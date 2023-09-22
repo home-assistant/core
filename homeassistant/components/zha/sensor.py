@@ -1049,3 +1049,258 @@ class AqaraSmokeDensityDbm(Sensor, id_suffix="smoke_density_dbm"):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_icon: str = "mdi:google-circles-communities"
     _attr_suggested_display_precision: int = 3
+
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyCurrentSumDeliveredMetering(Sensor, id_suffix="current_summ_delivered"):
+    """Sensor that displays the Current summation delivered of the 3 phases kWh """
+
+    SENSOR_ATTR = "current_summ_delivered"
+    _attr_name: str = "Current Summation Delivered"
+    _attr_native_unit_of_measurement = "kWh"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _divisor = 1000
+    _attr_suggested_display_precision: int = 0
+
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyInstantaneousDemandMetering(Sensor, id_suffix="instantaneous_demand"):
+    """Sensor that displays the Current summation delivered of the 3 phases kWh """
+
+    SENSOR_ATTR = "instantaneous_demand"
+    _attr_name: str = "Instantaneous Demand"
+    _attr_native_unit_of_measurement = "W"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _attr_suggested_display_precision: int = 0
+
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL1PowerMetering(Sensor, id_suffix="L1_phase_power"):
+    """Sensor that displays the power of L1 phase in W """
+
+    SENSOR_ATTR = "L1_phase_power"
+    _attr_name: str = "L1 Phase Power"
+    _attr_native_unit_of_measurement = "W"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _attr_suggested_display_precision: int = 0
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL2PowerMetering(Sensor, id_suffix="L2_phase_power"):
+    """Sensor that displays the power of L2 phase in W """
+
+    SENSOR_ATTR = "L2_phase_power"
+    _attr_name: str = "L2 Phase Power"
+    _attr_native_unit_of_measurement = "W"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _attr_suggested_display_precision: int = 0
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL3PowerMetering(Sensor, id_suffix="L3_phase_power"):
+    """Sensor that displays the power of L3 phase in W """
+
+    SENSOR_ATTR = "L3_phase_power"
+    _attr_name: str = "L3 Phase Power"
+    _attr_native_unit_of_measurement = "W"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _attr_suggested_display_precision: int = 0
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL1ReactivePowerMetering(Sensor, id_suffix="L1_phase_reactive_power"):
+    """Sensor that displays the reactive power of L1 phase in W """
+
+    SENSOR_ATTR = "L1_phase_reactive_power"
+    _attr_name: str = "L1 Phase Reactive Power"
+    _attr_native_unit_of_measurement = "W"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _attr_suggested_display_precision: int = 0
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL2ReactivePowerMetering(Sensor, id_suffix="L2_phase_reactive_power"):
+    """Sensor that displays the reactive power of L2 phase in W """
+
+    SENSOR_ATTR = "L2_phase_reactive_power"
+    _attr_name: str = "L2 Phase Reactive Power"
+    _attr_native_unit_of_measurement = "W"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _attr_suggested_display_precision: int = 0
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL3ReactivePowerMetering(Sensor, id_suffix="L3_phase_reactive_power"):
+    """Sensor that displays the reactive power of L3 phase in W """
+
+    SENSOR_ATTR = "L3_phase_reactive_power"
+    _attr_name: str = "L3 Phase Reactive Power"
+    _attr_native_unit_of_measurement = "W"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _attr_suggested_display_precision: int = 0
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyReactivePower3PhaseMetering(Sensor, id_suffix="reactive_power_summation_of_the_3_phases"):
+    """Sensor that displays the reactive power summation of the phases in W """
+
+    SENSOR_ATTR = "reactive_power_summation_of_the_3_phases"
+    _attr_name: str = "Reactive Power Summation of the 3 Phases"
+    _attr_native_unit_of_measurement = "W"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _attr_suggested_display_precision: int = 0
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL1VoltageMetering(Sensor, id_suffix="L1_phase_voltage"):
+    """Sensor that displays the voltage of L1 phase in V """
+
+    SENSOR_ATTR = "L1_phase_voltage"
+    _attr_name: str = "L1 Phase Voltage"
+    _attr_native_unit_of_measurement = "V"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _divisor = 10
+    _attr_suggested_display_precision: int = 1
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL2VoltageMetering(Sensor, id_suffix="L2_phase_voltage"):
+    """Sensor that displays the voltage of L2 phase in V """
+
+    SENSOR_ATTR = "L2_phase_voltage"
+    _attr_name: str = "L2 Phase Voltage"
+    _attr_native_unit_of_measurement = "V"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _divisor = 10
+    _attr_suggested_display_precision: int = 1
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL3VoltageMetering(Sensor, id_suffix="L3_phase_voltage"):
+    """Sensor that displays the voltage of L3 phase in V """
+
+    SENSOR_ATTR = "L3_phase_voltage"
+    _attr_name: str = "L3 Phase Voltage"
+    _attr_native_unit_of_measurement = "V"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _divisor = 10
+    _attr_suggested_display_precision: int = 1
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL1CurrentMetering(Sensor, id_suffix="L1_phase_current"):
+    """Sensor that displays the current of L3 phase in A """
+
+    SENSOR_ATTR = "L1_phase_current"
+    _attr_name: str = "L1 Phase Current"
+    _attr_native_unit_of_measurement = "A"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _divisor = 1000
+    _attr_suggested_display_precision: int = 2
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL2CurrentMetering(Sensor, id_suffix="L2_phase_current"):
+    """Sensor that displays the current of L3 phase in A """
+
+    SENSOR_ATTR = "L2_phase_current"
+    _attr_name: str = "L2 Phase Current"
+    _attr_native_unit_of_measurement = "A"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _divisor = 1000
+    _attr_suggested_display_precision: int = 2
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL3CurrentMetering(Sensor, id_suffix="L3_phase_current"):
+    """Sensor that displays the current of L3 phase in A """
+
+    SENSOR_ATTR = "L3_phase_current"
+    _attr_name: str = "L3 Phase Current"
+    _attr_native_unit_of_measurement = "A"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _divisor = 1000
+    _attr_suggested_display_precision: int = 2
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyCurrentSummationMetering(Sensor, id_suffix="current_summation_of_the_3_phases"):
+    """Sensor that displays the cureent summation of the 3 phases in A """
+
+    SENSOR_ATTR = "current_summation_of_the_3_phases"
+    _attr_name: str = "Current Summation of the 3 Phases"
+    _attr_native_unit_of_measurement = "A"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _divisor = 1000
+    _attr_suggested_display_precision: int = 0
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyLeakageCurrentMetering(Sensor, id_suffix="leakage_current"):
+    """Sensor that displays the leakage cureent in A """
+
+    SENSOR_ATTR = "leakage_current"
+    _attr_name: str = "Leakage Current"
+    _attr_native_unit_of_measurement = "A"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _divisor = 1000
+    _attr_suggested_display_precision: int = 0
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL1PhaseEnergyConsumptionMetering(Sensor, id_suffix="L1_phase_energy_consumption"):
+    """Sensor that displays the L1 energy consumption in kWh """
+
+    SENSOR_ATTR = "L1_phase_energy_consumption"
+    _attr_name: str = "L1 Phase Energy Consumption"
+    _attr_native_unit_of_measurement = "kWh"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _divisor = 1000
+    _attr_suggested_display_precision: int = 0
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL2PhaseEnergyConsumptionMetering(Sensor, id_suffix="L2_phase_energy_consumption"):
+    """Sensor that displays the L2 energy consumption in kWh """
+
+    SENSOR_ATTR = "L2_phase_energy_consumption"
+    _attr_name: str = "L2 Phase Energy Consumption"
+    _attr_native_unit_of_measurement = "kWh"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _divisor = 1000
+    _attr_suggested_display_precision: int = 0
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyL3PhaseEnergyConsumptionMetering(Sensor, id_suffix="L3_phase_energy_consumption"):
+    """Sensor that displays the L3 energy consumption in kWh """
+
+    SENSOR_ATTR = "L3_phase_energy_consumption"
+    _attr_name: str = "L3 Phase Energy Consumption"
+    _attr_native_unit_of_measurement = "kWh"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _divisor = 1000
+    _attr_suggested_display_precision: int = 0
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyReactiveEnergySummation3PhasesMetering(Sensor, id_suffix="reactive_energy_summation_of_the_3_phases"):
+    """Sensor that displays the reactive energy summation of the 3 phases in kWh """
+
+    SENSOR_ATTR = "reactive_energy_summation_of_the_3_phases"
+    _attr_name: str = "Reactive Energy Summation of the 3 Phases"
+    _attr_native_unit_of_measurement = "kWh"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _divisor = 1000
+    _attr_suggested_display_precision: int = 0
+    
+@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+class SmartEnergyReactiveEnergySummation3PhasesMetering(Sensor, id_suffix="frequency"):
+    """Sensor that displays the frequency in Hz """
+
+    SENSOR_ATTR = "frequency"
+    _attr_name: str = "Frequency"
+    _attr_native_unit_of_measurement = "Hz"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:lightning-bolt"
+    _attr_suggested_display_precision: int = 0
