@@ -1870,12 +1870,14 @@ def get_last_short_term_statistics(
 
 def get_latest_short_term_statistics_by_ids(
     session: Session, ids: Iterable[int]
-) -> Sequence[Row]:
+) -> list[Row]:
     """Return the latest short term statistics for a list of ids."""
     stmt = _latest_short_term_statistics_by_ids_stmt(ids)
-    return cast(
-        Sequence[Row],
-        execute_stmt_lambda_element(session, stmt, orm_rows=False),
+    return list(
+        cast(
+            Sequence[Row],
+            execute_stmt_lambda_element(session, stmt, orm_rows=False),
+        )
     )
 
 
@@ -1937,7 +1939,6 @@ def get_latest_short_term_statistics(
                     session, missing_ids
                 )
             ):
-                stats = list(stats)
                 stats.extend(additional_stats)
 
         if not stats:
