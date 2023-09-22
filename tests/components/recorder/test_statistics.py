@@ -1,24 +1,14 @@
 """The tests for sensor recorder platform."""
-import asyncio
 from collections.abc import Callable
 from datetime import timedelta
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 from sqlalchemy import select
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import (
-    SQLITE_URL_PREFIX,
-    Recorder,
-    history,
-    statistics,
-)
-from homeassistant.components.recorder.db_schema import (
-    LatestStatisticsShortTermIDs,
-    StatisticsShortTerm,
-)
+from homeassistant.components.recorder import Recorder, history, statistics
+from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import (
     datetime_to_timestamp_or_none,
     process_timestamp,
@@ -30,11 +20,11 @@ from homeassistant.components.recorder.statistics import (
     _generate_statistics_during_period_stmt,
     async_add_external_statistics,
     async_import_statistics,
-    clear_latest_short_term_statistics_ids,
     get_last_short_term_statistics,
     get_last_statistics,
     get_latest_short_term_statistics,
     get_metadata,
+    get_statistics_run_cache,
     list_statistic_ids,
 )
 from homeassistant.components.recorder.table_managers.statistics_meta import (
@@ -44,8 +34,7 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import recorder as recorder_helper
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
 from .common import (
@@ -57,7 +46,7 @@ from .common import (
     wait_recording_done,
 )
 
-from tests.common import async_test_home_assistant, mock_registry
+from tests.common import mock_registry
 from tests.typing import WebSocketGenerator
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
@@ -190,7 +179,8 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
 
     # Now wipe the latest_short_term_statistics_ids table and test again
     # to make sure we can rebuild the missing data
-    clear_latest_short_term_statistics_ids(instance.get_session())
+    run_cache = get_statistics_run_cache(instance.hass)
+    run_cache._latest_short_term_statistics_id_by_metadata_id = {}
     stats = get_latest_short_term_statistics(
         hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
     )
@@ -2370,65 +2360,3 @@ def test_change_with_none(
     assert stats == {}
 
     dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
-
-async def test_upgrade_downgrade_upgrade_clear_latest_short_term_statistics_ids(
-    tmp_path: Path,
-) -> None:
-    """Test we clear out LatestStatisticsShortTermIDs on startup for upgrade/downgrade/upgrades."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
-
-    hass = await async_test_home_assistant(asyncio.get_running_loop())
-    recorder_helper.async_initialize_recorder(hass)
-    assert await async_setup_component(
-        hass, "recorder", {"recorder": {"db_url": dburl}}
-    )
-    await hass.async_block_till_done()
-    await async_wait_recording_done(hass)
-    await async_wait_recording_done(hass)
-
-    def _add_data():
-        with session_scope(hass=hass) as session:
-            session.add(LatestStatisticsShortTermIDs(metadata_id=1, id=1))
-
-    def _get_latest_statistics_short_term_ids():
-        with session_scope(hass=hass) as session:
-            return list(session.query(LatestStatisticsShortTermIDs).all())
-
-    await recorder.get_instance(hass).async_add_executor_job(_add_data)
-    await hass.async_block_till_done()
-    await recorder.get_instance(hass).async_block_till_done()
-
-    ids = await recorder.get_instance(hass).async_add_executor_job(
-        _get_latest_statistics_short_term_ids
-    )
-
-    assert len(ids) == 1
-
-    await hass.async_stop()
-    await hass.async_block_till_done()
-
-    hass = await async_test_home_assistant(asyncio.get_running_loop())
-    recorder_helper.async_initialize_recorder(hass)
-    assert await async_setup_component(
-        hass, "recorder", {"recorder": {"db_url": dburl}}
-    )
-    await hass.async_block_till_done()
-
-    # We need to wait for all the migration tasks to complete
-    # before we can check the database.
-    for _ in range(10):
-        await recorder.get_instance(hass).async_block_till_done()
-        await async_wait_recording_done(hass)
-
-    ids = await recorder.get_instance(hass).async_add_executor_job(
-        _get_latest_statistics_short_term_ids
-    )
-
-    assert len(ids) == 0
-
-    await hass.async_stop()
-    await hass.async_block_till_done()
