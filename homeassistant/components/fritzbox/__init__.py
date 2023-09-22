@@ -17,8 +17,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -101,6 +105,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
+) -> bool:
+    """Remove Fritzbox config entry from a device."""
+    coordinator: FritzboxDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        CONF_COORDINATOR
+    ]
+
+    for identifier in device.identifiers:
+        if identifier[0] == DOMAIN and (
+            identifier[1] in coordinator.data.devices
+            or identifier[1] in coordinator.data.templates
+        ):
+            raise HomeAssistantError("not an orphan device")
+
+    return True
 
 
 class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
