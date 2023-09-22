@@ -131,6 +131,9 @@ class BaseHaScanner(ABC):
                 self.name,
                 SCANNER_WATCHDOG_TIMEOUT,
             )
+            self.scanning = False
+            return
+        self.scanning = not self._connecting
 
     @contextmanager
     def connecting(self) -> Generator[None, None, None]:
