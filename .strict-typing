@@ -141,6 +141,7 @@ homeassistant.components.glances.*
 homeassistant.components.goalzero.*
 homeassistant.components.google.*
 homeassistant.components.google_sheets.*
+homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
@@ -179,6 +180,7 @@ homeassistant.components.huawei_lte.*
 homeassistant.components.hydrawise.*
 homeassistant.components.hyperion.*
 homeassistant.components.ibeacon.*
+homeassistant.components.idasen_desk.*
 homeassistant.components.image.*
 homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
@@ -317,6 +319,7 @@ homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
 homeassistant.components.switch.*
 homeassistant.components.switchbee.*
+homeassistant.components.switchbot_cloud.*
 homeassistant.components.switcher_kis.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*

@@ -125,6 +125,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         self._optimistic = (
             config[CONF_OPTIMISTIC] or config.get(CONF_STATE_TOPIC) is None
         )
+        self._attr_assumed_state = bool(self._optimistic)
 
         self._value_template = MqttValueTemplate(
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
@@ -170,11 +171,6 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         if self._optimistic and (last_state := await self.async_get_last_state()):
             self._attr_is_on = last_state.state == STATE_ON
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on.

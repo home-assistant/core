@@ -40,6 +40,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
+from homeassistant.helpers.entity import EntityInfo
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
@@ -558,7 +559,7 @@ class StateAttributes(Base):
     @staticmethod
     def shared_attrs_bytes_from_event(
         event: Event,
-        entity_sources: dict[str, dict[str, str]],
+        entity_sources: dict[str, EntityInfo],
         exclude_attrs_by_domain: dict[str, set[str]],
         dialect: SupportedDialect | None,
     ) -> bytes:
@@ -575,6 +576,8 @@ class StateAttributes(Base):
             integration_attrs := exclude_attrs_by_domain.get(entity_info["domain"])
         ):
             exclude_attrs |= integration_attrs
+        if state_info := state.state_info:
+            exclude_attrs |= state_info["unrecorded_attributes"]
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
         bytes_result = encoder(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}

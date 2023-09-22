@@ -8,7 +8,7 @@ import copy
 import enum
 import logging
 import os
-from typing import Any
+from typing import Any, Self
 
 from bellows.config import CONF_USE_THREAD
 import voluptuous as vol
@@ -26,12 +26,11 @@ from .core.const import (
     CONF_DATABASE,
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
-    DATA_ZHA,
-    DATA_ZHA_CONFIG,
     DEFAULT_DATABASE_NAME,
     EZSP_OVERWRITE_EUI64,
     RadioType,
 )
+from .core.helpers import get_zha_data
 
 # Only the common radio types will be autoprobed, ordered by new device popularity.
 # XBee takes too long to probe since it scans through all possible bauds and likely has
@@ -127,12 +126,25 @@ class ZhaRadioManager:
         self.backups: list[zigpy.backups.NetworkBackup] = []
         self.chosen_backup: zigpy.backups.NetworkBackup | None = None
 
+    @classmethod
+    def from_config_entry(
+        cls, hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+    ) -> Self:
+        """Create an instance from a config entry."""
+        mgr = cls()
+        mgr.hass = hass
+        mgr.device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+        mgr.device_settings = config_entry.data[CONF_DEVICE]
+        mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
+
+        return mgr
+
     @contextlib.asynccontextmanager
-    async def _connect_zigpy_app(self) -> ControllerApplication:
+    async def connect_zigpy_app(self) -> ControllerApplication:
         """Connect to the radio with the current config and then clean up."""
         assert self.radio_type is not None
 
-        config = self.hass.data.get(DATA_ZHA, {}).get(DATA_ZHA_CONFIG, {})
+        config = get_zha_data(self.hass).yaml_config
         app_config = config.get(CONF_ZIGPY, {}).copy()
 
         database_path = config.get(
@@ -155,10 +167,9 @@ class ZhaRadioManager:
         )
 
         try:
-            await app.connect()
             yield app
         finally:
-            await app.disconnect()
+            await app.shutdown()
             await asyncio.sleep(CONNECT_DELAY_S)
 
     async def restore_backup(
@@ -170,7 +181,8 @@ class ZhaRadioManager:
         ):
             return
 
-        async with self._connect_zigpy_app() as app:
+        async with self.connect_zigpy_app() as app:
+            await app.connect()
             await app.backups.restore_backup(backup, **kwargs)
 
     @staticmethod
@@ -218,7 +230,9 @@ class ZhaRadioManager:
         """Connect to the radio and load its current network settings."""
         backup = None
 
-        async with self._connect_zigpy_app() as app:
+        async with self.connect_zigpy_app() as app:
+            await app.connect()
+
             # Check if the stick has any settings and load them
             try:
                 await app.load_network_info()
@@ -241,12 +255,14 @@ class ZhaRadioManager:
 
     async def async_form_network(self) -> None:
         """Form a brand-new network."""
-        async with self._connect_zigpy_app() as app:
+        async with self.connect_zigpy_app() as app:
+            await app.connect()
             await app.form_network()
 
     async def async_reset_adapter(self) -> None:
         """Reset the current adapter."""
-        async with self._connect_zigpy_app() as app:
+        async with self.connect_zigpy_app() as app:
+            await app.connect()
             await app.reset_network_info()
 
     async def async_restore_backup_step_1(self) -> bool:
