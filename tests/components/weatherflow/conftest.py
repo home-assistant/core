@@ -41,7 +41,7 @@ def mock_config_entry2() -> MockConfigEntry:
 def mock_has_devices() -> Generator[AsyncMock, None, None]:
     """Return a mock has_devices function."""
     with patch(
-        "pyweatherflowudp.client.WeatherFlowListener.on",
+        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
         return_value=True,
     ) as mock_has_devices:
         yield mock_has_devices
@@ -51,7 +51,7 @@ def mock_has_devices() -> Generator[AsyncMock, None, None]:
 def mock_on_throws_timeout() -> Generator[AsyncMock, None, None]:
     """Throw a timeout exceptoin."""
     with patch(
-        "pyweatherflowudp.client.WeatherFlowListener.on",
+        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
         side_effect=asyncio.TimeoutError,
     ) as mock_on:
         yield mock_on
@@ -61,7 +61,7 @@ def mock_on_throws_timeout() -> Generator[AsyncMock, None, None]:
 def mock_on_throws_cancelled() -> Generator[AsyncMock, None, None]:
     """Throw a cancelled error."""
     with patch(
-        "pyweatherflowudp.client.WeatherFlowListener.on",
+        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
         side_effect=asyncio.exceptions.CancelledError,
     ) as mock_on:
         yield mock_on
