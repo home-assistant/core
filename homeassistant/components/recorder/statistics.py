@@ -1877,17 +1877,6 @@ def _latest_short_term_statistics_by_id_stmt(
     )
 
 
-def _short_term_statistics_by_ids_stmt(
-    ids: set[int],
-) -> StatementLambdaElement:
-    """Create the statement for finding the latest short term stat rows."""
-    return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS_SHORT_TERM).where(
-            StatisticsShortTerm.id.in_(ids)
-        )
-    )
-
-
 def get_latest_short_term_statistics(
     hass: HomeAssistant,
     statistic_ids: set[str],
@@ -1939,7 +1928,7 @@ def get_latest_short_term_statistics(
                     )
                     missing_ids.add(missing_id)
             if missing_ids:
-                stmt = _short_term_statistics_by_ids_stmt(missing_ids)
+                stmt = _latest_short_term_statistics_by_id_stmt(missing_ids)
                 if stats_for_missing_rows := cast(
                     Sequence[Row],
                     execute_stmt_lambda_element(session, stmt, orm_rows=False),
