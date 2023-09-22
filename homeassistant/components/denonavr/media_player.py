@@ -240,7 +240,6 @@ class DenonDevice(MediaPlayerEntity):
             name=receiver.name,
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
-        
         self._receiver = receiver
         self._update_audyssey = update_audyssey
 
