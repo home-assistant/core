@@ -245,7 +245,7 @@
           "description": "Activate or disable the CO2 control"
         },
         "co2_threshold": {
-          "name": "co2 threshold",
+          "name": "CO2 threshold",
           "description": "Sets the CO2 pollution threshold level in ppm"
         },
         "co2_hysteresis": {
