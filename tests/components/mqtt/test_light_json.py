@@ -124,6 +124,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
@@ -2453,3 +2454,96 @@ async def test_setup_manual_entity_from_yaml(
     await mqtt_mock_entry()
     platform = light.DOMAIN
     assert hass.states.get(f"{platform}.test")
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            light.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "color_mode": True,
+                    "effect": True,
+                    "supported_color_modes": [
+                        "color_temp",
+                        "hs",
+                        "xy",
+                        "rgb",
+                        "rgbw",
+                        "rgbww",
+                        "white",
+                    ],
+                    "effect_list": ["effect1", "effect2"],
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                    "state_topic": "test-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("test-topic", '{"state":"ON"}', '{"state":"OFF"}'),
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+        (
+            "test-topic",
+            '{"state":"ON","effect":"effect1"}',
+            '{"state":"ON","effect":"effect2"}',
+        ),
+        (
+            "test-topic",
+            '{"state":"ON","brightness":255}',
+            '{"state":"ON","brightness":96}',
+        ),
+        (
+            "test-topic",
+            '{"state":"ON","brightness":96}',
+            '{"state":"ON","color_mode":"white","brightness":96}',
+        ),
+        (
+            "test-topic",
+            '{"state":"ON","color_mode":"color_temp", "color_temp": 200}',
+            '{"state":"ON","color_mode":"color_temp", "color_temp": 2400}',
+        ),
+        (
+            "test-topic",
+            '{"state":"ON","color_mode":"hs", "color": {"h":24.0,"s":100.0}}',
+            '{"state":"ON","color_mode":"hs", "color": {"h":24.0,"s":90.0}}',
+        ),
+        (
+            "test-topic",
+            '{"state":"ON","color_mode":"xy","color": {"x":0.14,"y":0.131}}',
+            '{"state":"ON","color_mode":"xy","color": {"x":0.16,"y": 0.100}}',
+        ),
+        (
+            "test-topic",
+            '{"state":"ON","brightness":255,"color_mode":"rgb","color":{"r":128,"g":128,"b":255}}',
+            '{"state":"ON","brightness":255,"color_mode":"rgb","color": {"r":255,"g":128,"b":255}}',
+        ),
+        (
+            "test-topic",
+            '{"state":"ON","color_mode":"rgbw","color":{"r":128,"g":128,"b":255,"w":128}}',
+            '{"state":"ON","color_mode":"rgbw","color": {"r":128,"g":128,"b":255,"w":255}}',
+        ),
+        (
+            "test-topic",
+            '{"state":"ON","color_mode":"rgbww","color":{"r":128,"g":128,"b":255,"c":32,"w":128}}',
+            '{"state":"ON","color_mode":"rgbww","color": {"r":128,"g":128,"b":255,"c":16,"w":128}}',
+        ),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
