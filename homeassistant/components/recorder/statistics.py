@@ -1910,9 +1910,9 @@ def get_latest_short_term_statistics(
             )
         else:
             stats = []
-        # If we do not have a row for a metadata_id, we need to find it in the table
-        # manually with a slower query. This should only happen once per metadata_id
-        # ever since the latest statistics table was introduced.
+        # If we are missing some metadata_ids in the run cache, we need run a query
+        # to populate the cache, and then run another query to get the latest
+        # short term statistics for the missing metadata_ids.
         if missing_metadata_ids := metadata_ids - set(metadata_id_to_id):
             missing_latest_ids: set[int] = set()
             for metadata_id in missing_metadata_ids:
