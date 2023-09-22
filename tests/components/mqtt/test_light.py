@@ -3175,9 +3175,9 @@ async def test_reloadable(
         ("state_topic", "ON", None, "on", None),
         (
             "color_mode_state_topic",
-            "200",
+            "rgb",
             "color_mode",
-            "200",
+            "rgb",
             ("state_topic", "ON"),
         ),
         ("color_temp_state_topic", "200", "color_temp", 200, ("state_topic", "ON")),
