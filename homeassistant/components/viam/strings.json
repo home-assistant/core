@@ -2,9 +2,29 @@
   "config": {
     "step": {
       "user": {
+        "title": "Authenticate with Viam",
+        "description": "Select which credential type to use.",
         "data": {
+          "credential_type": "Credential Type"
+        }
+      },
+      "auth": {
+        "title": "Authenticate with Viam",
+        "description": "Provide the credentials for communicating with the Viam service.",
+        "data": {
+          "api_id": "API Key ID",
+          "api_key": "API Key Value",
           "address": "Robot Address",
           "secret": "Robot Secret"
+        },
+        "data_description": {
+          "address": "Find this under the Code Sample tab in the app.",
+          "secret": "Find this under the Code Sample tab in the app when 'include secret' is enabled."
+        }
+      },
+      "robot": {
+        "data": {
+          "robot": "Select a robot"
         }
       }
     },
