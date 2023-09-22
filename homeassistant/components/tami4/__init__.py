@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         edge = await hass.async_add_executor_job(Tami4EdgeAPI, refresh_token)
     except Exception as ex:
-        raise ConfigEntryNotReady(f"Error connecting to API : {ex}") from ex
+        raise ConfigEntryNotReady(f"Error connecting to API") from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = edge
 
