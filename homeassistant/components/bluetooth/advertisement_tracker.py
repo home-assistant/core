@@ -12,7 +12,7 @@ ADVERTISING_TIMES_NEEDED = 16
 # Each scanner may buffer incoming packets so
 # we need to give a bit of leeway before we
 # mark a device unavailable
-TRACKER_BUFFERING_WOBBLE_SECONDS = 5
+TRACKER_BUFFERING_JITTER_SECONDS = 5
 
 
 class AdvertisementTracker:

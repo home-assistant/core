@@ -30,7 +30,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import monotonic_time_coarse
 
 from .advertisement_tracker import (
-    TRACKER_BUFFERING_WOBBLE_SECONDS,
+    TRACKER_BUFFERING_JITTER_SECONDS,
     AdvertisementTracker,
 )
 from .base_scanner import BaseHaScanner, BluetoothScannerDevice
@@ -343,7 +343,7 @@ class BluetoothManager:
                     # connection to it we can only determine its availability
                     # by the lack of advertisements
                     if advertising_interval := intervals.get(address):
-                        advertising_interval += TRACKER_BUFFERING_WOBBLE_SECONDS
+                        advertising_interval += TRACKER_BUFFERING_JITTER_SECONDS
                     else:
                         advertising_interval = (
                             FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
@@ -385,7 +385,7 @@ class BluetoothManager:
     ) -> bool:
         """Prefer previous advertisement from a different source if it is better."""
         if stale_seconds := self._advertisement_tracker.intervals.get(new.address):
-            stale_seconds += TRACKER_BUFFERING_WOBBLE_SECONDS
+            stale_seconds += TRACKER_BUFFERING_JITTER_SECONDS
         else:
             stale_seconds = FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
         if new.time - old.time > stale_seconds:
