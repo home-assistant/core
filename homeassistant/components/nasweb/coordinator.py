@@ -1,6 +1,8 @@
 """Message routing coordinators for handling NASweb push notifications."""
 import asyncio
+from datetime import timedelta
 import logging
+import time
 from typing import Any, Optional
 
 from aiohttp import web
@@ -9,8 +11,9 @@ from webio_api.const import KEY_DEVICE_SERIAL, KEY_OUTPUTS, KEY_TYPE, TYPE_STATU
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import STATUS_UPDATE_MAX_TIME_INTERVAL
 from .relay_switch import RelaySwitch
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,9 +80,10 @@ class NASwebCoordinator(DataUpdateCoordinator):
         self, hass: HomeAssistant, webio_api: WebioAPI, name: str = "NASweb[default]"
     ) -> None:
         """Initialize NASweb coordinator."""
-        self._hass = hass
-        self._connection_confirmed = False
         super().__init__(hass, _LOGGER, name=name)
+        self._hass = hass
+        self._last_update: Optional[float] = None
+        self.update_interval = timedelta(seconds=STATUS_UPDATE_MAX_TIME_INTERVAL)
         self.webio_api: WebioAPI = webio_api
         self.async_add_switch_callback: Optional[AddEntitiesCallback] = None
         data: dict[str, Any] = {}
@@ -88,7 +92,14 @@ class NASwebCoordinator(DataUpdateCoordinator):
 
     def is_connection_confirmed(self) -> bool:
         """Check whether coordinator received status update from NASweb."""
-        return self._connection_confirmed
+        return self._last_update is not None
+
+    async def _async_update_data(self) -> None:
+        result = "OK" if await self.webio_api.check_connection() else "ERROR"
+        raise UpdateFailed(
+            f"did not receive status update in last {STATUS_UPDATE_MAX_TIME_INTERVAL} "
+            f"seconds. Connection check: {result}"
+        )
 
     def handle_push_notification(self, notification: dict) -> None:
         """Handle incoming push notification from NASweb."""
@@ -97,7 +108,7 @@ class NASwebCoordinator(DataUpdateCoordinator):
 
         if msg_type == TYPE_STATUS_UPDATE:
             self.process_status_update(notification)
-            self._connection_confirmed = True
+            self._last_update = time.time()
 
     def process_status_update(self, new_status: dict) -> None:
         """Process status update from NASweb."""
