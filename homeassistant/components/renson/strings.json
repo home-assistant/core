@@ -249,7 +249,7 @@
           "description": "Sets the CO2 pollution threshold level in ppm"
         },
         "co2_hysteresis": {
-          "name": "co2 hysteresis",
+          "name": "CO2 hysteresis",
           "description": "Sets the CO2 pollution threshold hysteresis level in ppm"
         }
       }
