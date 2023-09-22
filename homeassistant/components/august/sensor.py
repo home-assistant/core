@@ -33,13 +33,17 @@ from . import AugustData
 from .const import (
     ATTR_OPERATION_AUTORELOCK,
     ATTR_OPERATION_KEYPAD,
+    ATTR_OPERATION_MANUAL,
     ATTR_OPERATION_METHOD,
     ATTR_OPERATION_REMOTE,
+    ATTR_OPERATION_TAG,
     DOMAIN,
     OPERATION_METHOD_AUTORELOCK,
     OPERATION_METHOD_KEYPAD,
+    OPERATION_METHOD_MANUAL,
     OPERATION_METHOD_MOBILE_DEVICE,
     OPERATION_METHOD_REMOTE,
+    OPERATION_METHOD_TAG,
 )
 from .entity import AugustEntityMixin
 
@@ -183,6 +187,8 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         self._device = device
         self._operated_remote = None
         self._operated_keypad = None
+        self._operated_manual = None
+        self._operated_tag = None
         self._operated_autorelock = None
         self._operated_time = None
         self._attr_unique_id = f"{self._device_id}_lock_operator"
@@ -200,6 +206,8 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
             self._attr_native_value = lock_activity.operated_by
             self._operated_remote = lock_activity.operated_remote
             self._operated_keypad = lock_activity.operated_keypad
+            self._operated_manual = lock_activity.operated_manual
+            self._operated_tag = lock_activity.operated_tag
             self._operated_autorelock = lock_activity.operated_autorelock
             self._attr_entity_picture = lock_activity.operator_thumbnail_url
 
@@ -212,6 +220,10 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
             attributes[ATTR_OPERATION_REMOTE] = self._operated_remote
         if self._operated_keypad is not None:
             attributes[ATTR_OPERATION_KEYPAD] = self._operated_keypad
+        if self._operated_manual is not None:
+            attributes[ATTR_OPERATION_MANUAL] = self._operated_manual
+        if self._operated_tag is not None:
+            attributes[ATTR_OPERATION_TAG] = self._operated_tag
         if self._operated_autorelock is not None:
             attributes[ATTR_OPERATION_AUTORELOCK] = self._operated_autorelock
 
@@ -219,6 +231,10 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
             attributes[ATTR_OPERATION_METHOD] = OPERATION_METHOD_REMOTE
         elif self._operated_keypad:
             attributes[ATTR_OPERATION_METHOD] = OPERATION_METHOD_KEYPAD
+        elif self._operated_manual:
+            attributes[ATTR_OPERATION_METHOD] = OPERATION_METHOD_MANUAL
+        elif self._operated_tag:
+            attributes[ATTR_OPERATION_METHOD] = OPERATION_METHOD_TAG
         elif self._operated_autorelock:
             attributes[ATTR_OPERATION_METHOD] = OPERATION_METHOD_AUTORELOCK
         else:
@@ -241,6 +257,10 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
             self._operated_remote = last_state.attributes[ATTR_OPERATION_REMOTE]
         if ATTR_OPERATION_KEYPAD in last_state.attributes:
             self._operated_keypad = last_state.attributes[ATTR_OPERATION_KEYPAD]
+        if ATTR_OPERATION_MANUAL in last_state.attributes:
+            self._operated_manual = last_state.attributes[ATTR_OPERATION_MANUAL]
+        if ATTR_OPERATION_TAG in last_state.attributes:
+            self._operated_tag = last_state.attributes[ATTR_OPERATION_TAG]
         if ATTR_OPERATION_AUTORELOCK in last_state.attributes:
             self._operated_autorelock = last_state.attributes[ATTR_OPERATION_AUTORELOCK]
 
