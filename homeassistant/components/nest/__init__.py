@@ -22,10 +22,6 @@ from google_nest_sdm.exceptions import (
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_READ
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.camera import Image, img_util
 from homeassistant.components.http import KEY_HASS_USER
 from homeassistant.components.http.view import HomeAssistantView
@@ -50,30 +46,22 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.entity_registry import async_entries_for_device
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
 from homeassistant.helpers.typing import ConfigType
 
-from . import api, config_flow
+from . import api
 from .const import (
     CONF_PROJECT_ID,
     CONF_SUBSCRIBER_ID,
     CONF_SUBSCRIBER_ID_IMPORTED,
     DATA_DEVICE_MANAGER,
-    DATA_NEST_CONFIG,
     DATA_SDM,
     DATA_SUBSCRIBER,
     DOMAIN,
-    INSTALLED_AUTH_DOMAIN,
-    WEB_AUTH_DOMAIN,
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
-from .legacy import async_setup_legacy, async_setup_legacy_entry
 from .media_source import (
     async_get_media_event_store,
     async_get_media_source_devices,
@@ -125,18 +113,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(NestEventMediaView(hass))
     hass.http.register_view(NestEventMediaThumbnailView(hass))
 
-    if DOMAIN not in config:
-        return True  # ConfigMode.SDM_APPLICATION_CREDENTIALS
-
-    # Note that configuration.yaml deprecation warnings are handled in the
-    # config entry since we don't know what type of credentials we have and
-    # whether or not they can be imported.
-    hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
-
-    config_mode = config_flow.get_config_mode(hass)
-    if config_mode == config_flow.ConfigMode.LEGACY:
-        return await async_setup_legacy(hass, config)
-
+    if DOMAIN in config and CONF_PROJECT_ID not in config[DOMAIN]:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "legacy_nest_deprecated",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="legacy_nest_removed",
+            translation_placeholders={
+                "documentation_url": "https://www.home-assistant.io/integrations/nest/",
+            },
+        )
+        return False
     return True
 
 
@@ -162,7 +152,9 @@ class SignalUpdateCallback:
             return
         _LOGGER.debug("Event Update %s", events.keys())
         device_registry = dr.async_get(self._hass)
-        device_entry = device_registry.async_get_device({(DOMAIN, device_id)})
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
         if not device_entry:
             return
         for api_event_type, image_event in events.items():
@@ -181,18 +173,14 @@ class SignalUpdateCallback:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nest from a config entry with dispatch between old/new flows."""
-    config_mode = config_flow.get_config_mode(hass)
-    if DATA_SDM not in entry.data or config_mode == config_flow.ConfigMode.LEGACY:
-        return await async_setup_legacy_entry(hass, entry)
+    if DATA_SDM not in entry.data:
+        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+        return False
 
-    if config_mode == config_flow.ConfigMode.SDM:
-        await async_import_config(hass, entry)
-    elif entry.unique_id != entry.data[CONF_PROJECT_ID]:
+    if entry.unique_id != entry.data[CONF_PROJECT_ID]:
         hass.config_entries.async_update_entry(
             entry, unique_id=entry.data[CONF_PROJECT_ID]
         )
-
-    async_delete_issue(hass, DOMAIN, "removed_app_auth")
 
     subscriber = await api.new_subscriber(hass, entry)
     if not subscriber:
@@ -237,71 +225,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
-
-async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Attempt to import configuration.yaml settings."""
-    config = hass.data[DOMAIN][DATA_NEST_CONFIG]
-    new_data = {
-        CONF_PROJECT_ID: config[CONF_PROJECT_ID],
-        **entry.data,
-    }
-    if CONF_SUBSCRIBER_ID not in entry.data:
-        if CONF_SUBSCRIBER_ID not in config:
-            raise ValueError("Configuration option 'subscriber_id' missing")
-        new_data.update(
-            {
-                CONF_SUBSCRIBER_ID: config[CONF_SUBSCRIBER_ID],
-                # Don't delete user managed subscriber
-                CONF_SUBSCRIBER_ID_IMPORTED: True,
-            }
-        )
-    hass.config_entries.async_update_entry(
-        entry, data=new_data, unique_id=new_data[CONF_PROJECT_ID]
-    )
-
-    if entry.data["auth_implementation"] == INSTALLED_AUTH_DOMAIN:
-        # App Auth credentials have been deprecated and must be re-created
-        # by the user in the config flow
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "removed_app_auth",
-            is_fixable=False,
-            severity=IssueSeverity.ERROR,
-            translation_key="removed_app_auth",
-            translation_placeholders={
-                "more_info_url": (
-                    "https://www.home-assistant.io/more-info/nest-auth-deprecation"
-                ),
-                "documentation_url": "https://www.home-assistant.io/integrations/nest/",
-            },
-        )
-        raise ConfigEntryAuthFailed(
-            "Google has deprecated App Auth credentials, and the integration "
-            "must be reconfigured in the UI to restore access to Nest Devices."
-        )
-
-    if entry.data["auth_implementation"] == WEB_AUTH_DOMAIN:
-        await async_import_client_credential(
-            hass,
-            DOMAIN,
-            ClientCredential(
-                config[CONF_CLIENT_ID],
-                config[CONF_CLIENT_SECRET],
-            ),
-            WEB_AUTH_DOMAIN,
-        )
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2022.10.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

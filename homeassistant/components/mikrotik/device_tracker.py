@@ -10,7 +10,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
@@ -31,7 +31,7 @@ async def async_setup_entry(
 
     tracked: dict[str, MikrotikDataUpdateCoordinatorTracker] = {}
 
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
 
     # Restore clients that is not a part of active clients list.
     for entity in registry.entities.values():

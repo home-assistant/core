@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_upnp_binary_sensors(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
-):
+) -> None:
     """Test normal sensors."""
     # First poll.
     wan_status_state = hass.states.get("binary_sensor.mock_name_wan_status")

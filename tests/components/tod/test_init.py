@@ -1,5 +1,6 @@
 """Test the Times of the Day integration."""
-from freezegun import freeze_time
+
+import pytest
 
 from homeassistant.components.tod.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -8,7 +9,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 
-@freeze_time("2022-03-16 17:37:00", tz_offset=-7)
+@pytest.mark.freeze_time("2022-03-16 17:37:00", tz_offset=-7)
 async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
     """Test setting up and removing a config entry."""
     registry = er.async_get(hass)

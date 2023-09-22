@@ -38,14 +38,14 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     await init_integration(hass, aioclient_mock)
     registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.home_caqi")
+    state = hass.states.get("sensor.home_common_air_quality_index")
     assert state
     assert state.state == "7.29"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "CAQI"
     assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
 
-    entry = registry.async_get("sensor.home_caqi")
+    entry = registry.async_get("sensor.home_common_air_quality_index")
     assert entry
     assert entry.unique_id == "123-456-caqi"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
@@ -63,7 +63,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert entry.unique_id == "123-456-humidity"
     assert entry.options["sensor"] == {"suggested_display_precision": 1}
 
-    state = hass.states.get("sensor.home_pm1_0")
+    state = hass.states.get("sensor.home_pm1")
     assert state
     assert state.state == "2.83"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -74,7 +74,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM1
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_pm1_0")
+    entry = registry.async_get("sensor.home_pm1")
     assert entry
     assert entry.unique_id == "123-456-pm1"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}

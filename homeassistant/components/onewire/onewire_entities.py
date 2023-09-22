@@ -7,7 +7,8 @@ from typing import Any
 
 from pyownet import protocol
 
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import StateType
 
 from .const import READ_MODE_BOOL, READ_MODE_INT
@@ -27,6 +28,7 @@ class OneWireEntity(Entity):
     """Implementation of a 1-Wire entity."""
 
     entity_description: OneWireEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -34,7 +36,6 @@ class OneWireEntity(Entity):
         device_id: str,
         device_info: DeviceInfo,
         device_file: str,
-        name: str,
         owproxy: protocol._Proxy,
     ) -> None:
         """Initialize the entity."""
@@ -42,7 +43,6 @@ class OneWireEntity(Entity):
         self._last_update_success = True
         self._attr_unique_id = f"/{device_id}/{description.key}"
         self._attr_device_info = device_info
-        self._attr_name = name
         self._device_file = device_file
         self._state: StateType = None
         self._value_raw: float | None = None

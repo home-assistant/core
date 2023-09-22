@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, patch
 
 from pyopenuv.errors import InvalidApiKeyError
+import pytest
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -16,6 +17,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_API_KEY, TEST_ELEVATION, TEST_LATITUDE, TEST_LONGITUDE
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_create_entry(hass: HomeAssistant, client, config, mock_pyopenuv) -> None:

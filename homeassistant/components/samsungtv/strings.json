@@ -39,5 +39,10 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "samsungtv.turn_on": "Device is requested to turn on"
+    }
   }
 }

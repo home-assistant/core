@@ -22,6 +22,7 @@ import homeassistant.helpers.aiohttp_client as client
 from homeassistant.util.color import RGBColor
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="camera_client")
@@ -127,7 +128,9 @@ async def test_get_clientsession_patched_close(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
-async def test_warning_close_session_integration(hass, caplog):
+async def test_warning_close_session_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test log warning message when closing the session from integration context."""
     with patch(
         "homeassistant.helpers.frame.extract_stack",
@@ -159,7 +162,9 @@ async def test_warning_close_session_integration(hass, caplog):
 
 
 @patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
-async def test_warning_close_session_custom(hass, caplog):
+async def test_warning_close_session_custom(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test log warning message when closing the session from custom context."""
     with patch(
         "homeassistant.helpers.frame.extract_stack",
@@ -190,7 +195,9 @@ async def test_warning_close_session_custom(hass, caplog):
     )
 
 
-async def test_async_aiohttp_proxy_stream(aioclient_mock, camera_client):
+async def test_async_aiohttp_proxy_stream(
+    aioclient_mock: AiohttpClientMocker, camera_client
+) -> None:
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", content=b"Frame1Frame2Frame3")
 
@@ -202,7 +209,9 @@ async def test_async_aiohttp_proxy_stream(aioclient_mock, camera_client):
     assert body == "Frame1Frame2Frame3"
 
 
-async def test_async_aiohttp_proxy_stream_timeout(aioclient_mock, camera_client):
+async def test_async_aiohttp_proxy_stream_timeout(
+    aioclient_mock: AiohttpClientMocker, camera_client
+) -> None:
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=asyncio.TimeoutError())
 
@@ -210,7 +219,9 @@ async def test_async_aiohttp_proxy_stream_timeout(aioclient_mock, camera_client)
     assert resp.status == 504
 
 
-async def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_client):
+async def test_async_aiohttp_proxy_stream_client_err(
+    aioclient_mock: AiohttpClientMocker, camera_client
+) -> None:
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=aiohttp.ClientError())
 
@@ -218,7 +229,9 @@ async def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_clie
     assert resp.status == 502
 
 
-async def test_sending_named_tuple(hass, aioclient_mock):
+async def test_sending_named_tuple(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test sending a named tuple in json."""
     resp = aioclient_mock.post("http://127.0.0.1/rgb", json={"rgb": RGBColor(4, 3, 2)})
     session = client.async_create_clientsession(hass)

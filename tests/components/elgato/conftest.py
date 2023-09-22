@@ -60,26 +60,15 @@ def mock_onboarding() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_elgato_config_flow(device_fixtures: str) -> Generator[None, MagicMock, None]:
-    """Return a mocked Elgato client."""
-    with patch(
-        "homeassistant.components.elgato.config_flow.Elgato", autospec=True
-    ) as elgato_mock:
-        elgato = elgato_mock.return_value
-        elgato.info.return_value = Info.parse_raw(
-            load_fixture(f"{device_fixtures}/info.json", DOMAIN)
-        )
-        yield elgato
-
-
-@pytest.fixture
 def mock_elgato(
     device_fixtures: str, state_variant: str
 ) -> Generator[None, MagicMock, None]:
     """Return a mocked Elgato client."""
     with patch(
         "homeassistant.components.elgato.coordinator.Elgato", autospec=True
-    ) as elgato_mock:
+    ) as elgato_mock, patch(
+        "homeassistant.components.elgato.config_flow.Elgato", new=elgato_mock
+    ):
         elgato = elgato_mock.return_value
         elgato.info.return_value = Info.parse_raw(
             load_fixture(f"{device_fixtures}/info.json", DOMAIN)

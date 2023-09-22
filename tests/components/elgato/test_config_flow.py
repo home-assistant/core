@@ -1,13 +1,15 @@
 """Tests for the Elgato Key Light config flow."""
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 from elgato import ElgatoConnectionError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import zeroconf
 from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT, CONF_SOURCE
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -16,8 +18,9 @@ from tests.common import MockConfigEntry
 
 async def test_full_user_flow_implementation(
     hass: HomeAssistant,
-    mock_elgato_config_flow: MagicMock,
+    mock_elgato: MagicMock,
     mock_setup_entry: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the full manual user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
@@ -26,38 +29,32 @@ async def test_full_user_flow_implementation(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 9123}
     )
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "CN11A1A00001"
-    assert result2.get("data") == {
-        CONF_HOST: "127.0.0.1",
-        CONF_MAC: None,
-        CONF_PORT: 9123,
-    }
-    assert "result" in result2
-    assert result2["result"].unique_id == "CN11A1A00001"
+    assert result2 == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_elgato_config_flow.info.mock_calls) == 1
+    assert len(mock_elgato.info.mock_calls) == 1
 
 
 async def test_full_zeroconf_flow_implementation(
     hass: HomeAssistant,
-    mock_elgato_config_flow: MagicMock,
+    mock_elgato: MagicMock,
     mock_setup_entry: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the zeroconf flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="example.local.",
             name="mock_name",
             port=9123,
@@ -81,25 +78,18 @@ async def test_full_zeroconf_flow_implementation(
     )
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "CN11A1A00001"
-    assert result2.get("data") == {
-        CONF_HOST: "127.0.0.1",
-        CONF_MAC: "AA:BB:CC:DD:EE:FF",
-        CONF_PORT: 9123,
-    }
-    assert "result" in result2
-    assert result2["result"].unique_id == "CN11A1A00001"
+    assert result2 == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_elgato_config_flow.info.mock_calls) == 1
+    assert len(mock_elgato.info.mock_calls) == 1
 
 
 async def test_connection_error(
     hass: HomeAssistant,
-    mock_elgato_config_flow: MagicMock,
+    mock_elgato: MagicMock,
 ) -> None:
     """Test we show user form on Elgato Key Light connection error."""
-    mock_elgato_config_flow.info.side_effect = ElgatoConnectionError
+    mock_elgato.info.side_effect = ElgatoConnectionError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -113,16 +103,16 @@ async def test_connection_error(
 
 async def test_zeroconf_connection_error(
     hass: HomeAssistant,
-    mock_elgato_config_flow: MagicMock,
+    mock_elgato: MagicMock,
 ) -> None:
     """Test we abort zeroconf flow on Elgato Key Light connection error."""
-    mock_elgato_config_flow.info.side_effect = ElgatoConnectionError
+    mock_elgato.info.side_effect = ElgatoConnectionError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=9123,
@@ -135,7 +125,7 @@ async def test_zeroconf_connection_error(
     assert result.get("type") == FlowResultType.ABORT
 
 
-@pytest.mark.usefixtures("mock_elgato_config_flow")
+@pytest.mark.usefixtures("mock_elgato")
 async def test_user_device_exists_abort(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -151,7 +141,7 @@ async def test_user_device_exists_abort(
     assert result.get("reason") == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_elgato_config_flow")
+@pytest.mark.usefixtures("mock_elgato")
 async def test_zeroconf_device_exists_abort(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -161,8 +151,8 @@ async def test_zeroconf_device_exists_abort(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=9123,
@@ -182,8 +172,8 @@ async def test_zeroconf_device_exists_abort(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.2",
-            addresses=["127.0.0.2"],
+            ip_address=ip_address("127.0.0.2"),
+            ip_addresses=[ip_address("127.0.0.2")],
             hostname="mock_hostname",
             name="mock_name",
             port=9123,
@@ -201,17 +191,18 @@ async def test_zeroconf_device_exists_abort(
 
 async def test_zeroconf_during_onboarding(
     hass: HomeAssistant,
-    mock_elgato_config_flow: MagicMock,
+    mock_elgato: MagicMock,
     mock_setup_entry: AsyncMock,
     mock_onboarding: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the zeroconf creates an entry during onboarding."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="example.local.",
             name="mock_name",
             port=9123,
@@ -221,15 +212,8 @@ async def test_zeroconf_during_onboarding(
     )
 
     assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "CN11A1A00001"
-    assert result.get("data") == {
-        CONF_HOST: "127.0.0.1",
-        CONF_MAC: "AA:BB:CC:DD:EE:FF",
-        CONF_PORT: 9123,
-    }
-    assert "result" in result
-    assert result["result"].unique_id == "CN11A1A00001"
+    assert result == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_elgato_config_flow.info.mock_calls) == 1
+    assert len(mock_elgato.info.mock_calls) == 1
     assert len(mock_onboarding.mock_calls) == 1

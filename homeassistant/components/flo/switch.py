@@ -68,15 +68,12 @@ async def async_setup_entry(
 class FloSwitch(FloEntity, SwitchEntity):
     """Switch class for the Flo by Moen valve."""
 
+    _attr_translation_key = "shutoff_valve"
+
     def __init__(self, device: FloDeviceDataUpdateCoordinator) -> None:
         """Initialize the Flo switch."""
-        super().__init__("shutoff_valve", "Shutoff valve", device)
-        self._state = self._device.last_known_valve_state == "open"
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if the valve is open."""
-        return self._state
+        super().__init__("shutoff_valve", device)
+        self._attr_is_on = device.last_known_valve_state == "open"
 
     @property
     def icon(self):
@@ -88,21 +85,22 @@ class FloSwitch(FloEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Open the valve."""
         await self._device.api_client.device.open_valve(self._device.id)
-        self._state = True
+        self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Close the valve."""
         await self._device.api_client.device.close_valve(self._device.id)
-        self._state = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
     @callback
     def async_update_state(self) -> None:
         """Retrieve the latest valve state and update the state machine."""
-        self._state = self._device.last_known_valve_state == "open"
+        self._attr_is_on = self._device.last_known_valve_state == "open"
         self.async_write_ha_state()
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(self._device.async_add_listener(self.async_update_state))

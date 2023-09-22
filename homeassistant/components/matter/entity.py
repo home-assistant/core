@@ -7,91 +7,102 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from matter_server.common.models.device_type_instance import MatterDeviceTypeInstance
-from matter_server.common.models.events import EventType
-from matter_server.common.models.node_device import AbstractMatterNodeDevice
-from matter_server.common.models.server_information import ServerInfo
+from chip.clusters.Objects import ClusterAttributeDescriptor, NullValue
+from matter_server.common.helpers.util import create_attribute_path
+from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
-from .helpers import get_device_id, get_operational_instance_id
+from .helpers import get_device_id
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
-    from matter_server.common.models.node import MatterAttribute
+    from matter_server.client.models.node import MatterEndpoint
+
+    from .discovery import MatterEntityInfo
 
 LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class MatterEntityDescription:
-    """Mixin to map a matter device to a Home Assistant entity."""
+class MatterEntityDescription(EntityDescription):
+    """Describe the Matter entity."""
 
-    entity_cls: type[MatterEntity]
-    subscribe_attributes: tuple
-
-
-@dataclass
-class MatterEntityDescriptionBaseClass(EntityDescription, MatterEntityDescription):
-    """For typing a base class that inherits from both entity descriptions."""
+    # convert the value from the primary attribute to the value used by HA
+    measurement_to_ha: Callable[[Any], Any] | None = None
 
 
 class MatterEntity(Entity):
     """Entity class for Matter devices."""
 
-    entity_description: MatterEntityDescriptionBaseClass
     _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
         self,
         matter_client: MatterClient,
-        node_device: AbstractMatterNodeDevice,
-        device_type_instance: MatterDeviceTypeInstance,
-        entity_description: MatterEntityDescriptionBaseClass,
+        endpoint: MatterEndpoint,
+        entity_info: MatterEntityInfo,
     ) -> None:
         """Initialize the entity."""
         self.matter_client = matter_client
-        self._node_device = node_device
-        self._device_type_instance = device_type_instance
-        self.entity_description = entity_description
+        self._endpoint = endpoint
+        self._entity_info = entity_info
+        self.entity_description = entity_info.entity_description
         self._unsubscribes: list[Callable] = []
         # for fast lookups we create a mapping to the attribute paths
-        # The server info is set when the client connects to the server.
         self._attributes_map: dict[type, str] = {}
-        server_info = cast(ServerInfo, self.matter_client.server_info)
+        # The server info is set when the client connects to the server.
+        server_info = cast(ServerInfoMessage, self.matter_client.server_info)
         # create unique_id based on "Operational Instance Name" and endpoint/device type
+        node_device_id = get_device_id(server_info, endpoint)
         self._attr_unique_id = (
-            f"{get_operational_instance_id(server_info, self._node_device.node())}-"
-            f"{device_type_instance.endpoint}-"
-            f"{device_type_instance.device_type.device_type}"
+            f"{node_device_id}-"
+            f"{endpoint.endpoint_id}-"
+            f"{entity_info.entity_description.key}-"
+            f"{entity_info.primary_attribute.cluster_id}-"
+            f"{entity_info.primary_attribute.attribute_id}"
         )
-        node_device_id = get_device_id(server_info, node_device)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
+        self._attr_available = self._endpoint.node.available
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
 
         # Subscribe to attribute updates.
-        for attr_cls in self.entity_description.subscribe_attributes:
-            if matter_attr := self.get_matter_attribute(attr_cls):
-                self._attributes_map[attr_cls] = matter_attr.path
-                self._unsubscribes.append(
-                    self.matter_client.subscribe(
-                        self._on_matter_event,
-                        EventType.ATTRIBUTE_UPDATED,
-                        self._device_type_instance.node.node_id,
-                        matter_attr.path,
-                    )
-                )
+        sub_paths: list[str] = []
+        for attr_cls in self._entity_info.attributes_to_watch:
+            attr_path = self.get_matter_attribute_path(attr_cls)
+            if attr_path in sub_paths:
+                # prevent duplicate subscriptions
                 continue
-            # not sure if this can happen, but just in case log it.
-            LOGGER.warning("Attribute not found on device: %s", attr_cls)
+            self._attributes_map[attr_cls] = attr_path
+            sub_paths.append(attr_path)
+            self._unsubscribes.append(
+                self.matter_client.subscribe_events(
+                    callback=self._on_matter_event,
+                    event_filter=EventType.ATTRIBUTE_UPDATED,
+                    node_filter=self._endpoint.node.node_id,
+                    attr_path_filter=attr_path,
+                )
+            )
+        await self.matter_client.subscribe_attribute(
+            self._endpoint.node.node_id, sub_paths
+        )
+        # subscribe to node (availability changes)
+        self._unsubscribes.append(
+            self.matter_client.subscribe_events(
+                callback=self._on_matter_event,
+                event_filter=EventType.NODE_UPDATED,
+                node_filter=self._endpoint.node.node_id,
+            )
+        )
 
         # make sure to update the attributes once
         self._update_from_device()
@@ -104,6 +115,7 @@ class MatterEntity(Entity):
     @callback
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:
         """Call on update."""
+        self._attr_available = self._endpoint.node.available
         self._update_from_device()
         self.async_write_ha_state()
 
@@ -113,13 +125,20 @@ class MatterEntity(Entity):
         """Update data from Matter device."""
 
     @callback
-    def get_matter_attribute(self, attribute: type) -> MatterAttribute | None:
-        """Lookup MatterAttribute on device by providing the attribute class."""
-        return next(
-            (
-                x
-                for x in self._device_type_instance.attributes
-                if x.attribute_type == attribute
-            ),
-            None,
+    def get_matter_attribute_value(
+        self, attribute: type[ClusterAttributeDescriptor], null_as_none: bool = True
+    ) -> Any:
+        """Get current value for given attribute."""
+        value = self._endpoint.get_attribute_value(None, attribute)
+        if null_as_none and value == NullValue:
+            return None
+        return value
+
+    @callback
+    def get_matter_attribute_path(
+        self, attribute: type[ClusterAttributeDescriptor]
+    ) -> str:
+        """Return AttributePath by providing the endpoint and Attribute class."""
+        return create_attribute_path(
+            self._endpoint.endpoint_id, attribute.cluster_id, attribute.attribute_id
         )

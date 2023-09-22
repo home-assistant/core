@@ -1,5 +1,6 @@
 """The blueprint integration."""
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
@@ -14,6 +15,8 @@ from .errors import (  # noqa: F401
 )
 from .models import Blueprint, BlueprintInputs, DomainBlueprints  # noqa: F401
 from .schemas import is_blueprint_instance_config  # noqa: F401
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

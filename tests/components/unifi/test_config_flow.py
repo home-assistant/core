@@ -21,7 +21,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -74,8 +74,14 @@ DEVICES = [
 ]
 
 WLANS = [
-    {"name": "SSID 1"},
-    {"name": "SSID 2", "name_combine_enabled": False, "name_combine_suffix": "_IOT"},
+    {"_id": "1", "name": "SSID 1"},
+    {
+        "_id": "2",
+        "name": "SSID 2",
+        "name_combine_enabled": False,
+        "name_combine_suffix": "_IOT",
+    },
+    {"_id": "3", "name": "SSID 4", "name_combine_enabled": False},
 ]
 
 DPI_GROUPS = [
@@ -87,7 +93,9 @@ DPI_GROUPS = [
 ]
 
 
-async def test_flow_works(hass, aioclient_mock, mock_discovery):
+async def test_flow_works(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_discovery
+) -> None:
     """Test config flow."""
     mock_discovery.return_value = "1"
     result = await hass.config_entries.flow.async_init(
@@ -146,7 +154,9 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
     }
 
 
-async def test_flow_works_negative_discovery(hass, aioclient_mock, mock_discovery):
+async def test_flow_works_negative_discovery(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_discovery
+) -> None:
     """Test config flow with a negative outcome of async_discovery_unifi."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -393,7 +403,7 @@ async def test_reauth_flow_update_configuration(
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     aioclient_mock.clear_requests()
 
@@ -455,17 +465,21 @@ async def test_advanced_option_flow(
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "device_tracker"
     assert not result["last_step"]
-    assert set(
-        result["data_schema"].schema[CONF_SSID_FILTER].options.keys()
-    ).intersection(("SSID 1", "SSID 2", "SSID 2_IOT", "SSID 3"))
-
+    assert list(result["data_schema"].schema[CONF_SSID_FILTER].options.keys()) == [
+        "",
+        "SSID 1",
+        "SSID 2",
+        "SSID 2_IOT",
+        "SSID 3",
+        "SSID 4",
+    ]
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_WIRED_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
-            CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3"],
+            CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
             CONF_DETECTION_TIME: 100,
         },
     )
@@ -499,7 +513,7 @@ async def test_advanced_option_flow(
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_WIRED_CLIENTS: False,
         CONF_TRACK_DEVICES: False,
-        CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3"],
+        CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
         CONF_DETECTION_TIME: 100,
         CONF_IGNORE_WIRED_BUG: False,
         CONF_DPI_RESTRICTIONS: False,

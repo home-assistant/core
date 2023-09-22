@@ -23,7 +23,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FIBARO_DEVICES, FibaroDevice
+from . import FibaroController, FibaroDevice
 from .const import DOMAIN
 
 PARALLEL_UPDATES = 2
@@ -56,13 +56,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Perform the setup for Fibaro controller devices."""
+    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            FibaroLight(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
-                Platform.LIGHT
-            ]
-        ],
+        [FibaroLight(device) for device in controller.fibaro_devices[Platform.LIGHT]],
         True,
     )
 
@@ -176,6 +172,7 @@ class FibaroLight(FibaroDevice, LightEntity):
 
     def _update(self):
         """Really update the state."""
+        super().update()
         # Brightness handling
         if brightness_supported(self.supported_color_modes):
             self._attr_brightness = scaleto255(self.fibaro_device.value.int_value())

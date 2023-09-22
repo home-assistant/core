@@ -1,7 +1,6 @@
 """Provide functionality to interact with Cast devices on the network."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime
@@ -24,7 +23,6 @@ from pychromecast.socket_client import (
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_DISCONNECTED,
 )
-import voluptuous as vol
 import yarl
 
 from homeassistant.components import media_source, zeroconf
@@ -48,9 +46,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import NoURLAvailableError, get_url, is_hass_url
 import homeassistant.util.dt as dt_util
@@ -83,15 +80,6 @@ _LOGGER = logging.getLogger(__name__)
 APP_IDS_UNRELIABLE_MEDIA_INFO = ("Netflix",)
 
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
-
-ENTITY_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_UUID): cv.string,
-            vol.Optional(CONF_IGNORE_CEC): vol.All(cv.ensure_list, [cv.string]),
-        }
-    ),
-)
 
 
 @callback
@@ -186,10 +174,11 @@ class CastDevice:
             self.hass, SIGNAL_CAST_REMOVED, self._async_cast_removed
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
-        # asyncio.create_task is used to avoid delaying startup wrapup if the device
+        # async_create_background_task is used to avoid delaying startup wrapup if the device
         # is discovered already during startup but then fails to respond
-        asyncio.create_task(
-            async_create_catching_coro(self._async_connect_to_chromecast())
+        self.hass.async_create_background_task(
+            async_create_catching_coro(self._async_connect_to_chromecast()),
+            "cast-connect",
         )
 
     async def _async_tear_down(self) -> None:
@@ -278,6 +267,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     """Representation of a Cast device on the network."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
     _attr_media_image_remotely_accessible = True
     _mz_only = False
@@ -372,15 +362,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         ):
             external_url = None
             internal_url = None
-            tts_base_url = None
             url_description = ""
-            if "tts" in self.hass.config.components:
-                # pylint: disable-next=[import-outside-toplevel]
-                from homeassistant.components import tts
-
-                with suppress(KeyError):  # base_url not configured
-                    tts_base_url = tts.get_base_url(self.hass)
-
             with suppress(NoURLAvailableError):  # external_url not configured
                 external_url = get_url(self.hass, allow_internal=False)
 
@@ -388,8 +370,6 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 internal_url = get_url(self.hass, allow_external=False)
 
             if media_status.content_id:
-                if tts_base_url and media_status.content_id.startswith(tts_base_url):
-                    url_description = f" from tts.base_url ({tts_base_url})"
                 if external_url and media_status.content_id.startswith(external_url):
                     url_description = f" from external_url ({external_url})"
                 if internal_url and media_status.content_id.startswith(internal_url):
@@ -819,7 +799,15 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             return MediaType.MOVIE
         if media_status.media_is_musictrack:
             return MediaType.MUSIC
-        return None
+
+        chromecast = self._get_chromecast()
+        if chromecast.cast_type in (
+            pychromecast.const.CAST_TYPE_AUDIO,
+            pychromecast.const.CAST_TYPE_GROUP,
+        ):
+            return MediaType.MUSIC
+
+        return MediaType.VIDEO
 
     @property
     def media_duration(self):

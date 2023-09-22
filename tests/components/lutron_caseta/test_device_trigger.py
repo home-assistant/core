@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -39,7 +40,6 @@ from . import MockBridge
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
@@ -165,7 +165,7 @@ async def test_get_triggers(hass: HomeAssistant) -> None:
         hass, DeviceAutomationType.TRIGGER, device_id
     )
 
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_get_triggers_for_invalid_device_id(

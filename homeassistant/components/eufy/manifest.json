@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/eufy",
   "iot_class": "local_polling",
   "loggers": ["lakeside"],
-  "requirements": ["lakeside==0.12"]
+  "requirements": ["lakeside==0.13"]
 }

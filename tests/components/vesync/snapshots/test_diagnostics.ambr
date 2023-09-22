@@ -1,0 +1,272 @@
+# serializer version: 1
+# name: test_async_get_config_entry_diagnostics__no_devices
+  dict({
+    'devices': dict({
+      'bulbs': list([
+      ]),
+      'fans': list([
+      ]),
+      'outlets': list([
+      ]),
+      'switches': list([
+      ]),
+    }),
+    'vesync': dict({
+      'bulb_count': 0,
+      'fan_count': 0,
+      'outlets_count': 0,
+      'switch_count': 0,
+      'timezone': 'US/Pacific',
+    }),
+  })
+# ---
+# name: test_async_get_config_entry_diagnostics__single_humidifier
+  dict({
+    'devices': dict({
+      'bulbs': list([
+      ]),
+      'fans': list([
+        dict({
+          '_api_modes': list([
+            'getHumidifierStatus',
+            'setAutomaticStop',
+            'setSwitch',
+            'setNightLightBrightness',
+            'setVirtualLevel',
+            'setTargetHumidity',
+            'setHumidityMode',
+            'setDisplay',
+            'setLevel',
+          ]),
+          'cid': 'abcdefghabcdefghabcdefghabcdefgh',
+          'config': dict({
+            'auto_target_humidity': 60,
+            'automatic_stop': True,
+            'display': True,
+          }),
+          'config_dict': dict({
+            'features': list([
+              'warm_mist',
+              'nightlight',
+            ]),
+            'mist_levels': list([
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+            ]),
+            'mist_modes': list([
+              'humidity',
+              'sleep',
+              'manual',
+            ]),
+            'models': list([
+              'LUH-A602S-WUSR',
+              'LUH-A602S-WUS',
+              'LUH-A602S-WEUR',
+              'LUH-A602S-WEU',
+              'LUH-A602S-WJP',
+            ]),
+            'module': 'VeSyncHumid200300S',
+            'warm_mist_levels': list([
+              0,
+              1,
+              2,
+              3,
+            ]),
+          }),
+          'config_module': 'WFON_AHM_LUH-A602S-WUS_US',
+          'connection_status': 'online',
+          'connection_type': 'WiFi+BTOnboarding+BTNotify',
+          'current_firm_version': None,
+          'details': dict({
+            'automatic_stop_reach_target': True,
+            'display': False,
+            'humidity': 35,
+            'humidity_high': False,
+            'mist_level': 3,
+            'mist_virtual_level': 9,
+            'mode': 'humidity',
+            'night_light_brightness': 0,
+            'warm_mist_enabled': False,
+            'warm_mist_level': 0,
+            'water_lacks': False,
+            'water_tank_lifted': False,
+          }),
+          'device_image': 'https://image.vesync.com/defaultImages/LV_600S_Series/icon_lv600s_humidifier_160.png',
+          'device_name': 'Humidifier',
+          'device_status': 'off',
+          'device_type': 'LUH-A602S-WUS',
+          'enabled': False,
+          'extension': None,
+          'features': list([
+            'warm_mist',
+            'nightlight',
+          ]),
+          'mac_id': '**REDACTED**',
+          'manager': '**REDACTED**',
+          'mist_levels': list([
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+          ]),
+          'mist_modes': list([
+            'humidity',
+            'sleep',
+            'manual',
+          ]),
+          'mode': None,
+          'night_light': True,
+          'speed': None,
+          'sub_device_no': None,
+          'type': 'wifi-air',
+          'uuid': '**REDACTED**',
+          'warm_mist_feature': True,
+          'warm_mist_levels': list([
+            0,
+            1,
+            2,
+            3,
+          ]),
+        }),
+      ]),
+      'outlets': list([
+      ]),
+      'switches': list([
+      ]),
+    }),
+    'vesync': dict({
+      'bulb_count': 0,
+      'fan_count': 1,
+      'outlets_count': 0,
+      'switch_count': 0,
+      'timezone': 'US/Pacific',
+    }),
+  })
+# ---
+# name: test_async_get_device_diagnostics__single_fan
+  dict({
+    'cid': 'abcdefghabcdefghabcdefghabcdefgh',
+    'config': dict({
+    }),
+    'config_module': 'WFON_AHM_LV-PUR131S_US',
+    'connection_status': 'unknown',
+    'connection_type': 'WiFi+BTOnboarding+BTNotify',
+    'current_firm_version': None,
+    'details': dict({
+      'active_time': 0,
+      'air_quality': 'unknown',
+      'filter_life': dict({
+      }),
+      'level': 0,
+      'screen_status': 'unknown',
+    }),
+    'device_image': '',
+    'device_name': 'Fan',
+    'device_status': 'unknown',
+    'device_type': 'LV-PUR131S',
+    'extension': None,
+    'home_assistant': dict({
+      'disabled': False,
+      'disabled_by': None,
+      'entities': list([
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'domain': 'fan',
+          'entity_category': None,
+          'entity_id': 'fan.fan',
+          'icon': None,
+          'name': None,
+          'original_device_class': None,
+          'original_icon': None,
+          'original_name': None,
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Fan',
+              'preset_modes': list([
+                'auto',
+                'sleep',
+              ]),
+              'supported_features': 9,
+            }),
+            'entity_id': 'fan.fan',
+            'last_changed': str,
+            'last_updated': str,
+            'state': 'unavailable',
+          }),
+          'unit_of_measurement': None,
+        }),
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'domain': 'sensor',
+          'entity_category': None,
+          'entity_id': 'sensor.fan_air_quality',
+          'icon': None,
+          'name': None,
+          'original_device_class': None,
+          'original_icon': None,
+          'original_name': 'Air quality',
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Fan Air quality',
+            }),
+            'entity_id': 'sensor.fan_air_quality',
+            'last_changed': str,
+            'last_updated': str,
+            'state': 'unavailable',
+          }),
+          'unit_of_measurement': None,
+        }),
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'domain': 'sensor',
+          'entity_category': 'diagnostic',
+          'entity_id': 'sensor.fan_filter_lifetime',
+          'icon': None,
+          'name': None,
+          'original_device_class': None,
+          'original_icon': None,
+          'original_name': 'Filter lifetime',
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Fan Filter lifetime',
+              'state_class': 'measurement',
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.fan_filter_lifetime',
+            'last_changed': str,
+            'last_updated': str,
+            'state': 'unavailable',
+          }),
+          'unit_of_measurement': '%',
+        }),
+      ]),
+      'name': 'Fan',
+      'name_by_user': None,
+    }),
+    'mac_id': '**REDACTED**',
+    'manager': '**REDACTED**',
+    'mode': None,
+    'speed': None,
+    'sub_device_no': None,
+    'type': 'wifi-air',
+    'uuid': '**REDACTED**',
+  })
+# ---

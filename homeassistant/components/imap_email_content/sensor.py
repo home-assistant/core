@@ -26,17 +26,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.ssl import client_context
 
+from .const import (
+    ATTR_BODY,
+    ATTR_FROM,
+    ATTR_SUBJECT,
+    CONF_FOLDER,
+    CONF_SENDERS,
+    CONF_SERVER,
+    DEFAULT_PORT,
+)
+from .repairs import async_process_issue
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_SERVER = "server"
-CONF_SENDERS = "senders"
-CONF_FOLDER = "folder"
-
-ATTR_FROM = "from"
-ATTR_BODY = "body"
-ATTR_SUBJECT = "subject"
-
-DEFAULT_PORT = 993
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -79,6 +80,8 @@ def setup_platform(
         value_template,
     )
 
+    hass.add_job(async_process_issue, hass, config)
+
     if sensor.connected:
         add_entities([sensor], True)
 
@@ -95,8 +98,24 @@ class EmailReader:
         self._folder = folder
         self._verify_ssl = verify_ssl
         self._last_id = None
+        self._last_message = None
         self._unread_ids = deque([])
         self.connection = None
+
+    @property
+    def last_id(self) -> int | None:
+        """Return last email uid that was processed."""
+        return self._last_id
+
+    @property
+    def last_unread_id(self) -> int | None:
+        """Return last email uid received."""
+        # We assume the last id in the list is the last unread id
+        # We cannot know if that is the newest one, because it could arrive later
+        # https://stackoverflow.com/questions/12409862/python-imap-the-order-of-uids
+        if self._unread_ids:
+            return int(self._unread_ids[-1])
+        return self._last_id
 
     def connect(self):
         """Login and setup the connection."""
@@ -128,21 +147,21 @@ class EmailReader:
         try:
             self.connection.select(self._folder, readonly=True)
 
-            if not self._unread_ids:
-                search = f"SINCE {datetime.date.today():%d-%b-%Y}"
-                if self._last_id is not None:
-                    search = f"UID {self._last_id}:*"
+            if self._last_id is None:
+                # search for today and yesterday
+                time_from = datetime.datetime.now() - datetime.timedelta(days=1)
+                search = f"SINCE {time_from:%d-%b-%Y}"
+            else:
+                search = f"UID {self._last_id}:*"
 
-                _, data = self.connection.uid("search", None, search)
-                self._unread_ids = deque(data[0].split())
-
+            _, data = self.connection.uid("search", None, search)
+            self._unread_ids = deque(data[0].split())
             while self._unread_ids:
                 message_uid = self._unread_ids.popleft()
                 if self._last_id is None or int(message_uid) > self._last_id:
                     self._last_id = int(message_uid)
-                    return self._fetch_message(message_uid)
-
-            return self._fetch_message(str(self._last_id))
+                    self._last_message = self._fetch_message(message_uid)
+                    return self._last_message
 
         except imaplib.IMAP4.error:
             _LOGGER.info("Connection to %s lost, attempting to reconnect", self._server)
@@ -254,22 +273,30 @@ class EmailContentSensor(SensorEntity):
     def update(self) -> None:
         """Read emails and publish state change."""
         email_message = self._email_reader.read_next()
+        while (
+            self._last_id is None or self._last_id != self._email_reader.last_unread_id
+        ):
+            if email_message is None:
+                self._message = None
+                self._state_attributes = {}
+                return
 
-        if email_message is None:
-            self._message = None
-            self._state_attributes = {}
-            return
+            self._last_id = self._email_reader.last_id
 
-        if self.sender_allowed(email_message):
-            message = EmailContentSensor.get_msg_subject(email_message)
+            if self.sender_allowed(email_message):
+                message = EmailContentSensor.get_msg_subject(email_message)
 
-            if self._value_template is not None:
-                message = self.render_template(email_message)
+                if self._value_template is not None:
+                    message = self.render_template(email_message)
 
-            self._message = message
-            self._state_attributes = {
-                ATTR_FROM: EmailContentSensor.get_msg_sender(email_message),
-                ATTR_SUBJECT: EmailContentSensor.get_msg_subject(email_message),
-                ATTR_DATE: email_message["Date"],
-                ATTR_BODY: EmailContentSensor.get_msg_text(email_message),
-            }
+                self._message = message
+                self._state_attributes = {
+                    ATTR_FROM: EmailContentSensor.get_msg_sender(email_message),
+                    ATTR_SUBJECT: EmailContentSensor.get_msg_subject(email_message),
+                    ATTR_DATE: email_message["Date"],
+                    ATTR_BODY: EmailContentSensor.get_msg_text(email_message),
+                }
+
+            if self._last_id == self._email_reader.last_unread_id:
+                break
+            email_message = self._email_reader.read_next()

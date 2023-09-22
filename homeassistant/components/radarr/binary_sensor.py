@@ -18,7 +18,7 @@ from .const import DOMAIN, HEALTH_ISSUES
 
 BINARY_SENSOR_TYPE = BinarySensorEntityDescription(
     key="health",
-    name="Health",
+    translation_key="health",
     entity_category=EntityCategory.DIAGNOSTIC,
     device_class=BinarySensorDeviceClass.PROBLEM,
 )

@@ -26,11 +26,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VizioAppsDataUpdateCoordinator
@@ -137,7 +137,7 @@ class VizioDevice(MediaPlayerEntity):
         device: VizioAsync,
         name: str,
         device_class: MediaPlayerDeviceClass,
-        apps_coordinator: VizioAppsDataUpdateCoordinator,
+        apps_coordinator: VizioAppsDataUpdateCoordinator | None,
     ) -> None:
         """Initialize Vizio device."""
         self._config_entry = config_entry
@@ -330,17 +330,21 @@ class VizioDevice(MediaPlayerEntity):
             )
         )
 
+        if not self._apps_coordinator:
+            return
+
         # Register callback for app list updates if device is a TV
         @callback
-        def apps_list_update():
+        def apps_list_update() -> None:
             """Update list of all apps."""
+            if not self._apps_coordinator:
+                return
             self._all_apps = self._apps_coordinator.data
             self.async_write_ha_state()
 
-        if self._attr_device_class == MediaPlayerDeviceClass.TV:
-            self.async_on_remove(
-                self._apps_coordinator.async_add_listener(apps_list_update)
-            )
+        self.async_on_remove(
+            self._apps_coordinator.async_add_listener(apps_list_update)
+        )
 
     @property
     def source(self) -> str | None:

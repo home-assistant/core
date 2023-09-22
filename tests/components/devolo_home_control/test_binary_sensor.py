@@ -2,17 +2,12 @@
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    EntityCategory,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
 from .mocks import (
@@ -24,7 +19,9 @@ from .mocks import (
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_binary_sensor(hass: HomeAssistant) -> None:
+async def test_binary_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test setup and state change of a binary sensor device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockBinarySensor()
@@ -37,18 +34,12 @@ async def test_binary_sensor(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get(f"{DOMAIN}.test_door")
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Door"
+    assert state == snapshot
+    assert entity_registry.async_get(f"{DOMAIN}.test_door") == snapshot
 
     state = hass.states.get(f"{DOMAIN}.test_overload")
-    assert state is not None
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Overload"
-    er = entity_registry.async_get(hass)
-    assert (
-        er.async_get(f"{DOMAIN}.test_overload").entity_category
-        == EntityCategory.DIAGNOSTIC
-    )
+    assert state == snapshot
+    assert entity_registry.async_get(f"{DOMAIN}.test_overload") == snapshot
 
     # Emulate websocket message: sensor turned on
     test_gateway.publisher.dispatch("Test", ("Test", True))
@@ -63,7 +54,9 @@ async def test_binary_sensor(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_remote_control(hass: HomeAssistant) -> None:
+async def test_remote_control(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test setup and state change of a remote control device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockRemoteControl()
@@ -76,9 +69,8 @@ async def test_remote_control(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get(f"{DOMAIN}.test_button_1")
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Button 1"
+    assert state == snapshot
+    assert entity_registry.async_get(f"{DOMAIN}.test_button_1") == snapshot
 
     # Emulate websocket message: button pressed
     test_gateway.publisher.dispatch("Test", ("Test", 1))

@@ -6,7 +6,6 @@ import json
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
 import voluptuous as vol
@@ -42,7 +41,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            async with timeout(15):
+            async with asyncio.timeout(15):
                 device_info = await fully.getDeviceInfo()
         except (
             ClientConnectorError,
@@ -57,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
             return None
 
-        await self.async_set_unique_id(device_info["deviceID"])
+        await self.async_set_unique_id(device_info["deviceID"], raise_on_progress=False)
         self._abort_if_unique_id_configured(updates=user_input)
         return self.async_create_entry(
             title=device_info["deviceName"],

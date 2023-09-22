@@ -24,7 +24,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -33,11 +33,13 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.service import remove_entity_service_fields
 from homeassistant.helpers.typing import ConfigType, StateType
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CHANGED_BY = "changed_by"
+CONF_DEFAULT_CODE = "default_code"
 
 DOMAIN = "lock"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -87,32 +89,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_lock(entity: LockEntity, service_call: ServiceCall) -> None:
     """Lock the lock."""
-    code: str = service_call.data.get(ATTR_CODE, "")
+    code: str = service_call.data.get(
+        ATTR_CODE, entity._lock_option_default_code  # pylint: disable=protected-access
+    )
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):
         raise ValueError(
             f"Code '{code}' for locking {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
-    await entity.async_lock(**service_call.data)
+    await entity.async_lock(**remove_entity_service_fields(service_call))
 
 
 async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
     """Unlock the lock."""
-    code: str = service_call.data.get(ATTR_CODE, "")
+    code: str = service_call.data.get(
+        ATTR_CODE, entity._lock_option_default_code  # pylint: disable=protected-access
+    )
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):
         raise ValueError(
             f"Code '{code}' for unlocking {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
-    await entity.async_unlock(**service_call.data)
+    await entity.async_unlock(**remove_entity_service_fields(service_call))
 
 
 async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
     """Open the door latch."""
-    code: str = service_call.data.get(ATTR_CODE, "")
+    code: str = service_call.data.get(
+        ATTR_CODE, entity._lock_option_default_code  # pylint: disable=protected-access
+    )
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):
         raise ValueError(
             f"Code '{code}' for opening {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
-    await entity.async_open(**service_call.data)
+    await entity.async_open(**remove_entity_service_fields(service_call))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -144,6 +152,7 @@ class LockEntity(Entity):
     _attr_is_jammed: bool | None = None
     _attr_state: None = None
     _attr_supported_features: LockEntityFeature = LockEntityFeature(0)
+    _lock_option_default_code: str = ""
     __code_format_cmp: re.Pattern[str] | None = None
 
     @property
@@ -242,3 +251,34 @@ class LockEntity(Entity):
     def supported_features(self) -> LockEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the sensor entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if not self.registry_entry:
+            return
+        self._async_read_entity_options()
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        self._async_read_entity_options()
+
+    @callback
+    def _async_read_entity_options(self) -> None:
+        """Read entity options from entity registry.
+
+        Called when the entity registry entry has been updated and before the lock is
+        added to the state machine.
+        """
+        assert self.registry_entry
+        if (lock_options := self.registry_entry.options.get(DOMAIN)) and (
+            custom_default_lock_code := lock_options.get(CONF_DEFAULT_CODE)
+        ):
+            if self.code_format_cmp and self.code_format_cmp.match(
+                custom_default_lock_code
+            ):
+                self._lock_option_default_code = custom_default_lock_code
+            return
+
+        self._lock_option_default_code = ""

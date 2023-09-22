@@ -3,10 +3,11 @@ from typing import Any
 
 from pylitejet import LiteJet, LiteJetError
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -35,14 +36,26 @@ class LiteJetSwitch(SwitchEntity):
     """Representation of a single LiteJet switch."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_entity_registry_enabled_default = False
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
-    def __init__(self, entry_id, lj, i, name):  # pylint: disable=invalid-name
+    def __init__(self, entry_id: str, system: LiteJet, i: int, name: str) -> None:
         """Initialize a LiteJet switch."""
-        self._entry_id = entry_id
-        self._lj = lj
+        self._lj = system
         self._index = i
         self._attr_is_on = False
+        self._attr_unique_id = f"{entry_id}_{i}"
         self._attr_name = name
+
+        # Keypad #1 has switches 1-6, #2 has 7-12, ...
+        keypad_number = int((i - 1) / 6) + 1
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry_id}_keypad_{keypad_number}")},
+            name=f"Keypad #{keypad_number}",
+            manufacturer="Centralite",
+            via_device=(DOMAIN, f"{entry_id}_mcp"),
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
@@ -56,25 +69,20 @@ class LiteJetSwitch(SwitchEntity):
         self._lj.unsubscribe(self._on_switch_released)
         self._lj.unsubscribe(self._on_connected_changed)
 
-    def _on_switch_pressed(self):
+    def _on_switch_pressed(self) -> None:
         self._attr_is_on = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def _on_switch_released(self):
+    def _on_switch_released(self) -> None:
         self._attr_is_on = False
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _on_connected_changed(self, connected: bool, reason: str) -> None:
         self._attr_available = connected
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
-    def unique_id(self):
-        """Return a unique identifier for this switch."""
-        return f"{self._entry_id}_{self._index}"
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device-specific state attributes."""
         return {ATTR_NUMBER: self._index}
 
@@ -91,8 +99,3 @@ class LiteJetSwitch(SwitchEntity):
             await self._lj.release_switch(self._index)
         except LiteJetError as exc:
             raise HomeAssistantError() from exc
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Switches are only enabled by explicit user choice."""
-        return False

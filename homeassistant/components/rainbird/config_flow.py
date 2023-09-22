@@ -6,7 +6,6 @@ import asyncio
 import logging
 from typing import Any
 
-import async_timeout
 from pyrainbird.async_client import (
     AsyncRainbirdClient,
     AsyncRainbirdController,
@@ -16,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_FRIENDLY_NAME, CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, selector
@@ -24,9 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     ATTR_DURATION,
-    CONF_IMPORTED_NAMES,
     CONF_SERIAL_NUMBER,
-    CONF_ZONES,
     DEFAULT_TRIGGER_TIME_MINUTES,
     DOMAIN,
     TIMEOUT_SECONDS,
@@ -108,7 +105,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         )
         try:
-            async with async_timeout.timeout(TIMEOUT_SECONDS):
+            async with asyncio.timeout(TIMEOUT_SECONDS):
                 return await controller.get_serial_number()
         except asyncio.TimeoutError as err:
             raise ConfigFlowError(
@@ -120,36 +117,6 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 f"Error connecting to Rain Bird controller: {str(err)}",
                 "cannot_connect",
             ) from err
-
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
-        try:
-            serial_number = await self._test_connection(
-                config[CONF_HOST], config[CONF_PASSWORD]
-            )
-        except ConfigFlowError as err:
-            _LOGGER.error("Error during config import: %s", err)
-            return self.async_abort(reason=err.error_code)
-
-        data = {
-            CONF_HOST: config[CONF_HOST],
-            CONF_PASSWORD: config[CONF_PASSWORD],
-            CONF_SERIAL_NUMBER: serial_number,
-        }
-        names: dict[str, str] = {}
-        for zone, zone_config in config.get(CONF_ZONES, {}).items():
-            if name := zone_config.get(CONF_FRIENDLY_NAME):
-                names[str(zone)] = name
-        if names:
-            data[CONF_IMPORTED_NAMES] = names
-        return await self.async_finish(
-            serial_number,
-            data=data,
-            options={
-                ATTR_DURATION: config.get(ATTR_DURATION, DEFAULT_TRIGGER_TIME_MINUTES),
-            },
-        )
 
     async def async_finish(
         self,

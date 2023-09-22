@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, call, patch
 
 import pytest
 import zhaquirks.ikea.starkvind
+from zigpy.device import Device
 from zigpy.exceptions import ZigbeeException
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general, hvac
@@ -17,8 +18,10 @@ from homeassistant.components.fan import (
     SERVICE_SET_PRESET_MODE,
     NotValidPresetModeError,
 )
+from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.discovery import GROUP_PROBE
 from homeassistant.components.zha.core.group import GroupMember
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.components.zha.fan import (
     PRESET_MODE_AUTO,
     PRESET_MODE_ON,
@@ -33,6 +36,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -41,7 +46,6 @@ from .common import (
     async_test_rejoin,
     async_wait_for_updates,
     find_entity_id,
-    get_zha_gateway,
     send_attributes_report,
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -159,12 +163,14 @@ async def device_fan_2(hass, zigpy_device_mock, zha_device_joined):
     return zha_device
 
 
-async def test_fan(hass, zha_device_joined_restored, zigpy_device):
+async def test_fan(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device
+) -> None:
     """Test ZHA fan platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints.get(1).fan
-    entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
+    entity_id = find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -189,26 +195,30 @@ async def test_fan(hass, zha_device_joined_restored, zigpy_device):
     # turn on from HA
     cluster.write_attributes.reset_mock()
     await async_turn_on(hass, entity_id)
-    assert len(cluster.write_attributes.mock_calls) == 1
-    assert cluster.write_attributes.call_args == call({"fan_mode": 2})
+    assert cluster.write_attributes.mock_calls == [
+        call({"fan_mode": 2}, manufacturer=None)
+    ]
 
     # turn off from HA
     cluster.write_attributes.reset_mock()
     await async_turn_off(hass, entity_id)
-    assert len(cluster.write_attributes.mock_calls) == 1
-    assert cluster.write_attributes.call_args == call({"fan_mode": 0})
+    assert cluster.write_attributes.mock_calls == [
+        call({"fan_mode": 0}, manufacturer=None)
+    ]
 
     # change speed from HA
     cluster.write_attributes.reset_mock()
     await async_set_percentage(hass, entity_id, percentage=100)
-    assert len(cluster.write_attributes.mock_calls) == 1
-    assert cluster.write_attributes.call_args == call({"fan_mode": 3})
+    assert cluster.write_attributes.mock_calls == [
+        call({"fan_mode": 3}, manufacturer=None)
+    ]
 
     # change preset_mode from HA
     cluster.write_attributes.reset_mock()
     await async_set_preset_mode(hass, entity_id, preset_mode=PRESET_MODE_ON)
-    assert len(cluster.write_attributes.mock_calls) == 1
-    assert cluster.write_attributes.call_args == call({"fan_mode": 4})
+    assert cluster.write_attributes.mock_calls == [
+        call({"fan_mode": 4}, manufacturer=None)
+    ]
 
     # set invalid preset_mode from HA
     cluster.write_attributes.reset_mock()
@@ -274,7 +284,9 @@ async def async_set_preset_mode(hass, entity_id, preset_mode=None):
     "homeassistant.components.zha.entity.DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY",
     new=0,
 )
-async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinator):
+async def test_zha_group_fan_entity(
+    hass: HomeAssistant, device_fan_1, device_fan_2, coordinator
+) -> None:
     """Test the fan entity for a ZHA group."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -387,8 +399,12 @@ async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinato
     new=0,
 )
 async def test_zha_group_fan_entity_failure_state(
-    hass, device_fan_1, device_fan_2, coordinator, caplog
-):
+    hass: HomeAssistant,
+    device_fan_1,
+    device_fan_2,
+    coordinator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the fan entity for a ZHA group when writing attributes generates an exception."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -434,12 +450,13 @@ async def test_zha_group_fan_entity_failure_state(
 
     # turn on from HA
     group_fan_cluster.write_attributes.reset_mock()
-    await async_turn_on(hass, entity_id)
+
+    with pytest.raises(HomeAssistantError):
+        await async_turn_on(hass, entity_id)
+
     await hass.async_block_till_done()
     assert len(group_fan_cluster.write_attributes.mock_calls) == 1
     assert group_fan_cluster.write_attributes.call_args[0][0] == {"fan_mode": 2}
-
-    assert "Could not set fan mode" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -453,20 +470,20 @@ async def test_zha_group_fan_entity_failure_state(
     ),
 )
 async def test_fan_init(
-    hass,
+    hass: HomeAssistant,
     zha_device_joined_restored,
     zigpy_device,
     plug_read,
     expected_state,
     expected_percentage,
-):
+) -> None:
     """Test ZHA fan platform."""
 
     cluster = zigpy_device.endpoints.get(1).fan
     cluster.PLUGGED_ATTR_READS = plug_read
 
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
+    entity_id = find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == expected_state
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == expected_percentage
@@ -474,17 +491,17 @@ async def test_fan_init(
 
 
 async def test_fan_update_entity(
-    hass,
+    hass: HomeAssistant,
     zha_device_joined_restored,
     zigpy_device,
-):
+) -> None:
     """Test ZHA fan platform."""
 
     cluster = zigpy_device.endpoints.get(1).fan
     cluster.PLUGGED_ATTR_READS = {"fan_mode": 0}
 
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
+    entity_id = find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_OFF
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 0
@@ -547,11 +564,15 @@ def zigpy_device_ikea(zigpy_device_mock):
     )
 
 
-async def test_fan_ikea(hass, zha_device_joined_restored, zigpy_device_ikea):
+async def test_fan_ikea(
+    hass: HomeAssistant,
+    zha_device_joined_restored: ZHADevice,
+    zigpy_device_ikea: Device,
+) -> None:
     """Test ZHA fan Ikea platform."""
     zha_device = await zha_device_joined_restored(zigpy_device_ikea)
     cluster = zigpy_device_ikea.endpoints.get(1).ikea_airpurifier
-    entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
+    entity_id = find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -576,26 +597,30 @@ async def test_fan_ikea(hass, zha_device_joined_restored, zigpy_device_ikea):
     # turn on from HA
     cluster.write_attributes.reset_mock()
     await async_turn_on(hass, entity_id)
-    assert len(cluster.write_attributes.mock_calls) == 1
-    assert cluster.write_attributes.call_args == call({"fan_mode": 1})
+    assert cluster.write_attributes.mock_calls == [
+        call({"fan_mode": 1}, manufacturer=None)
+    ]
 
     # turn off from HA
     cluster.write_attributes.reset_mock()
     await async_turn_off(hass, entity_id)
-    assert len(cluster.write_attributes.mock_calls) == 1
-    assert cluster.write_attributes.call_args == call({"fan_mode": 0})
+    assert cluster.write_attributes.mock_calls == [
+        call({"fan_mode": 0}, manufacturer=None)
+    ]
 
     # change speed from HA
     cluster.write_attributes.reset_mock()
     await async_set_percentage(hass, entity_id, percentage=100)
-    assert len(cluster.write_attributes.mock_calls) == 1
-    assert cluster.write_attributes.call_args == call({"fan_mode": 10})
+    assert cluster.write_attributes.mock_calls == [
+        call({"fan_mode": 10}, manufacturer=None)
+    ]
 
     # change preset_mode from HA
     cluster.write_attributes.reset_mock()
     await async_set_preset_mode(hass, entity_id, preset_mode=PRESET_MODE_AUTO)
-    assert len(cluster.write_attributes.mock_calls) == 1
-    assert cluster.write_attributes.call_args == call({"fan_mode": 1})
+    assert cluster.write_attributes.mock_calls == [
+        call({"fan_mode": 1}, manufacturer=None)
+    ]
 
     # set invalid preset_mode from HA
     cluster.write_attributes.reset_mock()
@@ -632,20 +657,20 @@ async def test_fan_ikea(hass, zha_device_joined_restored, zigpy_device_ikea):
     ),
 )
 async def test_fan_ikea_init(
-    hass,
+    hass: HomeAssistant,
     zha_device_joined_restored,
     zigpy_device_ikea,
     ikea_plug_read,
     ikea_expected_state,
     ikea_expected_percentage,
     ikea_preset_mode,
-):
+) -> None:
     """Test ZHA fan platform."""
     cluster = zigpy_device_ikea.endpoints.get(1).ikea_airpurifier
     cluster.PLUGGED_ATTR_READS = ikea_plug_read
 
     zha_device = await zha_device_joined_restored(zigpy_device_ikea)
-    entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
+    entity_id = find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == ikea_expected_state
     assert (
@@ -656,16 +681,16 @@ async def test_fan_ikea_init(
 
 
 async def test_fan_ikea_update_entity(
-    hass,
+    hass: HomeAssistant,
     zha_device_joined_restored,
     zigpy_device_ikea,
-):
+) -> None:
     """Test ZHA fan platform."""
     cluster = zigpy_device_ikea.endpoints.get(1).ikea_airpurifier
     cluster.PLUGGED_ATTR_READS = {"fan_mode": 0}
 
     zha_device = await zha_device_joined_restored(zigpy_device_ikea)
-    entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
+    entity_id = find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_OFF
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 0

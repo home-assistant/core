@@ -6,7 +6,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_TYPE
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DOMAIN, TYPE_ASTRONOMICAL, TYPE_METEOROLOGICAL
@@ -25,7 +25,7 @@ class SeasonConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_TYPE])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                title=DEFAULT_NAME,
                 data={CONF_TYPE: user_input[CONF_TYPE]},
             )
 
@@ -42,7 +42,3 @@ class SeasonConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             ),
         )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle import from configuration.yaml."""
-        return await self.async_step_user(user_input)

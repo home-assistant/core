@@ -1,5 +1,5 @@
 """Constants for the Wallbox integration."""
-from homeassistant.backports.enum import StrEnum
+from enum import StrEnum
 
 DOMAIN = "wallbox"
 

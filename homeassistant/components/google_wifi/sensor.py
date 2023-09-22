@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle, dt
+from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -212,7 +212,7 @@ class GoogleWifiAPI:
                     elif attr_key == ATTR_UPTIME:
                         sensor_value = round(sensor_value / (3600 * 24), 2)
                     elif attr_key == ATTR_LAST_RESTART:
-                        last_restart = dt.now() - timedelta(seconds=sensor_value)
+                        last_restart = dt_util.now() - timedelta(seconds=sensor_value)
                         sensor_value = last_restart.strftime("%Y-%m-%d %H:%M:%S")
                     elif attr_key == ATTR_STATUS:
                         if sensor_value:

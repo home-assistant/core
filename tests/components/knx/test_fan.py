@@ -17,7 +17,6 @@ async def test_fan_percent(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
 
     # turn on fan with default speed (50%)
     await hass.services.async_call(
@@ -63,7 +62,6 @@ async def test_fan_step(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
 
     # turn on fan with default speed (50% - step 2)
     await hass.services.async_call(
@@ -116,7 +114,6 @@ async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
 
     # turn on oscillation
     await hass.services.async_call(

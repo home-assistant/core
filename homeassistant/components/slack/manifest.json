@@ -1,7 +1,7 @@
 {
   "domain": "slack",
   "name": "Slack",
-  "codeowners": ["@bachya", "@tkdrob"],
+  "codeowners": ["@tkdrob", "@fletcherau"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/slack",
   "integration_type": "service",

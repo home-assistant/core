@@ -1,0 +1,75 @@
+# serializer version: 1
+# name: test_update_available
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'update',
+      'friendly_name': 'WLED RGB Light Firmware',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.wled_rgb_light_firmware',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_update_available.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.wled_rgb_light_firmware',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
+    'original_icon': None,
+    'original_name': 'Firmware',
+    'platform': 'wled',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aabbccddeeff_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_available.2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://127.0.0.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'esp8266',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wled',
+        'aabbccddeeff',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'WLED',
+    'model': 'DIY light',
+    'name': 'WLED RGB Light',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '0.8.5',
+    'via_device_id': None,
+  })
+# ---

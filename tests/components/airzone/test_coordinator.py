@@ -2,7 +2,12 @@
 
 from unittest.mock import patch
 
-from aioairzone.exceptions import AirzoneError, InvalidMethod, SystemOutOfRange
+from aioairzone.exceptions import (
+    AirzoneError,
+    HotWaterNotAvailable,
+    InvalidMethod,
+    SystemOutOfRange,
+)
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.components.airzone.coordinator import SCAN_INTERVAL
@@ -10,7 +15,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
-from .util import CONFIG, HVAC_MOCK
+from .util import CONFIG, HVAC_MOCK, HVAC_VERSION_MOCK
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -26,11 +31,17 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+        side_effect=HotWaterNotAvailable,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
     ) as mock_hvac, patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         side_effect=InvalidMethod,

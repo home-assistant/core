@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from unittest.mock import Mock, call, patch
-from xml.etree.ElementTree import ParseError
 
 from pyfritzhome import LoginError
 import pytest
@@ -170,7 +169,7 @@ async def test_coordinator_update_after_reboot(
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     assert fritz().update_devices.call_count == 2
-    assert fritz().update_templates.call_count == 2
+    assert fritz().update_templates.call_count == 1
     assert fritz().get_devices.call_count == 1
     assert fritz().get_templates.call_count == 1
     assert fritz().login.call_count == 2
@@ -206,7 +205,7 @@ async def test_coordinator_update_when_unreachable(
         unique_id="any",
     )
     entry.add_to_hass(hass)
-    fritz().get_devices.side_effect = [ConnectionError(), ""]
+    fritz().update_devices.side_effect = [ConnectionError(), ""]
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -261,6 +260,27 @@ async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) ->
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.fritzbox.Fritzhome.login",
+        side_effect=ConnectionError(),
+    ) as mock_login:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        mock_login.assert_called_once()
+
+    entries = hass.config_entries.async_entries()
+    config_entry = entries[0]
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> None:
+    """Config entry state is SETUP_ERROR when login to fritzbox fail."""
+    entry = MockConfigEntry(
+        domain=FB_DOMAIN,
+        data={CONF_HOST: "any", **MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0]},
+        unique_id="any",
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.fritzbox.Fritzhome.login",
         side_effect=LoginError("user"),
     ) as mock_login:
         await hass.config_entries.async_setup(entry.entry_id)
@@ -270,17 +290,3 @@ async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) ->
     entries = hass.config_entries.async_entries()
     config_entry = entries[0]
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_disable_smarthome_templates(hass: HomeAssistant, fritz: Mock) -> None:
-    """Test smarthome templates are disabled."""
-    entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
-        unique_id="any",
-    )
-    entry.add_to_hass(hass)
-    fritz().update_templates.side_effect = [ParseError(), ""]
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    assert fritz().update_templates.call_count == 1

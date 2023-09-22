@@ -1,7 +1,6 @@
 """Http views to control the config manager."""
 from __future__ import annotations
 
-import asyncio
 from http import HTTPStatus
 from typing import Any
 
@@ -12,7 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, Unauthorized
 import homeassistant.helpers.config_validation as cv
@@ -26,6 +25,7 @@ from homeassistant.loader import (
     IntegrationNotFound,
     async_get_config_flows,
     async_get_integration,
+    async_get_integrations,
 )
 
 
@@ -43,6 +43,7 @@ async def async_setup(hass):
 
     websocket_api.async_register_command(hass, config_entries_get)
     websocket_api.async_register_command(hass, config_entry_disable)
+    websocket_api.async_register_command(hass, config_entry_get_single)
     websocket_api.async_register_command(hass, config_entry_update)
     websocket_api.async_register_command(hass, config_entries_subscribe)
     websocket_api.async_register_command(hass, config_entries_progress)
@@ -137,13 +138,11 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
         """Not implemented."""
         raise aiohttp.web_exceptions.HTTPMethodNotAllowed("GET", ["POST"])
 
-    # pylint: disable=arguments-differ
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    )
     async def post(self, request):
         """Handle a POST request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
-
-        # pylint: disable=no-value-for-parameter
         try:
             return await super().post(request)
         except DependencyError as exc:
@@ -163,20 +162,18 @@ class ConfigManagerFlowResourceView(FlowManagerResourceView):
     url = "/api/config/config_entries/flow/{flow_id}"
     name = "api:config:config_entries:flow:resource"
 
-    async def get(self, request, flow_id):
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    )
+    async def get(self, request, /, flow_id):
         """Get the current state of a data_entry_flow."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
-
         return await super().get(request, flow_id)
 
-    # pylint: disable=arguments-differ
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    )
     async def post(self, request, flow_id):
         """Handle a POST request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
-
-        # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)
 
     def _prepare_result_json(self, result):
@@ -205,16 +202,14 @@ class OptionManagerFlowIndexView(FlowManagerIndexView):
     url = "/api/config/config_entries/options/flow"
     name = "api:config:config_entries:option:flow"
 
-    # pylint: disable=arguments-differ
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    )
     async def post(self, request):
         """Handle a POST request.
 
         handler in request is entry_id.
         """
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-
-        # pylint: disable=no-value-for-parameter
         return await super().post(request)
 
 
@@ -224,20 +219,18 @@ class OptionManagerFlowResourceView(FlowManagerResourceView):
     url = "/api/config/config_entries/options/flow/{flow_id}"
     name = "api:config:config_entries:options:flow:resource"
 
-    async def get(self, request, flow_id):
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    )
+    async def get(self, request, /, flow_id):
         """Get the current state of a data_entry_flow."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-
         return await super().get(request, flow_id)
 
-    # pylint: disable=arguments-differ
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    )
     async def post(self, request, flow_id):
         """Handle a POST request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-
-        # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)
 
 
@@ -282,6 +275,28 @@ def get_entry(
     if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
         send_entry_not_found(connection, msg_id)
     return entry
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config_entries/get_single",
+        "entry_id": str,
+    }
+)
+@websocket_api.async_response
+async def config_entry_get_single(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Update config entry."""
+    entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
+    if entry is None:
+        return
+
+    result = {"config_entry": entry_json(entry)}
+    connection.send_result(msg["id"], result)
 
 
 @websocket_api.require_admin
@@ -493,14 +508,12 @@ async def async_matching_config_entries(
 
     integrations = {}
     # Fetch all the integrations so we can check their type
-    tasks = (
-        async_get_integration(hass, domain)
-        for domain in {entry.domain for entry in entries}
-    )
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    for integration_or_exc in results:
+    domains = {entry.domain for entry in entries}
+    for domain_key, integration_or_exc in (
+        await async_get_integrations(hass, domains)
+    ).items():
         if isinstance(integration_or_exc, Integration):
-            integrations[integration_or_exc.domain] = integration_or_exc
+            integrations[domain_key] = integration_or_exc
         elif not isinstance(integration_or_exc, IntegrationNotFound):
             raise integration_or_exc
 
@@ -537,8 +550,8 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "source": entry.source,
         "state": entry.state.value,
         "supports_options": supports_options,
-        "supports_remove_device": entry.supports_remove_device,
-        "supports_unload": entry.supports_unload,
+        "supports_remove_device": entry.supports_remove_device or False,
+        "supports_unload": entry.supports_unload or False,
         "pref_disable_new_entities": entry.pref_disable_new_entities,
         "pref_disable_polling": entry.pref_disable_polling,
         "disabled_by": entry.disabled_by,

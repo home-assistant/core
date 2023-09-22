@@ -20,7 +20,7 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from . import statistics, websocket_api
+from . import entity_registry, websocket_api
 from .const import (  # noqa: F401
     CONF_DB_INTEGRITY_CHECK,
     DATA_INSTANCE,
@@ -28,7 +28,11 @@ from .const import (  # noqa: F401
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     EXCLUDE_ATTRIBUTES,
+    INTEGRATION_PLATFORM_COMPILE_STATISTICS,
+    INTEGRATION_PLATFORM_EXCLUDE_ATTRIBUTES,
+    INTEGRATION_PLATFORMS_LOAD_IN_RECORDER_THREAD,
     SQLITE_URL_PREFIX,
+    SupportedDialect,
 )
 from .core import Recorder
 from .services import async_register_services
@@ -131,7 +135,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     exclude_attributes_by_domain: dict[str, set[str]] = {}
     hass.data[EXCLUDE_ATTRIBUTES] = exclude_attributes_by_domain
     conf = config[DOMAIN]
-    entity_filter = convert_include_exclude_filter(conf)
+    entity_filter = convert_include_exclude_filter(conf).get_filter()
     auto_purge = conf[CONF_AUTO_PURGE]
     auto_repack = conf[CONF_AUTO_REPACK]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]
@@ -142,12 +146,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass_config_path=hass.config.path(DEFAULT_DB_FILE)
     )
     exclude = conf[CONF_EXCLUDE]
-    exclude_t = exclude.get(CONF_EVENT_TYPES, [])
-    if EVENT_STATE_CHANGED in exclude_t:
-        _LOGGER.warning(
-            "State change events are excluded, recorder will not record state changes."
-            "This will become an error in Home Assistant Core 2022.2"
-        )
+    exclude_event_types: set[str] = set(exclude.get(CONF_EVENT_TYPES, []))
+    if EVENT_STATE_CHANGED in exclude_event_types:
+        _LOGGER.error("State change events cannot be excluded, use a filter instead")
+        exclude_event_types.remove(EVENT_STATE_CHANGED)
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         auto_purge=auto_purge,
@@ -158,23 +160,49 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         db_max_retries=db_max_retries,
         db_retry_wait=db_retry_wait,
         entity_filter=entity_filter,
-        exclude_t=exclude_t,
+        exclude_event_types=exclude_event_types,
         exclude_attributes_by_domain=exclude_attributes_by_domain,
     )
     instance.async_initialize()
     instance.async_register()
     instance.start()
     async_register_services(hass, instance)
-    statistics.async_setup(hass)
     websocket_api.async_setup(hass)
-    await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
+    entity_registry.async_setup(hass)
+
+    await _async_setup_integration_platform(
+        hass, instance, exclude_attributes_by_domain
+    )
 
     return await instance.async_db_ready
 
 
-async def _process_recorder_platform(
-    hass: HomeAssistant, domain: str, platform: Any
+async def _async_setup_integration_platform(
+    hass: HomeAssistant,
+    instance: Recorder,
+    exclude_attributes_by_domain: dict[str, set[str]],
 ) -> None:
-    """Process a recorder platform."""
-    instance = get_instance(hass)
-    instance.queue_task(AddRecorderPlatformTask(domain, platform))
+    """Set up a recorder integration platform."""
+
+    async def _process_recorder_platform(
+        hass: HomeAssistant, domain: str, platform: Any
+    ) -> None:
+        """Process a recorder platform."""
+        # We need to add this before as soon as the component is loaded
+        # to ensure by the time the state is recorded that the excluded
+        # attributes are known. This is safe to modify in the event loop
+        # since exclude_attributes_by_domain is never iterated over.
+        if exclude_attributes := getattr(
+            platform, INTEGRATION_PLATFORM_EXCLUDE_ATTRIBUTES, None
+        ):
+            exclude_attributes_by_domain[domain] = exclude_attributes(hass)
+
+        # If the platform has a compile_statistics method, we need to
+        # add it to the recorder queue to be processed.
+        if any(
+            hasattr(platform, _attr)
+            for _attr in INTEGRATION_PLATFORMS_LOAD_IN_RECORDER_THREAD
+        ):
+            instance.queue_task(AddRecorderPlatformTask(domain, platform))
+
+    await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)

@@ -39,7 +39,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_AREA = "area"
 ATTR_POLLUTION_INDEX = "nilu_pollution_index"
-ATTRIBUTION = "Data provided by luftkvalitet.info and nilu.no"
 
 CONF_AREA = "area"
 CONF_STATION = "stations"
@@ -173,6 +172,8 @@ class NiluData:
 class NiluSensor(AirQualityEntity):
     """Single nilu station air sensor."""
 
+    _attr_attribution = "Data provided by luftkvalitet.info and nilu.no"
+
     def __init__(self, api_data: NiluData, name: str, show_on_map: bool) -> None:
         """Initialize the sensor."""
         self._api = api_data
@@ -183,11 +184,6 @@ class NiluSensor(AirQualityEntity):
         if show_on_map:
             self._attrs[CONF_LATITUDE] = api_data.data.latitude
             self._attrs[CONF_LONGITUDE] = api_data.data.longitude
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def extra_state_attributes(self) -> dict:

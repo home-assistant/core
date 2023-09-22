@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components import dhcp
 from homeassistant.components.dlink.const import CONF_USE_LEGACY_PROTOCOL, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.setup import async_setup_component
@@ -27,8 +27,6 @@ CONF_DHCP_DATA = {
 }
 
 CONF_DATA = CONF_DHCP_DATA | {CONF_HOST: HOST}
-
-CONF_IMPORT_DATA = CONF_DATA | {CONF_NAME: "Smart Plug"}
 
 CONF_DHCP_FLOW = dhcp.DhcpServiceInfo(
     ip=HOST,

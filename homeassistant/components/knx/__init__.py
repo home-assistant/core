@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
+from pathlib import Path
 from typing import Final
 
 import voluptuous as vol
@@ -10,7 +12,7 @@ from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
-from xknx.exceptions import ConversionError, XKNXException
+from xknx.exceptions import ConversionError, CouldNotParseTelegram, XKNXException
 from xknx.io import ConnectionConfig, ConnectionType, SecureConfig
 from xknx.telegram import AddressFilter, Telegram
 from xknx.telegram.address import (
@@ -28,6 +30,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
@@ -58,6 +61,7 @@ from .const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_LOG_SIZE,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
@@ -66,13 +70,18 @@ from .const import (
     DOMAIN,
     KNX_ADDRESS,
     SUPPORTED_PLATFORMS,
+    TELEGRAM_LOG_DEFAULT,
 )
+from .device import KNXInterfaceDevice
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
+from .project import STORAGE_KEY as PROJECT_STORAGE_KEY, KNXProject
 from .schema import (
     BinarySensorSchema,
     ButtonSchema,
     ClimateSchema,
     CoverSchema,
+    DateSchema,
+    DateTimeSchema,
     EventSchema,
     ExposeSchema,
     FanSchema,
@@ -84,10 +93,13 @@ from .schema import (
     SensorSchema,
     SwitchSchema,
     TextSchema,
+    TimeSchema,
     WeatherSchema,
     ga_validator,
     sensor_type_validator,
 )
+from .telegrams import STORAGE_KEY as TELEGRAMS_STORAGE_KEY, Telegrams
+from .websocket import register_panel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,6 +138,8 @@ CONFIG_SCHEMA = vol.Schema(
                     **ButtonSchema.platform_node(),
                     **ClimateSchema.platform_node(),
                     **CoverSchema.platform_node(),
+                    **DateSchema.platform_node(),
+                    **DateTimeSchema.platform_node(),
                     **FanSchema.platform_node(),
                     **LightSchema.platform_node(),
                     **NotifySchema.platform_node(),
@@ -135,6 +149,7 @@ CONFIG_SCHEMA = vol.Schema(
                     **SensorSchema.platform_node(),
                     **SwitchSchema.platform_node(),
                     **TextSchema.platform_node(),
+                    **TimeSchema.platform_node(),
                     **WeatherSchema.platform_node(),
                 }
             ),
@@ -219,6 +234,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     conf = dict(conf)
     hass.data[DATA_KNX_CONFIG] = conf
+
     return True
 
 
@@ -252,13 +268,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             knx_module.exposures.append(
                 create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
-
+    # always forward sensor for system entities (telegram counter, etc.)
+    await hass.config_entries.async_forward_entry_setup(entry, Platform.SENSOR)
     await hass.config_entries.async_forward_entry_setups(
         entry,
         [
             platform
             for platform in SUPPORTED_PLATFORMS
-            if platform in config and platform is not Platform.NOTIFY
+            if platform in config and platform not in (Platform.SENSOR, Platform.NOTIFY)
         ],
     )
 
@@ -300,6 +317,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
     )
 
+    async def _reload_integration(call: ServiceCall) -> None:
+        """Reload the integration."""
+        await hass.config_entries.async_reload(entry.entry_id)
+        hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_integration)
+
+    await register_panel(hass)
+
     return True
 
 
@@ -316,10 +342,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
         [
-            platform
-            for platform in SUPPORTED_PLATFORMS
-            if platform in hass.data[DATA_KNX_CONFIG]
-            and platform is not Platform.NOTIFY
+            Platform.SENSOR,  # always unload system entities (telegram counter, etc.)
+            *[
+                platform
+                for platform in SUPPORTED_PLATFORMS
+                if platform in hass.data[DATA_KNX_CONFIG]
+                and platform not in (Platform.SENSOR, Platform.NOTIFY)
+            ],
         ],
     )
     if unload_ok:
@@ -333,6 +362,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update a given config entry."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+
+    def remove_files(storage_dir: Path, knxkeys_filename: str | None) -> None:
+        """Remove KNX files."""
+        if knxkeys_filename is not None:
+            with contextlib.suppress(FileNotFoundError):
+                (storage_dir / knxkeys_filename).unlink()
+        with contextlib.suppress(FileNotFoundError):
+            (storage_dir / PROJECT_STORAGE_KEY).unlink()
+        with contextlib.suppress(FileNotFoundError):
+            (storage_dir / TELEGRAMS_STORAGE_KEY).unlink()
+        with contextlib.suppress(FileNotFoundError, OSError):
+            (storage_dir / DOMAIN).rmdir()
+
+    storage_dir = Path(hass.config.path(STORAGE_DIR))
+    knxkeys_filename = entry.data.get(CONF_KNX_KNXKEY_FILENAME)
+    await hass.async_add_executor_job(remove_files, storage_dir, knxkeys_filename)
 
 
 class KNXModule:
@@ -349,9 +398,24 @@ class KNXModule:
         self.service_exposures: dict[str, KNXExposeSensor | KNXExposeTime] = {}
         self.entry = entry
 
-        self.init_xknx()
+        self.project = KNXProject(hass=hass, entry=entry)
+
+        self.xknx = XKNX(
+            connection_config=self.connection_config(),
+            rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
+            state_updater=self.entry.data[CONF_KNX_STATE_UPDATER],
+        )
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
+        )
+        self.telegrams = Telegrams(
+            hass=hass,
+            xknx=self.xknx,
+            project=self.project,
+            log_size=entry.data.get(CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT),
+        )
+        self.interface_device = KNXInterfaceDevice(
+            hass=hass, entry=entry, xknx=self.xknx
         )
 
         self._address_filter_transcoder: dict[AddressFilter, type[DPTBase]] = {}
@@ -365,25 +429,28 @@ class KNXModule:
         )
         self.entry.async_on_unload(self.entry.add_update_listener(async_update_entry))
 
-    def init_xknx(self) -> None:
-        """Initialize XKNX object."""
-        self.xknx = XKNX(
-            connection_config=self.connection_config(),
-            rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
-            state_updater=self.entry.data[CONF_KNX_STATE_UPDATER],
-        )
-
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
+        await self.project.load_project()
+        await self.telegrams.load_history()
         await self.xknx.start()
 
     async def stop(self, event: Event | None = None) -> None:
         """Stop XKNX object. Disconnect from tunneling or Routing device."""
         await self.xknx.stop()
+        await self.telegrams.save_history()
 
     def connection_config(self) -> ConnectionConfig:
         """Return the connection_config."""
         _conn_type: str = self.entry.data[CONF_KNX_CONNECTION_TYPE]
+        _knxkeys_file: str | None = (
+            self.hass.config.path(
+                STORAGE_DIR,
+                self.entry.data[CONF_KNX_KNXKEY_FILENAME],
+            )
+            if self.entry.data.get(CONF_KNX_KNXKEY_FILENAME) is not None
+            else None
+        )
         if _conn_type == CONF_KNX_ROUTING:
             return ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
@@ -392,6 +459,10 @@ class KNXModule:
                 multicast_port=self.entry.data[CONF_KNX_MCAST_PORT],
                 local_ip=self.entry.data.get(CONF_KNX_LOCAL_IP),
                 auto_reconnect=True,
+                secure_config=SecureConfig(
+                    knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=_knxkeys_file,
+                ),
                 threaded=True,
             )
         if _conn_type == CONF_KNX_TUNNELING:
@@ -402,6 +473,10 @@ class KNXModule:
                 local_ip=self.entry.data.get(CONF_KNX_LOCAL_IP),
                 route_back=self.entry.data.get(CONF_KNX_ROUTE_BACK, False),
                 auto_reconnect=True,
+                secure_config=SecureConfig(
+                    knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=_knxkeys_file,
+                ),
                 threaded=True,
             )
         if _conn_type == CONF_KNX_TUNNELING_TCP:
@@ -410,16 +485,12 @@ class KNXModule:
                 gateway_ip=self.entry.data[CONF_HOST],
                 gateway_port=self.entry.data[CONF_PORT],
                 auto_reconnect=True,
+                secure_config=SecureConfig(
+                    knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=_knxkeys_file,
+                ),
                 threaded=True,
             )
-        knxkeys_file: str | None = (
-            self.hass.config.path(
-                STORAGE_DIR,
-                self.entry.data[CONF_KNX_KNXKEY_FILENAME],
-            )
-            if self.entry.data.get(CONF_KNX_KNXKEY_FILENAME) is not None
-            else None
-        )
         if _conn_type == CONF_KNX_TUNNELING_TCP_SECURE:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP_SECURE,
@@ -432,7 +503,7 @@ class KNXModule:
                         CONF_KNX_SECURE_DEVICE_AUTHENTICATION
                     ),
                     knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
-                    knxkeys_file_path=knxkeys_file,
+                    knxkeys_file_path=_knxkeys_file,
                 ),
                 auto_reconnect=True,
                 threaded=True,
@@ -450,13 +521,17 @@ class KNXModule:
                         CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE
                     ),
                     knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
-                    knxkeys_file_path=knxkeys_file,
+                    knxkeys_file_path=_knxkeys_file,
                 ),
                 auto_reconnect=True,
                 threaded=True,
             )
         return ConnectionConfig(
             auto_reconnect=True,
+            secure_config=SecureConfig(
+                knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                knxkeys_file_path=_knxkeys_file,
+            ),
             threaded=True,
         )
 
@@ -479,31 +554,29 @@ class KNXModule:
             )
         ):
             data = telegram.payload.value.value
-
-            if isinstance(data, tuple):
-                if transcoder := (
-                    self._group_address_transcoder.get(telegram.destination_address)
-                    or next(
+            if transcoder := (
+                self._group_address_transcoder.get(telegram.destination_address)
+                or next(
+                    (
+                        _transcoder
+                        for _filter, _transcoder in self._address_filter_transcoder.items()
+                        if _filter.match(telegram.destination_address)
+                    ),
+                    None,
+                )
+            ):
+                try:
+                    value = transcoder.from_knx(telegram.payload.value)
+                except (ConversionError, CouldNotParseTelegram) as err:
+                    _LOGGER.warning(
                         (
-                            _transcoder
-                            for _filter, _transcoder in self._address_filter_transcoder.items()
-                            if _filter.match(telegram.destination_address)
+                            "Error in `knx_event` at decoding type '%s' from"
+                            " telegram %s\n%s"
                         ),
-                        None,
+                        transcoder.__name__,
+                        telegram,
+                        err,
                     )
-                ):
-                    try:
-                        value = transcoder.from_knx(data)
-                    except ConversionError as err:
-                        _LOGGER.warning(
-                            (
-                                "Error in `knx_event` at decoding type '%s' from"
-                                " telegram %s\n%s"
-                            ),
-                            transcoder.__name__,
-                            telegram,
-                            err,
-                        )
 
         self.hass.bus.async_fire(
             "knx_event",
@@ -622,7 +695,7 @@ class KNXModule:
             transcoder = DPTBase.parse_transcoder(attr_type)
             if transcoder is None:
                 raise ValueError(f"Invalid type for knx.send service: {attr_type}")
-            payload = DPTArray(transcoder.to_knx(attr_payload))
+            payload = transcoder.to_knx(attr_payload)
         elif isinstance(attr_payload, int):
             payload = DPTBinary(attr_payload)
         else:
@@ -634,6 +707,7 @@ class KNXModule:
                 payload=GroupValueResponse(payload)
                 if attr_response
                 else GroupValueWrite(payload),
+                source_address=self.xknx.current_address,
             )
             await self.xknx.telegrams.put(telegram)
 
@@ -643,5 +717,6 @@ class KNXModule:
             telegram = Telegram(
                 destination_address=parse_device_group_address(address),
                 payload=GroupValueRead(),
+                source_address=self.xknx.current_address,
             )
             await self.xknx.telegrams.put(telegram)

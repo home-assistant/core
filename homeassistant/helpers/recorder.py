@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 DOMAIN = "recorder"
 
 
-@dataclass
+@dataclass(slots=True)
 class RecorderData:
     """Recorder data stored in hass.data."""
 

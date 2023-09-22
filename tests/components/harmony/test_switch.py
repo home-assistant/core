@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import utcnow
 
 from .const import ENTITY_PLAY_MUSIC, ENTITY_REMOTE, ENTITY_WATCH_TV, HUB_NAME
@@ -25,7 +25,11 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_connection_state_changes(
-    harmony_client, mock_hc, hass: HomeAssistant, mock_write_config
+    harmony_client,
+    mock_hc,
+    hass: HomeAssistant,
+    mock_write_config,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Ensure connection changes are reflected in the switch states."""
     entry = MockConfigEntry(
@@ -41,9 +45,8 @@ async def test_connection_state_changes(
     assert not hass.states.get(ENTITY_PLAY_MUSIC)
 
     # enable switch entities
-    ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_update_entity(ENTITY_WATCH_TV, disabled_by=None)
-    ent_reg.async_update_entity(ENTITY_PLAY_MUSIC, disabled_by=None)
+    entity_registry.async_update_entity(ENTITY_WATCH_TV, disabled_by=None)
+    entity_registry.async_update_entity(ENTITY_PLAY_MUSIC, disabled_by=None)
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -80,7 +83,9 @@ async def test_connection_state_changes(
     assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
 
 
-async def test_switch_toggles(mock_hc, hass: HomeAssistant, mock_write_config) -> None:
+async def test_switch_toggles(
+    mock_hc, hass: HomeAssistant, mock_write_config, entity_registry: er.EntityRegistry
+) -> None:
     """Ensure calls to the switch modify the harmony state."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -91,9 +96,8 @@ async def test_switch_toggles(mock_hc, hass: HomeAssistant, mock_write_config) -
     await hass.async_block_till_done()
 
     # enable switch entities
-    ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_update_entity(ENTITY_WATCH_TV, disabled_by=None)
-    ent_reg.async_update_entity(ENTITY_PLAY_MUSIC, disabled_by=None)
+    entity_registry.async_update_entity(ENTITY_WATCH_TV, disabled_by=None)
+    entity_registry.async_update_entity(ENTITY_PLAY_MUSIC, disabled_by=None)
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 

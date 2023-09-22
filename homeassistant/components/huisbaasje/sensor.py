@@ -21,7 +21,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, UnitOfEnergy, UnitOfPower, UnitOfVolume
+from homeassistant.const import (
+    CONF_ID,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -32,7 +38,6 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     DATA_COORDINATOR,
     DOMAIN,
-    FLOW_CUBIC_METERS_PER_HOUR,
     SENSOR_TYPE_RATE,
     SENSOR_TYPE_THIS_DAY,
     SENSOR_TYPE_THIS_MONTH,
@@ -53,7 +58,7 @@ class HuisbaasjeSensorEntityDescription(SensorEntityDescription):
 
 SENSORS_INFO = [
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Current Power",
+        translation_key="current_power",
         sensor_type=SENSOR_TYPE_RATE,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -62,7 +67,7 @@ SENSORS_INFO = [
         icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Current Power In Peak",
+        translation_key="current_power_peak",
         sensor_type=SENSOR_TYPE_RATE,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -71,7 +76,7 @@ SENSORS_INFO = [
         icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Current Power In Off Peak",
+        translation_key="current_power_off_peak",
         sensor_type=SENSOR_TYPE_RATE,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -80,7 +85,7 @@ SENSORS_INFO = [
         icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Current Power Out Peak",
+        translation_key="current_power_out_peak",
         sensor_type=SENSOR_TYPE_RATE,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -89,7 +94,7 @@ SENSORS_INFO = [
         icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Current Power Out Off Peak",
+        translation_key="current_power_out_off_peak",
         sensor_type=SENSOR_TYPE_RATE,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -98,7 +103,7 @@ SENSORS_INFO = [
         icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Energy Consumption Peak Today",
+        translation_key="energy_consumption_peak_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         key=SOURCE_TYPE_ELECTRICITY_IN,
@@ -108,7 +113,7 @@ SENSORS_INFO = [
         icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Energy Consumption Off Peak Today",
+        translation_key="energy_consumption_off_peak_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         key=SOURCE_TYPE_ELECTRICITY_IN_LOW,
@@ -118,7 +123,7 @@ SENSORS_INFO = [
         icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Energy Production Peak Today",
+        translation_key="energy_production_peak_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         key=SOURCE_TYPE_ELECTRICITY_OUT,
@@ -128,7 +133,7 @@ SENSORS_INFO = [
         icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Energy Production Off Peak Today",
+        translation_key="energy_production_off_peak_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         key=SOURCE_TYPE_ELECTRICITY_OUT_LOW,
@@ -138,7 +143,7 @@ SENSORS_INFO = [
         icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Energy Today",
+        translation_key="energy_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -148,7 +153,7 @@ SENSORS_INFO = [
         icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Energy This Week",
+        translation_key="energy_week",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -158,7 +163,7 @@ SENSORS_INFO = [
         icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Energy This Month",
+        translation_key="energy_month",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -168,7 +173,7 @@ SENSORS_INFO = [
         icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Energy This Year",
+        translation_key="energy_year",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -178,8 +183,8 @@ SENSORS_INFO = [
         icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Current Gas",
-        native_unit_of_measurement=FLOW_CUBIC_METERS_PER_HOUR,
+        translation_key="current_gas",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         sensor_type=SENSOR_TYPE_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         key=SOURCE_TYPE_GAS,
@@ -187,7 +192,7 @@ SENSORS_INFO = [
         precision=1,
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Gas Today",
+        translation_key="gas_today",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         key=SOURCE_TYPE_GAS,
@@ -197,7 +202,7 @@ SENSORS_INFO = [
         precision=1,
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Gas This Week",
+        translation_key="gas_week",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         key=SOURCE_TYPE_GAS,
@@ -207,7 +212,7 @@ SENSORS_INFO = [
         precision=1,
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Gas This Month",
+        translation_key="gas_month",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         key=SOURCE_TYPE_GAS,
@@ -217,7 +222,7 @@ SENSORS_INFO = [
         precision=1,
     ),
     HuisbaasjeSensorEntityDescription(
-        name="Huisbaasje Gas This Year",
+        translation_key="gas_year",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         key=SOURCE_TYPE_GAS,
@@ -252,6 +257,7 @@ class HuisbaasjeSensor(
     """Defines a Huisbaasje sensor."""
 
     entity_description: HuisbaasjeSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,

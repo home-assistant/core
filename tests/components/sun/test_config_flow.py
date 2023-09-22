@@ -18,7 +18,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
 
     with patch(
         "homeassistant.components.sun.async_setup_entry",

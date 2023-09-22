@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 
 from py_dormakaba_dkey import DKEYLock
-from py_dormakaba_dkey.errors import DKEY_EXCEPTIONS
+from py_dormakaba_dkey.errors import DKEY_EXCEPTIONS, NotAssociated
 from py_dormakaba_dkey.models import AssociationData
 
 from homeassistant.components import bluetooth
@@ -13,13 +13,13 @@ from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_ASSOCIATION_DATA, DOMAIN, UPDATE_SECONDS
 from .models import DormakabaDkeyData
 
-PLATFORMS: list[Platform] = [Platform.LOCK, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await lock.update()
             await lock.disconnect()
+        except NotAssociated as ex:
+            raise ConfigEntryAuthFailed("Not associated") from ex
         except DKEY_EXCEPTIONS as ex:
             raise UpdateFailed(str(ex)) from ex
 

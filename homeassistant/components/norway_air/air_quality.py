@@ -17,12 +17,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = (
-    "Air quality from "
-    "https://luftkvalitet.miljostatus.no/, "
-    "delivered by the Norwegian Meteorological Institute."
-)
-# https://api.met.no/license_data.html
 
 CONF_FORECAST = "forecast"
 
@@ -81,17 +75,19 @@ def round_state(func):
 class AirSensor(AirQualityEntity):
     """Representation of an air quality sensor."""
 
+    # https://api.met.no/license_data.html
+    _attr_attribution = (
+        "Air quality from "
+        "https://luftkvalitet.miljostatus.no/, "
+        "delivered by the Norwegian Meteorological Institute."
+    )
+
     def __init__(self, name, coordinates, forecast, session):
         """Initialize the sensor."""
         self._name = name
         self._api = metno.AirQualityData(
             coordinates, forecast, session, api_url=OVERRIDE_URL
         )
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def extra_state_attributes(self) -> dict:

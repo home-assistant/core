@@ -2,7 +2,7 @@
 
 https://github.com/home-assistant/core/issues/15336
 """
-
+from typing import Any
 from unittest import mock
 
 from aiohomekit import AccessoryNotFoundError
@@ -15,7 +15,8 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from ..common import (
@@ -30,7 +31,7 @@ from ..common import (
 )
 
 
-async def test_ecobee3_setup(hass):
+async def test_ecobee3_setup(hass: HomeAssistant) -> None:
     """Test that a Ecbobee 3 can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "ecobee3.json")
     await setup_test_accessories(hass, accessories)
@@ -125,7 +126,7 @@ async def test_ecobee3_setup(hass):
                     friendly_name="HomeW Current Temperature",
                     unique_id="00:00:00:00:00:00_1_16_19",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=TEMP_CELSIUS,
+                    unit_of_measurement=UnitOfTemperature.CELSIUS,
                     state="21.8",
                 ),
                 EntityTestInfo(
@@ -140,7 +141,9 @@ async def test_ecobee3_setup(hass):
     )
 
 
-async def test_ecobee3_setup_from_cache(hass, hass_storage):
+async def test_ecobee3_setup_from_cache(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test that Ecbobee can be correctly setup from its cached entity map."""
     accessories = await setup_accessories_from_file(hass, "ecobee3.json")
 
@@ -175,7 +178,7 @@ async def test_ecobee3_setup_from_cache(hass, hass_storage):
     assert occ3.unique_id == "00:00:00:00:00:00_4_56"
 
 
-async def test_ecobee3_setup_connection_failure(hass):
+async def test_ecobee3_setup_connection_failure(hass: HomeAssistant) -> None:
     """Test that Ecbobee can be correctly setup from its cached entity map."""
     accessories = await setup_accessories_from_file(hass, "ecobee3.json")
 
@@ -215,7 +218,7 @@ async def test_ecobee3_setup_connection_failure(hass):
     assert occ3.unique_id == "00:00:00:00:00:00_4_56"
 
 
-async def test_ecobee3_add_sensors_at_runtime(hass):
+async def test_ecobee3_add_sensors_at_runtime(hass: HomeAssistant) -> None:
     """Test that new sensors are automatically added."""
     entity_registry = er.async_get(hass)
 

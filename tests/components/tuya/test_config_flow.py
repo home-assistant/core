@@ -108,7 +108,7 @@ async def test_user_flow(
     assert not result["result"].unique_id
 
 
-async def test_error_on_invalid_credentials(hass, tuya):
+async def test_error_on_invalid_credentials(hass: HomeAssistant, tuya) -> None:
     """Test when we have invalid credentials."""
 
     result = await hass.config_entries.flow.async_init(

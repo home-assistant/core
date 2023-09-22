@@ -1,63 +1,45 @@
 """The tests for the hassio component."""
 import asyncio
 from http import HTTPStatus
+from unittest.mock import patch
 
 from aiohttp import StreamReader
 import pytest
 
-from homeassistant.components.hassio.http import _need_auth
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockUser
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_forward_request(
-    hassio_client, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test fetching normal path."""
-    aioclient_mock.post("http://127.0.0.1/beer", text="response")
-
-    resp = await hassio_client.post("/api/hassio/beer")
-
-    # Check we got right response
-    assert resp.status == HTTPStatus.OK
-    body = await resp.text()
-    assert body == "response"
-
-    # Check we forwarded command
-    assert len(aioclient_mock.mock_calls) == 1
+@pytest.fixture
+def mock_not_onboarded():
+    """Mock that we're not onboarded."""
+    with patch(
+        "homeassistant.components.hassio.http.async_is_onboarded", return_value=False
+    ):
+        yield
 
 
-@pytest.mark.parametrize(
-    "build_type", ["supervisor/info", "homeassistant/update", "host/info"]
-)
-async def test_auth_required_forward_request(hassio_noauth_client, build_type) -> None:
-    """Test auth required for normal request."""
-    resp = await hassio_noauth_client.post(f"/api/hassio/{build_type}")
-
-    # Check we got right response
-    assert resp.status == HTTPStatus.UNAUTHORIZED
+@pytest.fixture
+def hassio_user_client(hassio_client, hass_admin_user):
+    """Return a Hass.io HTTP client tied to a non-admin user."""
+    hass_admin_user.groups = []
+    return hassio_client
 
 
 @pytest.mark.parametrize(
-    "build_type",
+    "path",
     [
-        "app/index.html",
-        "app/hassio-app.html",
-        "app/index.html",
-        "app/hassio-app.html",
-        "app/some-chunk.js",
-        "app/app.js",
+        "app/entrypoint.js",
+        "addons/bl_b392/logo",
+        "addons/bl_b392/icon",
     ],
 )
-async def test_forward_request_no_auth_for_panel(
-    hassio_client, build_type, aioclient_mock: AiohttpClientMocker
+async def test_forward_request_onboarded_user_get(
+    hassio_user_client, aioclient_mock: AiohttpClientMocker, path: str
 ) -> None:
-    """Test no auth needed for ."""
-    aioclient_mock.get(f"http://127.0.0.1/{build_type}", text="response")
+    """Test fetching normal path."""
+    aioclient_mock.get(f"http://127.0.0.1/{path}", text="response")
 
-    resp = await hassio_client.get(f"/api/hassio/{build_type}")
+    resp = await hassio_user_client.get(f"/api/hassio/{path}")
 
     # Check we got right response
     assert resp.status == HTTPStatus.OK
@@ -66,15 +48,68 @@ async def test_forward_request_no_auth_for_panel(
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
+    # We only expect a single header.
+    assert aioclient_mock.mock_calls[0][3] == {"X-Hass-Source": "core.http"}
 
 
-async def test_forward_request_no_auth_for_logo(
-    hassio_client, aioclient_mock: AiohttpClientMocker
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE", "RANDOM"])
+async def test_forward_request_onboarded_user_unallowed_methods(
+    hassio_user_client, aioclient_mock: AiohttpClientMocker, method: str
 ) -> None:
-    """Test no auth needed for logo."""
-    aioclient_mock.get("http://127.0.0.1/addons/bl_b392/logo", text="response")
+    """Test fetching normal path."""
+    resp = await hassio_user_client.post("/api/hassio/app/entrypoint.js")
 
-    resp = await hassio_client.get("/api/hassio/addons/bl_b392/logo")
+    # Check we got right response
+    assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
+
+    # Check we did not forward command
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("bad_path", "expected_status"),
+    [
+        # Caught by bullshit filter
+        ("app/%252E./entrypoint.js", HTTPStatus.BAD_REQUEST),
+        # The .. is processed, making it an unauthenticated path
+        ("app/../entrypoint.js", HTTPStatus.UNAUTHORIZED),
+        ("app/%2E%2E/entrypoint.js", HTTPStatus.UNAUTHORIZED),
+        # Unauthenticated path
+        ("supervisor/info", HTTPStatus.UNAUTHORIZED),
+        ("supervisor/logs", HTTPStatus.UNAUTHORIZED),
+        ("addons/bl_b392/logs", HTTPStatus.UNAUTHORIZED),
+    ],
+)
+async def test_forward_request_onboarded_user_unallowed_paths(
+    hassio_user_client,
+    aioclient_mock: AiohttpClientMocker,
+    bad_path: str,
+    expected_status: int,
+) -> None:
+    """Test fetching normal path."""
+    resp = await hassio_user_client.get(f"/api/hassio/{bad_path}")
+
+    # Check we got right response
+    assert resp.status == expected_status
+    # Check we didn't forward command
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "app/entrypoint.js",
+        "addons/bl_b392/logo",
+        "addons/bl_b392/icon",
+    ],
+)
+async def test_forward_request_onboarded_noauth_get(
+    hassio_noauth_client, aioclient_mock: AiohttpClientMocker, path: str
+) -> None:
+    """Test fetching normal path."""
+    aioclient_mock.get(f"http://127.0.0.1/{path}", text="response")
+
+    resp = await hassio_noauth_client.get(f"/api/hassio/{path}")
 
     # Check we got right response
     assert resp.status == HTTPStatus.OK
@@ -83,15 +118,73 @@ async def test_forward_request_no_auth_for_logo(
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
+    # We only expect a single header.
+    assert aioclient_mock.mock_calls[0][3] == {"X-Hass-Source": "core.http"}
 
 
-async def test_forward_request_no_auth_for_icon(
-    hassio_client, aioclient_mock: AiohttpClientMocker
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE", "RANDOM"])
+async def test_forward_request_onboarded_noauth_unallowed_methods(
+    hassio_noauth_client, aioclient_mock: AiohttpClientMocker, method: str
 ) -> None:
-    """Test no auth needed for icon."""
-    aioclient_mock.get("http://127.0.0.1/addons/bl_b392/icon", text="response")
+    """Test fetching normal path."""
+    resp = await hassio_noauth_client.post("/api/hassio/app/entrypoint.js")
 
-    resp = await hassio_client.get("/api/hassio/addons/bl_b392/icon")
+    # Check we got right response
+    assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
+
+    # Check we did not forward command
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("bad_path", "expected_status"),
+    [
+        # Caught by bullshit filter
+        ("app/%252E./entrypoint.js", HTTPStatus.BAD_REQUEST),
+        # The .. is processed, making it an unauthenticated path
+        ("app/../entrypoint.js", HTTPStatus.UNAUTHORIZED),
+        ("app/%2E%2E/entrypoint.js", HTTPStatus.UNAUTHORIZED),
+        # Unauthenticated path
+        ("supervisor/info", HTTPStatus.UNAUTHORIZED),
+        ("supervisor/logs", HTTPStatus.UNAUTHORIZED),
+        ("addons/bl_b392/logs", HTTPStatus.UNAUTHORIZED),
+    ],
+)
+async def test_forward_request_onboarded_noauth_unallowed_paths(
+    hassio_noauth_client,
+    aioclient_mock: AiohttpClientMocker,
+    bad_path: str,
+    expected_status: int,
+) -> None:
+    """Test fetching normal path."""
+    resp = await hassio_noauth_client.get(f"/api/hassio/{bad_path}")
+
+    # Check we got right response
+    assert resp.status == expected_status
+    # Check we didn't forward command
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("path", "authenticated"),
+    [
+        ("app/entrypoint.js", False),
+        ("addons/bl_b392/logo", False),
+        ("addons/bl_b392/icon", False),
+        ("backups/1234abcd/info", True),
+    ],
+)
+async def test_forward_request_not_onboarded_get(
+    hassio_noauth_client,
+    aioclient_mock: AiohttpClientMocker,
+    path: str,
+    authenticated: bool,
+    mock_not_onboarded,
+) -> None:
+    """Test fetching normal path."""
+    aioclient_mock.get(f"http://127.0.0.1/{path}", text="response")
+
+    resp = await hassio_noauth_client.get(f"/api/hassio/{path}")
 
     # Check we got right response
     assert resp.status == HTTPStatus.OK
@@ -100,61 +193,226 @@ async def test_forward_request_no_auth_for_icon(
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
+    expected_headers = {
+        "X-Hass-Source": "core.http",
+    }
+    if authenticated:
+        expected_headers["Authorization"] = "Bearer 123456"
+
+    assert aioclient_mock.mock_calls[0][3] == expected_headers
 
 
-async def test_forward_log_request(
-    hassio_client, aioclient_mock: AiohttpClientMocker
+@pytest.mark.parametrize(
+    "path",
+    [
+        "backups/new/upload",
+        "backups/1234abcd/restore/full",
+        "backups/1234abcd/restore/partial",
+    ],
+)
+async def test_forward_request_not_onboarded_post(
+    hassio_noauth_client,
+    aioclient_mock: AiohttpClientMocker,
+    path: str,
+    mock_not_onboarded,
 ) -> None:
-    """Test fetching normal log path doesn't remove ANSI color escape codes."""
-    aioclient_mock.get("http://127.0.0.1/beer/logs", text="\033[32mresponse\033[0m")
+    """Test fetching normal path."""
+    aioclient_mock.get(f"http://127.0.0.1/{path}", text="response")
 
-    resp = await hassio_client.get("/api/hassio/beer/logs")
+    resp = await hassio_noauth_client.get(f"/api/hassio/{path}")
 
     # Check we got right response
     assert resp.status == HTTPStatus.OK
     body = await resp.text()
-    assert body == "\033[32mresponse\033[0m"
+    assert body == "response"
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
+    # We only expect a single header.
+    assert aioclient_mock.mock_calls[0][3] == {
+        "X-Hass-Source": "core.http",
+        "Authorization": "Bearer 123456",
+    }
+
+
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE", "RANDOM"])
+async def test_forward_request_not_onboarded_unallowed_methods(
+    hassio_noauth_client, aioclient_mock: AiohttpClientMocker, method: str
+) -> None:
+    """Test fetching normal path."""
+    resp = await hassio_noauth_client.post("/api/hassio/app/entrypoint.js")
+
+    # Check we got right response
+    assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
+
+    # Check we did not forward command
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("bad_path", "expected_status"),
+    [
+        # Caught by bullshit filter
+        ("app/%252E./entrypoint.js", HTTPStatus.BAD_REQUEST),
+        # The .. is processed, making it an unauthenticated path
+        ("app/../entrypoint.js", HTTPStatus.UNAUTHORIZED),
+        ("app/%2E%2E/entrypoint.js", HTTPStatus.UNAUTHORIZED),
+        # Unauthenticated path
+        ("supervisor/info", HTTPStatus.UNAUTHORIZED),
+        ("supervisor/logs", HTTPStatus.UNAUTHORIZED),
+        ("addons/bl_b392/logs", HTTPStatus.UNAUTHORIZED),
+    ],
+)
+async def test_forward_request_not_onboarded_unallowed_paths(
+    hassio_noauth_client,
+    aioclient_mock: AiohttpClientMocker,
+    bad_path: str,
+    expected_status: int,
+    mock_not_onboarded,
+) -> None:
+    """Test fetching normal path."""
+    resp = await hassio_noauth_client.get(f"/api/hassio/{bad_path}")
+
+    # Check we got right response
+    assert resp.status == expected_status
+    # Check we didn't forward command
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("path", "authenticated"),
+    [
+        ("app/entrypoint.js", False),
+        ("addons/bl_b392/logo", False),
+        ("addons/bl_b392/icon", False),
+        ("backups/1234abcd/info", True),
+        ("supervisor/logs", True),
+        ("addons/bl_b392/logs", True),
+        ("addons/bl_b392/changelog", True),
+        ("addons/bl_b392/documentation", True),
+    ],
+)
+async def test_forward_request_admin_get(
+    hassio_client,
+    aioclient_mock: AiohttpClientMocker,
+    path: str,
+    authenticated: bool,
+) -> None:
+    """Test fetching normal path."""
+    aioclient_mock.get(f"http://127.0.0.1/{path}", text="response")
+
+    resp = await hassio_client.get(f"/api/hassio/{path}")
+
+    # Check we got right response
+    assert resp.status == HTTPStatus.OK
+    body = await resp.text()
+    assert body == "response"
+
+    # Check we forwarded command
+    assert len(aioclient_mock.mock_calls) == 1
+    expected_headers = {
+        "X-Hass-Source": "core.http",
+    }
+    if authenticated:
+        expected_headers["Authorization"] = "Bearer 123456"
+
+    assert aioclient_mock.mock_calls[0][3] == expected_headers
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "backups/new/upload",
+        "backups/1234abcd/restore/full",
+        "backups/1234abcd/restore/partial",
+    ],
+)
+async def test_forward_request_admin_post(
+    hassio_client,
+    aioclient_mock: AiohttpClientMocker,
+    path: str,
+) -> None:
+    """Test fetching normal path."""
+    aioclient_mock.get(f"http://127.0.0.1/{path}", text="response")
+
+    resp = await hassio_client.get(f"/api/hassio/{path}")
+
+    # Check we got right response
+    assert resp.status == HTTPStatus.OK
+    body = await resp.text()
+    assert body == "response"
+
+    # Check we forwarded command
+    assert len(aioclient_mock.mock_calls) == 1
+    # We only expect a single header.
+    assert aioclient_mock.mock_calls[0][3] == {
+        "X-Hass-Source": "core.http",
+        "Authorization": "Bearer 123456",
+    }
+
+
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE", "RANDOM"])
+async def test_forward_request_admin_unallowed_methods(
+    hassio_client, aioclient_mock: AiohttpClientMocker, method: str
+) -> None:
+    """Test fetching normal path."""
+    resp = await hassio_client.post("/api/hassio/app/entrypoint.js")
+
+    # Check we got right response
+    assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
+
+    # Check we did not forward command
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("bad_path", "expected_status"),
+    [
+        # Caught by bullshit filter
+        ("app/%252E./entrypoint.js", HTTPStatus.BAD_REQUEST),
+        # The .. is processed, making it an unauthenticated path
+        ("app/../entrypoint.js", HTTPStatus.UNAUTHORIZED),
+        ("app/%2E%2E/entrypoint.js", HTTPStatus.UNAUTHORIZED),
+        # Unauthenticated path
+        ("supervisor/info", HTTPStatus.UNAUTHORIZED),
+    ],
+)
+async def test_forward_request_admin_unallowed_paths(
+    hassio_client,
+    aioclient_mock: AiohttpClientMocker,
+    bad_path: str,
+    expected_status: int,
+) -> None:
+    """Test fetching normal path."""
+    resp = await hassio_client.get(f"/api/hassio/{bad_path}")
+
+    # Check we got right response
+    assert resp.status == expected_status
+    # Check we didn't forward command
+    assert len(aioclient_mock.mock_calls) == 0
 
 
 async def test_bad_gateway_when_cannot_find_supervisor(
     hassio_client, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we get a bad gateway error if we can't find supervisor."""
-    aioclient_mock.get("http://127.0.0.1/addons/test/info", exc=asyncio.TimeoutError)
+    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js", exc=asyncio.TimeoutError)
 
-    resp = await hassio_client.get("/api/hassio/addons/test/info")
+    resp = await hassio_client.get("/api/hassio/app/entrypoint.js")
     assert resp.status == HTTPStatus.BAD_GATEWAY
 
 
-async def test_forwarding_user_info(
-    hassio_client, hass_admin_user: MockUser, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that we forward user info correctly."""
-    aioclient_mock.get("http://127.0.0.1/hello")
-
-    resp = await hassio_client.get("/api/hassio/hello")
-
-    # Check we got right response
-    assert resp.status == HTTPStatus.OK
-
-    assert len(aioclient_mock.mock_calls) == 1
-
-    req_headers = aioclient_mock.mock_calls[0][-1]
-    assert req_headers["X-Hass-User-ID"] == hass_admin_user.id
-    assert req_headers["X-Hass-Is-Admin"] == "1"
-
-
 async def test_backup_upload_headers(
-    hassio_client, aioclient_mock: AiohttpClientMocker, caplog: pytest.LogCaptureFixture
+    hassio_client,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    mock_not_onboarded,
 ) -> None:
     """Test that we forward the full header for backup upload."""
     content_type = "multipart/form-data; boundary='--webkit'"
-    aioclient_mock.get("http://127.0.0.1/backups/new/upload")
+    aioclient_mock.post("http://127.0.0.1/backups/new/upload")
 
-    resp = await hassio_client.get(
+    resp = await hassio_client.post(
         "/api/hassio/backups/new/upload", headers={"Content-Type": content_type}
     )
 
@@ -168,19 +426,19 @@ async def test_backup_upload_headers(
 
 
 async def test_backup_download_headers(
-    hassio_client, aioclient_mock: AiohttpClientMocker
+    hassio_client, aioclient_mock: AiohttpClientMocker, mock_not_onboarded
 ) -> None:
     """Test that we forward the full header for backup download."""
     content_disposition = "attachment; filename=test.tar"
     aioclient_mock.get(
-        "http://127.0.0.1/backups/slug/download",
+        "http://127.0.0.1/backups/1234abcd/download",
         headers={
             "Content-Length": "50000000",
             "Content-Disposition": content_disposition,
         },
     )
 
-    resp = await hassio_client.get("/api/hassio/backups/slug/download")
+    resp = await hassio_client.get("/api/hassio/backups/1234abcd/download")
 
     # Check we got right response
     assert resp.status == HTTPStatus.OK
@@ -190,21 +448,10 @@ async def test_backup_download_headers(
     assert resp.headers["Content-Disposition"] == content_disposition
 
 
-def test_need_auth(hass: HomeAssistant) -> None:
-    """Test if the requested path needs authentication."""
-    assert not _need_auth(hass, "addons/test/logo")
-    assert _need_auth(hass, "backups/new/upload")
-    assert _need_auth(hass, "supervisor/logs")
-
-    hass.data["onboarding"] = False
-    assert not _need_auth(hass, "backups/new/upload")
-    assert not _need_auth(hass, "supervisor/logs")
-
-
 async def test_stream(hassio_client, aioclient_mock: AiohttpClientMocker) -> None:
     """Verify that the request is a stream."""
-    aioclient_mock.get("http://127.0.0.1/test")
-    await hassio_client.get("/api/hassio/test", data="test")
+    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js")
+    await hassio_client.get("/api/hassio/app/entrypoint.js", data="test")
     assert isinstance(aioclient_mock.mock_calls[-1][2], StreamReader)
 
 

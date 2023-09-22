@@ -17,12 +17,12 @@ from .const import DOMAIN
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="pH Status",
-        name="pH Status",
+        translation_key="ph_status",
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     BinarySensorEntityDescription(
         key="Chlorine Status",
-        name="Chlorine Status",
+        translation_key="chlorine_status",
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
 )

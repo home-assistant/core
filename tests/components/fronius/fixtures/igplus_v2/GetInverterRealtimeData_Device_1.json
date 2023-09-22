@@ -1,0 +1,64 @@
+{
+  "Body": {
+    "Data": {
+      "DAY_ENERGY": {
+        "Unit": "Wh",
+        "Value": 42000
+      },
+      "DeviceStatus": {
+        "ErrorCode": 0,
+        "LEDColor": 2,
+        "LEDState": 0,
+        "MgmtTimerRemainingTime": -1,
+        "StateToReset": false,
+        "StatusCode": 7
+      },
+      "FAC": {
+        "Unit": "Hz",
+        "Value": 49.960000000000001
+      },
+      "IAC": {
+        "Unit": "A",
+        "Value": 9.0299999999999994
+      },
+      "IDC": {
+        "Unit": "A",
+        "Value": 6.46
+      },
+      "PAC": {
+        "Unit": "W",
+        "Value": 2096
+      },
+      "TOTAL_ENERGY": {
+        "Unit": "Wh",
+        "Value": 81809000
+      },
+      "UAC": {
+        "Unit": "V",
+        "Value": 232
+      },
+      "UDC": {
+        "Unit": "V",
+        "Value": 345
+      },
+      "YEAR_ENERGY": {
+        "Unit": "Wh",
+        "Value": 4927000
+      }
+    }
+  },
+  "Head": {
+    "RequestArguments": {
+      "DataCollection": "CommonInverterData",
+      "DeviceClass": "Inverter",
+      "DeviceId": "1",
+      "Scope": "Device"
+    },
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2023-07-14T17:21:42+02:00"
+  }
+}

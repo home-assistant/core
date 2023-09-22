@@ -1,17 +1,14 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import radiotherm
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
-    PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_HOME,
     ClimateEntity,
@@ -19,24 +16,14 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_HOST,
-    PRECISION_HALVES,
-    UnitOfTemperature,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 from .coordinator import RadioThermUpdateCoordinator
 from .entity import RadioThermostatEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_FAN_ACTION = "fan_action"
 
@@ -102,14 +89,6 @@ def round_temp(temperature):
     return round(temperature * 2.0) / 2.0
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
-    }
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -120,62 +99,17 @@ async def async_setup_entry(
     async_add_entities([RadioThermostat(coordinator)])
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Radio Thermostat."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2022.9.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-    _LOGGER.warning(
-        "Configuration of the Radio Thermostat climate platform in YAML is deprecated"
-        " and will be removed in Home Assistant 2022.9; Your existing configuration has"
-        " been imported into the UI automatically and can be safely removed from your"
-        " configuration.yaml file"
-    )
-
-    hosts: list[str] = []
-    if CONF_HOST in config:
-        hosts = config[CONF_HOST]
-    else:
-        hosts.append(
-            await hass.async_add_executor_job(radiotherm.discover.discover_address)
-        )
-
-    if not hosts:
-        _LOGGER.error("No Radiotherm Thermostats detected")
-        return
-
-    for host in hosts:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={CONF_HOST: host},
-            )
-        )
-
-
 class RadioThermostat(RadioThermostatEntity, ClimateEntity):
     """Representation of a Radio Thermostat."""
 
     _attr_hvac_modes = OPERATION_LIST
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_precision = PRECISION_HALVES
+    _attr_name = None
 
     def __init__(self, coordinator: RadioThermUpdateCoordinator) -> None:
         """Initialize the thermostat."""
         super().__init__(coordinator)
-        self._attr_name = self.init_data.name
         self._attr_unique_id = self.init_data.mac
         self._attr_fan_modes = CT30_FAN_OPERATION_LIST
         self._attr_supported_features = (

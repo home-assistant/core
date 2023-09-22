@@ -37,12 +37,7 @@ from .const import (
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-    warn_for_legacy_schema,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
 from .util import get_mqtt_data
 
@@ -54,7 +49,7 @@ CONF_STATE_OFF = "state_off"
 
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_STATE_OFF): cv.string,
@@ -63,13 +58,6 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-
-# Configuring MQTT Switches under the switch platform key was deprecated in
-# HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(switch.DOMAIN),
-)
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
@@ -100,6 +88,7 @@ async def _async_setup_entity(
 class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     """Representation of a switch that can be toggled using MQTT."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = switch.ENTITY_ID_FORMAT
 
     _optimistic: bool
@@ -136,6 +125,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         self._optimistic = (
             config[CONF_OPTIMISTIC] or config.get(CONF_STATE_TOPIC) is None
         )
+        self._attr_assumed_state = bool(self._optimistic)
 
         self._value_template = MqttValueTemplate(
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
@@ -181,11 +171,6 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         if self._optimistic and (last_state := await self.async_get_last_state()):
             self._attr_is_on = last_state.state == STATE_ON
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on.

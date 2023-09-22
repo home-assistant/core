@@ -21,7 +21,7 @@ ICON_PATH = "/some/path"
 MESSAGE = "one, two, testing, testing"
 
 
-async def test_notify(hass, client):
+async def test_notify(hass: HomeAssistant, client) -> None:
     """Test sending a message."""
     await setup_webostv(hass)
     assert hass.services.has_service(NOTIFY_DOMAIN, TV_NAME)
@@ -71,7 +71,7 @@ async def test_notify(hass, client):
     )
 
 
-async def test_notify_not_connected(hass, client, monkeypatch):
+async def test_notify_not_connected(hass: HomeAssistant, client, monkeypatch) -> None:
     """Test sending a message when client is not connected."""
     await setup_webostv(hass)
     assert hass.services.has_service(NOTIFY_DOMAIN, TV_NAME)
@@ -93,7 +93,9 @@ async def test_notify_not_connected(hass, client, monkeypatch):
     client.send_message.assert_called_with(MESSAGE, icon_path=ICON_PATH)
 
 
-async def test_icon_not_found(hass, caplog, client, monkeypatch):
+async def test_icon_not_found(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, client, monkeypatch
+) -> None:
     """Test notify icon not found error."""
     await setup_webostv(hass)
     assert hass.services.has_service(NOTIFY_DOMAIN, TV_NAME)
@@ -123,7 +125,14 @@ async def test_icon_not_found(hass, caplog, client, monkeypatch):
         (ConnectionRefusedError, "TV unreachable"),
     ],
 )
-async def test_connection_errors(hass, caplog, client, monkeypatch, side_effect, error):
+async def test_connection_errors(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    client,
+    monkeypatch,
+    side_effect,
+    error,
+) -> None:
     """Test connection errors scenarios."""
     await setup_webostv(hass)
     assert hass.services.has_service("notify", TV_NAME)

@@ -102,7 +102,6 @@ async def test_states_non_default_timezone(hass: HomeAssistant) -> None:
     assert device.state == "2017-05-17T20:54:00"
 
 
-# pylint: disable=no-member
 async def test_timezone_intervals(hass: HomeAssistant) -> None:
     """Test date sensor behavior in a timezone besides UTC."""
     hass.config.set_time_zone("America/New_York")
@@ -151,7 +150,9 @@ async def test_timezone_intervals(hass: HomeAssistant) -> None:
     "homeassistant.util.dt.utcnow",
     return_value=dt_util.parse_datetime("2017-11-14 02:47:19-00:00"),
 )
-async def test_timezone_intervals_empty_parameter(utcnow_mock, hass):
+async def test_timezone_intervals_empty_parameter(
+    utcnow_mock, hass: HomeAssistant
+) -> None:
     """Test get_interval() without parameters."""
     hass.config.set_time_zone("America/Edmonton")
     device = time_date.TimeDateSensor(hass, "date")

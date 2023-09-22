@@ -59,7 +59,7 @@ async def test_missing_required_keys(hass: HomeAssistant) -> None:
     assert hass.states.async_all("button") == []
 
 
-async def test_all_optional_config(hass, calls):
+async def test_all_optional_config(hass: HomeAssistant, calls) -> None:
     """Test: including all optional templates is ok."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -97,7 +97,7 @@ async def test_all_optional_config(hass, calls):
         _TEST_OPTIONS_BUTTON,
     )
 
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         await hass.services.async_call(

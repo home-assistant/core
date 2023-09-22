@@ -4,6 +4,7 @@
   "codeowners": ["@home-assistant/core"],
   "dependencies": [
     "application_credentials",
+    "assist_pipeline",
     "automation",
     "bluetooth",
     "cloud",
@@ -33,6 +34,7 @@
     "schedule",
     "script",
     "ssdp",
+    "stream",
     "sun",
     "system_health",
     "tag",

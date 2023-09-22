@@ -9,14 +9,22 @@ from homeassistant.components.imap_email_content import sensor as imap_email_con
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.template import Template
+from homeassistant.setup import async_setup_component
 
 
 class FakeEMailReader:
     """A test class for sending test emails."""
 
-    def __init__(self, messages):
+    def __init__(self, messages) -> None:
         """Set up the fake email reader."""
         self._messages = messages
+        self.last_id = 0
+        self.last_unread_id = len(messages)
+
+    def add_test_message(self, message):
+        """Add a new message."""
+        self.last_unread_id += 1
+        self._messages.append(message)
 
     def connect(self):
         """Stay always Connected."""
@@ -26,7 +34,13 @@ class FakeEMailReader:
         """Get the next email."""
         if len(self._messages) == 0:
             return None
+        self.last_id += 1
         return self._messages.popleft()
+
+
+async def test_integration_setup_(hass: HomeAssistant) -> None:
+    """Test the integration component setup is successful."""
+    assert await async_setup_component(hass, "imap_email_content", {})
 
 
 async def test_allowed_sender(hass: HomeAssistant) -> None:
@@ -146,7 +160,7 @@ async def test_multi_part_only_other_text(hass: HomeAssistant) -> None:
 
 
 async def test_multiple_emails(hass: HomeAssistant) -> None:
-    """Test multiple emails."""
+    """Test multiple emails, discarding stale states."""
     states = []
 
     test_message1 = email.message.Message()
@@ -158,8 +172,14 @@ async def test_multiple_emails(hass: HomeAssistant) -> None:
     test_message2 = email.message.Message()
     test_message2["From"] = "sender@test.com"
     test_message2["Subject"] = "Test 2"
-    test_message2["Date"] = datetime.datetime(2016, 1, 1, 12, 44, 57)
+    test_message2["Date"] = datetime.datetime(2016, 1, 1, 12, 44, 58)
     test_message2.set_payload("Test Message 2")
+
+    test_message3 = email.message.Message()
+    test_message3["From"] = "sender@test.com"
+    test_message3["Subject"] = "Test 3"
+    test_message3["Date"] = datetime.datetime(2016, 1, 1, 12, 50, 1)
+    test_message3.set_payload("Test Message 2")
 
     def state_changed_listener(entity_id, from_s, to_s):
         states.append(to_s)
@@ -178,11 +198,13 @@ async def test_multiple_emails(hass: HomeAssistant) -> None:
 
     sensor.async_schedule_update_ha_state(True)
     await hass.async_block_till_done()
+    # Fake a new received message
+    sensor._email_reader.add_test_message(test_message3)
     sensor.async_schedule_update_ha_state(True)
     await hass.async_block_till_done()
 
-    assert states[0].state == "Test"
-    assert states[1].state == "Test 2"
+    assert states[0].state == "Test 2"
+    assert states[1].state == "Test 3"
 
     assert sensor.extra_state_attributes["body"] == "Test Message 2"
 

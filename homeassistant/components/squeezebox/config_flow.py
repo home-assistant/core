@@ -130,7 +130,8 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # no host specified, see if we can discover an unconfigured LMS server
         try:
-            await asyncio.wait_for(self._discover(), timeout=TIMEOUT)
+            async with asyncio.timeout(TIMEOUT):
+                await self._discover()
             return await self.async_step_edit()
         except asyncio.TimeoutError:
             errors["base"] = "no_server_found"

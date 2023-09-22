@@ -48,6 +48,7 @@ async def test_light_entity_migration(
 ) -> None:
     """Test if entity schema for lights migrates from v1 to v2."""
     config_entry = mock_bridge_v2.config_entry = mock_config_entry_v2
+    config_entry.add_to_hass(hass)
 
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -92,6 +93,7 @@ async def test_sensor_entity_migration(
 ) -> None:
     """Test if entity schema for sensors migrates from v1 to v2."""
     config_entry = mock_bridge_v2.config_entry = mock_config_entry_v2
+    config_entry.add_to_hass(hass)
 
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -111,7 +113,7 @@ async def test_sensor_entity_migration(
     }
 
     # create entities with V1 schema in registry for Hue motion sensor
-    for dev_class, platform, new_id in sensor_mappings:
+    for dev_class, platform, _ in sensor_mappings:
         ent_reg.async_get_or_create(
             platform,
             hue.DOMAIN,

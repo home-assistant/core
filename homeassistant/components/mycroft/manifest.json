@@ -2,6 +2,7 @@
   "domain": "mycroft",
   "name": "Mycroft",
   "codeowners": [],
+  "disabled": "Dependencies not compatible with the new pip resolver",
   "documentation": "https://www.home-assistant.io/integrations/mycroft",
   "iot_class": "local_push",
   "loggers": ["mycroftapi"],

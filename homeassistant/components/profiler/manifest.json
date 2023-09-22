@@ -5,9 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/profiler",
   "quality_scale": "internal",
-  "requirements": [
-    "pyprof2calltree==1.4.5",
-    "guppy3==3.1.2;python_version<'3.11'",
-    "objgraph==3.5.0"
-  ]
+  "requirements": ["pyprof2calltree==1.4.5", "guppy3==3.1.3", "objgraph==3.5.0"]
 }

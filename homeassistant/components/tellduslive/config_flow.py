@@ -3,13 +3,12 @@ import asyncio
 import logging
 import os
 
-import async_timeout
 from tellduslive import Session, supports_local_api
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
-from homeassistant.util.json import load_json
+from homeassistant.util.json import load_json_object
 
 from .const import (
     APPLICATION_NAME,
@@ -91,7 +90,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 auth_url = await self.hass.async_add_executor_job(self._get_auth_url)
             if not auth_url:
                 return self.async_abort(reason="unknown_authorize_url_generation")
@@ -137,7 +136,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_user()
 
         conf = await self.hass.async_add_executor_job(
-            load_json, self.hass.config.path(TELLDUS_CONFIG_FILE)
+            load_json_object, self.hass.config.path(TELLDUS_CONFIG_FILE)
         )
         host = next(iter(conf))
 

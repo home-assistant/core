@@ -22,8 +22,9 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -744,16 +745,16 @@ class PlenticoreDataSensor(
         super().__init__(coordinator)
         self.entity_description = description
         self.entry_id = entry_id
-        self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
 
-        self._sensor_name = description.name
         self._formatter: Callable[[str], Any] = PlenticoreDataFormatter.get_method(
             description.formatter
         )
 
-        self._device_info = device_info
+        self._attr_device_info = device_info
+        self._attr_unique_id = f"{entry_id}_{self.module_id}_{self.data_id}"
+        self._attr_name = f"{platform_name} {description.name}"
 
     @property
     def available(self) -> bool:
@@ -768,7 +769,9 @@ class PlenticoreDataSensor(
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
-        self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        self.async_on_remove(
+            self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
@@ -776,22 +779,7 @@ class PlenticoreDataSensor(
         await super().async_will_remove_from_hass()
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return self._device_info
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of this Sensor Entity."""
-        return f"{self.entry_id}_{self.module_id}_{self.data_id}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of this Sensor Entity."""
-        return f"{self.platform_name} {self._sensor_name}"
-
-    @property
-    def native_value(self) -> Any | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             # None is translated to STATE_UNKNOWN

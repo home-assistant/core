@@ -1,4 +1,5 @@
 """Test UniFi Network integration setup process."""
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components import unifi
@@ -23,7 +24,7 @@ async def test_successful_config_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that configured options for a host are loaded via config entry."""
-    await setup_unifi_integration(hass, aioclient_mock, unique_id=None)
+    await setup_unifi_integration(hass, aioclient_mock)
     assert hass.data[UNIFI_DOMAIN]
 
 
@@ -61,7 +62,11 @@ async def test_unload_entry(
     assert not hass.data[UNIFI_DOMAIN]
 
 
-async def test_wireless_clients(hass, hass_storage, aioclient_mock):
+async def test_wireless_clients(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Verify wireless clients class."""
     hass_storage[unifi.STORAGE_KEY] = {
         "version": unifi.STORAGE_VERSION,
@@ -84,19 +89,13 @@ async def test_wireless_clients(hass, hass_storage, aioclient_mock):
         "is_wired": False,
         "mac": "00:00:00:00:00:02",
     }
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass, aioclient_mock, clients_response=[client_1, client_2]
     )
     await flush_store(hass.data[unifi.UNIFI_WIRELESS_CLIENTS]._store)
 
-    for mac in [
+    assert sorted(hass_storage[unifi.STORAGE_KEY]["data"]["wireless_clients"]) == [
         "00:00:00:00:00:00",
         "00:00:00:00:00:01",
         "00:00:00:00:00:02",
-    ]:
-        assert (
-            mac
-            in hass_storage[unifi.STORAGE_KEY]["data"][config_entry.entry_id][
-                "wireless_devices"
-            ]
-        )
+    ]

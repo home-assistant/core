@@ -12,13 +12,12 @@ from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
+    Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import event
+from homeassistant.helpers import config_validation as cv, event
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.sun import (
     get_astral_location,
     get_location_astral_event_next,
@@ -26,7 +25,7 @@ from homeassistant.helpers.sun import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_EVENTS_CHANGED, SIGNAL_POSITION_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +78,9 @@ _PHASE_UPDATES = {
 }
 
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track the state of the sun."""
     hass.async_create_task(
@@ -93,26 +95,44 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
     hass.data[DOMAIN] = Sun(hass)
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    sun = hass.data.pop(DOMAIN)
-    sun.remove_listeners()
-    hass.states.async_remove(sun.entity_id)
-    return True
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        entry, [Platform.SENSOR]
+    ):
+        sun: Sun = hass.data.pop(DOMAIN)
+        sun.remove_listeners()
+        hass.states.async_remove(sun.entity_id)
+    return unload_ok
 
 
 class Sun(Entity):
     """Representation of the Sun."""
 
+    _unrecorded_attributes = frozenset(
+        {
+            STATE_ATTR_AZIMUTH,
+            STATE_ATTR_ELEVATION,
+            STATE_ATTR_RISING,
+            STATE_ATTR_NEXT_DAWN,
+            STATE_ATTR_NEXT_DUSK,
+            STATE_ATTR_NEXT_MIDNIGHT,
+            STATE_ATTR_NEXT_NOON,
+            STATE_ATTR_NEXT_RISING,
+            STATE_ATTR_NEXT_SETTING,
+        }
+    )
+
     _attr_name = "Sun"
     entity_id = ENTITY_ID
+    # This entity is legacy and does not have a platform.
+    # We can't fix this easily without breaking changes.
+    _no_platform_reported = True
 
     location: Location
     elevation: Elevation
@@ -131,6 +151,12 @@ class Sun(Entity):
         """Initialize the sun."""
         self.hass = hass
         self.phase: str | None = None
+
+        # This is normally done by async_internal_added_to_hass which is not called
+        # for sun because sun has no platform
+        self._state_info = {
+            "unrecorded_attributes": self._Entity__combined_unrecorded_attributes  # type: ignore[attr-defined]
+        }
 
         self._config_listener: CALLBACK_TYPE | None = None
         self._update_events_listener: CALLBACK_TYPE | None = None
@@ -260,6 +286,7 @@ class Sun(Entity):
         if self._update_sun_position_listener:
             self._update_sun_position_listener()
         self.update_sun_position()
+        async_dispatcher_send(self.hass, SIGNAL_EVENTS_CHANGED)
 
         # Set timer for the next solar event
         self._update_events_listener = event.async_track_point_in_utc_time(
@@ -286,6 +313,8 @@ class Sun(Entity):
             self.solar_azimuth,
         )
         self.async_write_ha_state()
+
+        async_dispatcher_send(self.hass, SIGNAL_POSITION_CHANGED)
 
         # Next update as per the current phase
         assert self.phase

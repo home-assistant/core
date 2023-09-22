@@ -45,7 +45,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
     api = get_api(hass, data)
     try:
-        await api.get_data("all")
+        await api.get_ha_sensor_data()
     except GlancesApiError as err:
         raise CannotConnect from err
 
@@ -61,11 +61,14 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             try:
                 await validate_input(self.hass, user_input)
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                    title=f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                    data=user_input,
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"

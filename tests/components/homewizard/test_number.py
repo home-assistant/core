@@ -44,7 +44,7 @@ async def test_number_loads_entities(
 ) -> None:
     """Test entity does load number when brightness is available."""
 
-    api = get_mock_device()
+    api = get_mock_device(product_type="HWE-SKT")
     api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
 
     with patch(
@@ -81,7 +81,7 @@ async def test_brightness_level_set(
 ) -> None:
     """Test entity turns sets light level."""
 
-    api = get_mock_device()
+    api = get_mock_device(product_type="HWE-SKT")
     api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
 
     def state_set(brightness):
@@ -157,7 +157,7 @@ async def test_brightness_level_set_catches_requesterror(
 ) -> None:
     """Test entity raises HomeAssistantError when RequestError was raised."""
 
-    api = get_mock_device()
+    api = get_mock_device(product_type="HWE-SKT")
     api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
 
     api.state_set = AsyncMock(side_effect=RequestError())
@@ -193,7 +193,7 @@ async def test_brightness_level_set_catches_disablederror(
 ) -> None:
     """Test entity raises HomeAssistantError when DisabledError was raised."""
 
-    api = get_mock_device()
+    api = get_mock_device(product_type="HWE-SKT")
     api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
 
     api.state_set = AsyncMock(side_effect=DisabledError())
@@ -229,7 +229,7 @@ async def test_brightness_level_set_catches_invalid_value(
 ) -> None:
     """Test entity raises ValueError when value was invalid."""
 
-    api = get_mock_device()
+    api = get_mock_device(product_type="HWE-SKT")
     api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
 
     def state_set(brightness):

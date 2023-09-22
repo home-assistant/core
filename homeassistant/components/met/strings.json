@@ -18,5 +18,18 @@
     "abort": {
       "no_home": "No home coordinates are set in the Home Assistant configuration"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "[%key:common::config_flow::data::location%]",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "elevation": "[%key:common::config_flow::data::elevation%]"
+        }
+      }
+    }
   }
 }
