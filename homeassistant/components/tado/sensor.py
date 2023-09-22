@@ -321,14 +321,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
                 tado_sensor_data = tado_geofence_data
             else:  # SENSOR_DATA_CATEGORY_AIRCOMFORT
                 tado_sensor_data = tado_aircomfort_data
-        attr1 = self._attr_native_value
         self._attr_native_value = self.entity_description.state_fn(tado_sensor_data)
-        attr2 = self._attr_native_value
-        if (
-            attr1 != attr2
-            and self.entity_description.data_category == SENSOR_DATA_CATEGORY_AIRCOMFORT
-        ):
-            _LOGGER.debug("Aircomfort state changed from %s to %s", attr1, attr2)
         if self.entity_description.attributes_fn is not None:
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
                 tado_sensor_data
