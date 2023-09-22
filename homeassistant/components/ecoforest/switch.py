@@ -17,7 +17,7 @@ from .entity import EcoforestEntity
 
 
 @dataclass
-class EcoforestRequiredKeysMixin:
+class EcoforestSwitchRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Device], bool]
