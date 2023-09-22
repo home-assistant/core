@@ -11,6 +11,8 @@ from .const import DOMAIN
 class Tami4EdgeBaseEntity(Entity):
     """Base class for Tami4Edge entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, edge: Tami4EdgeAPI, entity_description: EntityDescription
     ) -> None:

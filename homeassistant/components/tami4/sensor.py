@@ -99,8 +99,6 @@ async def async_setup_entry(
 class Tami4EdgeSensorEntity(Tami4EdgeBaseEntity, CoordinatorEntity, SensorEntity):
     """Representation of the entity."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
