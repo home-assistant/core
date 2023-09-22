@@ -126,6 +126,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class ImageEntity(Entity):
     """The base class for image entities."""
 
+    _entity_component_unrecorded_attributes = frozenset(
+        {"access_token", "entity_picture"}
+    )
+
     # Entity Properties
     _attr_content_type: str = DEFAULT_CONTENT_TYPE
     _attr_image_last_updated: datetime | None = None

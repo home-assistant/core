@@ -35,5 +35,10 @@ SKU_TO_BASE_DEVICE = {
     "Core600S": "Core600S",
     "LAP-C601S-WUS": "Core600S",  # Alt ID Model Core600S
     "LAP-C601S-WUSR": "Core600S",  # Alt ID Model Core600S
-    "LAP-C601S-WEU": "Core600S",  # Alt ID Model Core600S
+    "LAP-C601S-WEU": "Core600S",  # Alt ID Model Core600S,
+    "LAP-V201S-AASR": "Vital200S",
+    "LAP-V201S-WJP": "Vital200S",
+    "LAP-V201S-WEU": "Vital200S",
+    "LAP-V201S-WUS": "Vital200S",
+    "LAP-V201-AUSR": "Vital200S",
 }
