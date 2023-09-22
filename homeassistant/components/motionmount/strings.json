@@ -18,18 +18,12 @@
         "title": "Discovered MotionMount"
       }
     },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "connection_upgrade": "Failed to connect to printer. Please try again with SSL/TLS option checked."
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "connection_upgrade": "Failed to connect to printer due to connection upgrade being required.",
-      "ipp_error": "Encountered IPP error.",
-      "ipp_version_error": "IPP version not supported by printer.",
-      "parse_error": "Failed to parse response from printer.",
-      "unique_id_required": "Device missing unique identification required for discovery."
+      "time_out": "Failed to connect due to a time out.",
+      "not_connected": "Failed to connect.",
+      "invalid_response": "Failed to connect due to an invalid response from the MotionMount."
     }
   }
 }

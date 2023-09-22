@@ -1,22 +1,18 @@
 """Config flow for Vogel's MotionMount."""
-import motionmount
-
-from homeassistant.core import HomeAssistant
-from homeassistant import config_entries
-from homeassistant.components import zeroconf
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-)
-
-from .const import DOMAIN
-
 import logging
 from typing import Any
 
+import motionmount
+
+from homeassistant import config_entries
+from homeassistant.components import zeroconf
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.data_entry_flow import FlowResult
+
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
+
 
 class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Vogel's MotionMount config flow."""
@@ -53,6 +49,17 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.context.update({"title_placeholders": {"name": name}})
 
+        try:
+            await self._validate_input(self.discovery_info)
+        except ConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        except TimeoutError:
+            return self.async_abort(reason="time_out")
+        except motionmount.NotConnectedError:
+            return self.async_abort(reason="not_connected")
+        except motionmount.MotionMountResponseError:
+            return self.async_abort(reason="invalid_response")
+
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
@@ -77,3 +84,10 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Set the unique ID and abort if already configured."""
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
+
+    async def _validate_input(self, data: dict):
+        """Validate the user input allows us to connect."""
+
+        mm = motionmount.MotionMount(data[CONF_HOST], data[CONF_PORT])
+        await mm.connect()
+        await mm.disconnect()
