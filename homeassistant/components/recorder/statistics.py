@@ -2334,7 +2334,7 @@ def get_statistics_run_cache(hass: HomeAssistant) -> StatisticsRunCache:
 def _find_latest_short_term_statistic_stmt(
     metadata_id: int,
 ) -> StatementLambdaElement:
-    """Find the latest short term statistics for a given metadata_id."""
+    """Create the statement to find the latest short term statistics for a given metadata_id."""
     #
     # This code only looks up one row, and should not be refactored to
     # lookup multiple the latest for multiple metadata_ids using func.max
