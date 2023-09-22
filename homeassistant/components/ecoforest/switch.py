@@ -57,8 +57,6 @@ class EcoforestSwitchEntity(EcoforestEntity, SwitchEntity):
 
     entity_description: EcoforestSwitchEntityDescription
 
-    _attr_name = None
-
     @property
     def is_on(self) -> bool:
         """Return the state of the ecoforest device."""
