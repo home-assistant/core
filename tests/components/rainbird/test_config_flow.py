@@ -145,7 +145,7 @@ async def test_multiple_config_entries(
     responses.extend(config_flow_responses)
 
     result = await complete_flow(hass)
-    assert result.get("type") == "create_entry"
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert dict(result.get("result").data) == expected_config_entry
 
     entries = hass.config_entries.async_entries(DOMAIN)
