@@ -533,11 +533,25 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def rgbww_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages for RGBWW."""
+
+            def _converter(
+                r: int, g: int, b: int, cw: int, ww: int
+            ) -> tuple[int, int, int]:
+                min_kelvin = color_util.color_temperature_mired_to_kelvin(
+                    self.min_mireds
+                )
+                max_kelvin = color_util.color_temperature_mired_to_kelvin(
+                    self.min_mireds
+                )
+                return color_util.color_rgbww_to_rgb(
+                    r, g, b, cw, ww, min_kelvin, max_kelvin
+                )
+
             rgbww = _rgbx_received(
                 msg,
                 CONF_RGBWW_VALUE_TEMPLATE,
                 ColorMode.RGBWW,
-                color_util.color_rgbww_to_rgb,
+                _converter,
             )
             if rgbww is None:
                 return
