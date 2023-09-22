@@ -137,7 +137,9 @@ async def test_report_notifications(
 ) -> None:
     """Test report state works."""
     assert await async_setup_component(hass, "event", {})
-    hass.states.async_set("event.doorbell", "unknown")
+    hass.states.async_set(
+        "event.doorbell", "unknown", attributes={"device_class": "doorbell"}
+    )
 
     with patch.object(
         BASIC_CONFIG, "async_report_state_all", AsyncMock()
@@ -166,7 +168,11 @@ async def test_report_notifications(
     ) as mock_notifications_request:
         event_time = datetime.fromisoformat("2023-08-01T00:02:57+00:00")
         epoc_event_time = int(mktime(event_time.timetuple()))
-        hass.states.async_set("event.doorbell", "2023-08-01T00:02:57+00:00")
+        hass.states.async_set(
+            "event.doorbell",
+            "2023-08-01T00:02:57+00:00",
+            attributes={"device_class": "doorbell"},
+        )
         async_fire_time_changed(
             hass, datetime.fromisoformat("2023-08-01T00:03:00+00:00")
         )
@@ -178,16 +184,22 @@ async def test_report_notifications(
             "devices"
         ]["notifications"]["event.doorbell"]
         assert notifications_payload == {
-            "ObjectDetection": {"priority": 0, "detectionTimestamp": epoc_event_time}
+            "ObjectDetection": {
+                "objects": {"unclassified": 1},
+                "priority": 0,
+                "detectionTimestamp": epoc_event_time * 1000,
+            }
         }
         assert "Sending event notification for entity event.doorbell" in caplog.text
         assert "Unable to send notification with result code" not in caplog.text
 
-    hass.states.async_set("event.doorbell", "unknown")
+    hass.states.async_set(
+        "event.doorbell", "unknown", attributes={"device_class": "doorbell"}
+    )
     async_fire_time_changed(hass, datetime.fromisoformat("2023-08-01T01:01:00+00:00"))
     await hass.async_block_till_done()
-    # Test the notification request failed
 
+    # Test the notification request failed
     caplog.clear()
     with patch.object(
         BASIC_CONFIG, "async_report_state_all", AsyncMock()
@@ -196,7 +208,11 @@ async def test_report_notifications(
     ) as mock_notifications_request:
         event_time = datetime.fromisoformat("2023-08-01T01:02:57+00:00")
         epoc_event_time = int(mktime(event_time.timetuple()))
-        hass.states.async_set("event.doorbell", "2023-08-01T01:02:57+00:00")
+        hass.states.async_set(
+            "event.doorbell",
+            "2023-08-01T01:02:57+00:00",
+            attributes={"device_class": "doorbell"},
+        )
         async_fire_time_changed(
             hass, datetime.fromisoformat("2023-08-01T01:03:00+00:00")
         )
@@ -206,7 +222,11 @@ async def test_report_notifications(
             "devices"
         ]["notifications"]["event.doorbell"]
         assert notifications_payload == {
-            "ObjectDetection": {"priority": 0, "detectionTimestamp": epoc_event_time}
+            "ObjectDetection": {
+                "objects": {"unclassified": 1},
+                "priority": 0,
+                "detectionTimestamp": epoc_event_time * 1000,
+            }
         }
         assert "Sending event notification for entity event.doorbell" in caplog.text
         assert (
