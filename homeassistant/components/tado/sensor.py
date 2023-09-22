@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 import logging
 from typing import Any
 
@@ -40,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 class TadoSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    state_fn: Callable[[Any], StateType]
+    state_fn: Callable[[Any], StateType | datetime]
 
 
 @dataclass
@@ -134,14 +135,18 @@ HOME_SENSORS = [
     TadoSensorEntityDescription(
         key="last open window",
         translation_key="last_open_window",
-        state_fn=lambda data: data["freshness"]["lastOpenWindow"],
+        state_fn=lambda data: datetime.strptime(
+            data["freshness"]["lastOpenWindow"], "%Y-%m-%dT%H:%M:%SZ"
+        ).replace(tzinfo=UTC),
         device_class=SensorDeviceClass.TIMESTAMP,
         data_category=SENSOR_DATA_CATEGORY_AIRCOMFORT,
     ),
     TadoSensorEntityDescription(
         key="last ac power off",
         translation_key="last_ac_power_off",
-        state_fn=lambda data: data["freshness"]["lastAcPowerOff"],
+        state_fn=lambda data: datetime.strptime(
+            data["freshness"]["lastAcPowerOff"], "%Y-%m-%dT%H:%M:%S.%fZ"
+        ).replace(tzinfo=UTC),
         device_class=SensorDeviceClass.TIMESTAMP,
         data_category=SENSOR_DATA_CATEGORY_AIRCOMFORT,
     ),
@@ -316,7 +321,14 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
                 tado_sensor_data = tado_geofence_data
             else:  # SENSOR_DATA_CATEGORY_AIRCOMFORT
                 tado_sensor_data = tado_aircomfort_data
+        attr1 = self._attr_native_value
         self._attr_native_value = self.entity_description.state_fn(tado_sensor_data)
+        attr2 = self._attr_native_value
+        if (
+            attr1 != attr2
+            and self.entity_description.data_category == SENSOR_DATA_CATEGORY_AIRCOMFORT
+        ):
+            _LOGGER.debug("Aircomfort state changed from %s to %s", attr1, attr2)
         if self.entity_description.attributes_fn is not None:
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
                 tado_sensor_data
