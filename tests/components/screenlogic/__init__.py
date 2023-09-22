@@ -35,6 +35,9 @@ def num_key_string_to_int(data: dict) -> None:
 DATA_FULL_CHEM = num_key_string_to_int(
     load_json_object_fixture("screenlogic/data_full_chem.json")
 )
+DATA_FULL_NO_GPM = num_key_string_to_int(
+    load_json_object_fixture("screenlogic/data_full_no_gpm.json")
+)
 DATA_MIN_MIGRATION = num_key_string_to_int(
     load_json_object_fixture("screenlogic/data_min_migration.json")
 )

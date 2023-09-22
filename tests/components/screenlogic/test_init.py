@@ -1,18 +1,28 @@
 """Tests for ScreenLogic integration init."""
 from dataclasses import dataclass
-from unittest.mock import DEFAULT, patch
+import importlib
+from typing import Any, cast
+from unittest.mock import DEFAULT, Mock, patch
 
 import pytest
 from screenlogicpy import ScreenLogicGateway
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.screenlogic import DOMAIN
+from homeassistant.components.screenlogic import (
+    DOMAIN,
+    PLATFORMS,
+    ScreenlogicDataUpdateCoordinator,
+)
+from homeassistant.components.screenlogic.coordinator import async_get_connect_info
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.loader import ComponentProtocol
 from homeassistant.util import slugify
 
 from . import (
+    DATA_FULL_CHEM,
+    DATA_FULL_NO_GPM,
     DATA_MIN_MIGRATION,
     GATEWAY_DISCOVERY_IMPORT_PATH,
     MOCK_ADAPTER_MAC,
@@ -241,3 +251,43 @@ async def test_entity_migration_data(
 
     entity_not_migrated = entity_registry.async_get(old_eid)
     assert entity_not_migrated == original_entity
+
+
+@pytest.mark.parametrize("data_set", [DATA_FULL_NO_GPM, DATA_FULL_CHEM])
+async def test_platform_setup(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, data_set: dict
+) -> None:
+    """Test platform setup."""
+    stub_connect = lambda *args, **kwargs: stub_async_connect(data_set, *args, **kwargs)
+
+    def add_ents(ents: list[Any]) -> None:
+        pass
+
+    with patch(
+        GATEWAY_DISCOVERY_IMPORT_PATH,
+        return_value={},
+    ), patch.multiple(
+        ScreenLogicGateway,
+        async_connect=stub_connect,
+        is_connected=True,
+        _async_connected_request=DEFAULT,
+    ):
+        connect_info = await async_get_connect_info(hass, mock_config_entry)
+        gateway = ScreenLogicGateway()
+        await gateway.async_connect(**connect_info)
+
+        mock_coordinator = Mock(
+            spec=ScreenlogicDataUpdateCoordinator,
+            config_entry=mock_config_entry,
+            gateway=gateway,
+            hass=hass,
+        )
+        hass.data.setdefault(DOMAIN, {})[mock_config_entry.entry_id] = mock_coordinator
+        for platform in PLATFORMS:
+            component = cast(
+                ComponentProtocol,
+                importlib.import_module(
+                    f"homeassistant.components.screenlogic.{platform}"
+                ),
+            )
+            await component.async_setup_entry(hass, mock_config_entry, add_ents)
