@@ -142,15 +142,6 @@ HOME_SENSORS = [
         data_category=SENSOR_DATA_CATEGORY_AIRCOMFORT,
     ),
     TadoSensorEntityDescription(
-        key="last ac power off",
-        translation_key="last_ac_power_off",
-        state_fn=lambda data: datetime.strptime(
-            data["freshness"]["lastAcPowerOff"], "%Y-%m-%dT%H:%M:%S.%fZ"
-        ).replace(tzinfo=UTC),
-        device_class=SensorDeviceClass.TIMESTAMP,
-        data_category=SENSOR_DATA_CATEGORY_AIRCOMFORT,
-    ),
-    TadoSensorEntityDescription(
         key="tado mode",
         translation_key="tado_mode",
         state_fn=get_tado_mode,
