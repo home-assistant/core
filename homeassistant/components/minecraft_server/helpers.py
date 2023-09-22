@@ -6,7 +6,7 @@ import aiodns
 
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import SRV_RECORD_PREFIX
+SRV_RECORD_PREFIX = "_minecraft._tcp"
 
 _LOGGER = logging.getLogger(__name__)
 
