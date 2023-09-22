@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from aiocomelit import ComeliteSerialBridgeAPi, exceptions as aiocomelit_exceptions
+from aiocomelit import ComeliteSerialBridgeApi, exceptions as aiocomelit_exceptions
 import voluptuous as vol
 
 from homeassistant import core, exceptions
@@ -37,7 +37,7 @@ async def validate_input(
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
-    api = ComeliteSerialBridgeAPi(data[CONF_HOST], data[CONF_PIN])
+    api = ComeliteSerialBridgeApi(data[CONF_HOST], data[CONF_PIN])
 
     try:
         await api.login()

@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-from aiocomelit import ComeliteSerialBridgeAPi
+from aiocomelit import ComeliteSerialBridgeApi
 import aiohttp
 
 from homeassistant.core import HomeAssistant
@@ -22,7 +22,7 @@ class ComelitSerialBridge(DataUpdateCoordinator):
         self._host = host
         self._pin = pin
 
-        self.api = ComeliteSerialBridgeAPi(host, pin)
+        self.api = ComeliteSerialBridgeApi(host, pin)
 
         super().__init__(
             hass=hass,
