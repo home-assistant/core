@@ -47,7 +47,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("WebIO serial number is not available")
         return False
 
-    coordinator = NASwebCoordinator(hass, webio_api)
+    coordinator = NASwebCoordinator(
+        hass, webio_api, name=f"NASweb[{webio_api.get_name()}]"
+    )
     hass.data[DOMAIN][entry.entry_id] = coordinator
     notifi_coordinator.add_coordinator(webio_serial, coordinator)
 
