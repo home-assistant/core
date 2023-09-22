@@ -126,14 +126,27 @@ HOME_SENSORS = [
         data_category=SENSOR_DATA_CATEGORY_WEATHER,
     ),
     TadoSensorEntityDescription(
-        key="air comfort",
+        key="freshness",
         translation_key="freshness",
         state_fn=lambda data: data["freshness"]["value"],
-        attributes_fn=lambda data: {
-            "lastOpenWidow": data["freshness"]["lastOpenWindow"],
-            "acPoweredOn": data["freshness"]["acPoweredOn"],
-            "lastAcPowerOff": data["freshness"]["lastAcPowerOff"],
-        },
+        data_category=SENSOR_DATA_CATEGORY_AIRCOMFORT,
+    ),
+    TadoSensorEntityDescription(
+        key="last open window",
+        translation_key="last_open_window",
+        state_fn=lambda data: data["freshness"]["lastOpenWindow"],
+        data_category=SENSOR_DATA_CATEGORY_AIRCOMFORT,
+    ),
+    TadoSensorEntityDescription(
+        key="ac powered on",
+        translation_key="ac_powered_on",
+        state_fn=lambda data: data["freshness"]["acPoweredOn"],
+        data_category=SENSOR_DATA_CATEGORY_AIRCOMFORT,
+    ),
+    TadoSensorEntityDescription(
+        key="last ac power off",
+        translation_key="last_ac_power_off",
+        state_fn=lambda data: data["freshness"]["lastAcPowerOff"],
         data_category=SENSOR_DATA_CATEGORY_AIRCOMFORT,
     ),
     TadoSensorEntityDescription(

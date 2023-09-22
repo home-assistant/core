@@ -63,6 +63,15 @@
       "freshness": {
         "name": "Freshness"
       },
+      "last_open_window": {
+        "name": "Last open window"
+      },
+      "ac_powered_on": {
+        "name": "AC powered on"
+      },
+      "last_ac_power_off": {
+        "name": "Last AC power off"
+      },
       "outdoor_temperature": {
         "name": "Outdoor temperature"
       },
