@@ -4,7 +4,7 @@ from datetime import datetime
 
 from freezegun import freeze_time as alter_time  # noqa: F401
 
-from homeassistant.components import jewish_calendar
+from homeassistant.components.jewish_calendar import const
 import homeassistant.util.dt as dt_util
 
 _LatLng = namedtuple("_LatLng", ["lat", "lng"])
@@ -26,7 +26,7 @@ def make_nyc_test_params(dtime, results, havdalah_offset=0):
         }
     return (
         dtime,
-        jewish_calendar.CANDLE_LIGHT_DEFAULT,
+        const.DEFAULT_CANDLE_LIGHT,
         havdalah_offset,
         True,
         "America/New_York",
@@ -48,7 +48,7 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
         }
     return (
         dtime,
-        jewish_calendar.CANDLE_LIGHT_DEFAULT,
+        const.DEFAULT_CANDLE_LIGHT,
         havdalah_offset,
         False,
         "Asia/Jerusalem",

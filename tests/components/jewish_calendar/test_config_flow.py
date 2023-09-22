@@ -1,59 +1,45 @@
 """Test the Jewish calendar config flow."""
-from unittest.mock import patch
-
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.jewish_calendar import config_flow
 from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
-    CONF_LANGUAGE,
     DEFAULT_DIASPORA,
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.core import HomeAssistant
 
-from tests.common import mock_coro
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_step_user(hass):
+async def test_step_user(hass: HomeAssistant) -> None:
     """Test user config."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.jewish_calendar.config_flow.validate_input",
-        return_value=mock_coro({"title": "Test Title"}),
-    ), patch(
-        "homeassistant.components.jewish_calendar.async_setup",
-        return_value=mock_coro(True),
-    ) as mock_setup, patch(
-        "homeassistant.components.jewish_calendar.async_setup_entry",
-        return_value=mock_coro(True),
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"name": "JCalendar", "diaspora": True, "language": "hebrew"},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"name": "Jewish Calendar", "diaspora": True, "language": "hebrew"},
+    )
 
-    assert result2["type"] == "form"
-    assert result2["title"] == "Test Title"
-    assert result2["data"] == {
-        "name": "JCalendar",
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Jewish Calendar"
+    assert result["data"] == {
+        "name": "Jewish Calendar",
         "diaspora": True,
         "language": "hebrew",
     }
-
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize("diaspora", [True, False])
