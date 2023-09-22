@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
-from time import mktime, time
 from typing import Any, TypeVar
 
 from homeassistant.components import (
@@ -80,6 +79,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.helpers.network import get_url
 from homeassistant.util import color as color_util, dt as dt_util
+from homeassistant.util.dt import utcnow
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -359,7 +359,9 @@ class ObjectDetection(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _) -> bool:
         """Test if state is supported."""
-        return domain == event.DOMAIN
+        return (
+            domain == event.DOMAIN and device_class == event.EventDeviceClass.DOORBELL
+        )
 
     def sync_attributes(self):
         """Return ObjectDetection attributes for a sync request."""
@@ -376,27 +378,23 @@ class ObjectDetection(_Trait):
     def query_notifications(self) -> dict[str, Any] | None:
         """Return notifications payload."""
 
+        if self.state.state in {STATE_UNKNOWN, STATE_UNAVAILABLE}:
+            return None
+
         # Only notify if last event was less then 30 seconds ago
-        if (
-            self.state.state not in {STATE_UNKNOWN, STATE_UNAVAILABLE}
-            and time()
-            - (
-                time_stamp := int(
-                    mktime(datetime.fromisoformat(self.state.state).timetuple())
-                )
-            )
-            < 30.0
-        ):
-            return {
-                "ObjectDetection": {
-                    "objects": {
-                        "unclassified": 1,
-                    },
-                    "priority": 0,
-                    "detectionTimestamp": time_stamp,
+        time_stamp = datetime.fromisoformat(self.state.state)
+        if (utcnow() - time_stamp) > timedelta(seconds=30):
+            return None
+
+        return {
+            "ObjectDetection": {
+                "objects": {
+                    "unclassified": 1,
                 },
-            }
-        return None
+                "priority": 0,
+                "detectionTimestamp": int(time_stamp.timestamp() * 1000),
+            },
+        }
 
     async def execute(self, command, data, params, challenge):
         """Execute an ObjectDetection command."""
