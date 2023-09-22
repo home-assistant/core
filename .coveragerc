@@ -182,6 +182,7 @@ omit =
     homeassistant/components/control4/__init__.py
     homeassistant/components/control4/director_utils.py
     homeassistant/components/control4/light.py
+    homeassistant/components/coolmaster/coordinator.py
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/crownstone/__init__.py
     homeassistant/components/crownstone/devices.py
@@ -258,6 +259,11 @@ omit =
     homeassistant/components/ecobee/notify.py
     homeassistant/components/ecobee/sensor.py
     homeassistant/components/ecobee/weather.py
+    homeassistant/components/ecoforest/__init__.py
+    homeassistant/components/ecoforest/coordinator.py
+    homeassistant/components/ecoforest/entity.py
+    homeassistant/components/ecoforest/number.py
+    homeassistant/components/ecoforest/sensor.py
     homeassistant/components/econet/__init__.py
     homeassistant/components/econet/binary_sensor.py
     homeassistant/components/econet/climate.py
@@ -1015,6 +1021,7 @@ omit =
     homeassistant/components/renson/coordinator.py
     homeassistant/components/renson/entity.py
     homeassistant/components/renson/sensor.py
+    homeassistant/components/renson/button.py
     homeassistant/components/renson/fan.py
     homeassistant/components/renson/binary_sensor.py
     homeassistant/components/renson/number.py
