@@ -32,7 +32,7 @@ class EcoforestSwitchEntityDescription(
 
 SWITCH_TYPES: tuple[EcoforestSwitchEntityDescription, ...] = (
     EcoforestSwitchEntityDescription(
-        key="status", translation_key="status", value_fn=lambda data: data.on
+        key="status", name=None, value_fn=lambda data: data.on
     ),
 )
 
