@@ -193,7 +193,7 @@
       "description": "Set the breeze function of the ventilation system",
       "fields": {
         "breeze_level": {
-          "name": "Level",
+          "name": "[%key:component::renson::services::set_timer_level::fields::timer_level::name%]",
           "description": "Ventilation level when breeze function is activated"
         },
         "temperature": {
