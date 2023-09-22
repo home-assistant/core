@@ -3,7 +3,7 @@ set_timer_level:
     timer_level:
       required: true
       advanced: false
-      default: "Level1"
+      default: "level1"
       selector:
         select:
           translation_key: "fan_setting"
