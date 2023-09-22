@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 from webio_api import Output as NASwebOutput
@@ -12,7 +13,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_registry import EntityRegistry, async_get
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, OUTPUT_TRANSLATION_KEY
+from .const import DOMAIN, OUTPUT_TRANSLATION_KEY, STATUS_UPDATE_MAX_TIME_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,9 +50,17 @@ class RelaySwitch(SwitchEntity):
         """Handle updated data from the coordinator."""
         old_available = self.available
         self._attr_is_on = self._output.state
-        self._attr_available = self._output.available
-        if old_available != self.available and not self.available and self.unique_id:
-            _LOGGER.warning("Removing unavailable entity: %s", self)
+        if (
+            time.time() - self._output.last_update >= STATUS_UPDATE_MAX_TIME_INTERVAL
+            or not self.coordinator.last_update_success
+        ):
+            self._attr_available = False
+        else:
+            self._attr_available = (
+                self._output.available if self._output.available is not None else False
+            )
+        if old_available and self._output.available is None and self.unique_id:
+            _LOGGER.warning("Removing entity: %s", self)
             er: EntityRegistry = async_get(self.hass)
             er.async_remove(self.entity_id)
             return
