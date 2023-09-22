@@ -2349,7 +2349,7 @@ def cache_latest_short_term_statistic_id_for_metadata_id(
 def _find_latest_short_term_statistic_for_metadata_id_stmt(
     metadata_id: int,
 ) -> StatementLambdaElement:
-    """Create the statement to find the latest short term statistics for a given metadata_id."""
+    """Create a statement to find the latest short term statistics for a metadata_id."""
     #
     # This code only looks up one row, and should not be refactored to
     # lookup multiple the latest for multiple metadata_ids using func.max
