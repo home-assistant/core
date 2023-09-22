@@ -1,6 +1,7 @@
 """Support for Fibaro scenes."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from pyfibaro.fibaro_scene import SceneModel
@@ -14,6 +15,8 @@ from homeassistant.util import slugify
 
 from . import FibaroController
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -50,6 +53,13 @@ class FibaroScene(Scene):
         # All scenes are shown on hub device
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, controller.hub_serial)}
+        )
+
+        _LOGGER.debug(
+            "Scene added: %s / %s -> %s",
+            fibaro_scene.fibaro_id,
+            fibaro_scene.name,
+            self._attr_unique_id,
         )
 
     def activate(self, **kwargs: Any) -> None:
