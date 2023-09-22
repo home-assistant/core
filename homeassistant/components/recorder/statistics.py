@@ -2306,8 +2306,7 @@ def _import_statistics_with_session(
         return True
 
     # We just inserted new short term statistics, so we need to update the
-    # latest_statistics_short_term_ids table that tracks what the newest id is
-    # for the metadata_id.
+    # ShortTermStatisticsRunCache with the latest id for the metadata_id
     run_cache = get_short_term_statistics_run_cache(instance.hass)
     cache_latest_short_term_statistic_id_for_metadata_id(
         run_cache, session, metadata_id
