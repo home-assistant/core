@@ -122,7 +122,7 @@ async def async_scan_tag(
 
     # Get name from helper, default value None if not present in data
     tag_name = None
-    if (tag_data := helper.data.get(tag_id)) is not None:
+    if tag_data := helper.data.get(tag_id):
         tag_name = tag_data.get(CONF_NAME)
 
     hass.bus.async_fire(
