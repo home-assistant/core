@@ -142,43 +142,37 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: VolumeConverter for unit in VolumeConverter.VALID_UNITS},
 }
 
-DATA_STATISTICS_RUN_CACHE = "recorder_statistics_run_cache"
+DATA_SHORT_TERM_STATISTICS_RUN_CACHE = "recorder_short_term_statistics_run_cache"
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(slots=True)
-class StatisticsRunCache:
-    """Cache for statistics runs."""
+class ShortTermStatisticsRunCache:
+    """Cache for short term statistics runs."""
 
     # This is a mapping of metadata_id:id of the last short term
     # statistics run for each metadata_id
-    _latest_short_term_statistics_id_by_metadata_id: dict[int, int] = dataclasses.field(
-        default_factory=dict
-    )
+    _latest_id_by_metadata_id: dict[int, int] = dataclasses.field(default_factory=dict)
 
-    def get_latest_short_term_statistics_ids(
-        self, metadata_ids: set[int]
-    ) -> dict[int, int]:
+    def get_latest_ids(self, metadata_ids: set[int]) -> dict[int, int]:
         """Return the latest short term statistics ids for the metadata_ids."""
         return {
             metadata_id: id_
-            for metadata_id, id_ in self._latest_short_term_statistics_id_by_metadata_id.items()
+            for metadata_id, id_ in self._latest_id_by_metadata_id.items()
             if metadata_id in metadata_ids
         }
 
-    def set_latest_short_term_statistic_id_for_metadata_id(
-        self, metadata_id: int, id_: int
-    ) -> None:
+    def set_latest_id_for_metadata_id(self, metadata_id: int, id_: int) -> None:
         """Cache the latest id for the metadata_id."""
-        self._latest_short_term_statistics_id_by_metadata_id[metadata_id] = id_
+        self._latest_id_by_metadata_id[metadata_id] = id_
 
-    def set_latest_short_term_statistic_ids_for_metadata_ids(
+    def set_latest_ids_for_metadata_ids(
         self, metadata_id_to_id: dict[int, int]
     ) -> None:
-        """Cache the latest id for the metadata_id."""
-        self._latest_short_term_statistics_id_by_metadata_id.update(metadata_id_to_id)
+        """Cache the latest id for the each metadata_id."""
+        self._latest_id_by_metadata_id.update(metadata_id_to_id)
 
 
 class BaseStatisticsRow(TypedDict, total=False):
@@ -583,11 +577,8 @@ def _compile_statistics(
             dict[int, int],
             {new_stat.metadata_id: new_stat.id for new_stat in new_short_term_stats},
         )
-        get_statistics_run_cache(
-            instance.hass
-        ).set_latest_short_term_statistic_ids_for_metadata_ids(
-            updated_metadata_id_to_id
-        )
+        run_cache = get_short_term_statistics_run_cache(instance.hass)
+        run_cache.set_latest_ids_for_metadata_ids(updated_metadata_id_to_id)
 
     return modified_statistic_ids
 
@@ -1910,12 +1901,10 @@ def get_latest_short_term_statistics(
         metadata_ids = set(
             _extract_metadata_and_discard_impossible_columns(metadata, types)
         )
-        run_cache = get_statistics_run_cache(hass)
+        run_cache = get_short_term_statistics_run_cache(hass)
         # Try to find the latest short term statistics ids for the metadata_ids
         # from the run cache first if we have it.
-        if metadata_id_to_id := run_cache.get_latest_short_term_statistics_ids(
-            metadata_ids
-        ):
+        if metadata_id_to_id := run_cache.get_latest_ids(metadata_ids):
             stats = get_latest_short_term_statistics_by_ids(
                 session, metadata_id_to_id.values()
             )
@@ -1930,9 +1919,7 @@ def get_latest_short_term_statistics(
                 if latest_id := find_latest_short_term_statistic_for_metadata_id(
                     session, metadata_id
                 ):
-                    run_cache.set_latest_short_term_statistic_id_for_metadata_id(
-                        metadata_id, latest_id
-                    )
+                    run_cache.set_latest_id_for_metadata_id(metadata_id, latest_id)
                     missing_ids.add(latest_id)
             if missing_ids and (
                 additional_stats := get_latest_short_term_statistics_by_ids(
@@ -2320,17 +2307,18 @@ def _import_statistics_with_session(
     if latest_id := find_latest_short_term_statistic_for_metadata_id(
         session, metadata_id
     ):
-        get_statistics_run_cache(
-            instance.hass
-        ).set_latest_short_term_statistic_id_for_metadata_id(metadata_id, latest_id)
+        run_cache = get_short_term_statistics_run_cache(instance.hass)
+        run_cache.set_latest_id_for_metadata_id(metadata_id, latest_id)
 
     return True
 
 
-@singleton(DATA_STATISTICS_RUN_CACHE)
-def get_statistics_run_cache(hass: HomeAssistant) -> StatisticsRunCache:
-    """Get the statistics run cache."""
-    return StatisticsRunCache()
+@singleton(DATA_SHORT_TERM_STATISTICS_RUN_CACHE)
+def get_short_term_statistics_run_cache(
+    hass: HomeAssistant,
+) -> ShortTermStatisticsRunCache:
+    """Get the short term statistics run cache."""
+    return ShortTermStatisticsRunCache()
 
 
 def find_latest_short_term_statistic_for_metadata_id(
