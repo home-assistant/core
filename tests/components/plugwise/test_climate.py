@@ -18,7 +18,11 @@ async def test_adam_climate_entity_attributes(
     state = hass.states.get("climate.zone_lisa_wk")
     assert state
     assert state.state == HVACMode.AUTO
-    assert state.attributes["hvac_modes"] == [HVACMode.HEAT, HVACMode.AUTO]
+    assert state.attributes["hvac_modes"] == [
+        HVACMode.HEAT,
+        HVACMode.OFF,
+        HVACMode.AUTO,
+    ]
     # hvac_action is not asserted as the fixture is not in line with recent firmware functionality
 
     assert "preset_modes" in state.attributes
@@ -31,12 +35,16 @@ async def test_adam_climate_entity_attributes(
     assert state.attributes["temperature"] == 21.5
     assert state.attributes["min_temp"] == 0.0
     assert state.attributes["max_temp"] == 99.9
-    assert state.attributes["target_temp_step"] == 0.1
+    assert state.attributes["target_temp_step"] == 0.5
 
     state = hass.states.get("climate.zone_thermostat_jessie")
     assert state
     assert state.state == HVACMode.AUTO
-    assert state.attributes["hvac_modes"] == [HVACMode.HEAT, HVACMode.AUTO]
+    assert state.attributes["hvac_modes"] == [
+        HVACMode.HEAT,
+        HVACMode.OFF,
+        HVACMode.AUTO,
+    ]
     # hvac_action is not asserted as the fixture is not in line with recent firmware functionality
 
     assert "preset_modes" in state.attributes
@@ -48,7 +56,7 @@ async def test_adam_climate_entity_attributes(
     assert state.attributes["temperature"] == 15.0
     assert state.attributes["min_temp"] == 0.0
     assert state.attributes["max_temp"] == 99.9
-    assert state.attributes["target_temp_step"] == 0.1
+    assert state.attributes["target_temp_step"] == 0.5
 
 
 async def test_adam_2_climate_entity_attributes(
@@ -59,13 +67,21 @@ async def test_adam_2_climate_entity_attributes(
     assert state
     assert state.state == HVACMode.HEAT
     assert state.attributes["hvac_action"] == "heating"
-    assert state.attributes["hvac_modes"] == [HVACMode.HEAT, HVACMode.AUTO]
+    assert state.attributes["hvac_modes"] == [
+        HVACMode.HEAT,
+        HVACMode.OFF,
+        HVACMode.AUTO,
+    ]
 
     state = hass.states.get("climate.lisa_badkamer")
     assert state
     assert state.state == HVACMode.AUTO
     assert state.attributes["hvac_action"] == "idle"
-    assert state.attributes["hvac_modes"] == [HVACMode.HEAT, HVACMode.AUTO]
+    assert state.attributes["hvac_modes"] == [
+        HVACMode.HEAT,
+        HVACMode.OFF,
+        HVACMode.AUTO,
+    ]
 
 
 async def test_adam_3_climate_entity_attributes(
@@ -79,6 +95,7 @@ async def test_adam_3_climate_entity_attributes(
     assert state.attributes["hvac_action"] == "cooling"
     assert state.attributes["hvac_modes"] == [
         HVACMode.HEAT_COOL,
+        HVACMode.OFF,
         HVACMode.AUTO,
     ]
 
@@ -219,6 +236,7 @@ async def test_anna_climate_entity_attributes(
     assert state.attributes["hvac_action"] == "heating"
     assert state.attributes["hvac_modes"] == [
         HVACMode.HEAT,
+        HVACMode.OFF,
         HVACMode.AUTO,
     ]
 
@@ -231,7 +249,7 @@ async def test_anna_climate_entity_attributes(
     assert state.attributes["temperature"] == 20.5
     assert state.attributes["min_temp"] == 4.0
     assert state.attributes["max_temp"] == 30.0
-    assert state.attributes["target_temp_step"] == 0.1
+    assert state.attributes["target_temp_step"] == 0.5
 
 
 async def test_anna_2_climate_entity_attributes(
@@ -246,6 +264,7 @@ async def test_anna_2_climate_entity_attributes(
     assert state.attributes["hvac_action"] == "cooling"
     assert state.attributes["hvac_modes"] == [
         HVACMode.HEAT_COOL,
+        HVACMode.OFF,
         HVACMode.AUTO,
     ]
     assert state.attributes["supported_features"] == 18
@@ -265,6 +284,7 @@ async def test_anna_3_climate_entity_attributes(
     assert state.attributes["hvac_action"] == "idle"
     assert state.attributes["hvac_modes"] == [
         HVACMode.HEAT_COOL,
+        HVACMode.OFF,
         HVACMode.AUTO,
     ]
 
