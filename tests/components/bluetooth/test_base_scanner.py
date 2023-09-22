@@ -18,7 +18,7 @@ from homeassistant.components.bluetooth import (
     storage,
 )
 from homeassistant.components.bluetooth.advertisement_tracker import (
-    TRACKER_BUFFERING_WOBBLE_SECONDS,
+    TRACKER_BUFFERING_JITTER_SECONDS,
 )
 from homeassistant.components.bluetooth.const import (
     CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -528,7 +528,7 @@ async def test_device_with_ten_minute_advertising_interval(
     assert bparasite_device_went_unavailable is False
 
     missed_advertisement_future_time = (
-        future_time + advertising_interval + TRACKER_BUFFERING_WOBBLE_SECONDS + 1
+        future_time + advertising_interval + TRACKER_BUFFERING_JITTER_SECONDS + 1
     )
 
     with patch(
