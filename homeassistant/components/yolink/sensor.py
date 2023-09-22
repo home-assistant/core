@@ -249,6 +249,7 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
         )
+        self.coordinator = coordinator
 
     @callback
     def update_entity_state(self, state: dict) -> None:
@@ -259,5 +260,12 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
             )
         ) is None and self.entity_description.should_update_entity(attr_val) is False:
             return
+        self._attr_available = self.coordinator.dev_online
         self._attr_native_value = attr_val
         self.async_write_ha_state()
+
+    @property
+    def available(self):
+        """Return true is device is available."""
+        return self.coordinator.dev_online
+

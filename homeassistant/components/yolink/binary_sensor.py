@@ -124,6 +124,7 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
     ) -> None:
         """Init YoLink Sensor."""
         super().__init__(config_entry, coordinator)
+        self.coordinator = coordinator
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
@@ -132,7 +133,14 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
     @callback
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
+        self._attr_available = self.coordinator.dev_online
         self._attr_is_on = self.entity_description.value(
             state.get(self.entity_description.state_key)
         )
         self.async_write_ha_state()
+
+    @property
+    def available(self):
+        """Return true is device is available."""
+        return self.coordinator.dev_online
+
