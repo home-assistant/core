@@ -45,9 +45,14 @@ from .const import (
     DEFAULT_OPTIMISTIC,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
-from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -349,6 +354,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_current_cover_tilt_position"})
         def tilt_message_received(msg: ReceiveMessage) -> None:
             """Handle tilt updates."""
             payload = self._tilt_status_template(msg.payload)
@@ -361,6 +367,9 @@ class MqttCover(MqttEntity, CoverEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(
+            self, {"_attr_is_closed", "_attr_is_closing", "_attr_is_opening"}
+        )
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT state messages."""
             payload = self._value_template(msg.payload)
@@ -398,10 +407,18 @@ class MqttCover(MqttEntity, CoverEntity):
                 return
             self._update_state(state)
 
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(
+            self,
+            {
+                "_attr_current_cover_position",
+                "_attr_current_cover_tilt_position",
+                "_attr_is_closed",
+                "_attr_is_closing",
+                "_attr_is_opening",
+            },
+        )
         def position_message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT position messages."""
             payload: ReceivePayloadType = self._get_position_template(msg.payload)
@@ -443,8 +460,6 @@ class MqttCover(MqttEntity, CoverEntity):
                     if percentage_payload == DEFAULT_POSITION_CLOSED
                     else STATE_OPEN
                 )
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_GET_POSITION_TOPIC):
             topics["get_position_topic"] = {
@@ -721,7 +736,6 @@ class MqttCover(MqttEntity, CoverEntity):
         ):
             level = self.find_percentage_in_range(payload)
             self._attr_current_cover_tilt_position = level
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
         else:
             _LOGGER.warning(
                 "Payload '%s' is out of range, must be between '%s' and '%s' inclusive",
