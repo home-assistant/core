@@ -1868,7 +1868,18 @@ def get_last_short_term_statistics(
     )
 
 
-def _latest_short_term_statistics_by_id_stmt(
+def get_latest_short_term_statistics_by_ids(
+    session: Session, ids: Iterable[int]
+) -> Sequence[Row]:
+    """Return the latest short term statistics for a list of ids."""
+    stmt = _latest_short_term_statistics_by_ids_stmt(ids)
+    return cast(
+        Sequence[Row],
+        execute_stmt_lambda_element(session, stmt, orm_rows=False),
+    )
+
+
+def _latest_short_term_statistics_by_ids_stmt(
     ids: Iterable[int],
 ) -> StatementLambdaElement:
     """Create the statement for finding the latest short term stat rows by id."""
@@ -1898,45 +1909,35 @@ def get_latest_short_term_statistics(
             _extract_metadata_and_discard_impossible_columns(metadata, types)
         )
         run_cache = get_statistics_run_cache(hass)
-        # Find the latest short term statistics ids for the metadata_ids
+        # Try to find the latest short term statistics ids for the metadata_ids
+        # from the run cache first if we have it.
         metadata_id_to_id = run_cache.get_latest_short_term_statistics_ids(metadata_ids)
         if metadata_id_to_id:
-            stmt = _latest_short_term_statistics_by_id_stmt(metadata_id_to_id.values())
-            stats = cast(
-                Sequence[Row],
-                execute_stmt_lambda_element(session, stmt, orm_rows=False),
+            stats = get_latest_short_term_statistics_by_ids(
+                session, metadata_id_to_id.values()
             )
         else:
             stats = []
-        found_metadata_ids = set(metadata_id_to_id)
         # If we do not have a row for a metadata_id, we need to find it in the table
         # manually with a slower query. This should only happen once per metadata_id
         # ever since the latest statistics table was introduced.
-        if missing_metadata_ids := metadata_ids - found_metadata_ids:
+        if missing_metadata_ids := metadata_ids - set(metadata_id_to_id):
             missing_ids: set[int] = set()
             for metadata_id in missing_metadata_ids:
-                if (
-                    latest := cast(
-                        Sequence[Row],
-                        execute_stmt_lambda_element(
-                            session,
-                            _find_latest_short_term_statistic_stmt(metadata_id),
-                            orm_rows=False,
-                        ),
-                    )
-                ) and (missing_id := latest[0].id):
-                    run_cache.set_latest_short_term_statistic_id_for_metadata_id(
-                        metadata_id, missing_id
-                    )
-                    missing_ids.add(missing_id)
-            if missing_ids:
-                stmt = _latest_short_term_statistics_by_id_stmt(missing_ids)
-                if stats_for_missing_rows := cast(
-                    Sequence[Row],
-                    execute_stmt_lambda_element(session, stmt, orm_rows=False),
+                if latest_id := find_latest_short_term_statistic_for_metadata_id(
+                    session, metadata_id
                 ):
-                    stats = list(stats)
-                    stats.extend(stats_for_missing_rows)
+                    run_cache.set_latest_short_term_statistic_id_for_metadata_id(
+                        metadata_id, latest_id
+                    )
+                    missing_ids.add(latest_id)
+            if missing_ids and (
+                additional_stats := get_latest_short_term_statistics_by_ids(
+                    session, missing_ids
+                )
+            ):
+                stats = list(stats)
+                stats.extend(additional_stats)
 
         if not stats:
             return {}
@@ -2314,15 +2315,12 @@ def _import_statistics_with_session(
     # We just inserted new short term statistics, so we need to update the
     # latest_statistics_short_term_ids table that tracks what the newest id is
     # for the metadata_id.
-    if latest := cast(
-        Sequence[Row],
-        execute_stmt_lambda_element(
-            session, _find_latest_short_term_statistic_stmt(metadata_id), orm_rows=False
-        ),
+    if latest_id := find_latest_short_term_statistic_for_metadata_id(
+        session, metadata_id
     ):
         get_statistics_run_cache(
             instance.hass
-        ).set_latest_short_term_statistic_id_for_metadata_id(metadata_id, latest[0].id)
+        ).set_latest_short_term_statistic_id_for_metadata_id(metadata_id, latest_id)
 
     return True
 
@@ -2333,7 +2331,23 @@ def get_statistics_run_cache(hass: HomeAssistant) -> StatisticsRunCache:
     return StatisticsRunCache()
 
 
-def _find_latest_short_term_statistic_stmt(
+def find_latest_short_term_statistic_for_metadata_id(
+    session: Session, metadata_id: int
+) -> int | None:
+    """Find the latest short term statistic for a given metadata_id."""
+    if latest := cast(
+        Sequence[Row],
+        execute_stmt_lambda_element(
+            session,
+            _find_latest_short_term_statistic_for_metadata_id_stmt(metadata_id),
+            orm_rows=False,
+        ),
+    ):
+        return cast(int, latest[0].id)
+    return None
+
+
+def _find_latest_short_term_statistic_for_metadata_id_stmt(
     metadata_id: int,
 ) -> StatementLambdaElement:
     """Create the statement to find the latest short term statistics for a given metadata_id."""
