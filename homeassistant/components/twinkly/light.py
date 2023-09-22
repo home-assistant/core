@@ -105,7 +105,6 @@ class TwinklyLight(LightEntity):
         self._software_version = software_version
         # We guess that most devices are "new" and support effects
         self._attr_supported_features = LightEntityFeature.EFFECT
-        self._attr_last_mode: str | None = None
 
     @property
     def name(self) -> str:
@@ -169,7 +168,6 @@ class TwinklyLight(LightEntity):
 
             await self._client.set_brightness(brightness)
 
-        await self._client.interview()
         color = None
         if (
             ATTR_RGBW_COLOR in kwargs
@@ -205,12 +203,10 @@ class TwinklyLight(LightEntity):
                 await self._client.set_static_colour(color)
                 await self._client.set_mode("color")
                 self._client.default_mode = "color"
-                self._attr_last_mode = "color"
             else:
                 await self._client.set_cycle_colours(color)
                 await self._client.set_mode("movie")
                 self._client.default_mode = "movie"
-                self._attr_last_mode = "movie"
 
         if (
             ATTR_EFFECT in kwargs
@@ -223,7 +219,6 @@ class TwinklyLight(LightEntity):
                 await self._client.set_current_movie(int(movie_id))
                 await self._client.set_mode("movie")
                 self._client.default_mode = "movie"
-                self._attr_last_mode = "movie"
         if not self._attr_is_on:
             await self._client.turn_on()
 
