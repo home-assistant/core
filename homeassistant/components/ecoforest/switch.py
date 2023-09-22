@@ -1,9 +1,11 @@
 """Switch platform for Ecoforest."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import Any
 
+from pyecoforest.api import EcoforestApi
 from pyecoforest.models.device import Device
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -21,6 +23,7 @@ class EcoforestSwitchRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Device], bool]
+    switch_fn: Callable[[EcoforestApi, bool], Coroutine[Any, Any, Device]]
 
 
 @dataclass
@@ -32,7 +35,10 @@ class EcoforestSwitchEntityDescription(
 
 SWITCH_TYPES: tuple[EcoforestSwitchEntityDescription, ...] = (
     EcoforestSwitchEntityDescription(
-        key="status", name=None, value_fn=lambda data: data.on
+        key="status",
+        name=None,
+        value_fn=lambda data: data.on,
+        switch_fn=lambda api, status: api.turn(status),
     ),
 )
 
@@ -64,10 +70,10 @@ class EcoforestSwitchEntity(EcoforestEntity, SwitchEntity):
 
     async def async_turn_on(self):
         """Turn on the ecoforest device."""
-        await self.coordinator.api.turn(True)
+        await self.entity_description.switch_fn(self.coordinator.api, True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self):
         """Turn off the ecoforest device."""
-        await self.coordinator.api.turn(False)
+        await self.entity_description.switch_fn(self.coordinator.api, False)
         await self.coordinator.async_request_refresh()
