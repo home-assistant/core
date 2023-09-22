@@ -1911,8 +1911,9 @@ def get_latest_short_term_statistics(
         run_cache = get_statistics_run_cache(hass)
         # Try to find the latest short term statistics ids for the metadata_ids
         # from the run cache first if we have it.
-        metadata_id_to_id = run_cache.get_latest_short_term_statistics_ids(metadata_ids)
-        if metadata_id_to_id:
+        if metadata_id_to_id := run_cache.get_latest_short_term_statistics_ids(
+            metadata_ids
+        ):
             stats = get_latest_short_term_statistics_by_ids(
                 session, metadata_id_to_id.values()
             )
