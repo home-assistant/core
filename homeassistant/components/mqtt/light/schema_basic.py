@@ -557,7 +557,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 _LOGGER.debug("Ignoring empty color mode message from '%s'", msg.topic)
                 return
 
-            self._attr_color_mode = str(payload)
+            self._attr_color_mode = ColorMode(str(payload))
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_COLOR_MODE_STATE_TOPIC, color_mode_received)
