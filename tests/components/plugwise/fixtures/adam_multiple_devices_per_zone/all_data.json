@@ -119,7 +119,6 @@
       "hardware": "255",
       "last_used": "CV Jessie",
       "location": "82fa13f017d240daa0d0ea1775420f24",
-      "mode": "auto",
       "model": "Lisa",
       "name": "Zone Thermostat Jessie",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
