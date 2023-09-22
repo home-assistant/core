@@ -19,6 +19,7 @@ from denonavr.exceptions import (
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -238,7 +239,8 @@ class DenonDevice(MediaPlayerEntity):
             name=receiver.name,
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
-
+        self._attr_device_class = MediaPlayerDeviceClass.TV
+        
         self._receiver = receiver
         self._update_audyssey = update_audyssey
 
