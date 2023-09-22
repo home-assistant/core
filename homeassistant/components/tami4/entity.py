@@ -17,12 +17,11 @@ class Tami4EdgeBaseEntity(Entity):
         """Initialize the Tami4Edge."""
         self._state = None
         self._edge = edge
-        self._name = f"{edge.device.name}"
-        self._device_id = edge.device.psn
+        device_id = edge.device.psn
         self.entity_description = entity_description
-        self._attr_unique_id = f"{self._device_id}_{self.entity_description.key}"
+        self._attr_unique_id = f"{device_id}_{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, edge.device.psn)},
+            identifiers={(DOMAIN, device_id)},
             manufacturer="Stratuss",
             name=edge.device.name,
             model="Tami4",
