@@ -1,6 +1,7 @@
 """Test different accessory types: Media Players."""
 import pytest
 
+from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
@@ -15,6 +16,7 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.type_media_players import (
     MediaPlayer,
+    ReceiverMediaPlayer,
     TelevisionMediaPlayer,
 )
 from homeassistant.components.media_player import (
@@ -629,3 +631,29 @@ async def test_media_player_television_unsafe_chars(
     assert events[-1].data[ATTR_VALUE] is None
 
     assert acc.char_input_source.value == 4
+
+
+async def test_media_player_receiver(
+    hass: HomeAssistant, hk_driver: HomeDriver, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test if television accessory with unsafe characters."""
+    entity_id = "media_player.receiver"
+    sources = ["MUSIC", "HDMI 3/ARC", "SCREEN MIRRORING", "HDMI 2/MHL", "HDMI", "MUSIC"]
+    hass.states.async_set(
+        entity_id,
+        None,
+        {
+            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+            ATTR_SUPPORTED_FEATURES: 3469,
+            ATTR_MEDIA_VOLUME_MUTED: False,
+            ATTR_INPUT_SOURCE: "HDMI 2/MHL",
+            ATTR_INPUT_SOURCE_LIST: sources,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = ReceiverMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.aid == 2
+    assert acc.category == 34  # Receiver

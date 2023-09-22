@@ -17,7 +17,10 @@ from homeassistant.components.homekit.const import (
     TYPE_SWITCH,
     TYPE_VALVE,
 )
-from homeassistant.components.media_player import MediaPlayerEntityFeature
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.const import (
@@ -202,7 +205,14 @@ def test_type_covers(type_name, entity_id, state, attrs) -> None:
             "TelevisionMediaPlayer",
             "media_player.tv",
             "on",
-            {ATTR_DEVICE_CLASS: "tv"},
+            {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV},
+            {},
+        ),
+        (
+            "ReceiverMediaPlayer",
+            "media_player.receiver",
+            "on",
+            {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.RECEIVER},
             {},
         ),
     ],
