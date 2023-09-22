@@ -571,14 +571,18 @@ def _compile_statistics(
         # These are always the newest statistics, so we can update
         # the run cache without having to check the start_ts.
         session.flush()  # populate the ids of the new StatisticsShortTerm rows
+        run_cache = get_short_term_statistics_run_cache(instance.hass)
         # metadata_id is typed to allow None, but we know it's not None here
         # so we can safely cast it to int.
-        updated_metadata_id_to_id = cast(
-            dict[int, int],
-            {new_stat.metadata_id: new_stat.id for new_stat in new_short_term_stats},
+        run_cache.set_latest_ids_for_metadata_ids(
+            cast(
+                dict[int, int],
+                {
+                    new_stat.metadata_id: new_stat.id
+                    for new_stat in new_short_term_stats
+                },
+            )
         )
-        run_cache = get_short_term_statistics_run_cache(instance.hass)
-        run_cache.set_latest_ids_for_metadata_ids(updated_metadata_id_to_id)
 
     return modified_statistic_ids
 
