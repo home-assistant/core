@@ -463,6 +463,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         add_topic(CONF_BRIGHTNESS_STATE_TOPIC, brightness_received)
 
+        @callback
         def _rgbx_received(
             msg: ReceiveMessage,
             template: str,
@@ -534,11 +535,12 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         def rgbww_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages for RGBWW."""
 
+            @callback
             def _converter(
                 r: int, g: int, b: int, cw: int, ww: int
             ) -> tuple[int, int, int]:
                 min_kelvin = color_util.color_temperature_mired_to_kelvin(
-                    self.min_mireds
+                    self.max_mireds
                 )
                 max_kelvin = color_util.color_temperature_mired_to_kelvin(
                     self.min_mireds
