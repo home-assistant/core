@@ -1917,7 +1917,7 @@ def get_latest_short_term_statistics(
         # to populate the cache for each metadata_id, and then run another query
         # to get the latest short term statistics for the missing metadata_ids.
         if (missing_metadata_ids := metadata_ids - set(metadata_id_to_id)) and (
-            missing_latest_ids := {
+            found_latest_ids := {
                 latest_id
                 for metadata_id in missing_metadata_ids
                 if (
@@ -1929,7 +1929,7 @@ def get_latest_short_term_statistics(
             }
         ):
             stats.extend(
-                get_latest_short_term_statistics_by_ids(session, missing_latest_ids)
+                get_latest_short_term_statistics_by_ids(session, found_latest_ids)
             )
 
         if not stats:
