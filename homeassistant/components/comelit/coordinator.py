@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER, BRIDGE_MODEL, DOMAIN
 
 
 class ComelitSerialBridge(DataUpdateCoordinator):
@@ -34,6 +34,38 @@ class ComelitSerialBridge(DataUpdateCoordinator):
             name=f"{DOMAIN}-{host}-coordinator",
             update_interval=timedelta(seconds=5),
         )
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            identifiers={(DOMAIN, self.config_entry.entry_id)},
+            model=BRIDGE_MODEL,
+            name=f"{BRIDGE_MODEL} ({self.api.host})",
+            **self.basic_device_info,
+        )
+
+    @property
+    def basic_device_info(self) -> dict:
+        """Set basic device info."""
+
+        return {
+            "manufacturer": "Comelit",
+            "hw_version": "20003101",
+        }
+
+    def platform_device_info(
+        self, device: ComelitSerialBridgeObject, platform: str
+    ) -> dr.DeviceInfo:
+        """Set platform device info."""
+
+        return dr.DeviceInfo(
+            identifiers={
+                (DOMAIN, f"{self.config_entry.entry_id}-{platform}-{device.index}")
+            },
+            via_device=(DOMAIN, self.config_entry.entry_id),
+            name=device.name,
+            model=f"{BRIDGE_MODEL} {platform}",
+            **self.basic_device_info,
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update router data."""
@@ -51,18 +83,3 @@ class ComelitSerialBridge(DataUpdateCoordinator):
         await self.api.logout()
 
         return devices_data
-
-    def register_device(self) -> None:
-        """Create device with all available info."""
-
-        device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            identifiers={
-                (DOMAIN, self.config_entry.entry_id),
-            },
-            manufacturer="Comelit",
-            model="Serial Bridge",
-            hw_version="20003101",
-            name=f"Serial Bridge ({self.api.host})",
-        )
