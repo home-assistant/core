@@ -25,7 +25,7 @@ class EcoforestSwitchRequiredKeysMixin:
 
 @dataclass
 class EcoforestSwitchEntityDescription(
-    SwitchEntityDescription, EcoforestRequiredKeysMixin
+    SwitchEntityDescription, EcoforestSwitchRequiredKeysMixin
 ):
     """Describes an Ecoforest switch entity."""
 
