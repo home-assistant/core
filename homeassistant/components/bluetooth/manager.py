@@ -108,6 +108,7 @@ class BluetoothManager:
         "_cancel_unavailable_tracking",
         "_cancel_logging_listener",
         "_advertisement_tracker",
+        "_fallback_intervals",
         "_unavailable_callbacks",
         "_connectable_unavailable_callbacks",
         "_callback_index",
@@ -139,6 +140,7 @@ class BluetoothManager:
         self._cancel_logging_listener: CALLBACK_TYPE | None = None
 
         self._advertisement_tracker = AdvertisementTracker()
+        self._fallback_intervals: dict[str, float] = {}
 
         self._unavailable_callbacks: dict[
             str, list[Callable[[BluetoothServiceInfoBleak], None]]
@@ -344,6 +346,8 @@ class BluetoothManager:
                     # by the lack of advertisements
                     if advertising_interval := intervals.get(address):
                         advertising_interval += TRACKER_BUFFERING_WOBBLE_SECONDS
+                    elif advertising_interval := self._fallback_intervals.get(address):
+                        advertising_interval += TRACKER_BUFFERING_WOBBLE_SECONDS
                     else:
                         advertising_interval = (
                             FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
@@ -355,6 +359,7 @@ class BluetoothManager:
                     # The second loop (connectable=False) is responsible for removing
                     # the device from all the interval tracking since it is no longer
                     # available for both connectable and non-connectable
+                    self._fallback_intervals.pop(address, None)
                     tracker.async_remove_address(address)
                     self._integration_matcher.async_clear_address(address)
                     self._async_dismiss_discoveries(address)
@@ -779,3 +784,15 @@ class BluetoothManager:
     def async_allocate_connection_slot(self, device: BLEDevice) -> bool:
         """Allocate a connection slot."""
         return self.slot_manager.allocate_slot(device)
+
+    @hass_callback
+    def async_get_learned_advertising_interval(self, address: str) -> float | None:
+        """Get the learned advertising interval for a MAC address."""
+        return self._advertisement_tracker.intervals.get(address)
+
+    @hass_callback
+    def async_set_fallback_availability_interval(
+        self, address: str, interval: float
+    ) -> None:
+        """Override the fallback availability timeout for a MAC address."""
+        self._fallback_intervals[address] = interval
