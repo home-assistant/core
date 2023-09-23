@@ -249,7 +249,6 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
         )
-        self.coordinator = coordinator
 
     @callback
     def update_entity_state(self, state: dict) -> None:

@@ -124,7 +124,6 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
     ) -> None:
         """Init YoLink Sensor."""
         super().__init__(config_entry, coordinator)
-        self.coordinator = coordinator
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
