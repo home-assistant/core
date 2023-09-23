@@ -1,28 +1,26 @@
 """Tests for ScreenLogic integration init."""
 from dataclasses import dataclass
-import importlib
-from typing import Any, cast
-from unittest.mock import DEFAULT, Mock, patch
+from unittest.mock import DEFAULT, patch
 
 import pytest
 from screenlogicpy import ScreenLogicGateway
+from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.screenlogic import (
-    DOMAIN,
-    PLATFORMS,
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from homeassistant.components.screenlogic import DOMAIN
+from homeassistant.components.screenlogic.coordinator import (
     ScreenlogicDataUpdateCoordinator,
 )
-from homeassistant.components.screenlogic.coordinator import async_get_connect_info
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.loader import ComponentProtocol
 from homeassistant.util import slugify
 
 from . import (
     DATA_FULL_CHEM,
     DATA_FULL_NO_GPM,
+    DATA_FULL_NO_SALT_PPM,
     DATA_MIN_MIGRATION,
     GATEWAY_DISCOVERY_IMPORT_PATH,
     MOCK_ADAPTER_MAC,
@@ -253,15 +251,18 @@ async def test_entity_migration_data(
     assert entity_not_migrated == original_entity
 
 
-@pytest.mark.parametrize("data_set", [DATA_FULL_NO_GPM, DATA_FULL_CHEM])
+@pytest.mark.parametrize(
+    "data_set", [DATA_FULL_NO_GPM, DATA_FULL_NO_SALT_PPM, DATA_FULL_CHEM]
+)
 async def test_platform_setup(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, data_set: dict
 ) -> None:
-    """Test platform setup."""
+    """Test setup for platforms that define expected data."""
     stub_connect = lambda *args, **kwargs: stub_async_connect(data_set, *args, **kwargs)
 
-    def add_ents(ents: list[Any]) -> None:
-        pass
+    device_prefix = slugify(MOCK_ADAPTER_NAME)
+
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
         GATEWAY_DISCOVERY_IMPORT_PATH,
@@ -272,22 +273,26 @@ async def test_platform_setup(
         is_connected=True,
         _async_connected_request=DEFAULT,
     ):
-        connect_info = await async_get_connect_info(hass, mock_config_entry)
-        gateway = ScreenLogicGateway()
-        await gateway.async_connect(**connect_info)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-        mock_coordinator = Mock(
-            spec=ScreenlogicDataUpdateCoordinator,
-            config_entry=mock_config_entry,
-            gateway=gateway,
-            hass=hass,
+        coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
+            mock_config_entry.entry_id
+        ]
+        gateway: ScreenLogicGateway = coordinator.gateway
+
+        assert (
+            hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{device_prefix}_active_alert")
+            is not None
         )
-        hass.data.setdefault(DOMAIN, {})[mock_config_entry.entry_id] = mock_coordinator
-        for platform in PLATFORMS:
-            component = cast(
-                ComponentProtocol,
-                importlib.import_module(
-                    f"homeassistant.components.screenlogic.{platform}"
-                ),
+        assert (
+            hass.states.get(f"{SENSOR_DOMAIN}.{device_prefix}_air_temperature")
+            is not None
+        )
+        if EQUIPMENT_FLAG.CHLORINATOR in gateway.equipment_flags:
+            assert (
+                hass.states.get(
+                    f"{NUMBER_DOMAIN}.{device_prefix}_pool_chlorinator_setpoint"
+                )
+                is not None
             )
-            await component.async_setup_entry(hass, mock_config_entry, add_ents)
