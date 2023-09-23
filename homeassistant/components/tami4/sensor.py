@@ -76,24 +76,20 @@ async def async_setup_entry(
     """Perform the setup for Tami4Edge."""
     edge = hass.data[DOMAIN][entry.entry_id]
 
-    try:
-        coordinator = Tami4EdgeWaterQualityCoordinator(hass, edge)
+    coordinator = Tami4EdgeWaterQualityCoordinator(hass, edge)
 
-        entities = []
-        for entity_description in ENTITY_DESCRIPTIONS:
-            entities.append(
-                Tami4EdgeSensorEntity(
-                    coordinator=coordinator,
-                    edge=edge,
-                    entity_description=entity_description,
-                )
+    entities = []
+    for entity_description in ENTITY_DESCRIPTIONS:
+        entities.append(
+            Tami4EdgeSensorEntity(
+                coordinator=coordinator,
+                edge=edge,
+                entity_description=entity_description,
             )
+        )
 
-        async_add_entities(entities)
-        await coordinator.async_config_entry_first_refresh()
-    except Exception as ex:
-        _LOGGER.exception("Fail to setup Tami4Edge")
-        raise ex
+    async_add_entities(entities)
+    await coordinator.async_config_entry_first_refresh()
 
 
 class Tami4EdgeSensorEntity(Tami4EdgeBaseEntity, CoordinatorEntity, SensorEntity):
