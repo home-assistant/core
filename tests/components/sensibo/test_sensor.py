@@ -18,7 +18,7 @@ async def test_sensor(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
-    monkeypatch: pytest.pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo sensor."""
