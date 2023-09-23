@@ -283,10 +283,9 @@ async def test_setup_incorrect_add_holiday_ranges(
 
     hass.states.get("binary_sensor.workday_sensor")
 
-    assert "Incorrect adding dates in date range: 2023-12-30,2023-12-32" in caplog.text
+    assert "Incorrect dates in date range: 2023-12-30,2023-12-32" in caplog.text
     assert (
-        "Incorrect adding dates in date range: 2023-12-29,2023-12-30,2023-12-31"
-        in caplog.text
+        "Incorrect dates in date range: 2023-12-29,2023-12-30,2023-12-31" in caplog.text
     )
 
 
@@ -302,12 +301,9 @@ async def test_setup_incorrect_remove_holiday_ranges(
 
     hass.states.get("binary_sensor.workday_sensor")
 
+    assert "Incorrect dates in date range: 2023-12-30,2023-12-32" in caplog.text
     assert (
-        "Incorrect removing dates in date range: 2023-12-30,2023-12-32" in caplog.text
-    )
-    assert (
-        "Incorrect removing dates in date range: 2023-12-29,2023-12-30,2023-12-31"
-        in caplog.text
+        "Incorrect dates in date range: 2023-12-29,2023-12-30,2023-12-31" in caplog.text
     )
 
 
