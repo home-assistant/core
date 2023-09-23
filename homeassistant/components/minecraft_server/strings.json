@@ -11,7 +11,7 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to server. Please check the address and try again. Also ensure that you are running at least Minecraft version 1.7 on your server."
+      "cannot_connect": "Failed to connect to server. Please check the address and try again. If a port was provided, it must be within a valid range. Also ensure that you are running at least version 1.7 of Minecraft Java Edition on your server."
     }
   },
   "entity": {
