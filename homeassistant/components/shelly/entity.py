@@ -321,12 +321,13 @@ class RestEntityDescription(EntityDescription):
 class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     """Helper class to represent a block entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.block = block
         self._attr_name = get_block_entity_name(coordinator.device, block)
-        self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
@@ -360,11 +361,12 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
 class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
     """Helper class to represent a rpc entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, coordinator: ShellyRpcCoordinator, key: str) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
-        self._attr_should_poll = False
         self._attr_device_info = {
             "connections": {(CONNECTION_NETWORK_MAC, coordinator.mac)}
         }
@@ -553,6 +555,8 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
     """Represent a shelly sleeping block attribute entity."""
 
+    _attr_should_poll = False
+
     # pylint: disable-next=super-init-not-called
     def __init__(
         self,
@@ -571,7 +575,6 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
         self.block: Block | None = block  # type: ignore[assignment]
         self.entity_description = description
 
-        self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
@@ -626,6 +629,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
     """Helper class to represent a sleeping rpc attribute."""
 
     entity_description: RpcEntityDescription
+    _attr_should_poll = False
 
     # pylint: disable-next=super-init-not-called
     def __init__(
@@ -643,7 +647,6 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self.attribute = attribute
         self.entity_description = description
 
-        self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
