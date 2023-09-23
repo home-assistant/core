@@ -1,6 +1,14 @@
 """The sensor tests for the august platform."""
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from typing import Any
+
+from homeassistant import core as ha
+from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .mocks import (
@@ -10,6 +18,8 @@ from .mocks import (
     _mock_doorsense_enabled_august_lock_detail,
     _mock_lock_from_fixture,
 )
+
+from tests.common import mock_restore_cache_with_extra_data
 
 
 async def test_create_doorbell(hass: HomeAssistant) -> None:
@@ -139,34 +149,15 @@ async def test_lock_operator_bluetooth(hass: HomeAssistant) -> None:
         "sensor.online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == "Your favorite elven princess"
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "remote"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "keypad"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "autorelock"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "method"
-        ]
-        == "mobile"
-    )
+
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Your favorite elven princess"
+    assert state.attributes["manual"] is False
+    assert state.attributes["tag"] is False
+    assert state.attributes["remote"] is False
+    assert state.attributes["keypad"] is False
+    assert state.attributes["autorelock"] is False
+    assert state.attributes["method"] == "mobile"
 
 
 async def test_lock_operator_keypad(hass: HomeAssistant) -> None:
@@ -183,34 +174,15 @@ async def test_lock_operator_keypad(hass: HomeAssistant) -> None:
         "sensor.online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == "Your favorite elven princess"
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "remote"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "keypad"
-        ]
-        is True
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "autorelock"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "method"
-        ]
-        == "keypad"
-    )
+
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Your favorite elven princess"
+    assert state.attributes["manual"] is False
+    assert state.attributes["tag"] is False
+    assert state.attributes["remote"] is False
+    assert state.attributes["keypad"] is True
+    assert state.attributes["autorelock"] is False
+    assert state.attributes["method"] == "keypad"
 
 
 async def test_lock_operator_remote(hass: HomeAssistant) -> None:
@@ -225,34 +197,39 @@ async def test_lock_operator_remote(hass: HomeAssistant) -> None:
         "sensor.online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == "Your favorite elven princess"
+
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Your favorite elven princess"
+    assert state.attributes["manual"] is False
+    assert state.attributes["tag"] is False
+    assert state.attributes["remote"] is True
+    assert state.attributes["keypad"] is False
+    assert state.attributes["autorelock"] is False
+    assert state.attributes["method"] == "remote"
+
+
+async def test_lock_operator_manual(hass: HomeAssistant) -> None:
+    """Test operation of a lock with doorsense and bridge."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+
+    activities = await _mock_activities_from_fixture(
+        hass, "get_activity.lock_from_manual.json"
     )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "remote"
-        ]
-        is True
+    await _create_august_with_devices(hass, [lock_one], activities=activities)
+
+    entity_registry = er.async_get(hass)
+    lock_operator_sensor = entity_registry.async_get(
+        "sensor.online_with_doorsense_name_operator"
     )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "keypad"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "autorelock"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "method"
-        ]
-        == "remote"
-    )
+    assert lock_operator_sensor
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Your favorite elven princess"
+    assert state.attributes["manual"] is True
+    assert state.attributes["tag"] is False
+    assert state.attributes["remote"] is False
+    assert state.attributes["keypad"] is False
+    assert state.attributes["autorelock"] is False
+    assert state.attributes["method"] == "manual"
 
 
 async def test_lock_operator_autorelock(hass: HomeAssistant) -> None:
@@ -269,31 +246,110 @@ async def test_lock_operator_autorelock(hass: HomeAssistant) -> None:
         "sensor.online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == "Auto Relock"
+
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Auto Relock"
+    assert state.attributes["manual"] is False
+    assert state.attributes["tag"] is False
+    assert state.attributes["remote"] is False
+    assert state.attributes["keypad"] is False
+    assert state.attributes["autorelock"] is True
+    assert state.attributes["method"] == "autorelock"
+
+
+async def test_unlock_operator_manual(hass: HomeAssistant) -> None:
+    """Test operation of a lock manually."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+
+    activities = await _mock_activities_from_fixture(
+        hass, "get_activity.unlock_from_manual.json"
     )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "remote"
-        ]
-        is False
+    await _create_august_with_devices(hass, [lock_one], activities=activities)
+
+    entity_registry = er.async_get(hass)
+    lock_operator_sensor = entity_registry.async_get(
+        "sensor.online_with_doorsense_name_operator"
     )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "keypad"
-        ]
-        is False
+    assert lock_operator_sensor
+
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Your favorite elven princess"
+    assert state.attributes["manual"] is True
+    assert state.attributes["tag"] is False
+    assert state.attributes["remote"] is False
+    assert state.attributes["keypad"] is False
+    assert state.attributes["autorelock"] is False
+    assert state.attributes["method"] == "manual"
+
+
+async def test_unlock_operator_tag(hass: HomeAssistant) -> None:
+    """Test operation of a lock with a tag."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+
+    activities = await _mock_activities_from_fixture(
+        hass, "get_activity.unlock_from_tag.json"
     )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "autorelock"
-        ]
-        is True
+    await _create_august_with_devices(hass, [lock_one], activities=activities)
+
+    entity_registry = er.async_get(hass)
+    lock_operator_sensor = entity_registry.async_get(
+        "sensor.online_with_doorsense_name_operator"
     )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "method"
-        ]
-        == "autorelock"
+    assert lock_operator_sensor
+
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Your favorite elven princess"
+    assert state.attributes["manual"] is False
+    assert state.attributes["tag"] is True
+    assert state.attributes["remote"] is False
+    assert state.attributes["keypad"] is False
+    assert state.attributes["autorelock"] is False
+    assert state.attributes["method"] == "tag"
+
+
+async def test_restored_state(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test restored state."""
+
+    entity_id = "sensor.online_with_doorsense_name_operator"
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+
+    fake_state = ha.State(
+        entity_id,
+        state="Tag Unlock",
+        attributes={
+            "method": "tag",
+            "manual": False,
+            "remote": False,
+            "keypad": False,
+            "tag": True,
+            "autorelock": False,
+            ATTR_ENTITY_PICTURE: "image.png",
+        },
     )
+
+    # Home assistant is not running yet
+    hass.state = CoreState.not_running
+    last_reset = "2023-09-22T00:00:00.000000+00:00"
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                fake_state,
+                {
+                    "last_reset": last_reset,
+                },
+            )
+        ],
+    )
+
+    august_entry = await _create_august_with_devices(hass, [lock_one])
+    august_entry.add_to_hass(hass)
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "Tag Unlock"
+    assert state.attributes["method"] == "tag"
+    assert state.attributes[ATTR_ENTITY_PICTURE] == "image.png"
