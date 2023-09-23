@@ -62,7 +62,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if ble_device is None:
             _LOGGER.debug("no ble_device in _get_device_data")
-            raise ValueError("Cannot find BLE device")
+            raise BleakError("Cannot find BLE device")
 
         inspector = MedcomBleDeviceData(_LOGGER)
 

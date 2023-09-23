@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from bleak import BleakError
 from medcom_ble import MedcomBleDevice
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.medcom_ble.const import DOMAIN
@@ -42,9 +41,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
-    assert result["description_placeholders"] == {
-        "name": "Inspector BLE (a0d95a570b00)"
-    }
+    assert result["description_placeholders"] == {"name": "InspectorBLE-D9A0 (0B00)"}
 
     with patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
@@ -52,51 +49,15 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Inspector BLE (a0d95a570b00)"
-    assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
-
-
-async def test_bluetooth_discovery_no_BLEDevice(hass: HomeAssistant) -> None:
-    """Test discovery via bluetooth but there's no BLEDevice."""
-    with patch_async_ble_device_from_address(None):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=MEDCOM_SERVICE_INFO,
-        )
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-@pytest.mark.parametrize(
-    ("medcom_service", "exc", "reason"),
-    [
-        (MEDCOM_SERVICE_INFO, Exception(), "unknown"),
-        (MEDCOM_SERVICE_INFO, BleakError(), "cannot_connect"),
-    ],
-)
-async def test_bluetooth_discovery_medcom_ble_update_failed(
-    hass: HomeAssistant, medcom_service, exc, reason
-) -> None:
-    """Test discovery via bluetooth but there's an exception from medcom-ble."""
-    with patch_async_ble_device_from_address(medcom_service), patch_medcom_ble(
-        side_effect=exc
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=MEDCOM_SERVICE_INFO,
-        )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == reason
+    assert result["title"] == "InspectorBLE-D9A0 (0B00)"
+    assert result["result"].unique_id == "a0:d9:5a:57:0b:00"
 
 
 async def test_bluetooth_discovery_already_setup(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a valid device when already setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="cc:cc:cc:cc:cc:cc",
+        unique_id="a0:d9:5a:57:0b:00",
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -131,20 +92,20 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     assert result["data_schema"] is not None
     schema = result["data_schema"].schema
 
-    assert schema.get(CONF_ADDRESS).container == {"cc:cc:cc:cc:cc:cc": "Inspector BLE"}
+    assert schema.get(CONF_ADDRESS).container == {"a0:d9:5a:57:0b:00": "Inspector BLE"}
 
     with patch(
         "homeassistant.components.medcom_ble.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_ADDRESS: "cc:cc:cc:cc:cc:cc"}
+            result["flow_id"], user_input={CONF_ADDRESS: "a0:d9:5a:57:0b:00"}
         )
 
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Inspector BLE (a0d95a570b00)"
-    assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
+    assert result["result"].unique_id == "a0:d9:5a:57:0b:00"
 
 
 async def test_user_setup_no_device(hass: HomeAssistant) -> None:

@@ -37,11 +37,11 @@ def patch_medcom_ble(return_value=MedcomBleDevice, side_effect=None):
 
 
 MEDCOM_SERVICE_INFO = BluetoothServiceInfoBleak(
-    name="cc-cc-cc-cc-cc-cc",
-    address="cc:cc:cc:cc:cc:cc",
+    name="InspectorBLE-D9A0",
+    address="a0:d9:5a:57:0b:00",
     device=generate_ble_device(
-        address="cc:cc:cc:cc:cc:cc",
-        name="Inspector-BLED9A0",
+        address="a0:d9:5a:57:0b:00",
+        name="InspectorBLE-D9A0",
     ),
     rssi=-54,
     manufacturer_data={},
@@ -101,11 +101,11 @@ MEDCOM_DEVICE_INFO = MedcomBleDevice(
     hw_version="2.0",
     sw_version="170602",
     model="Inspector BLE",
-    model_raw="Inspector-BLE",
+    model_raw="InspectorBLE-D9A0",
     name="Inspector BLE",
     identifier="a0d95a570b00",
     sensors={
         "cpm": 45,
     },
-    address="cc:cc:cc:cc:cc:cc",
+    address="a0:d9:5a:57:0b:00",
 )
