@@ -1,5 +1,6 @@
 """API for fitbit bound to Home Assistant OAuth."""
 
+from abc import ABC
 import logging
 from typing import Any, cast
 
@@ -14,7 +15,11 @@ from .model import FitbitDevice, FitbitProfile
 _LOGGER = logging.getLogger(__name__)
 
 
-class FitbitApi:
+CONF_REFRESH_TOKEN = "refresh_token"
+CONF_EXPIRES_AT = "expires_at"
+
+
+class FitbitApi(ABC):
     """Fitbit client library wrapper base class."""
 
     def __init__(
