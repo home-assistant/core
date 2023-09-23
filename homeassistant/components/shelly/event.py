@@ -111,7 +111,7 @@ async def async_setup_entry(
                 coordinator.device.settings, block
             ):
                 channel = int(block.channel or 0) + 1
-                unique_id = f"{coordinator.mac}-{block.type}-{channel}"
+                unique_id = f"{coordinator.mac}-{block.description}-{channel}"
                 async_remove_shelly_entity(hass, EVENT_DOMAIN, unique_id)
             else:
                 entities.append(ShellyBlockEvent(coordinator, block, BLOCK_EVENT))
