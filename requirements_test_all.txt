@@ -437,7 +437,7 @@ base36==0.1.1
 beautifulsoup4==4.12.2
 
 # homeassistant.components.zha
-bellows==0.36.3
+bellows==0.36.4
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.0
@@ -1745,7 +1745,7 @@ samsungtvws[async,encrypted]==2.6.0
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.9.0
+screenlogicpy==0.9.1
 
 # homeassistant.components.backup
 securetar==2023.3.0
@@ -1932,7 +1932,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.1.7
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.13
+universal-silabs-flasher==0.0.14
 
 # homeassistant.components.upb
 upb-lib==0.5.4

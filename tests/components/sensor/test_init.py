@@ -44,6 +44,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import (
     MockConfigEntry,
+    MockEntityPlatform,
     MockModule,
     MockPlatform,
     async_mock_restore_state_shutdown_restart,
@@ -2177,27 +2178,24 @@ async def test_unit_conversion_update(
 
     entity_registry = er.async_get(hass)
     platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
 
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = platform.MockSensor(
         name="Test 0",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
         native_value=str(native_value),
         unique_id="very_unique",
     )
-    entity0 = platform.ENTITIES["0"]
 
-    platform.ENTITIES["1"] = platform.MockSensor(
+    entity1 = platform.MockSensor(
         name="Test 1",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
         native_value=str(native_value),
         unique_id="very_unique_1",
     )
-    entity1 = platform.ENTITIES["1"]
 
-    platform.ENTITIES["2"] = platform.MockSensor(
+    entity2 = platform.MockSensor(
         name="Test 2",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -2205,9 +2203,8 @@ async def test_unit_conversion_update(
         suggested_unit_of_measurement=suggested_unit,
         unique_id="very_unique_2",
     )
-    entity2 = platform.ENTITIES["2"]
 
-    platform.ENTITIES["3"] = platform.MockSensor(
+    entity3 = platform.MockSensor(
         name="Test 3",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -2215,9 +2212,33 @@ async def test_unit_conversion_update(
         suggested_unit_of_measurement=suggested_unit,
         unique_id="very_unique_3",
     )
-    entity3 = platform.ENTITIES["3"]
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    entity4 = platform.MockSensor(
+        name="Test 4",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        unique_id="very_unique_4",
+    )
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="sensor", platform_name="test", platform=None
+    )
+    await entity_platform.async_add_entities((entity0, entity1, entity2, entity3))
+
+    # Pre-register entity4
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", entity4.unique_id, unit_of_measurement=automatic_unit_1
+    )
+    entity4_entity_id = entry.entity_id
+    entity_registry.async_update_entity_options(
+        entity4_entity_id,
+        "sensor.private",
+        {
+            "suggested_unit_of_measurement": automatic_unit_1,
+        },
+    )
+
     await hass.async_block_till_done()
 
     # Registered entity -> Follow automatic unit conversion
@@ -2319,6 +2340,25 @@ async def test_unit_conversion_update(
     state = hass.states.get(entity3.entity_id)
     assert state.state == suggested_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+
+    # Entity 4 still has a pending request to refresh entity options
+    entry = entity_registry.async_get(entity4_entity_id)
+    assert entry.options == {
+        "sensor.private": {
+            "refresh_initial_entity_options": True,
+            "suggested_unit_of_measurement": automatic_unit_1,
+        }
+    }
+
+    # Add entity 4, the pending request to refresh entity options should be handled
+    await entity_platform.async_add_entities((entity4,))
+
+    state = hass.states.get(entity4_entity_id)
+    assert state.state == automatic_state_2
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit_2
+
+    entry = entity_registry.async_get(entity4_entity_id)
+    assert entry.options == {}
 
 
 class MockFlow(ConfigFlow):
