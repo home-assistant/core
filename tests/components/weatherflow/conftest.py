@@ -1,4 +1,4 @@
-"""Fixtures for IntelliFire integration tests."""
+"""Fixtures for Weatherflow integration tests."""
 import asyncio
 from collections.abc import Generator
 import json
@@ -6,12 +6,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED
-from pyweatherflowudp.const import DEFAULT_HOST
 from pyweatherflowudp.device import WeatherFlowDevice
 from pyweatherflowudp.errors import AddressInUseError, ListenerError
 
 from homeassistant.components.weatherflow.const import DOMAIN
-from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
@@ -26,15 +24,29 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return a mock config entry."""
-    return MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.2.3.4"})
+def mock_has_devices_error_address_in_use() -> Generator[AsyncMock, None, None]:
+    """Return a mock has_devices returning an error."""
+    with patch(
+        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
+        side_effect=AddressInUseError,
+    ) as mock_has_devices:
+        yield mock_has_devices
 
 
 @pytest.fixture
-def mock_config_entry2() -> MockConfigEntry:
+def mock_has_devices_error_listener_error() -> Generator[AsyncMock, None, None]:
+    """Return a mock has_devices returning an error."""
+    with patch(
+        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
+        side_effect=ListenerError,
+    ) as mock_has_devices:
+        yield mock_has_devices
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
-    return MockConfigEntry(domain=DOMAIN, data={CONF_HOST: DEFAULT_HOST})
+    return MockConfigEntry(domain=DOMAIN, data={})
 
 
 @pytest.fixture
@@ -53,6 +65,7 @@ def mock_on_throws_timeout() -> Generator[AsyncMock, None, None]:
     with patch(
         "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
         side_effect=asyncio.TimeoutError,
+        return_value=None,
     ) as mock_on:
         yield mock_on
 
@@ -65,26 +78,6 @@ def mock_on_throws_cancelled() -> Generator[AsyncMock, None, None]:
         side_effect=asyncio.exceptions.CancelledError,
     ) as mock_on:
         yield mock_on
-
-
-@pytest.fixture
-def mock_has_devices_error_listener() -> Generator[AsyncMock, None, None]:
-    """Return a mock has_devices returning an error."""
-    with patch(
-        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
-        side_effect=ListenerError,
-    ) as mock_has_devices:
-        yield mock_has_devices
-
-
-@pytest.fixture
-def mock_has_devices_error_address_in_use() -> Generator[AsyncMock, None, None]:
-    """Return a mock has_devices returning an error."""
-    with patch(
-        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
-        side_effect=AddressInUseError,
-    ) as mock_has_devices:
-        yield mock_has_devices
 
 
 @pytest.fixture

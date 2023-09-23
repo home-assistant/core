@@ -4,7 +4,12 @@ import asyncio
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.weatherflow.const import DOMAIN
+from homeassistant.components.weatherflow.const import (
+    DOMAIN,
+    ERROR_MSG_ADDRESS_IN_USE,
+    ERROR_MSG_CANNOT_CONNECT,
+    ERROR_MSG_NO_DEVICE_FOUND,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -20,44 +25,52 @@ async def test_address_in_use(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["errors"] == {"base": "address_in_use"}
+    assert result["errors"]["base"] == ERROR_MSG_ADDRESS_IN_USE
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["data"] == {}
 
 
 async def test_cannot_connect(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_has_devices_error_listener: AsyncMock,
+    mock_has_devices_error_listener_error: AsyncMock,
 ) -> None:
-    """Test cannot connect error."""
+    """Test the address in use error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"]["base"] == ERROR_MSG_CANNOT_CONNECT
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-
-# async def test_abort_create(
-#     hass: HomeAssistant,
-#     mock_config_entry: MockConfigEntry,
-#     mock_has_devices: AsyncMock
-# ) -> None:
-#     """Test abort creation."""
-#     mock_config_entry.add_to_hass(hass)
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN,
-#         context={"source": config_entries.SOURCE_USER},
-#         data=mock_config_entry.data,
-#     )
-#     assert result["type"] == FlowResultType.ABORT
-#     assert result["reason"] == "single_instance_allowed"
+    with patch(
+        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["data"] == {}
 
 
 async def test_single_instance(
     hass: HomeAssistant,
-    mock_config_entry2: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_has_devices: AsyncMock,
 ) -> None:
     """Test more than one instance."""
-    mock_config_entry2.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -93,7 +106,7 @@ async def test_devices_with_mocks_timeout(
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
-    assert result["data"] == {}
+    assert result["errors"]["base"] == ERROR_MSG_NO_DEVICE_FOUND
     assert result["step_id"] == "user"
 
 
@@ -105,10 +118,12 @@ async def test_devices_with_mocks_cancelled(
 ) -> None:
     """Test getting user input."""
     with patch(
-        "pyweatherflowudp.client.WeatherFlowListener.on",
+        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
         side_effect=asyncio.exceptions.CancelledError,
     ):
-        await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"]["base"] == ERROR_MSG_CANNOT_CONNECT
