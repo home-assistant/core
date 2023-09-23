@@ -67,15 +67,15 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             self._attr_preset_modes = presets
 
         # Determine hvac modes and current hvac mode
-        self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
         if self.coordinator.data.gateway["cooling_present"]:
-            self._attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
+            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT_COOL]
         if self.device["available_schedules"] != ["None"]:
             self._attr_hvac_modes.append(HVACMode.AUTO)
 
         self._attr_min_temp = self.device["thermostat"]["lower_bound"]
         self._attr_max_temp = self.device["thermostat"]["upper_bound"]
-        # Ensure we don't drop below 0.1
+        # Ensure we don't drop below 0.5
         self._attr_target_temperature_step = max(
             self.device["thermostat"]["resolution"], 0.5
         )
@@ -112,7 +112,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
     @property
     def hvac_mode(self) -> HVACMode:
-        """Return HVAC operation ie. auto, heat, or heat_cool mode."""
+        """Return HVAC operation ie. off, auto, heat, or heat_cool mode."""
         if (mode := self.device.get("mode")) is None or mode not in self.hvac_modes:
             return HVACMode.OFF
         return HVACMode(mode)
