@@ -112,9 +112,9 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     dev_info, utc_point_in_time
                 ),
             )
-            for dev_info in (await self.api.get_all_devices()).values()
+            for dev_info in (await self.api.get_devices_data()).values()
         }
-        data_sensors = await self.api.get_user_data()
+        data_sensors = await self.api.get_sensor_data()
         await self.api.logout()
         return UpdateCoordinatorDataType(data_devices, data_sensors)
 

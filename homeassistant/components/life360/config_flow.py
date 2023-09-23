@@ -137,6 +137,12 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle reauthorization completion."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema(password_schema(self._password)),
+                errors={"base": "invalid_auth"},
+            )
         self._password = user_input[CONF_PASSWORD]
         return await self._async_verify("reauth_confirm")
 

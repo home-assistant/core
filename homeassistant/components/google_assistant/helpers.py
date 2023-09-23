@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
+from functools import lru_cache
 from http import HTTPStatus
 import logging
 import pprint
@@ -490,8 +491,33 @@ def get_google_type(domain, device_class):
     return typ if typ is not None else DOMAIN_TO_GOOGLE_TYPES[domain]
 
 
+@lru_cache(maxsize=4096)
+def supported_traits_for_state(state: State) -> list[type[trait._Trait]]:
+    """Return all supported traits for state."""
+    domain = state.domain
+    attributes = state.attributes
+    features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+    if not isinstance(features, int):
+        _LOGGER.warning(
+            "Entity %s contains invalid supported_features value %s",
+            state.entity_id,
+            features,
+        )
+        return []
+
+    device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    return [
+        Trait
+        for Trait in trait.TRAITS
+        if Trait.supported(domain, features, device_class, attributes)
+    ]
+
+
 class GoogleEntity:
     """Adaptation of Entity expressed in Google's terms."""
+
+    __slots__ = ("hass", "config", "state", "_traits")
 
     def __init__(
         self, hass: HomeAssistant, config: AbstractConfig, state: State
@@ -501,6 +527,10 @@ class GoogleEntity:
         self.config = config
         self.state = state
         self._traits: list[trait._Trait] | None = None
+
+    def __repr__(self) -> str:
+        """Return the representation."""
+        return f"<GoogleEntity {self.state.entity_id}: {self.state.name}>"
 
     @property
     def entity_id(self):
@@ -512,26 +542,10 @@ class GoogleEntity:
         """Return traits for entity."""
         if self._traits is not None:
             return self._traits
-
         state = self.state
-        domain = state.domain
-        attributes = state.attributes
-        features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-
-        if not isinstance(features, int):
-            _LOGGER.warning(
-                "Entity %s contains invalid supported_features value %s",
-                self.entity_id,
-                features,
-            )
-            return []
-
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-
         self._traits = [
             Trait(self.hass, state, self.config)
-            for Trait in trait.TRAITS
-            if Trait.supported(domain, features, device_class, attributes)
+            for Trait in supported_traits_for_state(state)
         ]
         return self._traits
 
@@ -554,18 +568,8 @@ class GoogleEntity:
 
     @callback
     def is_supported(self) -> bool:
-        """Return if the entity is supported by Google."""
-        features: int | None = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
-
-        result = self.config.is_supported_cache.get(self.entity_id)
-
-        if result is None or result[0] != features:
-            result = self.config.is_supported_cache[self.entity_id] = (
-                features,
-                bool(self.traits()),
-            )
-
-        return result[1]
+        """Return if entity is supported."""
+        return bool(self.traits())
 
     @callback
     def might_2fa(self) -> bool:
@@ -726,18 +730,63 @@ def deep_update(target, source):
 
 
 @callback
+def async_get_google_entity_if_supported_cached(
+    hass: HomeAssistant, config: AbstractConfig, state: State
+) -> GoogleEntity | None:
+    """Return a GoogleEntity if entity is supported checking the cache first.
+
+    This function will check the cache, and call async_get_google_entity_if_supported
+    if the entity is not in the cache, which will update the cache.
+    """
+    entity_id = state.entity_id
+    is_supported_cache = config.is_supported_cache
+    features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+    if result := is_supported_cache.get(entity_id):
+        cached_features, supported = result
+        if cached_features == features:
+            return GoogleEntity(hass, config, state) if supported else None
+    # Cache miss, check if entity is supported
+    return async_get_google_entity_if_supported(hass, config, state)
+
+
+@callback
+def async_get_google_entity_if_supported(
+    hass: HomeAssistant, config: AbstractConfig, state: State
+) -> GoogleEntity | None:
+    """Return a GoogleEntity if entity is supported.
+
+    This function will update the cache, but it does not check the cache first.
+    """
+    features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+    entity = GoogleEntity(hass, config, state)
+    is_supported = bool(entity.traits())
+    config.is_supported_cache[state.entity_id] = (features, is_supported)
+    return entity if is_supported else None
+
+
+@callback
 def async_get_entities(
     hass: HomeAssistant, config: AbstractConfig
 ) -> list[GoogleEntity]:
     """Return all entities that are supported by Google."""
-    entities = []
+    entities: list[GoogleEntity] = []
+    is_supported_cache = config.is_supported_cache
     for state in hass.states.async_all():
-        if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+        entity_id = state.entity_id
+        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             continue
-
-        entity = GoogleEntity(hass, config, state)
-
-        if entity.is_supported():
+        # Check check inlined for performance to avoid
+        # function calls for every entity since we enumerate
+        # the entire state machine here
+        features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        if result := is_supported_cache.get(entity_id):
+            cached_features, supported = result
+            if cached_features == features:
+                if supported:
+                    entities.append(GoogleEntity(hass, config, state))
+                continue
+            # Cached features don't match, fall through to check
+            # if the entity is supported and update the cache.
+        if entity := async_get_google_entity_if_supported(hass, config, state):
             entities.append(entity)
-
     return entities

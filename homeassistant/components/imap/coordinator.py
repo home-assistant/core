@@ -111,6 +111,15 @@ class ImapMessage:
         return header_base
 
     @property
+    def message_id(self) -> str | None:
+        """Get the message ID."""
+        value: str
+        for header, value in self.email_message.items():
+            if header == "Message-ID":
+                return value
+        return None
+
+    @property
     def date(self) -> datetime | None:
         """Get the date the email was sent."""
         # See https://www.rfc-editor.org/rfc/rfc2822#section-3.3
@@ -189,6 +198,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         """Initiate imap client."""
         self.imap_client = imap_client
         self.auth_errors: int = 0
+        self._last_message_uid: str | None = None
         self._last_message_id: str | None = None
         self.custom_event_template = None
         _custom_event_template = entry.data.get(CONF_CUSTOM_EVENT_DATA_TEMPLATE)
@@ -209,16 +219,22 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         if self.imap_client is None:
             self.imap_client = await connect_to_server(self.config_entry.data)
 
-    async def _async_process_event(self, last_message_id: str) -> None:
+    async def _async_process_event(self, last_message_uid: str) -> None:
         """Send a event for the last message if the last message was changed."""
-        response = await self.imap_client.fetch(last_message_id, "BODY.PEEK[]")
+        response = await self.imap_client.fetch(last_message_uid, "BODY.PEEK[]")
         if response.result == "OK":
             message = ImapMessage(response.lines[1])
+            # Set `initial` to `False` if the last message is triggered again
+            initial: bool = True
+            if (message_id := message.message_id) == self._last_message_id:
+                initial = False
+            self._last_message_id = message_id
             data = {
                 "server": self.config_entry.data[CONF_SERVER],
                 "username": self.config_entry.data[CONF_USERNAME],
                 "search": self.config_entry.data[CONF_SEARCH],
                 "folder": self.config_entry.data[CONF_FOLDER],
+                "initial": initial,
                 "date": message.date,
                 "text": message.text,
                 "sender": message.sender,
@@ -231,18 +247,20 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                         data, parse_result=True
                     )
                     _LOGGER.debug(
-                        "imap custom template (%s) for msgid %s rendered to: %s",
+                        "IMAP custom template (%s) for msguid %s (%s) rendered to: %s, initial: %s",
                         self.custom_event_template,
-                        last_message_id,
+                        last_message_uid,
+                        message_id,
                         data["custom"],
+                        initial,
                     )
                 except TemplateError as err:
                     data["custom"] = None
                     _LOGGER.error(
-                        "Error rendering imap custom template (%s) for msgid %s "
+                        "Error rendering IMAP custom template (%s) for msguid %s "
                         "failed with message: %s",
                         self.custom_event_template,
-                        last_message_id,
+                        last_message_uid,
                         err,
                     )
             data["text"] = message.text[
@@ -263,10 +281,12 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
 
             self.hass.bus.fire(EVENT_IMAP, data)
             _LOGGER.debug(
-                "Message with id %s processed, sender: %s, subject: %s",
-                last_message_id,
+                "Message with id %s (%s) processed, sender: %s, subject: %s, initial: %s",
+                last_message_uid,
+                message_id,
                 message.sender,
                 message.subject,
+                initial,
             )
 
     async def _async_fetch_number_of_messages(self) -> int | None:
@@ -282,20 +302,20 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 f"Invalid response for search '{self.config_entry.data[CONF_SEARCH]}': {result} / {lines[0]}"
             )
         if not (count := len(message_ids := lines[0].split())):
-            self._last_message_id = None
+            self._last_message_uid = None
             return 0
-        last_message_id = (
+        last_message_uid = (
             str(message_ids[-1:][0], encoding=self.config_entry.data[CONF_CHARSET])
             if count
             else None
         )
         if (
             count
-            and last_message_id is not None
-            and self._last_message_id != last_message_id
+            and last_message_uid is not None
+            and self._last_message_uid != last_message_uid
         ):
-            self._last_message_id = last_message_id
-            await self._async_process_event(last_message_id)
+            self._last_message_uid = last_message_uid
+            await self._async_process_event(last_message_uid)
 
         return count
 

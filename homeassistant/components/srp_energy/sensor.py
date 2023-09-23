@@ -40,12 +40,7 @@ class SrpEntity(CoordinatorEntity[SRPEnergyDataUpdateCoordinator], SensorEntity)
         """Initialize the SrpEntity class."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{config_entry.entry_id}_total_usage"
-        self._name = SENSOR_NAME
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{DEFAULT_NAME} {self._name}"
+        self._attr_name = f"{DEFAULT_NAME} {SENSOR_NAME}"
 
     @property
     def native_value(self) -> float:

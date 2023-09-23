@@ -1,4 +1,5 @@
 """Test the Xiaomi Miio config flow."""
+from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
 from construct.core import ChecksumError
@@ -426,8 +427,8 @@ async def test_zeroconf_gateway_success(hass: HomeAssistant) -> None:
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=TEST_HOST,
-            addresses=[TEST_HOST],
+            ip_address=ip_address(TEST_HOST),
+            ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
             name=TEST_ZEROCONF_NAME,
             port=None,
@@ -469,8 +470,8 @@ async def test_zeroconf_unknown_device(hass: HomeAssistant) -> None:
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=TEST_HOST,
-            addresses=[TEST_HOST],
+            ip_address=ip_address(TEST_HOST),
+            ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
             name="not-a-xiaomi-miio-device",
             port=None,
@@ -489,8 +490,8 @@ async def test_zeroconf_no_data(hass: HomeAssistant) -> None:
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=None,
-            addresses=[],
+            ip_address=None,
+            ip_addresses=[],
             hostname="mock_hostname",
             name=None,
             port=None,
@@ -509,8 +510,8 @@ async def test_zeroconf_missing_data(hass: HomeAssistant) -> None:
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=TEST_HOST,
-            addresses=[TEST_HOST],
+            ip_address=ip_address(TEST_HOST),
+            ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
             name=TEST_ZEROCONF_NAME,
             port=None,
@@ -791,8 +792,8 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=TEST_HOST,
-            addresses=[TEST_HOST],
+            ip_address=ip_address(TEST_HOST),
+            ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
             name=zeroconf_name_to_test,
             port=None,

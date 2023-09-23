@@ -35,7 +35,7 @@ async def test_form(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "0.0.0.0"
+    assert result["title"] == "0.0.0.0:61208"
     assert result["data"] == MOCK_USER_INPUT
 
 
