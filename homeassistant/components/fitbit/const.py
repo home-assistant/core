@@ -79,10 +79,3 @@ FITBIT_MEASUREMENTS: Final[dict[str, dict[str, str]]] = {
         ATTR_BATTERY: "",
     },
 }
-
-BATTERY_LEVELS: Final[dict[str, int]] = {
-    "High": 100,
-    "Medium": 50,
-    "Low": 20,
-    "Empty": 0,
-}

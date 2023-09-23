@@ -60,9 +60,8 @@ class FitbitApi:
 
     def get_latest_time_series(self, resource_type: str) -> dict[str, Any]:
         """Return the most recent value from the time series for the specified resource type."""
-        container = resource_type.replace("/", "-")
-
         response: dict[str, Any] = self._client.time_series(resource_type, period="7d")
         _LOGGER.debug("time_series(%s)=%s", resource_type, response)
-        results: dict[str, Any] = response[container][-1]
-        return results
+        container = resource_type.replace("/", "-")
+        dated_results: list[dict[str, Any]] = response[container]
+        return dated_results[-1]

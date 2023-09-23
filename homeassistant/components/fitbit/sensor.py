@@ -711,7 +711,6 @@ class FitbitSensor(SensorEntity):
             self._attr_native_value = self.device.battery
 
         else:
-            resource_type.replace("/", "-")
             result = self.api.get_latest_time_series(resource_type)
             self._attr_native_value = self.entity_description.value_fn(result)
 
