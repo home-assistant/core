@@ -10,7 +10,13 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    SET_BREEZE_SCHEMA,
+    SET_DAY_NIGHT_TIME_SCHEMA,
+    SET_POLLUTION_SETTINGS_SCHEMA,
+    SET_TIMER_LEVEL_SCHEMA,
+)
 from .coordinator import RensonCoordinator
 
 PLATFORMS = [
@@ -108,9 +114,16 @@ def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> N
             co2_hysteresis,
         )
 
-    hass.services.async_register(DOMAIN, "set_breeze", set_breeze)
-    hass.services.async_register(DOMAIN, "set_day_night_time", set_day_night_time)
+    hass.services.async_register(DOMAIN, "set_breeze", set_breeze, SET_BREEZE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, "set_pollution_settings", set_pollution_settings
+        DOMAIN, "set_day_night_time", set_day_night_time, SET_DAY_NIGHT_TIME_SCHEMA
     )
-    hass.services.async_register(DOMAIN, "set_timer_level", set_timer_level)
+    hass.services.async_register(
+        DOMAIN,
+        "set_pollution_settings",
+        set_pollution_settings,
+        SET_POLLUTION_SETTINGS_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN, "set_timer_level", set_timer_level, SET_TIMER_LEVEL_SCHEMA
+    )
