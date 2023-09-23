@@ -75,7 +75,7 @@ async def test_rpc_event_removal(
 async def test_block_event(hass: HomeAssistant, monkeypatch, mock_block_device) -> None:
     """Test block device event."""
     await init_integration(hass, 1)
-    entity_id = "event.test_name_input_1"
+    entity_id = "event.test_name_channel_1"
     registry = async_get(hass)
 
     state = hass.states.get(entity_id)
@@ -87,7 +87,7 @@ async def test_block_event(hass: HomeAssistant, monkeypatch, mock_block_device) 
 
     entry = registry.async_get(entity_id)
     assert entry
-    assert entry.unique_id == "123456789ABC-input-1"
+    assert entry.unique_id == "123456789ABC-relay_0-1"
 
     monkeypatch.setattr(
         mock_block_device.blocks[DEVICE_BLOCK_ID],
@@ -105,7 +105,7 @@ async def test_block_event(hass: HomeAssistant, monkeypatch, mock_block_device) 
 async def test_block_event_shix3_1(hass: HomeAssistant, mock_block_device) -> None:
     """Test block device event for SHIX3-1."""
     await init_integration(hass, 1, model="SHIX3-1")
-    entity_id = "event.test_name_input_1"
+    entity_id = "event.test_name_channel_1"
 
     state = hass.states.get(entity_id)
     assert state
