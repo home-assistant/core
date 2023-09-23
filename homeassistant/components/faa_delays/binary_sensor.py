@@ -42,7 +42,7 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
         self.coordinator = coordinator
         self._entry_id = entry_id
         self._attrs: dict[str, Any] = {}
-        _id = coordinator.data.iata
+        _id = coordinator.data.code
         self._attr_name = f"{_id} {description.name}"
         self._attr_unique_id = f"{_id}_{description.key}"
 
@@ -83,7 +83,6 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
             self._attrs["trend"] = self.coordinator.data.arrive_delay.trend
             self._attrs["reason"] = self.coordinator.data.arrive_delay.reason
         elif sensor_type == "CLOSURE":
-            self._attrs["begin"] = self.coordinator.data.closure.begin
+            self._attrs["begin"] = self.coordinator.data.closure.start
             self._attrs["end"] = self.coordinator.data.closure.end
-            self._attrs["reason"] = self.coordinator.data.closure.reason
         return self._attrs
