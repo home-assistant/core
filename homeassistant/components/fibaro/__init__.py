@@ -514,7 +514,7 @@ class FibaroDevice(Entity):
 
     def update(self) -> None:
         """Update the available state of the entity."""
-        if isinstance(self.fibaro_device, DeviceModel) and self.fibaro_device.has_dead:
+        if self.fibaro_device.has_dead:
             self._attr_available = not self.fibaro_device.dead
 
 

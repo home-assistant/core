@@ -114,6 +114,7 @@ FLOWS = {
         "eafm",
         "easyenergy",
         "ecobee",
+        "ecoforest",
         "econet",
         "ecowitt",
         "edl21",

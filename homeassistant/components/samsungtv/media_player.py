@@ -72,6 +72,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     """Representation of a Samsung TV."""
 
     _attr_source_list: list[str]
+    _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(
         self,
@@ -90,7 +91,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         self._playing: bool = True
 
         self._attr_is_volume_muted: bool = False
-        self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_source_list = list(SOURCES)
         self._app_list: dict[str, str] | None = None
         self._app_list_event: asyncio.Event = asyncio.Event()
