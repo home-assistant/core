@@ -23,27 +23,16 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize(
-    ("medcom_service", "ble_device"),
-    [
-        (
-            MEDCOM_SERVICE_INFO,
-            MedcomBleDevice(
-                manufacturer="International Medcom",
-                model="Inspector BLE",
-                model_raw="Inspector-BLE",
-                name="Inspector BLE",
-                identifier="a0d95a570b00",
-            ),
-        )
-    ],
-)
-async def test_bluetooth_discovery(
-    hass: HomeAssistant, medcom_service, ble_device
-) -> None:
+async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a valid device."""
-    with patch_async_ble_device_from_address(medcom_service), patch_medcom_ble(
-        ble_device
+    with patch_async_ble_device_from_address(MEDCOM_SERVICE_INFO), patch_medcom_ble(
+        MedcomBleDevice(
+            manufacturer="International Medcom",
+            model="Inspector BLE",
+            model_raw="Inspector-BLE",
+            name="Inspector BLE",
+            identifier="a0d95a570b00",
+        )
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -119,28 +108,19 @@ async def test_bluetooth_discovery_already_setup(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(
-    ("medcom_service", "ble_device"),
-    [
-        (
-            MEDCOM_SERVICE_INFO,
-            MedcomBleDevice(
-                manufacturer="International Medcom",
-                model="Inspector BLE",
-                model_raw="Inspector-BLE",
-                name="Inspector BLE",
-                identifier="a0d95a570b00",
-            ),
-        )
-    ],
-)
-async def test_user_setup(hass: HomeAssistant, medcom_service, ble_device) -> None:
+async def test_user_setup(hass: HomeAssistant) -> None:
     """Test the user initiated form."""
     with patch(
         "homeassistant.components.medcom_ble.config_flow.async_discovered_service_info",
-        return_value=[medcom_service],
-    ), patch_async_ble_device_from_address(medcom_service), patch_medcom_ble(
-        ble_device
+        return_value=[MEDCOM_SERVICE_INFO],
+    ), patch_async_ble_device_from_address(MEDCOM_SERVICE_INFO), patch_medcom_ble(
+        MedcomBleDevice(
+            manufacturer="International Medcom",
+            model="Inspector BLE",
+            model_raw="Inspector-BLE",
+            name="Inspector BLE",
+            identifier="a0d95a570b00",
+        )
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

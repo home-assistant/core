@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from bleak import BleakError
+from bluetooth_data_tools import human_readable_name
 from medcom_ble import MedcomBleDevice, MedcomBleDeviceData
 import voluptuous as vol
 
@@ -53,6 +54,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
+        self._discovery_info: BluetoothServiceInfo | None = None
         self._discovered_device: Discovery | None = None
         self._discovered_devices: dict[str, Discovery] = {}
 
@@ -88,20 +90,16 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfo
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-        _LOGGER.debug("Discovered BLE device: %s", discovery_info)
+        _LOGGER.debug("Discovered BLE device: %s", discovery_info.name)
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
-        try:
-            device = await self._get_device_data(discovery_info)
-        except MedcomBleDeviceUpdateError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
-            return self.async_abort(reason="unknown")
-
-        name = get_name(device)
-        self.context["title_placeholders"] = {"name": name}
-        self._discovered_device = Discovery(name, discovery_info, device)
+        self._discovery_info = discovery_info
+        self.context["title_placeholders"] = {
+            "name": human_readable_name(
+                None, discovery_info.name, discovery_info.address
+            )
+        }
 
         return await self.async_step_bluetooth_confirm()
 
