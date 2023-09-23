@@ -30,6 +30,9 @@ PRESET_HOLIDAY_MODE = "holiday_mode"
 FAN_SILENT = "silent"
 AUTO_MANU_MODE_STATE = "core:AutoManuModeState"
 TEMPERATURE_CHANGE_STATE = "ovp:TemperatureChangeState"
+AUTO_PIVOT_TEMPERATURE = 23
+AUTO_TEMPERATURE_CHANGE_MAX = 5
+AUTO_TEMPERATURE_CHANGE_MIN = -5
 FAN_SPEED_STATE = OverkizState.OVP_FAN_SPEED
 LEAVE_HOME_STATE = OverkizState.OVP_LEAVE_HOME
 MAIN_OPERATION_STATE = OverkizState.OVP_MAIN_OPERATION
@@ -176,6 +179,12 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     @property
     def target_temperature(self) -> int | None:
         """Return the temperature."""
+        # When the hvac mode is AUTO, the temperature control uses a temperature_change delta around a pivot temperature
+        if self.hvac_mode == HVACMode.AUTO:
+            if (temperature_change := self.temperature_change) and temperature_change:
+                return AUTO_PIVOT_TEMPERATURE + self.temperature_change
+            return AUTO_PIVOT_TEMPERATURE
+
         if (
             temperature := self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
         ) and temperature.value_as_int:
@@ -295,14 +304,6 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             OverkizCommandParam.STOP,
         )
 
-        # OVP protocol has specific fan_mode values; they require cleaning in case protocol HLRR_WIFI values are leaking
-        if fan_mode == OverkizCommandParam.MEDIUM:
-            fan_mode = OverkizCommandParam.MED
-        elif fan_mode == OverkizCommandParam.HIGH:
-            fan_mode = OverkizCommandParam.HI
-        elif fan_mode == OverkizCommandParam.LOW:
-            fan_mode = OverkizCommandParam.LO
-
         # OVP protocol has an AUTO_MANU parameter that is not controlled by HA (except if we want to club it into the PRESET property) and which is getting turned "off" when the device is on Holiday mode
         auto_manu_mode = self._control_backfill(
             None, AUTO_MANU_MODE_STATE, OverkizCommandParam.MANU
@@ -310,20 +311,27 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         if self.preset_mode == PRESET_HOLIDAY_MODE:
             auto_manu_mode = OverkizCommandParam.HOLIDAYS
 
-        # OVP protocol does not pass a target temperature when in AUTO mode, it passes a "temperature change" value in the range [-5,5]
+        # In all the hvac modes except AUTO, the temperature command parameter is the target temperature
+        temperature_command = target_temperature
+
+        # In the hvac mode AUTO, the temperature command parameter is a temperature_change which is the delta between a pivot temperature (23) and the target temperature
         if hvac_mode == OverkizCommandParam.AUTO:
-            target_temperature = self.temperature_change
-            # Cases were observed in the nature where the current state is out of range and cannot be used as a command. Resetting to 0 when this happens.
-            if (
-                not target_temperature
-                or target_temperature < -5
-                or target_temperature > 5
-            ):
-                target_temperature = 0
+            temperature_change = 0
+            if target_temperature:
+                temperature_change = target_temperature - AUTO_PIVOT_TEMPERATURE
+            elif self.temperature_change:
+                temperature_change = self.temperature_change
+
+            # Keep temperature_change in the API accepted range
+            if temperature_change > AUTO_TEMPERATURE_CHANGE_MAX:
+                temperature_change = AUTO_TEMPERATURE_CHANGE_MAX
+            elif temperature_change < AUTO_TEMPERATURE_CHANGE_MIN:
+                temperature_change = AUTO_TEMPERATURE_CHANGE_MIN
+            temperature_command = temperature_change
 
         command_data = [
             main_operation,  # Main Operation
-            target_temperature,  # Target Temperature
+            temperature_command,  # Target Temperature
             fan_mode,  # Fan Mode
             hvac_mode,  # Mode
             auto_manu_mode,  # Auto Manu Mode
