@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from voluptuous import MultipleInvalid
 
 from homeassistant.components.climate import (
@@ -80,6 +81,7 @@ async def test_climate(
     caplog: pytest.LogCaptureFixture,
     get_data: SensiboData,
     load_int: ConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Sensibo climate."""
 
@@ -88,36 +90,7 @@ async def test_climate(
     state3 = hass.states.get("climate.bedroom")
 
     assert state1.state == "heat"
-    assert state1.attributes == {
-        "hvac_modes": [
-            "cool",
-            "heat",
-            "dry",
-            "heat_cool",
-            "fan_only",
-            "off",
-        ],
-        "min_temp": 10,
-        "max_temp": 20,
-        "target_temp_step": 1,
-        "fan_modes": [
-            "quiet",
-            "low",
-            "medium",
-        ],
-        "swing_modes": [
-            "stopped",
-            "fixedtop",
-            "fixedmiddletop",
-        ],
-        "current_temperature": 21.2,
-        "temperature": 25,
-        "current_humidity": 32.9,
-        "fan_mode": "high",
-        "swing_mode": "stopped",
-        "friendly_name": "Hallway",
-        "supported_features": 41,
-    }
+    assert state1.attributes == snapshot
 
     assert state2.state == "off"
 
