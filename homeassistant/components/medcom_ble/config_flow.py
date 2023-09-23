@@ -43,10 +43,6 @@ def get_name(device: MedcomBleDevice) -> str:
     return name
 
 
-class MedcomBleDeviceUpdateError(Exception):
-    """Custom error class for device updates."""
-
-
 class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Medcom BLE radiation monitors."""
 
@@ -66,7 +62,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if ble_device is None:
             _LOGGER.debug("no ble_device in _get_device_data")
-            raise MedcomBleDeviceUpdateError("No ble_device")
+            raise ValueError("Cannot find BLE device")
 
         inspector = MedcomBleDeviceData(_LOGGER)
 
@@ -78,7 +74,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                 discovery_info.address,
                 err,
             )
-            raise MedcomBleDeviceUpdateError("Failed getting device data") from err
+            raise err
         except Exception as err:
             _LOGGER.error(
                 "Unknown error occurred from %s: %s", discovery_info.address, err
@@ -144,7 +140,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 device = await self._get_device_data(discovery_info)
-            except MedcomBleDeviceUpdateError:
+            except BleakError:
                 return self.async_abort(reason="cannot_connect")
             except Exception:  # pylint: disable=broad-except
                 return self.async_abort(reason="unknown")
