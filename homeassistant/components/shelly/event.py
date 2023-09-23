@@ -25,6 +25,7 @@ from .const import (
     SHIX3_1_INPUTS_EVENTS_TYPES,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
+from .entity import ShellyBlockEntity
 from .utils import (
     async_remove_shelly_entity,
     get_device_entry_gen,
@@ -106,20 +107,19 @@ async def async_setup_entry(
             ):
                 continue
 
-            channel = int(block.channel or 0) + 1
-
             if BLOCK_EVENT.removal_condition and BLOCK_EVENT.removal_condition(
                 coordinator.device.settings, block
             ):
-                unique_id = f"{coordinator.mac}-{BLOCK_EVENT.key}-{channel}"
+                channel = int(block.channel or 0) + 1
+                unique_id = f"{coordinator.mac}-{block.type}-{channel}"
                 async_remove_shelly_entity(hass, EVENT_DOMAIN, unique_id)
             else:
-                entities.append(ShellyBlockEvent(coordinator, channel, BLOCK_EVENT))
+                entities.append(ShellyBlockEvent(coordinator, block, BLOCK_EVENT))
 
     async_add_entities(entities)
 
 
-class ShellyBlockEvent(CoordinatorEntity[ShellyBlockCoordinator], EventEntity):
+class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
     """Represent Block event entity."""
 
     _attr_should_poll = False
@@ -128,17 +128,14 @@ class ShellyBlockEvent(CoordinatorEntity[ShellyBlockCoordinator], EventEntity):
     def __init__(
         self,
         coordinator: ShellyBlockCoordinator,
-        channel: int,
+        block: Block,
         description: ShellyBlockEventDescription,
     ) -> None:
         """Initialize Shelly entity."""
-        super().__init__(coordinator)
-        self.channel = channel
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
-        )
-        self._attr_unique_id = f"{coordinator.mac}-{description.key}-{channel}"
-        self._attr_name = f"{coordinator.device.name} Input {channel}"
+        super().__init__(coordinator, block)
+        self.channel = channel = int(block.channel or 0) + 1
+        self._attr_unique_id = f"{super().unique_id}-{channel}"
+
         if coordinator.model == "SHIX3-1":
             self._attr_event_types = list(SHIX3_1_INPUTS_EVENTS_TYPES)
         else:
