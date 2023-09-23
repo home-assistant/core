@@ -791,6 +791,11 @@ class BluetoothManager:
         return self._advertisement_tracker.intervals.get(address)
 
     @hass_callback
+    def async_get_fallback_availability_interval(self, address: str) -> float | None:
+        """Get the fallback availability timeout for a MAC address."""
+        return self._fallback_intervals.get(address)
+
+    @hass_callback
     def async_set_fallback_availability_interval(
         self, address: str, interval: float
     ) -> None:

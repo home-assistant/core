@@ -208,6 +208,14 @@ def async_get_learned_advertising_interval(
 
 
 @hass_callback
+def async_get_fallback_availability_interval(
+    hass: HomeAssistant, address: str
+) -> float | None:
+    """Get the fallback availability timeout for a MAC address."""
+    return _get_manager(hass).async_get_fallback_availability_interval(address)
+
+
+@hass_callback
 def async_set_fallback_availability_interval(
     hass: HomeAssistant, address: str, interval: float
 ) -> None:
