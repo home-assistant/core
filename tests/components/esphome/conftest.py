@@ -1,6 +1,7 @@
 """esphome session fixtures."""
 from __future__ import annotations
 
+import asyncio
 from asyncio import Event
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -15,7 +16,6 @@ from aioesphomeapi import (
     ReconnectLogic,
     UserService,
 )
-import async_timeout
 import pytest
 from zeroconf import Zeroconf
 
@@ -62,6 +62,7 @@ def mock_config_entry(hass) -> MockConfigEntry:
     """Return the default mocked config entry."""
     config_entry = MockConfigEntry(
         title="ESPHome Device",
+        entry_id="08d821dc059cf4f645cb024d32c8e708",
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.2",
@@ -252,7 +253,7 @@ async def _mock_generic_device_entry(
         "homeassistant.components.esphome.manager.ReconnectLogic", MockReconnectLogic
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        async with async_timeout.timeout(2):
+        async with asyncio.timeout(2):
             await try_connect_done.wait()
 
     await hass.async_block_till_done()

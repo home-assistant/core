@@ -1,17 +1,16 @@
 """Support for gauges from flood monitoring API."""
+import asyncio
 from datetime import timedelta
 import logging
 
 from aioeafm import get_station
-import async_timeout
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -49,7 +48,7 @@ async def async_setup_entry(
 
     async def async_update_data():
         # DataUpdateCoordinator will handle aiohttp ClientErrors and timeouts
-        async with async_timeout.timeout(30):
+        async with asyncio.timeout(30):
             data = await get_station(session, station_key)
 
         measures = get_measures(data)

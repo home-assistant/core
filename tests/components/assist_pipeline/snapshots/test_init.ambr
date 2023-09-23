@@ -313,6 +313,18 @@
     }),
     dict({
       'data': dict({
+        'timestamp': 0,
+      }),
+      'type': <PipelineEventType.STT_VAD_START: 'stt-vad-start'>,
+    }),
+    dict({
+      'data': dict({
+        'timestamp': 1500,
+      }),
+      'type': <PipelineEventType.STT_VAD_END: 'stt-vad-end'>,
+    }),
+    dict({
+      'data': dict({
         'stt_output': dict({
           'text': 'test transcript',
         }),

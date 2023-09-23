@@ -2,10 +2,11 @@
 from homeassistant.const import Platform
 
 PLATFORMS = [
-    Platform.SENSOR,
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.NUMBER,
     Platform.SCENE,
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 

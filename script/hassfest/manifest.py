@@ -71,6 +71,7 @@ NO_IOT_CLASS = [
     "history",
     "homeassistant",
     "homeassistant_alerts",
+    "homeassistant_green",
     "homeassistant_hardware",
     "homeassistant_sky_connect",
     "homeassistant_yellow",
@@ -254,12 +255,8 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
-        vol.Required("documentation"): vol.All(
-            vol.Url(), documentation_url  # pylint: disable=no-value-for-parameter
-        ),
-        vol.Optional(
-            "issue_tracker"
-        ): vol.Url(),  # pylint: disable=no-value-for-parameter
+        vol.Required("documentation"): vol.All(vol.Url(), documentation_url),
+        vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
         vol.Optional("dependencies"): [str],
@@ -369,15 +366,19 @@ def _sort_manifest_keys(key: str) -> str:
     return _SORT_KEYS.get(key, key)
 
 
-def sort_manifest(integration: Integration) -> bool:
+def sort_manifest(integration: Integration, config: Config) -> bool:
     """Sort manifest."""
     keys = list(integration.manifest.keys())
     if (keys_sorted := sorted(keys, key=_sort_manifest_keys)) != keys:
         manifest = {key: integration.manifest[key] for key in keys_sorted}
-        integration.manifest_path.write_text(json.dumps(manifest, indent=2))
+        if config.action == "generate":
+            integration.manifest_path.write_text(json.dumps(manifest, indent=2))
+            text = "have been sorted"
+        else:
+            text = "are not sorted correctly"
         integration.add_error(
             "manifest",
-            "Manifest keys have been sorted: domain, name, then alphabetical order",
+            f"Manifest keys {text}: domain, name, then alphabetical order",
         )
         return True
     return False
@@ -390,11 +391,12 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     for integration in integrations.values():
         validate_manifest(integration, core_components_dir)
         if not integration.errors:
-            if sort_manifest(integration):
+            if sort_manifest(integration, config):
                 manifests_resorted.append(integration.manifest_path)
-    if manifests_resorted:
+    if config.action == "generate" and manifests_resorted:
         subprocess.run(
             ["pre-commit", "run", "--hook-stage", "manual", "prettier", "--files"]
             + manifests_resorted,
             stdout=subprocess.DEVNULL,
+            check=True,
         )

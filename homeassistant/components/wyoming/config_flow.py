@@ -93,9 +93,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             uri = urlparse(self._hassio_discovery.config["uri"])
             if service := await WyomingService.create(uri.hostname, uri.port):
-                if not any(
-                    asr for asr in service.info.asr if asr.installed
-                ) and not any(tts for tts in service.info.tts if tts.installed):
+                if (
+                    not any(asr for asr in service.info.asr if asr.installed)
+                    and not any(tts for tts in service.info.tts if tts.installed)
+                    and not any(wake for wake in service.info.wake if wake.installed)
+                ):
                     return self.async_abort(reason="no_services")
 
                 return self.async_create_entry(

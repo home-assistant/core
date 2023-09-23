@@ -10,7 +10,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 import aiohttp
-import async_timeout
 from hass_nabucasa import Cloud, cloud_api
 from yarl import URL
 
@@ -501,7 +500,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             )
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
 
             return True

@@ -1,10 +1,10 @@
 """The syncthru component."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
 
 from homeassistant.config_entries import ConfigEntry
@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data() -> SyncThru:
         """Fetch data from the printer."""
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await printer.update()
         except SyncThruAPINotSupported as api_error:
             # if an exception is thrown, printer does not support syncthru

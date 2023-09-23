@@ -109,10 +109,6 @@ def _native_datetime() -> datetime:
 class AugustBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes August binary_sensor entity."""
 
-    # AugustBinarySensor does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
-
 
 @dataclass
 class AugustDoorbellRequiredKeysMixin:
@@ -128,34 +124,28 @@ class AugustDoorbellBinarySensorEntityDescription(
 ):
     """Describes August binary_sensor entity."""
 
-    # AugustDoorbellBinarySensor does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
-
 
 SENSOR_TYPE_DOOR = AugustBinarySensorEntityDescription(
-    key="door_open",
-    name="Open",
+    key="open",
+    device_class=BinarySensorDeviceClass.DOOR,
 )
 
 SENSOR_TYPES_VIDEO_DOORBELL = (
     AugustDoorbellBinarySensorEntityDescription(
-        key="doorbell_motion",
-        name="Motion",
+        key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
         value_fn=_retrieve_motion_state,
         is_time_based=True,
     ),
     AugustDoorbellBinarySensorEntityDescription(
-        key="doorbell_image_capture",
-        name="Image Capture",
+        key="image capture",
+        translation_key="image_capture",
         icon="mdi:file-image",
         value_fn=_retrieve_image_capture_state,
         is_time_based=True,
     ),
     AugustDoorbellBinarySensorEntityDescription(
-        key="doorbell_online",
-        name="Online",
+        key="online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_online_state,
@@ -166,8 +156,7 @@ SENSOR_TYPES_VIDEO_DOORBELL = (
 
 SENSOR_TYPES_DOORBELL: tuple[AugustDoorbellBinarySensorEntityDescription, ...] = (
     AugustDoorbellBinarySensorEntityDescription(
-        key="doorbell_ding",
-        name="Ding",
+        key="ding",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         value_fn=_retrieve_ding_state,
         is_time_based=True,
@@ -236,8 +225,7 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self.entity_description = description
         self._data = data
         self._device = device
-        self._attr_name = f"{device.device_name} {description.name}"
-        self._attr_unique_id = f"{self._device_id}_{description.name.lower()}"
+        self._attr_unique_id = f"{self._device_id}_{description.key}"
 
     @callback
     def _update_from_data(self):
@@ -284,8 +272,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self.entity_description = description
         self._check_for_off_update_listener = None
         self._data = data
-        self._attr_name = f"{device.device_name} {description.name}"
-        self._attr_unique_id = f"{self._device_id}_{description.name.lower()}"
+        self._attr_unique_id = f"{self._device_id}_{description.key}"
 
     @callback
     def _update_from_data(self):

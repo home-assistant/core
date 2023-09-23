@@ -108,7 +108,7 @@ async def test_controller_timeout(
     """Test an error talking to the controller."""
 
     with patch(
-        "homeassistant.components.rainbird.config_flow.async_timeout.timeout",
+        "homeassistant.components.rainbird.config_flow.asyncio.timeout",
         side_effect=asyncio.TimeoutError,
     ):
         result = await complete_flow(hass)

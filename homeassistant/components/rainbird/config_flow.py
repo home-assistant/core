@@ -6,7 +6,6 @@ import asyncio
 import logging
 from typing import Any
 
-import async_timeout
 from pyrainbird.async_client import (
     AsyncRainbirdClient,
     AsyncRainbirdController,
@@ -106,7 +105,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         )
         try:
-            async with async_timeout.timeout(TIMEOUT_SECONDS):
+            async with asyncio.timeout(TIMEOUT_SECONDS):
                 return await controller.get_serial_number()
         except asyncio.TimeoutError as err:
             raise ConfigFlowError(

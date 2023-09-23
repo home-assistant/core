@@ -14,13 +14,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import (
-    BaseWithingsSensor,
-    UpdateType,
-    WithingsEntityDescription,
-    async_get_data_manager,
-)
+from .common import UpdateType, async_get_data_manager
 from .const import Measurement
+from .entity import BaseWithingsSensor, WithingsEntityDescription
 
 
 @dataclass
@@ -36,7 +32,7 @@ BINARY_SENSORS = [
         key=Measurement.IN_BED.value,
         measurement=Measurement.IN_BED,
         measure_type=NotifyAppli.BED_IN,
-        name="In bed",
+        translation_key="in_bed",
         icon="mdi:bed",
         update_type=UpdateType.WEBHOOK,
         device_class=BinarySensorDeviceClass.OCCUPANCY,

@@ -98,13 +98,10 @@ class MinutPointSensor(MinutPointEntity, SensorEntity):
         """Update the value of the sensor."""
         _LOGGER.debug("Update sensor value for %s", self)
         if self.is_updated:
-            self._value = await self.device.sensor(self.device_class)
+            self._attr_native_value = await self.device.sensor(self.device_class)
+            if self.native_value is not None:
+                self._attr_native_value = round(
+                    self.native_value, self.entity_description.precision
+                )
             self._updated = parse_datetime(self.device.last_update)
         self.async_write_ha_state()
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if self.value is None:
-            return None
-        return round(self.value, self.entity_description.precision)
