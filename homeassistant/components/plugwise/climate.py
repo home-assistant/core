@@ -67,7 +67,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             self._attr_preset_modes = presets
 
         # Determine hvac modes and current hvac mode
-        # Add HVACMode.OFF for Google Home support
         self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
         if self.coordinator.data.gateway["cooling_present"]:
             self._attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
