@@ -113,18 +113,12 @@ async def async_create_fix_flow(
 ) -> RepairsFlow:
     """Create flow."""
     entry = None
-    country = None
     if data and (entry_id := data.get("entry_id")):
         entry_id = cast(str, entry_id)
         entry = hass.config_entries.async_get_entry(entry_id)
-        country = data.get("country")
 
-    if entry and country:
-        # Province does not exist
-        return CountryFixFlow(entry, country)
-
-    if entry and country is None:
-        # Country does not exist
-        return CountryFixFlow(entry, country)
+    if data and entry:
+        # Country or province does not exist
+        return CountryFixFlow(entry, data.get("country"))
 
     return ConfirmRepairFlow()
