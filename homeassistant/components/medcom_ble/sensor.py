@@ -56,9 +56,7 @@ async def async_setup_entry(
             )
             continue
         entities.append(
-            MedcomSensor(
-                coordinator, coordinator.data, SENSORS_MAPPING_TEMPLATE[sensor_type]
-            )
+            MedcomSensor(coordinator, SENSORS_MAPPING_TEMPLATE[sensor_type])
         )
 
     async_add_entities(entities)
@@ -74,12 +72,12 @@ class MedcomSensor(
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[MedcomBleDevice],
-        medcom_device: MedcomBleDevice,
         entity_description: SensorEntityDescription,
     ) -> None:
         """Populate the medcom entity with relevant data."""
         super().__init__(coordinator)
         self.entity_description = entity_description
+        medcom_device = coordinator.data
 
         name = medcom_device.name
         if identifier := medcom_device.identifier:
