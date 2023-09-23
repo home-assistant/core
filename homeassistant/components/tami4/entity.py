@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from Tami4EdgeAPI import Tami4EdgeAPI
 
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN
 
