@@ -52,7 +52,12 @@ from .const import (
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -60,7 +65,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from .util import valid_publish_topic, valid_subscribe_topic
 
 CONF_AVAILABLE_MODES_LIST = "modes"
 CONF_DEVICE_CLASS = "device_class"
@@ -313,6 +318,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_is_on"})
         def state_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message."""
             payload = self._value_templates[CONF_STATE](msg.payload)
@@ -325,12 +331,12 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 self._attr_is_on = False
             elif payload == PAYLOAD_NONE:
                 self._attr_is_on = None
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self.add_subscription(topics, CONF_STATE_TOPIC, state_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_action"})
         def action_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message."""
             action_payload = self._value_templates[ATTR_ACTION](msg.payload)
@@ -347,12 +353,12 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                     action_payload,
                 )
                 return
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self.add_subscription(topics, CONF_ACTION_TOPIC, action_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_current_humidity"})
         def current_humidity_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for the current humidity."""
             rendered_current_humidity_payload = self._value_templates[
@@ -360,7 +366,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             ](msg.payload)
             if rendered_current_humidity_payload == self._payload["HUMIDITY_RESET"]:
                 self._attr_current_humidity = None
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
             if not rendered_current_humidity_payload:
                 _LOGGER.debug("Ignoring empty current humidity from '%s'", msg.topic)
@@ -384,7 +389,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 )
                 return
             self._attr_current_humidity = current_humidity
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self.add_subscription(
             topics, CONF_CURRENT_HUMIDITY_TOPIC, current_humidity_received
@@ -392,6 +396,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_target_humidity"})
         def target_humidity_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for the target humidity."""
             rendered_target_humidity_payload = self._value_templates[ATTR_HUMIDITY](
@@ -402,7 +407,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 return
             if rendered_target_humidity_payload == self._payload["HUMIDITY_RESET"]:
                 self._attr_target_humidity = None
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
             try:
                 target_humidity = round(float(rendered_target_humidity_payload))
@@ -426,7 +430,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 )
                 return
             self._attr_target_humidity = target_humidity
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self.add_subscription(
             topics, CONF_TARGET_HUMIDITY_STATE_TOPIC, target_humidity_received
@@ -434,12 +437,12 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_mode"})
         def mode_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for mode."""
             mode = str(self._value_templates[ATTR_MODE](msg.payload))
             if mode == self._payload["MODE_RESET"]:
                 self._attr_mode = None
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
             if not mode:
                 _LOGGER.debug("Ignoring empty mode from '%s'", msg.topic)
@@ -454,7 +457,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 return
 
             self._attr_mode = mode
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self.add_subscription(topics, CONF_MODE_STATE_TOPIC, mode_received)
 
