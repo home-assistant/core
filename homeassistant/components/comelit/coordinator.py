@@ -3,7 +3,8 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-from aiocomelit import ComeliteSerialBridgeApi
+from aiocomelit import ComeliteSerialBridgeApi, ComelitSerialBridgeObject
+from aiocomelit.const import BRIDGE
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, BRIDGE_MODEL, DOMAIN
+from .const import _LOGGER, DOMAIN
 
 
 class ComelitSerialBridge(DataUpdateCoordinator):
@@ -38,8 +39,8 @@ class ComelitSerialBridge(DataUpdateCoordinator):
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, self.config_entry.entry_id)},
-            model=BRIDGE_MODEL,
-            name=f"{BRIDGE_MODEL} ({self.api.host})",
+            model=BRIDGE,
+            name=f"{BRIDGE} ({self.api.host})",
             **self.basic_device_info,
         )
 
@@ -63,7 +64,7 @@ class ComelitSerialBridge(DataUpdateCoordinator):
             },
             via_device=(DOMAIN, self.config_entry.entry_id),
             name=device.name,
-            model=f"{BRIDGE_MODEL} {platform}",
+            model=f"{BRIDGE} {platform}",
             **self.basic_device_info,
         )
 
