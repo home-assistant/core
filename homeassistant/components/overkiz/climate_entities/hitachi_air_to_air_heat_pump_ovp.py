@@ -308,7 +308,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             None, AUTO_MANU_MODE_STATE, OverkizCommandParam.MANU
         )
         if self.preset_mode == PRESET_HOLIDAY_MODE:
-            auto_manu_mode = OverkizCommandParam.HOLIDAYS
+            auto_manu_mode = OverkizCommandParam.OFF
 
         # In all the hvac modes except AUTO, the temperature command parameter is the target temperature
         temperature_command = target_temperature
