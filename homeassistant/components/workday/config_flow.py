@@ -93,6 +93,14 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
                 raise RemoveDatesError("Incorrect date or name")
 
 
+def get_lowercase_countries() -> list[str]:
+    """Convert country list to lowercases."""
+    lowercase_countries = []
+    for country in list_supported_countries():
+        lowercase_countries.append(country.lower())
+    return lowercase_countries
+
+
 DATA_SCHEMA_SETUP = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
@@ -196,6 +204,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input[CONF_COUNTRY] = user_input[CONF_COUNTRY].upper()
             self.data = user_input
             return await self.async_step_options()
         return self.async_show_form(

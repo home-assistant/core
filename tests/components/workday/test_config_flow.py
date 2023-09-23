@@ -41,7 +41,7 @@ async def test_form(hass: HomeAssistant) -> None:
         result["flow_id"],
         {
             CONF_NAME: "Workday Sensor",
-            CONF_COUNTRY: "DE",
+            CONF_COUNTRY: "de",
         },
     )
     await hass.async_block_till_done()
@@ -126,7 +126,7 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
         result["flow_id"],
         {
             CONF_NAME: "Workday Sensor",
-            CONF_COUNTRY: "SE",
+            CONF_COUNTRY: "se",
         },
     )
     await hass.async_block_till_done()
@@ -348,7 +348,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
         result["flow_id"],
         {
             CONF_NAME: "Workday Sensor",
-            CONF_COUNTRY: "DE",
+            CONF_COUNTRY: "de",
         },
     )
     await hass.async_block_till_done()
