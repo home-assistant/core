@@ -122,7 +122,6 @@ async def async_setup_entry(
 class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
     """Represent Block event entity."""
 
-    _attr_should_poll = False
     entity_description: ShellyBlockEventDescription
 
     def __init__(
