@@ -128,18 +128,20 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
             ),
             None,
         )
-        self._open: bool | None
         super().__init__(hass, router, node, cover_node)
-        self.async_update_node()
+        self._cover_trigger = self.get_command_id(
+            node["type"]["endpoints"], "signal", "cover"
+        )
+        self._open = self.get_value("signal", "cover")
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._open
 
-    async def async_update_node(self):
+    async def async_update_signal(self):
         """Update name & state."""
-        self._open = self.get_value("signal", "cover")
+        self._open = await self.get_home_endpoint_value(self._cover_trigger)
 
     @property
     def device_class(self) -> BinarySensorDeviceClass:
