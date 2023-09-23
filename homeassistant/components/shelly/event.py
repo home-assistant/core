@@ -36,19 +36,27 @@ from .utils import (
 
 
 @dataclass
-class ShellyRpcEventDescription(EventEntityDescription):
-    """Class to describe Shelly event."""
-
-    removal_condition: Callable[[dict, dict, str], bool] | None = None
-
-
-@dataclass
 class ShellyBlockEventDescription(EventEntityDescription):
     """Class to describe Shelly event."""
 
     removal_condition: Callable[[dict, Block], bool] | None = None
 
 
+@dataclass
+class ShellyRpcEventDescription(EventEntityDescription):
+    """Class to describe Shelly event."""
+
+    removal_condition: Callable[[dict, dict, str], bool] | None = None
+
+
+BLOCK_EVENT: Final = ShellyBlockEventDescription(
+    key="input",
+    translation_key="input",
+    device_class=EventDeviceClass.BUTTON,
+    removal_condition=lambda settings, block: not is_block_momentary_input(
+        settings, block, True
+    ),
+)
 RPC_EVENT: Final = ShellyRpcEventDescription(
     key="input",
     translation_key="input",
@@ -56,14 +64,6 @@ RPC_EVENT: Final = ShellyRpcEventDescription(
     event_types=list(RPC_INPUTS_EVENTS_TYPES),
     removal_condition=lambda config, status, key: not is_rpc_momentary_input(
         config, status, key
-    ),
-)
-BLOCK_EVENT: Final = ShellyBlockEventDescription(
-    key="input",
-    translation_key="input",
-    device_class=EventDeviceClass.BUTTON,
-    removal_condition=lambda settings, block: not is_block_momentary_input(
-        settings, block, True
     ),
 )
 
@@ -119,43 +119,6 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
-    """Represent RPC event entity."""
-
-    _attr_should_poll = False
-    entity_description: ShellyRpcEventDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        description: ShellyRpcEventDescription,
-    ) -> None:
-        """Initialize Shelly entity."""
-        super().__init__(coordinator)
-        self.input_index = int(key.split(":")[-1])
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
-        )
-        self._attr_unique_id = f"{coordinator.mac}-{key}"
-        self._attr_name = get_rpc_input_name(coordinator.device, key)
-        self.entity_description = description
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.async_subscribe_input_events(self._async_handle_event)
-        )
-
-    @callback
-    def _async_handle_event(self, event: dict[str, Any]) -> None:
-        """Handle the demo button event."""
-        if event["id"] == self.input_index:
-            self._trigger_event(event["event"])
-            self.async_write_ha_state()
-
-
 class ShellyBlockEvent(CoordinatorEntity[ShellyBlockCoordinator], EventEntity):
     """Represent Block event entity."""
 
@@ -193,5 +156,42 @@ class ShellyBlockEvent(CoordinatorEntity[ShellyBlockCoordinator], EventEntity):
     def _async_handle_event(self, event: dict[str, Any]) -> None:
         """Handle the demo button event."""
         if event["channel"] == self.channel:
+            self._trigger_event(event["event"])
+            self.async_write_ha_state()
+
+
+class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
+    """Represent RPC event entity."""
+
+    _attr_should_poll = False
+    entity_description: ShellyRpcEventDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        description: ShellyRpcEventDescription,
+    ) -> None:
+        """Initialize Shelly entity."""
+        super().__init__(coordinator)
+        self.input_index = int(key.split(":")[-1])
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
+        )
+        self._attr_unique_id = f"{coordinator.mac}-{key}"
+        self._attr_name = get_rpc_input_name(coordinator.device, key)
+        self.entity_description = description
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_subscribe_input_events(self._async_handle_event)
+        )
+
+    @callback
+    def _async_handle_event(self, event: dict[str, Any]) -> None:
+        """Handle the demo button event."""
+        if event["id"] == self.input_index:
             self._trigger_event(event["event"])
             self.async_write_ha_state()
