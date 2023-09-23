@@ -34,5 +34,6 @@ async def async_setup_entry(
             device.device_url, data.coordinator
         )
         for device in data.platforms[Platform.CLIMATE]
-        if device.protocol and device.widget in WIDGET_TO_PROTOCOL_TO_CLIMATE_ENTITY
+        if device.widget in WIDGET_TO_PROTOCOL_TO_CLIMATE_ENTITY
+        and device.protocol in WIDGET_TO_PROTOCOL_TO_CLIMATE_ENTITY[device.widget]
     )
