@@ -38,7 +38,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             phone = user_input[CONF_PHONE].strip()
 
             try:
-                if m:= re.match("^(\+?972)?0?(?P<number>\d{8,9})$", phone):
+                if m := re.match(r"^(\+?972)?0?(?P<number>\d{8,9})$", phone):
                     self.phone = f"+972{m.group('number')}"
                 else:
                     raise InvalidPhoneNumber
