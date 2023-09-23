@@ -347,22 +347,21 @@ class CloudGoogleConfig(AbstractConfig):
 
     async def async_report_state(
         self, message: Any, agent_user_id: str, event_id: str | None = None
-    ) -> HTTPStatus | None:
+    ) -> None:
         """Send a state report to Google."""
         try:
             await self._cloud.google_report_state.async_send_message(message)
         except ErrorResponse as err:
             _LOGGER.warning("Error reporting state - %s: %s", err.code, err.message)
-        return None
 
-    async def _async_request_sync_devices(self, agent_user_id: str) -> HTTPStatus:
+    async def _async_request_sync_devices(self, agent_user_id: str) -> HTTPStatus | int:
         """Trigger a sync with Google."""
         if self._sync_entities_lock.locked():
             return HTTPStatus.OK
 
         async with self._sync_entities_lock:
             resp = await cloud_api.async_google_actions_request_sync(self._cloud)
-            return HTTPStatus(resp.status)
+            return resp.status
 
     async def _async_prefs_updated(self, prefs: CloudPreferences) -> None:
         """Handle updated preferences."""

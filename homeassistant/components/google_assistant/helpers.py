@@ -215,6 +215,28 @@ class AbstractConfig(ABC):
             self._unsub_report_state()
             self._unsub_report_state = None
 
+    async def async_sync_entities(self, agent_user_id: str):
+        """Sync all entities to Google."""
+        # Remove any pending sync
+        self._google_sync_unsub.pop(agent_user_id, lambda: None)()
+        status = await self._async_request_sync_devices(agent_user_id)
+        if status == HTTPStatus.NOT_FOUND:
+            await self.async_disconnect_agent_user(agent_user_id)
+        return status
+
+    async def async_sync_entities_all(self) -> int:
+        """Sync all entities to Google for all registered agents."""
+        if not self._store.agent_user_ids:
+            return 204
+
+        res = await gather(
+            *(
+                self.async_sync_entities(agent_user_id)
+                for agent_user_id in self._store.agent_user_ids
+            )
+        )
+        return max(res, default=204)
+
     async def async_sync_notification(
         self, agent_user_id: str, event_id: str, payload: dict[str, Any]
     ) -> HTTPStatus:
@@ -226,28 +248,6 @@ class AbstractConfig(ABC):
         if status == HTTPStatus.NOT_FOUND:
             await self.async_disconnect_agent_user(agent_user_id)
         return status
-
-    async def async_sync_entities(self, agent_user_id: str) -> HTTPStatus:
-        """Sync all entities to Google."""
-        # Remove any pending sync
-        self._google_sync_unsub.pop(agent_user_id, lambda: None)()
-        status = await self._async_request_sync_devices(agent_user_id)
-        if status == HTTPStatus.NOT_FOUND:
-            await self.async_disconnect_agent_user(agent_user_id)
-        return status
-
-    async def async_sync_entities_all(self) -> HTTPStatus:
-        """Sync all entities to Google for all registered agents."""
-        if not self._store.agent_user_ids:
-            return HTTPStatus.NO_CONTENT
-
-        res = await gather(
-            *(
-                self.async_sync_entities(agent_user_id)
-                for agent_user_id in self._store.agent_user_ids
-            )
-        )
-        return max(res, default=HTTPStatus.NO_CONTENT)
 
     async def async_sync_notification_all(
         self, event_id: str, payload: dict[str, Any]
@@ -285,7 +285,7 @@ class AbstractConfig(ABC):
         for agent_user_id in self._store.agent_user_ids:
             self.async_schedule_google_sync(agent_user_id)
 
-    async def _async_request_sync_devices(self, agent_user_id: str) -> HTTPStatus:
+    async def _async_request_sync_devices(self, agent_user_id: str) -> int:
         """Trigger a sync with Google.
 
         Return value is the HTTP status code of the sync request.

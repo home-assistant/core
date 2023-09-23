@@ -306,12 +306,23 @@ async def test_agent_user_id_connect() -> None:
 
 @pytest.mark.parametrize("agents", [{}, {"1"}, {"1", "2"}])
 async def test_report_state_all(agents) -> None:
-    """Test a disconnect message."""
+    """Test sync of all states."""
     config = MockConfig(agent_user_ids=agents)
     data = {}
     with patch.object(config, "async_report_state") as mock:
         await config.async_report_state_all(data)
         assert sorted(mock.mock_calls) == sorted(call(data, agent) for agent in agents)
+
+
+@pytest.mark.parametrize("agents", [{}, {"1"}, {"1", "2"}])
+async def test_sync_entities(agents) -> None:
+    """Test sync of all entities."""
+    config = MockConfig(agent_user_ids=agents)
+    with patch.object(
+        config, "async_sync_entities", return_value=HTTPStatus.NO_CONTENT
+    ) as mock:
+        await config.async_sync_entities_all()
+        assert sorted(mock.mock_calls) == sorted(call(agent) for agent in agents)
 
 
 @pytest.mark.parametrize(
