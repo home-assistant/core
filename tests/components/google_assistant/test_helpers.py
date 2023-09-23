@@ -325,6 +325,17 @@ async def test_sync_entities(agents) -> None:
         assert sorted(mock.mock_calls) == sorted(call(agent) for agent in agents)
 
 
+@pytest.mark.parametrize("agents", [{}, {"1"}, {"1", "2"}])
+async def test_sync_notifications(agents) -> None:
+    """Test sync of notifications."""
+    config = MockConfig(agent_user_ids=agents)
+    with patch.object(
+        config, "async_sync_notification", return_value=HTTPStatus.NO_CONTENT
+    ) as mock:
+        await config.async_sync_notification_all("1234", {})
+        assert not agents or bool(mock.mock_calls) and agents
+
+
 @pytest.mark.parametrize(
     ("agents", "result"),
     [({}, 204), ({"1": 200}, 200), ({"1": 200, "2": 300}, 300)],
