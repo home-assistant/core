@@ -113,7 +113,9 @@ class Tami4EdgeSensorEntity(Tami4EdgeBaseEntity, CoordinatorEntity, SensorEntity
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
-            self._attr_native_value = self.coordinator.data[self.entity_description.key]
+            self._attr_native_value = getattr(
+                self.coordinator.data, self.entity_description.key
+            )
         except KeyError:
             return
         self.async_write_ha_state()
