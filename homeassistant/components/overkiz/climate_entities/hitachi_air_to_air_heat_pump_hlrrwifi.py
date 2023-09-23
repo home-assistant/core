@@ -28,8 +28,6 @@ from ..entity import OverkizEntity
 
 PRESET_HOLIDAY_MODE = "holiday_mode"
 FAN_SILENT = "silent"
-AUTO_MANU_MODE_STATE = "core:AutoManuModeState"
-
 FAN_SPEED_STATE = OverkizState.HLRRWIFI_FAN_SPEED
 LEAVE_HOME_STATE = OverkizState.HLRRWIFI_LEAVE_HOME
 MAIN_OPERATION_STATE = OverkizState.HLRRWIFI_MAIN_OPERATION

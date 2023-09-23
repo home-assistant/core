@@ -34,7 +34,6 @@ AUTO_PIVOT_TEMPERATURE = 23
 AUTO_TEMPERATURE_CHANGE_MAX = 5
 AUTO_TEMPERATURE_CHANGE_MIN = -5
 FAN_SPEED_STATE = OverkizState.OVP_FAN_SPEED
-LEAVE_HOME_STATE = OverkizState.OVP_LEAVE_HOME
 MAIN_OPERATION_STATE = OverkizState.OVP_MAIN_OPERATION
 MODE_CHANGE_STATE = OverkizState.OVP_MODE_CHANGE
 ROOM_TEMPERATURE_STATE = OverkizState.OVP_ROOM_TEMPERATURE
@@ -331,7 +330,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
 
         command_data = [
             main_operation,  # Main Operation
-            temperature_command,  # Target Temperature
+            temperature_command,  # Temperature Command
             fan_mode,  # Fan Mode
             hvac_mode,  # Mode
             auto_manu_mode,  # Auto Manu Mode
