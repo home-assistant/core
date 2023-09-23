@@ -2352,7 +2352,7 @@ def _find_latest_short_term_statistic_for_metadata_id_stmt(
     """Create a statement to find the latest short term statistics for a metadata_id."""
     #
     # This code only looks up one row, and should not be refactored to
-    # lookup multiple the latest for multiple metadata_ids using func.max
+    # lookup multiple using func.max
     # or similar, as that will cause the query to be significantly slower
     # for DBMs such as PostgreSQL that will have to do a full scan
     #
