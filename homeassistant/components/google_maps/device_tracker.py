@@ -121,10 +121,9 @@ class GoogleMapsScanner:
             if last_seen == self._prev_seen.get(dev_id, last_seen) and hasattr(self, "success_init"):
                 _LOGGER.warning(
                     "Ignoring %s update because timestamp "
-                    "is same than last timestamp %s : %s",
+                    "is same than last timestamp %s",
                     person.nickname,
                     last_seen,
-                    person.source_type,
                 )
                 continue
             self._prev_seen[dev_id] = last_seen
