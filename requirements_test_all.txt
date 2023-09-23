@@ -629,6 +629,9 @@ feedparser==6.0.10
 # homeassistant.components.file
 file-read-backwards==2.0.0
 
+# homeassistant.components.fitbit
+fitbit==0.3.1
+
 # homeassistant.components.fivem
 fivem-api==0.1.2
 
