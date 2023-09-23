@@ -119,13 +119,13 @@
       "fix_flow": {
         "step": {
           "province": {
-            "title": "Select province for {title}",
-            "description": "Select a province in country {country} to use for your Workday sensor.",
+            "title": "[%key:component::workday::issues::bad_country::fix_flow::step::province::title%]",
+            "description": "[%key:component::workday::issues::bad_country::fix_flow::step::province::description%]",
             "data": {
               "province": "[%key:component::workday::config::step::options::data::province%]"
             },
             "data_description": {
-              "province": "State, Territory, Province, Region of Country"
+              "province": "[%key:component::workday::issues::bad_country::fix_flow::step::province::data_description::province%]"
             }
           }
         }
