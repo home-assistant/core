@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, event
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import (
     get_astral_location,
@@ -24,7 +25,7 @@ from homeassistant.helpers.sun import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_EVENTS_CHANGED, SIGNAL_POSITION_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -285,6 +286,7 @@ class Sun(Entity):
         if self._update_sun_position_listener:
             self._update_sun_position_listener()
         self.update_sun_position()
+        async_dispatcher_send(self.hass, SIGNAL_EVENTS_CHANGED)
 
         # Set timer for the next solar event
         self._update_events_listener = event.async_track_point_in_utc_time(
@@ -311,6 +313,8 @@ class Sun(Entity):
             self.solar_azimuth,
         )
         self.async_write_ha_state()
+
+        async_dispatcher_send(self.hass, SIGNAL_POSITION_CHANGED)
 
         # Next update as per the current phase
         assert self.phase

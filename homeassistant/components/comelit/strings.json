@@ -3,7 +3,7 @@
     "flow_title": "{host}",
     "step": {
       "reauth_confirm": {
-        "description": "Please enter the correct PIN for VEDO system: {host}",
+        "description": "Please enter the correct PIN for {host}",
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         }
