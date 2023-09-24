@@ -921,6 +921,9 @@ gpiozero==1.6.2
 # homeassistant.components.gpsd
 gps3==0.33.3
 
+# homeassistant.components.hunter_hydrawise
+gql==3.4.1
+
 # homeassistant.components.gree
 greeclimate==1.4.1
 

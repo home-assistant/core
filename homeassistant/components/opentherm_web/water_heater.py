@@ -99,24 +99,29 @@ class OpenThermWaterHeater(
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         self.web_api.set_dhw_temperature(temperature)
+        self.refresh()
         self.schedule_update_ha_state(force_refresh=False)
 
     def turn_away_mode_on(self) -> None:
         """Turn on away mode."""
         self.web_api.set_dhw_away_mode(True)
+        self.refresh()
         self.schedule_update_ha_state(force_refresh=False)
 
     def turn_away_mode_off(self) -> None:
         """Turn off away mode."""
         self.web_api.set_dhw_away_mode(False)
+        self.refresh()
         self.schedule_update_ha_state(force_refresh=False)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
         await self.hass.async_add_executor_job(self.turn_away_mode_off)
+        self.refresh()
         self.async_schedule_update_ha_state(force_refresh=False)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         await self.hass.async_add_executor_job(self.turn_away_mode_on)
+        self.refresh()
         self.async_schedule_update_ha_state(force_refresh=False)

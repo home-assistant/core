@@ -100,6 +100,7 @@ class OpenThermClimate(CoordinatorEntity[OpenThermWebCoordinator], ClimateEntity
             return
 
         self.web_api.set_room_temperature(temperature)
+        self.refresh()
         self.schedule_update_ha_state(force_refresh=False)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -108,4 +109,5 @@ class OpenThermClimate(CoordinatorEntity[OpenThermWebCoordinator], ClimateEntity
             return
 
         self.web_api.set_hvac_mode(hvac_mode == HVACMode.AUTO)
+        self.refresh()
         self.schedule_update_ha_state(force_refresh=False)
