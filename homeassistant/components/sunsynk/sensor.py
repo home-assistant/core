@@ -131,7 +131,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class SunsynkSensor(CoordinatorEntity, SensorEntity):
+class SunsynkSensor(CoordinatorEntity[SunsynkCoordinator], SensorEntity):
     """Representation of a grid power usage."""
 
     def __init__(
