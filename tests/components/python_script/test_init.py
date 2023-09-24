@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.python_script import DOMAIN, FOLDER, execute
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 
@@ -121,34 +122,30 @@ this is not valid Python
     assert "Error loading script test.py" in caplog.text
 
 
-async def test_execute_runtime_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_execute_runtime_error(hass: HomeAssistant) -> None:
     """Test compile error logs error."""
-    caplog.set_level(logging.ERROR)
     source = """
 raise Exception('boom')
     """
 
-    hass.async_add_executor_job(execute, hass, "test.py", source, {})
+    task = hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
-    assert "Error executing script: boom" in caplog.text
+    assert type(task.exception()) == HomeAssistantError
+    assert "Error executing script: boom" in str(task.exception())
 
 
-async def test_accessing_async_methods(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_accessing_async_methods(hass: HomeAssistant) -> None:
     """Test compile error logs error."""
-    caplog.set_level(logging.ERROR)
     source = """
 hass.async_stop()
     """
 
-    hass.async_add_executor_job(execute, hass, "test.py", source, {})
+    task = hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
-    assert "Not allowed to access async methods" in caplog.text
+    assert type(task.exception()) == ValueError
+    assert "Not allowed to access async methods" in str(task.exception())
 
 
 async def test_using_complex_structures(
@@ -168,22 +165,19 @@ logger.info('Logging from inside script: %s %s' % (mydict["a"], mylist[2]))
     assert "Logging from inside script: 1 3" in caplog.text
 
 
-async def test_accessing_forbidden_methods(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_accessing_forbidden_methods(hass: HomeAssistant) -> None:
     """Test compile error logs error."""
-    caplog.set_level(logging.ERROR)
-
     for source, name in {
         "hass.stop()": "HomeAssistant.stop",
         "dt_util.set_default_time_zone()": "module.set_default_time_zone",
         "datetime.non_existing": "module.non_existing",
         "time.tzset()": "TimeWrapper.tzset",
     }.items():
-        caplog.records.clear()
-        hass.async_add_executor_job(execute, hass, "test.py", source, {})
+        task = hass.async_add_executor_job(execute, hass, "test.py", source, {})
         await hass.async_block_till_done()
-        assert f"Not allowed to access {name}" in caplog.text
+
+        assert type(task.exception()) == ValueError
+        assert f"Not allowed to access {name}" in str(task.exception())
 
 
 async def test_iterating(hass: HomeAssistant) -> None:
@@ -528,12 +522,8 @@ no_output = {"result": f"hello {data.get('name', 'World')}"}
     assert caplog.text == ""
 
 
-async def test_execute_wrong_output_type(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_execute_wrong_output_type(hass: HomeAssistant) -> None:
     """Test executing a script without a return value."""
-    caplog.set_level(logging.WARNING)
-
     scripts = [
         "/some/config/dir/python_scripts/hello.py",
     ]
@@ -550,16 +540,11 @@ output = f"hello {data.get('name', 'World')}"
         "homeassistant.components.python_script.open",
         mock_open(read_data=source),
         create=True,
-    ):
-        response = await hass.services.async_call(
+    ), pytest.raises(ValueError):
+        await hass.services.async_call(
             "python_script",
             "hello",
             {"name": "paulus"},
             blocking=True,
             return_response=True,
         )
-
-    assert isinstance(response, dict)
-    assert len(response) == 0
-
-    assert "Expected `output` to be a dictionary, was <class 'str'>" in caplog.text

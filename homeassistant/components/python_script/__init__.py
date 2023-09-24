@@ -246,9 +246,9 @@ def execute(hass, filename, source, data=None):
                 f"Expected `output` to be a dictionary, was {output_type}"
             )
     except ScriptError as err:
-        logger.error("Error executing script: %s", err)
+        raise ValueError(f"Error executing script: {err}") from err
     except Exception as err:  # pylint: disable=broad-except
-        logger.exception("Error executing script: %s", err)
+        raise HomeAssistantError(f"Error executing script: {err}") from err
 
     return restricted_globals["output"]
 
