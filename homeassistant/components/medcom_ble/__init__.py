@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from bleak import BleakError
 from medcom_ble import MedcomBleDeviceData
 
 from homeassistant.components import bluetooth
@@ -43,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             data = await inspector.update_device(ble_device)
-        except Exception as err:
+        except BleakError as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
 
         return data

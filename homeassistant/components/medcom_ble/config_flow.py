@@ -18,7 +18,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
 from .const import DOMAIN
 
@@ -62,22 +62,22 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if ble_device is None:
             _LOGGER.debug("no ble_device in _get_device_data")
-            raise BleakError("Cannot find BLE device")
+            raise AbortFlow(
+                "cannot_connect",
+                description_placeholders={
+                    "error connecting to": discovery_info.address
+                },
+            )
 
         inspector = MedcomBleDeviceData(_LOGGER)
 
         try:
             data = await inspector.update_device(ble_device)
-        except BleakError as err:
-            _LOGGER.error(
-                "Error connecting to and getting data from %s: %s",
+        except Exception as err:
+            _LOGGER.exception(
+                "Error occurred reading information from %s: %s",
                 discovery_info.address,
                 err,
-            )
-            raise err
-        except Exception as err:
-            _LOGGER.error(
-                "Unknown error occurred from %s: %s", discovery_info.address, err
             )
             raise err
         return data
@@ -140,7 +140,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 device = await self._get_device_data(discovery_info)
-            except BleakError:
+            except (BleakError, AbortFlow):
                 return self.async_abort(reason="cannot_connect")
             except Exception:  # pylint: disable=broad-except
                 return self.async_abort(reason="unknown")
