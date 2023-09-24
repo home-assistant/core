@@ -160,6 +160,7 @@ class ToshibaAcSelectEntity(ToshibaAcStateEntity, SelectEntity):
 
     entity_description: ToshibaAcSelectDescription
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, device: ToshibaAcDevice, entity_description: ToshibaAcSelectDescription
