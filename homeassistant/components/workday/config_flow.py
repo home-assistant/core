@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import holidays
-from holidays import HolidayBase, list_supported_countries
+from holidays import HolidayBase, country_holidays, list_supported_countries
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -53,11 +52,10 @@ def add_province_to_schema(
 ) -> vol.Schema:
     """Update schema with province from country."""
     all_countries = list_supported_countries()
-    all_provinces = all_countries.get(country)
-    if not all_provinces:
+    if not all_countries.get(country):
         return schema
 
-    province_list = [NONE_SENTINEL, *all_provinces]
+    province_list = [NONE_SENTINEL, *all_countries[country]]
     add_schema = {
         vol.Optional(CONF_PROVINCE, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
@@ -77,19 +75,17 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
         if dt_util.parse_date(add_date) is None:
             raise AddDatesError("Incorrect date")
 
-    country: str = user_input[CONF_COUNTRY]
-    if country is not None:
-        cls: type[HolidayBase] = getattr(holidays, country)
-    else:
-        cls = HolidayBase
-
     year: int = dt_util.now().year
-
-    obj_holidays = cls(
-        subdiv=user_input.get(CONF_PROVINCE),
-        years=year,
-        language=cls.default_language,
-    )
+    if country := user_input[CONF_COUNTRY]:
+        cls = country_holidays(country)
+        obj_holidays = country_holidays(
+            country=country,
+            subdiv=user_input.get(CONF_PROVINCE),
+            years=year,
+            language=cls.default_language,
+        )
+    else:
+        obj_holidays = HolidayBase(years=year)
 
     for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
         if dt_util.parse_date(remove_date) is None:
