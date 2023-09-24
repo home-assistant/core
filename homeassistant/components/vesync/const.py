@@ -8,6 +8,7 @@ VS_SWITCHES = "switches"
 VS_FANS = "fans"
 VS_LIGHTS = "lights"
 VS_SENSORS = "sensors"
+VS_BINARY_SENSORS = "binary_sensors"
 VS_MANAGER = "manager"
 
 DEV_TYPE_TO_HA = {
@@ -18,6 +19,7 @@ DEV_TYPE_TO_HA = {
     "ESWL01": "switch",
     "ESWL03": "switch",
     "ESO15-TB": "outlet",
+    "LAP-V201S-WUS": "fan",
 }
 
 SKU_TO_BASE_DEVICE = {

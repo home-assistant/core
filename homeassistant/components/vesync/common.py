@@ -7,7 +7,14 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, ToggleEntity
 
-from .const import DOMAIN, VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
+from .const import (
+    DOMAIN,
+    VS_BINARY_SENSORS,
+    VS_FANS,
+    VS_LIGHTS,
+    VS_SENSORS,
+    VS_SWITCHES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,6 +26,7 @@ async def async_process_devices(hass, manager):
     devices[VS_FANS] = []
     devices[VS_LIGHTS] = []
     devices[VS_SENSORS] = []
+    devices[VS_BINARY_SENSORS] = []
 
     await hass.async_add_executor_job(manager.update)
 
@@ -26,6 +34,9 @@ async def async_process_devices(hass, manager):
         devices[VS_FANS].extend(manager.fans)
         # Expose fan sensors separately
         devices[VS_SENSORS].extend(manager.fans)
+        # Expose fan binary sensors separately
+        devices[VS_BINARY_SENSORS].extend(manager.fans)
+        devices[VS_SWITCHES].extend(manager.fans)
         _LOGGER.info("%d VeSync fans found", len(manager.fans))
 
     if manager.bulbs:
@@ -36,6 +47,8 @@ async def async_process_devices(hass, manager):
         devices[VS_SWITCHES].extend(manager.outlets)
         # Expose outlets' voltage, power & energy usage as separate sensors
         devices[VS_SENSORS].extend(manager.outlets)
+        # Expose fan binary sensors separately
+        devices[VS_BINARY_SENSORS].extend(manager.outlets)
         _LOGGER.info("%d VeSync outlets found", len(manager.outlets))
 
     if manager.switches:
