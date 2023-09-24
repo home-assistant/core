@@ -61,7 +61,8 @@ class ReolinkHost:
         )
 
         self.webhook_id: str | None = None
-        self._onvif_supported: bool = True
+        self._onvif_push_supported: bool = True
+        self._onvif_long_poll_supported: bool = True
         self._base_url: str = ""
         self._webhook_url: str = ""
         self._webhook_reachable: bool = False
@@ -97,7 +98,9 @@ class ReolinkHost:
                 f"'{self._api.user_level}', only admin users can change camera settings"
             )
 
-        self._onvif_supported = self._api.supported(None, "ONVIF")
+        onvif_supported = self._api.supported(None, "ONVIF")
+        self._onvif_push_supported = onvif_supported
+        self._onvif_long_poll_supported = onvif_supported
 
         enable_rtsp = None
         enable_onvif = None
@@ -109,7 +112,7 @@ class ReolinkHost:
             )
             enable_rtsp = True
 
-        if not self._api.onvif_enabled and self._onvif_supported:
+        if not self._api.onvif_enabled and onvif_supported:
             _LOGGER.debug(
                 "ONVIF is disabled on %s, trying to enable it", self._api.nvr_name
             )
@@ -157,11 +160,11 @@ class ReolinkHost:
 
         self._unique_id = format_mac(self._api.mac_address)
 
-        if self._onvif_supported:
+        if self._onvif_push_supported:
             try:
                 await self.subscribe()
             except NotSupportedError:
-                self._onvif_supported = False
+                self._onvif_push_supported = False
                 self.unregister_webhook()
                 await self._api.unsubscribe()
             else:
@@ -179,12 +182,27 @@ class ReolinkHost:
                 self._cancel_onvif_check = async_call_later(
                     self._hass, FIRST_ONVIF_TIMEOUT, self._async_check_onvif
                 )
-        if not self._onvif_supported:
+        if not self._onvif_push_supported:
             _LOGGER.debug(
-                "Camera model %s does not support ONVIF, using fast polling instead",
+                "Camera model %s does not support ONVIF push, using ONVIF long polling instead",
                 self._api.model,
             )
-            await self._async_poll_all_motion()
+            try:
+                await self._async_start_long_polling(initial=True)
+            except NotSupportedError:
+                _LOGGER.debug(
+                    "Camera model %s does not support ONVIF long polling, using fast polling instead",
+                    self._api.model,
+                )
+                self._onvif_long_poll_supported = False
+                await self._api.unsubscribe()
+                await self._async_poll_all_motion()
+            else:
+                self._cancel_long_poll_check = async_call_later(
+                    self._hass,
+                    FIRST_ONVIF_LONG_POLL_TIMEOUT,
+                    self._async_check_onvif_long_poll,
+                )
 
         if self._api.sw_version_update_required:
             ir.async_create_issue(
@@ -317,11 +335,22 @@ class ReolinkHost:
                 str(err),
             )
 
-    async def _async_start_long_polling(self):
+    async def _async_start_long_polling(self, initial=False):
         """Start ONVIF long polling task."""
         if self._long_poll_task is None:
             try:
                 await self._api.subscribe(sub_type=SubType.long_poll)
+            except NotSupportedError as err:
+                if initial:
+                    raise err
+                # make sure the long_poll_task is always created to try again later
+                if not self._lost_subscription:
+                    self._lost_subscription = True
+                    _LOGGER.error(
+                        "Reolink %s event long polling subscription lost: %s",
+                        self._api.nvr_name,
+                        str(err),
+                    )
             except ReolinkError as err:
                 # make sure the long_poll_task is always created to try again later
                 if not self._lost_subscription:
@@ -381,12 +410,11 @@ class ReolinkHost:
 
     async def renew(self) -> None:
         """Renew the subscription of motion events (lease time is 15 minutes)."""
-        if not self._onvif_supported:
-            return
-
         try:
-            await self._renew(SubType.push)
-            if self._long_poll_task is not None:
+            if self._onvif_push_supported:
+                await self._renew(SubType.push)
+
+            if self._onvif_long_poll_supported and self._long_poll_task is not None:
                 if not self._api.subscribed(SubType.long_poll):
                     _LOGGER.debug("restarting long polling task")
                     # To prevent 5 minute request timeout
