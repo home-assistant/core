@@ -589,18 +589,24 @@ def test_isnonstringiterable(hass: HomeAssistant, value, expected) -> None:
         (b"abc", False),
     ],
 )
-def test_isdict(hass: HomeAssistant, value, expected) -> None:
-    """Test is_dict."""
+def test_ismapping(hass: HomeAssistant, value, expected) -> None:
+    """Test is_mapping."""
     assert (
-        template.Template("{{ is_dict(value) }}", hass).async_render({"value": value})
+        template.Template("{{ is_mapping(value) }}", hass).async_render(
+            {"value": value}
+        )
         == expected
     )
     assert (
-        template.Template("{{ value | is_dict }}", hass).async_render({"value": value})
+        template.Template("{{ value | is_mapping }}", hass).async_render(
+            {"value": value}
+        )
         == expected
     )
     assert (
-        template.Template("{{ value is is_dict }}", hass).async_render({"value": value})
+        template.Template("{{ value is is_mapping }}", hass).async_render(
+            {"value": value}
+        )
         == expected
     )
 

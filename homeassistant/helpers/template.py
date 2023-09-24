@@ -5,7 +5,14 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Collection, Generator, Iterable, MutableMapping
+from collections.abc import (
+    Callable,
+    Collection,
+    Generator,
+    Iterable,
+    Mapping,
+    MutableMapping,
+)
 from contextlib import contextmanager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -20,7 +27,7 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from types import CodeType, MappingProxyType
+from types import CodeType
 from typing import (
     Any,
     Concatenate,
@@ -1966,9 +1973,9 @@ def is_set(value):
     return isinstance(value, set)
 
 
-def is_dict(value):
-    """Return whether a value is a dict."""
-    return isinstance(value, (dict, ReadOnlyDict, MappingProxyType))
+def is_mapping(value):
+    """Return whether a value is a mapping."""
+    return isinstance(value, Mapping)
 
 
 def is_non_string_or_dict_iterable(value):
@@ -2380,7 +2387,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["is_number"] = is_number
         self.filters["is_list"] = is_list
         self.filters["is_set"] = is_set
-        self.filters["is_dict"] = is_dict
+        self.filters["is_mapping"] = is_mapping
         self.filters["is_non_string_iterable"] = is_non_string_or_dict_iterable
         self.filters["float"] = forgiving_float_filter
         self.filters["int"] = forgiving_int_filter
@@ -2415,7 +2422,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_number"] = is_number
         self.globals["is_list"] = is_list
         self.globals["is_set"] = is_set
-        self.globals["is_dict"] = is_dict
+        self.globals["is_mapping"] = is_mapping
         self.globals["is_non_string_iterable"] = is_non_string_or_dict_iterable
         self.globals["int"] = forgiving_int
         self.globals["pack"] = struct_pack
@@ -2427,7 +2434,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.tests["is_number"] = is_number
         self.tests["is_list"] = is_list
         self.tests["is_set"] = is_set
-        self.tests["is_dict"] = is_dict
+        self.tests["is_mapping"] = is_mapping
         self.tests["is_non_string_iterable"] = is_non_string_or_dict_iterable
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
