@@ -71,16 +71,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         inspector = MedcomBleDeviceData(_LOGGER)
 
-        try:
-            data = await inspector.update_device(ble_device)
-        except Exception as err:
-            _LOGGER.exception(
-                "Error occurred reading information from %s: %s",
-                discovery_info.address,
-                err,
-            )
-            raise err
-        return data
+        return await inspector.update_device(ble_device)
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
