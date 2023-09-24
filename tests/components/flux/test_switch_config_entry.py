@@ -85,10 +85,7 @@ async def test_valid_config(hass: HomeAssistant) -> None:
             "lights": ["light.desk", "light.lamp"],
         }
     )
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=config_settings,
-    )
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, options=config_settings)
     config_entry.add_to_hass(hass)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -110,10 +107,7 @@ async def test_restore_state_last_on(hass: HomeAssistant) -> None:
             "lights": ["light.desk", "light.lamp"],
         }
     )
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=config_settings,
-    )
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, options=config_settings)
     config_entry.add_to_hass(hass)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -135,10 +129,7 @@ async def test_restore_state_last_off(hass: HomeAssistant) -> None:
             "lights": ["light.desk", "light.lamp"],
         }
     )
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=config_settings,
-    )
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, options=config_settings)
     config_entry.add_to_hass(hass)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -163,10 +154,7 @@ async def test_valid_config_with_info(hass: HomeAssistant) -> None:
             "stop_colortemp": "4000",
         }
     )
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=config_settings,
-    )
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, options=config_settings)
     config_entry.add_to_hass(hass)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -201,10 +189,7 @@ async def test_flux_when_switch_is_off(
                 "lights": [ent1.entity_id],
             }
         )
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            data=config_settings,
-        )
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, options=config_settings)
         config_entry.add_to_hass(hass)
 
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -221,10 +206,7 @@ async def update_lights(hass: HomeAssistant, config_settings, test_time, event_d
         "homeassistant.components.flux.switch.get_astral_event_date",
         side_effect=event_date,
     ):
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            data=config_settings,
-        )
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, options=config_settings)
         config_entry.add_to_hass(hass)
 
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -294,10 +276,7 @@ async def test_flux_before_sunrise_known_location(
                 "lights": [ent1.entity_id],
             }
         )
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            data=config_settings,
-        )
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, options=config_settings)
         config_entry.add_to_hass(hass)
 
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})

@@ -2,12 +2,18 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 from voluptuous.schema_builder import UNDEFINED
 
 from homeassistant import config_entries
 from homeassistant.components.light import ATTR_TRANSITION
+from homeassistant.config_entries import (
+    ConfigEntry,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import (
     CONF_BRIGHTNESS,
     CONF_LIGHTS,
@@ -44,11 +50,13 @@ from .const import (
     CONF_STOP_CT,
     CONF_STOP_TIME,
     CONF_SUNSET_CT,
+    DEFAULT_INTERVAL_DURATION,
     DEFAULT_MODE,
     DEFAULT_NAME,
     DEFAULT_START_COLOR_TEMP_KELVIN,
     DEFAULT_STOP_COLOR_TEMP_KELVIN,
     DEFAULT_SUNSET_COLOR_TEMP_KELVIN,
+    DEFAULT_TRANSITION_DURATION,
     DOMAIN,
     MODE_MIRED,
     MODE_RGB,
@@ -83,8 +91,8 @@ def default_settings():
     settings_dict[CONF_STOP_CT] = DEFAULT_STOP_COLOR_TEMP_KELVIN
     settings_dict[CONF_ADJUST_BRIGHTNESS] = True
     settings_dict[CONF_MODE] = DEFAULT_MODE
-    settings_dict[CONF_INTERVAL] = {"seconds": 30}
-    settings_dict[ATTR_TRANSITION] = {"seconds": 30}
+    settings_dict[CONF_INTERVAL] = DEFAULT_INTERVAL_DURATION
+    settings_dict[ATTR_TRANSITION] = DEFAULT_TRANSITION_DURATION
     return settings_dict
 
 
@@ -95,16 +103,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for the Flux component."""
-        return OptionsFlow(config_entry)
+        return FluxOptionsFlow(config_entry)
 
-    async def async_step_user(self, user_input: dict[str, Any] | None=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
 
         if user_input is not None:
             user_input.update(default_settings())
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            return self.async_create_entry(
+                title=user_input[CONF_NAME], data={}, options=user_input
+            )
 
         return self.async_show_form(
             step_id="user",
@@ -114,35 +126,49 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, yaml_config: ConfigType) -> FlowResult:
         """Handle import from configuration.yaml."""
         # start with the same default settings as in the UI
-        entry_data = default_settings()
+        entry_options = default_settings()
 
         # remove the old two very similar options
-        brightness = yaml_config.pop(CONF_BRIGHTNESS, False)
-        disable_brightness_adjust = yaml_config.pop(
+        brightness = yaml_config.get(CONF_BRIGHTNESS, False)
+        disable_brightness_adjust = yaml_config.get(
             CONF_DISABLE_BRIGHTNESS_ADJUST, False
         )
 
         # combine them into the "new" option
         if brightness or disable_brightness_adjust:
-            entry_data[CONF_ADJUST_BRIGHTNESS] = False
+            entry_options[CONF_ADJUST_BRIGHTNESS] = False
 
-        entry_data[CONF_INTERVAL] = {"seconds": yaml_config.pop(CONF_INTERVAL)}
-        entry_data[ATTR_TRANSITION] = {"seconds": yaml_config.pop(ATTR_TRANSITION)}
+        if CONF_INTERVAL in yaml_config:
+            entry_options[CONF_INTERVAL] = {"seconds": yaml_config[CONF_INTERVAL]}
+        if ATTR_TRANSITION in yaml_config:
+            entry_options[ATTR_TRANSITION] = {"seconds": yaml_config[ATTR_TRANSITION]}
 
         if CONF_START_TIME in yaml_config:
-            entry_data[CONF_START_TIME] = str(yaml_config.pop(CONF_START_TIME))
+            entry_options[CONF_START_TIME] = str(yaml_config[CONF_START_TIME])
 
         if CONF_STOP_TIME in yaml_config:
-            entry_data[CONF_STOP_TIME] = str(yaml_config.pop(CONF_STOP_TIME))
-
-        yaml_config.pop("platform")
+            entry_options[CONF_STOP_TIME] = str(yaml_config[CONF_STOP_TIME])
 
         # apply the rest of the remaining options
-        entry_data.update(yaml_config)
+        entry_options[CONF_LIGHTS] = yaml_config[CONF_LIGHTS]
+        if CONF_MODE in yaml_config:
+            entry_options[CONF_MODE] = yaml_config[CONF_MODE]
+        if CONF_START_CT in yaml_config:
+            entry_options[CONF_START_CT] = yaml_config[CONF_START_CT]
+        if CONF_SUNSET_CT in yaml_config:
+            entry_options[CONF_SUNSET_CT] = yaml_config[CONF_SUNSET_CT]
+        if CONF_STOP_CT in yaml_config:
+            entry_options[CONF_STOP_CT] = yaml_config[CONF_STOP_CT]
+        if CONF_NAME in yaml_config:
+            entry_options[CONF_NAME] = yaml_config[CONF_NAME]
 
-        self._async_abort_entries_match(entry_data)
+        self._async_abort_entries_match(entry_options)
 
-        return self.async_create_entry(title=entry_data[CONF_NAME], data=entry_data)
+        return self.async_create_entry(
+            title=entry_options.get(CONF_NAME, DEFAULT_NAME),
+            data={},
+            options=entry_options,
+        )
 
 
 class FluxOptionsFlow(OptionsFlowWithConfigEntry):
@@ -181,7 +207,6 @@ class FluxOptionsFlow(OptionsFlowWithConfigEntry):
 
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Configure the options."""
-        errors: dict[str, str] = {}
         if user_input is not None:
             user_input = self.reset_values_to_default(user_input)
             user_input = self.convert_mired_stuff_to_kelvin(user_input)
@@ -189,13 +214,13 @@ class FluxOptionsFlow(OptionsFlowWithConfigEntry):
 
             # modify the existing entry...
             self.hass.config_entries.async_update_entry(
-                self._config_entry, title=user_input[CONF_NAME], data=user_input
+                self._config_entry, title=user_input[CONF_NAME], options=user_input
             )
 
             # instead of adding options to it..
             return self.async_create_entry(title="", data={})
 
-        settings = self._config_entry.data
+        settings = self._config_entry.options
 
         return self.async_show_form(
             step_id="init",
@@ -260,5 +285,4 @@ class FluxOptionsFlow(OptionsFlowWithConfigEntry):
                     ): DurationSelector(),
                 }
             ),
-            errors=errors,
         )

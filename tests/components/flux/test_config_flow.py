@@ -16,9 +16,7 @@ from homeassistant.components.flux.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import (
-    MockConfigEntry,
-)
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -67,10 +65,7 @@ async def test_options(hass: HomeAssistant) -> None:
             "lights": ["light.desk", "light.lamp"],
         }
     )
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=config_settings,
-    )
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, options=config_settings)
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
