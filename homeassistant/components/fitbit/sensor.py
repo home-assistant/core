@@ -708,7 +708,7 @@ class FitbitSensor(SensorEntity):
             device_id = self.device.id
             registered_devs: list[FitbitDevice] = self.api.get_devices()
             self.device = next(
-                iter([device for device in registered_devs if device.id == device_id])
+                device for device in registered_devs if device.id == device_id
             )
             self._attr_native_value = self.device.battery
 
