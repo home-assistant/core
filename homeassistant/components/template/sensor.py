@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+import logging
 from typing import Any
 
-import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -69,7 +69,10 @@ LEGACY_FIELDS = {
 
 def validate_last_reset(val):
     """Run extra validation checks."""
-    if ATTR_LAST_RESET in val and val.get(CONF_STATE_CLASS) != SensorStateClass.TOTAL:
+    if (
+        val.get(ATTR_LAST_RESET) is not None
+        and val.get(CONF_STATE_CLASS) != SensorStateClass.TOTAL
+    ):
         raise vol.Invalid(
             "last_reset is only valid for template sensors with state_class 'total'"
         )
@@ -254,7 +257,9 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
         self._template: template.Template = config[CONF_STATE]
-        self._attr_last_reset_template: template.Template = config.get(ATTR_LAST_RESET)
+        self._attr_last_reset_template: None | template.Template = config.get(
+            ATTR_LAST_RESET
+        )
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
@@ -353,9 +358,7 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
 
         # Update last_reset
         if ATTR_LAST_RESET in self._rendered:
-            parsed_timestamp = dt_util.parse_datetime(
-                self._rendered.get(ATTR_LAST_RESET)
-            )
+            parsed_timestamp = dt_util.parse_datetime(self._rendered[ATTR_LAST_RESET])
             if parsed_timestamp is None:
                 _LOGGER.warning(
                     "%s rendered invalid timestamp for last_reset attribute: %s",
