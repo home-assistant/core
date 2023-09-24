@@ -95,7 +95,7 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
 
 def get_lowercase_countries() -> list[str]:
     """Convert country list to lowercases."""
-    lowercase_countries = []
+    lowercase_countries = [NONE_SENTINEL]
     for country in list_supported_countries():
         lowercase_countries.append(country.lower())
     return lowercase_countries
@@ -106,7 +106,7 @@ DATA_SCHEMA_SETUP = vol.Schema(
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
         vol.Optional(CONF_COUNTRY, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
-                options=[NONE_SENTINEL, *list(list_supported_countries())],
+                options=get_lowercase_countries(),
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_COUNTRY,
             )
@@ -204,7 +204,8 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            user_input[CONF_COUNTRY] = user_input[CONF_COUNTRY].upper()
+            if user_input[CONF_COUNTRY] != NONE_SENTINEL:
+                user_input[CONF_COUNTRY] = user_input[CONF_COUNTRY].upper()
             self.data = user_input
             return await self.async_step_options()
         return self.async_show_form(
