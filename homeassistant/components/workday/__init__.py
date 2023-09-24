@@ -13,12 +13,13 @@ from .const import CONF_COUNTRY, CONF_PROVINCE, PLATFORMS
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Workday from a config entry."""
 
-    country: str = entry.options[CONF_COUNTRY]
+    country: str | None = entry.options.get(CONF_COUNTRY)
     province: str | None = entry.options.get(CONF_PROVINCE)
+
     if country and country not in list_supported_countries():
         raise ConfigEntryError(f"Selected country {country} is not valid")
 
-    if province and province not in list_supported_countries()[country]:
+    if country and province and province not in list_supported_countries()[country]:
         raise ConfigEntryError(
             f"Selected province {province} for country {country} is not valid"
         )
