@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 import async_timeout
-from sunsynk.client import SunsynkClient
+from sunsynk.client import InvalidCredentialsException, SunsynkClient
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -38,7 +38,7 @@ class SunsynkCoordinator(DataUpdateCoordinator):
             # Name of the data. For logging purposes.
             name="Sunsynk",
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(minutes=2),
         )
         self.api = api
         self.inverter_sn = inverter_sn
@@ -68,5 +68,5 @@ class SunsynkCoordinator(DataUpdateCoordinator):
                 data[SOLAR_ENERGY_TOTAL] = solar_pv.generated_total
                 data[SOLAR_POWER] = solar_pv.get_power()
                 return data
-        except Exception as err:
+        except InvalidCredentialsException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
