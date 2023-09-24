@@ -298,6 +298,26 @@ class Pipeline:
 
     id: str = field(default_factory=ulid_util.ulid)
 
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> Pipeline:
+        """Create an instance from a JSON serialization.
+
+        This function was added in HA Core 2023.10, previous versions will raise
+        if there are unexpected items in the serialized data.
+        """
+        return cls(
+            conversation_engine=data["conversation_engine"],
+            conversation_language=data["conversation_language"],
+            id=data["id"],
+            language=data["language"],
+            name=data["name"],
+            stt_engine=data["stt_engine"],
+            stt_language=data["stt_language"],
+            tts_engine=data["tts_engine"],
+            tts_language=data["tts_language"],
+            tts_voice=data["tts_voice"],
+        )
+
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
         return {
@@ -1205,7 +1225,7 @@ class PipelineStorageCollection(
 
     def _deserialize_item(self, data: dict) -> Pipeline:
         """Create an item from its serialized representation."""
-        return Pipeline(**data)
+        return Pipeline.from_json(data)
 
     def _serialize_item(self, item_id: str, item: Pipeline) -> dict:
         """Return the serialized representation of an item for storing."""
