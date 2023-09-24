@@ -12,8 +12,13 @@ from pyhap.const import CATEGORY_OTHER
 from pyhap.iid_manager import IIDManager
 from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
+import voluptuous as vol
 
+from homeassistant.components import device_automation
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
+from homeassistant.components.device_automation.trigger import (
+    async_validate_trigger_config,
+)
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.remote import RemoteEntityFeature
 from homeassistant.components.sensor import SensorDeviceClass
@@ -46,10 +51,12 @@ from homeassistant.core import (
     callback as ha_callback,
     split_entity_id,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
+from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import EventType
 from homeassistant.util.decorator import Registry
 
@@ -62,6 +69,8 @@ from .const import (
     CHAR_BATTERY_LEVEL,
     CHAR_CHARGING_STATE,
     CHAR_HARDWARE_REVISION,
+    CHAR_MOTION_DETECTED,
+    CHAR_PROGRAMMABLE_SWITCH_EVENT,
     CHAR_STATUS_LOW_BATTERY,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
@@ -80,6 +89,8 @@ from .const import (
     MAX_VERSION_LENGTH,
     SERV_ACCESSORY_INFO,
     SERV_BATTERY_SERVICE,
+    SERV_DOORBELL,
+    SERV_MOTION_SENSOR,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     TYPE_FAUCET,
     TYPE_OUTLET,
@@ -345,6 +356,9 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         if device_id:
             return
 
+        self._char_linked_trigger: list[Characteristic] = []
+        self._remove_triggers: CALLBACK_TYPE | None = None
+
         self._char_battery = None
         self._char_charging = None
         self._char_low_battery = None
@@ -416,6 +430,74 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             )
         )
 
+        # Check for triggers associated with the entity's device
+        configured_triggers: list[dict[str, Any]] = []
+        ent_reg = er.async_get(self.hass)
+        if entity := ent_reg.async_get(self.entity_id):
+            for device_id, triggers in (
+                await device_automation.async_get_device_automations(
+                    self.hass,
+                    device_automation.DeviceAutomationType.TRIGGER,
+                    [entity.device_id or ""],
+                )
+            ).items():
+                for trigger in triggers:
+                    try:
+                        await async_validate_trigger_config(self.hass, trigger)
+                    except vol.Invalid:
+                        continue
+
+                    if trigger["type"] == "doorbell_chime":
+                        _LOGGER.debug(
+                            "%s: Configuring %s device trigger for device %s",
+                            self.entity_id,
+                            trigger["type"],
+                            device_id,
+                        )
+
+                        serv_doorbell = self.add_preload_service(SERV_DOORBELL)
+                        self.set_primary_service(serv_doorbell)
+                        self._char_linked_trigger.append(
+                            serv_doorbell.get_characteristic(
+                                CHAR_PROGRAMMABLE_SWITCH_EVENT
+                            )
+                        )
+                        configured_triggers.append(trigger)
+
+                    elif trigger["type"] == "camera_motion":
+                        _LOGGER.debug(
+                            "%s: Configuring %s device trigger for device %s",
+                            self.entity_id,
+                            trigger["type"],
+                            device_id,
+                        )
+
+                        serv_motion_sensor = self.add_preload_service(
+                            SERV_MOTION_SENSOR
+                        )
+                        self._char_linked_trigger.append(
+                            serv_motion_sensor.get_characteristic(CHAR_MOTION_DETECTED)
+                        )
+
+                        configured_triggers.append(trigger)
+
+                    else:
+                        _LOGGER.debug(
+                            "%s: Ignoring unknown trigger type: %s",
+                            self.entity_id,
+                            trigger["type"],
+                        )
+
+        if configured_triggers:
+            self._remove_triggers = await async_initialize_triggers(
+                self.hass,
+                configured_triggers,
+                self.async_trigger,
+                "homekit",
+                self.display_name,
+                _LOGGER.log,
+            )
+
         battery_charging_state = None
         battery_state = None
         if self.linked_battery_sensor and (
@@ -451,6 +533,23 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
         if battery_state is not None or battery_charging_state is not None:
             self.async_update_battery(battery_state, battery_charging_state)
+
+    async def async_trigger(
+        self,
+        run_variables: dict[str, Any],
+        context: Context | None = None,
+        skip_condition: bool = False,
+    ) -> None:
+        """Handle device trigger event on an accessory.
+
+        This method is a coroutine.
+        """
+        reason = ""
+        if "trigger" in run_variables and "description" in run_variables["trigger"]:
+            reason = f' by {run_variables["trigger"]["description"]}'
+        _LOGGER.debug("Button triggered%s - %s", reason, run_variables)
+        idx = int(run_variables["trigger"]["idx"])
+        self._char_linked_trigger[idx].set_value(0)
 
     @ha_callback
     def async_update_event_state_callback(
@@ -580,6 +679,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
     async def stop(self) -> None:
         """Cancel any subscriptions when the bridge is stopped."""
+        if self._remove_triggers:
+            self._remove_triggers()
         while self._subscriptions:
             self._subscriptions.pop(0)()
 
