@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.4
+AEMET-OpenData==0.4.5
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -468,7 +468,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.11.0
+bluetooth-data-tools==1.12.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -621,7 +621,7 @@ esphome-dashboard-api==1.2.3
 eufylife-ble-client==0.1.7
 
 # homeassistant.components.faa_delays
-faadelays==0.0.7
+faadelays==2023.9.1
 
 # homeassistant.components.feedreader
 feedparser==6.0.10
@@ -1244,6 +1244,9 @@ pydexcom==0.2.3
 # homeassistant.components.discovergy
 pydiscovergy==2.0.3
 
+# homeassistant.components.hydrawise
+pydrawise==2023.8.0
+
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
 
@@ -1368,7 +1371,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.5.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.5
+pylitterbot==2023.4.8
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.18.2
@@ -1502,7 +1505,7 @@ pysabnzbd==1.1.1
 pyschlage==2023.9.1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.33
+pysensibo==1.0.35
 
 # homeassistant.components.serial
 # homeassistant.components.zha

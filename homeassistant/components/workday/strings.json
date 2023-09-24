@@ -66,6 +66,11 @@
     }
   },
   "selector": {
+    "country": {
+      "options": {
+        "none": "No country"
+      }
+    },
     "province": {
       "options": {
         "none": "No subdivision"

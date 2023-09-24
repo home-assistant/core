@@ -35,6 +35,7 @@ SERIAL_NUMBER = 0x12635436566
 
 # Get serial number Command 0x85. Serial is 0x12635436566
 SERIAL_RESPONSE = "850000012635436566"
+ZERO_SERIAL_RESPONSE = "850000000000000000"
 # Model and version command 0x82
 MODEL_AND_VERSION_RESPONSE = "820006090C"
 # Get available stations command 0x83
@@ -85,6 +86,12 @@ def yaml_config() -> dict[str, Any]:
 
 
 @pytest.fixture
+async def unique_id() -> str:
+    """Fixture for serial number used in the config entry."""
+    return SERIAL_NUMBER
+
+
+@pytest.fixture
 async def config_entry_data() -> dict[str, Any]:
     """Fixture for MockConfigEntry data."""
     return CONFIG_ENTRY_DATA
@@ -92,13 +99,14 @@ async def config_entry_data() -> dict[str, Any]:
 
 @pytest.fixture
 async def config_entry(
-    config_entry_data: dict[str, Any] | None
+    config_entry_data: dict[str, Any] | None,
+    unique_id: str,
 ) -> MockConfigEntry | None:
     """Fixture for MockConfigEntry."""
     if config_entry_data is None:
         return None
     return MockConfigEntry(
-        unique_id=SERIAL_NUMBER,
+        unique_id=unique_id,
         domain=DOMAIN,
         data=config_entry_data,
         options={ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES},
