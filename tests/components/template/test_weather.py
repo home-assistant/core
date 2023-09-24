@@ -18,8 +18,12 @@ from homeassistant.components.weather import (
     SERVICE_GET_FORECAST,
     Forecast,
 )
-from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
+
+from tests.common import assert_setup_component, mock_restore_cache_with_extra_data
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
@@ -493,3 +497,140 @@ async def test_forecast_format_error(
         return_response=True,
     )
     assert "Forecast in list is not a dict, see Weather documentation" in caplog.text
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "weather": {
+                    "name": "test",
+                    "condition_template": "{{ trigger.event.data.condition }}",
+                    "temperature_template": "{{ trigger.event.data.temperature | float }}",
+                    "temperature_unit": "°C",
+                    "humidity_template": "{{ trigger.event.data.humidity | float }}",
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("restored_state", "restored_temperature", "restored_humidity", "initial_state"),
+    [
+        ("sunny", 10, 20, "sunny"),
+        (STATE_UNAVAILABLE, 10, 20, STATE_UNKNOWN),
+        (STATE_UNKNOWN, 10, 20, STATE_UNKNOWN),
+    ],
+)
+async def test_trigger_entity_restore_state(
+    hass: HomeAssistant,
+    count,
+    domain,
+    config,
+    restored_state,
+    restored_temperature,
+    restored_humidity,
+    initial_state,
+) -> None:
+    """Test restoring trigger template binary sensor."""
+
+    restored_attributes = {
+        "temperature": 10,
+        "humidity": 20,
+    }
+
+    fake_state = State(
+        "weather.test",
+        restored_state,
+        restored_attributes,
+    )
+    fake_extra_data = {
+        "last_temperature": restored_temperature,
+        "last_humidity": restored_humidity,
+        "last_wind_speed": None,
+        "last_wind_bearing": None,
+        "last_ozone": None,
+        "last_visibility": None,
+        "last_pressure": None,
+        "last_wind_gust_speed": None,
+        "last_cloud_coverage": None,
+        "last_dew_point": None,
+        "last_apparent_temperature": None,
+        "last_forecast": None,
+    }
+    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
+    with assert_setup_component(count, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            config,
+        )
+
+        await hass.async_block_till_done()
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    state = hass.states.get("weather.test")
+    assert state.state == initial_state
+
+    hass.bus.async_fire(
+        "test_event", {"condition": "cloudy", "temperature": 15, "humidity": 25}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("weather.test")
+
+    state = hass.states.get("weather.test")
+    assert state.state == "cloudy"
+    assert state.attributes["temperature"] == 15.0
+    assert state.attributes["humidity"] == 25.0
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": [
+                        {
+                            "variables": {
+                                "my_variable": "{{ trigger.event.data.temperature + 1 }}"
+                            },
+                        },
+                    ],
+                    "weather": [
+                        {
+                            "name": "Hello Name",
+                            "condition_template": "sunny",
+                            "temperature_unit": "°C",
+                            "humidity_template": "{{ 20 }}",
+                            "temperature_template": "{{ my_variable + 1 }}",
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+async def test_trigger_action(
+    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+) -> None:
+    """Test trigger entity with an action works."""
+    state = hass.states.get("weather.hello_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"temperature": 1}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("weather.hello_name")
+    assert state.state == "sunny"
+    assert state.attributes["temperature"] == 3.0
+    assert state.context is context
