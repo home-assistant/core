@@ -621,7 +621,7 @@ esphome-dashboard-api==1.2.3
 eufylife-ble-client==0.1.7
 
 # homeassistant.components.faa_delays
-faadelays==0.0.7
+faadelays==2023.9.1
 
 # homeassistant.components.feedreader
 feedparser==6.0.10
@@ -1244,6 +1244,9 @@ pydexcom==0.2.3
 # homeassistant.components.discovergy
 pydiscovergy==2.0.3
 
+# homeassistant.components.hydrawise
+pydrawise==2023.8.0
+
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
 
@@ -1502,7 +1505,7 @@ pysabnzbd==1.1.1
 pyschlage==2023.9.1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.33
+pysensibo==1.0.35
 
 # homeassistant.components.serial
 # homeassistant.components.zha
