@@ -88,7 +88,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id=STEP_USER, data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors = {}
+        errors: dict[str, str] = {}
 
         try:
             self.hub = await validate_input(self.hass, user_input)
