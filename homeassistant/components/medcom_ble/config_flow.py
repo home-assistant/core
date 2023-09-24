@@ -133,7 +133,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await self._get_device_data(discovery_info)
             except (BleakError, AbortFlow):
                 return self.async_abort(reason="cannot_connect")
-            except Exception:  # pylint: disable=broad-except
+            except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "Error occurred reading information from %s: %s",
                     discovery_info.address,
