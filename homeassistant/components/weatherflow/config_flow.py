@@ -38,8 +38,8 @@ async def _async_can_discover_devices() -> bool:
             await future_event
         except asyncio.TimeoutError:
             return False
-        except (EndpointError, CancelledError):
-            raise ListenerError
+        # except (EndpointError, CancelledError):
+        #     raise ListenerError
 
     return True
 
@@ -65,7 +65,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             found = await _async_can_discover_devices()
         except AddressInUseError:
             errors["base"] = ERROR_MSG_ADDRESS_IN_USE
-        except ListenerError:
+        except (ListenerError, EndpointError, CancelledError):
             errors["base"] = ERROR_MSG_CANNOT_CONNECT
 
         if not found and not errors:
