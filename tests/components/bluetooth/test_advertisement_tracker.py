@@ -1,5 +1,6 @@
 """Tests for the Bluetooth integration advertisement tracking."""
 from datetime import timedelta
+import math
 import time
 from unittest.mock import patch
 
@@ -63,7 +64,9 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout(
             SOURCE_LOCAL,
         )
 
-    assert async_get_learned_advertising_interval(hass, "44:44:33:11:23:12") == 2.0
+    assert math.isclose(
+        async_get_learned_advertising_interval(hass, "44:44:33:11:23:12"), 2.0
+    )
 
     switchbot_device_unavailable_cancel = async_track_unavailable(
         hass, _switchbot_device_unavailable_callback, switchbot_device.address
@@ -112,9 +115,9 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_connectab
             SOURCE_LOCAL,
         )
 
-    assert (
-        async_get_learned_advertising_interval(hass, "44:44:33:11:23:18")
-        == ONE_HOUR_SECONDS
+    assert math.isclose(
+        async_get_learned_advertising_interval(hass, "44:44:33:11:23:18"),
+        ONE_HOUR_SECONDS,
     )
 
     switchbot_device_unavailable_cancel = async_track_unavailable(
@@ -166,7 +169,9 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
             "original",
         )
 
-    assert async_get_learned_advertising_interval(hass, "44:44:33:11:23:45") == 2.0
+    assert math.isclose(
+        async_get_learned_advertising_interval(hass, "44:44:33:11:23:45"), 2.0
+    )
 
     for i in range(ADVERTISING_TIMES_NEEDED):
         inject_advertisement_with_time_and_source(
@@ -177,9 +182,9 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
             "new",
         )
 
-    assert (
-        async_get_learned_advertising_interval(hass, "44:44:33:11:23:45")
-        == ONE_HOUR_SECONDS
+    assert math.isclose(
+        async_get_learned_advertising_interval(hass, "44:44:33:11:23:45"),
+        ONE_HOUR_SECONDS,
     )
 
     switchbot_device_unavailable_cancel = async_track_unavailable(
@@ -231,9 +236,9 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_not_conne
             SOURCE_LOCAL,
         )
 
-    assert (
-        async_get_learned_advertising_interval(hass, "44:44:33:11:23:45")
-        == ONE_HOUR_SECONDS
+    assert math.isclose(
+        async_get_learned_advertising_interval(hass, "44:44:33:11:23:45"),
+        ONE_HOUR_SECONDS,
     )
 
     switchbot_device_unavailable_cancel = async_track_unavailable(
@@ -290,9 +295,9 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout_adapter_
             "original",
         )
 
-    assert (
-        async_get_learned_advertising_interval(hass, "44:44:33:11:23:5C")
-        == ONE_HOUR_SECONDS
+    assert math.isclose(
+        async_get_learned_advertising_interval(hass, "44:44:33:11:23:5C"),
+        ONE_HOUR_SECONDS,
     )
 
     switchbot_adv_better_rssi = generate_advertisement_data(
@@ -309,7 +314,9 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout_adapter_
             "new",
         )
 
-    assert async_get_learned_advertising_interval(hass, "44:44:33:11:23:5C") == 2.0
+    assert math.isclose(
+        async_get_learned_advertising_interval(hass, "44:44:33:11:23:5C"), 2.0
+    )
 
     switchbot_device_unavailable_cancel = async_track_unavailable(
         hass,
@@ -369,7 +376,9 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
             connectable=False,
         )
 
-    assert async_get_learned_advertising_interval(hass, "44:44:33:11:23:45") == 2.0
+    assert math.isclose(
+        async_get_learned_advertising_interval(hass, "44:44:33:11:23:45"), 2.0
+    )
 
     switchbot_better_rssi_adv = generate_advertisement_data(
         local_name="wohand",
@@ -386,9 +395,9 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
             connectable=False,
         )
 
-    assert (
-        async_get_learned_advertising_interval(hass, "44:44:33:11:23:45")
-        == ONE_HOUR_SECONDS
+    assert math.isclose(
+        async_get_learned_advertising_interval(hass, "44:44:33:11:23:45"),
+        ONE_HOUR_SECONDS,
     )
 
     switchbot_device_unavailable_cancel = async_track_unavailable(
@@ -471,7 +480,9 @@ async def test_advertisment_interval_longer_increasing_than_adapter_stack_timeou
             "new",
         )
 
-    assert async_get_learned_advertising_interval(hass, "44:44:33:11:23:45") == 61.0
+    assert math.isclose(
+        async_get_learned_advertising_interval(hass, "44:44:33:11:23:45"), 61.0
+    )
 
     switchbot_device_unavailable_cancel = async_track_unavailable(
         hass,
