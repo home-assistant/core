@@ -385,8 +385,13 @@ PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_CLOCK_FORMAT, default=DEFAULT_CLOCK_FORMAT): vol.In(
             ["12H", "24H"]
         ),
-        vol.Optional(CONF_UNIT_SYSTEM, default="default"): vol.In(
-            ["en_GB", "en_US", "metric", "default"]
+        vol.Optional(CONF_UNIT_SYSTEM, default=FitbitUnitSystem.LEGACY_DEFAULT): vol.In(
+            [
+                FitbitUnitSystem.EN_GB,
+                FitbitUnitSystem.EN_US,
+                FitbitUnitSystem.METRIC,
+                FitbitUnitSystem.LEGACY_DEFAULT,
+            ]
         ),
     }
 )
