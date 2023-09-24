@@ -30,14 +30,14 @@ from .. import subscription
 from ..config import MQTT_BASE_SCHEMA
 from ..const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
 from ..models import (
     MqttValueTemplate,
     PayloadSentinel,
     ReceiveMessage,
     ReceivePayloadType,
 )
-from ..util import get_mqtt_data, valid_publish_topic
+from ..util import valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
@@ -313,6 +313,16 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(
+            self,
+            {
+                "_attr_battery_level",
+                "_attr_fan_speed",
+                "_attr_is_on",
+                "_attr_status",
+                "_charging",
+            },
+        )
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT message."""
             if (
@@ -386,8 +396,6 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 )
                 if fan_speed and fan_speed is not PayloadSentinel.DEFAULT:
                     self._attr_fan_speed = str(fan_speed)
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         topics_list = {topic for topic in self._state_topics.values() if topic}
         self._sub_state = subscription.async_prepare_subscribe_topics(
