@@ -391,7 +391,10 @@ class BluetoothManager:
         """Prefer previous advertisement from a different source if it is better."""
         if new.time - old.time > (
             stale_seconds := self._advertisement_tracker.intervals.get(
-                new.address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+                new.address,
+                self._fallback_intervals.get(
+                    new.address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+                ),
             )
         ):
             # If the old advertisement is stale, any new advertisement is preferred
