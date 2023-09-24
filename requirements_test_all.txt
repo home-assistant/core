@@ -629,6 +629,9 @@ feedparser==6.0.10
 # homeassistant.components.file
 file-read-backwards==2.0.0
 
+# homeassistant.components.fitbit
+fitbit==0.3.1
+
 # homeassistant.components.fivem
 fivem-api==0.1.2
 
@@ -1496,7 +1499,7 @@ pyrympro==0.0.7
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2023.9.0
+pyschlage==2023.9.1
 
 # homeassistant.components.sensibo
 pysensibo==1.0.33
@@ -1712,7 +1715,7 @@ reolink-aio==0.7.10
 rflink==0.0.65
 
 # homeassistant.components.ring
-ring-doorbell==0.7.2
+ring-doorbell==0.7.3
 
 # homeassistant.components.roku
 rokuecp==0.18.1
@@ -2053,6 +2056,9 @@ youless-api==1.0.1
 
 # homeassistant.components.youtube
 youtubeaio==1.1.5
+
+# homeassistant.components.media_extractor
+yt-dlp==2023.7.6
 
 # homeassistant.components.zamg
 zamg==0.3.0
