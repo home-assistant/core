@@ -138,8 +138,6 @@ async def async_setup_entry(
             years=year,
             language=cls.default_language,
         )
-    elif province:
-        raise ValueError(f"Must not specify a province without a country: {province}")
     else:
         obj_holidays = HolidayBase()
 
