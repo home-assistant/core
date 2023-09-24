@@ -36,7 +36,12 @@ class SunsynkHub:
     async def authenticate(self, username: str, password: str) -> bool:
         """Test if we can authenticate with the host."""
         try:
-            self.client = await SunsynkClient.create(username, password)
+            if self.client is None:
+                self.client = await SunsynkClient.create(username, password)
+            else:
+                self.client.username = username
+                self.client.password = password
+                self.client = await self.client.login()
             return True
         except InvalidCredentialsException:
             return False

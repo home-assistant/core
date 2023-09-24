@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 import pytest
-from sunsynk.client import InvalidCredentialsException
+from sunsynk.client import InvalidCredentialsException, SunsynkClient
 from sunsynk.inverter import Inverter
 
 from homeassistant import config_entries
@@ -17,9 +17,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-SUNSYNK_CLIENT_CREATE = "sunsynk.client.SunsynkClient.create"
-SUNSYNK_GET_INVERTERS = "sunsynk.client.SunsynkClient.get_inverters"
-
 SUNSYNK_HUB_AUTHENTICATE = (
     "homeassistant.components.sunsynk.config_flow.SunsynkHub.authenticate"
 )
@@ -28,18 +25,42 @@ SUNSYNK_HUB_GET_INVERTERS = (
 )
 
 
+class MockSunsynkClient(SunsynkClient):
+    """Mock of the SunsynkClient."""
+
+    @classmethod
+    async def create(cls, username: str, password: str) -> SunsynkClient:
+        """Create an instance of MockSunsynkClient."""
+        return MockSunsynkClient(username=username, password=password)
+
+    def __init__(self):
+        """Provide blank, stubbed constructor for mock."""
+        pass
+
+    async def login(self) -> SunsynkClient:
+        """Mock the login process."""
+        if self.username == "myuser" and self.password == "letmein":
+            return self
+        raise InvalidCredentialsException()
+
+    async def get_inverters(self) -> list[Inverter]:
+        """Return a mock inverter if mock credentials are valid."""
+        if self.username == "myuser" and self.password == "letmein":
+            return [Inverter({"sn": "INV123"})]
+        return []
+
+
 async def test_sunsunk_hub_authenticate_success(hass: HomeAssistant) -> None:
     """Test SunsynkHub can authenticate successfully."""
     hub = SunsynkHub()
-    with patch(SUNSYNK_CLIENT_CREATE, return_value=True):
+    with patch.object(hub, "client", new=MockSunsynkClient()):
         assert (await hub.authenticate("myuser", "letmein")) is True
 
 
 async def test_sunsunk_hub_authenticate_failure(hass: HomeAssistant) -> None:
     """Test SunsynkHub can handle authentication failure."""
     hub = SunsynkHub()
-    with patch(SUNSYNK_CLIENT_CREATE) as client_create:
-        client_create.side_effect = InvalidCredentialsException()
+    with patch.object(hub, "client", new=MockSunsynkClient()):
         assert (await hub.authenticate("myuser", "invalidpassword")) is False
 
 
