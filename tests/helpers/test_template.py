@@ -7,6 +7,7 @@ import json
 import logging
 import math
 import random
+from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
 
@@ -43,6 +44,7 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import UnitSystem
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -471,6 +473,134 @@ def test_isnumber(hass: HomeAssistant, value, expected) -> None:
         template.Template("{{ value is is_number }}", hass).async_render(
             {"value": value}
         )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ([1, 2], True),
+        (["a", "b"], True),
+        ({1, 2}, False),
+        ({"a": 1, "b": 2}, False),
+        ({1: "a", 2: "b"}, False),
+        (ReadOnlyDict({"a": 1, "b": 2}), False),
+        (MappingProxyType({"a": 1, "b": 2}), False),
+        ("abc", False),
+        (b"abc", False),
+    ],
+)
+def test_islist(hass: HomeAssistant, value, expected) -> None:
+    """Test is_list."""
+    assert (
+        template.Template("{{ is_list(value) }}", hass).async_render({"value": value})
+        == expected
+    )
+    assert (
+        template.Template("{{ value | is_list }}", hass).async_render({"value": value})
+        == expected
+    )
+    assert (
+        template.Template("{{ value is is_list }}", hass).async_render({"value": value})
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ([1, 2], False),
+        (["a", "b"], False),
+        ({1, 2}, True),
+        ({"a": 1, "b": 2}, False),
+        ({1: "a", 2: "b"}, False),
+        (ReadOnlyDict({"a": 1, "b": 2}), False),
+        (MappingProxyType({"a": 1, "b": 2}), False),
+        ("abc", False),
+        (b"abc", False),
+    ],
+)
+def test_isset(hass: HomeAssistant, value, expected) -> None:
+    """Test is_set."""
+    assert (
+        template.Template("{{ is_set(value) }}", hass).async_render({"value": value})
+        == expected
+    )
+    assert (
+        template.Template("{{ value | is_set }}", hass).async_render({"value": value})
+        == expected
+    )
+    assert (
+        template.Template("{{ value is is_set }}", hass).async_render({"value": value})
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ([1, 2], True),
+        (["a", "b"], True),
+        ({1, 2}, True),
+        ({"a": 1, "b": 2}, True),
+        ({1: "a", 2: "b"}, True),
+        (ReadOnlyDict({"a": 1, "b": 2}), True),
+        (MappingProxyType({"a": 1, "b": 2}), True),
+        ("abc", False),
+        (b"abc", False),
+    ],
+)
+def test_isnonstringiterable(hass: HomeAssistant, value, expected) -> None:
+    """Test is_non_string_iterable."""
+    assert (
+        template.Template("{{ is_non_string_iterable(value) }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
+    assert (
+        template.Template("{{ value | is_non_string_iterable }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
+    assert (
+        template.Template("{{ value is is_non_string_iterable }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ([1, 2], False),
+        (["a", "b"], False),
+        ({1, 2}, False),
+        ({"a": 1, "b": 2}, True),
+        ({1: "a", 2: "b"}, True),
+        ({"a": 1, "b": 2}, True),
+        ({1: "a", 2: "b"}, True),
+        (ReadOnlyDict({"a": 1, "b": 2}), True),
+        (MappingProxyType({"a": 1, "b": 2}), True),
+        ("abc", False),
+        (b"abc", False),
+    ],
+)
+def test_isdict(hass: HomeAssistant, value, expected) -> None:
+    """Test is_dict."""
+    assert (
+        template.Template("{{ is_dict(value) }}", hass).async_render({"value": value})
+        == expected
+    )
+    assert (
+        template.Template("{{ value | is_dict }}", hass).async_render({"value": value})
+        == expected
+    )
+    assert (
+        template.Template("{{ value is is_dict }}", hass).async_render({"value": value})
         == expected
     )
 

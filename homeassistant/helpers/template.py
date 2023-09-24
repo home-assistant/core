@@ -20,7 +20,7 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from types import CodeType
+from types import CodeType, MappingProxyType
 from typing import (
     Any,
     Concatenate,
@@ -1956,6 +1956,28 @@ def is_number(value):
     return True
 
 
+def is_list(value):
+    """Return whether a value is a list."""
+    return isinstance(value, list)
+
+
+def is_set(value):
+    """Return whether a value is a set."""
+    return isinstance(value, set)
+
+
+def is_dict(value):
+    """Return whether a value is a dict."""
+    return isinstance(value, (dict, ReadOnlyDict, MappingProxyType))
+
+
+def is_non_string_or_dict_iterable(value):
+    """Return whether a value is an interable that's not a string."""
+    return isinstance(value, Iterable) and not isinstance(
+        value, (str, bytes, bytearray)
+    )
+
+
 def regex_match(value, find="", ignorecase=False):
     """Match value using regex."""
     if not isinstance(value, str):
@@ -2356,6 +2378,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["unpack"] = struct_unpack
         self.filters["ord"] = ord
         self.filters["is_number"] = is_number
+        self.filters["is_list"] = is_list
+        self.filters["is_set"] = is_set
+        self.filters["is_dict"] = is_dict
+        self.filters["is_non_string_iterable"] = is_non_string_or_dict_iterable
         self.filters["float"] = forgiving_float_filter
         self.filters["int"] = forgiving_int_filter
         self.filters["slugify"] = slugify
@@ -2387,6 +2413,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
         self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["is_number"] = is_number
+        self.globals["is_list"] = is_list
+        self.globals["is_set"] = is_set
+        self.globals["is_dict"] = is_dict
+        self.globals["is_non_string_iterable"] = is_non_string_or_dict_iterable
         self.globals["int"] = forgiving_int
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack
@@ -2395,6 +2425,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
         self.tests["is_number"] = is_number
+        self.tests["is_list"] = is_list
+        self.tests["is_set"] = is_set
+        self.tests["is_dict"] = is_dict
+        self.tests["is_non_string_iterable"] = is_non_string_or_dict_iterable
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
         self.tests["contains"] = contains
