@@ -7,17 +7,14 @@ from dataclasses import dataclass
 import datetime
 import logging
 import os
-import time
 from typing import Any, Final, cast
 
-from aiohttp.web import Request
-from fitbit import Fitbit
-from fitbit.api import FitbitOauth2Client
-from oauthlib.oauth2.rfc6749.errors import MismatchingStateError, MissingTokenError
 import voluptuous as vol
 
-from homeassistant.components import configurator
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SensorDeviceClass,
@@ -25,9 +22,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
+    CONF_TOKEN,
     CONF_UNIT_SYSTEM,
     PERCENTAGE,
     UnitOfLength,
@@ -38,8 +37,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.json import save_json
-from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import load_json_object
 
@@ -49,12 +47,13 @@ from .const import (
     ATTR_LAST_SAVED_AT,
     ATTR_REFRESH_TOKEN,
     ATTRIBUTION,
+    AUTH_IMPL_IMPORTED,
+    BATTERY_LEVELS,
     CONF_CLOCK_FORMAT,
     CONF_MONITORED_RESOURCES,
     DEFAULT_CLOCK_FORMAT,
     DEFAULT_CONFIG,
-    FITBIT_AUTH_CALLBACK_PATH,
-    FITBIT_AUTH_START,
+    DOMAIN,
     FITBIT_CONFIG_FILE,
     FITBIT_DEFAULT_RESOURCES,
     FitbitUnitSystem,
@@ -396,88 +395,31 @@ PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
     }
 )
 
-
-def request_app_setup(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    config_path: str,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Assist user with configuring the Fitbit dev application."""
-
-    def fitbit_configuration_callback(fields: list[dict[str, str]]) -> None:
-        """Handle configuration updates."""
-        config_path = hass.config.path(FITBIT_CONFIG_FILE)
-        if os.path.isfile(config_path):
-            config_file = load_json_object(config_path)
-            if config_file == DEFAULT_CONFIG:
-                error_msg = (
-                    f"You didn't correctly modify {FITBIT_CONFIG_FILE}, please try"
-                    " again."
-                )
-
-                configurator.notify_errors(hass, _CONFIGURING["fitbit"], error_msg)
-            else:
-                setup_platform(hass, config, add_entities, discovery_info)
-        else:
-            setup_platform(hass, config, add_entities, discovery_info)
-
-    try:
-        description = f"""Please create a Fitbit developer app at
-                       https://dev.fitbit.com/apps/new.
-                       For the OAuth 2.0 Application Type choose Personal.
-                       Set the Callback URL to {get_url(hass, require_ssl=True)}{FITBIT_AUTH_CALLBACK_PATH}.
-                       (Note: Your Home Assistant instance must be accessible via HTTPS.)
-                       They will provide you a Client ID and secret.
-                       These need to be saved into the file located at: {config_path}.
-                       Then come back here and hit the below button.
-                       """
-    except NoURLAvailableError:
-        _LOGGER.error(
-            "Could not find an SSL enabled URL for your Home Assistant instance. "
-            "Fitbit requires that your Home Assistant instance is accessible via HTTPS"
-        )
-        return
-
-    submit = f"I have saved my Client ID and Client Secret into {FITBIT_CONFIG_FILE}."
-
-    _CONFIGURING["fitbit"] = configurator.request_config(
-        hass,
-        "Fitbit",
-        fitbit_configuration_callback,
-        description=description,
-        submit_caption=submit,
-        description_image="/static/images/config_fitbit_app.png",
-    )
+# Only import configuration if it was previously created successfully with all
+# of the following fields.
+FITBIT_CONF_KEYS = [
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    ATTR_ACCESS_TOKEN,
+    ATTR_REFRESH_TOKEN,
+    ATTR_LAST_SAVED_AT,
+]
 
 
-def request_oauth_completion(hass: HomeAssistant) -> None:
-    """Request user complete Fitbit OAuth2 flow."""
-    if "fitbit" in _CONFIGURING:
-        configurator.notify_errors(
-            hass, _CONFIGURING["fitbit"], "Failed to register, please try again."
-        )
-
-        return
-
-    def fitbit_configuration_callback(fields: list[dict[str, str]]) -> None:
-        """Handle configuration updates."""
-
-    start_url = f"{get_url(hass, require_ssl=True)}{FITBIT_AUTH_START}"
-
-    description = f"Please authorize Fitbit by visiting {start_url}"
-
-    _CONFIGURING["fitbit"] = configurator.request_config(
-        hass,
-        "Fitbit",
-        fitbit_configuration_callback,
-        description=description,
-        submit_caption="I have authorized Fitbit.",
-    )
+def load_config_file(config_path: str) -> dict[str, Any] | None:
+    """Load existing valid fitbit.conf from disk for import."""
+    if os.path.isfile(config_path):
+        _LOGGER.debug("is file=yes")
+        config_file = load_json_object(config_path)
+        _LOGGER.debug("config_file=%s", config_file)
+        if config_file != DEFAULT_CONFIG and all(
+            key in config_file for key in FITBIT_CONF_KEYS
+        ):
+            return config_file
+    return None
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
@@ -485,182 +427,96 @@ def setup_platform(
 ) -> None:
     """Set up the Fitbit sensor."""
     config_path = hass.config.path(FITBIT_CONFIG_FILE)
-    if os.path.isfile(config_path):
-        config_file = load_json_object(config_path)
-        if config_file == DEFAULT_CONFIG:
-            request_app_setup(
-                hass, config, add_entities, config_path, discovery_info=None
-            )
-            return
-    else:
-        save_json(config_path, DEFAULT_CONFIG)
-        request_app_setup(hass, config, add_entities, config_path, discovery_info=None)
-        return
+    config_file = await hass.async_add_executor_job(load_config_file, config_path)
+    _LOGGER.debug("loaded config file: %s", config_file)
 
-    if "fitbit" in _CONFIGURING:
-        configurator.request_done(hass, _CONFIGURING.pop("fitbit"))
-
-    if (
-        (access_token := config_file.get(ATTR_ACCESS_TOKEN)) is not None
-        and (refresh_token := config_file.get(ATTR_REFRESH_TOKEN)) is not None
-        and (expires_at := config_file.get(ATTR_LAST_SAVED_AT)) is not None
-    ):
-        authd_client = Fitbit(
-            config_file.get(CONF_CLIENT_ID),
-            config_file.get(CONF_CLIENT_SECRET),
-            access_token=access_token,
-            refresh_token=refresh_token,
-            expires_at=expires_at,
-            refresh_cb=lambda x: None,
+    if config_file is not None:
+        _LOGGER.debug("Importing existing fitbit.conf application credentials")
+        await async_import_client_credential(
+            hass,
+            DOMAIN,
+            ClientCredential(
+                config_file[CONF_CLIENT_ID], config_file[CONF_CLIENT_SECRET]
+            ),
+            auth_domain=AUTH_IMPL_IMPORTED,
         )
-
-        if int(time.time()) - cast(int, expires_at) > 3600:
-            authd_client.client.refresh_token()
-
-        api = FitbitApi(hass, authd_client, config[CONF_UNIT_SYSTEM])
-        user_profile = asyncio.run_coroutine_threadsafe(
-            api.async_get_user_profile(), hass.loop
-        ).result()
-        unit_system = asyncio.run_coroutine_threadsafe(
-            api.async_get_unit_system(), hass.loop
-        ).result()
-
-        clock_format = config[CONF_CLOCK_FORMAT]
-        monitored_resources = config[CONF_MONITORED_RESOURCES]
-        resource_list = [
-            *FITBIT_RESOURCES_LIST,
-            SLEEP_START_TIME_12HR if clock_format == "12H" else SLEEP_START_TIME,
-        ]
-        entities = [
-            FitbitSensor(
-                api,
-                user_profile.encoded_id,
-                config_path,
-                description,
-                units=description.unit_fn(unit_system),
-            )
-            for description in resource_list
-            if description.key in monitored_resources
-        ]
-        if "devices/battery" in monitored_resources:
-            devices = asyncio.run_coroutine_threadsafe(
-                api.async_get_devices(),
-                hass.loop,
-            ).result()
-            entities.extend(
-                [
-                    FitbitSensor(
-                        api,
-                        user_profile.encoded_id,
-                        config_path,
-                        FITBIT_RESOURCE_BATTERY,
-                        device,
-                    )
-                    for device in devices
-                ]
-            )
-        add_entities(entities, True)
-
-    else:
-        oauth = FitbitOauth2Client(
-            config_file.get(CONF_CLIENT_ID), config_file.get(CONF_CLIENT_SECRET)
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    "auth_implementation": AUTH_IMPL_IMPORTED,
+                    CONF_TOKEN: {
+                        ATTR_ACCESS_TOKEN: config_file[ATTR_ACCESS_TOKEN],
+                        ATTR_REFRESH_TOKEN: config_file[ATTR_REFRESH_TOKEN],
+                        "expires_at": config_file[ATTR_LAST_SAVED_AT],
+                    },
+                    CONF_CLOCK_FORMAT: config[CONF_CLOCK_FORMAT],
+                    CONF_UNIT_SYSTEM: config[CONF_UNIT_SYSTEM],
+                    CONF_MONITORED_RESOURCES: config[CONF_MONITORED_RESOURCES],
+                },
+            ),
         )
+    try:
+        await hass.async_add_executor_job(os.unlink, config_path)
+    except FileNotFoundError:
+        _LOGGER.debug("Unable to unlink fitbit configuration file")
 
-        redirect_uri = f"{get_url(hass, require_ssl=True)}{FITBIT_AUTH_CALLBACK_PATH}"
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
 
-        fitbit_auth_start_url, _ = oauth.authorize_token_url(
-            redirect_uri=redirect_uri,
-            scope=[
-                "activity",
-                "heartrate",
-                "nutrition",
-                "profile",
-                "settings",
-                "sleep",
-                "weight",
-            ],
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Fitbit sensor platform."""
+
+    api: FitbitApi = hass.data[DOMAIN][entry.entry_id]
+
+    (user_profile, devices, unit_system) = await asyncio.gather(
+        api.async_get_user_profile(),
+        api.async_get_devices(),
+        api.async_get_unit_system(),
+    )
+
+    clock_format = entry.data.get(CONF_CLOCK_FORMAT)
+    monitored_resources = entry.data.get(CONF_MONITORED_RESOURCES, [])
+    resource_list = [
+        *FITBIT_RESOURCES_LIST,
+        SLEEP_START_TIME_12HR if clock_format == "12H" else SLEEP_START_TIME,
+    ]
+
+    entities = [
+        FitbitSensor(
+            api,
+            user_profile.encoded_id,
+            description,
+            units=description.unit_fn(unit_system),
         )
-
-        hass.http.register_redirect(FITBIT_AUTH_START, fitbit_auth_start_url)
-        hass.http.register_view(FitbitAuthCallbackView(config, add_entities, oauth))
-
-        request_oauth_completion(hass)
-
-
-class FitbitAuthCallbackView(HomeAssistantView):
-    """Handle OAuth finish callback requests."""
-
-    requires_auth = False
-    url = FITBIT_AUTH_CALLBACK_PATH
-    name = "api:fitbit:callback"
-
-    def __init__(
-        self,
-        config: ConfigType,
-        add_entities: AddEntitiesCallback,
-        oauth: FitbitOauth2Client,
-    ) -> None:
-        """Initialize the OAuth callback view."""
-        self.config = config
-        self.add_entities = add_entities
-        self.oauth = oauth
-
-    async def get(self, request: Request) -> str:
-        """Finish OAuth callback request."""
-        hass: HomeAssistant = request.app["hass"]
-        data = request.query
-
-        response_message = """Fitbit has been successfully authorized!
-        You can close this window now!"""
-
-        result = None
-        if data.get("code") is not None:
-            redirect_uri = f"{get_url(hass, require_current_request=True)}{FITBIT_AUTH_CALLBACK_PATH}"
-
-            try:
-                result = await hass.async_add_executor_job(
-                    self.oauth.fetch_access_token, data.get("code"), redirect_uri
+        for description in resource_list
+        if description.key in monitored_resources
+    ]
+    if "devices/battery" in monitored_resources:
+        entities.extend(
+            [
+                FitbitSensor(
+                    api,
+                    user_profile.encoded_id,
+                    FITBIT_RESOURCE_BATTERY,
+                    device=device,
                 )
-            except MissingTokenError as error:
-                _LOGGER.error("Missing token: %s", error)
-                response_message = f"""Something went wrong when
-                attempting authenticating with Fitbit. The error
-                encountered was {error}. Please try again!"""
-            except MismatchingStateError as error:
-                _LOGGER.error("Mismatched state, CSRF error: %s", error)
-                response_message = f"""Something went wrong when
-                attempting authenticating with Fitbit. The error
-                encountered was {error}. Please try again!"""
-        else:
-            _LOGGER.error("Unknown error when authing")
-            response_message = """Something went wrong when
-                attempting authenticating with Fitbit.
-                An unknown error occurred. Please try again!
-                """
-
-        if result is None:
-            _LOGGER.error("Unknown error when authing")
-            response_message = """Something went wrong when
-                attempting authenticating with Fitbit.
-                An unknown error occurred. Please try again!
-                """
-
-        html_response = f"""<html><head><title>Fitbit Auth</title></head>
-        <body><h1>{response_message}</h1></body></html>"""
-
-        if result:
-            config_contents = {
-                ATTR_ACCESS_TOKEN: result.get("access_token"),
-                ATTR_REFRESH_TOKEN: result.get("refresh_token"),
-                CONF_CLIENT_ID: self.oauth.client_id,
-                CONF_CLIENT_SECRET: self.oauth.client_secret,
-                ATTR_LAST_SAVED_AT: int(time.time()),
-            }
-        save_json(hass.config.path(FITBIT_CONFIG_FILE), config_contents)
-
-        hass.async_add_job(setup_platform, hass, self.config, self.add_entities)
-
-        return html_response
+                for device in devices
+            ]
+        )
+    async_add_entities(entities, True)
 
 
 class FitbitSensor(SensorEntity):
@@ -673,7 +529,6 @@ class FitbitSensor(SensorEntity):
         self,
         api: FitbitApi,
         user_profile_id: str,
-        config_path: str,
         description: FitbitSensorEntityDescription,
         device: FitbitDevice | None = None,
         units: str | None = None,
@@ -681,7 +536,6 @@ class FitbitSensor(SensorEntity):
         """Initialize the Fitbit sensor."""
         self.entity_description = description
         self.api = api
-        self.config_path = config_path
         self.device = device
 
         self._attr_unique_id = f"{user_profile_id}_{description.key}"
@@ -729,16 +583,3 @@ class FitbitSensor(SensorEntity):
         else:
             result = await self.api.async_get_latest_time_series(resource_type)
             self._attr_native_value = self.entity_description.value_fn(result)
-
-        self.hass.async_add_executor_job(self._update_token)
-
-    def _update_token(self) -> None:
-        token = self.api.client.client.session.token
-        config_contents = {
-            ATTR_ACCESS_TOKEN: token.get("access_token"),
-            ATTR_REFRESH_TOKEN: token.get("refresh_token"),
-            CONF_CLIENT_ID: self.api.client.client.client_id,
-            CONF_CLIENT_SECRET: self.api.client.client.client_secret,
-            ATTR_LAST_SAVED_AT: int(time.time()),
-        }
-        save_json(self.config_path, config_contents)

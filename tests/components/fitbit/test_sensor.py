@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.fitbit.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -176,6 +177,7 @@ DEVICE_RESPONSE_ARIA_AIR = {
 )
 async def test_sensors(
     hass: HomeAssistant,
+    fitbit_config_setup: None,
     sensor_platform_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
     entity_registry: er.EntityRegistry,
@@ -190,6 +192,8 @@ async def test_sensors(
         api_resource, timeseries_response(api_resource.replace("/", "-"), api_value)
     )
     await sensor_platform_setup()
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
 
     state = hass.states.get(entity_id)
     assert state
@@ -204,12 +208,15 @@ async def test_sensors(
 )
 async def test_device_battery_level(
     hass: HomeAssistant,
+    fitbit_config_setup: None,
     sensor_platform_setup: Callable[[], Awaitable[bool]],
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test battery level sensor for devices."""
 
-    await sensor_platform_setup()
+    assert await sensor_platform_setup()
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
 
     state = hass.states.get("sensor.charge_2_battery")
     assert state
@@ -217,7 +224,7 @@ async def test_device_battery_level(
     assert state.attributes == {
         "attribution": "Data provided by Fitbit.com",
         "friendly_name": "Charge 2 Battery",
-        "icon": "mdi:battery-60",
+        "icon": "mdi:battery-50",
         "model": "Charge 2",
         "type": "tracker",
     }
@@ -269,6 +276,7 @@ async def test_device_battery_level(
 )
 async def test_profile_local(
     hass: HomeAssistant,
+    fitbit_config_setup: None,
     sensor_platform_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
     expected_unit: str,
@@ -277,6 +285,8 @@ async def test_profile_local(
 
     register_timeseries("body/weight", timeseries_response("body-weight", "175"))
     await sensor_platform_setup()
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
 
     state = hass.states.get("sensor.weight")
     assert state
@@ -315,6 +325,7 @@ async def test_profile_local(
 )
 async def test_sleep_time_clock_format(
     hass: HomeAssistant,
+    fitbit_config_setup: None,
     sensor_platform_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
     api_response: str,
