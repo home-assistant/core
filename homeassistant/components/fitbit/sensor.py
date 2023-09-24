@@ -98,8 +98,8 @@ def _clock_format_12h(result: dict[str, Any]) -> str:
     return f"{hours}:{minutes:02d} {setting}"
 
 
-def _weight_unit(unit_system: str) -> str:
-    """Determine the correct weight unit based on the user profile locale."""
+def _weight_unit(unit_system: FitbitUnitSystem) -> UnitOfMass:
+    """Determine the weight unit."""
     if unit_system == FitbitUnitSystem.EN_US:
         return UnitOfMass.POUNDS
     if unit_system == FitbitUnitSystem.EN_GB:
@@ -107,15 +107,15 @@ def _weight_unit(unit_system: str) -> str:
     return UnitOfMass.KILOGRAMS
 
 
-def _distance_unit(unit_system: str) -> str:
-    """Determine the correct distance unit based on the user profile locale."""
+def _distance_unit(unit_system: FitbitUnitSystem) -> UnitOfLength:
+    """Determine the distance unit."""
     if unit_system == FitbitUnitSystem.EN_US:
         return UnitOfLength.MILES
     return UnitOfLength.KILOMETERS
 
 
-def _elevation_unit(unit_system: str) -> str:
-    """Determine the correct elevation unit based on the user profile locale."""
+def _elevation_unit(unit_system: FitbitUnitSystem) -> UnitOfLength:
+    """Determine the elevation unit."""
     if unit_system == FitbitUnitSystem.EN_US:
         return UnitOfLength.FEET
     return UnitOfLength.METERS
@@ -127,7 +127,7 @@ class FitbitSensorEntityDescription(SensorEntityDescription):
 
     unit_type: str | None = None
     value_fn: Callable[[dict[str, Any]], Any] = _default_value_fn
-    unit_fn: Callable[[str], str | None] = lambda x: None
+    unit_fn: Callable[[FitbitUnitSystem], str | None] = lambda x: None
 
 
 FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (

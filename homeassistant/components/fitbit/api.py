@@ -18,7 +18,10 @@ class FitbitApi:
     """Fitbit client library wrapper base class."""
 
     def __init__(
-        self, hass: HomeAssistant, client: Fitbit, unit_system: str | None = None
+        self,
+        hass: HomeAssistant,
+        client: Fitbit,
+        unit_system: FitbitUnitSystem | None = None,
     ) -> None:
         """Initialize Fitbit auth."""
         self._hass = hass
@@ -44,7 +47,7 @@ class FitbitApi:
             )
         return self._profile
 
-    def get_unit_system(self) -> str:
+    def get_unit_system(self) -> FitbitUnitSystem:
         """Get the unit system to use when fetching timeseries.
 
         This is used in a couple ways. The first is to determine the request
