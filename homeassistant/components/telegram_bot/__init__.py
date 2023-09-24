@@ -94,6 +94,7 @@ CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_PROXY_URL = "proxy_url"
 CONF_PROXY_PARAMS = "proxy_params"
 CONF_TRUSTED_NETWORKS = "trusted_networks"
+CONF_SECRET_TOKEN = "secret_token"
 
 DOMAIN = "telegram_bot"
 
@@ -122,6 +123,7 @@ PARSER_HTML = "html"
 PARSER_MD = "markdown"
 
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
+DEFAULT_SECRET_TOKEN = "insecure_default_secret_token"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -145,6 +147,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(
                             CONF_TRUSTED_NETWORKS, default=DEFAULT_TRUSTED_NETWORKS
                         ): vol.All(cv.ensure_list, [ip_network]),
+                        vol.Optional(CONF_SECRET_TOKEN, default=DEFAULT_SECRET_TOKEN): cv.string,
                     }
                 )
             ],
