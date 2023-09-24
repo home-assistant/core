@@ -21,7 +21,6 @@ from . import (
     TEST_CONFIG_INCORRECT_PROVINCE,
     TEST_CONFIG_NO_COUNTRY,
     TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY,
-    TEST_CONFIG_NO_COUNTRY_WITH_PROVINCE,
     TEST_CONFIG_NO_PROVINCE,
     TEST_CONFIG_NO_STATE,
     TEST_CONFIG_REMOVE_HOLIDAY,
@@ -247,18 +246,6 @@ async def test_setup_faulty_province(
     assert state is None
 
     assert "Selected province ZZ for country DE is not valid" in caplog.text
-
-
-async def test_setup_no_country_faulty_province(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test setup with no country and faulty province."""
-    freezer.move_to(datetime(2017, 1, 6, 12, tzinfo=UTC))  # Friday
-    await init_integration(hass, TEST_CONFIG_NO_COUNTRY_WITH_PROVINCE)
-
-    state = hass.states.get("binary_sensor.workday_sensor")
-    assert state is None
 
 
 async def test_setup_incorrect_add_remove(

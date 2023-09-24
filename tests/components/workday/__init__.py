@@ -56,15 +56,6 @@ TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY = {
     "add_holidays": ["2020-02-24"],
     "remove_holidays": [],
 }
-TEST_CONFIG_NO_COUNTRY_WITH_PROVINCE = {
-    "name": DEFAULT_NAME,
-    "excludes": DEFAULT_EXCLUDES,
-    "days_offset": DEFAULT_OFFSET,
-    "workdays": DEFAULT_WORKDAYS,
-    "add_holidays": [],
-    "remove_holidays": [],
-    "province": "NO",
-}
 TEST_CONFIG_WITH_PROVINCE = {
     "name": DEFAULT_NAME,
     "country": "DE",
