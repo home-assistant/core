@@ -348,12 +348,17 @@ def init_entity_id_from_config(
 
 
 def write_state_on_attr_change(
-    entity: Entity, attributes: set[str]
+    entity: Entity, attributes: set[str] | None = None
 ) -> Callable[[MessageCallbackType], MessageCallbackType]:
     """Wrap an MQTT message callback to track state attribute changes."""
 
     def _attrs_have_changed(tracked_attrs: dict[str, Any]) -> bool:
-        """Return True if attributes on entity changed or if update is forced."""
+        """Return True if attributes on entity changed or if update is forced.
+
+        Always returns True, if no attributes are set.
+        """
+        if not tracked_attrs:
+            return True
         if not (write_state := (getattr(entity, "_attr_force_update", False))):
             for attribute, last_value in tracked_attrs.items():
                 if getattr(entity, attribute, UNDEFINED) != last_value:
@@ -368,7 +373,7 @@ def write_state_on_attr_change(
             """Track attributes for write state requests."""
             tracked_attrs: dict[str, Any] = {
                 attribute: getattr(entity, attribute, UNDEFINED)
-                for attribute in attributes
+                for attribute in attributes or set()
             }
             msg_callback(msg)
             if not _attrs_have_changed(tracked_attrs):
