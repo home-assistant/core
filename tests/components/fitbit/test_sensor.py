@@ -217,7 +217,7 @@ async def test_device_battery_level(
     assert state.attributes == {
         "attribution": "Data provided by Fitbit.com",
         "friendly_name": "Charge 2 Battery",
-        "icon": "mdi:battery-60",
+        "icon": "mdi:battery-50",
         "model": "Charge 2",
         "type": "tracker",
     }

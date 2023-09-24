@@ -47,6 +47,7 @@ from .const import (
     ATTR_LAST_SAVED_AT,
     ATTR_REFRESH_TOKEN,
     ATTRIBUTION,
+    BATTERY_LEVELS,
     CONF_CLOCK_FORMAT,
     CONF_MONITORED_RESOURCES,
     DEFAULT_CLOCK_FORMAT,
@@ -680,8 +681,12 @@ class FitbitSensor(SensorEntity):
     @property
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
-        if self.entity_description.key == "devices/battery" and self.device is not None:
-            return icon_for_battery_level(battery_level=self.device.battery_level)
+        if (
+            self.entity_description.key == "devices/battery"
+            and self.device is not None
+            and (battery_level := BATTERY_LEVELS.get(self.device.battery)) is not None
+        ):
+            return icon_for_battery_level(battery_level=battery_level)
         return self.entity_description.icon
 
     @property
@@ -702,12 +707,9 @@ class FitbitSensor(SensorEntity):
         if resource_type == "devices/battery" and self.device is not None:
             device_id = self.device.id
             registered_devs: list[FitbitDevice] = self.api.get_devices()
-            self.device = list(
-                filter(
-                    lambda device: device.id == device_id,
-                    registered_devs,
-                )
-            )[0]
+            self.device = next(
+                iter([device for device in registered_devs if device.id == device_id])
+            )
             self._attr_native_value = self.device.battery
 
         else:
