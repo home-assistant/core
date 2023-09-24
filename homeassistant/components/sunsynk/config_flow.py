@@ -4,30 +4,24 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from sunsynk.client import InvalidCredentialsException, SunsynkClient
+from sunsynk.client import InvalidCredentialsException, Inverter, SunsynkClient
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
-from .const import (
-    DATA_INVERTER_SN,
-    DATA_PASSWORD,
-    DATA_USERNAME,
-    DOMAIN,
-    STEP_INVERTER,
-    STEP_USER,
-)
+from .const import DATA_INVERTER_SN, DOMAIN, STEP_INVERTER, STEP_USER
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(DATA_USERNAME): str,
-        vol.Required(DATA_PASSWORD): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -47,7 +41,7 @@ class SunsynkHub:
         except InvalidCredentialsException:
             return False
 
-    async def get_inverters(self):
+    async def get_inverters(self) -> list[Inverter]:
         """Get the list of inverters."""
         if self.client is None:
             return []
@@ -60,12 +54,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> SunsynkHu
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    if DATA_USERNAME not in data or DATA_PASSWORD not in data:
+    if CONF_USERNAME not in data or CONF_PASSWORD not in data:
         raise InvalidAuth
 
     hub = SunsynkHub()
 
-    if not await hub.authenticate(data[DATA_USERNAME], data[DATA_PASSWORD]):
+    if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
         raise InvalidAuth
 
     return hub
@@ -93,8 +87,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             self.hub = await validate_input(self.hass, user_input)
-            self.username = user_input[DATA_USERNAME]
-            self.password = user_input[DATA_PASSWORD]
+            self.username = user_input[CONF_USERNAME]
+            self.password = user_input[CONF_PASSWORD]
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -133,8 +127,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         assert user_input is not None
-        user_input[DATA_USERNAME] = self.username
-        user_input[DATA_PASSWORD] = self.password
+        user_input[CONF_USERNAME] = self.username
+        user_input[CONF_PASSWORD] = self.password
         return self.async_create_entry(
             title=f"Inverter {user_input[DATA_INVERTER_SN]}", data=user_input
         )
