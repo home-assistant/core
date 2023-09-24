@@ -248,7 +248,9 @@ def execute(hass, filename, source, data=None):
     except ScriptError as err:
         raise ValueError(f"Error executing script: {err}") from err
     except Exception as err:  # pylint: disable=broad-except
-        raise HomeAssistantError(f"Error executing script: {err}") from err
+        raise HomeAssistantError(
+            f"Error executing script ({type(err).__name__}): {err}"
+        ) from err
 
     return restricted_globals["output"]
 

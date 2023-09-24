@@ -132,7 +132,7 @@ raise Exception('boom')
     await hass.async_block_till_done()
 
     assert type(task.exception()) == HomeAssistantError
-    assert "Error executing script: boom" in str(task.exception())
+    assert "Error executing script (Exception): boom" in str(task.exception())
 
 
 async def test_accessing_async_methods(hass: HomeAssistant) -> None:
