@@ -70,21 +70,21 @@ def discover_mysensors_platform(
 
 @callback
 def discover_mysensors_node(
-    hass: HomeAssistant, gateway_id: GatewayId, node: int
+    hass: HomeAssistant, gateway_id: GatewayId, node_id: int
 ) -> None:
     """Discover a MySensors node."""
     discovered_nodes = hass.data[DOMAIN].setdefault(
         MYSENSORS_DISCOVERED_NODES.format(gateway_id), set()
     )
 
-    if node not in discovered_nodes:
-        discovered_nodes.add(node)
+    if node_id not in discovered_nodes:
+        discovered_nodes.add(node_id)
         async_dispatcher_send(
             hass,
             MYSENSORS_NODE_DISCOVERY,
             {
                 ATTR_GATEWAY_ID: gateway_id,
-                ATTR_NODE_ID: node,
+                ATTR_NODE_ID: node_id,
             },
         )
 

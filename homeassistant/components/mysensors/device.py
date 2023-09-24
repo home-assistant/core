@@ -44,7 +44,7 @@ class MySensorNodeEntity(Entity):
     def __init__(
         self, gateway_id: GatewayId, gateway: BaseAsyncGateway, node_id: int
     ) -> None:
-        """Set up the MySensors device."""
+        """Set up the MySensors node entity."""
         self.gateway_id: GatewayId = gateway_id
         self.gateway: BaseAsyncGateway = gateway
         self.node_id: int = node_id
@@ -153,14 +153,13 @@ class MySensorsChildEntity(MySensorNodeEntity):
         child_id: int,
         value_type: int,
     ) -> None:
-        """Set up the MySensors device."""
+        """Set up the MySensors child entity."""
         super().__init__(gateway_id, gateway, node_id)
         self.child_id: int = child_id
         # value_type as int. string variant can be looked up in gateway consts
         self.value_type: int = value_type
         self.child_type = self._child.type
         self._values: dict[int, Any] = {}
-        self._debouncer: Debouncer | None = None
 
     @property
     def dev_id(self) -> DevId:
