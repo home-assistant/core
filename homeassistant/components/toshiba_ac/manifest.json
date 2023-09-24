@@ -1,0 +1,14 @@
+{
+  "domain": "toshiba_ac",
+  "name": "Toshiba AC",
+  "codeowners": ["@h4de5"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/h4de5/home-assistant-toshiba_ac",
+  "homekit": {},
+  "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/h4de5/home-assistant-toshiba_ac/issues",
+  "requirements": ["toshiba-ac==0.3.3"],
+  "ssdp": [],
+  "zeroconf": []
+}

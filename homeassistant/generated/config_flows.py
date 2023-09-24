@@ -484,6 +484,7 @@ FLOWS = {
         "tolo",
         "tomorrowio",
         "toon",
+        "toshiba_ac",
         "totalconnect",
         "tplink",
         "tplink_omada",
