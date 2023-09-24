@@ -344,9 +344,9 @@ class BluetoothManager:
                     # since it may have gone to sleep and since we do not need an active
                     # connection to it we can only determine its availability
                     # by the lack of advertisements
-                    if advertising_interval := intervals.get(address):
-                        advertising_interval += TRACKER_BUFFERING_WOBBLE_SECONDS
-                    elif advertising_interval := self._fallback_intervals.get(address):
+                    if advertising_interval := (
+                        intervals.get(address) or self._fallback_intervals.get(address)
+                    ):
                         advertising_interval += TRACKER_BUFFERING_WOBBLE_SECONDS
                     else:
                         advertising_interval = (
