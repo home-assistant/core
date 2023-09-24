@@ -17,11 +17,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
@@ -120,7 +116,7 @@ async def async_remove_config_entry_device(
             identifier[1] in coordinator.data.devices
             or identifier[1] in coordinator.data.templates
         ):
-            raise HomeAssistantError("not an orphan device")
+            return False
 
     return True
 
