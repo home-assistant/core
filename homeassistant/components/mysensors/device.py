@@ -8,7 +8,7 @@ from typing import Any
 from mysensors import BaseAsyncGateway, Sensor
 from mysensors.sensor import ChildSensor
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -94,7 +94,6 @@ class MySensorNodeEntity(Entity):
         node = self.gateway.sensors[self.node_id]
 
         return {
-            ATTR_BATTERY_LEVEL: node.battery_level,
             ATTR_HEARTBEAT: node.heartbeat,
             ATTR_NODE_ID: self.node_id,
         }
