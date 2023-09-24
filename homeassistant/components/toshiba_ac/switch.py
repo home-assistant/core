@@ -155,6 +155,7 @@ class ToshibaAcSwitchEntity(ToshibaAcStateEntity, SwitchEntity):
 
     entity_description: ToshibaAcSwitchDescription
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, device: ToshibaAcDevice, entity_description: ToshibaAcSwitchDescription
