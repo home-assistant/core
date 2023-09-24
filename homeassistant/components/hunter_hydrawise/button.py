@@ -1,19 +1,13 @@
 """Support for Hydrawise cloud buttons."""
 from __future__ import annotations
 
-from homeassistant.components.button import (
-    ButtonEntity,
-    ButtonEntityDescription,
-)
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DEFAULT_SUSPEND_DAYS,
-    DOMAIN,
-)
+from .const import DEFAULT_SUSPEND_DAYS, DOMAIN
 from .coordinator import HydrawiseDataUpdateCoordinator, HydrawiseEntity
 from .hydrawiser import Hydrawiser
 
@@ -96,3 +90,5 @@ class HydrawiseButton(HydrawiseEntity, ButtonEntity):
             await self.coordinator.api.async_stop_all(self.controller_id)
         elif self.entity_description.key == "run_all_zones":
             await self.coordinator.api.async_run_all(self.controller_id)
+
+        self.async_schedule_update_ha_state(force_refresh=False)
