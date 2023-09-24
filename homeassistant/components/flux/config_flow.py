@@ -99,7 +99,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for the Flux component."""
         return OptionsFlow(config_entry)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None=None) -> FlowResult:
         """Handle the initial step."""
 
         if user_input is not None:
@@ -145,12 +145,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=entry_data[CONF_NAME], data=entry_data)
 
 
-class OptionsFlow(config_entries.OptionsFlow):
+class FluxOptionsFlow(OptionsFlowWithConfigEntry):
     """Handle flux options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize the flux options flow."""
-        self._config_entry = config_entry
 
     def reset_values_to_default(self, user_input):
         """Hacky method to reset saved values and use the default again."""
