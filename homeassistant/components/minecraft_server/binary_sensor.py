@@ -10,9 +10,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, ICON_STATUS, KEY_STATUS
+from .const import DOMAIN
 from .coordinator import MinecraftServerCoordinator
 from .entity import MinecraftServerEntity
+
+ICON_STATUS = "mdi:lan"
+
+KEY_STATUS = "status"
 
 
 @dataclass

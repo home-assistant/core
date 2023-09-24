@@ -44,7 +44,12 @@ from homeassistant.util.unit_conversion import (
 
 from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
 
-CHECK_FORECAST_KEYS = set().union(Forecast.__annotations__.keys())
+CHECK_FORECAST_KEYS = (
+    set().union(Forecast.__annotations__.keys())
+    # Manually add the forecast resulting attributes that only exists
+    #  as native_* in the Forecast definition
+    .union(("apparent_temperature", "wind_gust_speed", "dew_point"))
+)
 
 CONDITION_CLASSES = {
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -434,7 +439,8 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
             diff_result = set().union(forecast.keys()).difference(CHECK_FORECAST_KEYS)
             if diff_result:
                 raise vol.Invalid(
-                    "Only valid keys in Forecast are allowed, see Weather documentation https://www.home-assistant.io/integrations/weather/"
+                    f"Only valid keys in Forecast are allowed, unallowed keys: ({diff_result}), "
+                    "see Weather documentation https://www.home-assistant.io/integrations/weather/"
                 )
             if forecast_type == "twice_daily" and "is_daytime" not in forecast:
                 raise vol.Invalid(

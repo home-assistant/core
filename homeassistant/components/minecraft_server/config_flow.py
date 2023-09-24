@@ -10,7 +10,9 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
 from . import helpers
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+
+DEFAULT_HOST = "localhost:25565"
 
 _LOGGER = logging.getLogger(__name__)
 
