@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from holidays import HolidayBase, country_holidays, list_supported_countries
+import holidays
+from holidays import HolidayBase, list_supported_countries
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -52,10 +53,11 @@ def add_province_to_schema(
 ) -> vol.Schema:
     """Update schema with province from country."""
     all_countries = list_supported_countries()
-    if not all_countries[country]:
+    all_provinces = all_countries.get(country)
+    if not all_provinces:
         return schema
 
-    province_list = [NONE_SENTINEL, *all_countries[country]]
+    province_list = [NONE_SENTINEL, *all_provinces]
     add_schema = {
         vol.Optional(CONF_PROVINCE, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
@@ -71,15 +73,19 @@ def add_province_to_schema(
 
 def validate_custom_dates(user_input: dict[str, Any]) -> None:
     """Validate custom dates for add/remove holidays."""
-
     for add_date in user_input[CONF_ADD_HOLIDAYS]:
         if dt_util.parse_date(add_date) is None:
             raise AddDatesError("Incorrect date")
 
-    cls: HolidayBase = country_holidays(user_input[CONF_COUNTRY])
+    country: str = user_input[CONF_COUNTRY]
+    if country is not None:
+        cls: type[HolidayBase] = getattr(holidays, country)
+    else:
+        cls = HolidayBase
+
     year: int = dt_util.now().year
-    obj_holidays: HolidayBase = country_holidays(
-        user_input[CONF_COUNTRY],
+
+    obj_holidays = cls(
         subdiv=user_input.get(CONF_PROVINCE),
         years=year,
         language=cls.default_language,
@@ -94,10 +100,11 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
 DATA_SCHEMA_SETUP = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Required(CONF_COUNTRY): SelectSelector(
+        vol.Optional(CONF_COUNTRY, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
-                options=list(list_supported_countries()),
+                options=[NONE_SENTINEL, *list(list_supported_countries())],
                 mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_COUNTRY,
             )
         ),
     }
@@ -208,6 +215,9 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
+
+            if combined_input.get(CONF_COUNTRY, NONE_SENTINEL) == NONE_SENTINEL:
+                combined_input[CONF_COUNTRY] = None
             if combined_input.get(CONF_PROVINCE, NONE_SENTINEL) == NONE_SENTINEL:
                 combined_input[CONF_PROVINCE] = None
 

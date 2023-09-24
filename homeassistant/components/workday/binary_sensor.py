@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Any
 
+import holidays
 from holidays import (
     DateLike,
     HolidayBase,
@@ -121,21 +122,27 @@ async def async_setup_entry(
     """Set up the Workday sensor."""
     add_holidays: list[DateLike] = entry.options[CONF_ADD_HOLIDAYS]
     remove_holidays: list[str] = entry.options[CONF_REMOVE_HOLIDAYS]
-    country: str = entry.options[CONF_COUNTRY]
+    country: str | None = entry.options.get(CONF_COUNTRY)
     days_offset: int = int(entry.options[CONF_OFFSET])
     excludes: list[str] = entry.options[CONF_EXCLUDES]
     province: str | None = entry.options.get(CONF_PROVINCE)
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
+
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
 
-    cls: HolidayBase = country_holidays(country, subdiv=province, years=year)
-    obj_holidays: HolidayBase = country_holidays(
-        country,
-        subdiv=province,
-        years=year,
-        language=cls.default_language,
-    )
+    if country:
+        cls: HolidayBase = country_holidays(country, subdiv=province, years=year)
+        obj_holidays: HolidayBase = country_holidays(
+            country,
+            subdiv=province,
+            years=year,
+            language=cls.default_language,
+        )
+    elif province:
+        raise ValueError(f"Must not specify a province without a country: {province}")
+    else:
+        obj_holidays = HolidayBase()
 
     # Add custom holidays
     try:
