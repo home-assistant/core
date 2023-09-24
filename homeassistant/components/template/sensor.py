@@ -254,6 +254,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
         self._template: template.Template = config[CONF_STATE]
+        self._attr_last_reset_template: template.Template = config.get(ATTR_LAST_RESET)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
@@ -265,8 +266,23 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         self.add_template_attribute(
             "_attr_native_value", self._template, None, self._update_state
         )
+        if self._attr_last_reset_template is not None:
+            self.add_template_attribute(
+                "_attr_last_reset",
+                self._attr_last_reset_template,
+                cv.datetime,
+                self._update_last_reset,
+            )
 
         super()._async_setup_templates()
+
+    @callback
+    def _update_last_reset(self, result):
+        if isinstance(result, TemplateError):
+            self._attr_available = True
+            return
+
+        self._attr_last_reset = result
 
     @callback
     def _update_state(self, result):
