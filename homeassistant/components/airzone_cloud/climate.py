@@ -16,7 +16,6 @@ from aioairzone_cloud.const import (
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
-    AZD_NAME,
     AZD_POWER,
     AZD_TEMP,
     AZD_TEMP_SET,
@@ -157,6 +156,8 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
 class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneClimate):
     """Define an Airzone Cloud Zone climate."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -166,7 +167,6 @@ class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneClimate):
         """Initialize Airzone Cloud Zone climate."""
         super().__init__(coordinator, system_zone_id, zone_data)
 
-        self._attr_name = f"{zone_data[AZD_NAME]}"
         self._attr_unique_id = system_zone_id
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
