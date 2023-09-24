@@ -153,7 +153,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         if response.content_type == "application/json":
                             try:
                                 _content = await response.json()
-                            except JSONDecodeError as err:
+                            except (JSONDecodeError, AttributeError) as err:
                                 raise HomeAssistantError from err
                         else:
                             try:

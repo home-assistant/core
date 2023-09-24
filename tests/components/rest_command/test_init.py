@@ -366,6 +366,29 @@ class TestRestCommandComponent:
         assert response["content"]["number"] == 42
         assert response["status"] == 200
 
+    def test_rest_command_get_response_malformed_json(self, aioclient_mock):
+        """Get rest_command response, malformed json."""
+        with assert_setup_component(5):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        aioclient_mock.get(
+            self.url,
+            content='{"status": "failure", 42',
+            headers={"content-type": "application/json"},
+        )
+
+        # No problem without 'return_response'
+        response = self.hass.services.call(rc.DOMAIN, "get_test", {}, blocking=True)
+        self.hass.block_till_done()
+        assert not response
+
+        # Throws error when requesting response
+        with pytest.raises(HomeAssistantError):
+            response = self.hass.services.call(
+                rc.DOMAIN, "get_test", {}, blocking=True, return_response=True
+            )
+            self.hass.block_till_done()
+
     def test_rest_command_get_response_none(self, aioclient_mock):
         """Get rest_command response, other."""
         with assert_setup_component(5):
