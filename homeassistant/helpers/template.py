@@ -1979,7 +1979,7 @@ def is_mapping(value):
 
 
 def is_non_string_or_dict_iterable(value):
-    """Return whether a value is an interable that's not a string."""
+    """Return whether a value is an iterable that's not a string."""
     return isinstance(value, Iterable) and not isinstance(
         value, (str, bytes, bytearray)
     )
