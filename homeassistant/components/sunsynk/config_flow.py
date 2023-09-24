@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
@@ -83,26 +83,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id=STEP_USER, data_schema=STEP_USER_DATA_SCHEMA
-            )
-
         errors: dict[str, str] = {}
 
-        try:
-            self.hub = await validate_input(self.hass, user_input)
-            self.username = user_input[CONF_USERNAME]
-            self.password = user_input[CONF_PASSWORD]
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return await self.async_step_inverter()
+        if user_input is not None:
+            try:
+                self.hub = await validate_input(self.hass, user_input)
+                self.username = user_input[CONF_USERNAME]
+                self.password = user_input[CONF_PASSWORD]
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return await self.async_step_inverter()
 
         return self.async_show_form(
             step_id=STEP_USER, data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -113,29 +109,45 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the inverter selection step."""
         if user_input is None and self.hub is not None:
-            inverters = await self.hub.get_inverters()
-            options = [
-                selector.SelectOptionDict(value=inverter.sn, label=inverter.sn)
-                for inverter in inverters
-            ]
-            inverter_schema = vol.Schema(
-                {
-                    vol.Required(DATA_INVERTER_SN): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=options, mode=selector.SelectSelectorMode.DROPDOWN
-                        )
-                    )
-                }
-            )
             return self.async_show_form(
-                step_id=STEP_INVERTER, data_schema=inverter_schema
+                step_id=STEP_INVERTER, data_schema=await self._inverter_scheme()
             )
 
         assert user_input is not None
-        user_input[CONF_USERNAME] = self.username
-        user_input[CONF_PASSWORD] = self.password
+
+        if self._inverter_already_exists(user_input[DATA_INVERTER_SN]):
+            raise AbortFlow("already_configured")
+
+        await self.async_set_unique_id(user_input[DATA_INVERTER_SN])
         return self.async_create_entry(
-            title=f"Inverter {user_input[DATA_INVERTER_SN]}", data=user_input
+            title=f"Inverter {user_input[DATA_INVERTER_SN]}",
+            data={
+                CONF_USERNAME: self.username,
+                CONF_PASSWORD: self.password,
+                DATA_INVERTER_SN: user_input[DATA_INVERTER_SN],
+            },
+        )
+
+    def _inverter_already_exists(self, inverter_sn: str) -> bool:
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.unique_id == inverter_sn:
+                return True
+        return False
+
+    async def _inverter_scheme(self):
+        inverters = await self.hub.get_inverters()
+        options = [
+            selector.SelectOptionDict(value=inverter.sn, label=inverter.sn)
+            for inverter in inverters
+        ]
+        return vol.Schema(
+            {
+                vol.Required(DATA_INVERTER_SN): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=options, mode=selector.SelectSelectorMode.DROPDOWN
+                    )
+                )
+            }
         )
 
 
