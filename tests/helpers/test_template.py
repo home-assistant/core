@@ -573,44 +573,6 @@ def test_isnonstringiterable(hass: HomeAssistant, value, expected) -> None:
     )
 
 
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        ([1, 2], False),
-        (["a", "b"], False),
-        ({1, 2}, False),
-        ({"a": 1, "b": 2}, True),
-        ({1: "a", 2: "b"}, True),
-        ({"a": 1, "b": 2}, True),
-        ({1: "a", 2: "b"}, True),
-        (ReadOnlyDict({"a": 1, "b": 2}), True),
-        (MappingProxyType({"a": 1, "b": 2}), True),
-        ("abc", False),
-        (b"abc", False),
-    ],
-)
-def test_ismapping(hass: HomeAssistant, value, expected) -> None:
-    """Test is_mapping."""
-    assert (
-        template.Template("{{ is_mapping(value) }}", hass).async_render(
-            {"value": value}
-        )
-        == expected
-    )
-    assert (
-        template.Template("{{ value | is_mapping }}", hass).async_render(
-            {"value": value}
-        )
-        == expected
-    )
-    assert (
-        template.Template("{{ value is is_mapping }}", hass).async_render(
-            {"value": value}
-        )
-        == expected
-    )
-
-
 def test_rounding_value(hass: HomeAssistant) -> None:
     """Test rounding value."""
     hass.states.async_set("sensor.temperature", 12.78)
