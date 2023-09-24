@@ -105,7 +105,7 @@ async def test_form_configures_inverter_integration(hass: HomeAssistant) -> None
     )
     assert initial_form_result["type"] == FlowResultType.FORM
     assert initial_form_result["step_id"] == "user"
-    assert initial_form_result["errors"] is None
+    assert initial_form_result["errors"] == {}
 
     with patch(SUNSYNK_HUB_AUTHENTICATE, return_value=True) as mock_authenticate, patch(
         SUNSYNK_HUB_GET_INVERTERS, return_value=[Inverter({"sn": "INV123"})]
