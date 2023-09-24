@@ -47,12 +47,18 @@ from .const import DOMAIN, LOGGER, format_dispatch_call
 
 
 @dataclass
-class WeatherFlowSensorEntityDescription(SensorEntityDescription):
-    """Describes a WeatherFlow sensor entity description."""
+class WeatherFlowSensorRequiredKeysMixin:
+    """Mixin for required keys."""
 
-    raw_data_conv_fn: Callable[
-        [WeatherFlowDevice], datetime | StateType
-    ] = lambda _: None
+    raw_data_conv_fn: Callable[[WeatherFlowDevice], datetime | StateType]
+
+
+@dataclass
+class WeatherFlowSensorEntityDescription(
+    SensorEntityDescription, WeatherFlowSensorRequiredKeysMixin
+):
+    """Describes August binary_sensor entity."""
+
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
     imperial_suggested_unit: None | str = None
 
