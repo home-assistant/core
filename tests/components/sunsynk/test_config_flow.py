@@ -30,25 +30,23 @@ SUNSYNK_HUB_GET_INVERTERS = (
 
 async def test_sunsunk_hub_authenticate_success(hass: HomeAssistant) -> None:
     """Test SunsynkHub can authenticate successfully."""
+    hub = SunsynkHub()
     with patch(SUNSYNK_CLIENT_CREATE, return_value=True):
-        hub = SunsynkHub()
         assert (await hub.authenticate("myuser", "letmein")) is True
 
 
 async def test_sunsunk_hub_authenticate_failure(hass: HomeAssistant) -> None:
     """Test SunsynkHub can handle authentication failure."""
+    hub = SunsynkHub()
     with patch(SUNSYNK_CLIENT_CREATE) as client_create:
         client_create.side_effect = InvalidCredentialsException()
-        hub = SunsynkHub()
         assert (await hub.authenticate("myuser", "invalidpassword")) is False
 
 
 async def test_sunsunk_hub_get_inverters(hass: HomeAssistant) -> None:
     """Test SunsynkHub can retrieve inverters when logged in."""
-    with patch(SUNSYNK_CLIENT_CREATE, return_value=True), patch(
-        SUNSYNK_HUB_GET_INVERTERS, return_value=[Inverter({"sn": "INV123"})]
-    ):
-        hub = SunsynkHub()
+    hub = SunsynkHub()
+    with patch(SUNSYNK_HUB_GET_INVERTERS, return_value=[Inverter({"sn": "INV123"})]):
         assert len(await hub.get_inverters()) == 1
 
 
