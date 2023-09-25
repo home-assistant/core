@@ -265,6 +265,7 @@ class MqttSiren(MqttEntity, SirenEntity):
                 if json_payload[STATE] == PAYLOAD_NONE:
                     self._attr_is_on = None
                 del json_payload[STATE]
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
             if json_payload:
                 # process attributes
@@ -279,7 +280,7 @@ class MqttSiren(MqttEntity, SirenEntity):
                     )
                     return
                 self._update(process_turn_on_params(self, params))
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
@@ -379,6 +380,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         """Update the extra siren state attributes."""
         for attribute, support in SUPPORTED_ATTRIBUTES.items():
             if self._attr_supported_features & support and attribute in data:
-                self._extra_attributes[attribute] = data[
-                    attribute  # type: ignore[literal-required]
-                ]
+                data_attr = data[attribute]  # type: ignore[literal-required]
+                if self._extra_attributes.get(attribute) == data_attr:
+                    continue
+                self._extra_attributes[attribute] = data_attr
