@@ -122,7 +122,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "Reolink DHCP reported new IP '%s', "
                     "but got error '%s' trying to connect, so sticking to IP '%s'",
                     discovery_info.ip,
-                    str(err),
+                    err,
                     existing_entry.data[CONF_HOST],
                 )
                 raise AbortFlow("already_configured") from err
