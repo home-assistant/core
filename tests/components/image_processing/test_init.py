@@ -5,7 +5,8 @@ import pytest
 
 import homeassistant.components.http as http
 import homeassistant.components.image_processing as ip
-from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -32,6 +33,15 @@ def get_url(hass):
     """Return camera url."""
     state = hass.states.get("camera.demo_camera")
     return f"{hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
+
+
+async def test_config_entry(
+    hass: HomeAssistant,
+    mock_image_processing_config_entry: ConfigEntry,
+) -> None:
+    """Test setting up an image platform from a config entry."""
+    state = hass.states.get("image_processing.test")
+    assert state.state == STATE_UNKNOWN
 
 
 async def setup_image_processing(hass, aiohttp_unused_port_factory):
