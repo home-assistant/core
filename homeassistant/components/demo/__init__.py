@@ -34,6 +34,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
+    Platform.IMAGE_PROCESSING,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.MEDIA_PLAYER,
@@ -48,15 +49,14 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.WATER_HEATER,
+    Platform.WEATHER,
 ]
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.TTS,
     Platform.MAILBOX,
     Platform.NOTIFY,
-    Platform.IMAGE_PROCESSING,
     Platform.DEVICE_TRACKER,
-    Platform.WEATHER,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
