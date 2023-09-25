@@ -17,12 +17,12 @@ SERVICE_TYPE_DEVICE_NAMES = {
     "today_gas": "Gas market price",
 }
 SERVICE_NAME: Final = "get_prices"
-SERVICE_PRICE_TYPES: Final = ["energy", "gas", "all"]
+SERVICE_PRICE_TYPES: Final = ["energy", "gas"]
 SERVICE_SCHEMA: Final = vol.Schema(
     {
         vol.Required("type"): vol.In(SERVICE_PRICE_TYPES),
         vol.Optional("start"): str,
         vol.Optional("end"): str,
-        vol.Optional("incl_btw", default=False): bool,
+        vol.Optional("incl_btw", default=True): bool,
     }
 )
