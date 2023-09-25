@@ -113,8 +113,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, data=new_data, options=new_options, unique_id=unique_id
         )
-    use_webhook = hass.data[DOMAIN][CONFIG].get(CONF_USE_WEBHOOK)
-    if use_webhook is not None and use_webhook != entry.options[CONF_USE_WEBHOOK]:
+    if (
+        use_webhook := hass.data[DOMAIN][CONFIG].get(CONF_USE_WEBHOOK)
+    ) is not None and use_webhook != entry.options[CONF_USE_WEBHOOK]:
         new_options = entry.options.copy()
         new_options |= {CONF_USE_WEBHOOK: use_webhook}
         hass.config_entries.async_update_entry(entry, options=new_options)

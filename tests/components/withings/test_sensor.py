@@ -3,6 +3,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 from withings_api.common import NotifyAppli
@@ -15,7 +16,6 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
-from homeassistant.util import dt as dt_util
 
 from . import call_webhook, enable_webhooks, setup_integration
 from .conftest import USER_ID, WEBHOOK_ID
@@ -153,13 +153,14 @@ async def test_update_failed(
     snapshot: SnapshotAssertion,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test all entities."""
     await setup_integration(hass, polling_config_entry)
 
     withings.async_measure_get_meas.side_effect = Exception
-    future = dt_util.utcnow() + timedelta(minutes=10)
-    async_fire_time_changed(hass, future)
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.henk_weight")

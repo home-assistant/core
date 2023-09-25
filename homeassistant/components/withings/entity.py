@@ -45,5 +45,3 @@ class WithingsEntity(CoordinatorEntity[WithingsDataUpdateCoordinator]):
             identifiers={(DOMAIN, str(coordinator.config_entry.unique_id))},
             manufacturer="Withings",
         )
-        if coordinator.use_webhooks:
-            self._attr_should_poll = False

@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 from urllib.parse import urlparse
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 from withings_api.common import AuthFailedException, NotifyAppli, UnauthorizedException
@@ -139,12 +140,14 @@ async def test_webhook_subscription_polling_config(
     disable_webhook_delay,
     polling_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test webhook subscriptions not run when polling."""
     await setup_integration(hass, polling_config_entry)
     await hass_client_no_auth()
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert withings.notify_revoke.call_count == 0
