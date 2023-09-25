@@ -143,6 +143,8 @@ class HueBatterySensor(HueSensorBase):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
+        if self.resource.power_state.battery_state is None:
+            return {}
         return {"battery_state": self.resource.power_state.battery_state.value}
 
 
