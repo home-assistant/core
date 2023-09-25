@@ -3,6 +3,7 @@ from unittest.mock import PropertyMock, patch
 
 import pytest
 
+from homeassistant import config_entries
 import homeassistant.components.http as http
 import homeassistant.components.image_processing as ip
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +30,7 @@ def aiohttp_unused_port_factory(event_loop, unused_tcp_port_factory, socket_enab
     return unused_tcp_port_factory
 
 
-def get_url(hass):
+def get_url(hass: HomeAssistant):
     """Return camera url."""
     state = hass.states.get("camera.demo_camera")
     return f"{hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
@@ -43,8 +44,24 @@ async def test_config_entry(
     state = hass.states.get("image_processing.test")
     assert state.state == STATE_UNKNOWN
 
+    assert (
+        mock_image_processing_config_entry.state
+        == config_entries.ConfigEntryState.LOADED
+    )
+    assert await hass.config_entries.async_unload(
+        mock_image_processing_config_entry.entry_id
+    )
+    await hass.async_block_till_done()
+    assert (
+        mock_image_processing_config_entry.state
+        is config_entries.ConfigEntryState.NOT_LOADED
+    )
 
-async def setup_image_processing(hass, aiohttp_unused_port_factory):
+    state = hass.states.get("image_processing.test")
+    assert not state
+
+
+async def setup_image_processing(hass: HomeAssistant, aiohttp_unused_port_factory):
     """Set up things to be run when tests are started."""
     await async_setup_component(
         hass,
@@ -58,7 +75,7 @@ async def setup_image_processing(hass, aiohttp_unused_port_factory):
     await hass.async_block_till_done()
 
 
-async def setup_image_processing_face(hass):
+async def setup_image_processing_face(hass: HomeAssistant):
     """Set up things to be run when tests are started."""
     config = {ip.DOMAIN: {"platform": "demo"}, "camera": {"platform": "demo"}}
 
