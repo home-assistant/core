@@ -39,16 +39,19 @@ class MockProviderEntity(wake_word.WakeWordDetectionEntity):
     @property
     def supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
-        return [wake_word.WakeWord(ww_id="test_ww", name="Test Wake Word")]
+        return [
+            wake_word.WakeWord(ww_id="test_ww", name="Test Wake Word"),
+            wake_word.WakeWord(ww_id="test_ww_2", name="Test Wake Word 2"),
+        ]
 
     async def _async_process_audio_stream(
-        self, stream: AsyncIterable[tuple[bytes, int]]
+        self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str
     ) -> wake_word.DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps."""
         async for _chunk, timestamp in stream:
             if timestamp >= 2000:
                 return wake_word.DetectionResult(
-                    ww_id=self.supported_wake_words[0].ww_id, timestamp=timestamp
+                    ww_id=wake_word_id, timestamp=timestamp
                 )
 
         # Not detected
@@ -148,11 +151,20 @@ async def test_config_entry_unload(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("ww_id", "expected_ww"),
+    [
+        (None, "test_ww"),
+        ("test_ww_2", "test_ww_2"),
+    ],
+)
 async def test_detected_entity(
     hass: HomeAssistant,
     tmp_path: Path,
     setup: MockProviderEntity,
     snapshot: SnapshotAssertion,
+    ww_id: str | None,
+    expected_ww: str,
 ) -> None:
     """Test successful detection through entity."""
 
@@ -164,8 +176,8 @@ async def test_detected_entity(
 
     # Need 2 seconds to trigger
     state = setup.state
-    result = await setup.async_process_audio_stream(three_second_stream())
-    assert result == wake_word.DetectionResult("test_ww", 2048)
+    result = await setup.async_process_audio_stream(three_second_stream(), ww_id)
+    assert result == wake_word.DetectionResult(expected_ww, 2048)
 
     assert state != setup.state
     assert state == snapshot

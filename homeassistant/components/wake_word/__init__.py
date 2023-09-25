@@ -88,7 +88,7 @@ class WakeWordDetectionEntity(RestoreEntity):
 
     @abstractmethod
     async def _async_process_audio_stream(
-        self, stream: AsyncIterable[tuple[bytes, int]]
+        self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str
     ) -> DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps.
 
@@ -96,13 +96,15 @@ class WakeWordDetectionEntity(RestoreEntity):
         """
 
     async def async_process_audio_stream(
-        self, stream: AsyncIterable[tuple[bytes, int]]
+        self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str | None = None
     ) -> DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps.
 
         Audio must be 16Khz sample rate with 16-bit mono PCM samples.
         """
-        result = await self._async_process_audio_stream(stream)
+        if wake_word_id is None:
+            wake_word_id = self.supported_wake_words[0].ww_id
+        result = await self._async_process_audio_stream(stream, wake_word_id)
         if result is not None:
             # Update last detected only when there is a detection
             self.__last_detected = dt_util.utcnow().isoformat()
