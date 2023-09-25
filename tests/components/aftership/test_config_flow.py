@@ -1,90 +1,113 @@
-"""Test the AfterShip config flow."""
+"""Test AfterShip config flow."""
 from unittest.mock import AsyncMock, patch
 
-import pytest
+from pyaftership import AfterShipException
 
-from homeassistant import config_entries
-from homeassistant.components.aftership.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.aftership.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+async def test_full_user_flow(hass: HomeAssistant) -> None:
+    """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
-
-    with patch(
-        "homeassistant.components.aftership.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
 
     with patch(
-        "homeassistant.components.aftership.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
+        "homeassistant.components.aftership.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.aftership.config_flow.AfterShip",
+        return_value=AsyncMock(),
+    ) as mock_aftership:
+        mock_aftership.return_value.trackings.return_value.list.return_value = {}
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+            user_input={
+                CONF_API_KEY: "mock-api-key",
             },
         )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "AfterShip"
+        assert result["data"] == {
+            CONF_API_KEY: "mock-api-key",
+        }
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
 
-
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+async def test_flow_cannot_connect(hass: HomeAssistant) -> None:
+    """Test handling invalid connection."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
 
     with patch(
-        "homeassistant.components.aftership.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
+        "homeassistant.components.aftership.config_flow.AfterShip",
+        return_value=AsyncMock(),
+    ) as mock_aftership:
+        mock_aftership.side_effect = AfterShipException
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+            user_input={
+                CONF_API_KEY: "mock-api-key",
             },
         )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    with patch(
+        "homeassistant.components.aftership.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.aftership.config_flow.AfterShip",
+        return_value=AsyncMock(),
+    ) as mock_aftership:
+        mock_aftership.return_value.trackings.return_value.list.return_value = {}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "mock-api-key",
+            },
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "AfterShip"
+        assert result["data"] == {
+            CONF_API_KEY: "mock-api-key",
+        }
+
+
+async def test_import_flow(hass: HomeAssistant) -> None:
+    """Test importing yaml config."""
+
+    with patch(
+        "homeassistant.components.aftership.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.aftership.config_flow.AfterShip",
+        return_value=AsyncMock(),
+    ) as mock_aftership:
+        mock_aftership.return_value.trackings.return_value.list.return_value = {}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_API_KEY: "yaml-api-key"},
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "AfterShip"
+        assert result["data"] == {
+            CONF_API_KEY: "yaml-api-key",
+        }
+
+
+async def test_import_flow_already_exists(hass: HomeAssistant) -> None:
+    """Test importing yaml config where entry already exists."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_KEY: "yaml-api-key"})
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_API_KEY: "yaml-api-key"}
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

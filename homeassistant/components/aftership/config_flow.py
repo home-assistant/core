@@ -83,5 +83,6 @@ class AfterShipConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
         return self.async_create_entry(
-            title=config[CONF_NAME], data={CONF_API_KEY: config[CONF_API_KEY]}
+            title=config.get(CONF_NAME, "AfterShip"),
+            data={CONF_API_KEY: config[CONF_API_KEY]},
         )
