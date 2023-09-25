@@ -17,13 +17,6 @@ from tests.typing import ClientSessionGenerator
 
 def init_config_flow(hass, side_effect=None):
     """Init a configuration flow."""
-    config_flow.register_flow_implementation(
-        hass,
-        DOMAIN,
-        "id",
-        "secret",
-        "redirect_uri",
-    )
     flow = config_flow.PointFlowHandler()
     flow._get_authorization_url = AsyncMock(
         return_value="https://example.com", side_effect=side_effect
@@ -54,43 +47,40 @@ def mock_pypoint(is_authorized):
         yield PointSession
 
 
-async def test_abort_if_no_implementation_registered(hass: HomeAssistant) -> None:
-    """Test we abort if no implementation is registered."""
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
+    """Test we abort if Point is already setup."""
     flow = config_flow.PointFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "no_flows"
-
-
-async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
-    """Test we abort if Point is already setup."""
-    flow = init_config_flow(hass)
-
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "already_setup"
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "already_setup"
 
-    with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
-        result = await flow.async_step_import()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "already_setup"
+        result = await flow.async_step_finish()
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "already_setup"
 
 
 async def test_full_flow_implementation(hass: HomeAssistant, mock_pypoint) -> None:
     """Test registering an implementation and finishing flow works."""
-    config_flow.register_flow_implementation(
-        hass,
-        "test-other",
-        "id",
-        "secret",
-        "refresh_uri",
-    )
+    flow = config_flow.PointFlowHandler()
+    flow.hass = hass
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CLIENT_ID: "id",
+            CONF_CLIENT_SECRET: "secret",
+            "redirect_uri": "uri",
+        },
     )
     assert result["type"] == FlowResultType.EXTERNAL_STEP
     assert result["step_id"] == "auth"
@@ -110,20 +100,11 @@ async def test_full_flow_implementation(hass: HomeAssistant, mock_pypoint) -> No
     assert result["title"] == "john.doe@example.com"
 
 
-async def test_step_import(hass: HomeAssistant, mock_pypoint) -> None:
-    """Test that we trigger import when configuring with client."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_import()
-    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
-    assert result["step_id"] == "auth"
-
-
 async def test_abort_if_timeout_generating_auth_url(hass: HomeAssistant) -> None:
     """Test we abort if generating authorize url fails."""
     flow = init_config_flow(hass, side_effect=asyncio.TimeoutError)
 
-    result = await flow.async_step_user()
+    result = await flow.async_step_auth()
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "authorize_url_timeout"
 
@@ -132,9 +113,21 @@ async def test_abort_if_exception_generating_auth_url(hass: HomeAssistant) -> No
     """Test we abort if generating authorize url blows up."""
     flow = init_config_flow(hass, side_effect=ValueError)
 
-    result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    result = await flow.async_step_auth()
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown_authorize_url_generation"
+
+
+@pytest.mark.parametrize("is_authorized", [False])
+async def test_wrong_code_flow_implementation(
+    hass: HomeAssistant, mock_pypoint
+) -> None:
+    """Test wrong code."""
+    flow = init_config_flow(hass)
+
+    result = await flow._async_create_session("123ABC")
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "auth_error"
 
 
 async def test_callback_view(
@@ -143,16 +136,28 @@ async def test_callback_view(
     mock_pypoint,
 ) -> None:
     """Test callback view."""
-    config_flow.register_flow_implementation(
-        hass, "test-other", "id", "secret", "refresh_uri"
-    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CLIENT_ID: "id",
+            CONF_CLIENT_SECRET: "secret",
+            "redirect_uri": "uri",
+        },
     )
     assert result["type"] == FlowResultType.EXTERNAL_STEP
     assert result["step_id"] == "auth"
 
     client = await hass_client_no_auth()
+    forward_url = config_flow.AUTH_CALLBACK_PATH
+    resp = await client.get(forward_url)
+    assert resp.status == HTTPStatus.OK
+
     forward_url = (
         f'{config_flow.AUTH_CALLBACK_PATH}?code=ABC123&state={result["flow_id"]}'
     )

@@ -6,7 +6,6 @@ from httpx import ConnectTimeout
 from pypoint import PointSession
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -30,7 +29,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 
-from . import config_flow
 from .const import (
     CONF_REDIRECT_URI,
     CONF_WEBHOOK_URL,
@@ -67,22 +65,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Minut Point component."""
     if DOMAIN not in config:
         return True
-
-    conf = config[DOMAIN]
-
-    config_flow.register_flow_implementation(
-        hass,
-        DOMAIN,
-        conf[CONF_CLIENT_ID],
-        conf[CONF_CLIENT_SECRET],
-        conf[CONF_REDIRECT_URI],
-    )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-        )
-    )
 
     return True
 
