@@ -12,7 +12,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CONF_REDIRECT_URI, DOMAIN
 
 AUTH_CALLBACK_PATH = "/api/minut"
 AUTH_CALLBACK_NAME = "api:minut"
@@ -23,13 +23,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def register_flow_implementation(hass, domain, client_id, client_secret):
+def register_flow_implementation(hass, domain, client_id, client_secret, redirect_uri):
     """Register a flow implementation.
 
     domain: Domain of the component responsible for the implementation.
     name: Name of the component.
     client_id: Client id.
     client_secret: Client secret.
+    redirect_uri: Redirect_uri.
     """
     if DATA_FLOW_IMPL not in hass.data:
         hass.data[DATA_FLOW_IMPL] = OrderedDict()
@@ -37,6 +38,7 @@ def register_flow_implementation(hass, domain, client_id, client_secret):
     hass.data[DATA_FLOW_IMPL][domain] = {
         CONF_CLIENT_ID: client_id,
         CONF_CLIENT_SECRET: client_secret,
+        CONF_REDIRECT_URI: redirect_uri,
     }
 
 
@@ -111,10 +113,12 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
         client_id = flow[CONF_CLIENT_ID]
         client_secret = flow[CONF_CLIENT_SECRET]
+        redirect_uri = flow[CONF_REDIRECT_URI]
         point_session = PointSession(
             async_get_clientsession(self.hass),
-            client_id,
-            client_secret,
+            client_id=client_id,
+            client_secret=client_secret,
+            redirect_uri=redirect_uri,
         )
 
         self.hass.http.register_view(MinutAuthCallbackView())
@@ -143,10 +147,12 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
         client_id = flow[CONF_CLIENT_ID]
         client_secret = flow[CONF_CLIENT_SECRET]
+        redirect_uri = flow[CONF_REDIRECT_URI]
         point_session = PointSession(
             async_get_clientsession(self.hass),
             client_id,
             client_secret,
+            redirect_uri=redirect_uri,
         )
         token = await point_session.get_access_token(code)
         _LOGGER.debug("Got new token")

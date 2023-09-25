@@ -32,6 +32,7 @@ from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 
 from . import config_flow
 from .const import (
+    CONF_REDIRECT_URI,
     CONF_WEBHOOK_URL,
     DOMAIN,
     EVENT_RECEIVED,
@@ -54,6 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
+                vol.Required(CONF_REDIRECT_URI): cv.string,
             }
         )
     },
@@ -69,7 +71,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
 
     config_flow.register_flow_implementation(
-        hass, DOMAIN, conf[CONF_CLIENT_ID], conf[CONF_CLIENT_SECRET]
+        hass,
+        DOMAIN,
+        conf[CONF_CLIENT_ID],
+        conf[CONF_CLIENT_SECRET],
+        conf[CONF_REDIRECT_URI],
     )
 
     hass.async_create_task(
