@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED
 from pyweatherflowudp.device import WeatherFlowDevice
-from pyweatherflowudp.errors import AddressInUseError, ListenerError
+from pyweatherflowudp.errors import AddressInUseError
 
 from homeassistant.components.weatherflow.const import DOMAIN
 
@@ -34,16 +34,6 @@ def mock_has_devices_error_address_in_use() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_has_devices_error_listener_error() -> Generator[AsyncMock, None, None]:
-    """Return a mock has_devices returning an error."""
-    with patch(
-        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
-        side_effect=ListenerError,
-    ) as mock_has_devices:
-        yield mock_has_devices
-
-
-@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(domain=DOMAIN, data={})
@@ -57,27 +47,6 @@ def mock_has_devices() -> Generator[AsyncMock, None, None]:
         return_value=True,
     ) as mock_has_devices:
         yield mock_has_devices
-
-
-@pytest.fixture
-def mock_on_throws_timeout() -> Generator[AsyncMock, None, None]:
-    """Throw a timeout exceptoin."""
-    with patch(
-        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
-        side_effect=asyncio.TimeoutError,
-        return_value=None,
-    ) as mock_on:
-        yield mock_on
-
-
-@pytest.fixture
-def mock_on_throws_cancelled() -> Generator[AsyncMock, None, None]:
-    """Throw a cancelled error."""
-    with patch(
-        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
-        side_effect=asyncio.exceptions.CancelledError,
-    ) as mock_on:
-        yield mock_on
 
 
 @pytest.fixture
@@ -124,25 +93,6 @@ def mock_start() -> Generator[AsyncMock, None, None]:
     async def mock_start_listening(self):
         """Mock listening function."""
         self._devices["HB-00000001"] = device
-        self._udp_task = asyncio.create_task(device_discovery_task(self))
-
-    with patch(
-        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.start_listening",
-        autospec=True,
-        side_effect=mock_start_listening,
-    ) as mock_function:
-        yield mock_function
-
-
-@pytest.fixture
-def mock_start_timeout() -> Generator[AsyncMock, None, None]:
-    """Return fixture for starting upd."""
-
-    async def device_discovery_task(self):
-        await asyncio.sleep(0.1)
-
-    async def mock_start_listening(self):
-        """Mock listening function."""
         self._udp_task = asyncio.create_task(device_discovery_task(self))
 
     with patch(

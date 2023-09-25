@@ -1,4 +1,4 @@
-"""Tests for weatherflow."""
+"""Tests for WeatherFlow."""
 
 import asyncio
 from unittest.mock import AsyncMock, patch
@@ -40,30 +40,6 @@ async def test_address_in_use(
         assert result2["data"] == {}
 
 
-async def test_cannot_connect(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_has_devices_error_listener_error: AsyncMock,
-) -> None:
-    """Test the address in use error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["errors"]["base"] == ERROR_MSG_CANNOT_CONNECT
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    with patch(
-        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["data"] == {}
-
-
 async def test_single_instance(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -91,33 +67,6 @@ async def test_devices_with_mocks(
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
-
-
-async def test_devices_with_mocks_timeout(
-    hass: HomeAssistant,
-    mock_start_timeout: AsyncMock,
-    mock_stop: AsyncMock,
-    mock_on_throws_timeout: AsyncMock,
-) -> None:
-    """Test a timeout on discovery."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-    await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"]["base"] == ERROR_MSG_NO_DEVICE_FOUND
-    assert result["step_id"] == "user"
-
-    with patch(
-        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["data"] == {}
 
 
 async def test_devices_with_various_mocks_errors(
