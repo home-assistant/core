@@ -27,14 +27,9 @@ from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import MessageCallbackType, MqttValueTemplate, ReceiveMessage
-from .util import valid_subscribe_topic
+from .util import get_mqtt_data, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,7 +166,6 @@ class MqttImage(MqttEntity, ImageEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_image_last_updated"})
         def image_data_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             try:
@@ -189,12 +183,12 @@ class MqttImage(MqttEntity, ImageEntity):
                 )
                 self._last_image = None
             self._attr_image_last_updated = dt_util.utcnow()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscribe_topic(CONF_IMAGE_TOPIC, image_data_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_image_last_updated"})
         def image_from_url_request_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
 
@@ -209,6 +203,7 @@ class MqttImage(MqttEntity, ImageEntity):
                 )
             self._attr_image_last_updated = dt_util.utcnow()
             self._cached_image = None
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscribe_topic(CONF_URL_TOPIC, image_from_url_request_received)
 
