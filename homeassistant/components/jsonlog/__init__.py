@@ -8,7 +8,7 @@ from queue import SimpleQueue
 import voluptuous as vol
 
 from homeassistant.const import CONF_FILENAME, EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -55,7 +55,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = queue_handler
 
     @callback
-    def _async_stop_handler(_) -> None:
+    def _async_stop_handler(event: Event) -> None:
         """Cleanup handler."""
         queue_handler.close()
         logging.root.removeHandler(queue_handler)
