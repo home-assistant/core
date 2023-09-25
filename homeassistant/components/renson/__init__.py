@@ -89,8 +89,8 @@ def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> N
 
     async def set_day_night_time(call: ServiceCall) -> None:
         """Configure day night times."""
-        day = call.data.get("day", "7:00")
-        night = call.data.get("night", "22:00")
+        day = call.data.get["day"]
+        night = call.data.get["night"]
 
         await hass.async_add_executor_job(renson_api.set_time, day, night)
 
