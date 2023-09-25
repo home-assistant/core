@@ -39,5 +39,29 @@
         "name": "Hours priced equal or lower than current - today"
       }
     }
+  },
+  "services": {
+    "get_prices": {
+      "name": "Get prices",
+      "description": "Request energy or gas prices from EnergyZero.",
+      "fields": {
+        "type": {
+          "name": "Type",
+          "description": "Type of prices to get, energy or gas."
+        },
+        "incl_btw": {
+          "name": "Including BTW",
+          "description": "Include BTW in the prices."
+        },
+        "start": {
+          "name": "Start datetime",
+          "description": "From which datetime to get the prices."
+        },
+        "end": {
+          "name": "End datetime",
+          "description": "Until which datetime to get the prices."
+        }
+      }
+    }
   }
 }

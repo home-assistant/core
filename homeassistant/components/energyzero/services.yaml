@@ -5,7 +5,6 @@ get_prices:
       example: "gas"
       selector:
         select:
-          translation_key: "type"
           options:
             - "gas"
             - "energy"
