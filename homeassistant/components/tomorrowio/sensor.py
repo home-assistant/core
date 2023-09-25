@@ -157,6 +157,7 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_WIND_DIRECTION,
         name="Wind Direction",
         native_unit_of_measurement="°",
+        icon="mdi:windsock",
     ),
     # Data comes in as m/s, convert to mi/h for imperial
     TomorrowioSensorEntityDescription(
@@ -192,6 +193,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRECIPITATION_PROBABILITY,
         name="Precipitation Probability",
+        icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
     ),
     TomorrowioSensorEntityDescription(
@@ -211,6 +213,7 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_CLOUD_COVER,
         name="Cloud Cover",
         native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:cloud-percent",
     ),
     # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
