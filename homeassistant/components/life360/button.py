@@ -20,10 +20,8 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     async_add_entities(
-        [
-            Life360UpdateLocationButton(coordinator, member.circle_id, member_id)
-            for member_id, member in coordinator.data.members.items()
-        ]
+        Life360UpdateLocationButton(coordinator, member.circle_id, member_id)
+        for member_id, member in coordinator.data.members.items()
     )
 
 
