@@ -7,4 +7,4 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_CHANNELS = "channels"
 
-OAUTH_SCOPES = [AuthScope.USER_READ_SUBSCRIPTIONS]
+OAUTH_SCOPES = [AuthScope.USER_READ_SUBSCRIPTIONS, AuthScope.USER_READ_FOLLOWS]

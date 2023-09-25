@@ -109,7 +109,7 @@ class TwitchSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update device state."""
-        followers = (await self._client.get_users_follows(to_id=self._channel.id)).total
+        followers = (await self._client.get_channel_followers(self._channel.id)).total
         self._attr_extra_state_attributes = {
             ATTR_FOLLOWING: followers,
             ATTR_VIEWS: self._channel.view_count,
@@ -149,11 +149,11 @@ class TwitchSensor(SensorEntity):
         except TwitchAPIException as exc:
             LOGGER.error("Error response on check_user_subscription: %s", exc)
 
-        follows = (
-            await self._client.get_users_follows(
-                from_id=user.id, to_id=self._channel.id
-            )
-        ).data
+        user_follows = await self._client.get_followed_channels(
+            broadcaster_id=self._channel.id, user_id=user.id
+        )
+
+        follows = user_follows.data
         self._attr_extra_state_attributes[ATTR_FOLLOW] = len(follows) > 0
         if len(follows):
             self._attr_extra_state_attributes[ATTR_FOLLOW_SINCE] = follows[
