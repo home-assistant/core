@@ -936,8 +936,8 @@ async def test_add_pipeline(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
-            "wakeword_entity": "wakeword_entity_1",
-            "wakeword_id": "wakeword_id_1",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()
@@ -953,8 +953,8 @@ async def test_add_pipeline(
         "tts_engine": "test_tts_engine",
         "tts_language": "test_language",
         "tts_voice": "Arnold Schwarzenegger",
-        "wakeword_entity": "wakeword_entity_1",
-        "wakeword_id": "wakeword_id_1",
+        "wake_word_entity": "wakeword_entity_1",
+        "wake_word_id": "wakeword_id_1",
     }
 
     assert len(pipeline_store.data) == 2
@@ -970,8 +970,8 @@ async def test_add_pipeline(
         tts_engine="test_tts_engine",
         tts_language="test_language",
         tts_voice="Arnold Schwarzenegger",
-        wakeword_entity="wakeword_entity_1",
-        wakeword_id="wakeword_id_1",
+        wake_word_entity="wakeword_entity_1",
+        wake_word_id="wakeword_id_1",
     )
 
     await client.send_json_auto_id(
@@ -1006,8 +1006,8 @@ async def test_add_pipeline_missing_language(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
-            "wakeword_entity": "wakeword_entity_1",
-            "wakeword_id": "wakeword_id_1",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()
@@ -1026,8 +1026,8 @@ async def test_add_pipeline_missing_language(
             "tts_engine": "test_tts_engine",
             "tts_language": None,
             "tts_voice": "Arnold Schwarzenegger",
-            "wakeword_entity": "wakeword_entity_1",
-            "wakeword_id": "wakeword_id_1",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()
@@ -1055,8 +1055,8 @@ async def test_delete_pipeline(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
-            "wakeword_entity": "wakeword_entity_1",
-            "wakeword_id": "wakeword_id_1",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()
@@ -1075,8 +1075,8 @@ async def test_delete_pipeline(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
-            "wakeword_entity": "wakeword_entity_2",
-            "wakeword_id": "wakeword_id_2",
+            "wake_word_entity": "wakeword_entity_2",
+            "wake_word_id": "wakeword_id_2",
         }
     )
     msg = await client.receive_json()
@@ -1157,8 +1157,8 @@ async def test_get_pipeline(
         "tts_engine": "test",
         "tts_language": "en-US",
         "tts_voice": "james_earl_jones",
-        "wakeword_entity": None,
-        "wakeword_id": None,
+        "wake_word_entity": None,
+        "wake_word_id": None,
     }
 
     await client.send_json_auto_id(
@@ -1186,8 +1186,8 @@ async def test_get_pipeline(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
-            "wakeword_entity": "wakeword_entity_1",
-            "wakeword_id": "wakeword_id_1",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()
@@ -1214,8 +1214,8 @@ async def test_get_pipeline(
         "tts_engine": "test_tts_engine",
         "tts_language": "test_language",
         "tts_voice": "Arnold Schwarzenegger",
-        "wakeword_entity": "wakeword_entity_1",
-        "wakeword_id": "wakeword_id_1",
+        "wake_word_entity": "wakeword_entity_1",
+        "wake_word_id": "wakeword_id_1",
     }
 
 
@@ -1241,8 +1241,8 @@ async def test_list_pipelines(
                 "tts_engine": "test",
                 "tts_language": "en-US",
                 "tts_voice": "james_earl_jones",
-                "wakeword_entity": None,
-                "wakeword_id": None,
+                "wake_word_entity": None,
+                "wake_word_id": None,
             }
         ],
         "preferred_pipeline": ANY,
@@ -1270,8 +1270,8 @@ async def test_update_pipeline(
             "tts_engine": "new_tts_engine",
             "tts_language": "new_tts_language",
             "tts_voice": "new_tts_voice",
-            "wakeword_entity": "new_wakeword_entity",
-            "wakeword_id": "new_wakeword_id",
+            "wake_word_entity": "new_wakeword_entity",
+            "wake_word_id": "new_wakeword_id",
         }
     )
     msg = await client.receive_json()
@@ -1293,8 +1293,8 @@ async def test_update_pipeline(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
-            "wakeword_entity": "wakeword_entity_1",
-            "wakeword_id": "wakeword_id_1",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()
@@ -1315,8 +1315,8 @@ async def test_update_pipeline(
             "tts_engine": "new_tts_engine",
             "tts_language": "new_tts_language",
             "tts_voice": "new_tts_voice",
-            "wakeword_entity": "new_wakeword_entity",
-            "wakeword_id": "new_wakeword_id",
+            "wake_word_entity": "new_wakeword_entity",
+            "wake_word_id": "new_wakeword_id",
         }
     )
     msg = await client.receive_json()
@@ -1332,8 +1332,8 @@ async def test_update_pipeline(
         "tts_engine": "new_tts_engine",
         "tts_language": "new_tts_language",
         "tts_voice": "new_tts_voice",
-        "wakeword_entity": "new_wakeword_entity",
-        "wakeword_id": "new_wakeword_id",
+        "wake_word_entity": "new_wakeword_entity",
+        "wake_word_id": "new_wakeword_id",
     }
 
     assert len(pipeline_store.data) == 2
@@ -1349,8 +1349,8 @@ async def test_update_pipeline(
         tts_engine="new_tts_engine",
         tts_language="new_tts_language",
         tts_voice="new_tts_voice",
-        wakeword_entity="new_wakeword_entity",
-        wakeword_id="new_wakeword_id",
+        wake_word_entity="new_wakeword_entity",
+        wake_word_id="new_wakeword_id",
     )
 
     await client.send_json_auto_id(
@@ -1366,8 +1366,8 @@ async def test_update_pipeline(
             "tts_engine": None,
             "tts_language": None,
             "tts_voice": None,
-            "wakeword_entity": None,
-            "wakeword_id": None,
+            "wake_word_entity": None,
+            "wake_word_id": None,
         }
     )
     msg = await client.receive_json()
@@ -1383,8 +1383,8 @@ async def test_update_pipeline(
         "tts_engine": None,
         "tts_language": None,
         "tts_voice": None,
-        "wakeword_entity": None,
-        "wakeword_id": None,
+        "wake_word_entity": None,
+        "wake_word_id": None,
     }
 
     pipeline = pipeline_store.data[pipeline_id]
@@ -1399,8 +1399,8 @@ async def test_update_pipeline(
         tts_engine=None,
         tts_language=None,
         tts_voice=None,
-        wakeword_entity=None,
-        wakeword_id=None,
+        wake_word_entity=None,
+        wake_word_id=None,
     )
 
 
@@ -1424,8 +1424,8 @@ async def test_set_preferred_pipeline(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
-            "wakeword_entity": "wakeword_entity_1",
-            "wakeword_id": "wakeword_id_1",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()

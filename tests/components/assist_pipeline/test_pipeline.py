@@ -46,8 +46,8 @@ async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
             "tts_engine": "tts_engine_1",
             "tts_language": "language_1",
             "tts_voice": "Arnold Schwarzenegger",
-            "wakeword_entity": "wakeword_entity_1",
-            "wakeword_id": "wakeword_id_1",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         },
         {
             "conversation_engine": "conversation_engine_2",
@@ -59,8 +59,8 @@ async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
             "tts_engine": "tts_engine_2",
             "tts_language": "language_2",
             "tts_voice": "The Voice",
-            "wakeword_entity": "wakeword_entity_2",
-            "wakeword_id": "wakeword_id_2",
+            "wake_word_entity": "wakeword_entity_2",
+            "wake_word_id": "wakeword_id_2",
         },
         {
             "conversation_engine": "conversation_engine_3",
@@ -72,8 +72,8 @@ async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
             "tts_engine": None,
             "tts_language": None,
             "tts_voice": None,
-            "wakeword_entity": "wakeword_entity_3",
-            "wakeword_id": "wakeword_id_3",
+            "wake_word_entity": "wakeword_entity_3",
+            "wake_word_id": "wakeword_id_3",
         },
     ]
     pipeline_ids = []
@@ -124,8 +124,8 @@ async def test_loading_pipelines_from_storage(
                     "tts_engine": "tts_engine_1",
                     "tts_language": "language_1",
                     "tts_voice": "Arnold Schwarzenegger",
-                    "wakeword_entity": "wakeword_entity_1",
-                    "wakeword_id": "wakeword_id_1",
+                    "wake_word_entity": "wakeword_entity_1",
+                    "wake_word_id": "wakeword_id_1",
                 },
                 {
                     "conversation_engine": "conversation_engine_2",
@@ -138,8 +138,8 @@ async def test_loading_pipelines_from_storage(
                     "tts_engine": "tts_engine_2",
                     "tts_language": "language_2",
                     "tts_voice": "The Voice",
-                    "wakeword_entity": "wakeword_entity_2",
-                    "wakeword_id": "wakeword_id_2",
+                    "wake_word_entity": "wakeword_entity_2",
+                    "wake_word_id": "wakeword_id_2",
                 },
                 {
                     "conversation_engine": "conversation_engine_3",
@@ -152,8 +152,8 @@ async def test_loading_pipelines_from_storage(
                     "tts_engine": None,
                     "tts_language": None,
                     "tts_voice": None,
-                    "wakeword_entity": "wakeword_entity_3",
-                    "wakeword_id": "wakeword_id_3",
+                    "wake_word_entity": "wakeword_entity_3",
+                    "wake_word_id": "wakeword_id_3",
                 },
             ],
             "preferred_item": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
@@ -249,8 +249,8 @@ async def test_create_default_pipeline(
         tts_engine="test",
         tts_language="en-US",
         tts_voice="james_earl_jones",
-        wakeword_entity=None,
-        wakeword_id=None,
+        wake_word_entity=None,
+        wake_word_id=None,
     )
 
 
@@ -291,8 +291,8 @@ async def test_get_pipelines(hass: HomeAssistant) -> None:
             tts_engine=None,
             tts_language=None,
             tts_voice=None,
-            wakeword_entity=None,
-            wakeword_id=None,
+            wake_word_entity=None,
+            wake_word_id=None,
         )
     ]
 
@@ -338,8 +338,8 @@ async def test_default_pipeline_no_stt_tts(
         tts_engine=None,
         tts_language=None,
         tts_voice=None,
-        wakeword_entity=None,
-        wakeword_id=None,
+        wake_word_entity=None,
+        wake_word_id=None,
     )
 
 
@@ -400,8 +400,8 @@ async def test_default_pipeline(
         tts_engine="test",
         tts_language=tts_language,
         tts_voice=None,
-        wakeword_entity=None,
-        wakeword_id=None,
+        wake_word_entity=None,
+        wake_word_id=None,
     )
 
 
@@ -431,8 +431,8 @@ async def test_default_pipeline_unsupported_stt_language(
         tts_engine="test",
         tts_language="en-US",
         tts_voice="james_earl_jones",
-        wakeword_entity=None,
-        wakeword_id=None,
+        wake_word_entity=None,
+        wake_word_id=None,
     )
 
 
@@ -462,8 +462,8 @@ async def test_default_pipeline_unsupported_tts_language(
         tts_engine=None,
         tts_language=None,
         tts_voice=None,
-        wakeword_entity=None,
-        wakeword_id=None,
+        wake_word_entity=None,
+        wake_word_id=None,
     )
 
 
@@ -512,6 +512,6 @@ async def test_default_pipeline_cloud(
         tts_engine="cloud",
         tts_language="en-US",
         tts_voice="james_earl_jones",
-        wakeword_entity=None,
-        wakeword_id=None,
+        wake_word_entity=None,
+        wake_word_id=None,
     )

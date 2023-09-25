@@ -70,8 +70,8 @@ async def pipeline_1(
             "tts_voice": None,
             "stt_engine": None,
             "stt_language": None,
-            "wakeword_entity": None,
-            "wakeword_id": None,
+            "wake_word_entity": None,
+            "wake_word_id": None,
         }
     )
 
@@ -92,8 +92,8 @@ async def pipeline_2(
             "tts_voice": None,
             "stt_engine": None,
             "stt_language": None,
-            "wakeword_entity": None,
-            "wakeword_id": None,
+            "wake_word_entity": None,
+            "wake_word_id": None,
         }
     )
 
