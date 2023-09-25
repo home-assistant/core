@@ -142,7 +142,11 @@ async def async_enable_server_logging_if_needed(
     # check if server log level is less verbose than library logging, and if so, set it
     # to debug to match library logging. We will store the old server log level in
     # hass.data so we can reset it later
-    if not driver or not driver.client or driver.client.server_logging_enabled:
+    if (
+        not driver
+        or not driver.client.connected
+        or driver.client.server_logging_enabled
+    ):
         return
     if (curr_server_log_level := driver.log_config.level) and (
         LOG_LEVEL_MAP[curr_server_log_level]
@@ -165,7 +169,11 @@ async def async_disable_server_logging_if_needed(
     hass: HomeAssistant, entry: ConfigEntry, driver: Driver
 ) -> None:
     """Disable logging of zwave-js-server in the lib if still connected to server."""
-    if not driver or not driver.client or not driver.client.server_logging_enabled:
+    if (
+        not driver
+        or not driver.client.connected
+        or not driver.client.server_logging_enabled
+    ):
         return
     entry_id = entry.entry_id
     if DATA_OLD_SERVER_LOG_LEVEL in hass.data[DOMAIN][entry_id]:
