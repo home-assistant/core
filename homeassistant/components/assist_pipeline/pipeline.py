@@ -61,6 +61,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = f"{DOMAIN}.pipelines"
 STORAGE_VERSION = 1
+STORAGE_VERSION_MINOR = 2
 
 ENGINE_LANGUAGE_PAIRS = (
     ("stt_engine", "stt_language"),
@@ -86,6 +87,8 @@ PIPELINE_FIELDS = {
     vol.Required("tts_engine"): vol.Any(str, None),
     vol.Required("tts_language"): vol.Any(str, None),
     vol.Required("tts_voice"): vol.Any(str, None),
+    vol.Required("wake_word_entity"): vol.Any(str, None),
+    vol.Required("wake_word_id"): vol.Any(str, None),
 }
 
 STORED_PIPELINE_RUNS = 10
@@ -111,6 +114,8 @@ async def _async_resolve_default_pipeline_settings(
     tts_engine = None
     tts_language = None
     tts_voice = None
+    wake_word_entity = None
+    wake_word_id = None
 
     # Find a matching language supported by the Home Assistant conversation agent
     conversation_languages = language_util.matches(
@@ -188,6 +193,8 @@ async def _async_resolve_default_pipeline_settings(
         "tts_engine": tts_engine_id,
         "tts_language": tts_language,
         "tts_voice": tts_voice,
+        "wake_word_entity": wake_word_entity,
+        "wake_word_id": wake_word_id,
     }
 
 
@@ -295,6 +302,8 @@ class Pipeline:
     tts_engine: str | None
     tts_language: str | None
     tts_voice: str | None
+    wake_word_entity: str | None
+    wake_word_id: str | None
 
     id: str = field(default_factory=ulid_util.ulid)
 
@@ -316,6 +325,8 @@ class Pipeline:
             tts_engine=data["tts_engine"],
             tts_language=data["tts_language"],
             tts_voice=data["tts_voice"],
+            wake_word_entity=data["wake_word_entity"],
+            wake_word_id=data["wake_word_id"],
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -331,6 +342,8 @@ class Pipeline:
             "tts_engine": self.tts_engine,
             "tts_language": self.tts_language,
             "tts_voice": self.tts_voice,
+            "wake_word_entity": self.wake_word_entity,
+            "wake_word_id": self.wake_word_id,
         }
 
 
@@ -400,8 +413,8 @@ class PipelineRun:
     stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False)
     tts_engine: str = field(init=False)
     tts_options: dict | None = field(init=False, default=None)
-    wake_word_engine: str = field(init=False)
-    wake_word_provider: wake_word.WakeWordDetectionEntity = field(init=False)
+    wake_word_entity_id: str = field(init=False)
+    wake_word_entity: wake_word.WakeWordDetectionEntity = field(init=False)
 
     debug_recording_thread: Thread | None = None
     """Thread that records audio to debug_recording_dir"""
@@ -463,24 +476,26 @@ class PipelineRun:
 
     async def prepare_wake_word_detection(self) -> None:
         """Prepare wake-word-detection."""
-        engine = wake_word.async_default_engine(self.hass)
-        if engine is None:
+        entity_id = self.pipeline.wake_word_entity or wake_word.async_default_entity(
+            self.hass
+        )
+        if entity_id is None:
             raise WakeWordDetectionError(
                 code="wake-engine-missing",
                 message="No wake word engine",
             )
 
-        wake_word_provider = wake_word.async_get_wake_word_detection_entity(
-            self.hass, engine
+        wake_word_entity = wake_word.async_get_wake_word_detection_entity(
+            self.hass, entity_id
         )
-        if wake_word_provider is None:
+        if wake_word_entity is None:
             raise WakeWordDetectionError(
                 code="wake-provider-missing",
-                message=f"No wake-word-detection provider for: {engine}",
+                message=f"No wake-word-detection provider for: {entity_id}",
             )
 
-        self.wake_word_engine = engine
-        self.wake_word_provider = wake_word_provider
+        self.wake_word_entity_id = entity_id
+        self.wake_word_entity = wake_word_entity
 
     async def wake_word_detection(
         self,
@@ -506,14 +521,14 @@ class PipelineRun:
             PipelineEvent(
                 PipelineEventType.WAKE_WORD_START,
                 {
-                    "engine": self.wake_word_engine,
+                    "entity_id": self.wake_word_entity_id,
                     "metadata": metadata_dict,
                 },
             )
         )
 
         if self.debug_recording_queue is not None:
-            self.debug_recording_queue.put_nowait(f"00_wake-{self.wake_word_engine}")
+            self.debug_recording_queue.put_nowait(f"00_wake-{self.wake_word_entity_id}")
 
         wake_word_settings = self.wake_word_settings or WakeWordSettings()
 
@@ -535,12 +550,13 @@ class PipelineRun:
 
         try:
             # Detect wake word(s)
-            result = await self.wake_word_provider.async_process_audio_stream(
+            result = await self.wake_word_entity.async_process_audio_stream(
                 self._wake_word_audio_stream(
                     audio_stream=stream,
                     stt_audio_buffer=stt_audio_buffer,
                     wake_word_vad=wake_word_vad,
-                )
+                ),
+                self.pipeline.wake_word_id,
             )
 
             if stt_audio_buffer is not None:
@@ -1382,11 +1398,35 @@ class PipelineRunDebug:
     )
 
 
+class PipelineStore(Store[SerializedPipelineStorageCollection]):
+    """Store entity registry data."""
+
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: SerializedPipelineStorageCollection,
+    ) -> SerializedPipelineStorageCollection:
+        """Migrate to the new version."""
+        if old_major_version == 1 and old_minor_version < 2:
+            # Version 1.2 adds wake word configuration
+            for pipeline in old_data["items"]:
+                # Populate keys which were introduced before version 1.2
+                pipeline.setdefault("wake_word_entity", None)
+                pipeline.setdefault("wake_word_id", None)
+
+        if old_major_version > 1:
+            raise NotImplementedError
+        return old_data
+
+
 @singleton(DOMAIN)
 async def async_setup_pipeline_store(hass: HomeAssistant) -> PipelineData:
     """Set up the pipeline storage collection."""
     pipeline_store = PipelineStorageCollection(
-        Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        PipelineStore(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+        )
     )
     await pipeline_store.async_load()
     PipelineStorageCollectionWebsocket(

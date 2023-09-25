@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.4
+AEMET-OpenData==0.4.5
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -197,7 +197,6 @@ aiocomelit==0.0.8
 aiodiscover==1.5.1
 
 # homeassistant.components.dnsip
-# homeassistant.components.minecraft_server
 aiodns==3.0.0
 
 # homeassistant.components.eafm
@@ -213,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==16.0.5
+aioesphomeapi==16.0.6
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -228,7 +227,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.0.3
+aiohomekit==3.0.4
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -468,7 +467,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.11.0
+bluetooth-data-tools==1.12.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -621,13 +620,16 @@ esphome-dashboard-api==1.2.3
 eufylife-ble-client==0.1.7
 
 # homeassistant.components.faa_delays
-faadelays==0.0.7
+faadelays==2023.9.1
 
 # homeassistant.components.feedreader
 feedparser==6.0.10
 
 # homeassistant.components.file
 file-read-backwards==2.0.0
+
+# homeassistant.components.fitbit
+fitbit==0.3.1
 
 # homeassistant.components.fivem
 fivem-api==0.1.2
@@ -1241,6 +1243,9 @@ pydexcom==0.2.3
 # homeassistant.components.discovergy
 pydiscovergy==2.0.3
 
+# homeassistant.components.hydrawise
+pydrawise==2023.8.0
+
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
 
@@ -1365,7 +1370,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.5.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.5
+pylitterbot==2023.4.8
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.18.2
@@ -1496,10 +1501,10 @@ pyrympro==0.0.7
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2023.9.0
+pyschlage==2023.9.1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.33
+pysensibo==1.0.35
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1712,7 +1717,7 @@ reolink-aio==0.7.10
 rflink==0.0.65
 
 # homeassistant.components.ring
-ring-doorbell==0.7.2
+ring-doorbell==0.7.3
 
 # homeassistant.components.roku
 rokuecp==0.18.1
@@ -2053,6 +2058,9 @@ youless-api==1.0.1
 
 # homeassistant.components.youtube
 youtubeaio==1.1.5
+
+# homeassistant.components.media_extractor
+yt-dlp==2023.7.6
 
 # homeassistant.components.zamg
 zamg==0.3.0
