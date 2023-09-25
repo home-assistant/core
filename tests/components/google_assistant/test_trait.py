@@ -11,6 +11,7 @@ from homeassistant.components import (
     camera,
     climate,
     cover,
+    event,
     fan,
     group,
     humidifier,
@@ -218,6 +219,42 @@ async def test_onoff_input_boolean(hass: HomeAssistant) -> None:
     await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "input_boolean.bla"}
+
+
+@pytest.mark.freeze_time("2023-08-01T00:02:57+00:00")
+async def test_doorbell_event(hass: HomeAssistant) -> None:
+    """Test doorbell event trait support for input_boolean domain."""
+    assert trait.ObjectDetection.supported(event.DOMAIN, 0, "doorbell", None)
+
+    state = State(
+        "event.bla",
+        "2023-08-01T00:02:57+00:00",
+        attributes={"device_class": "doorbell"},
+    )
+    trt_od = trait.ObjectDetection(hass, state, BASIC_CONFIG)
+
+    assert not trt_od.sync_attributes()
+    assert trt_od.sync_options() == {"notificationSupportedByAgent": True}
+    assert not trt_od.query_attributes()
+    time_stamp = datetime.fromisoformat(state.state)
+    assert trt_od.query_notifications() == {
+        "ObjectDetection": {
+            "objects": {
+                "unclassified": 1,
+            },
+            "priority": 0,
+            "detectionTimestamp": int(time_stamp.timestamp() * 1000),
+        }
+    }
+
+    # Test that stale notifications (older than 30 s) are dropped
+    state = State(
+        "event.bla",
+        "2023-08-01T00:02:22+00:00",
+        attributes={"device_class": "doorbell"},
+    )
+    trt_od = trait.ObjectDetection(hass, state, BASIC_CONFIG)
+    assert trt_od.query_notifications() is None
 
 
 async def test_onoff_switch(hass: HomeAssistant) -> None:
