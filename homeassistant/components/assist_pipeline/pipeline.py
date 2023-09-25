@@ -476,23 +476,23 @@ class PipelineRun:
 
     async def prepare_wake_word_detection(self) -> None:
         """Prepare wake-word-detection."""
-        engine = wake_word.async_default_entity(self.hass)
-        if engine is None:
+        entity_id = wake_word.async_default_entity(self.hass)
+        if entity_id is None:
             raise WakeWordDetectionError(
                 code="wake-engine-missing",
                 message="No wake word engine",
             )
 
         wake_word_provider = wake_word.async_get_wake_word_detection_entity(
-            self.hass, engine
+            self.hass, entity_id
         )
         if wake_word_provider is None:
             raise WakeWordDetectionError(
                 code="wake-provider-missing",
-                message=f"No wake-word-detection provider for: {engine}",
+                message=f"No wake-word-detection provider for: {entity_id}",
             )
 
-        self.wake_word_engine = engine
+        self.wake_word_engine = entity_id
         self.wake_word_provider = wake_word_provider
 
     async def wake_word_detection(
