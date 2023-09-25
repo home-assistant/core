@@ -88,6 +88,7 @@ from .const import (
     CONF_S2_ACCESS_CONTROL_KEY,
     CONF_S2_AUTHENTICATED_KEY,
     CONF_S2_UNAUTHENTICATED_KEY,
+    CONF_SERVER_LOGGING_ENABLED,
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DATA_CLIENT,
@@ -248,6 +249,9 @@ class DriverEvents:
             await async_enable_statistics(driver)
         elif opted_in is False:
             await driver.async_disable_statistics()
+
+        if self.config_entry.data.get(CONF_SERVER_LOGGING_ENABLED):
+            await driver.client.enable_server_logging()
 
         # Check for nodes that no longer exist and remove them
         stored_devices = dr.async_entries_for_config_entry(

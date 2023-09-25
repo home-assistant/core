@@ -39,7 +39,6 @@ from .const import (
     ATTR_ENDPOINT,
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
-    CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
     DOMAIN,
     LOGGER,
@@ -125,17 +124,6 @@ def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
 async def async_enable_statistics(driver: Driver) -> None:
     """Enable statistics on the driver."""
     await driver.async_enable_statistics("Home Assistant", HA_VERSION)
-    await driver.async_enable_error_reporting()
-
-
-@callback
-def async_update_data_collection_preference(
-    hass: HomeAssistant, entry: ConfigEntry, preference: bool
-) -> None:
-    """Update data collection preference on config entry."""
-    new_data = entry.data.copy()
-    new_data[CONF_DATA_COLLECTION_OPTED_IN] = preference
-    hass.config_entries.async_update_entry(entry, data=new_data)
 
 
 def get_valueless_base_unique_id(driver: Driver, node: ZwaveNode) -> str:

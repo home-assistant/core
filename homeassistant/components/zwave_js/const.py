@@ -28,6 +28,7 @@ CONF_S2_UNAUTHENTICATED_KEY = "s2_unauthenticated_key"
 CONF_USB_PATH = "usb_path"
 CONF_USE_ADDON = "use_addon"
 CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
+CONF_SERVER_LOGGING_ENABLED = "server_logging_enabled"
 DOMAIN = "zwave_js"
 
 DATA_CLIENT = "client"

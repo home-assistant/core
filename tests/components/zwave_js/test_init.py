@@ -1550,3 +1550,31 @@ async def test_identify_event(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+
+
+async def test_enabled_server_logging(hass: HomeAssistant, client) -> None:
+    """Test that we enabled server logging if the entry has it stored as enabled."""
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "server_logging_enabled": True},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert client.enable_server_logging.called
+    assert not client.disable_server_logging.called
+
+
+async def test_disabled_server_logging(hass: HomeAssistant, client) -> None:
+    """Test that we diisabled server logging if the entry has it stored as disabled."""
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "server_logging_enabled": False},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not client.enable_server_logging.called
+    assert not client.disable_server_logging.called

@@ -65,6 +65,7 @@ from homeassistant.components.websocket_api import (
     ActiveConnection,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import CONF_ENABLED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -74,6 +75,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .config_validation import BITMASK_SCHEMA
 from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
+    CONF_SERVER_LOGGING_ENABLED,
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
@@ -82,7 +84,6 @@ from .const import (
 from .helpers import (
     async_enable_statistics,
     async_get_node_from_device_id,
-    async_update_data_collection_preference,
     get_device_id,
 )
 
@@ -448,6 +449,7 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_subscribe_controller_statistics
     )
     websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
+    websocket_api.async_register_command(hass, websocket_update_server_logging_status)
     hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
 
 
@@ -490,6 +492,7 @@ async def websocket_network_status(
             "state": "connected" if client.connected else "disconnected",
             "driver_version": client_version_info.driver_version,
             "server_version": client_version_info.server_version,
+            "server_logging_enabled": client.server_logging_enabled,
         },
         "controller": {
             "home_id": controller.home_id,
@@ -1875,7 +1878,10 @@ async def websocket_update_data_collection_preference(
 ) -> None:
     """Update preference for data collection and enable/disable collection."""
     opted_in = msg[OPTED_IN]
-    async_update_data_collection_preference(hass, entry, opted_in)
+    if entry.data.get(CONF_DATA_COLLECTION_OPTED_IN) != opted_in:
+        new_data = entry.data.copy()
+        new_data[CONF_DATA_COLLECTION_OPTED_IN] = opted_in
+        hass.config_entries.async_update_entry(entry, data=new_data)
 
     if opted_in:
         await async_enable_statistics(driver)
@@ -2438,3 +2444,35 @@ async def websocket_subscribe_node_statistics(
             },
         )
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/update_server_logging_status",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(CONF_ENABLED): bool,
+    }
+)
+@websocket_api.async_response
+@async_get_entry
+async def websocket_update_server_logging_status(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Enable or disable logging from the server in the library."""
+    enabled: bool = msg[CONF_ENABLED]
+    if entry.data.get(CONF_SERVER_LOGGING_ENABLED) != enabled:
+        new_data = entry.data.copy()
+        new_data[CONF_SERVER_LOGGING_ENABLED] = enabled
+        hass.config_entries.async_update_entry(entry, data=new_data)
+
+    if enabled:
+        await client.enable_server_logging()
+    else:
+        await client.disable_server_logging()
+    connection.send_result(msg[ID], None)
