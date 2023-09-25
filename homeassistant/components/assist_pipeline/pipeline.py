@@ -476,7 +476,9 @@ class PipelineRun:
 
     async def prepare_wake_word_detection(self) -> None:
         """Prepare wake-word-detection."""
-        entity_id = wake_word.async_default_entity(self.hass)
+        entity_id = self.pipeline.wake_word_entity or wake_word.async_default_entity(
+            self.hass
+        )
         if entity_id is None:
             raise WakeWordDetectionError(
                 code="wake-engine-missing",
@@ -553,7 +555,8 @@ class PipelineRun:
                     audio_stream=stream,
                     stt_audio_buffer=stt_audio_buffer,
                     wake_word_vad=wake_word_vad,
-                )
+                ),
+                self.pipeline.wake_word_id,
             )
 
             if stt_audio_buffer is not None:

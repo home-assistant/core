@@ -96,7 +96,7 @@ class WakeWordDetectionEntity(RestoreEntity):
         """
 
     async def async_process_audio_stream(
-        self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str | None = None
+        self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str | None
     ) -> DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps.
 
