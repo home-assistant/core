@@ -207,20 +207,20 @@ async def test_not_detected_entity(
 
 
 async def test_default_engine_none(hass: HomeAssistant, tmp_path: Path) -> None:
-    """Test async_default_engine."""
+    """Test async_default_entity."""
     assert await async_setup_component(hass, wake_word.DOMAIN, {wake_word.DOMAIN: {}})
     await hass.async_block_till_done()
 
-    assert wake_word.async_default_engine(hass) is None
+    assert wake_word.async_default_entity(hass) is None
 
 
 async def test_default_engine_entity(
     hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
 ) -> None:
-    """Test async_default_engine."""
+    """Test async_default_entity."""
     await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
 
-    assert wake_word.async_default_engine(hass) == f"{wake_word.DOMAIN}.{TEST_DOMAIN}"
+    assert wake_word.async_default_entity(hass) == f"{wake_word.DOMAIN}.{TEST_DOMAIN}"
 
 
 async def test_get_engine_entity(
