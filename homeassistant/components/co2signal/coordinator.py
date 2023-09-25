@@ -69,7 +69,7 @@ def get_data(hass: HomeAssistant, config: Mapping[str, Any]) -> CO2SignalRespons
             wait=False,
         )
 
-    except json.JSONDecodeError as err:
+    except JSONDecodeError as err:
         # raise occasional occurring json decoding errors as CO2Error so the data update coordinator retries it
         raise CO2Error from err
 
