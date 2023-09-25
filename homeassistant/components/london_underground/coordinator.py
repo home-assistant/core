@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import cast
 
 from london_tube_status import TubeData
 
@@ -15,7 +15,7 @@ from .const import DOMAIN, SCAN_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class LondonTubeCoordinator(DataUpdateCoordinator[Any]):
+class LondonTubeCoordinator(DataUpdateCoordinator[dict[str, dict[str, str]]]):
     """London Underground sensor coordinator."""
 
     def __init__(self, hass: HomeAssistant, data: TubeData) -> None:
@@ -28,7 +28,7 @@ class LondonTubeCoordinator(DataUpdateCoordinator[Any]):
         )
         self._data = data
 
-    async def _async_update_data(self) -> Any:
+    async def _async_update_data(self) -> dict[str, dict[str, str]]:
         async with asyncio.timeout(10):
             await self._data.update()
-            return self._data.data
+            return cast(dict[str, dict[str, str]], self._data.data)
