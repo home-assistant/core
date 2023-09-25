@@ -1484,6 +1484,8 @@ build.json @home-assistant/supervisor
 /tests/components/zeversolar/ @kvanzuijlen
 /homeassistant/components/zha/ @dmulcahey @adminiuga @puddly
 /tests/components/zha/ @dmulcahey @adminiuga @puddly
+/homeassistant/components/zimi/ @markhannon
+/tests/components/zimi/ @markhannon
 /homeassistant/components/zodiac/ @JulienTant
 /tests/components/zodiac/ @JulienTant
 /homeassistant/components/zone/ @home-assistant/core

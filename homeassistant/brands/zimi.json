@@ -1,0 +1,5 @@
+{
+  "domain": "zimi",
+  "name": "Zimi",
+  "integrations": ["zimi"]
+}
