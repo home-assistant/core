@@ -30,9 +30,9 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
         self.data = data
         self.entity_description = description
         self._device_id = str(data.get(device_id_key))
-        self._attr_unique_id = f"{self._device_id}_{self.entity_description.key}"
+        self._attr_unique_id = f"{self._device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
-            name=self.data["name"],
+            name=data["name"],
             manufacturer=MANUFACTURER,
         )
