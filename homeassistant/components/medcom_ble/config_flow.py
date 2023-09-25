@@ -25,15 +25,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_name(device: MedcomBleDevice) -> str:
-    """Generate name with model and identifier for device."""
-
-    name = device.friendly_name()
-    if identifier := device.identifier:
-        name += f" ({identifier})"
-    return name
-
-
 class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Medcom BLE radiation monitors."""
 
