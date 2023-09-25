@@ -137,7 +137,7 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_create_session(self, code):
         """Create point session and entries."""
 
-        flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
+        flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
         client_id = flow[CONF_CLIENT_ID]
         client_secret = flow[CONF_CLIENT_SECRET]
         redirect_uri = flow[CONF_REDIRECT_URI]
