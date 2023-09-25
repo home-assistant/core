@@ -127,7 +127,6 @@ def mock_start() -> Generator[AsyncMock, None, None]:
         self._udp_task = asyncio.create_task(device_discovery_task(self))
 
     with patch(
-        # "pyweatherflowudp.client.WeatherFlowListener.start_listening",
         "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.start_listening",
         autospec=True,
         side_effect=mock_start_listening,
@@ -147,7 +146,6 @@ def mock_start_timeout() -> Generator[AsyncMock, None, None]:
         self._udp_task = asyncio.create_task(device_discovery_task(self))
 
     with patch(
-        # "pyweatherflowudp.client.WeatherFlowListener.start_listening",
         "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.start_listening",
         autospec=True,
         side_effect=mock_start_listening,

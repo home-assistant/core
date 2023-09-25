@@ -38,8 +38,6 @@ async def _async_can_discover_devices() -> bool:
             await future_event
         except asyncio.TimeoutError:
             return False
-        # except (EndpointError, CancelledError):
-        #     raise ListenerError
 
     return True
 
