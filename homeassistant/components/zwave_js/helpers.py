@@ -8,8 +8,14 @@ from typing import Any, cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.const import (
+    LOG_LEVEL_MAP,
+    CommandClass,
+    ConfigurationValueType,
+    LogLevel,
+)
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
@@ -40,7 +46,9 @@ from .const import (
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
     DATA_CLIENT,
+    DATA_OLD_SERVER_LOG_LEVEL,
     DOMAIN,
+    LIB_LOGGER,
     LOGGER,
 )
 
@@ -124,6 +132,47 @@ def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
 async def async_enable_statistics(driver: Driver) -> None:
     """Enable statistics on the driver."""
     await driver.async_enable_statistics("Home Assistant", HA_VERSION)
+
+
+async def async_enable_server_logging_if_needed(
+    hass: HomeAssistant, entry: ConfigEntry, driver: Driver
+) -> None:
+    """Enable logging of zwave-js-server in the lib."""
+    # If lib log level is set to debug, we want to enable server logging. First we
+    # check if server log level is less verbose than library logging, and if so, set it
+    # to debug to match library logging. We will store the old server log level in
+    # hass.data so we can reset it later
+    if not driver or not driver.client or driver.client.server_logging_enabled:
+        return
+    if (curr_server_log_level := driver.log_config.level) and (
+        LOG_LEVEL_MAP[curr_server_log_level]
+    ) > (lib_log_level := LIB_LOGGER.getEffectiveLevel()):
+        entry_id = entry.entry_id
+        LOGGER.warning(
+            (
+                "Server logging is set to %s and is currently less verbose "
+                "than library logging, setting server log level to %s to match"
+            ),
+            curr_server_log_level,
+            logging.getLevelName(lib_log_level),
+        )
+        await driver.async_update_log_config(LogConfig(level=LogLevel.DEBUG))
+        hass.data[DOMAIN][entry_id][DATA_OLD_SERVER_LOG_LEVEL] = curr_server_log_level
+    await driver.client.enable_server_logging()
+
+
+async def async_disable_server_logging_if_needed(
+    hass: HomeAssistant, entry: ConfigEntry, driver: Driver
+) -> None:
+    """Disable logging of zwave-js-server in the lib if still connected to server."""
+    if not driver or not driver.client or not driver.client.server_logging_enabled:
+        return
+    entry_id = entry.entry_id
+    if DATA_OLD_SERVER_LOG_LEVEL in hass.data[DOMAIN][entry_id]:
+        await driver.async_update_log_config(
+            LogConfig(level=hass.data[DOMAIN][entry_id].pop(DATA_OLD_SERVER_LOG_LEVEL))
+        )
+    await driver.client.disable_server_logging()
 
 
 def get_valueless_base_unique_id(driver: Driver, node: ZwaveNode) -> str:

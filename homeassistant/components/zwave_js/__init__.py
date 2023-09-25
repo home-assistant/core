@@ -5,6 +5,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Coroutine
 from contextlib import suppress
+import logging
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
@@ -21,6 +22,7 @@ from zwave_js_server.model.notification import (
 from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.logger import EVENT_LOGGING_CHANGED
 from homeassistant.components.persistent_notification import async_create
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -88,12 +90,12 @@ from .const import (
     CONF_S2_ACCESS_CONTROL_KEY,
     CONF_S2_AUTHENTICATED_KEY,
     CONF_S2_UNAUTHENTICATED_KEY,
-    CONF_SERVER_LOGGING_ENABLED,
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    LIB_LOGGER,
     LOGGER,
     USER_AGENT,
     ZWAVE_JS_NOTIFICATION_EVENT,
@@ -106,6 +108,8 @@ from .discovery import (
     async_discover_single_value,
 )
 from .helpers import (
+    async_disable_server_logging_if_needed,
+    async_enable_server_logging_if_needed,
     async_enable_statistics,
     get_device_id,
     get_device_id_ext,
@@ -250,8 +254,23 @@ class DriverEvents:
         elif opted_in is False:
             await driver.async_disable_statistics()
 
-        if self.config_entry.data.get(CONF_SERVER_LOGGING_ENABLED):
-            await driver.client.enable_server_logging()
+        async def handle_logging_changed(_: Event | None = None) -> None:
+            """Handle logging changed event."""
+            if LIB_LOGGER.isEnabledFor(logging.DEBUG):
+                await async_enable_server_logging_if_needed(
+                    self.hass, self.config_entry, driver
+                )
+            else:
+                await async_disable_server_logging_if_needed(
+                    self.hass, self.config_entry, driver
+                )
+
+        # Set up server logging on setup if needed
+        await handle_logging_changed()
+
+        self.config_entry.async_on_unload(
+            self.hass.bus.async_listen(EVENT_LOGGING_CHANGED, handle_logging_changed)
+        )
 
         # Check for nodes that no longer exist and remove them
         stored_devices = dr.async_entries_for_config_entry(
@@ -905,6 +924,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     unload_ok = all(await asyncio.gather(*tasks)) if tasks else True
 
+    await async_disable_server_logging_if_needed(hass, entry, driver_events.driver)
     if DATA_CLIENT_LISTEN_TASK in info:
         await disconnect_client(hass, entry)
 

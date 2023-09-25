@@ -28,14 +28,15 @@ CONF_S2_UNAUTHENTICATED_KEY = "s2_unauthenticated_key"
 CONF_USB_PATH = "usb_path"
 CONF_USE_ADDON = "use_addon"
 CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
-CONF_SERVER_LOGGING_ENABLED = "server_logging_enabled"
 DOMAIN = "zwave_js"
 
 DATA_CLIENT = "client"
+DATA_OLD_SERVER_LOG_LEVEL = "old_server_log_level"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 
 LOGGER = logging.getLogger(__package__)
+LIB_LOGGER = logging.getLogger("zwave_js_server")
 
 # constants extra state attributes
 ATTR_RESERVED_VALUES = "reserved_values"  # ConfigurationValue number entities
