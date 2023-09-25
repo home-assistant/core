@@ -337,6 +337,14 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
+    CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION,
+        name="Valve position",
+        icon="mdi:pipe-valve",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
 }
 
 
