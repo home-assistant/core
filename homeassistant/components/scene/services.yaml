@@ -56,12 +56,8 @@ create:
           multiple: true
 
 delete:
-  name: Delete
-  description: Deletes a dynamically created scene.
   fields:
     entity_id:
-      name: Scene entity ID
-      description: The entity_id of the scene to be deleted.
       required: true
       example: scene.all_lights
       selector:

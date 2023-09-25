@@ -46,6 +46,16 @@
           "description": "List of entities to be included in the snapshot. By taking a snapshot, you record the current state of those entities. If you do not want to use the current state of all your entities for this scene, you can combine the `snapshot_entities` with `entities`."
         }
       }
+    },
+    "delete": {
+      "name": "Delete",
+      "description": "Deletes a dynamically created scene.",
+      "fields": {
+        "entity_id": {
+          "name": "Scene entity ID",
+          "description": "The entity_id of the scene to be deleted."
+        }
+      }
     }
   }
 }

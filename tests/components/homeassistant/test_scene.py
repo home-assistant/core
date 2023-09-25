@@ -173,7 +173,7 @@ async def test_delete_service(
         "scene",
         {"scene": {"name": "hallo_2", "entities": {"light.kitchen": "on"}}},
     )
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene",
         "create",
         {
@@ -183,7 +183,7 @@ async def test_delete_service(
         blocking=True,
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene",
         "delete",
         {
@@ -194,7 +194,7 @@ async def test_delete_service(
     await hass.async_block_till_done()
     assert "The scene scene.hallo_3 does not exist" in caplog.text
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene",
         "delete",
         {
@@ -209,7 +209,7 @@ async def test_delete_service(
     )
     assert hass.states.get("scene.hallo_2") is not None
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene",
         "delete",
         {
