@@ -157,7 +157,6 @@ FAN_SWITCHES: tuple[VeSyncSwitchEntityDescription, ...] = (
 )
 
 
-# class VeSyncFanSwitchEntity(VeSyncBaseSwitch, SwitchEntity):
 class VeSyncFanSwitchEntity(VeSyncBaseEntity, SwitchEntity):
     """Describe VeSync fan switch entity."""
 
@@ -180,7 +179,6 @@ class VeSyncFanSwitchEntity(VeSyncBaseEntity, SwitchEntity):
 
     def update(self) -> None:
         """Run the update function defined for the switch."""
-        _LOGGER.error("UPDATE %s", self.name)
         self.entity_description.update_fn(self.device)
 
     def turn_on(self, **kwargs: Any) -> None:
