@@ -82,6 +82,7 @@ FLOWS = {
         "cloudflare",
         "co2signal",
         "coinbase",
+        "color_extractor",
         "comelit",
         "control4",
         "coolmaster",
