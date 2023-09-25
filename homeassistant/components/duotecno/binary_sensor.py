@@ -1,4 +1,4 @@
-"""Support for Duotecno switches."""
+"""Support for Duotecno binary sensors."""
 
 from duotecno.unit import ControlUnit
 
@@ -16,7 +16,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Velbus switch based on config_entry."""
+    """Set up Duotecno binary sensor on config_entry."""
     cntrl = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         DuotecnoBinarySensor(channel) for channel in cntrl.get_units("ControlUnit")
@@ -24,11 +24,11 @@ async def async_setup_entry(
 
 
 class DuotecnoBinarySensor(DuotecnoEntity, BinarySensorEntity):
-    """Representation of a BinarySensor."""
+    """Representation of a DuotecnoBinarySensor."""
 
     _unit: ControlUnit
 
     @property
     def is_on(self) -> bool:
-        """Return true if the switch is on."""
+        """Return true if the binary sensor is on."""
         return self._unit.is_on()
