@@ -72,7 +72,10 @@ BINARY_SENSORS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
         key="light-detected",
         translation_key="light_detected",
         icon="mdi:lightbulb-question-outline",
-        value_fn=lambda device: device.light_detection_state,
+        # We need to inverse the state, since the attribute is
+        # * False when light is detected
+        # * True when NO light is detected
+        value_fn=lambda device: not device.light_detection_state,
         exists_fn=lambda device: sku_supported(device, LIGHT_DETECTION_SUPPORTED),
     ),
 )
