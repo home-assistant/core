@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.4
+AEMET-OpenData==0.4.5
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -191,7 +191,7 @@ aiobafi6==0.9.0
 aiobotocore==2.6.0
 
 # homeassistant.components.comelit
-aiocomelit==0.0.5
+aiocomelit==0.0.8
 
 # homeassistant.components.dhcp
 aiodiscover==1.5.1
@@ -345,7 +345,7 @@ aiounifi==62
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.2.0
+aiovodafone==0.3.0
 
 # homeassistant.components.waqi
 aiowaqi==0.2.1
@@ -437,7 +437,7 @@ base36==0.1.1
 beautifulsoup4==4.12.2
 
 # homeassistant.components.zha
-bellows==0.36.3
+bellows==0.36.4
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.0
@@ -468,7 +468,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.11.0
+bluetooth-data-tools==1.12.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -621,13 +621,16 @@ esphome-dashboard-api==1.2.3
 eufylife-ble-client==0.1.7
 
 # homeassistant.components.faa_delays
-faadelays==0.0.7
+faadelays==2023.9.1
 
 # homeassistant.components.feedreader
 feedparser==6.0.10
 
 # homeassistant.components.file
 file-read-backwards==2.0.0
+
+# homeassistant.components.fitbit
+fitbit==0.3.1
 
 # homeassistant.components.fivem
 fivem-api==0.1.2
@@ -787,7 +790,7 @@ holidays==0.28
 home-assistant-frontend==20230911.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.8.2
+home-assistant-intents==2023.9.22
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1241,6 +1244,9 @@ pydexcom==0.2.3
 # homeassistant.components.discovergy
 pydiscovergy==2.0.3
 
+# homeassistant.components.hydrawise
+pydrawise==2023.8.0
+
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
 
@@ -1365,7 +1371,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.5.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.5
+pylitterbot==2023.4.8
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.18.2
@@ -1496,10 +1502,10 @@ pyrympro==0.0.7
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2023.9.0
+pyschlage==2023.9.1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.33
+pysensibo==1.0.35
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1712,7 +1718,7 @@ reolink-aio==0.7.10
 rflink==0.0.65
 
 # homeassistant.components.ring
-ring-doorbell==0.7.2
+ring-doorbell==0.7.3
 
 # homeassistant.components.roku
 rokuecp==0.18.1
@@ -1745,7 +1751,7 @@ samsungtvws[async,encrypted]==2.6.0
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.9.0
+screenlogicpy==0.9.1
 
 # homeassistant.components.backup
 securetar==2023.3.0
@@ -1932,7 +1938,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.1.7
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.13
+universal-silabs-flasher==0.0.14
 
 # homeassistant.components.upb
 upb-lib==0.5.4
@@ -2053,6 +2059,9 @@ youless-api==1.0.1
 
 # homeassistant.components.youtube
 youtubeaio==1.1.5
+
+# homeassistant.components.media_extractor
+yt-dlp==2023.7.6
 
 # homeassistant.components.zamg
 zamg==0.3.0

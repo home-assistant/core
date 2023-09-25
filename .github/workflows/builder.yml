@@ -197,7 +197,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2023.08.0
+        uses: home-assistant/builder@2023.09.0
         with:
           args: |
             $BUILD_ARGS \
@@ -205,8 +205,6 @@ jobs:
             --cosign \
             --target /data \
             --generic ${{ needs.init.outputs.version }}
-        env:
-          CAS_API_KEY: ${{ secrets.CAS_TOKEN }}
 
       - name: Archive translations
         shell: bash
@@ -275,15 +273,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2023.08.0
+        uses: home-assistant/builder@2023.09.0
         with:
           args: |
             $BUILD_ARGS \
             --target /data/machine \
             --cosign \
             --machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}"
-        env:
-          CAS_API_KEY: ${{ secrets.CAS_TOKEN }}
 
   publish_ha:
     name: Publish version files
