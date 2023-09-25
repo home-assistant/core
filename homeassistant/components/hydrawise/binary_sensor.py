@@ -23,14 +23,14 @@ from .entity import HydrawiseEntity
 
 BINARY_SENSOR_STATUS = BinarySensorEntityDescription(
     key="status",
-    name="Status",
+    translation_key="connectivity",
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="is_watering",
-        name="Watering",
+        translation_key="watering",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
 )
