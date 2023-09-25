@@ -51,15 +51,15 @@
         },
         "incl_btw": {
           "name": "Including BTW",
-          "description": "Include BTW in the prices."
+          "description": "Include BTW in the prices. Defaults to true if omitted."
         },
         "start": {
           "name": "Start datetime",
-          "description": "From which datetime to get the prices."
+          "description": "From which datetime to get the prices. Defaults to today if omitted."
         },
         "end": {
           "name": "End datetime",
-          "description": "Until which datetime to get the prices."
+          "description": "Until which datetime to get the prices. Defaults to today if omitted."
         }
       }
     }
