@@ -21,11 +21,7 @@ HVACMODE: Final = {
     1: HVACMode.HEAT,
     2: HVACMode.COOL,
 }
-HVACMODE_REVERSE: Final = {
-    HVACMode.OFF: 0,
-    HVACMode.HEAT: 1,
-    HVACMode.COOL: 2,
-}
+HVACMODE_REVERSE: Final = {value: key for key, value in HVACMODE.items()}
 
 PRESETMODES: Final = {
     "sun": 0,
@@ -33,13 +29,7 @@ PRESETMODES: Final = {
     "moon": 2,
     "half_moon": 3,
 }
-
-PRESETMODES_REVERSE: Final = {
-    0: "sun",
-    1: "half_sun",
-    2: "moon",
-    3: "half_moon",
-}
+PRESETMODES_REVERSE: Final = {value: key for key, value in PRESETMODES.items()}
 
 
 async def async_setup_entry(

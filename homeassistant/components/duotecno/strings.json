@@ -22,9 +22,9 @@
           "preset_mode": {
             "state": {
               "sun": "Sun",
-              "half_sun": "Half Sun",
+              "half_sun": "Half sun",
               "moon": "Moon",
-              "half_moon": "Half Moon"
+              "half_moon": "Half moon"
             }
           }
         }
