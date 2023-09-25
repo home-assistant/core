@@ -103,6 +103,8 @@ async def test_pipeline_from_audio_stream_legacy(
             "tts_engine": "test",
             "tts_language": "en-US",
             "tts_voice": "Arnold Schwarzenegger",
+            "wakeword_entity": None,
+            "wakeword_id": None,
         }
     )
     msg = await client.receive_json()
@@ -163,6 +165,8 @@ async def test_pipeline_from_audio_stream_entity(
             "tts_engine": "test",
             "tts_language": "en-US",
             "tts_voice": "Arnold Schwarzenegger",
+            "wakeword_entity": None,
+            "wakeword_id": None,
         }
     )
     msg = await client.receive_json()
@@ -223,6 +227,8 @@ async def test_pipeline_from_audio_stream_no_stt(
             "tts_engine": "test",
             "tts_language": "en-AU",
             "tts_voice": "Arnold Schwarzenegger",
+            "wakeword_entity": None,
+            "wakeword_id": None,
         }
     )
     msg = await client.receive_json()
