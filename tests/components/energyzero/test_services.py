@@ -18,7 +18,7 @@ async def test_has_service(
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("price_type", ["gas", "energy", "all"])
+@pytest.mark.parametrize("price_type", ["gas", "energy"])
 @pytest.mark.parametrize("incl_btw", [True, False, None])
 @pytest.mark.parametrize("start", ["2023-01-01 00:00:00", None])
 @pytest.mark.parametrize("end", ["2023-01-01 00:00:00", None])

@@ -2,13 +2,11 @@ get_prices:
   fields:
     type:
       required: true
-      example: "all"
-      default: "all"
+      example: "gas"
       selector:
         select:
           translation_key: "type"
           options:
-            - "all"
             - "gas"
             - "energy"
     incl_btw:
