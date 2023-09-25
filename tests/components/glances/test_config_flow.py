@@ -9,7 +9,6 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import glances
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -70,10 +69,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, mock_api: MagicMock) -> No
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {
-        CONF_USERNAME: "invalid_auth",
-        CONF_PASSWORD: "invalid_auth",
-    }
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_already_configured(hass: HomeAssistant) -> None:

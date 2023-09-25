@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from . import get_api
@@ -30,7 +29,6 @@ from .const import (
     DOMAIN,
     SUPPORTED_VERSIONS,
 )
-from .exceptions import AuthorizationError, CannotConnect
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -43,17 +41,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
 )
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect."""
-    api = get_api(hass, data)
-    try:
-        await api.get_ha_sensor_data()
-    except GlancesApiAuthorizationError as err:
-        raise AuthorizationError from err
-    except GlancesApiConnectionError as err:
-        raise CannotConnect from err
 
 
 class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -70,17 +57,18 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
+            api = get_api(self.hass, user_input)
             try:
-                await validate_input(self.hass, user_input)
+                await api.get_ha_sensor_data()
+            except GlancesApiAuthorizationError:
+                errors["base"] = "invalid_auth"
+            except GlancesApiConnectionError:
+                errors["base"] = "cannot_connect"
+            if not errors:
                 return self.async_create_entry(
                     title=f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
                     data=user_input,
                 )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except AuthorizationError:
-                errors[CONF_USERNAME] = "invalid_auth"
-                errors[CONF_PASSWORD] = "invalid_auth"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
