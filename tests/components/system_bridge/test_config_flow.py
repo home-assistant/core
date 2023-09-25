@@ -1,5 +1,6 @@
 """Test the System Bridge config flow."""
 import asyncio
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from systembridgeconnector.const import MODEL_SYSTEM, TYPE_DATA_UPDATE
@@ -37,8 +38,8 @@ FIXTURE_ZEROCONF_INPUT = {
 }
 
 FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
-    host="test-bridge",
-    addresses=["1.1.1.1"],
+    ip_address=ip_address("1.1.1.1"),
+    ip_addresses=[ip_address("1.1.1.1")],
     port=9170,
     hostname="test-bridge.local.",
     type="_system-bridge._tcp.local.",
@@ -55,8 +56,8 @@ FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
 )
 
 FIXTURE_ZEROCONF_BAD = zeroconf.ZeroconfServiceInfo(
-    host="1.1.1.1",
-    addresses=["1.1.1.1"],
+    ip_address=ip_address("1.1.1.1"),
+    ip_addresses=[ip_address("1.1.1.1")],
     port=9170,
     hostname="test-bridge.local.",
     type="_system-bridge._tcp.local.",

@@ -36,6 +36,9 @@
       },
       "water_box_attached": {
         "name": "Water box attached"
+      },
+      "water_shortage": {
+        "name": "Water shortage"
       }
     },
     "number": {
@@ -69,6 +72,12 @@
       },
       "mop_drying_remaining_time": {
         "name": "Mop drying remaining time"
+      },
+      "last_clean_start": {
+        "name": "Last clean begin"
+      },
+      "last_clean_end": {
+        "name": "Last clean end"
       },
       "side_brush_time_left": {
         "name": "Side brush time left"

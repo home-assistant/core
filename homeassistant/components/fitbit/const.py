@@ -12,6 +12,8 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 
+DOMAIN: Final = "fitbit"
+
 ATTR_ACCESS_TOKEN: Final = "access_token"
 ATTR_REFRESH_TOKEN: Final = "refresh_token"
 ATTR_LAST_SAVED_AT: Final = "last_saved_at"

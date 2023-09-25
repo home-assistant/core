@@ -149,6 +149,8 @@ class SensorEntityDescription(EntityDescription):
 class SensorEntity(Entity):
     """Base class for sensor entities."""
 
+    _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
+
     entity_description: SensorEntityDescription
     _attr_device_class: SensorDeviceClass | None
     _attr_last_reset: datetime | None
@@ -345,7 +347,7 @@ class SensorEntity(Entity):
         """Return initial entity options.
 
         These will be stored in the entity registry the first time the entity is seen,
-        and then never updated.
+        and then only updated if the unit system is changed.
         """
         suggested_unit_of_measurement = self._get_initial_suggested_unit()
 
@@ -783,7 +785,7 @@ class SensorEntity(Entity):
             registry = er.async_get(self.hass)
             initial_options = self.get_initial_entity_options() or {}
             registry.async_update_entity_options(
-                self.entity_id,
+                self.registry_entry.entity_id,
                 f"{DOMAIN}.private",
                 initial_options.get(f"{DOMAIN}.private"),
             )
