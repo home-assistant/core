@@ -49,7 +49,12 @@ from .const import (
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -57,7 +62,6 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
 
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -223,6 +227,7 @@ class MqttSiren(MqttEntity, SirenEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_is_on", "_extra_attributes"})
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT state messages."""
             payload = self._value_template(msg.payload)
@@ -265,7 +270,6 @@ class MqttSiren(MqttEntity, SirenEntity):
                 if json_payload[STATE] == PAYLOAD_NONE:
                     self._attr_is_on = None
                 del json_payload[STATE]
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
             if json_payload:
                 # process attributes
@@ -279,8 +283,8 @@ class MqttSiren(MqttEntity, SirenEntity):
                         invalid_siren_parameters,
                     )
                     return
+                self._extra_attributes = dict(self._extra_attributes)
                 self._update(process_turn_on_params(self, params))
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
