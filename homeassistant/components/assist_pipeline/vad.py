@@ -41,9 +41,9 @@ class VoiceActivityDetector(ABC):
         """Return True if audio chunk contains speech."""
 
     @property
+    @abstractmethod
     def samples_per_chunk(self) -> int | None:
         """Return number of samples per chunk or None if chunking is not required."""
-        return None
 
 
 class WebRtcVad(VoiceActivityDetector):
@@ -187,14 +187,22 @@ class VoiceCommandSegmenter:
         self,
         chunk: bytes,
         vad: VoiceActivityDetector,
-        leftover_chunk_buffer: AudioBuffer,
+        leftover_chunk_buffer: AudioBuffer | None,
     ) -> bool:
-        """Process an audio chunk using an external VAD."""
+        """Process an audio chunk using an external VAD.
+
+        A buffer is required if the VAD requires fixed-sized audio chunks (usually the case).
+
+        Returns False when voice command is finished.
+        """
         if vad.samples_per_chunk is None:
             # No chunking
             chunk_seconds = (len(chunk) // _SAMPLE_WIDTH) / _SAMPLE_RATE
             is_speech = vad.is_speech(chunk)
             return self.process(chunk_seconds, is_speech)
+
+        if leftover_chunk_buffer is None:
+            raise ValueError("leftover_chunk_buffer is required when vad uses chunking")
 
         # With chunking
         seconds_per_chunk = vad.samples_per_chunk / _SAMPLE_RATE

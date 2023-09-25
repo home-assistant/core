@@ -124,3 +124,43 @@ def test_chunk_samples_leftover() -> None:
 
     assert len(chunks) == 1
     assert leftover_chunk_buffer.bytes() == bytes([5, 6])
+
+
+def test_vad_no_chunking() -> None:
+    """Test VAD that doesn't require chunking."""
+
+    class VadNoChunk(VoiceActivityDetector):
+        def is_speech(self, chunk: bytes) -> bool:
+            return sum(chunk) > 0
+
+        @property
+        def samples_per_chunk(self) -> int | None:
+            return None
+
+    vad = VadNoChunk()
+    segmenter = VoiceCommandSegmenter(
+        speech_seconds=1.0, silence_seconds=1.0, reset_seconds=0.5
+    )
+    silence = bytes([0] * 16000)
+    speech = bytes([255] * (16000 // 2))
+
+    # Test with differently-sized chunks
+    assert vad.is_speech(speech)
+    assert not vad.is_speech(silence)
+
+    # Simulate voice command
+    assert segmenter.process_with_vad(silence, vad, None)
+    # begin
+    assert segmenter.process_with_vad(speech, vad, None)
+    assert segmenter.process_with_vad(speech, vad, None)
+    assert segmenter.process_with_vad(speech, vad, None)
+    # reset with silence
+    assert segmenter.process_with_vad(silence, vad, None)
+    # resume
+    assert segmenter.process_with_vad(speech, vad, None)
+    assert segmenter.process_with_vad(speech, vad, None)
+    assert segmenter.process_with_vad(speech, vad, None)
+    assert segmenter.process_with_vad(speech, vad, None)
+    # end
+    assert segmenter.process_with_vad(silence, vad, None)
+    assert not segmenter.process_with_vad(silence, vad, None)
