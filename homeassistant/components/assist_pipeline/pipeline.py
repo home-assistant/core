@@ -476,7 +476,7 @@ class PipelineRun:
 
     async def prepare_wake_word_detection(self) -> None:
         """Prepare wake-word-detection."""
-        engine = wake_word.async_default_engine(self.hass)
+        engine = wake_word.async_default_entity(self.hass)
         if engine is None:
             raise WakeWordDetectionError(
                 code="wake-engine-missing",
