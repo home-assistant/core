@@ -146,7 +146,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Checking device connection: %s", self._discovery_info.name)
         try:
-            device = await self._get_device_data(self._discovery_info)
+            await self._get_device_data(self._discovery_info)
         except (BleakError, AbortFlow):
             return self.async_abort(reason="cannot_connect")
         except Exception as err:  # pylint: disable=broad-except
@@ -156,9 +156,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                 err,
             )
             return self.async_abort(reason="unknown")
-        get_name(device)
         _LOGGER.debug("Device connection successful, proceeding")
-        self._discovered_devices[self._discovery_info.address] = self._discovery_info
         return self.async_create_entry(
             title=self.context["title_placeholders"]["name"], data={}
         )
