@@ -1405,17 +1405,16 @@ class PipelineStore(Store[SerializedPipelineStorageCollection]):
         old_data: SerializedPipelineStorageCollection,
     ) -> SerializedPipelineStorageCollection:
         """Migrate to the new version."""
-        data = old_data
         if old_major_version == 1 and old_minor_version < 2:
             # Version 1.2 adds wake word configuration
-            for pipeline in data["items"]:
+            for pipeline in old_data["items"]:
                 # Populate keys which were introduced before version 1.2
                 pipeline.setdefault("wake_word_entity", None)
                 pipeline.setdefault("wake_word_id", None)
 
         if old_major_version > 1:
             raise NotImplementedError
-        return data
+        return old_data
 
 
 @singleton(DOMAIN)
