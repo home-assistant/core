@@ -11,6 +11,7 @@ from typing import Any, Final, TypedDict, final
 import voluptuous as vol
 
 from homeassistant.components.camera import Image
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -95,7 +96,7 @@ class FaceInformation(TypedDict, total=False):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the image processing."""
-    component = EntityComponent[ImageProcessingEntity](
+    component = hass.data[DOMAIN] = EntityComponent[ImageProcessingEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -118,6 +119,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    component: EntityComponent[ImageProcessingEntity] = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    component: EntityComponent[ImageProcessingEntity] = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
 
 @dataclass
