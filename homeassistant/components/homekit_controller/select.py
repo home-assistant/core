@@ -32,13 +32,15 @@ class HomeKitSelectEntityDescription(
 ):
     """A generic description of a select entity backed by a single characteristic."""
 
+    name: str | None = None
+
 
 SELECT_ENTITIES: dict[str, HomeKitSelectEntityDescription] = {
     CharacteristicsTypes.TEMPERATURE_UNITS: HomeKitSelectEntityDescription(
         key="temperature_display_units",
         translation_key="temperature_display_units",
         name="Temperature Display Units",
-        icon="mdi:water",
+        icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         choices={
             "celsius": TemperatureDisplayUnits.CELSIUS,
@@ -88,11 +90,11 @@ class HomeKitSelect(BaseHomeKitSelect):
         return [self._char.type]
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the device if any."""
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
-        return f"{self.entity_description.name}"
+        return self.entity_description.name
 
     @property
     def current_option(self) -> str | None:
