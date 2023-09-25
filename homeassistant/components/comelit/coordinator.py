@@ -71,10 +71,10 @@ class ComelitSerialBridge(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update router data."""
         _LOGGER.debug("Polling Comelit Serial Bridge host: %s", self._host)
+        logged = False
         try:
             logged = await self.api.login()
         except (asyncio.exceptions.TimeoutError, aiohttp.ClientConnectorError) as err:
-            logged = False
             _LOGGER.warning("Connection error for %s", self._host)
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
         finally:
