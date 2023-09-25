@@ -1,6 +1,5 @@
-"""Test the IntelliFire config flow."""
+"""Tests for weatherflow."""
 
-import asyncio
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
@@ -109,6 +108,16 @@ async def test_devices_with_mocks_timeout(
     assert result["errors"]["base"] == ERROR_MSG_NO_DEVICE_FOUND
     assert result["step_id"] == "user"
 
+    with patch(
+        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["data"] == {}
+
 
 async def test_devices_with_mocks_cancelled(
     hass: HomeAssistant,
@@ -117,13 +126,19 @@ async def test_devices_with_mocks_cancelled(
     mock_on_throws_cancelled: AsyncMock,
 ) -> None:
     """Test getting user input."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"]["base"] == ERROR_MSG_CANNOT_CONNECT
     with patch(
-        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
-        side_effect=asyncio.exceptions.CancelledError,
+        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
+        return_value=True,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"]["base"] == ERROR_MSG_CANNOT_CONNECT
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["data"] == {}
