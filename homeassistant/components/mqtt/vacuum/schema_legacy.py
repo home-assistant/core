@@ -322,7 +322,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 # We track _attr_status and _charging as they are used to
                 # To determine the batery_icon.
                 # We do not need to track _docked as it is
-                # not related entity changes directly.
+                # not leading to entity changes directly.
                 "_attr_status",
                 "_charging",
             },
