@@ -153,12 +153,13 @@ async def test_callback_view(
     assert result["step_id"] == "auth"
 
     client = await hass_client_no_auth()
-    forward_url = config_flow.AUTH_CALLBACK_PATH
+    forward_url = (
+        f'{config_flow.AUTH_CALLBACK_PATH}?code=ABC123&state={result["flow_id"]}'
+    )
 
     resp = await client.get(forward_url)
     assert resp.status == HTTPStatus.OK
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == FlowResultType.EXTERNAL_STEP_DONE
-    assert result["step_id"] == "finish"
+    assert result["type"] == FlowResultType.CREATE_ENTRY

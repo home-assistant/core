@@ -5,7 +5,6 @@ import logging
 
 from aiohttp import web_response
 from pypoint import MINUT_AUTH_URL, PointSession
-import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
@@ -73,18 +72,8 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("no flows")
             return self.async_abort(reason="no_flows")
 
-        if len(flows) == 1:
-            self.flow_impl = list(flows)[0]
-            return await self.async_step_auth()
-
-        if user_input is not None:
-            self.flow_impl = user_input["flow_impl"]
-            return await self.async_step_auth()
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required("flow_impl"): vol.In(list(flows))}),
-        )
+        self.flow_impl = list(flows)[0]
+        return await self.async_step_auth()
 
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
