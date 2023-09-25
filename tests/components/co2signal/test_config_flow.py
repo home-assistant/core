@@ -132,28 +132,33 @@ async def test_form_country(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("name", "side_effect", "err_code"),
+    ("side_effect", "err_code"),
     [
         (
-            "invalid auth",
             ValueError("Invalid authentication credentials"),
             "invalid_auth",
         ),
         (
-            "rate limit exceeded",
             ValueError("API rate limit exceeded."),
             "api_ratelimit",
         ),
-        ("unknown value error", ValueError("Something else"), "unknown"),
-        ("json decode error", JSONDecodeError(msg="boom", doc="", pos=1), "unknown"),
-        ("unknown error", Exception("Boom"), "unknown"),
-        ("error in json dict", Mock(return_value={"error": "boom"}), "unknown"),
-        ("status error", Mock(return_value={"status": "error"}), "unknown"),
+        (ValueError("Something else"), "unknown"),
+        (JSONDecodeError(msg="boom", doc="", pos=1), "unknown"),
+        (Exception("Boom"), "unknown"),
+        (Mock(return_value={"error": "boom"}), "unknown"),
+        (Mock(return_value={"status": "error"}), "unknown"),
+    ],
+    ids=[
+        "invalid auth",
+        "rate limit exceeded",
+        "unknown value error",
+        "json decode error",
+        "unknown error",
+        "error in json dict",
+        "status error",
     ],
 )
-async def test_form_error_handling(
-    hass: HomeAssistant, name, side_effect, err_code
-) -> None:
+async def test_form_error_handling(hass: HomeAssistant, side_effect, err_code) -> None:
     """Test we handle expected errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
