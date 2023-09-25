@@ -277,7 +277,7 @@
     }),
     dict({
       'data': dict({
-        'engine': 'wake_word.test',
+        'entity_id': 'wake_word.test',
         'metadata': dict({
           'bit_rate': <AudioBitRates.BITRATE_16: 16>,
           'channel': <AudioChannels.CHANNEL_MONO: 1>,
