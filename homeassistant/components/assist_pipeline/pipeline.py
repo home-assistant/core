@@ -413,8 +413,8 @@ class PipelineRun:
     stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False)
     tts_engine: str = field(init=False)
     tts_options: dict | None = field(init=False, default=None)
-    wake_word_engine: str = field(init=False)
-    wake_word_provider: wake_word.WakeWordDetectionEntity = field(init=False)
+    wake_word_entity_id: str = field(init=False)
+    wake_word_entity: wake_word.WakeWordDetectionEntity = field(init=False)
 
     debug_recording_thread: Thread | None = None
     """Thread that records audio to debug_recording_dir"""
@@ -483,17 +483,17 @@ class PipelineRun:
                 message="No wake word engine",
             )
 
-        wake_word_provider = wake_word.async_get_wake_word_detection_entity(
+        wake_word_entity = wake_word.async_get_wake_word_detection_entity(
             self.hass, entity_id
         )
-        if wake_word_provider is None:
+        if wake_word_entity is None:
             raise WakeWordDetectionError(
                 code="wake-provider-missing",
                 message=f"No wake-word-detection provider for: {entity_id}",
             )
 
-        self.wake_word_engine = entity_id
-        self.wake_word_provider = wake_word_provider
+        self.wake_word_entity_id = entity_id
+        self.wake_word_entity = wake_word_entity
 
     async def wake_word_detection(
         self,
@@ -519,14 +519,14 @@ class PipelineRun:
             PipelineEvent(
                 PipelineEventType.WAKE_WORD_START,
                 {
-                    "engine": self.wake_word_engine,
+                    "entity_id": self.wake_word_entity_id,
                     "metadata": metadata_dict,
                 },
             )
         )
 
         if self.debug_recording_queue is not None:
-            self.debug_recording_queue.put_nowait(f"00_wake-{self.wake_word_engine}")
+            self.debug_recording_queue.put_nowait(f"00_wake-{self.wake_word_entity_id}")
 
         wake_word_settings = self.wake_word_settings or WakeWordSettings()
 
@@ -548,7 +548,7 @@ class PipelineRun:
 
         try:
             # Detect wake word(s)
-            result = await self.wake_word_provider.async_process_audio_stream(
+            result = await self.wake_word_entity.async_process_audio_stream(
                 self._wake_word_audio_stream(
                     audio_stream=stream,
                     stt_audio_buffer=stt_audio_buffer,
