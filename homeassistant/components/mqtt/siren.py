@@ -283,6 +283,8 @@ class MqttSiren(MqttEntity, SirenEntity):
                         invalid_siren_parameters,
                     )
                     return
+                # To be able to track changes to self._extra_attributes we assign
+                # a fresh copy to make the original tracked reference immutable.
                 self._extra_attributes = dict(self._extra_attributes)
                 self._update(process_turn_on_params(self, params))
 
