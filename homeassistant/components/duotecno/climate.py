@@ -54,6 +54,7 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(HVACMODE_REVERSE)
     _attr_preset_modes = list(PRESETMODES)
+    _attr_translation_key = "duotecno"
 
     @property
     def current_temperature(self) -> int | None:
