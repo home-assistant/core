@@ -21,6 +21,7 @@ from .coordinator import EnergyZeroDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
+
 def _get_date(date_input: str) -> date | datetime:
     """Get date."""
     if not date_input:
@@ -30,6 +31,7 @@ def _get_date(date_input: str) -> date | datetime:
         return value
     else:
         raise ValueError(f"Invalid date: {date_input}")
+
 
 async def _get_prices(hass: HomeAssistant, call: ServiceCall) -> ServiceResponse:
     """Search prices."""
@@ -44,16 +46,9 @@ async def _get_prices(hass: HomeAssistant, call: ServiceCall) -> ServiceResponse
     end = _get_date(call.data.get("end", ""))
 
     if price_type == "energy":
-        return (
-            await energyzero.energy_prices(start_date=start, end_date=end)
-        ).prices
+        return (await energyzero.energy_prices(start_date=start, end_date=end)).prices
 
-    elif price_type == "gas":
-        return (
-            await energyzero.gas_prices(start_date=start, end_date=end)
-        ).prices
-
-    return {}
+    return (await energyzero.gas_prices(start_date=start, end_date=end)).prices
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

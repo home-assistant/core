@@ -959,6 +959,24 @@
     HAFakeDatetime(2022, 12, 7, 22, 0, tzinfo=datetime.timezone.utc): 1.47,
   })
 # ---
+# name: test_service[2023-01-01 00:00:00-incorrect date-False-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[2023-01-01 00:00:00-incorrect date-False-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[2023-01-01 00:00:00-incorrect date-None-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[2023-01-01 00:00:00-incorrect date-None-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[2023-01-01 00:00:00-incorrect date-True-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[2023-01-01 00:00:00-incorrect date-True-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
 # name: test_service[None-2023-01-01 00:00:00-False-all]
   dict({
     'energy': dict({
@@ -1918,4 +1936,76 @@
     HAFakeDatetime(2022, 12, 7, 21, 0, tzinfo=datetime.timezone.utc): 1.47,
     HAFakeDatetime(2022, 12, 7, 22, 0, tzinfo=datetime.timezone.utc): 1.47,
   })
+# ---
+# name: test_service[None-incorrect date-False-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[None-incorrect date-False-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[None-incorrect date-None-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[None-incorrect date-None-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[None-incorrect date-True-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[None-incorrect date-True-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-2023-01-01 00:00:00-False-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-2023-01-01 00:00:00-False-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-2023-01-01 00:00:00-None-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-2023-01-01 00:00:00-None-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-2023-01-01 00:00:00-True-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-2023-01-01 00:00:00-True-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-None-False-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-None-False-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-None-None-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-None-None-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-None-True-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-None-True-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-incorrect date-False-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-incorrect date-False-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-incorrect date-None-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-incorrect date-None-gas]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-incorrect date-True-energy]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[incorrect date-incorrect date-True-gas]
+  ValueError('Invalid date: incorrect date')
 # ---

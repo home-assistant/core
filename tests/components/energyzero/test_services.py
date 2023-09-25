@@ -20,8 +20,8 @@ async def test_has_service(
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("price_type", ["gas", "energy"])
 @pytest.mark.parametrize("incl_btw", [True, False, None])
-@pytest.mark.parametrize("start", ["2023-01-01 00:00:00", None])
-@pytest.mark.parametrize("end", ["2023-01-01 00:00:00", None])
+@pytest.mark.parametrize("start", ["2023-01-01 00:00:00", "incorrect date", None])
+@pytest.mark.parametrize("end", ["2023-01-01 00:00:00", "incorrect date", None])
 async def test_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -43,12 +43,14 @@ async def test_service(
     if end is not None:
         data["end"] = end
 
-    response = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_NAME,
-        data,
-        blocking=True,
-        return_response=True,
-    )
-
-    assert response == snapshot
+    try:
+        response = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NAME,
+            data,
+            blocking=True,
+            return_response=True,
+        )
+        assert response == snapshot
+    except ValueError as e:
+        assert e == snapshot
