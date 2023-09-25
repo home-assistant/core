@@ -69,16 +69,24 @@ def add_province_to_schema(
     return vol.Schema({**DATA_SCHEMA_OPT.schema, **add_schema})
 
 
+def _is_valid_date_range(check_date: str, error: type[HomeAssistantError]) -> bool:
+    """Validate date range."""
+    if check_date.find(",") > 0:
+        dates = check_date.split(",", maxsplit=1)
+        for date in dates:
+            if dt_util.parse_date(date) is None:
+                raise error("Incorrect date in range")
+        return True
+    return False
+
+
 def validate_custom_dates(user_input: dict[str, Any]) -> None:
     """Validate custom dates for add/remove holidays."""
     for add_date in user_input[CONF_ADD_HOLIDAYS]:
-        if add_date.find(",") > 0:
-            dates = add_date.split(",", maxsplit=1)
-            for date in dates:
-                if dt_util.parse_date(date) is None:
-                    raise AddDateRangeError("Incorrect date in range")
-            continue
-        if dt_util.parse_date(add_date) is None:
+        if (
+            not _is_valid_date_range(add_date, AddDateRangeError)
+            and dt_util.parse_date(add_date) is None
+        ):
             raise AddDatesError("Incorrect date")
 
     year: int = dt_util.now().year
@@ -94,13 +102,10 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
         obj_holidays = HolidayBase(years=year)
 
     for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
-        if remove_date.find(",") > 0:
-            dates = remove_date.split(",", maxsplit=1)
-            for date in dates:
-                if dt_util.parse_date(date) is None:
-                    raise RemoveDateRangeError("Incorrect date in range")
-            continue
-        if dt_util.parse_date(remove_date) is None:
+        if (
+            not _is_valid_date_range(remove_date, RemoveDateRangeError)
+            and dt_util.parse_date(remove_date) is None
+        ):
             if obj_holidays.get_named(remove_date) == []:
                 raise RemoveDatesError("Incorrect date or name")
 
