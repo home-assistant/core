@@ -489,6 +489,8 @@ def test_isnumber(hass: HomeAssistant, value, expected) -> None:
         (MappingProxyType({"a": 1, "b": 2}), False),
         ("abc", False),
         (b"abc", False),
+        ((1, 2), False),
+        (("a", "b"), False),
     ],
 )
 def test_islist(hass: HomeAssistant, value, expected) -> None:
@@ -519,6 +521,8 @@ def test_islist(hass: HomeAssistant, value, expected) -> None:
         (MappingProxyType({"a": 1, "b": 2}), False),
         ("abc", False),
         (b"abc", False),
+        ((1, 2), False),
+        (("a", "b"), False),
     ],
 )
 def test_isset(hass: HomeAssistant, value, expected) -> None:
@@ -540,6 +544,40 @@ def test_isset(hass: HomeAssistant, value, expected) -> None:
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
+        ([1, 2], False),
+        (["a", "b"], False),
+        ({1, 2}, True),
+        ({"a": 1, "b": 2}, False),
+        ({1: "a", 2: "b"}, False),
+        (ReadOnlyDict({"a": 1, "b": 2}), False),
+        (MappingProxyType({"a": 1, "b": 2}), False),
+        ("abc", False),
+        (b"abc", False),
+        ((1, 2), True),
+        (("a", "b"), True),
+    ],
+)
+def test_istuple(hass: HomeAssistant, value, expected) -> None:
+    """Test is_tuple."""
+    assert (
+        template.Template("{{ is_tuple(value) }}", hass).async_render({"value": value})
+        == expected
+    )
+    assert (
+        template.Template("{{ value | is_tuple }}", hass).async_render({"value": value})
+        == expected
+    )
+    assert (
+        template.Template("{{ value is is_tuple }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
         ([1, 2], True),
         (["a", "b"], True),
         ({1, 2}, True),
@@ -549,6 +587,8 @@ def test_isset(hass: HomeAssistant, value, expected) -> None:
         (MappingProxyType({"a": 1, "b": 2}), True),
         ("abc", False),
         (b"abc", False),
+        ((1, 2), True),
+        (("a", "b"), True),
     ],
 )
 def test_isnonstringiterable(hass: HomeAssistant, value, expected) -> None:

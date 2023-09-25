@@ -1966,6 +1966,11 @@ def is_set(value):
     return isinstance(value, set)
 
 
+def is_tuple(value):
+    """Return whether a value is a tuple."""
+    return isinstance(value, tuple)
+
+
 def is_non_string_iterable(value):
     """Return whether a value is an iterable that's not a string."""
     return isinstance(value, Iterable) and not isinstance(
@@ -2375,6 +2380,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["is_number"] = is_number
         self.filters["is_list"] = is_list
         self.filters["is_set"] = is_set
+        self.filters["is_tuple"] = is_tuple
         self.filters["is_non_string_iterable"] = is_non_string_iterable
         self.filters["float"] = forgiving_float_filter
         self.filters["int"] = forgiving_int_filter
@@ -2409,6 +2415,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_number"] = is_number
         self.globals["is_list"] = is_list
         self.globals["is_set"] = is_set
+        self.globals["is_tuple"] = is_tuple
         self.globals["is_non_string_iterable"] = is_non_string_iterable
         self.globals["int"] = forgiving_int
         self.globals["pack"] = struct_pack
@@ -2420,6 +2427,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.tests["is_number"] = is_number
         self.tests["is_list"] = is_list
         self.tests["is_set"] = is_set
+        self.tests["is_tuple"] = is_tuple
         self.tests["is_non_string_iterable"] = is_non_string_iterable
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
