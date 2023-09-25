@@ -46,8 +46,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RensonCoordinator, RensonData
+from . import RensonData
 from .const import DOMAIN
+from .coordinator import RensonCoordinator
 from .entity import RensonEntity
 
 OPTIONS_MAPPING = {

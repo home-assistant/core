@@ -33,7 +33,7 @@ BINARY_SENSOR_KEYS = {"v1": "Status", "v2": "status"}
 
 
 async def test_entry_migration_v1_to_v2(hass: HomeAssistant) -> None:
-    """Test entry migratiion from version 1 to 2."""
+    """Test entry migration from version 1 to 2."""
 
     # Create mock config entry.
     config_entry_v1 = MockConfigEntry(

@@ -6,6 +6,7 @@ from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
 import os
+import re
 from typing import Any, NamedTuple
 
 import voluptuous as vol
@@ -149,10 +150,12 @@ SERVICE_BACKUP_PARTIAL = "backup_partial"
 SERVICE_RESTORE_FULL = "restore_full"
 SERVICE_RESTORE_PARTIAL = "restore_partial"
 
+VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
+
 
 def valid_addon(value: Any) -> str:
     """Validate value is a valid addon slug."""
-    value = cv.slug(value)
+    value = VALID_ADDON_SLUG(value)
 
     hass: HomeAssistant | None = None
     with suppress(HomeAssistantError):

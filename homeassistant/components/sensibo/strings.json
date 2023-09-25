@@ -127,6 +127,7 @@
               "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
               "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
               "medium_high": "Medium high",
+              "strong": "Strong",
               "quiet": "Quiet"
             }
           },
@@ -211,6 +212,7 @@
               "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
               "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
               "medium_high": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_high%]",
+              "strong": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::strong%]",
               "quiet": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::quiet%]"
             }
           },
@@ -347,6 +349,7 @@
           "fan_mode": {
             "state": {
               "quiet": "Quiet",
+              "strong": "Strong",
               "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
               "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
               "medium_high": "Medium high",

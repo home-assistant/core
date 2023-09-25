@@ -40,26 +40,6 @@ EXAMPLE_USER_INPUT = {
 }
 
 
-async def _test_exception_generates_error(
-    hass: HomeAssistant, exception: Exception, error: str
-) -> None:
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
-        side_effect=exception,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            EXAMPLE_USER_INPUT,
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": error}
-
-
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form and create an entry."""
     result = await hass.config_entries.flow.async_init(
@@ -69,8 +49,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.weatherkit.config_flow.WeatherKitFlowHandler._test_config",
-        return_value=None,
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        return_value=[DataSetType.CURRENT_WEATHER],
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -100,7 +80,21 @@ async def test_error_handling(
     hass: HomeAssistant, exception: Exception, expected_error: str
 ) -> None:
     """Test that we handle various exceptions and generate appropriate errors."""
-    await _test_exception_generates_error(hass, exception, expected_error)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            EXAMPLE_USER_INPUT,
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
 
 
 async def test_form_unsupported_location(hass: HomeAssistant) -> None:
