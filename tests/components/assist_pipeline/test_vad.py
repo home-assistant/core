@@ -4,11 +4,12 @@ from unittest.mock import patch
 
 from homeassistant.components.assist_pipeline.vad import (
     AudioBuffer,
+    VoiceActivityDetector,
     VoiceCommandSegmenter,
     chunk_samples,
 )
 
-_ONE_SECOND = 16000 * 2  # 16Khz 16-bit
+_ONE_SECOND = 1.0
 
 
 def test_silence() -> None:
@@ -16,7 +17,7 @@ def test_silence() -> None:
     segmenter = VoiceCommandSegmenter()
 
     # True return value indicates voice command has not finished
-    assert segmenter.process(bytes(_ONE_SECOND * 3))
+    assert segmenter.process(_ONE_SECOND * 3, False)
 
 
 def test_speech() -> None:
@@ -27,77 +28,74 @@ def test_speech() -> None:
         return sum(chunk) > 0
 
     segmenter = VoiceCommandSegmenter()
-    with patch.object(
-        segmenter,
-        "is_speech",
-        new=is_speech,
-    ):
-        # silence
-        assert segmenter.process(bytes(_ONE_SECOND))
 
-        # "speech"
-        assert segmenter.process(bytes([255] * _ONE_SECOND))
+    # silence
+    assert segmenter.process(_ONE_SECOND, False)
 
-        # silence
-        # False return value indicates voice command is finished
-        assert not segmenter.process(bytes(_ONE_SECOND))
+    # "speech"
+    assert segmenter.process(_ONE_SECOND, True)
+
+    # silence
+    # False return value indicates voice command is finished
+    assert not segmenter.process(_ONE_SECOND, False)
 
 
 def test_audio_buffer() -> None:
     """Test audio buffer wrapping."""
 
-    def is_speech(chunk):
-        """Disable VAD."""
-        return False
+    class DisabledVad(VoiceActivityDetector):
+        def is_speech(self, chunk):
+            return False
 
+        @property
+        def samples_per_chunk(self):
+            return 160  # 10 ms
+
+    vad = DisabledVad()
+    bytes_per_chunk = vad.samples_per_chunk * 2
+    vad_buffer = AudioBuffer(bytes_per_chunk)
     segmenter = VoiceCommandSegmenter()
-    with patch.object(
-        segmenter,
-        "is_speech",
-        new=is_speech,
-    ):
-        bytes_per_chunk = segmenter.vad_samples_per_chunk * 2
 
-        with patch.object(
-            segmenter, "_process_chunk", return_value=True
-        ) as mock_process:
-            # Partially fill audio buffer
-            half_chunk = bytes(it.islice(it.cycle(range(256)), bytes_per_chunk // 2))
-            segmenter.process(half_chunk)
+    with patch.object(vad, "is_speech", return_value=False) as mock_process:
+        # Partially fill audio buffer
+        half_chunk = bytes(it.islice(it.cycle(range(256)), bytes_per_chunk // 2))
+        segmenter.process_with_vad(half_chunk, vad, vad_buffer)
 
-            assert not mock_process.called
-            assert segmenter.audio_buffer == half_chunk
+        assert not mock_process.called
+        assert vad_buffer is not None
+        assert vad_buffer.bytes() == half_chunk
 
-            # Fill and wrap with 1/4 chunk left over
-            three_quarters_chunk = bytes(
-                it.islice(it.cycle(range(256)), int(0.75 * bytes_per_chunk))
-            )
-            segmenter.process(three_quarters_chunk)
+        # Fill and wrap with 1/4 chunk left over
+        three_quarters_chunk = bytes(
+            it.islice(it.cycle(range(256)), int(0.75 * bytes_per_chunk))
+        )
+        segmenter.process_with_vad(three_quarters_chunk, vad, vad_buffer)
 
-            assert mock_process.call_count == 1
-            assert (
-                segmenter.audio_buffer
-                == three_quarters_chunk[
-                    len(three_quarters_chunk) - (bytes_per_chunk // 4) :
-                ]
-            )
-            assert (
-                mock_process.call_args[0][0]
-                == half_chunk + three_quarters_chunk[: bytes_per_chunk // 2]
-            )
+        assert mock_process.call_count == 1
+        assert (
+            vad_buffer.bytes()
+            == three_quarters_chunk[
+                len(three_quarters_chunk) - (bytes_per_chunk // 4) :
+            ]
+        )
+        assert (
+            mock_process.call_args[0][0]
+            == half_chunk + three_quarters_chunk[: bytes_per_chunk // 2]
+        )
 
-            # Run 2 chunks through
-            segmenter.reset()
-            assert len(segmenter.audio_buffer) == 0
+        # Run 2 chunks through
+        segmenter.reset()
+        vad_buffer.clear()
+        assert len(vad_buffer) == 0
 
-            mock_process.reset_mock()
-            two_chunks = bytes(it.islice(it.cycle(range(256)), bytes_per_chunk * 2))
-            segmenter.process(two_chunks)
+        mock_process.reset_mock()
+        two_chunks = bytes(it.islice(it.cycle(range(256)), bytes_per_chunk * 2))
+        segmenter.process_with_vad(two_chunks, vad, vad_buffer)
 
-            assert mock_process.call_count == 2
-            assert len(segmenter.audio_buffer) == 0
-            assert mock_process.call_args_list[0][0][0] == two_chunks[:bytes_per_chunk]
-            assert mock_process.call_args_list[1][0][0] == two_chunks[bytes_per_chunk:]
+        assert mock_process.call_count == 2
+        assert len(vad_buffer) == 0
+        assert mock_process.call_args_list[0][0][0] == two_chunks[:bytes_per_chunk]
+        assert mock_process.call_args_list[1][0][0] == two_chunks[bytes_per_chunk:]
 
 
 def test_partial_chunk() -> None:

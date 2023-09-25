@@ -240,6 +240,8 @@ async def test_audio_pipeline_with_wake_word_no_timeout(
             "input": {
                 "sample_rate": 16000,
                 "timeout": 0,
+                "no_vad": True,
+                "no_chunking": True,
             },
         }
     )
