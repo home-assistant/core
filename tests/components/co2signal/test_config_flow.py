@@ -1,6 +1,6 @@
 """Test the CO2 Signal config flow."""
 from json import JSONDecodeError
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -132,16 +132,28 @@ async def test_form_country(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "err_code"),
+    ("name", "side_effect", "err_code"),
     [
-        (ValueError("Invalid authentication credentials"), "invalid_auth"),
-        (ValueError("API rate limit exceeded."), "api_ratelimit"),
-        (ValueError("Something else"), "unknown"),
-        (JSONDecodeError(msg="boom", doc="", pos=1), "unknown"),
-        (Exception("Boom"), "unknown"),
+        (
+            "invalid auth",
+            ValueError("Invalid authentication credentials"),
+            "invalid_auth",
+        ),
+        (
+            "rate limit exceeded",
+            ValueError("API rate limit exceeded."),
+            "api_ratelimit",
+        ),
+        ("unknown value error", ValueError("Something else"), "unknown"),
+        ("json decode error", JSONDecodeError(msg="boom", doc="", pos=1), "unknown"),
+        ("unknown error", Exception("Boom"), "unknown"),
+        ("error in json dict", Mock(return_value={"error": "boom"}), "unknown"),
+        ("status error", Mock(return_value={"status": "error"}), "unknown"),
     ],
 )
-async def test_form_error_handling(hass: HomeAssistant, side_effect, err_code) -> None:
+async def test_form_error_handling(
+    hass: HomeAssistant, name, side_effect, err_code
+) -> None:
     """Test we handle expected errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -180,47 +192,3 @@ async def test_form_error_handling(hass: HomeAssistant, side_effect, err_code) -
     assert result["data"] == {
         "api_key": "api_key",
     }
-
-
-async def test_form_data_contains_error_key(hass: HomeAssistant) -> None:
-    """Test we handle unexpected data."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "CO2Signal.get_latest",
-        return_value={"error": "boom"},
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "location": config_flow.TYPE_USE_HOME,
-                "api_key": "api_key",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_form_error_unexpected_data(hass: HomeAssistant) -> None:
-    """Test we handle unexpected data."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "CO2Signal.get_latest",
-        return_value={"status": "error"},
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "location": config_flow.TYPE_USE_HOME,
-                "api_key": "api_key",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
