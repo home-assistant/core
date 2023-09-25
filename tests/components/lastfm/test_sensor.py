@@ -55,7 +55,7 @@ async def test_sensors(
     user = request.getfixturevalue(fixture)
     await setup_integration(config_entry, user)
 
-    entity_id = "sensor.testaccount1"
+    entity_id = "sensor.lastfm_testaccount1"
 
     state = hass.states.get(entity_id)
 

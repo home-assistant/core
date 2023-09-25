@@ -277,7 +277,7 @@
     }),
     dict({
       'data': dict({
-        'engine': 'wake_word.test',
+        'entity_id': 'wake_word.test',
         'metadata': dict({
           'bit_rate': <AudioBitRates.BITRATE_16: 16>,
           'channel': <AudioChannels.CHANNEL_MONO: 1>,
@@ -316,6 +316,12 @@
         'timestamp': 0,
       }),
       'type': <PipelineEventType.STT_VAD_START: 'stt-vad-start'>,
+    }),
+    dict({
+      'data': dict({
+        'timestamp': 1500,
+      }),
+      'type': <PipelineEventType.STT_VAD_END: 'stt-vad-end'>,
     }),
     dict({
       'data': dict({

@@ -62,13 +62,8 @@ class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def __init__(self, coordinator, name, sensor: Input) -> None:
         """Set initializing values."""
         super().__init__(coordinator)
-        self._name = name
+        self._attr_name = name
         self._sensor = sensor
-
-    @property
-    def name(self):
-        """Return the sensor name."""
-        return self._name
 
     @property
     def is_on(self):

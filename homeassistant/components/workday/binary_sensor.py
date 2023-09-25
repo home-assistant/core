@@ -121,23 +121,25 @@ async def async_setup_entry(
     """Set up the Workday sensor."""
     add_holidays: list[DateLike] = entry.options[CONF_ADD_HOLIDAYS]
     remove_holidays: list[str] = entry.options[CONF_REMOVE_HOLIDAYS]
-    country: str = entry.options[CONF_COUNTRY]
+    country: str | None = entry.options.get(CONF_COUNTRY)
     days_offset: int = int(entry.options[CONF_OFFSET])
     excludes: list[str] = entry.options[CONF_EXCLUDES]
     province: str | None = entry.options.get(CONF_PROVINCE)
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
+
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
 
-    if country and country not in list_supported_countries():
-        LOGGER.error("There is no country %s", country)
-        return
-
-    if province and province not in list_supported_countries()[country]:
-        LOGGER.error("There is no subdivision %s in country %s", province, country)
-        return
-
-    obj_holidays: HolidayBase = country_holidays(country, subdiv=province, years=year)
+    if country:
+        cls: HolidayBase = country_holidays(country, subdiv=province, years=year)
+        obj_holidays: HolidayBase = country_holidays(
+            country,
+            subdiv=province,
+            years=year,
+            language=cls.default_language,
+        )
+    else:
+        obj_holidays = HolidayBase()
 
     # Add custom holidays
     try:

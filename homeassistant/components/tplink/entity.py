@@ -41,18 +41,14 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
         super().__init__(coordinator)
         self.device: SmartDevice = device
         self._attr_unique_id = self.device.device_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
-            identifiers={(DOMAIN, str(self.device.device_id))},
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
+            identifiers={(DOMAIN, str(device.device_id))},
             manufacturer="TP-Link",
-            model=self.device.model,
-            name=self.device.alias,
-            sw_version=self.device.hw_info["sw_ver"],
-            hw_version=self.device.hw_info["hw_ver"],
+            model=device.model,
+            name=device.alias,
+            sw_version=device.hw_info["sw_ver"],
+            hw_version=device.hw_info["hw_ver"],
         )
 
     @property

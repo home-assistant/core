@@ -1,4 +1,10 @@
 # serializer version: 1
+# name: test_detected_entity[None-test_ww]
+  None
+# ---
+# name: test_detected_entity[test_ww_2-test_ww_2]
+  None
+# ---
 # name: test_ws_detect
   dict({
     'event': dict({

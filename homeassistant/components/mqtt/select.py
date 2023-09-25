@@ -28,7 +28,12 @@ from .const import (
     CONF_STATE_TOPIC,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -36,7 +41,6 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,7 +119,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._optimistic = config[CONF_OPTIMISTIC]
+        self._attr_assumed_state = config[CONF_OPTIMISTIC]
         self._attr_options = config[CONF_OPTIONS]
 
         self._command_template = MqttCommandTemplate(
@@ -131,12 +135,12 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_current_option"})
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             payload = str(self._value_template(msg.payload))
             if payload.lower() == "none":
                 self._attr_current_option = None
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
 
             if payload not in self.options:
@@ -148,11 +152,10 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
                 )
                 return
             self._attr_current_option = payload
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
-            self._optimistic = True
+            self._attr_assumed_state = True
         else:
             self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
@@ -171,13 +174,15 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
-        if self._optimistic and (last_state := await self.async_get_last_state()):
+        if self._attr_assumed_state and (
+            last_state := await self.async_get_last_state()
+        ):
             self._attr_current_option = last_state.state
 
     async def async_select_option(self, option: str) -> None:
         """Update the current value."""
         payload = self._command_template(option)
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._attr_current_option = option
             self.async_write_ha_state()
 
@@ -188,8 +193,3 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
         )
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic

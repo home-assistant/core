@@ -58,7 +58,7 @@ async def test_text_only_pipeline(
     # run end
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] is None
+    assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -148,7 +148,7 @@ async def test_audio_pipeline(
     # run end
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] is None
+    assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -212,6 +212,12 @@ async def test_audio_pipeline_with_wake_word_timeout(
     # Time out error
     msg = await client.receive_json()
     assert msg["event"]["type"] == "error"
+    assert msg["event"]["data"] == snapshot
+    events.append(msg["event"])
+
+    # run end
+    msg = await client.receive_json()
+    assert msg["event"]["type"] == "run-end"
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
@@ -302,7 +308,7 @@ async def test_audio_pipeline_with_wake_word_no_timeout(
     # run end
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] is None
+    assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -331,7 +337,7 @@ async def test_audio_pipeline_no_wake_word_engine(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.wake_word.async_default_engine", return_value=None
+        "homeassistant.components.wake_word.async_default_entity", return_value=None
     ):
         await client.send_json_auto_id(
             {
@@ -361,7 +367,7 @@ async def test_audio_pipeline_no_wake_word_entity(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.wake_word.async_default_engine",
+        "homeassistant.components.wake_word.async_default_entity",
         return_value="wake_word.bad-entity-id",
     ), patch(
         "homeassistant.components.wake_word.async_get_wake_word_detection_entity",
@@ -426,6 +432,12 @@ async def test_intent_timeout(
         # intent
         msg = await client.receive_json()
         assert msg["event"]["type"] == "intent-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
+
+        # run-end
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-end"
         assert msg["event"]["data"] == snapshot
         events.append(msg["event"])
 
@@ -548,6 +560,12 @@ async def test_intent_failed(
         msg = await client.receive_json()
         assert msg["event"]["type"] == "error"
         assert msg["event"]["data"]["code"] == "intent-failed"
+        events.append(msg["event"])
+
+        # run end
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-end"
+        assert msg["event"]["data"] == snapshot
         events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -730,6 +748,12 @@ async def test_stt_stream_failed(
         assert msg["event"]["data"]["code"] == "stt-stream-failed"
         events.append(msg["event"])
 
+        # run end
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
+
     pipeline_data: PipelineData = hass.data[DOMAIN]
     pipeline_id = list(pipeline_data.pipeline_runs)[0]
     pipeline_run_id = list(pipeline_data.pipeline_runs[pipeline_id])[0]
@@ -790,6 +814,12 @@ async def test_tts_failed(
         msg = await client.receive_json()
         assert msg["event"]["type"] == "error"
         assert msg["event"]["data"]["code"] == "tts-failed"
+        events.append(msg["event"])
+
+        # run end
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-end"
+        assert msg["event"]["data"] == snapshot
         events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -906,6 +936,8 @@ async def test_add_pipeline(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()
@@ -921,6 +953,8 @@ async def test_add_pipeline(
         "tts_engine": "test_tts_engine",
         "tts_language": "test_language",
         "tts_voice": "Arnold Schwarzenegger",
+        "wake_word_entity": "wakeword_entity_1",
+        "wake_word_id": "wakeword_id_1",
     }
 
     assert len(pipeline_store.data) == 2
@@ -936,6 +970,8 @@ async def test_add_pipeline(
         tts_engine="test_tts_engine",
         tts_language="test_language",
         tts_voice="Arnold Schwarzenegger",
+        wake_word_entity="wakeword_entity_1",
+        wake_word_id="wakeword_id_1",
     )
 
     await client.send_json_auto_id(
@@ -970,6 +1006,8 @@ async def test_add_pipeline_missing_language(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()
@@ -988,6 +1026,8 @@ async def test_add_pipeline_missing_language(
             "tts_engine": "test_tts_engine",
             "tts_language": None,
             "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()
@@ -1015,6 +1055,8 @@ async def test_delete_pipeline(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()
@@ -1033,6 +1075,8 @@ async def test_delete_pipeline(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": "wakeword_entity_2",
+            "wake_word_id": "wakeword_id_2",
         }
     )
     msg = await client.receive_json()
@@ -1113,6 +1157,8 @@ async def test_get_pipeline(
         "tts_engine": "test",
         "tts_language": "en-US",
         "tts_voice": "james_earl_jones",
+        "wake_word_entity": None,
+        "wake_word_id": None,
     }
 
     await client.send_json_auto_id(
@@ -1140,6 +1186,8 @@ async def test_get_pipeline(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()
@@ -1166,6 +1214,8 @@ async def test_get_pipeline(
         "tts_engine": "test_tts_engine",
         "tts_language": "test_language",
         "tts_voice": "Arnold Schwarzenegger",
+        "wake_word_entity": "wakeword_entity_1",
+        "wake_word_id": "wakeword_id_1",
     }
 
 
@@ -1191,6 +1241,8 @@ async def test_list_pipelines(
                 "tts_engine": "test",
                 "tts_language": "en-US",
                 "tts_voice": "james_earl_jones",
+                "wake_word_entity": None,
+                "wake_word_id": None,
             }
         ],
         "preferred_pipeline": ANY,
@@ -1218,6 +1270,8 @@ async def test_update_pipeline(
             "tts_engine": "new_tts_engine",
             "tts_language": "new_tts_language",
             "tts_voice": "new_tts_voice",
+            "wake_word_entity": "new_wakeword_entity",
+            "wake_word_id": "new_wakeword_id",
         }
     )
     msg = await client.receive_json()
@@ -1239,6 +1293,8 @@ async def test_update_pipeline(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()
@@ -1259,6 +1315,8 @@ async def test_update_pipeline(
             "tts_engine": "new_tts_engine",
             "tts_language": "new_tts_language",
             "tts_voice": "new_tts_voice",
+            "wake_word_entity": "new_wakeword_entity",
+            "wake_word_id": "new_wakeword_id",
         }
     )
     msg = await client.receive_json()
@@ -1274,6 +1332,8 @@ async def test_update_pipeline(
         "tts_engine": "new_tts_engine",
         "tts_language": "new_tts_language",
         "tts_voice": "new_tts_voice",
+        "wake_word_entity": "new_wakeword_entity",
+        "wake_word_id": "new_wakeword_id",
     }
 
     assert len(pipeline_store.data) == 2
@@ -1289,6 +1349,8 @@ async def test_update_pipeline(
         tts_engine="new_tts_engine",
         tts_language="new_tts_language",
         tts_voice="new_tts_voice",
+        wake_word_entity="new_wakeword_entity",
+        wake_word_id="new_wakeword_id",
     )
 
     await client.send_json_auto_id(
@@ -1304,6 +1366,8 @@ async def test_update_pipeline(
             "tts_engine": None,
             "tts_language": None,
             "tts_voice": None,
+            "wake_word_entity": None,
+            "wake_word_id": None,
         }
     )
     msg = await client.receive_json()
@@ -1319,6 +1383,8 @@ async def test_update_pipeline(
         "tts_engine": None,
         "tts_language": None,
         "tts_voice": None,
+        "wake_word_entity": None,
+        "wake_word_id": None,
     }
 
     pipeline = pipeline_store.data[pipeline_id]
@@ -1333,6 +1399,8 @@ async def test_update_pipeline(
         tts_engine=None,
         tts_language=None,
         tts_voice=None,
+        wake_word_entity=None,
+        wake_word_id=None,
     )
 
 
@@ -1356,6 +1424,8 @@ async def test_set_preferred_pipeline(
             "tts_engine": "test_tts_engine",
             "tts_language": "test_language",
             "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         }
     )
     msg = await client.receive_json()
@@ -1460,7 +1530,7 @@ async def test_audio_pipeline_debug(
     # run end
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] is None
+    assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
     # Get the id of the pipeline
@@ -1603,3 +1673,29 @@ async def test_list_pipeline_languages(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"languages": ["en"]}
+
+
+async def test_list_pipeline_languages_with_aliases(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+) -> None:
+    """Test listing pipeline languages using aliases."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.conversation.async_get_conversation_languages",
+        return_value={"he", "nb"},
+    ), patch(
+        "homeassistant.components.stt.async_get_speech_to_text_languages",
+        return_value={"he", "no"},
+    ), patch(
+        "homeassistant.components.tts.async_get_text_to_speech_languages",
+        return_value={"iw", "nb"},
+    ):
+        await client.send_json_auto_id({"type": "assist_pipeline/language/list"})
+
+        # result
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {"languages": ["he", "nb"]}

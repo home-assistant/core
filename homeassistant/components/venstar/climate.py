@@ -107,6 +107,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
     _attr_fan_modes = [FAN_ON, FAN_AUTO]
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF, HVACMode.AUTO]
     _attr_precision = PRECISION_HALVES
+    _attr_name = None
 
     def __init__(
         self,
@@ -121,7 +122,6 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             HVACMode.AUTO: self._client.MODE_AUTO,
         }
         self._attr_unique_id = config.entry_id
-        self._attr_name = self._client.name
 
     @property
     def supported_features(self) -> ClimateEntityFeature:

@@ -801,8 +801,9 @@ async def test_zeroconf_flow_with_port_in_host(
     entry.add_to_hass(hass)
 
     # Try rediscovering same device, this time with port already in host
+    # This test needs to be refactored as the port is never in the host
+    # field of the zeroconf service info
     discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO)
-    discovery_info.host = f"{discovery_info.host}:{discovery_info.port}"
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )

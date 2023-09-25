@@ -79,7 +79,7 @@ VIDEO_OUTPUT = (
     "-ssrc {v_ssrc} -f rtp "
     "-srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params {v_srtp_key} "
     "srtp://{address}:{v_port}?rtcpport={v_port}&"
-    "localrtcpport={v_port}&pkt_size={v_pkt_size}"
+    "localrtpport={v_port}&pkt_size={v_pkt_size}"
 )
 
 AUDIO_OUTPUT = (
@@ -92,7 +92,7 @@ AUDIO_OUTPUT = (
     "-ssrc {a_ssrc} -f rtp "
     "-srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params {a_srtp_key} "
     "srtp://{address}:{a_port}?rtcpport={a_port}&"
-    "localrtcpport={a_port}&pkt_size={a_pkt_size}"
+    "localrtpport={a_port}&pkt_size={a_pkt_size}"
 )
 
 SLOW_RESOLUTIONS = [

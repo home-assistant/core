@@ -6,7 +6,12 @@ from collections.abc import AsyncGenerator, AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
+from pathlib import Path
+from queue import Queue
+from threading import Thread
+import time
 from typing import Any, cast
+import wave
 
 import voluptuous as vol
 
@@ -39,7 +44,7 @@ from homeassistant.util import (
 )
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
-from .const import DOMAIN
+from .const import DATA_CONFIG, DOMAIN
 from .error import (
     IntentRecognitionError,
     PipelineError,
@@ -49,12 +54,14 @@ from .error import (
     WakeWordDetectionError,
     WakeWordTimeoutError,
 )
+from .ring_buffer import RingBuffer
 from .vad import VoiceActivityTimeout, VoiceCommandSegmenter
 
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = f"{DOMAIN}.pipelines"
 STORAGE_VERSION = 1
+STORAGE_VERSION_MINOR = 2
 
 ENGINE_LANGUAGE_PAIRS = (
     ("stt_engine", "stt_language"),
@@ -80,6 +87,8 @@ PIPELINE_FIELDS = {
     vol.Required("tts_engine"): vol.Any(str, None),
     vol.Required("tts_language"): vol.Any(str, None),
     vol.Required("tts_voice"): vol.Any(str, None),
+    vol.Required("wake_word_entity"): vol.Any(str, None),
+    vol.Required("wake_word_id"): vol.Any(str, None),
 }
 
 STORED_PIPELINE_RUNS = 10
@@ -105,6 +114,8 @@ async def _async_resolve_default_pipeline_settings(
     tts_engine = None
     tts_language = None
     tts_voice = None
+    wake_word_entity = None
+    wake_word_id = None
 
     # Find a matching language supported by the Home Assistant conversation agent
     conversation_languages = language_util.matches(
@@ -182,6 +193,8 @@ async def _async_resolve_default_pipeline_settings(
         "tts_engine": tts_engine_id,
         "tts_language": tts_language,
         "tts_voice": tts_voice,
+        "wake_word_entity": wake_word_entity,
+        "wake_word_id": wake_word_id,
     }
 
 
@@ -289,8 +302,32 @@ class Pipeline:
     tts_engine: str | None
     tts_language: str | None
     tts_voice: str | None
+    wake_word_entity: str | None
+    wake_word_id: str | None
 
     id: str = field(default_factory=ulid_util.ulid)
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> Pipeline:
+        """Create an instance from a JSON serialization.
+
+        This function was added in HA Core 2023.10, previous versions will raise
+        if there are unexpected items in the serialized data.
+        """
+        return cls(
+            conversation_engine=data["conversation_engine"],
+            conversation_language=data["conversation_language"],
+            id=data["id"],
+            language=data["language"],
+            name=data["name"],
+            stt_engine=data["stt_engine"],
+            stt_language=data["stt_language"],
+            tts_engine=data["tts_engine"],
+            tts_language=data["tts_language"],
+            tts_voice=data["tts_voice"],
+            wake_word_entity=data["wake_word_entity"],
+            wake_word_id=data["wake_word_id"],
+        )
 
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
@@ -305,6 +342,8 @@ class Pipeline:
             "tts_engine": self.tts_engine,
             "tts_language": self.tts_language,
             "tts_voice": self.tts_voice,
+            "wake_word_entity": self.wake_word_entity,
+            "wake_word_id": self.wake_word_id,
         }
 
 
@@ -374,8 +413,14 @@ class PipelineRun:
     stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False)
     tts_engine: str = field(init=False)
     tts_options: dict | None = field(init=False, default=None)
-    wake_word_engine: str = field(init=False)
-    wake_word_provider: wake_word.WakeWordDetectionEntity = field(init=False)
+    wake_word_entity_id: str = field(init=False)
+    wake_word_entity: wake_word.WakeWordDetectionEntity = field(init=False)
+
+    debug_recording_thread: Thread | None = None
+    """Thread that records audio to debug_recording_dir"""
+
+    debug_recording_queue: Queue[str | bytes | None] | None = None
+    """Queue to communicate with debug recording thread"""
 
     def __post_init__(self) -> None:
         """Set language for pipeline."""
@@ -404,8 +449,10 @@ class PipelineRun:
             return
         pipeline_data.pipeline_runs[self.pipeline.id][self.id].events.append(event)
 
-    def start(self) -> None:
+    def start(self, device_id: str | None) -> None:
         """Emit run start event."""
+        self._start_debug_recording_thread(device_id)
+
         data = {
             "pipeline": self.pipeline.id,
             "language": self.language,
@@ -415,8 +462,12 @@ class PipelineRun:
 
         self.process_event(PipelineEvent(PipelineEventType.RUN_START, data))
 
-    def end(self) -> None:
+    async def end(self) -> None:
         """Emit run end event."""
+        # Stop the recording thread before emitting run-end.
+        # This ensures that files are properly closed if the event handler reads them.
+        await self._stop_debug_recording_thread()
+
         self.process_event(
             PipelineEvent(
                 PipelineEventType.RUN_END,
@@ -425,30 +476,31 @@ class PipelineRun:
 
     async def prepare_wake_word_detection(self) -> None:
         """Prepare wake-word-detection."""
-        # Need to add to pipeline store
-        engine = wake_word.async_default_engine(self.hass)
-        if engine is None:
+        entity_id = self.pipeline.wake_word_entity or wake_word.async_default_entity(
+            self.hass
+        )
+        if entity_id is None:
             raise WakeWordDetectionError(
                 code="wake-engine-missing",
                 message="No wake word engine",
             )
 
-        wake_word_provider = wake_word.async_get_wake_word_detection_entity(
-            self.hass, engine
+        wake_word_entity = wake_word.async_get_wake_word_detection_entity(
+            self.hass, entity_id
         )
-        if wake_word_provider is None:
+        if wake_word_entity is None:
             raise WakeWordDetectionError(
                 code="wake-provider-missing",
-                message=f"No wake-word-detection provider for: {engine}",
+                message=f"No wake-word-detection provider for: {entity_id}",
             )
 
-        self.wake_word_engine = engine
-        self.wake_word_provider = wake_word_provider
+        self.wake_word_entity_id = entity_id
+        self.wake_word_entity = wake_word_entity
 
     async def wake_word_detection(
         self,
         stream: AsyncIterable[bytes],
-        audio_buffer: list[bytes],
+        audio_chunks_for_stt: list[bytes],
     ) -> wake_word.DetectionResult | None:
         """Run wake-word-detection portion of pipeline. Returns detection result."""
         metadata_dict = asdict(
@@ -469,11 +521,14 @@ class PipelineRun:
             PipelineEvent(
                 PipelineEventType.WAKE_WORD_START,
                 {
-                    "engine": self.wake_word_engine,
+                    "entity_id": self.wake_word_entity_id,
                     "metadata": metadata_dict,
                 },
             )
         )
+
+        if self.debug_recording_queue is not None:
+            self.debug_recording_queue.put_nowait(f"00_wake-{self.wake_word_entity_id}")
 
         wake_word_settings = self.wake_word_settings or WakeWordSettings()
 
@@ -484,46 +539,30 @@ class PipelineRun:
             # Use VAD to determine timeout
             wake_word_vad = VoiceActivityTimeout(wake_word_settings.timeout)
 
-        # Audio chunk buffer.
-        audio_bytes_to_buffer = int(
-            wake_word_settings.audio_seconds_to_buffer * 16000 * 2
+        # Audio chunk buffer. This audio will be forwarded to speech-to-text
+        # after wake-word-detection.
+        num_audio_bytes_to_buffer = int(
+            wake_word_settings.audio_seconds_to_buffer * 16000 * 2  # 16-bit @ 16Khz
         )
-        audio_ring_buffer = b""
-
-        async def timestamped_stream() -> AsyncIterable[tuple[bytes, int]]:
-            """Yield audio with timestamps (milliseconds since start of stream)."""
-            nonlocal audio_ring_buffer
-
-            timestamp_ms = 0
-            async for chunk in stream:
-                yield chunk, timestamp_ms
-                timestamp_ms += (len(chunk) // 2) // 16  # milliseconds @ 16Khz
-
-                # Keeping audio right before wake word detection allows the
-                # voice command to be spoken immediately after the wake word.
-                if audio_bytes_to_buffer > 0:
-                    audio_ring_buffer += chunk
-                    if len(audio_ring_buffer) > audio_bytes_to_buffer:
-                        # A proper ring buffer would be far more efficient
-                        audio_ring_buffer = audio_ring_buffer[
-                            len(audio_ring_buffer) - audio_bytes_to_buffer :
-                        ]
-
-                if (wake_word_vad is not None) and (not wake_word_vad.process(chunk)):
-                    raise WakeWordTimeoutError(
-                        code="wake-word-timeout", message="Wake word was not detected"
-                    )
+        stt_audio_buffer: RingBuffer | None = None
+        if num_audio_bytes_to_buffer > 0:
+            stt_audio_buffer = RingBuffer(num_audio_bytes_to_buffer)
 
         try:
             # Detect wake word(s)
-            result = await self.wake_word_provider.async_process_audio_stream(
-                timestamped_stream()
+            result = await self.wake_word_entity.async_process_audio_stream(
+                self._wake_word_audio_stream(
+                    audio_stream=stream,
+                    stt_audio_buffer=stt_audio_buffer,
+                    wake_word_vad=wake_word_vad,
+                ),
+                self.pipeline.wake_word_id,
             )
 
-            if audio_ring_buffer:
+            if stt_audio_buffer is not None:
                 # All audio kept from right before the wake word was detected as
                 # a single chunk.
-                audio_buffer.append(audio_ring_buffer)
+                audio_chunks_for_stt.append(stt_audio_buffer.getvalue())
         except WakeWordTimeoutError:
             _LOGGER.debug("Timeout during wake word detection")
             raise
@@ -540,9 +579,14 @@ class PipelineRun:
             wake_word_output: dict[str, Any] = {}
         else:
             if result.queued_audio:
-                # Add audio that was pending at detection
+                # Add audio that was pending at detection.
+                #
+                # Because detection occurs *after* the wake word was actually
+                # spoken, we need to make sure pending audio is forwarded to
+                # speech-to-text so the user does not have to pause before
+                # speaking the voice command.
                 for chunk_ts in result.queued_audio:
-                    audio_buffer.append(chunk_ts[0])
+                    audio_chunks_for_stt.append(chunk_ts[0])
 
             wake_word_output = asdict(result)
 
@@ -557,6 +601,39 @@ class PipelineRun:
         )
 
         return result
+
+    async def _wake_word_audio_stream(
+        self,
+        audio_stream: AsyncIterable[bytes],
+        stt_audio_buffer: RingBuffer | None,
+        wake_word_vad: VoiceActivityTimeout | None,
+        sample_rate: int = 16000,
+        sample_width: int = 2,
+    ) -> AsyncIterable[tuple[bytes, int]]:
+        """Yield audio chunks with timestamps (milliseconds since start of stream).
+
+        Adds audio to a ring buffer that will be forwarded to speech-to-text after
+        detection. Times out if VAD detects enough silence.
+        """
+        ms_per_sample = sample_rate // 1000
+        timestamp_ms = 0
+        async for chunk in audio_stream:
+            if self.debug_recording_queue is not None:
+                self.debug_recording_queue.put_nowait(chunk)
+
+            yield chunk, timestamp_ms
+            timestamp_ms += (len(chunk) // sample_width) // ms_per_sample
+
+            # Wake-word-detection occurs *after* the wake word was actually
+            # spoken. Keeping audio right before detection allows the voice
+            # command to be spoken immediately after the wake word.
+            if stt_audio_buffer is not None:
+                stt_audio_buffer.put(chunk)
+
+            if (wake_word_vad is not None) and (not wake_word_vad.process(chunk)):
+                raise WakeWordTimeoutError(
+                    code="wake-word-timeout", message="Wake word was not detected"
+                )
 
     async def prepare_speech_to_text(self, metadata: stt.SpeechMetadata) -> None:
         """Prepare speech-to-text."""
@@ -607,42 +684,17 @@ class PipelineRun:
             )
         )
 
+        if self.debug_recording_queue is not None:
+            # New recording
+            self.debug_recording_queue.put_nowait(f"01_stt-{engine}")
+
         try:
-            segmenter = VoiceCommandSegmenter()
-
-            async def segment_stream(
-                stream: AsyncIterable[bytes],
-            ) -> AsyncGenerator[bytes, None]:
-                """Stop stream when voice command is finished."""
-                sent_vad_start = False
-                timestamp_ms = 0
-                async for chunk in stream:
-                    if not segmenter.process(chunk):
-                        # Silence detected at the end of voice command
-                        self.process_event(
-                            PipelineEvent(
-                                PipelineEventType.STT_VAD_END,
-                                {"timestamp": timestamp_ms},
-                            )
-                        )
-                        break
-
-                    if segmenter.in_command and (not sent_vad_start):
-                        # Speech detected at start of voice command
-                        self.process_event(
-                            PipelineEvent(
-                                PipelineEventType.STT_VAD_START,
-                                {"timestamp": timestamp_ms},
-                            )
-                        )
-                        sent_vad_start = True
-
-                    yield chunk
-                    timestamp_ms += (len(chunk) // 2) // 16  # milliseconds @ 16Khz
-
             # Transcribe audio stream
             result = await self.stt_provider.async_process_audio_stream(
-                metadata, segment_stream(stream)
+                metadata,
+                self._speech_to_text_stream(
+                    audio_stream=stream, stt_vad=VoiceCommandSegmenter()
+                ),
             )
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during speech-to-text")
@@ -676,6 +728,45 @@ class PipelineRun:
         )
 
         return result.text
+
+    async def _speech_to_text_stream(
+        self,
+        audio_stream: AsyncIterable[bytes],
+        stt_vad: VoiceCommandSegmenter | None,
+        sample_rate: int = 16000,
+        sample_width: int = 2,
+    ) -> AsyncGenerator[bytes, None]:
+        """Yield audio chunks until VAD detects silence or speech-to-text completes."""
+        ms_per_sample = sample_rate // 1000
+        sent_vad_start = False
+        timestamp_ms = 0
+        async for chunk in audio_stream:
+            if self.debug_recording_queue is not None:
+                self.debug_recording_queue.put_nowait(chunk)
+
+            if stt_vad is not None:
+                if not stt_vad.process(chunk):
+                    # Silence detected at the end of voice command
+                    self.process_event(
+                        PipelineEvent(
+                            PipelineEventType.STT_VAD_END,
+                            {"timestamp": timestamp_ms},
+                        )
+                    )
+                    break
+
+                if stt_vad.in_command and (not sent_vad_start):
+                    # Speech detected at start of voice command
+                    self.process_event(
+                        PipelineEvent(
+                            PipelineEventType.STT_VAD_START,
+                            {"timestamp": timestamp_ms},
+                        )
+                    )
+                    sent_vad_start = True
+
+            yield chunk
+            timestamp_ms += (len(chunk) // sample_width) // ms_per_sample
 
     async def prepare_recognize_intent(self) -> None:
         """Prepare recognizing an intent."""
@@ -834,6 +925,96 @@ class PipelineRun:
 
         return tts_media.url
 
+    def _start_debug_recording_thread(self, device_id: str | None) -> None:
+        """Start thread to record wake/stt audio if debug_recording_dir is set."""
+        if self.debug_recording_thread is not None:
+            # Already started
+            return
+
+        # Directory to save audio for each pipeline run.
+        # Configured in YAML for assist_pipeline.
+        if debug_recording_dir := self.hass.data[DATA_CONFIG].get(
+            "debug_recording_dir"
+        ):
+            if device_id is None:
+                # <debug_recording_dir>/<pipeline.name>/<run.id>
+                run_recording_dir = (
+                    Path(debug_recording_dir)
+                    / self.pipeline.name
+                    / str(time.monotonic_ns())
+                )
+            else:
+                # <debug_recording_dir>/<device_id>/<pipeline.name>/<run.id>
+                run_recording_dir = (
+                    Path(debug_recording_dir)
+                    / device_id
+                    / self.pipeline.name
+                    / str(time.monotonic_ns())
+                )
+
+            self.debug_recording_queue = Queue()
+            self.debug_recording_thread = Thread(
+                target=_pipeline_debug_recording_thread_proc,
+                args=(run_recording_dir, self.debug_recording_queue),
+                daemon=True,
+            )
+            self.debug_recording_thread.start()
+
+    async def _stop_debug_recording_thread(self) -> None:
+        """Stop recording thread."""
+        if (self.debug_recording_thread is None) or (
+            self.debug_recording_queue is None
+        ):
+            # Not running
+            return
+
+        # Signal thread to stop gracefully
+        self.debug_recording_queue.put(None)
+
+        # Wait until the thread has finished to ensure that files are fully written
+        await self.hass.async_add_executor_job(self.debug_recording_thread.join)
+
+        self.debug_recording_queue = None
+        self.debug_recording_thread = None
+
+
+def _pipeline_debug_recording_thread_proc(
+    run_recording_dir: Path,
+    queue: Queue[str | bytes | None],
+    message_timeout: float = 5,
+) -> None:
+    wav_writer: wave.Wave_write | None = None
+
+    try:
+        _LOGGER.debug("Saving wake/stt audio to %s", run_recording_dir)
+        run_recording_dir.mkdir(parents=True, exist_ok=True)
+
+        while True:
+            message = queue.get(timeout=message_timeout)
+            if message is None:
+                # Stop signal
+                break
+
+            if isinstance(message, str):
+                # New WAV file name
+                if wav_writer is not None:
+                    wav_writer.close()
+
+                wav_path = run_recording_dir / f"{message}.wav"
+                wav_writer = wave.open(str(wav_path), "wb")
+                wav_writer.setframerate(16000)
+                wav_writer.setsampwidth(2)
+                wav_writer.setnchannels(1)
+            elif isinstance(message, bytes):
+                # Chunk of 16-bit mono audio at 16Khz
+                if wav_writer is not None:
+                    wav_writer.writeframes(message)
+    except Exception:  # pylint: disable=broad-exception-caught
+        _LOGGER.exception("Unexpected error in debug recording thread")
+    finally:
+        if wav_writer is not None:
+            wav_writer.close()
+
 
 @dataclass
 class PipelineInput:
@@ -859,19 +1040,20 @@ class PipelineInput:
 
     async def execute(self) -> None:
         """Run pipeline."""
-        self.run.start()
+        self.run.start(device_id=self.device_id)
         current_stage: PipelineStage | None = self.run.start_stage
-        audio_buffer: list[bytes] = []
+        stt_audio_buffer: list[bytes] = []
 
         try:
             if current_stage == PipelineStage.WAKE_WORD:
+                # wake-word-detection
                 assert self.stt_stream is not None
                 detect_result = await self.run.wake_word_detection(
-                    self.stt_stream, audio_buffer
+                    self.stt_stream, stt_audio_buffer
                 )
                 if detect_result is None:
                     # No wake word. Abort the rest of the pipeline.
-                    self.run.end()
+                    await self.run.end()
                     return
 
                 current_stage = PipelineStage.STT
@@ -882,19 +1064,22 @@ class PipelineInput:
                 assert self.stt_metadata is not None
                 assert self.stt_stream is not None
 
-                if audio_buffer:
+                stt_stream = self.stt_stream
 
-                    async def buffered_stream() -> AsyncGenerator[bytes, None]:
-                        for chunk in audio_buffer:
+                if stt_audio_buffer:
+                    # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
+                    # This is basically an async itertools.chain.
+                    async def buffer_then_audio_stream() -> AsyncGenerator[bytes, None]:
+                        # Buffered audio
+                        for chunk in stt_audio_buffer:
                             yield chunk
 
+                        # Streamed audio
                         assert self.stt_stream is not None
                         async for chunk in self.stt_stream:
                             yield chunk
 
-                    stt_stream = cast(AsyncIterable[bytes], buffered_stream())
-                else:
-                    stt_stream = self.stt_stream
+                    stt_stream = buffer_then_audio_stream()
 
                 intent_input = await self.run.speech_to_text(
                     self.stt_metadata,
@@ -906,6 +1091,7 @@ class PipelineInput:
                 tts_input = self.tts_input
 
                 if current_stage == PipelineStage.INTENT:
+                    # intent-recognition
                     assert intent_input is not None
                     tts_input = await self.run.recognize_intent(
                         intent_input,
@@ -915,6 +1101,7 @@ class PipelineInput:
                     current_stage = PipelineStage.TTS
 
                 if self.run.end_stage != PipelineStage.INTENT:
+                    # text-to-speech
                     if current_stage == PipelineStage.TTS:
                         assert tts_input is not None
                         await self.run.text_to_speech(tts_input)
@@ -926,9 +1113,10 @@ class PipelineInput:
                     {"code": err.code, "message": err.message},
                 )
             )
-            return
-
-        self.run.end()
+        finally:
+            # Always end the run since it needs to shut down the debug recording
+            # thread, etc.
+            await self.run.end()
 
     async def validate(self) -> None:
         """Validate pipeline input against start stage."""
@@ -1053,7 +1241,7 @@ class PipelineStorageCollection(
 
     def _deserialize_item(self, data: dict) -> Pipeline:
         """Create an item from its serialized representation."""
-        return Pipeline(**data)
+        return Pipeline.from_json(data)
 
     def _serialize_item(self, item_id: str, item: Pipeline) -> dict:
         """Return the serialized representation of an item for storing."""
@@ -1210,11 +1398,35 @@ class PipelineRunDebug:
     )
 
 
+class PipelineStore(Store[SerializedPipelineStorageCollection]):
+    """Store entity registry data."""
+
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: SerializedPipelineStorageCollection,
+    ) -> SerializedPipelineStorageCollection:
+        """Migrate to the new version."""
+        if old_major_version == 1 and old_minor_version < 2:
+            # Version 1.2 adds wake word configuration
+            for pipeline in old_data["items"]:
+                # Populate keys which were introduced before version 1.2
+                pipeline.setdefault("wake_word_entity", None)
+                pipeline.setdefault("wake_word_id", None)
+
+        if old_major_version > 1:
+            raise NotImplementedError
+        return old_data
+
+
 @singleton(DOMAIN)
 async def async_setup_pipeline_store(hass: HomeAssistant) -> PipelineData:
     """Set up the pipeline storage collection."""
     pipeline_store = PipelineStorageCollection(
-        Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        PipelineStore(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+        )
     )
     await pipeline_store.async_load()
     PipelineStorageCollectionWebsocket(

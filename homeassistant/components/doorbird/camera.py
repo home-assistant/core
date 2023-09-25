@@ -87,7 +87,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         self._last_update = datetime.datetime.min
         self._attr_unique_id = f"{self._mac_addr}_{camera_id}"
 
-    async def stream_source(self):
+    async def stream_source(self) -> str | None:
         """Return the stream source."""
         return self._stream_url
 
@@ -128,5 +128,6 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         """Unsubscribe from events."""
         event_to_entity_id = self._door_bird_data.event_entity_ids
         for event in self._door_station.events:
-            del event_to_entity_id[event]
+            # If the clear api was called, the events may not be in the dict
+            event_to_entity_id.pop(event, None)
         await super().async_will_remove_from_hass()
