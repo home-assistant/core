@@ -9,6 +9,7 @@ FLOWS = {
         "group",
         "integration",
         "min_max",
+        "random",
         "switch_as_x",
         "template",
         "threshold",
