@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from energyzero import EnergyZero
+
+from energyzero import Electricity, EnergyZero, Gas
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -29,8 +30,13 @@ def _get_date(date_input: str) -> date | datetime:
 
     if value := dt_util.parse_datetime(date_input):
         return value
-    else:
-        raise ValueError(f"Invalid date: {date_input}")
+
+    raise ValueError(f"Invalid date: {date_input}")
+
+
+def __serialize_prices(prices: Electricity | Gas) -> ServiceResponse:
+    """Serialize prices."""
+    return {str(timestamp): price for timestamp, price in prices.prices.items()}
 
 
 async def _get_prices(hass: HomeAssistant, call: ServiceCall) -> ServiceResponse:
@@ -46,9 +52,13 @@ async def _get_prices(hass: HomeAssistant, call: ServiceCall) -> ServiceResponse
     end = _get_date(call.data.get("end", ""))
 
     if price_type == "energy":
-        return (await energyzero.energy_prices(start_date=start, end_date=end)).prices
+        return __serialize_prices(
+            await energyzero.energy_prices(start_date=start, end_date=end)
+        )
 
-    return (await energyzero.gas_prices(start_date=start, end_date=end)).prices
+    return __serialize_prices(
+        await energyzero.gas_prices(start_date=start, end_date=end)
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
