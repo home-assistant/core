@@ -71,17 +71,17 @@ def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> N
 
     async def set_timer_level(call: ServiceCall) -> None:
         """Set timer level."""
-        level_string = call.data["timer_level"]
-        time = call.data.get["time"]
-        level = Level[level_string.upper()]
+        level_string = call.data.get("timer_level")
+        time = call.data.get("time")
+        level = Level[str(level_string).upper()]
 
         await hass.async_add_executor_job(renson_api.set_timer_level, level, time)
 
     async def set_breeze(call: ServiceCall) -> None:
         """Configure breeze feature."""
-        level = call.data.get["breeze_level"]
-        temperature = call.data.get["temperature"]
-        activated = call.data.get["activate"]
+        level = call.data.get("breeze_level")
+        temperature = call.data.get("temperature")
+        activated = call.data.get("activate")
 
         await hass.async_add_executor_job(
             renson_api.set_breeze, level, temperature, activated
@@ -89,20 +89,20 @@ def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> N
 
     async def set_day_night_time(call: ServiceCall) -> None:
         """Configure day night times."""
-        day = call.data.get["day"]
-        night = call.data.get["night"]
+        day = call.data.get("day")
+        night = call.data.get("night")
 
         await hass.async_add_executor_job(renson_api.set_time, day, night)
 
     async def set_pollution_settings(call: ServiceCall) -> None:
         """Configure pollutions settings."""
-        day = call.data.get["day_pollution_level"]
-        night = call.data.get["night_pollution_level"]
-        humidity_control = call.data.get("humidity_control", "")
-        airquality_control = call.data.get("airquality_control", "")
-        co2_control = call.data.get("co2_control", "")
-        co2_threshold = call.data.get("co2_threshold", 0)
-        co2_hysteresis = call.data.get("co2_hysteresis", 0)
+        day = call.data.get("day_pollution_level")
+        night = call.data.get("night_pollution_level")
+        humidity_control = call.data.get("humidity_control")
+        airquality_control = call.data.get("airquality_control")
+        co2_control = call.data.get("co2_control")
+        co2_threshold = call.data.get("co2_threshold")
+        co2_hysteresis = call.data.get("co2_hysteresis")
 
         await renson_api.set_pollution(
             day,

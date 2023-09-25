@@ -10,7 +10,7 @@ SET_TIMER_LEVEL_SCHEMA = vol.Schema(
         vol.Required("timer_level"): vol.In(
             ["level1", "level2", "level3", "level4", "holiday", "breeze"]
         ),
-        vol.Required("time"): cv.time,
+        vol.Required("time"): cv.positive_int,
     }
 )
 
