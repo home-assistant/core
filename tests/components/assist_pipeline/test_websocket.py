@@ -337,7 +337,7 @@ async def test_audio_pipeline_no_wake_word_engine(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.wake_word.async_default_engine", return_value=None
+        "homeassistant.components.wake_word.async_default_entity", return_value=None
     ):
         await client.send_json_auto_id(
             {
@@ -367,7 +367,7 @@ async def test_audio_pipeline_no_wake_word_entity(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.wake_word.async_default_engine",
+        "homeassistant.components.wake_word.async_default_entity",
         return_value="wake_word.bad-entity-id",
     ), patch(
         "homeassistant.components.wake_word.async_get_wake_word_detection_entity",

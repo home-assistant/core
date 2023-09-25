@@ -19,7 +19,7 @@ from .const import DOMAIN
 from .models import DetectionResult, WakeWord
 
 __all__ = [
-    "async_default_engine",
+    "async_default_entity",
     "async_get_wake_word_detection_entity",
     "DetectionResult",
     "DOMAIN",
@@ -33,8 +33,8 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @callback
-def async_default_engine(hass: HomeAssistant) -> str | None:
-    """Return the domain or entity id of the default engine."""
+def async_default_entity(hass: HomeAssistant) -> str | None:
+    """Return the entity id of the default engine."""
     return next(iter(hass.states.async_entity_ids(DOMAIN)), None)
 
 
@@ -96,7 +96,7 @@ class WakeWordDetectionEntity(RestoreEntity):
         """
 
     async def async_process_audio_stream(
-        self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str | None = None
+        self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str | None
     ) -> DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps.
 

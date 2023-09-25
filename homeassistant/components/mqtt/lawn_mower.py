@@ -32,7 +32,12 @@ from .const import (
     DEFAULT_RETAIN,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -40,7 +45,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -168,6 +173,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_activity"})
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             payload = str(self._value_template(msg.payload))
@@ -180,7 +186,6 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
                 return
             if payload.lower() == "none":
                 self._attr_activity = None
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
 
             try:
@@ -193,7 +198,6 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
                     [option.value for option in LawnMowerActivity],
                 )
                 return
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_ACTIVITY_STATE_TOPIC) is None:
             # Force into optimistic mode.
