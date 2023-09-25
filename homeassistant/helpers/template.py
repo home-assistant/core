@@ -1971,6 +1971,16 @@ def is_tuple(value):
     return isinstance(value, tuple)
 
 
+def _set(value):
+    """Convert value to set."""
+    return set(value)
+
+
+def _tuple(value):
+    """Convert value to tuple."""
+    return tuple(value)
+
+
 def is_datetime(value):
     """Return whether a value is a datetime."""
     return isinstance(value, datetime)
@@ -2386,6 +2396,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["is_list"] = is_list
         self.filters["is_set"] = is_set
         self.filters["is_tuple"] = is_tuple
+        self.filters["set"] = _set
+        self.filters["tuple"] = _tuple
         self.filters["is_datetime"] = is_datetime
         self.filters["is_non_string_iterable"] = is_non_string_iterable
         self.filters["float"] = forgiving_float_filter
@@ -2422,6 +2434,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_list"] = is_list
         self.globals["is_set"] = is_set
         self.globals["is_tuple"] = is_tuple
+        self.globals["set"] = _set
+        self.globals["tuple"] = _tuple
         self.globals["is_datetime"] = is_datetime
         self.globals["is_non_string_iterable"] = is_non_string_iterable
         self.globals["int"] = forgiving_int

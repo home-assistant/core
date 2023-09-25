@@ -572,6 +572,69 @@ def test_istuple(hass: HomeAssistant, value, expected) -> None:
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
+        ([1, 2], {1, 2}),
+        ({1, 2}, {1, 2}),
+        ({"a": 1, "b": 2}, {"a", "b"}),
+        (ReadOnlyDict({"a": 1, "b": 2}), {"a", "b"}),
+        (MappingProxyType({"a": 1, "b": 2}), {"a", "b"}),
+        ("abc", {"a", "b", "c"}),
+        (b"abc", {97, 98, 99}),
+        ((1, 2), {1, 2}),
+    ],
+)
+def test_set(hass: HomeAssistant, value, expected) -> None:
+    """Test set function/filter."""
+    assert (
+        template.Template("{{ set(value) }}", hass).async_render({"value": value})
+        == expected
+    )
+    assert (
+        template.Template("{{ value | set }}", hass).async_render({"value": value})
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ([1, 2], (1, 2)),
+        ({1, 2}, (1, 2)),
+        ({"a": 1, "b": 2}, ("a", "b")),
+        (ReadOnlyDict({"a": 1, "b": 2}), ("a", "b")),
+        (MappingProxyType({"a": 1, "b": 2}), ("a", "b")),
+        ("abc", ("a", "b", "c")),
+        (b"abc", (97, 98, 99)),
+        ((1, 2), (1, 2)),
+    ],
+)
+def test_tuple(hass: HomeAssistant, value, expected) -> None:
+    """Test tuple function/filter."""
+    assert (
+        template.Template("{{ tuple(value) }}", hass).async_render({"value": value})
+        == expected
+    )
+    assert (
+        template.Template("{{ value | tuple }}", hass).async_render({"value": value})
+        == expected
+    )
+
+
+def test_converting_datetime_to_iterable(hass: HomeAssistant) -> None:
+    """Test converting a datetime to an iterable raises an error."""
+    dt_ = datetime(2020, 1, 1, 0, 0, 0)
+    with pytest.raises(TemplateError):
+        template.Template("{{ tuple(value) }}", hass).async_render({"value": dt_})
+    with pytest.raises(TemplateError):
+        template.Template("{{ value | tuple }}", hass).async_render({"value": dt_})
+    with pytest.raises(TemplateError):
+        template.Template("{{ set(value) }}", hass).async_render({"value": dt_})
+    with pytest.raises(TemplateError):
+        template.Template("{{ value | set }}", hass).async_render({"value": dt_})
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
         ([1, 2], False),
         ({1, 2}, False),
         ({"a": 1, "b": 2}, False),
