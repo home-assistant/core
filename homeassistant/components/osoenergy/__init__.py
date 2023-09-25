@@ -64,8 +64,4 @@ class OSOEnergyEntity(Entity):
         """Initialize the instance."""
         self.osoenergy = osoenergy
         self.device = osoenergy_device
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID of entity."""
-        return self.device["device_id"]
+        self._attr_unique_id = osoenergy_device["device_id"]

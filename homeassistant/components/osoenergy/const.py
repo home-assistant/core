@@ -60,8 +60,6 @@ SERVICE_TURN_OFF = "turn_off"
 SERVICE_SET_V40MIN = "set_v40_min"
 SERVICE_SET_PROFILE = "set_profile"
 
-TITLE = "OSO Energy"
-
 OSO_ENERGY_TO_HASS_STATE = {
     "on": STATE_ON,
     "off": STATE_OFF,
