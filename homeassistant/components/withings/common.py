@@ -93,6 +93,54 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
         )
         self.use_webhooks = use_webhooks
 
+    async def async_subscribe_webhooks(self) -> None:
+        """Subscribe to webhooks."""
+        await self.async_unsubscribe_webhooks()
+
+        current_webhooks = await self._client.async_notify_list()
+
+        subscribed_notifications = frozenset(
+            profile.appli
+            for profile in current_webhooks.profiles
+            if profile.callbackurl == self._webhook_url
+        )
+
+        notification_to_subscribe = (
+            set(NotifyAppli)
+            - subscribed_notifications
+            - {NotifyAppli.USER, NotifyAppli.UNKNOWN}
+        )
+
+        for notification in notification_to_subscribe:
+            LOGGER.debug(
+                "Subscribing %s for %s in %s seconds",
+                self._webhook_url,
+                notification,
+                SUBSCRIBE_DELAY.total_seconds(),
+            )
+            # Withings will HTTP HEAD the callback_url and needs some downtime
+            # between each call or there is a higher chance of failure.
+            await asyncio.sleep(SUBSCRIBE_DELAY.total_seconds())
+            await self._client.async_notify_subscribe(self._webhook_url, notification)
+
+    async def async_unsubscribe_webhooks(self) -> None:
+        """Unsubscribe to webhooks."""
+        current_webhooks = await self._client.async_notify_list()
+
+        for webhook_configuration in current_webhooks.profiles:
+            LOGGER.debug(
+                "Unsubscribing %s for %s in %s seconds",
+                webhook_configuration.callbackurl,
+                webhook_configuration.appli,
+                UNSUBSCRIBE_DELAY.total_seconds(),
+            )
+            # Quick calls to Withings can result in the service returning errors.
+            # Give them some time to cool down.
+            await asyncio.sleep(UNSUBSCRIBE_DELAY.total_seconds())
+            await self._client.async_notify_revoke(
+                webhook_configuration.callbackurl, webhook_configuration.appli
+            )
+
     async def _async_update_data(self) -> dict[Measurement, Any]:
         try:
             measurements = await self._get_measurements()
@@ -212,54 +260,6 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
             else None
             for field, value in values.items()
         }
-
-    async def async_subscribe_webhooks(self) -> None:
-        """Subscribe to webhooks."""
-        await self.async_unsubscribe_webhooks()
-
-        current_webhooks = await self._client.async_notify_list()
-
-        subscribed_notifications = frozenset(
-            profile.appli
-            for profile in current_webhooks.profiles
-            if profile.callbackurl == self._webhook_url
-        )
-
-        notification_to_subscribe = (
-            set(NotifyAppli)
-            - subscribed_notifications
-            - {NotifyAppli.USER, NotifyAppli.UNKNOWN}
-        )
-
-        for notification in notification_to_subscribe:
-            LOGGER.debug(
-                "Subscribing %s for %s in %s seconds",
-                self._webhook_url,
-                notification,
-                SUBSCRIBE_DELAY.total_seconds(),
-            )
-            # Withings will HTTP HEAD the callback_url and needs some downtime
-            # between each call or there is a higher chance of failure.
-            await asyncio.sleep(SUBSCRIBE_DELAY.total_seconds())
-            await self._client.async_notify_subscribe(self._webhook_url, notification)
-
-    async def async_unsubscribe_webhooks(self) -> None:
-        """Unsubscribe to webhooks."""
-        current_webhooks = await self._client.async_notify_list()
-
-        for webhook_configuration in current_webhooks.profiles:
-            LOGGER.debug(
-                "Unsubscribing %s for %s in %s seconds",
-                webhook_configuration.callbackurl,
-                webhook_configuration.appli,
-                UNSUBSCRIBE_DELAY.total_seconds(),
-            )
-            # Quick calls to Withings can result in the service returning errors.
-            # Give them some time to cool down.
-            await asyncio.sleep(UNSUBSCRIBE_DELAY.total_seconds())
-            await self._client.async_notify_revoke(
-                webhook_configuration.callbackurl, webhook_configuration.appli
-            )
 
     async def async_webhook_data_updated(
         self, notification_category: NotifyAppli
