@@ -309,6 +309,8 @@ build.json @home-assistant/supervisor
 /tests/components/easyenergy/ @klaasnicolaas
 /homeassistant/components/ecobee/ @marthoc @marcolivierarsenault
 /tests/components/ecobee/ @marthoc @marcolivierarsenault
+/homeassistant/components/ecoforest/ @pjanuario
+/tests/components/ecoforest/ @pjanuario
 /homeassistant/components/econet/ @vangorra @w1ll1am23
 /tests/components/econet/ @vangorra @w1ll1am23
 /homeassistant/components/ecovacs/ @OverloadUT @mib1185
@@ -388,6 +390,8 @@ build.json @home-assistant/supervisor
 /tests/components/fireservicerota/ @cyberjunky
 /homeassistant/components/firmata/ @DaAwesomeP
 /tests/components/firmata/ @DaAwesomeP
+/homeassistant/components/fitbit/ @allenporter
+/tests/components/fitbit/ @allenporter
 /homeassistant/components/fivem/ @Sander0542
 /tests/components/fivem/ @Sander0542
 /homeassistant/components/fjaraskupan/ @elupus
@@ -558,6 +562,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/hvv_departures/ @vigonotion
 /tests/components/hvv_departures/ @vigonotion
 /homeassistant/components/hydrawise/ @dknowles2 @ptcryan
+/tests/components/hydrawise/ @dknowles2 @ptcryan
 /homeassistant/components/hyperion/ @dermotduffy
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/ialarm/ @RyuzakiKK
@@ -712,6 +717,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/logi_circle/ @evanjd
 /tests/components/logi_circle/ @evanjd
 /homeassistant/components/london_underground/ @jpbede
+/tests/components/london_underground/ @jpbede
 /homeassistant/components/lookin/ @ANMalko @bdraco
 /tests/components/lookin/ @ANMalko @bdraco
 /homeassistant/components/loqed/ @mikewoudenberg
@@ -737,6 +743,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/meater/ @Sotolotl @emontnemery
 /tests/components/meater/ @Sotolotl @emontnemery
 /homeassistant/components/media_extractor/ @joostlek
+/tests/components/media_extractor/ @joostlek
 /homeassistant/components/media_player/ @home-assistant/core
 /tests/components/media_player/ @home-assistant/core
 /homeassistant/components/media_source/ @hunterjm
@@ -1144,8 +1151,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/sky_hub/ @rogerselwyn
 /homeassistant/components/skybell/ @tkdrob
 /tests/components/skybell/ @tkdrob
-/homeassistant/components/slack/ @tkdrob
-/tests/components/slack/ @tkdrob
+/homeassistant/components/slack/ @tkdrob @fletcherau
+/tests/components/slack/ @tkdrob @fletcherau
 /homeassistant/components/sleepiq/ @mfugate1 @kbickar
 /tests/components/sleepiq/ @mfugate1 @kbickar
 /homeassistant/components/slide/ @ualex73

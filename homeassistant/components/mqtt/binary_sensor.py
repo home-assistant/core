@@ -43,9 +43,9 @@ from .mixins import (
     MqttAvailability,
     MqttEntity,
     async_setup_entry_helper,
+    write_state_on_attr_change,
 )
 from .models import MqttValueTemplate, ReceiveMessage
-from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -191,6 +191,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_is_on"})
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT state message."""
             # auto-expire enabled?
@@ -256,8 +257,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 self._delay_listener = evt.async_call_later(
                     self.hass, off_delay, off_delay_listener
                 )
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,

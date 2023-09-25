@@ -891,7 +891,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         unique_id=None,
         disabled_by=None,
         reason=None,
-    ):
+    ) -> None:
         """Initialize a mock config entry."""
         kwargs = {
             "entry_id": entry_id or uuid_util.random_uuid_hex(),
@@ -913,17 +913,15 @@ class MockConfigEntry(config_entries.ConfigEntry):
         if reason is not None:
             self.reason = reason
 
-    def add_to_hass(self, hass):
+    def add_to_hass(self, hass: HomeAssistant) -> None:
         """Test helper to add entry to hass."""
         hass.config_entries._entries[self.entry_id] = self
-        hass.config_entries._domain_index.setdefault(self.domain, []).append(
-            self.entry_id
-        )
+        hass.config_entries._domain_index.setdefault(self.domain, []).append(self)
 
-    def add_to_manager(self, manager):
+    def add_to_manager(self, manager: config_entries.ConfigEntries) -> None:
         """Test helper to add entry to entry manager."""
         manager._entries[self.entry_id] = self
-        manager._domain_index.setdefault(self.domain, []).append(self.entry_id)
+        manager._domain_index.setdefault(self.domain, []).append(self)
 
 
 def patch_yaml_files(files_dict, endswith=True):
