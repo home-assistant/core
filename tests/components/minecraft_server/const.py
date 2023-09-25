@@ -17,9 +17,9 @@ TEST_JAVA_STATUS_RESPONSE_RAW = {
         "online": 3,
         "max": 10,
         "sample": [
-            {"name": "Dummy Player 1", "id": "1"},
-            {"name": "Dummy Player 2", "id": "2"},
-            {"name": "Dummy Player 3", "id": "3"},
+            {"name": "Player 1", "id": "1"},
+            {"name": "Player 2", "id": "2"},
+            {"name": "Player 3", "id": "3"},
         ],
     },
 }

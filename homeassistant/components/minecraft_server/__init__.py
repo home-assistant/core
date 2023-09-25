@@ -87,15 +87,19 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             address = config_data[CONF_HOST]
             JavaServer.lookup(address)
             host_only_lookup_success = True
-        except ValueError:
+        except ValueError as error:
             host_only_lookup_success = False
+            _LOGGER.debug(
+                "Hostname (without port) cannot be parsed (error: %s), trying again with port",
+                error,
+            )
 
         if not host_only_lookup_success:
             try:
-                address = address = f"{config_data[CONF_HOST]}:{config_data[CONF_PORT]}"
+                address = f"{config_data[CONF_HOST]}:{config_data[CONF_PORT]}"
                 JavaServer.lookup(address)
             except ValueError as error:
-                _LOGGER.error(
+                _LOGGER.exception(
                     "Can't migrate configuration entry due to error while parsing server address (error: %s), try again later",
                     error,
                 )
