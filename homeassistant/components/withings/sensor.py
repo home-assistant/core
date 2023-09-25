@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .common import WithingsDataUpdateCoordinator
 from .const import (
     DOMAIN,
     SCORE_POINTS,
@@ -32,7 +33,6 @@ from .const import (
     UOM_MMHG,
     Measurement,
 )
-from .coordinator import WithingsDataUpdateCoordinator
 from .entity import WithingsEntity, WithingsEntityDescription
 
 
