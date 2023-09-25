@@ -35,7 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _async_scan_update(_=None):
         if "ip" in entry.data and entry.data["ip"]:
-            bcast_addr = [IPv4Address(entry.data["ip"])]
+            bcast_addr = [
+                IPv4Address(ip.strip()) for ip in str(entry.data["ip"]).split(",")
+            ]
         else:
             bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
         await gree_discovery.discovery.scan(0, bcast_ifaces=bcast_addr)

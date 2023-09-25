@@ -31,7 +31,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     gree_discovery = Discovery(DISCOVERY_TIMEOUT)
     if "ip" in data and data["ip"]:
-        bcast_addr = [IPv4Address(data["ip"])]
+        bcast_addr = [IPv4Address(ip.strip()) for ip in str(data["ip"]).split(",")]
     else:
         bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
     devices = await gree_discovery.scan(
