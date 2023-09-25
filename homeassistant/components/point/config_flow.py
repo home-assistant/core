@@ -3,10 +3,11 @@ import asyncio
 from collections import OrderedDict
 import logging
 
-from pypoint import PointSession
+from aiohttp import web_response
+from pypoint import MINUT_AUTH_URL, PointSession
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
@@ -46,6 +47,7 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
+    code: str | None = None
 
     def __init__(self) -> None:
         """Initialize flow."""
@@ -89,11 +91,9 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="external_setup")
 
-        errors = {}
-
         if user_input is not None:
-            errors["base"] = "follow_link"
-
+            self.code = user_input
+            return self.async_external_step_done(next_step_id="finish")
         try:
             async with asyncio.timeout(10):
                 url = await self._get_authorization_url()
@@ -102,10 +102,9 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error generating auth url")
             return self.async_abort(reason="unknown_authorize_url_generation")
-        return self.async_show_form(
+        return self.async_external_step(
             step_id="auth",
-            description_placeholders={"authorization_url": url},
-            errors=errors,
+            url=url,
         )
 
     async def _get_authorization_url(self):
@@ -122,23 +121,17 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         self.hass.http.register_view(MinutAuthCallbackView())
+        return point_session.create_authorization_url(
+            MINUT_AUTH_URL, state=self.flow_id
+        )[0]
 
-        return point_session.get_authorization_url
-
-    async def async_step_code(self, code=None):
+    async def async_step_finish(self, user_input=None):
         """Received code for authentication."""
+        code = self.code
         if self._async_current_entries():
             return self.async_abort(reason="already_setup")
-
         if code is None:
             return self.async_abort(reason="no_code")
-
-        _LOGGER.debug(
-            "Should close all flows below %s",
-            self._async_in_progress(),
-        )
-        # Remove notification if no other discovery config entries in progress
-
         return await self._async_create_session(code)
 
     async def _async_create_session(self, code):
@@ -187,9 +180,12 @@ class MinutAuthCallbackView(HomeAssistantView):
         """Receive authorization code."""
         hass = request.app["hass"]
         if "code" in request.query:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": "code"}, data=request.query["code"]
-                )
+            result = await hass.config_entries.flow.async_configure(
+                flow_id=request.query["state"], user_input=request.query["code"]
             )
-        return "OK!"
+            if result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP_DONE:
+                return web_response.Response(
+                    headers={"content-type": "text/html"},
+                    text="<script>window.close()</script>Success! This window can be closed",
+                )
+        return "Error authenticating Minut Point."
