@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import dataclasses
 import logging
 from typing import Any
 
 from bleak import BleakError
 from bluetooth_data_tools import human_readable_name
 from medcom_ble import MedcomBleDevice, MedcomBleDeviceData
+from medcom_ble.const import INSPECTOR_SERVICE_UUID
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -23,15 +23,6 @@ from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclasses.dataclass
-class Discovery:
-    """A discovered bluetooth device."""
-
-    name: str
-    discovery_info: BluetoothServiceInfo
-    device: MedcomBleDevice
 
 
 def get_name(device: MedcomBleDevice) -> str:
@@ -51,22 +42,19 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovery_info: BluetoothServiceInfo | None = None
-        self._discovered_device: Discovery | None = None
-        self._discovered_devices: dict[str, Discovery] = {}
+        self._discovered_devices: dict[str, BluetoothServiceInfo] = {}
 
     async def _get_device_data(
-        self, discovery_info: BluetoothServiceInfo
+        self, service_info: BluetoothServiceInfo
     ) -> MedcomBleDevice:
         ble_device = bluetooth.async_ble_device_from_address(
-            self.hass, discovery_info.address
+            self.hass, service_info.address
         )
         if ble_device is None:
             _LOGGER.debug("no ble_device in _get_device_data")
             raise AbortFlow(
                 "cannot_connect",
-                description_placeholders={
-                    "error connecting to": discovery_info.address
-                },
+                description_placeholders={"error connecting to": service_info.address},
             )
 
         inspector = MedcomBleDeviceData(_LOGGER)
@@ -80,7 +68,6 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Discovered BLE device: %s", discovery_info.name)
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
-
         self._discovery_info = discovery_info
         self.context["title_placeholders"] = {
             "name": human_readable_name(
@@ -94,16 +81,18 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm discovery."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.context["title_placeholders"]["name"], data={}
+        # We always will have self._discovery_info be a BluetoothServiceInfo at this point
+        # and this helps mypy not complain
+        assert self._discovery_info is not None
+
+        if user_input is None:
+            name = self._discovery_info.name or self._discovery_info.address
+            return self.async_show_form(
+                step_id="bluetooth_confirm",
+                description_placeholders={"name": name},
             )
 
-        self._set_confirm_only()
-        return self.async_show_form(
-            step_id="bluetooth_confirm",
-            description_placeholders=self.context["title_placeholders"],
-        )
+        return await self.async_step_check_connection()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -113,41 +102,31 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            discovery = self._discovered_devices[address]
-
+            self._discovery_info = self._discovered_devices[address]
             self.context["title_placeholders"] = {
-                "name": discovery.name,
+                "name": self._discovery_info.name,
             }
-
-            self._discovered_device = discovery
-
-            return self.async_create_entry(title=discovery.name, data={})
+            return await self.async_step_check_connection()
 
         current_addresses = self._async_current_ids()
         for discovery_info in async_discovered_service_info(self.hass):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
+                _LOGGER.debug(
+                    "Detected a device that's already configured: %s", address
+                )
                 continue
 
-            try:
-                device = await self._get_device_data(discovery_info)
-            except (BleakError, AbortFlow):
-                return self.async_abort(reason="cannot_connect")
-            except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.exception(
-                    "Error occurred reading information from %s: %s",
-                    discovery_info.address,
-                    err,
-                )
-                return self.async_abort(reason="unknown")
-            name = get_name(device)
-            self._discovered_devices[address] = Discovery(name, discovery_info, device)
+            if INSPECTOR_SERVICE_UUID not in discovery_info.service_uuids:
+                continue
+
+            self._discovered_devices[discovery_info.address] = discovery_info
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
         titles = {
-            address: discovery.device.name
+            address: discovery.name
             for (address, discovery) in self._discovered_devices.items()
         }
         return self.async_show_form(
@@ -157,4 +136,29 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_ADDRESS): vol.In(titles),
                 },
             ),
+        )
+
+    async def async_step_check_connection(self) -> FlowResult:
+        """Check we can connect to the device before considering the configuration is successful."""
+        # We always will have self._discovery_info be a BluetoothServiceInfo at this point
+        # and this helps mypy not complain
+        assert self._discovery_info is not None
+
+        _LOGGER.debug("Checking device connection: %s", self._discovery_info.name)
+        try:
+            device = await self._get_device_data(self._discovery_info)
+        except (BleakError, AbortFlow):
+            return self.async_abort(reason="cannot_connect")
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Error occurred reading information from %s: %s",
+                self._discovery_info.address,
+                err,
+            )
+            return self.async_abort(reason="unknown")
+        get_name(device)
+        _LOGGER.debug("Device connection successful, proceeding")
+        self._discovered_devices[self._discovery_info.address] = self._discovery_info
+        return self.async_create_entry(
+            title=self.context["title_placeholders"]["name"], data={}
         )
