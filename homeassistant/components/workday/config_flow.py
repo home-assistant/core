@@ -105,9 +105,9 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
         if (
             not _is_valid_date_range(remove_date, RemoveDateRangeError)
             and dt_util.parse_date(remove_date) is None
+            and obj_holidays.get_named(remove_date) == []
         ):
-            if obj_holidays.get_named(remove_date) == []:
-                raise RemoveDatesError("Incorrect date or name")
+            raise RemoveDatesError("Incorrect date or name")
 
 
 DATA_SCHEMA_SETUP = vol.Schema(
