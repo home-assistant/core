@@ -1,11 +1,15 @@
 """Tests for Glances config flow."""
 from unittest.mock import MagicMock
 
-from glances_api.exceptions import GlancesApiConnectionError
+from glances_api.exceptions import (
+    GlancesApiAuthorizationError,
+    GlancesApiConnectionError,
+)
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import glances
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -52,6 +56,24 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_api: MagicMock) -> 
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_invalid_auth(hass: HomeAssistant, mock_api: MagicMock) -> None:
+    """Test to return error if not authroized."""
+
+    mock_api.return_value.get_ha_sensor_data.side_effect = GlancesApiAuthorizationError
+    result = await hass.config_entries.flow.async_init(
+        glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_INPUT
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {
+        CONF_USERNAME: "invalid_auth",
+        CONF_PASSWORD: "invalid_auth",
+    }
 
 
 async def test_form_already_configured(hass: HomeAssistant) -> None:

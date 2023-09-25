@@ -3,10 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances_api.exceptions import GlancesApiError
+from glances_api.exceptions import (
+    GlancesApiAuthorizationError,
+    GlancesApiConnectionError,
+)
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -27,6 +30,7 @@ from .const import (
     DOMAIN,
     SUPPORTED_VERSIONS,
 )
+from .exceptions import AuthorizationError, CannotConnect
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -46,7 +50,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     api = get_api(hass, data)
     try:
         await api.get_ha_sensor_data()
-    except GlancesApiError as err:
+    except GlancesApiAuthorizationError as err:
+        raise AuthorizationError from err
+    except GlancesApiConnectionError as err:
         raise CannotConnect from err
 
 
@@ -72,11 +78,10 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except AuthorizationError:
+                errors[CONF_USERNAME] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
