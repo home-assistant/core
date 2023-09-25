@@ -924,7 +924,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     unload_ok = all(await asyncio.gather(*tasks)) if tasks else True
 
-    await async_disable_server_logging_if_needed(hass, entry, driver_events.driver)
+    if hasattr(driver_events, "driver"):
+        await async_disable_server_logging_if_needed(hass, entry, driver_events.driver)
     if DATA_CLIENT_LISTEN_TASK in info:
         await disconnect_client(hass, entry)
 

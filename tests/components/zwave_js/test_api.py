@@ -78,11 +78,9 @@ from homeassistant.components.zwave_js.api import (
 )
 from homeassistant.components.zwave_js.const import (
     CONF_DATA_COLLECTION_OPTED_IN,
-    CONF_SERVER_LOGGING_ENABLED,
     DOMAIN,
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.const import CONF_ENABLED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -4646,74 +4644,6 @@ async def test_subscribe_node_statistics(
             ID: 4,
             TYPE: "zwave_js/subscribe_node_statistics",
             DEVICE_ID: multisensor_6_device.id,
-        }
-    )
-    msg = await ws_client.receive_json()
-
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_LOADED
-
-
-async def test_server_logging(
-    hass: HomeAssistant, client, integration, hass_ws_client: WebSocketGenerator
-) -> None:
-    """Test that the data collection WS API commands work."""
-    entry = integration
-    ws_client = await hass_ws_client(hass)
-
-    assert CONF_SERVER_LOGGING_ENABLED not in entry.data
-
-    client.async_send_command.reset_mock()
-
-    client.async_send_command.return_value = {}
-    await ws_client.send_json(
-        {
-            ID: 2,
-            TYPE: "zwave_js/update_server_logging_status",
-            ENTRY_ID: entry.entry_id,
-            CONF_ENABLED: True,
-        }
-    )
-    msg = await ws_client.receive_json()
-    result = msg["result"]
-    assert result is None
-
-    assert len(client.enable_server_logging.call_args_list) == 1
-    assert len(client.disable_server_logging.call_args_list) == 0
-
-    assert entry.data[CONF_SERVER_LOGGING_ENABLED]
-
-    client.async_send_command.reset_mock()
-
-    client.async_send_command.return_value = {}
-    await ws_client.send_json(
-        {
-            ID: 3,
-            TYPE: "zwave_js/update_server_logging_status",
-            ENTRY_ID: entry.entry_id,
-            CONF_ENABLED: False,
-        }
-    )
-    msg = await ws_client.receive_json()
-    result = msg["result"]
-    assert result is None
-
-    assert len(client.enable_server_logging.call_args_list) == 1
-    assert len(client.disable_server_logging.call_args_list) == 1
-    assert not entry.data[CONF_SERVER_LOGGING_ENABLED]
-
-    client.async_send_command.reset_mock()
-
-    # Test sending command with not loaded entry fails
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    await ws_client.send_json(
-        {
-            ID: 7,
-            TYPE: "zwave_js/update_server_logging_status",
-            ENTRY_ID: entry.entry_id,
-            CONF_ENABLED: True,
         }
     )
     msg = await ws_client.receive_json()

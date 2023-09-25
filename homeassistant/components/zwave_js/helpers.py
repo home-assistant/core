@@ -160,8 +160,8 @@ async def async_enable_server_logging_if_needed(
             curr_server_log_level,
             logging.getLevelName(lib_log_level),
         )
-        await driver.async_update_log_config(LogConfig(level=LogLevel.DEBUG))
         hass.data[DOMAIN][entry_id][DATA_OLD_SERVER_LOG_LEVEL] = curr_server_log_level
+        await driver.async_update_log_config(LogConfig(level=LogLevel.DEBUG))
     await driver.client.enable_server_logging()
 
 
