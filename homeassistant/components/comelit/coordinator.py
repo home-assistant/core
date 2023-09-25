@@ -74,13 +74,11 @@ class ComelitSerialBridge(DataUpdateCoordinator):
         try:
             logged = await self.api.login()
         except (asyncio.exceptions.TimeoutError, aiohttp.ClientConnectorError) as err:
+            logged = False
             _LOGGER.warning("Connection error for %s", self._host)
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
+        finally:
+            if not logged:
+                raise ConfigEntryAuthFailed
 
-        if not logged:
-            raise ConfigEntryAuthFailed
-
-        devices_data = await self.api.get_all_devices()
-        await self.api.logout()
-
-        return devices_data
+        return await self.api.get_all_devices()
