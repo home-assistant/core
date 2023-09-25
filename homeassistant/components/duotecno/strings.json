@@ -14,5 +14,21 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "climamate": {
+      "duotecno": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "sun": "Sun",
+              "half_sun": "Half Sun",
+              "moon": "Moon",
+              "half_moon": "Half Moon"
+            }
+          }
+        }
+      }
+    }
   }
 }

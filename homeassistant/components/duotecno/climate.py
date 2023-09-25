@@ -1,5 +1,5 @@
 """Support for Duotecno climate devices."""
-from typing import Any
+from typing import Any, Final
 
 from duotecno.unit import SensUnit
 
@@ -13,8 +13,33 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, HVACMODE, PRESETMODES
+from .const import DOMAIN
 from .entity import DuotecnoEntity, api_call
+
+HVACMODE: Final = {
+    0: HVACMode.OFF,
+    1: HVACMode.HEAT,
+    2: HVACMode.COOL,
+}
+HVACMODE_REVERSE: Final = {
+    HVACMode.OFF: 0,
+    HVACMode.HEAT: 1,
+    HVACMode.COOL: 2,
+}
+
+PRESETMODES: Final = {
+    "sun": 0,
+    "half_sun": 1,
+    "moon": 2,
+    "half_moon": 3,
+}
+
+PRESETMODES_REVERSE: Final = {
+    0: "sun",
+    1: "half_sun",
+    2: "moon",
+    3: "half_moon",
+}
 
 
 async def async_setup_entry(
@@ -37,7 +62,7 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL]
+    _attr_hvac_modes = list(HVACMODE_REVERSE)
     _attr_preset_modes = list(PRESETMODES)
 
     @property
@@ -58,10 +83,7 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str:
         """Get the preset mode."""
-        return next(
-            (key for key, val in PRESETMODES.items() if val == self._unit.get_preset()),
-            "Sun",
-        )
+        return PRESETMODES_REVERSE[self._unit.get_preset()]
 
     @api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
