@@ -3577,13 +3577,10 @@ async def test_data_collection(
     result = msg["result"]
     assert result is None
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "driver.enable_statistics"
     assert args["applicationName"] == "Home Assistant"
-    args = client.async_send_command.call_args_list[1][0][0]
-    assert args["command"] == "driver.enable_error_reporting"
-    assert entry.data[CONF_DATA_COLLECTION_OPTED_IN]
 
     client.async_send_command.reset_mock()
 
