@@ -6,7 +6,7 @@ from unittest.mock import ANY, patch
 import pytest
 from pytest_unordered import unordered
 
-from homeassistant.components import camera
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.cover import DemoCover
@@ -39,7 +39,7 @@ from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
@@ -251,10 +251,12 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
 @pytest.mark.parametrize("area_on_device", [True, False])
 async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> None:
     """Test a sync message where room hint comes from area."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
     area = registries.area.async_create("Living Room")
 
     device = registries.device.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         manufacturer="Someone",
         model="Some model",
         sw_version="Some Version",
@@ -625,8 +627,8 @@ async def test_execute_times_out(
     """Test an execute command which times out."""
     orig_execute_limit = sh.EXECUTE_LIMIT
     sh.EXECUTE_LIMIT = 0.02  # Decrease timeout to 20ms
-    await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -1184,7 +1186,9 @@ async def test_trait_execute_adding_query_data(hass: HomeAssistant) -> None:
         {"external_url": "https://example.com"},
     )
     hass.states.async_set(
-        "camera.office", "idle", {"supported_features": camera.SUPPORT_STREAM}
+        "camera.office",
+        "idle",
+        {"supported_features": CameraEntityFeature.STREAM},
     )
 
     with patch(

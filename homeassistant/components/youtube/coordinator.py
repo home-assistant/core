@@ -5,13 +5,13 @@ from datetime import timedelta
 from typing import Any
 
 from youtubeaio.helper import first
-from youtubeaio.types import UnauthorizedError
+from youtubeaio.types import UnauthorizedError, YouTubeBackendError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, ATTR_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import AsyncConfigEntryAuth
 from .const import (
@@ -70,4 +70,6 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 }
         except UnauthorizedError as err:
             raise ConfigEntryAuthFailed from err
+        except YouTubeBackendError as err:
+            raise UpdateFailed("Couldn't connect to YouTube") from err
         return res

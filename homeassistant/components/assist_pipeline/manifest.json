@@ -2,7 +2,7 @@
   "domain": "assist_pipeline",
   "name": "Assist pipeline",
   "codeowners": ["@balloob", "@synesthesiam"],
-  "dependencies": ["conversation", "stt", "tts"],
+  "dependencies": ["conversation", "stt", "tts", "wake_word"],
   "documentation": "https://www.home-assistant.io/integrations/assist_pipeline",
   "iot_class": "local_push",
   "quality_scale": "internal",

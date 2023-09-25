@@ -1,10 +1,8 @@
 """Sensor for checking the status of London Underground tube lines."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
-import async_timeout
 from london_tube_status import TubeData
 import voluptuous as vol
 
@@ -15,36 +13,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import CONF_LINE, TUBE_LINES
+from .coordinator import LondonTubeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "london_underground"
-
-CONF_LINE = "line"
-
-
-SCAN_INTERVAL = timedelta(seconds=30)
-
-TUBE_LINES = [
-    "Bakerloo",
-    "Central",
-    "Circle",
-    "District",
-    "DLR",
-    "Elizabeth line",
-    "Hammersmith & City",
-    "Jubilee",
-    "London Overground",
-    "Metropolitan",
-    "Northern",
-    "Piccadilly",
-    "Victoria",
-    "Waterloo & City",
-]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_LINE): vol.All(cv.ensure_list, [vol.In(list(TUBE_LINES))])}
@@ -74,25 +48,6 @@ async def async_setup_platform(
         sensors.append(LondonTubeSensor(coordinator, line))
 
     async_add_entities(sensors)
-
-
-class LondonTubeCoordinator(DataUpdateCoordinator):
-    """London Underground sensor coordinator."""
-
-    def __init__(self, hass, data):
-        """Initialize coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
-        )
-        self._data = data
-
-    async def _async_update_data(self):
-        async with async_timeout.timeout(10):
-            await self._data.update()
-            return self._data.data
 
 
 class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):

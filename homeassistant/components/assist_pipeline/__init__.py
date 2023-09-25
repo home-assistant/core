@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterable
 
+import voluptuous as vol
+
 from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_CONFIG, DOMAIN
 from .error import PipelineNotFound
 from .pipeline import (
     Pipeline,
@@ -18,6 +19,7 @@ from .pipeline import (
     PipelineInput,
     PipelineRun,
     PipelineStage,
+    WakeWordSettings,
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
@@ -35,13 +37,23 @@ __all__ = (
     "PipelineEvent",
     "PipelineEventType",
     "PipelineNotFound",
+    "WakeWordSettings",
 )
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {vol.Optional("debug_recording_dir"): str},
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Assist pipeline integration."""
+    hass.data[DATA_CONFIG] = config.get(DOMAIN, {})
+
     await async_setup_pipeline_store(hass)
     async_register_websocket_api(hass)
 
@@ -50,6 +62,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_pipeline_from_audio_stream(
     hass: HomeAssistant,
+    *,
     context: Context,
     event_callback: PipelineEventCallback,
     stt_metadata: stt.SpeechMetadata,
@@ -57,7 +70,10 @@ async def async_pipeline_from_audio_stream(
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
     tts_audio_output: str | None = None,
+    wake_word_settings: WakeWordSettings | None = None,
     device_id: str | None = None,
+    start_stage: PipelineStage = PipelineStage.STT,
+    end_stage: PipelineStage = PipelineStage.TTS,
 ) -> None:
     """Create an audio pipeline from an audio stream.
 
@@ -72,10 +88,11 @@ async def async_pipeline_from_audio_stream(
             hass,
             context=context,
             pipeline=async_get_pipeline(hass, pipeline_id=pipeline_id),
-            start_stage=PipelineStage.STT,
-            end_stage=PipelineStage.TTS,
+            start_stage=start_stage,
+            end_stage=end_stage,
             event_callback=event_callback,
             tts_audio_output=tts_audio_output,
+            wake_word_settings=wake_word_settings,
         ),
     )
     await pipeline_input.validate()

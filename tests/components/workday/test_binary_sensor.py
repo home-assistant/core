@@ -17,7 +17,10 @@ from . import (
     TEST_CONFIG_EXAMPLE_2,
     TEST_CONFIG_INCLUDE_HOLIDAY,
     TEST_CONFIG_INCORRECT_ADD_REMOVE,
+    TEST_CONFIG_INCORRECT_COUNTRY,
     TEST_CONFIG_INCORRECT_PROVINCE,
+    TEST_CONFIG_NO_COUNTRY,
+    TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY,
     TEST_CONFIG_NO_PROVINCE,
     TEST_CONFIG_NO_STATE,
     TEST_CONFIG_REMOVE_HOLIDAY,
@@ -48,6 +51,7 @@ async def test_valid_country_yaml() -> None:
 @pytest.mark.parametrize(
     ("config", "expected_state"),
     [
+        (TEST_CONFIG_NO_COUNTRY, "on"),
         (TEST_CONFIG_WITH_PROVINCE, "off"),
         (TEST_CONFIG_NO_PROVINCE, "off"),
         (TEST_CONFIG_WITH_STATE, "on"),
@@ -70,6 +74,7 @@ async def test_setup(
     await init_integration(hass, config)
 
     state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
     assert state.state == expected_state
     assert state.attributes == {
         "friendly_name": "Workday Sensor",
@@ -98,6 +103,7 @@ async def test_setup_from_import(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
     assert state.state == "off"
     assert state.attributes == {
         "friendly_name": "Workday Sensor",
@@ -109,7 +115,6 @@ async def test_setup_from_import(
 
 async def test_setup_with_invalid_province_from_yaml(hass: HomeAssistant) -> None:
     """Test setup invalid province with import."""
-
     await async_setup_component(
         hass,
         "binary_sensor",
@@ -136,11 +141,20 @@ async def test_setup_with_working_holiday(
     await init_integration(hass, TEST_CONFIG_INCLUDE_HOLIDAY)
 
     state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
     assert state.state == "on"
 
 
+@pytest.mark.parametrize(
+    "config",
+    [
+        TEST_CONFIG_EXAMPLE_2,
+        TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY,
+    ],
+)
 async def test_setup_add_holiday(
     hass: HomeAssistant,
+    config: dict[str, Any],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setup from various configs."""
@@ -148,6 +162,20 @@ async def test_setup_add_holiday(
     await init_integration(hass, TEST_CONFIG_EXAMPLE_2)
 
     state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
+    assert state.state == "off"
+
+
+async def test_setup_no_country_weekend(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test setup shows weekend as non-workday with no country."""
+    freezer.move_to(datetime(2020, 2, 23, 12, tzinfo=UTC))  # Sunday
+    await init_integration(hass, TEST_CONFIG_NO_COUNTRY)
+
+    state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
     assert state.state == "off"
 
 
@@ -160,6 +188,7 @@ async def test_setup_remove_holiday(
     await init_integration(hass, TEST_CONFIG_REMOVE_HOLIDAY)
 
     state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
     assert state.state == "on"
 
 
@@ -172,6 +201,7 @@ async def test_setup_remove_holiday_named(
     await init_integration(hass, TEST_CONFIG_REMOVE_NAMED)
 
     state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
     assert state.state == "on"
 
 
@@ -184,7 +214,23 @@ async def test_setup_day_after_tomorrow(
     await init_integration(hass, TEST_CONFIG_DAY_AFTER_TOMORROW)
 
     state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
     assert state.state == "off"
+
+
+async def test_setup_faulty_country(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup with faulty province."""
+    freezer.move_to(datetime(2017, 1, 6, 12, tzinfo=UTC))  # Friday
+    await init_integration(hass, TEST_CONFIG_INCORRECT_COUNTRY)
+
+    state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is None
+
+    assert "Selected country ZZ is not valid" in caplog.text
 
 
 async def test_setup_faulty_province(
@@ -199,7 +245,7 @@ async def test_setup_faulty_province(
     state = hass.states.get("binary_sensor.workday_sensor")
     assert state is None
 
-    assert "There is no subdivision" in caplog.text
+    assert "Selected province ZZ for country DE is not valid" in caplog.text
 
 
 async def test_setup_incorrect_add_remove(

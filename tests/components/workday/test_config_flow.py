@@ -72,6 +72,48 @@ async def test_form(hass: HomeAssistant) -> None:
     }
 
 
+async def test_form_no_country(hass: HomeAssistant) -> None:
+    """Test we get the forms correctly without a country."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Workday Sensor",
+            CONF_COUNTRY: "none",
+        },
+    )
+    await hass.async_block_till_done()
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_EXCLUDES: DEFAULT_EXCLUDES,
+            CONF_OFFSET: DEFAULT_OFFSET,
+            CONF_WORKDAYS: DEFAULT_WORKDAYS,
+            CONF_ADD_HOLIDAYS: [],
+            CONF_REMOVE_HOLIDAYS: [],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Workday Sensor"
+    assert result3["options"] == {
+        "name": "Workday Sensor",
+        "country": None,
+        "excludes": ["sat", "sun", "holiday"],
+        "days_offset": 0,
+        "workdays": ["mon", "tue", "wed", "thu", "fri"],
+        "add_holidays": [],
+        "remove_holidays": [],
+        "province": None,
+    }
+
+
 async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     """Test we get the forms correctly without subdivision."""
 

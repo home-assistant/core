@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components import stt, tts
+from homeassistant.components import stt, tts, wake_word
 from homeassistant.components.assist_pipeline import DOMAIN
 from homeassistant.components.assist_pipeline.pipeline import (
     PipelineData,
@@ -174,6 +174,40 @@ class MockSttPlatform(MockPlatform):
         self.async_get_engine = async_get_engine
 
 
+class MockWakeWordEntity(wake_word.WakeWordDetectionEntity):
+    """Mock wake word entity."""
+
+    fail_process_audio = False
+    url_path = "wake_word.test"
+    _attr_name = "test"
+
+    @property
+    def supported_wake_words(self) -> list[wake_word.WakeWord]:
+        """Return a list of supported wake words."""
+        return [wake_word.WakeWord(ww_id="test_ww", name="Test Wake Word")]
+
+    async def _async_process_audio_stream(
+        self, stream: AsyncIterable[tuple[bytes, int]]
+    ) -> wake_word.DetectionResult | None:
+        """Try to detect wake word(s) in an audio stream with timestamps."""
+        async for chunk, timestamp in stream:
+            if chunk.startswith(b"wake word"):
+                return wake_word.DetectionResult(
+                    ww_id=self.supported_wake_words[0].ww_id,
+                    timestamp=timestamp,
+                    queued_audio=[(b"queued audio", 0)],
+                )
+
+        # Not detected
+        return None
+
+
+@pytest.fixture
+async def mock_wake_word_provider_entity(hass) -> MockWakeWordEntity:
+    """Mock wake word provider."""
+    return MockWakeWordEntity()
+
+
 class MockFlow(ConfigFlow):
     """Test flow."""
 
@@ -193,6 +227,7 @@ async def init_supporting_components(
     mock_stt_provider: MockSttProvider,
     mock_stt_provider_entity: MockSttProviderEntity,
     mock_tts_provider: MockTTSProvider,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
     config_flow_fixture,
 ):
     """Initialize relevant components with empty configs."""
@@ -201,14 +236,18 @@ async def init_supporting_components(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, stt.DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [stt.DOMAIN, wake_word.DOMAIN]
+        )
         return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Unload up test config entry."""
-        await hass.config_entries.async_forward_entry_unload(config_entry, stt.DOMAIN)
+        await hass.config_entries.async_unload_platforms(
+            config_entry, [stt.DOMAIN, wake_word.DOMAIN]
+        )
         return True
 
     async def async_setup_entry_stt_platform(
@@ -218,6 +257,14 @@ async def init_supporting_components(
     ) -> None:
         """Set up test stt platform via config entry."""
         async_add_entities([mock_stt_provider_entity])
+
+    async def async_setup_entry_wake_word_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test wake word platform via config entry."""
+        async_add_entities([mock_wake_word_provider_entity])
 
     mock_integration(
         hass,
@@ -240,6 +287,13 @@ async def init_supporting_components(
         MockSttPlatform(
             async_get_engine=AsyncMock(return_value=mock_stt_provider),
             async_setup_entry=async_setup_entry_stt_platform,
+        ),
+    )
+    mock_platform(
+        hass,
+        "test.wake_word",
+        MockPlatform(
+            async_setup_entry=async_setup_entry_wake_word_platform,
         ),
     )
     mock_platform(hass, "test.config_flow")

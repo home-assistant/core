@@ -18,6 +18,14 @@ class PipelineNotFound(PipelineError):
     """Unspecified pipeline picked."""
 
 
+class WakeWordDetectionError(PipelineError):
+    """Error in wake-word-detection portion of pipeline."""
+
+
+class WakeWordTimeoutError(WakeWordDetectionError):
+    """Timeout when wake word was not detected."""
+
+
 class SpeechToTextError(PipelineError):
     """Error in speech-to-text portion of pipeline."""
 

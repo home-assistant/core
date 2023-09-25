@@ -9,6 +9,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN, VALID_UNITS, WeatherEntityFeature
 
@@ -80,7 +81,7 @@ async def ws_subscribe_forecast(
         return
 
     @callback
-    def forecast_listener(forecast: list[dict[str, Any]] | None) -> None:
+    def forecast_listener(forecast: list[JsonValueType] | None) -> None:
         """Push a new forecast to websocket."""
         connection.send_message(
             websocket_api.event_message(

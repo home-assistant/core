@@ -48,7 +48,9 @@ def get_current_branch():
     """Get current branch."""
     return (
         subprocess.run(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"], stdout=subprocess.PIPE
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            stdout=subprocess.PIPE,
+            check=True,
         )
         .stdout.decode()
         .strip()

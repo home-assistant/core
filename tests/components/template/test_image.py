@@ -14,11 +14,7 @@ from homeassistant.components.input_text import (
     DOMAIN as INPUT_TEXT_DOMAIN,
     SERVICE_SET_VALUE as INPUT_TEXT_SERVICE_SET_VALUE,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_PICTURE,
-    CONF_ENTITY_ID,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ENTITY_PICTURE, CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util

@@ -4,6 +4,7 @@ from __future__ import annotations
 from base64 import b64decode
 import functools
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -112,7 +113,8 @@ class MqttCamera(MqttEntity, Camera):
             if CONF_IMAGE_ENCODING in self._config:
                 self._last_image = b64decode(msg.payload)
             else:
-                assert isinstance(msg.payload, bytes)
+                if TYPE_CHECKING:
+                    assert isinstance(msg.payload, bytes)
                 self._last_image = msg.payload
 
         self._sub_state = subscription.async_prepare_subscribe_topics(

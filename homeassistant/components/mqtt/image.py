@@ -6,16 +6,13 @@ import binascii
 from collections.abc import Callable
 import functools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 import voluptuous as vol
 
 from homeassistant.components import image
-from homeassistant.components.image import (
-    DEFAULT_CONTENT_TYPE,
-    ImageEntity,
-)
+from homeassistant.components.image import DEFAULT_CONTENT_TYPE, ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -175,7 +172,8 @@ class MqttImage(MqttEntity, ImageEntity):
                 if CONF_IMAGE_ENCODING in self._config:
                     self._last_image = b64decode(msg.payload)
                 else:
-                    assert isinstance(msg.payload, bytes)
+                    if TYPE_CHECKING:
+                        assert isinstance(msg.payload, bytes)
                     self._last_image = msg.payload
             except (binascii.Error, ValueError, AssertionError) as err:
                 _LOGGER.error(

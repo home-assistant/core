@@ -1,5 +1,4 @@
 """The tests for sensor recorder platform."""
-# pylint: disable=invalid-name
 import datetime
 from datetime import timedelta
 from statistics import fmean
