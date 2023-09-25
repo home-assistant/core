@@ -132,14 +132,16 @@ async def test_form_country(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("err_str", "err_code"),
+    ("side_effect", "err_code"),
     [
-        ("Invalid authentication credentials", "invalid_auth"),
-        ("API rate limit exceeded.", "api_ratelimit"),
-        ("Something else", "unknown"),
+        (ValueError("Invalid authentication credentials"), "invalid_auth"),
+        (ValueError("API rate limit exceeded."), "api_ratelimit"),
+        (ValueError("Something else"), "unknown"),
+        (JSONDecodeError(msg="boom", doc="", pos=1), "unknown"),
+        (Exception("Boom"), "unknown"),
     ],
 )
-async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> None:
+async def test_form_error_handling(hass: HomeAssistant, side_effect, err_code) -> None:
     """Test we handle expected errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -147,9 +149,9 @@ async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> No
 
     with patch(
         "CO2Signal.get_latest",
-        side_effect=ValueError(err_str),
+        side_effect=side_effect,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "location": config_flow.TYPE_USE_HOME,
@@ -157,41 +159,38 @@ async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> No
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": err_code}
-
-
-async def test_form_invalid_json(hass: HomeAssistant) -> None:
-    """Test we handle invalid json."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": err_code}
 
     with patch(
         "CO2Signal.get_latest",
-        side_effect=JSONDecodeError(msg="boom", doc="", pos=1),
+        return_value=VALID_PAYLOAD,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "location": config_flow.TYPE_USE_HOME,
                 "api_key": "api_key",
             },
         )
+        await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "CO2 Signal"
+    assert result["data"] == {
+        "api_key": "api_key",
+    }
 
 
-async def test_form_error_unexpected_error(hass: HomeAssistant) -> None:
-    """Test we handle unexpected error."""
+async def test_form_data_contains_error_key(hass: HomeAssistant) -> None:
+    """Test we handle unexpected data."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
         "CO2Signal.get_latest",
-        side_effect=Exception("Boom"),
+        return_value={"error": "boom"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
