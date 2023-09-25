@@ -82,7 +82,7 @@ class VeSyncBaseSwitch(VeSyncDevice, SwitchEntity):
 class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
     """Representation of a VeSync switch."""
 
-    def __init__(self, plug):
+    def __init__(self, plug) -> None:
         """Initialize the VeSync switch device."""
         super().__init__(plug)
         self.smartplug = plug
@@ -96,7 +96,7 @@ class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
 class VeSyncLightSwitch(VeSyncBaseSwitch, SwitchEntity):
     """Handle representation of VeSync Light Switch."""
 
-    def __init__(self, switch):
+    def __init__(self, switch) -> None:
         """Initialize Light Switch device class."""
         super().__init__(switch)
         self.switch = switch

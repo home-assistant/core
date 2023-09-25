@@ -2,8 +2,10 @@
 import logging
 from typing import Any
 
+from pyvesync import VeSync
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, ToggleEntity
 
@@ -19,9 +21,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_process_devices(hass, manager):
+async def async_process_devices(hass: HomeAssistant, manager: VeSync):
     """Assign devices to proper component."""
-    devices = {}
+    devices: dict[str, list[VeSyncBaseDevice]] = {}
     devices[VS_SWITCHES] = []
     devices[VS_FANS] = []
     devices[VS_LIGHTS] = []
