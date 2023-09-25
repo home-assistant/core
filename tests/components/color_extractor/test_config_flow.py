@@ -68,19 +68,3 @@ async def test_import_flow(
     assert result.get("title") == "Color extractor"
     assert result.get("data") == {}
     assert result.get("options") == {}
-
-
-# async def test_import_flow_already_exists(
-#     hass: HomeAssistant,
-# ) -> None:
-#     """Test the import configuration flow."""
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN,
-#         context={"source": SOURCE_IMPORT},
-#         data={},
-#     )
-#
-#     assert result.get("type") == FlowResultType.CREATE_ENTRY
-#     assert result.get("title") == "Color extractor"
-#     assert result.get("data") == {}
-#     assert result.get("options") == {}
