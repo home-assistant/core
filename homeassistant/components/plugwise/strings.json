@@ -9,6 +9,9 @@
           "host": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "Smile Username"
+        },
+        "data_description": {
+          "host": "Leave empty if using Auto Discovery"
         }
       }
     },

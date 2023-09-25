@@ -141,7 +141,7 @@ def _state_diff_event(event: Event) -> dict:
     if (event_old_state := event.data["old_state"]) is None:
         return {
             ENTITY_EVENT_ADD: {
-                event_new_state.entity_id: event_new_state.as_compressed_state()
+                event_new_state.entity_id: event_new_state.as_compressed_state
             }
         }
     if TYPE_CHECKING:

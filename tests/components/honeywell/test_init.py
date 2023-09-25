@@ -12,6 +12,7 @@ from homeassistant.components.honeywell.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
 
@@ -33,7 +34,10 @@ async def test_setup_entry(hass: HomeAssistant, config_entry: MockConfigEntry) -
 
 
 async def test_setup_multiple_thermostats(
-    hass: HomeAssistant, config_entry: MockConfigEntry, location, another_device
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    location: MagicMock,
+    another_device: MagicMock,
 ) -> None:
     """Test that the config form is shown."""
     location.devices_by_id[another_device.deviceid] = another_device
@@ -50,8 +54,8 @@ async def test_setup_multiple_thermostats_with_same_deviceid(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     config_entry: MockConfigEntry,
-    device,
-    client,
+    device: MagicMock,
+    client: MagicMock,
 ) -> None:
     """Test Honeywell TCC API returning duplicate device IDs."""
     mock_location2 = create_autospec(aiosomecomfort.Location, instance=True)
@@ -115,3 +119,62 @@ async def test_no_devices(
     client.locations_by_id = {}
     await init_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_remove_stale_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    location: MagicMock,
+    another_device: MagicMock,
+    client: MagicMock,
+) -> None:
+    """Test that the stale device is removed."""
+    location.devices_by_id[another_device.deviceid] = another_device
+
+    config_entry.add_to_hass(hass)
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("OtherDomain", 7654321)},
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert (
+        hass.states.async_entity_ids_count() == 6
+    )  # 2 climate entities; 4 sensor entities
+
+    device_registry = dr.async_get(hass)
+    device_entry = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert len(device_entry) == 3
+    assert any((DOMAIN, 1234567) in device.identifiers for device in device_entry)
+    assert any((DOMAIN, 7654321) in device.identifiers for device in device_entry)
+    assert any(
+        ("OtherDomain", 7654321) in device.identifiers for device in device_entry
+    )
+
+    assert await config_entry.async_unload(hass)
+    await hass.async_block_till_done()
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+
+    del location.devices_by_id[another_device.deviceid]
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert (
+        hass.states.async_entity_ids_count() == 3
+    )  # 1 climate entities; 2 sensor entities
+
+    device_entry = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert len(device_entry) == 2
+    assert any((DOMAIN, 1234567) in device.identifiers for device in device_entry)
+    assert any(
+        ("OtherDomain", 7654321) in device.identifiers for device in device_entry
+    )

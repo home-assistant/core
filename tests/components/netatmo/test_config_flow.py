@@ -1,4 +1,5 @@
 """Test the Netatmo config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from pyatmo.const import ALL_SCOPES
@@ -44,8 +45,8 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
         "netatmo",
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="0.0.0.0",
-            addresses=["0.0.0.0"],
+            ip_address=ip_address("192.168.1.5"),
+            ip_addresses=[ip_address("192.168.1.5")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,

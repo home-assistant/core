@@ -5,13 +5,10 @@ from apple_weatherkit.client import (
     WeatherKitApiClientAuthenticationError,
     WeatherKitApiClientError,
 )
-import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.weatherkit import async_setup_entry
 from homeassistant.components.weatherkit.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import EXAMPLE_CONFIG_DATA
 
@@ -50,7 +47,7 @@ async def test_client_error_handling(hass: HomeAssistant) -> None:
         data=EXAMPLE_CONFIG_DATA,
     )
 
-    with pytest.raises(ConfigEntryNotReady), patch(
+    with patch(
         "homeassistant.components.weatherkit.WeatherKitApiClient.get_weather_data",
         side_effect=WeatherKitApiClientError,
     ), patch(
@@ -58,6 +55,7 @@ async def test_client_error_handling(hass: HomeAssistant) -> None:
         side_effect=WeatherKitApiClientError,
     ):
         entry.add_to_hass(hass)
-        config_entries.current_entry.set(entry)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
+    assert entry.state == config_entries.ConfigEntryState.SETUP_RETRY

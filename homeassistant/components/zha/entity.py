@@ -59,7 +59,6 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self._extra_state_attributes: dict[str, Any] = {}
         self._zha_device = zha_device
         self._unsubs: list[Callable[[], None]] = []
-        self.remove_future: asyncio.Future[Any] = asyncio.Future()
 
     @property
     def unique_id(self) -> str:
@@ -143,6 +142,8 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 class ZhaEntity(BaseZhaEntity, RestoreEntity):
     """A base class for non group ZHA entities."""
 
+    remove_future: asyncio.Future[Any]
+
     def __init_subclass__(cls, id_suffix: str | None = None, **kwargs: Any) -> None:
         """Initialize subclass.
 
@@ -188,7 +189,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
-        self.remove_future = asyncio.Future()
+        self.remove_future = self.hass.loop.create_future()
         self.async_accept_signal(
             None,
             f"{SIGNAL_REMOVE}_{self.zha_device.ieee}",

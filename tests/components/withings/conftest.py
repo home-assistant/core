@@ -15,7 +15,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.withings.common import ConfigEntryWithingsApi
+from homeassistant.components.withings.api import ConfigEntryWithingsApi
 from homeassistant.components.withings.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -96,8 +96,10 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
                 "scope": ",".join(scopes),
             },
             "profile": TITLE,
-            "use_webhook": True,
             "webhook_id": WEBHOOK_ID,
+        },
+        options={
+            "use_webhook": True,
         },
     )
 
@@ -110,13 +112,13 @@ def mock_withings():
     mock.user_get_device.return_value = UserGetDeviceResponse(
         **load_json_object_fixture("withings/get_device.json")
     )
-    mock.measure_get_meas.return_value = MeasureGetMeasResponse(
+    mock.async_measure_get_meas.return_value = MeasureGetMeasResponse(
         **load_json_object_fixture("withings/get_meas.json")
     )
-    mock.sleep_get_summary.return_value = SleepGetSummaryResponse(
+    mock.async_sleep_get_summary.return_value = SleepGetSummaryResponse(
         **load_json_object_fixture("withings/get_sleep.json")
     )
-    mock.notify_list.return_value = NotifyListResponse(
+    mock.async_notify_list.return_value = NotifyListResponse(
         **load_json_object_fixture("withings/notify_list.json")
     )
 
