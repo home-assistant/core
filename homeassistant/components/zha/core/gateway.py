@@ -10,7 +10,6 @@ import itertools
 import logging
 import re
 import time
-import traceback
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from zigpy.application import ControllerApplication
@@ -814,21 +813,20 @@ class LogRelayHandler(logging.Handler):
         super().__init__()
         self.hass = hass
         self.gateway = gateway
-
-    def emit(self, record: LogRecord) -> None:
-        """Relay log message via dispatcher."""
-        stack = []
-        if record.levelno >= logging.WARN and not record.exc_info:
-            stack = [f for f, _, _, _ in traceback.extract_stack()]
-
         hass_path: str = HOMEASSISTANT_PATH[0]
         config_dir = self.hass.config.config_dir
-        paths_re = re.compile(
+        self.paths_re = re.compile(
             r"(?:{})/(.*)".format(
                 "|".join([re.escape(x) for x in (hass_path, config_dir)])
             )
         )
-        entry = LogEntry(record, _figure_out_source(record, stack, paths_re))
+
+    def emit(self, record: LogRecord) -> None:
+        """Relay log message via dispatcher."""
+        if record.levelno >= logging.WARN:
+            entry = LogEntry(record, _figure_out_source(record, self.paths_re))
+        else:
+            entry = LogEntry(record, (record.pathname, record.lineno))
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,

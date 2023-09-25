@@ -1,4 +1,5 @@
 """Test Axis device."""
+from ipaddress import ip_address
 from unittest import mock
 from unittest.mock import Mock, patch
 
@@ -117,8 +118,8 @@ async def test_update_address(
         await hass.config_entries.flow.async_init(
             AXIS_DOMAIN,
             data=zeroconf.ZeroconfServiceInfo(
-                host="2.3.4.5",
-                addresses=["2.3.4.5"],
+                ip_address=ip_address("2.3.4.5"),
+                ip_addresses=[ip_address("2.3.4.5")],
                 hostname="mock_hostname",
                 name="name",
                 port=80,

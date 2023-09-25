@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FIBARO_DEVICES, FibaroDevice
+from . import FibaroController, FibaroDevice
 from .const import DOMAIN
 
 PRESET_RESUME = "resume"
@@ -113,12 +113,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Perform the setup for Fibaro controller devices."""
+    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
             FibaroThermostat(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
-                Platform.CLIMATE
-            ]
+            for device in controller.fibaro_devices[Platform.CLIMATE]
         ],
         True,
     )

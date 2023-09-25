@@ -34,13 +34,10 @@ _LOGGER = logging.getLogger(__name__)
 class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
     """Manage the StateAttributes table."""
 
-    def __init__(
-        self, recorder: Recorder, exclude_attributes_by_domain: dict[str, set[str]]
-    ) -> None:
+    def __init__(self, recorder: Recorder) -> None:
         """Initialize the event type manager."""
         super().__init__(recorder, CACHE_SIZE)
         self.active = True  # always active
-        self._exclude_attributes_by_domain = exclude_attributes_by_domain
         self._entity_sources = entity_sources(recorder.hass)
 
     def serialize_from_event(self, event: Event) -> bytes | None:
@@ -49,7 +46,6 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
             return StateAttributes.shared_attrs_bytes_from_event(
                 event,
                 self._entity_sources,
-                self._exclude_attributes_by_domain,
                 self.recorder.dialect_name,
             )
         except JSON_ENCODE_EXCEPTIONS as ex:
