@@ -103,6 +103,13 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
     return schema
 
 
+def options_schema(domain: str) -> vol.Schema:
+    """Generate options schema."""
+    return vol.Schema(
+        generate_schema(domain, "option"),
+    )
+
+
 def config_schema(domain: str) -> vol.Schema:
     """Generate config schema."""
     return vol.Schema(
@@ -111,6 +118,11 @@ def config_schema(domain: str) -> vol.Schema:
         }
         | generate_schema(domain, "config"),
     )
+
+
+async def choose_options_step(options: dict[str, Any]) -> str:
+    """Return next step_id for options flow according to template_type."""
+    return cast(str, options["entity_type"])
 
 
 def _strip_sentinel(options: dict[str, Any]) -> None:
@@ -188,10 +200,24 @@ CONFIG_FLOW = {
 }
 
 
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(next_step=choose_options_step),
+    Platform.BINARY_SENSOR: SchemaFlowFormStep(
+        options_schema(Platform.BINARY_SENSOR),
+        validate_user_input=validate_user_input(Platform.BINARY_SENSOR),
+    ),
+    Platform.SENSOR: SchemaFlowFormStep(
+        options_schema(Platform.SENSOR),
+        validate_user_input=validate_user_input(Platform.SENSOR),
+    ),
+}
+
+
 class RandomConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle config flow for random helper."""
 
     config_flow = CONFIG_FLOW
+    options_flow = OPTIONS_FLOW
 
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:

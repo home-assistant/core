@@ -27,5 +27,19 @@
         "title": "Random helper"
       }
     }
+  },
+  "options": {
+    "step": {
+      "binary_sensor": {},
+      "sensor": {
+        "data": {
+          "device_class": "[%key:component::random::config::step::sensor::data::device_class%]",
+          "minimum": "[%key:component::random::config::step::sensor::data::minimum%]",
+          "maximum": "[%key:component::random::config::step::sensor::data::maximum%]",
+          "unit_of_measurement": "[%key:component::random::config::step::sensor::data::unit_of_measurement%]"
+        },
+        "title": "[%key:component::random::config::step::sensor::title%]"
+      }
+    }
   }
 }
