@@ -481,16 +481,14 @@ def test_isnumber(hass: HomeAssistant, value, expected) -> None:
     ("value", "expected"),
     [
         ([1, 2], True),
-        (["a", "b"], True),
         ({1, 2}, False),
         ({"a": 1, "b": 2}, False),
-        ({1: "a", 2: "b"}, False),
         (ReadOnlyDict({"a": 1, "b": 2}), False),
         (MappingProxyType({"a": 1, "b": 2}), False),
         ("abc", False),
         (b"abc", False),
         ((1, 2), False),
-        (("a", "b"), False),
+        (datetime(2024, 1, 1, 0, 0, 0), False),
     ],
 )
 def test_islist(hass: HomeAssistant, value, expected) -> None:
@@ -513,16 +511,14 @@ def test_islist(hass: HomeAssistant, value, expected) -> None:
     ("value", "expected"),
     [
         ([1, 2], False),
-        (["a", "b"], False),
         ({1, 2}, True),
         ({"a": 1, "b": 2}, False),
-        ({1: "a", 2: "b"}, False),
         (ReadOnlyDict({"a": 1, "b": 2}), False),
         (MappingProxyType({"a": 1, "b": 2}), False),
         ("abc", False),
         (b"abc", False),
         ((1, 2), False),
-        (("a", "b"), False),
+        (datetime(2024, 1, 1, 0, 0, 0), False),
     ],
 )
 def test_isset(hass: HomeAssistant, value, expected) -> None:
@@ -545,16 +541,14 @@ def test_isset(hass: HomeAssistant, value, expected) -> None:
     ("value", "expected"),
     [
         ([1, 2], False),
-        (["a", "b"], False),
-        ({1, 2}, True),
+        ({1, 2}, False),
         ({"a": 1, "b": 2}, False),
-        ({1: "a", 2: "b"}, False),
         (ReadOnlyDict({"a": 1, "b": 2}), False),
         (MappingProxyType({"a": 1, "b": 2}), False),
         ("abc", False),
         (b"abc", False),
         ((1, 2), True),
-        (("a", "b"), True),
+        (datetime(2024, 1, 1, 0, 0, 0), False),
     ],
 )
 def test_istuple(hass: HomeAssistant, value, expected) -> None:
@@ -578,17 +572,51 @@ def test_istuple(hass: HomeAssistant, value, expected) -> None:
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
+        ([1, 2], False),
+        ({1, 2}, False),
+        ({"a": 1, "b": 2}, False),
+        (ReadOnlyDict({"a": 1, "b": 2}), False),
+        (MappingProxyType({"a": 1, "b": 2}), False),
+        ("abc", False),
+        (b"abc", False),
+        ((1, 2), False),
+        (datetime(2024, 1, 1, 0, 0, 0), True),
+    ],
+)
+def test_isdatetime(hass: HomeAssistant, value, expected) -> None:
+    """Test is_datetime."""
+    assert (
+        template.Template("{{ is_datetime(value) }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
+    assert (
+        template.Template("{{ value | is_datetime }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
+    assert (
+        template.Template("{{ value is is_datetime }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
         ([1, 2], True),
-        (["a", "b"], True),
         ({1, 2}, True),
         ({"a": 1, "b": 2}, True),
-        ({1: "a", 2: "b"}, True),
         (ReadOnlyDict({"a": 1, "b": 2}), True),
         (MappingProxyType({"a": 1, "b": 2}), True),
         ("abc", False),
         (b"abc", False),
         ((1, 2), True),
-        (("a", "b"), True),
+        (datetime(2024, 1, 1, 0, 0, 0), False),
     ],
 )
 def test_isnonstringiterable(hass: HomeAssistant, value, expected) -> None:
