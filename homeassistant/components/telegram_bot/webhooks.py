@@ -3,6 +3,8 @@ import datetime as dt
 from http import HTTPStatus
 from ipaddress import ip_address
 import logging
+import secrets
+import string
 
 from telegram import Update
 from telegram.error import TimedOut
@@ -11,8 +13,9 @@ from telegram.ext import Dispatcher, TypeHandler
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.storage import Store
 
-from . import CONF_TRUSTED_NETWORKS, CONF_SECRET_TOKEN, CONF_URL, BaseTelegramBotEntity
+from . import CONF_TRUSTED_NETWORKS, CONF_URL, BaseTelegramBotEntity, DOMAIN, STORE_VERSION, STORE_SECRET_TOKEN, SECRET_TOKEN_LENGTH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +25,18 @@ REMOVE_WEBHOOK_URL = ""
 
 async def async_setup_platform(hass, bot, config):
     """Set up the Telegram webhooks platform."""
-    pushbot = PushBot(hass, bot, config)
+
+    # Obtain secret token from storage, or create a new one if it does not exist
+    store = Store(hass, STORE_VERSION, DOMAIN)
+    if (data := await store.async_load()) is None:
+        alphabet = string.ascii_letters + string.digits + '-_'
+        secret_token = ''.join(secrets.choice(alphabet) for _ in range(SECRET_TOKEN_LENGTH))
+        data = {
+            STORE_SECRET_TOKEN: secret_token,
+        }
+    await store.async_save(data)
+
+    pushbot = PushBot(hass, bot, config, data[STORE_SECRET_TOKEN])
 
     if not pushbot.webhook_url.startswith("https"):
         _LOGGER.error("Invalid telegram webhook %s must be https", pushbot.webhook_url)
@@ -34,7 +48,7 @@ async def async_setup_platform(hass, bot, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pushbot.deregister_webhook)
     hass.http.register_view(
-        PushBotView(hass, bot, pushbot.dispatcher, config[CONF_TRUSTED_NETWORKS], config[CONF_SECRET_TOKEN])
+        PushBotView(hass, bot, pushbot.dispatcher, config[CONF_TRUSTED_NETWORKS], data[STORE_SECRET_TOKEN])
     )
     return True
 
@@ -42,11 +56,11 @@ async def async_setup_platform(hass, bot, config):
 class PushBot(BaseTelegramBotEntity):
     """Handles all the push/webhook logic and passes telegram updates to `self.handle_update`."""
 
-    def __init__(self, hass, bot, config):
+    def __init__(self, hass, bot, config, secret_token):
         """Create Dispatcher before calling super()."""
         self.bot = bot
         self.trusted_networks = config[CONF_TRUSTED_NETWORKS]
-        self.secret_token = config[CONF_SECRET_TOKEN]
+        self.secret_token = secret_token
         # Dumb dispatcher that just gets our updates to our handler callback (self.handle_update)
         self.dispatcher = Dispatcher(bot, None)
         self.dispatcher.add_handler(TypeHandler(Update, self.handle_update))
