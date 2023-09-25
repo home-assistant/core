@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any
 
 from london_tube_status import TubeData
 import voluptuous as vol
@@ -71,7 +71,7 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
     @property
     def native_value(self) -> str:
         """Return the state of the sensor."""
-        return cast(str, self.coordinator.data[self.name]["State"])
+        return self.coordinator.data[self.name]["State"]
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
