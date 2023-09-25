@@ -199,7 +199,7 @@ async def test_not_detected_entity(
 
     # Need 2 seconds to trigger
     state = setup.state
-    result = await setup.async_process_audio_stream(one_second_stream())
+    result = await setup.async_process_audio_stream(one_second_stream(), None)
     assert result is None
 
     # State should only change when there's a detection
