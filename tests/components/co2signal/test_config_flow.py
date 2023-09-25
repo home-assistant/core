@@ -1,4 +1,5 @@
 """Test the CO2 Signal config flow."""
+from json import JSONDecodeError
 from unittest.mock import patch
 
 import pytest
@@ -158,6 +159,28 @@ async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> No
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": err_code}
+
+
+async def test_form_invalid_json(hass: HomeAssistant) -> None:
+    """Test we handle invalid json."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "CO2Signal.get_latest",
+        side_effect=JSONDecodeError(msg="boom", doc="", pos=1),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "location": config_flow.TYPE_USE_HOME,
+                "api_key": "api_key",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_error_unexpected_error(hass: HomeAssistant) -> None:
