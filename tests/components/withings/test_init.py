@@ -17,7 +17,8 @@ from homeassistant.components.cloud import (
     CloudNotAvailable,
 )
 from homeassistant.components.webhook import async_generate_url
-from homeassistant.components.withings import CONFIG_SCHEMA, DOMAIN, async_setup, const
+from homeassistant.components.withings import CONFIG_SCHEMA, async_setup
+from homeassistant.components.withings.const import CONF_USE_WEBHOOK, DOMAIN
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -42,7 +43,7 @@ from tests.typing import ClientSessionGenerator
 
 def config_schema_validate(withings_config) -> dict:
     """Assert a schema config succeeds."""
-    hass_config = {const.DOMAIN: withings_config}
+    hass_config = {DOMAIN: withings_config}
 
     return CONFIG_SCHEMA(hass_config)
 
@@ -59,7 +60,7 @@ def test_config_schema_basic_config() -> None:
         {
             CONF_CLIENT_ID: "my_client_id",
             CONF_CLIENT_SECRET: "my_client_secret",
-            const.CONF_USE_WEBHOOK: True,
+            CONF_USE_WEBHOOK: True,
         }
     )
 
@@ -91,23 +92,23 @@ def test_config_schema_use_webhook() -> None:
         {
             CONF_CLIENT_ID: "my_client_id",
             CONF_CLIENT_SECRET: "my_client_secret",
-            const.CONF_USE_WEBHOOK: True,
+            CONF_USE_WEBHOOK: True,
         }
     )
-    assert config[const.DOMAIN][const.CONF_USE_WEBHOOK] is True
+    assert config[DOMAIN][CONF_USE_WEBHOOK] is True
     config = config_schema_validate(
         {
             CONF_CLIENT_ID: "my_client_id",
             CONF_CLIENT_SECRET: "my_client_secret",
-            const.CONF_USE_WEBHOOK: False,
+            CONF_USE_WEBHOOK: False,
         }
     )
-    assert config[const.DOMAIN][const.CONF_USE_WEBHOOK] is False
+    assert config[DOMAIN][CONF_USE_WEBHOOK] is False
     config_schema_assert_fail(
         {
             CONF_CLIENT_ID: "my_client_id",
             CONF_CLIENT_SECRET: "my_client_secret",
-            const.CONF_USE_WEBHOOK: "A",
+            CONF_USE_WEBHOOK: "A",
         }
     )
 

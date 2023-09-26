@@ -39,18 +39,23 @@ from homeassistant.helpers import config_entry_oauth2_flow, config_validation as
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
-from . import const
 from .api import ConfigEntryWithingsApi
-from .const import CONF_CLOUDHOOK_URL, LOGGER
+from .const import (
+    CONF_CLOUDHOOK_URL,
+    CONF_PROFILES,
+    CONF_USE_WEBHOOK,
+    CONFIG,
+    DOMAIN,
+    LOGGER,
+)
 from .coordinator import WithingsDataUpdateCoordinator
 
-DOMAIN = const.DOMAIN
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(const.CONF_PROFILES),
+            cv.deprecated(CONF_PROFILES),
             cv.deprecated(CONF_CLIENT_ID),
             cv.deprecated(CONF_CLIENT_SECRET),
             vol.Schema(
@@ -59,8 +64,8 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_CLIENT_SECRET): vol.All(
                         cv.string, vol.Length(min=1)
                     ),
-                    vol.Optional(const.CONF_USE_WEBHOOK): cv.boolean,
-                    vol.Optional(const.CONF_PROFILES): vol.All(
+                    vol.Optional(CONF_USE_WEBHOOK): cv.boolean,
+                    vol.Optional(CONF_PROFILES): vol.All(
                         cv.ensure_list,
                         vol.Unique(),
                         vol.Length(min=1),
@@ -79,10 +84,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not (conf := config.get(DOMAIN)):
         # Apply the defaults.
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
-        hass.data[DOMAIN] = {const.CONFIG: conf}
+        hass.data[DOMAIN] = {CONFIG: conf}
         return True
 
-    hass.data[DOMAIN] = {const.CONFIG: conf}
+    hass.data[DOMAIN] = {CONFIG: conf}
 
     # Setup the oauth2 config flow.
     if CONF_CLIENT_ID in conf:
