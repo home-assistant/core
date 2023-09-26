@@ -107,18 +107,8 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
 
     _default_name = None
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
+    _location_name: str | None = None
     _value_template: Callable[..., ReceivePayloadType]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the tracker."""
-        self._location_name: str | None = None
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
