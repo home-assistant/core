@@ -15,7 +15,7 @@ from transmission_rpc.error import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -102,20 +102,6 @@ SERVICE_STOP_TORRENT_SCHEMA = vol.All(
 )
 
 
-def _get_client(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> TransmissionDataUpdateCoordinator | None:
-    """Return client from entry_id."""
-    if (
-        (entry_id := data.get(CONF_ENTRY_ID))
-        and (entry := hass.config_entries.async_get_entry(entry_id))
-        and entry.state == ConfigEntryState.LOADED
-    ):
-        return hass.data[DOMAIN][entry_id]
-
-    return None
-
-
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Transmission Component."""
 
@@ -153,48 +139,35 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def add_torrent(service: ServiceCall) -> None:
         """Add new torrent to download."""
-        if not (tm_client := _get_client(hass, service.data)):
-            raise ValueError("Transmission instance is not found")
-
         torrent = service.data[ATTR_TORRENT]
         if torrent.startswith(
             ("http", "ftp:", "magnet:")
         ) or hass.config.is_allowed_path(torrent):
-            await hass.async_add_executor_job(tm_client.api.add_torrent, torrent)
-            await tm_client.async_request_refresh()
+            await hass.async_add_executor_job(coordinator.api.add_torrent, torrent)
+            await coordinator.async_request_refresh()
         else:
             _LOGGER.warning("Could not add torrent: unsupported type or no permission")
 
     async def start_torrent(service: ServiceCall) -> None:
         """Start torrent."""
-        if not (tm_client := _get_client(hass, service.data)):
-            raise ValueError("Transmission instance is not found")
-
         torrent_id = service.data[CONF_ID]
-        await hass.async_add_executor_job(tm_client.api.start_torrent, torrent_id)
-        await tm_client.async_request_refresh()
+        await hass.async_add_executor_job(coordinator.api.start_torrent, torrent_id)
+        await coordinator.async_request_refresh()
 
     async def stop_torrent(service: ServiceCall) -> None:
         """Stop torrent."""
-        if not (tm_client := _get_client(hass, service.data)):
-            raise ValueError("Transmission instance is not found")
-
         torrent_id = service.data[CONF_ID]
-        await hass.async_add_executor_job(tm_client.api.stop_torrent, torrent_id)
-        await tm_client.async_request_refresh()
+        await hass.async_add_executor_job(coordinator.api.stop_torrent, torrent_id)
+        await coordinator.async_request_refresh()
 
     async def remove_torrent(service: ServiceCall) -> None:
         """Remove torrent."""
-        if not (tm_client := _get_client(hass, service.data)):
-            raise ValueError("Transmission instance is not found")
-
         torrent_id = service.data[CONF_ID]
         delete_data = service.data[ATTR_DELETE_DATA]
         await hass.async_add_executor_job(
-            partial(tm_client.api.remove_torrent, torrent_id, delete_data=delete_data)
+            partial(coordinator.api.remove_torrent, torrent_id, delete_data=delete_data)
         )
-
-        await tm_client.async_request_refresh()
+        await coordinator.async_request_refresh()
 
     hass.services.async_register(
         DOMAIN, SERVICE_ADD_TORRENT, add_torrent, schema=SERVICE_ADD_TORRENT_SCHEMA
