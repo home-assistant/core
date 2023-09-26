@@ -28,7 +28,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             RainDelayNumber(
-                hass.data[DOMAIN][config_entry.entry_id],
+                hass.data[DOMAIN][config_entry.entry_id].coordinator,
             )
         ]
     )
