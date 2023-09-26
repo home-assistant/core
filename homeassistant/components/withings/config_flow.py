@@ -83,7 +83,9 @@ class WithingsFlowHandler(
             )
 
         if self.reauth_entry.unique_id == user_id:
-            self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
+            self.hass.config_entries.async_update_entry(
+                self.reauth_entry, data={**self.reauth_entry.data, **data}
+            )
             return self.async_abort(reason="reauth_successful")
 
         return self.async_abort(reason="wrong_account")

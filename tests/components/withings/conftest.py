@@ -136,7 +136,7 @@ def mock_withings():
         yield mock
 
 
-@pytest.fixture(name="disable_webhook_delay")
+@pytest.fixture(name="disable_webhook_delay", autouse=True)
 def disable_webhook_delay():
     """Disable webhook delay."""
 
