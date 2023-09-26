@@ -8,11 +8,12 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
 
 
-async def test_full_user_flow(hass: HomeAssistant) -> None:
+async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -20,8 +21,6 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.aftership.async_setup_entry", return_value=True
-    ), patch(
         "homeassistant.components.aftership.config_flow.AfterShip",
         return_value=AsyncMock(),
     ) as mock_aftership:
@@ -39,7 +38,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         }
 
 
-async def test_flow_cannot_connect(hass: HomeAssistant) -> None:
+async def test_flow_cannot_connect(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test handling invalid connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -61,8 +60,6 @@ async def test_flow_cannot_connect(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.aftership.async_setup_entry", return_value=True
-    ), patch(
         "homeassistant.components.aftership.config_flow.AfterShip",
         return_value=AsyncMock(),
     ) as mock_aftership:
@@ -80,12 +77,10 @@ async def test_flow_cannot_connect(hass: HomeAssistant) -> None:
         }
 
 
-async def test_import_flow(hass: HomeAssistant) -> None:
+async def test_import_flow(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test importing yaml config."""
 
     with patch(
-        "homeassistant.components.aftership.async_setup_entry", return_value=True
-    ), patch(
         "homeassistant.components.aftership.config_flow.AfterShip",
         return_value=AsyncMock(),
     ) as mock_aftership:
@@ -100,6 +95,8 @@ async def test_import_flow(hass: HomeAssistant) -> None:
         assert result["data"] == {
             CONF_API_KEY: "yaml-api-key",
         }
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
 
 
 async def test_import_flow_already_exists(hass: HomeAssistant) -> None:
