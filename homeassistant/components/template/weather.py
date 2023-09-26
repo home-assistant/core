@@ -470,22 +470,22 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         return result
 
 
-@dataclass
+@dataclass(kw_only=True)
 class WeatherExtraStoredData(ExtraStoredData):
     """Object to hold extra stored data."""
 
     last_temperature: float | None
     last_humidity: float | None
-    last_wind_speed: float | None = None
-    last_wind_bearing: float | str | None = None
-    last_ozone: float | None = None
-    last_visibility: float | None = None
-    last_pressure: float | None = None
-    last_wind_gust_speed: float | None = None
-    last_cloud_coverage: int | None = None
-    last_dew_point: float | None = None
-    last_apparent_temperature: float | None = None
-    last_forecast: list[Forecast] | None = None
+    last_wind_speed: float | None
+    last_wind_bearing: float | str | None
+    last_ozone: float | None
+    last_visibility: float | None
+    last_pressure: float | None
+    last_wind_gust_speed: float | None
+    last_cloud_coverage: int | None
+    last_dew_point: float | None
+    last_apparent_temperature: float | None
+    last_forecast: list[Forecast] | None
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the event data."""
@@ -495,7 +495,7 @@ class WeatherExtraStoredData(ExtraStoredData):
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored event state from a dict."""
         try:
-            return cls(
+            return cls(  # type: ignore[misc]
                 restored["last_temperature"],
                 restored["last_humidity"],
                 restored["last_wind_speed"],
