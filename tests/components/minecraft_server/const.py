@@ -1,6 +1,9 @@
 """Constants for Minecraft Server integration tests."""
 from mcstatus.motd import Motd
 from mcstatus.status_response import (
+    BedrockStatusPlayers,
+    BedrockStatusResponse,
+    BedrockStatusVersion,
     JavaStatusPlayers,
     JavaStatusResponse,
     JavaStatusVersion,
@@ -31,4 +34,13 @@ TEST_JAVA_STATUS_RESPONSE = JavaStatusResponse(
     motd=Motd.parse(TEST_JAVA_STATUS_RESPONSE_RAW["description"], bedrock=False),
     icon=None,
     latency=5,
+)
+
+TEST_BEDROCK_STATUS_RESPONSE = BedrockStatusResponse(
+    players=BedrockStatusPlayers(online=3, max=10),
+    version=BedrockStatusVersion(brand="MCPE", name="Dummy Version", protocol=123),
+    motd=Motd.parse("Dummy Description", bedrock=True),
+    latency=5,
+    gamemode="Dummy Game Mode",
+    map_name="Dummy Map Name",
 )

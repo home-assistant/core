@@ -13,11 +13,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN, KEY_LATENCY, KEY_MOTD
-from .coordinator import MinecraftServerCoordinator, MinecraftServerData
+from .coordinator import (
+    MinecraftServerCoordinator,
+    MinecraftServerData,
+    MinecraftServerType,
+)
 from .entity import MinecraftServerEntity
 
 ATTR_PLAYERS_LIST = "players_list"
 
+ICON_EDITION = "mdi:minecraft"
+ICON_GAME_MODE = "mdi:cog"
+ICON_MAP_NAME = "mdi:map"
 ICON_LATENCY = "mdi:signal"
 ICON_PLAYERS_MAX = "mdi:account-multiple"
 ICON_PLAYERS_ONLINE = "mdi:account-multiple"
@@ -25,6 +32,9 @@ ICON_PROTOCOL_VERSION = "mdi:numeric"
 ICON_VERSION = "mdi:numeric"
 ICON_MOTD = "mdi:minecraft"
 
+KEY_EDITION = "edition"
+KEY_GAME_MODE = "game_mode"
+KEY_MAP_NAME = "map_name"
 KEY_PLAYERS_MAX = "players_max"
 KEY_PLAYERS_ONLINE = "players_online"
 KEY_PROTOCOL_VERSION = "protocol_version"
@@ -40,6 +50,7 @@ class MinecraftServerEntityDescriptionMixin:
 
     value_fn: Callable[[MinecraftServerData], StateType]
     attributes_fn: Callable[[MinecraftServerData], MutableMapping[str, Any]] | None
+    enabled_fn: Callable[[MinecraftServerType], bool]
 
 
 @dataclass
@@ -69,6 +80,10 @@ SENSOR_DESCRIPTIONS = [
         icon=ICON_VERSION,
         value_fn=lambda data: data.version,
         attributes_fn=None,
+        enabled_fn=lambda server_type: (
+            server_type
+            in (MinecraftServerType.JAVA_EDITION, MinecraftServerType.BEDROCK_EDITION)
+        ),
     ),
     MinecraftServerSensorEntityDescription(
         key=KEY_PROTOCOL_VERSION,
@@ -76,6 +91,10 @@ SENSOR_DESCRIPTIONS = [
         icon=ICON_PROTOCOL_VERSION,
         value_fn=lambda data: data.protocol_version,
         attributes_fn=None,
+        enabled_fn=lambda server_type: (
+            server_type
+            in (MinecraftServerType.JAVA_EDITION, MinecraftServerType.BEDROCK_EDITION)
+        ),
     ),
     MinecraftServerSensorEntityDescription(
         key=KEY_PLAYERS_MAX,
@@ -84,6 +103,10 @@ SENSOR_DESCRIPTIONS = [
         icon=ICON_PLAYERS_MAX,
         value_fn=lambda data: data.players_max,
         attributes_fn=None,
+        enabled_fn=lambda server_type: (
+            server_type
+            in (MinecraftServerType.JAVA_EDITION, MinecraftServerType.BEDROCK_EDITION)
+        ),
     ),
     MinecraftServerSensorEntityDescription(
         key=KEY_LATENCY,
@@ -93,6 +116,10 @@ SENSOR_DESCRIPTIONS = [
         icon=ICON_LATENCY,
         value_fn=lambda data: data.latency,
         attributes_fn=None,
+        enabled_fn=lambda server_type: (
+            server_type
+            in (MinecraftServerType.JAVA_EDITION, MinecraftServerType.BEDROCK_EDITION)
+        ),
     ),
     MinecraftServerSensorEntityDescription(
         key=KEY_MOTD,
@@ -100,6 +127,10 @@ SENSOR_DESCRIPTIONS = [
         icon=ICON_MOTD,
         value_fn=lambda data: data.motd,
         attributes_fn=None,
+        enabled_fn=lambda server_type: (
+            server_type
+            in (MinecraftServerType.JAVA_EDITION, MinecraftServerType.BEDROCK_EDITION)
+        ),
     ),
     MinecraftServerSensorEntityDescription(
         key=KEY_PLAYERS_ONLINE,
@@ -108,6 +139,40 @@ SENSOR_DESCRIPTIONS = [
         icon=ICON_PLAYERS_ONLINE,
         value_fn=lambda data: data.players_online,
         attributes_fn=get_extra_state_attributes_players_list,
+        enabled_fn=lambda server_type: (
+            server_type
+            in (MinecraftServerType.JAVA_EDITION, MinecraftServerType.BEDROCK_EDITION)
+        ),
+    ),
+    MinecraftServerSensorEntityDescription(
+        key=KEY_EDITION,
+        translation_key=KEY_EDITION,
+        icon=ICON_EDITION,
+        value_fn=lambda data: data.edition,
+        attributes_fn=None,
+        enabled_fn=lambda server_type: (
+            server_type == MinecraftServerType.BEDROCK_EDITION
+        ),
+    ),
+    MinecraftServerSensorEntityDescription(
+        key=KEY_GAME_MODE,
+        translation_key=KEY_GAME_MODE,
+        icon=ICON_GAME_MODE,
+        value_fn=lambda data: data.game_mode,
+        attributes_fn=None,
+        enabled_fn=lambda server_type: (
+            server_type == MinecraftServerType.BEDROCK_EDITION
+        ),
+    ),
+    MinecraftServerSensorEntityDescription(
+        key=KEY_MAP_NAME,
+        translation_key=KEY_MAP_NAME,
+        icon=ICON_MAP_NAME,
+        value_fn=lambda data: data.map_name,
+        attributes_fn=None,
+        enabled_fn=lambda server_type: (
+            server_type == MinecraftServerType.BEDROCK_EDITION
+        ),
     ),
 ]
 
@@ -125,6 +190,7 @@ async def async_setup_entry(
         [
             MinecraftServerSensorEntity(coordinator, description)
             for description in SENSOR_DESCRIPTIONS
+            if description.enabled_fn(coordinator.server_type)
         ]
     )
 

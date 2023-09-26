@@ -1,14 +1,15 @@
 """Config flow for Minecraft Server integration."""
 import logging
 
-from mcstatus import JavaServer
+from mcstatus import BedrockServer, JavaServer
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DOMAIN
+from .coordinator import MinecraftServerType
 
 DEFAULT_ADDRESS = "localhost:25565"
 
@@ -18,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Minecraft Server."""
 
-    VERSION = 3
+    VERSION = 4
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
@@ -27,9 +28,19 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             address = user_input[CONF_ADDRESS]
 
-            if await self._async_is_server_online(address):
-                # No error was detected, create configuration entry.
-                config_data = {CONF_NAME: user_input[CONF_NAME], CONF_ADDRESS: address}
+            # Prepare config entry data.
+            config_data = {
+                CONF_NAME: user_input[CONF_NAME],
+                CONF_ADDRESS: address,
+            }
+
+            # Some Bedrock Edition servers mimic a Java Edition server, therefore check for a Bedrock Edition server first.
+            if await self._async_is_bedrock_server_online(address):
+                config_data[CONF_TYPE] = MinecraftServerType.BEDROCK_EDITION
+                return self.async_create_entry(title=address, data=config_data)
+
+            if await self._async_is_java_server_online(address):
+                config_data[CONF_TYPE] = MinecraftServerType.JAVA_EDITION
                 return self.async_create_entry(title=address, data=config_data)
 
             # Host or port invalid or server not reachable.
@@ -60,8 +71,8 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_is_server_online(self, address: str) -> bool:
-        """Check server connection using a 'status' request and return result."""
+    async def _async_is_java_server_online(self, address: str) -> bool:
+        """Check Java Edition server connection."""
 
         # Parse and check server address.
         try:
@@ -69,7 +80,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         except ValueError as error:
             _LOGGER.debug(
                 (
-                    "Error occurred while parsing server address '%s' -"
+                    "Error occurred while parsing Java Edition server address '%s' -"
                     " ValueError: %s"
                 ),
                 address,
@@ -77,16 +88,56 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return False
 
+        _LOGGER.debug("Java Edition server address '%s' is valid", address)
+
+        return await self._async_is_server_online(server)
+
+    async def _async_is_bedrock_server_online(self, address: str) -> bool:
+        """Check Bedrock Edition server connection."""
+
+        # Parse and check server address.
+        try:
+            server = BedrockServer.lookup(address)
+        except ValueError as error:
+            _LOGGER.debug(
+                (
+                    "Error occurred while parsing Bedrock Edition server address '%s' -"
+                    " ValueError: %s"
+                ),
+                address,
+                error,
+            )
+            return False
+
+        _LOGGER.debug("Bedrock Edition server address '%s' is valid", address)
+
+        return await self._async_is_server_online(server)
+
+    async def _async_is_server_online(self, server: BedrockServer | JavaServer) -> bool:
+        """Check if server is online by sending a status request."""
+
+        if isinstance(server, JavaServer):
+            server_type = MinecraftServerType.JAVA_EDITION
+        else:
+            server_type = MinecraftServerType.BEDROCK_EDITION
+
         # Send a status request to the server.
         try:
             await server.async_status()
+            _LOGGER.debug(
+                "%s server '%s:%s' is online",
+                server_type,
+                server.address.host,
+                server.address.port,
+            )
             return True
         except OSError as error:
             _LOGGER.debug(
                 (
-                    "Error occurred while trying to check the connection to '%s:%s' -"
+                    "Error occurred while trying to check the connection to %s server '%s:%s' -"
                     " OSError: %s"
                 ),
+                server_type,
                 server.address.host,
                 server.address.port,
                 error,

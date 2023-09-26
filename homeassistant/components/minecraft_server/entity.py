@@ -20,10 +20,11 @@ class MinecraftServerEntity(CoordinatorEntity[MinecraftServerCoordinator]):
     ) -> None:
         """Initialize base entity."""
         super().__init__(coordinator)
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.unique_id)},
             manufacturer=MANUFACTURER,
-            model=f"Minecraft Server ({coordinator.data.version})",
+            model=f"Minecraft Server ({coordinator.server_type})",
             name=coordinator.name,
-            sw_version=str(coordinator.data.protocol_version),
+            sw_version=f"{coordinator.data.version} ({coordinator.data.protocol_version})",
         )

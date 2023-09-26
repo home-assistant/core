@@ -7,13 +7,13 @@ from typing import Any
 from mcstatus import JavaServer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
 from .const import DOMAIN, KEY_LATENCY, KEY_MOTD
-from .coordinator import MinecraftServerCoordinator
+from .coordinator import MinecraftServerCoordinator, MinecraftServerType
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -120,6 +120,24 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         hass.config_entries.async_update_entry(config_entry, data=new_data)
 
         _LOGGER.debug("Migration to version 3 successful")
+
+    # 3 --> 4: Add server type.
+    if config_entry.version == 3:
+        _LOGGER.debug("Migrating from version 3")
+
+        # Existing server(s) with version 2 can only be of type Java Edition.
+        _LOGGER.debug(
+            "Migrating config entry, adding server type '%s'",
+            MinecraftServerType.JAVA_EDITION,
+        )
+
+        config_data = config_entry.data
+        new_data = config_data.copy()
+        new_data[CONF_TYPE] = MinecraftServerType.JAVA_EDITION
+        config_entry.version = 4
+        hass.config_entries.async_update_entry(config_entry, data=new_data)
+
+        _LOGGER.debug("Migration to version 4 successful")
 
     return True
 
