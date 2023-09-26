@@ -344,7 +344,7 @@ aiounifi==62
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.3.0
+aiovodafone==0.3.1
 
 # homeassistant.components.waqi
 aiowaqi==0.2.1
@@ -929,6 +929,9 @@ mcstatus==11.0.0
 # homeassistant.components.meater
 meater-python==0.0.8
 
+# homeassistant.components.medcom_ble
+medcom-ble==0.1.1
+
 # homeassistant.components.melnor
 melnor-bluetooth==0.0.25
 
@@ -1402,9 +1405,6 @@ pymodbus==3.5.2
 # homeassistant.components.monoprice
 pymonoprice==0.4
 
-# homeassistant.components.myq
-pymyq==3.1.4
-
 # homeassistant.components.mysensors
 pymysensors==0.24.0
 
@@ -1594,6 +1594,9 @@ python-matter-server==3.7.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
+
+# homeassistant.components.myq
+python-myq==3.1.9
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
