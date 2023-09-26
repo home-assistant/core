@@ -62,8 +62,8 @@ async def test_text_only_pipeline(
     events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_runs)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_runs[pipeline_id])[0]
+    pipeline_id = list(pipeline_data.pipeline_debug)[0]
+    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
 
     await client.send_json_auto_id(
         {
@@ -153,8 +153,8 @@ async def test_audio_pipeline(
     events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_runs)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_runs[pipeline_id])[0]
+    pipeline_id = list(pipeline_data.pipeline_debug)[0]
+    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
 
     await client.send_json_auto_id(
         {
@@ -316,8 +316,8 @@ async def test_audio_pipeline_with_wake_word_no_timeout(
     events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_runs)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_runs[pipeline_id])[0]
+    pipeline_id = list(pipeline_data.pipeline_debug)[0]
+    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
 
     await client.send_json_auto_id(
         {
@@ -452,8 +452,8 @@ async def test_intent_timeout(
         events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_runs)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_runs[pipeline_id])[0]
+    pipeline_id = list(pipeline_data.pipeline_debug)[0]
+    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
 
     await client.send_json_auto_id(
         {
@@ -505,8 +505,8 @@ async def test_text_pipeline_timeout(
         events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_runs)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_runs[pipeline_id])[0]
+    pipeline_id = list(pipeline_data.pipeline_debug)[0]
+    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
 
     await client.send_json_auto_id(
         {
@@ -573,8 +573,8 @@ async def test_intent_failed(
         events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_runs)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_runs[pipeline_id])[0]
+    pipeline_id = list(pipeline_data.pipeline_debug)[0]
+    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
 
     await client.send_json_auto_id(
         {
@@ -628,8 +628,8 @@ async def test_audio_pipeline_timeout(
         events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_runs)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_runs[pipeline_id])[0]
+    pipeline_id = list(pipeline_data.pipeline_debug)[0]
+    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
 
     await client.send_json_auto_id(
         {
@@ -760,8 +760,8 @@ async def test_stt_stream_failed(
         events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_runs)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_runs[pipeline_id])[0]
+    pipeline_id = list(pipeline_data.pipeline_debug)[0]
+    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
 
     await client.send_json_auto_id(
         {
@@ -828,8 +828,8 @@ async def test_tts_failed(
         events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_runs)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_runs[pipeline_id])[0]
+    pipeline_id = list(pipeline_data.pipeline_debug)[0]
+    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
 
     await client.send_json_auto_id(
         {
@@ -1792,8 +1792,8 @@ async def test_audio_pipeline_with_enhancements(
     events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_runs)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_runs[pipeline_id])[0]
+    pipeline_id = list(pipeline_data.pipeline_debug)[0]
+    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
 
     await client.send_json_auto_id(
         {

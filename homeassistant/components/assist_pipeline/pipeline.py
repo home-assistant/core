@@ -499,11 +499,11 @@ class PipelineRun:
             raise InvalidPipelineStagesError(self.start_stage, self.end_stage)
 
         pipeline_data: PipelineData = self.hass.data[DOMAIN]
-        if self.pipeline.id not in pipeline_data.pipeline_runs:
-            pipeline_data.pipeline_runs[self.pipeline.id] = LimitedSizeDict(
+        if self.pipeline.id not in pipeline_data.pipeline_debug:
+            pipeline_data.pipeline_debug[self.pipeline.id] = LimitedSizeDict(
                 size_limit=STORED_PIPELINE_RUNS
             )
-        pipeline_data.pipeline_runs[self.pipeline.id][self.id] = PipelineRunDebug()
+        pipeline_data.pipeline_debug[self.pipeline.id][self.id] = PipelineRunDebug()
 
         # Initialize with audio settings
         self.audio_processor_buffer = AudioBuffer(AUDIO_PROCESSOR_BYTES)
@@ -518,10 +518,10 @@ class PipelineRun:
         """Log an event and call listener."""
         self.event_callback(event)
         pipeline_data: PipelineData = self.hass.data[DOMAIN]
-        if self.id not in pipeline_data.pipeline_runs[self.pipeline.id]:
+        if self.id not in pipeline_data.pipeline_debug[self.pipeline.id]:
             # This run has been evicted from the logged pipeline runs already
             return
-        pipeline_data.pipeline_runs[self.pipeline.id][self.id].events.append(event)
+        pipeline_data.pipeline_debug[self.pipeline.id][self.id].events.append(event)
 
     def start(self, device_id: str | None) -> None:
         """Emit run start event."""
@@ -1559,7 +1559,7 @@ class PipelineStorageCollectionWebsocket(
 class PipelineData:
     """Store and debug data stored in hass.data."""
 
-    pipeline_runs: dict[str, LimitedSizeDict[str, PipelineRunDebug]]
+    pipeline_debug: dict[str, LimitedSizeDict[str, PipelineRunDebug]]
     pipeline_store: PipelineStorageCollection
     pipeline_devices: set[str] = field(default_factory=set, init=False)
 
