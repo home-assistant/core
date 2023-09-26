@@ -130,6 +130,7 @@ async def _async_setup_entity(
 class MqttLock(MqttEntity, LockEntity):
     """Representation of a lock that can be toggled using MQTT."""
 
+    _attr_is_locked: bool | None = False
     _default_name = DEFAULT_NAME
     _entity_id_format = lock.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LOCK_ATTRIBUTES_BLOCKED
@@ -141,16 +142,6 @@ class MqttLock(MqttEntity, LockEntity):
         [PublishPayloadType, TemplateVarsType], PublishPayloadType
     ]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the lock."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:

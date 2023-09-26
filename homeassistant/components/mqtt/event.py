@@ -108,16 +108,6 @@ class MqttEvent(MqttEntity, EventEntity):
     _attributes_extra_blocked = MQTT_EVENT_ATTRIBUTES_BLOCKED
     _template: Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the sensor."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""

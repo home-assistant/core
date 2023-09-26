@@ -220,6 +220,9 @@ async def _async_setup_entity(
 class MqttFan(MqttEntity, FanEntity):
     """A MQTT fan component."""
 
+    _attr_percentage: int | None = None
+    _attr_preset_mode: str | None = None
+
     _default_name = DEFAULT_NAME
     _entity_id_format = fan.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_FAN_ATTRIBUTES_BLOCKED
@@ -236,19 +239,6 @@ class MqttFan(MqttEntity, FanEntity):
     _optimistic_preset_mode: bool
     _payload: dict[str, Any]
     _speed_range: tuple[int, int]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT fan."""
-        self._attr_percentage = None
-        self._attr_preset_mode = None
-
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
