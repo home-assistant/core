@@ -1994,7 +1994,7 @@ wallbox==0.4.12
 watchdog==2.3.1
 
 # homeassistant.components.assist_pipeline
-webrtcvad==2.0.10
+webrtc-noise-gain==1.1.0
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.4
