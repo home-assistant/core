@@ -84,7 +84,6 @@ async def test_config_non_unique_profile(
     current_request_with_host: None,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
-    disable_webhook_delay,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup a non-unique profile."""
@@ -138,7 +137,6 @@ async def test_config_reauth_profile(
     aioclient_mock: AiohttpClientMocker,
     polling_config_entry: MockConfigEntry,
     withings: AsyncMock,
-    disable_webhook_delay,
     current_request_with_host,
 ) -> None:
     """Test reauth an existing profile reauthenticates the config entry."""
@@ -201,7 +199,6 @@ async def test_config_reauth_wrong_account(
     aioclient_mock: AiohttpClientMocker,
     polling_config_entry: MockConfigEntry,
     withings: AsyncMock,
-    disable_webhook_delay,
     current_request_with_host,
 ) -> None:
     """Test reauth with wrong account."""
