@@ -18,6 +18,12 @@ async def test_request_text() -> None:
     assert await request.text() == "hello"
 
 
+async def test_request_body_exists() -> None:
+    """Test a JSON request."""
+    request = aiohttp.MockRequest(b"", mock_source="test")
+    assert not request.body_exists
+
+
 async def test_request_post_query() -> None:
     """Test a JSON request."""
     request = aiohttp.MockRequest(
