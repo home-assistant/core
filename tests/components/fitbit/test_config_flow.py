@@ -182,7 +182,34 @@ async def test_import_fitbit_config(
     }
 
     # Verify an issue is raised for deprecated configuration.yaml
-    assert (DOMAIN, "deprecated_yaml") in issue_registry.issues
+    assert (DOMAIN, "deprecated_yaml_import") in issue_registry.issues
+
+
+async def test_import_fitbit_config_failure_cannot_connect(
+    hass: HomeAssistant,
+    fitbit_config_setup: None,
+    sensor_platform_setup: Callable[[], Awaitable[bool]],
+    issue_registry: ir.IssueRegistry,
+    requests_mock: Mocker,
+) -> None:
+    """Test that platform configuration is imported successfully."""
+
+    requests_mock.register_uri(
+        "GET", PROFILE_API_URL, status_code=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+
+    with patch(
+        "homeassistant.components.fitbit.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await sensor_platform_setup()
+
+    assert len(mock_setup.mock_calls) == 0
+
+    # Verify an issue is raised that we were unable to import configuration
+    assert (
+        DOMAIN,
+        "deprecated_yaml_import_issue_cannot_connect",
+    ) in issue_registry.issues
 
 
 async def test_platform_setup_without_import(
@@ -204,4 +231,4 @@ async def test_platform_setup_without_import(
     assert len(entries) == 0
 
     # Verify an issue is raised for deprecated configuration.yaml
-    assert (DOMAIN, "deprecated_yaml") in issue_registry.issues
+    assert (DOMAIN, "deprecated_yaml_no_import") in issue_registry.issues

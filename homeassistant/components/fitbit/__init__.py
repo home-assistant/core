@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         await fitbit_api.async_get_access_token()
-    except aiohttp.ClientResponseError as err:
+    except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err

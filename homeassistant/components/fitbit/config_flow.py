@@ -6,8 +6,9 @@ from typing import Any
 from fitbit.exceptions import HTTPException
 
 from homeassistant.const import CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from . import api
 from .const import DOMAIN, OAUTH_SCOPES
@@ -51,4 +52,14 @@ class OAuth2FlowHandler(
 
     async def async_step_import(self, data: dict[str, Any]) -> FlowResult:
         """Handle import from YAML."""
-        return await self.async_oauth_create_entry(data)
+        result = await self.async_oauth_create_entry(data)
+        if result.get("type") == FlowResultType.ABORT:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_yaml_import_issue_cannot_connect",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue_cannot_connect",
+            )
+        return result

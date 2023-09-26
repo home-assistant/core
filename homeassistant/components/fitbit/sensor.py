@@ -128,7 +128,6 @@ class FitbitSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[dict[str, Any]], Any] = _default_value_fn
     unit_fn: Callable[[FitbitUnitSystem], str | None] = lambda x: None
     scope: str | None = None
-    disabled_by_default: bool = False
 
 
 FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
@@ -507,6 +506,12 @@ async def async_setup_platform(
                 },
             ),
         )
+        issue_key = "deprecated_yaml_import"
+        translation_key = "deprecated_yaml_import"
+    else:
+        issue_key = "deprecated_yaml_no_import"
+        translation_key = "deprecated_yaml_no_import"
+
     try:
         await hass.async_add_executor_job(os.unlink, config_path)
     except FileNotFoundError:
@@ -515,10 +520,10 @@ async def async_setup_platform(
     async_create_issue(
         hass,
         DOMAIN,
-        "deprecated_yaml",
+        issue_key,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
+        translation_key=translation_key,
     )
 
 
@@ -531,7 +536,7 @@ async def async_setup_entry(
 
     api: FitbitApi = hass.data[DOMAIN][entry.entry_id]
 
-    # Note: This will only be one rpc since it will
+    # Note: This will only be one rpc since it will cache the user profile
     (user_profile, unit_system) = await asyncio.gather(
         api.async_get_user_profile(), api.async_get_unit_system()
     )
