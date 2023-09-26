@@ -195,4 +195,4 @@ def get_best_stream(formats: list[dict[str, Any]]) -> str:
 def get_best_stream_youtube(formats: list[dict[str, Any]]) -> str:
     """YouTube requests also include manifest files. Skip them."""
 
-    return get_best_stream(list(filter(lambda format: "filesize" in format, formats)))
+    return get_best_stream([format for format in formats if "filesize" in format])
