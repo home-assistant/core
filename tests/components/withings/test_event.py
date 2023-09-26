@@ -57,6 +57,7 @@ async def test_sleep_event(
     )
     assert resp.message_code == 0
     await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
     assert state.state == "2023-08-01T00:10:00.000+00:00"
     assert state.attributes["event_type"] == "out_bed"
 
@@ -69,7 +70,7 @@ async def test_polling_binary_sensor(
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test binary sensor."""
-    await setup_integration(hass, polling_config_entry)
+    await setup_integration(hass, polling_config_entry, False)
 
     client = await hass_client_no_auth()
 
