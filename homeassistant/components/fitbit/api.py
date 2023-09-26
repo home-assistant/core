@@ -148,7 +148,10 @@ class OAuthFitbitApi(FitbitApi):
 
 
 class ConfigFlowFitbitApi(FitbitApi):
-    """Profile fitbit authentication before a ConfigEntry exists."""
+    """Profile fitbit authentication before a ConfigEntry exists.
+
+    This implementation directly provides the token without supporting refresh.
+    """
 
     def __init__(
         self,

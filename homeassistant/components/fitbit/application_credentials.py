@@ -38,15 +38,6 @@ class FitbitOAuth2Implementation(AuthImplementation):
         ).decode()
         headers = {"Authorization": f"Basic {basic_auth}"}
         resp = await session.post(self.token_url, data=data, headers=headers)
-        if resp.status >= 400 and _LOGGER.isEnabledFor(logging.DEBUG):
-            # await resp.json()
-            # Token request failed with status=400, body={"errors":[{"errorType":"invalid_request","message":"Missing 'grant_type' parameter value. Visit https://dev.fitbit.com/docs/oauth2 for more information on the Fitbit Web API authorization process."}],"success":false}
-            body = await resp.text()
-            _LOGGER.debug(
-                "Token request failed with status=%s, body=%s",
-                resp.status,
-                body,
-            )
         resp.raise_for_status()
         return cast(dict, await resp.json())
 
