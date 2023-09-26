@@ -286,3 +286,24 @@ async def test_list_wake_words(
             {"ww_id": "test_ww_2", "name": "Test Wake Word 2"},
         ]
     }
+
+
+async def test_list_wake_words_unknown_entity(
+    hass: HomeAssistant,
+    setup: MockProviderEntity,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that the list_wake_words websocket command works."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "wake_word/info",
+            "entity_id": "wake_word.blah",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {"code": "not_found", "message": "Entity not found"}

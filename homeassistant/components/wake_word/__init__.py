@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import AsyncIterable
-import dataclasses
 import logging
 from typing import final
 
@@ -150,5 +149,5 @@ def websocket_entity_info(
 
     connection.send_result(
         msg["id"],
-        {"wake_words": [dataclasses.asdict(ww) for ww in entity.supported_wake_words]},
+        {"wake_words": entity.supported_wake_words},
     )
