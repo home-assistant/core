@@ -29,6 +29,8 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_UNIT_SYSTEM,
     PERCENTAGE,
+    UnitOfLength,
+    UnitOfMass,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -39,7 +41,6 @@ from homeassistant.helpers.json import save_json
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import load_json_object
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .api import FitbitApi
 from .const import (
@@ -56,9 +57,9 @@ from .const import (
     FITBIT_AUTH_START,
     FITBIT_CONFIG_FILE,
     FITBIT_DEFAULT_RESOURCES,
-    FITBIT_MEASUREMENTS,
+    FitbitUnitSystem,
 )
-from .model import FitbitDevice, FitbitProfile
+from .model import FitbitDevice
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -97,12 +98,36 @@ def _clock_format_12h(result: dict[str, Any]) -> str:
     return f"{hours}:{minutes:02d} {setting}"
 
 
+def _weight_unit(unit_system: FitbitUnitSystem) -> UnitOfMass:
+    """Determine the weight unit."""
+    if unit_system == FitbitUnitSystem.EN_US:
+        return UnitOfMass.POUNDS
+    if unit_system == FitbitUnitSystem.EN_GB:
+        return UnitOfMass.STONES
+    return UnitOfMass.KILOGRAMS
+
+
+def _distance_unit(unit_system: FitbitUnitSystem) -> UnitOfLength:
+    """Determine the distance unit."""
+    if unit_system == FitbitUnitSystem.EN_US:
+        return UnitOfLength.MILES
+    return UnitOfLength.KILOMETERS
+
+
+def _elevation_unit(unit_system: FitbitUnitSystem) -> UnitOfLength:
+    """Determine the elevation unit."""
+    if unit_system == FitbitUnitSystem.EN_US:
+        return UnitOfLength.FEET
+    return UnitOfLength.METERS
+
+
 @dataclass
 class FitbitSensorEntityDescription(SensorEntityDescription):
     """Describes Fitbit sensor entity."""
 
     unit_type: str | None = None
     value_fn: Callable[[dict[str, Any]], Any] = _default_value_fn
+    unit_fn: Callable[[FitbitUnitSystem], str | None] = lambda x: None
 
 
 FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
@@ -127,17 +152,17 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
     FitbitSensorEntityDescription(
         key="activities/distance",
         name="Distance",
-        unit_type="distance",
         icon="mdi:map-marker",
         device_class=SensorDeviceClass.DISTANCE,
         value_fn=_distance_value_fn,
+        unit_fn=_distance_unit,
     ),
     FitbitSensorEntityDescription(
         key="activities/elevation",
         name="Elevation",
-        unit_type="elevation",
         icon="mdi:walk",
         device_class=SensorDeviceClass.DISTANCE,
+        unit_fn=_elevation_unit,
     ),
     FitbitSensorEntityDescription(
         key="activities/floors",
@@ -201,17 +226,17 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
     FitbitSensorEntityDescription(
         key="activities/tracker/distance",
         name="Tracker Distance",
-        unit_type="distance",
         icon="mdi:map-marker",
         device_class=SensorDeviceClass.DISTANCE,
         value_fn=_distance_value_fn,
+        unit_fn=_distance_unit,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/elevation",
         name="Tracker Elevation",
-        unit_type="elevation",
         icon="mdi:walk",
         device_class=SensorDeviceClass.DISTANCE,
+        unit_fn=_elevation_unit,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/floors",
@@ -272,11 +297,11 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
     FitbitSensorEntityDescription(
         key="body/weight",
         name="Weight",
-        unit_type="weight",
         icon="mdi:human",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.WEIGHT,
         value_fn=_body_value_fn,
+        unit_fn=_weight_unit,
     ),
     FitbitSensorEntityDescription(
         key="sleep/awakeningsCount",
@@ -360,8 +385,13 @@ PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_CLOCK_FORMAT, default=DEFAULT_CLOCK_FORMAT): vol.In(
             ["12H", "24H"]
         ),
-        vol.Optional(CONF_UNIT_SYSTEM, default="default"): vol.In(
-            ["en_GB", "en_US", "metric", "default"]
+        vol.Optional(CONF_UNIT_SYSTEM, default=FitbitUnitSystem.LEGACY_DEFAULT): vol.In(
+            [
+                FitbitUnitSystem.EN_GB,
+                FitbitUnitSystem.EN_US,
+                FitbitUnitSystem.METRIC,
+                FitbitUnitSystem.LEGACY_DEFAULT,
+            ]
         ),
     }
 )
@@ -487,17 +517,9 @@ def setup_platform(
         if int(time.time()) - cast(int, expires_at) > 3600:
             authd_client.client.refresh_token()
 
-        api = FitbitApi(hass, authd_client)
+        api = FitbitApi(hass, authd_client, config[CONF_UNIT_SYSTEM])
         user_profile = api.get_user_profile()
-        if (unit_system := config[CONF_UNIT_SYSTEM]) == "default":
-            authd_client.system = user_profile.locale
-            if authd_client.system != "en_GB":
-                if hass.config.units is METRIC_SYSTEM:
-                    authd_client.system = "metric"
-                else:
-                    authd_client.system = "en_US"
-        else:
-            authd_client.system = unit_system
+        unit_system = api.get_unit_system()
 
         clock_format = config[CONF_CLOCK_FORMAT]
         monitored_resources = config[CONF_MONITORED_RESOURCES]
@@ -508,11 +530,10 @@ def setup_platform(
         entities = [
             FitbitSensor(
                 api,
-                user_profile,
+                user_profile.encoded_id,
                 config_path,
                 description,
-                hass.config.units is METRIC_SYSTEM,
-                clock_format,
+                units=description.unit_fn(unit_system),
             )
             for description in resource_list
             if description.key in monitored_resources
@@ -523,11 +544,9 @@ def setup_platform(
                 [
                     FitbitSensor(
                         api,
-                        user_profile,
+                        user_profile.encoded_id,
                         config_path,
                         FITBIT_RESOURCE_BATTERY,
-                        hass.config.units is METRIC_SYSTEM,
-                        clock_format,
                         device,
                     )
                     for device in devices
@@ -646,37 +665,25 @@ class FitbitSensor(SensorEntity):
     def __init__(
         self,
         api: FitbitApi,
-        user_profile: FitbitProfile,
+        user_profile_id: str,
         config_path: str,
         description: FitbitSensorEntityDescription,
-        is_metric: bool,
-        clock_format: str,
         device: FitbitDevice | None = None,
+        units: str | None = None,
     ) -> None:
         """Initialize the Fitbit sensor."""
         self.entity_description = description
         self.api = api
         self.config_path = config_path
-        self.is_metric = is_metric
-        self.clock_format = clock_format
         self.device = device
 
-        self._attr_unique_id = f"{user_profile.encoded_id}_{description.key}"
+        self._attr_unique_id = f"{user_profile_id}_{description.key}"
         if device is not None:
             self._attr_name = f"{device.device_version} Battery"
             self._attr_unique_id = f"{self._attr_unique_id}_{device.id}"
 
-        if description.unit_type:
-            try:
-                measurement_system = FITBIT_MEASUREMENTS[self.api.client.system]
-            except KeyError:
-                if self.is_metric:
-                    measurement_system = FITBIT_MEASUREMENTS["metric"]
-                else:
-                    measurement_system = FITBIT_MEASUREMENTS["en_US"]
-            split_resource = description.key.rsplit("/", maxsplit=1)[-1]
-            unit_type = measurement_system[split_resource]
-            self._attr_native_unit_of_measurement = unit_type
+        if units is not None:
+            self._attr_native_unit_of_measurement = units
 
     @property
     def icon(self) -> str | None:
