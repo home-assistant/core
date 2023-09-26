@@ -9,7 +9,7 @@
         "description": "The Fitbit integration needs to re-authenticate your account"
       },
       "auth": {
-        "title": "Link Fitbit Account"
+        "title": "Link Fitbit"
       }
     },
     "abort": {
@@ -26,13 +26,6 @@
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
-    }
-  },
-  "entity": {
-    "sensor": {
-      "battery": {
-        "name": "Battery"
-      }
     }
   },
   "issues": {
