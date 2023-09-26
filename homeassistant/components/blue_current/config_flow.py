@@ -30,9 +30,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        client = Client()
         errors = {}
         if user_input is not None:
+            client = Client()
             api_token = user_input[CONF_API_TOKEN]
             self._async_abort_entries_match(user_input)
 
@@ -52,8 +52,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             else:
-                self._abort_if_unique_id_configured()
-
                 return self.async_create_entry(title=email, data=user_input)
 
         return self.async_show_form(
