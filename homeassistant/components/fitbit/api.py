@@ -19,12 +19,13 @@ _LOGGER = logging.getLogger(__name__)
 CONF_REFRESH_TOKEN = "refresh_token"
 CONF_EXPIRES_AT = "expires_at"
 
-CONF_REFRESH_TOKEN = "refresh_token"
-CONF_EXPIRES_AT = "expires_at"
 
+class FitbitApi(ABC):
+    """Fitbit client library wrapper base class.
 
-class FitbitApi:
-    """Fitbit client library wrapper base class."""
+    This can be subclassed with different implementations for provindg an access
+    token depending on the use case.
+    """
 
     def __init__(
         self,
