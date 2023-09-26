@@ -1126,21 +1126,14 @@ class PipelineRun:
 
 def _multiply_volume(chunk: bytes, volume_multiplier: float) -> bytes:
     """Multiplies 16-bit PCM samples by a constant."""
+
+    def _clamp(val: float) -> float:
+        """Clamp to signed 16-bit."""
+        return max(-32768, min(32767, val))
+
     return array.array(
         "h",
-        [
-            int(
-                # Clamp to signed 16-bit range
-                max(
-                    -32767,
-                    min(
-                        32767,
-                        value * volume_multiplier,
-                    ),
-                )
-            )
-            for value in array.array("h", chunk)
-        ],
+        (int(_clamp(value * volume_multiplier)) for value in array.array("h", chunk)),
     ).tobytes()
 
 
