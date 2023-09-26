@@ -22,6 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
+    if CONF_TYPE not in entry.data:
+        _migrate_config_entry_data_key_type(hass, entry)
 
     # Create coordinator instance.
     coordinator = MinecraftServerCoordinator(hass, entry)
@@ -121,24 +123,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
         _LOGGER.debug("Migration to version 3 successful")
 
-    # 3 --> 4: Add server type.
-    if config_entry.version == 3:
-        _LOGGER.debug("Migrating from version 3")
-
-        # Existing server(s) with version 2 can only be of type Java Edition.
-        _LOGGER.debug(
-            "Migrating config entry, adding server type '%s'",
-            MinecraftServerType.JAVA_EDITION,
-        )
-
-        config_data = config_entry.data
-        new_data = config_data.copy()
-        new_data[CONF_TYPE] = MinecraftServerType.JAVA_EDITION
-        config_entry.version = 4
-        hass.config_entries.async_update_entry(config_entry, data=new_data)
-
-        _LOGGER.debug("Migration to version 4 successful")
-
     return True
 
 
@@ -209,3 +193,19 @@ def _migrate_entity_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
     )
 
     return {"new_unique_id": new_unique_id}
+
+
+def _migrate_config_entry_data_key_type(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """Add key 'TYPE' to config entry data."""
+
+    # Existing server(s) without the key 'TYPE' can only be of type Java Edition.
+    _LOGGER.debug(
+        "Migrating config entry, adding server type '%s'",
+        MinecraftServerType.JAVA_EDITION,
+    )
+
+    new_data = entry.data.copy()
+    new_data[CONF_TYPE] = MinecraftServerType.JAVA_EDITION
+    hass.config_entries.async_update_entry(entry, data=new_data)

@@ -144,7 +144,7 @@ async def test_entry_migration(hass: HomeAssistant) -> None:
         CONF_ADDRESS: TEST_ADDRESS,
         CONF_TYPE: MinecraftServerType.JAVA_EDITION,
     }
-    assert config_entry.version == 4
+    assert config_entry.version == 3
 
     # Test migrated device entry.
     device_registry = dr.async_get(hass)
@@ -196,7 +196,7 @@ async def test_entry_migration_host_only(hass: HomeAssistant) -> None:
         CONF_ADDRESS: TEST_HOST,
         CONF_TYPE: MinecraftServerType.JAVA_EDITION,
     }
-    assert config_entry.version == 4
+    assert config_entry.version == 3
 
 
 async def test_entry_migration_v3_failure(hass: HomeAssistant) -> None:
