@@ -19,20 +19,12 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    CONF_ACCESS_TOKEN,
-    CONF_CHANNELS,
-    CONF_REFRESH_TOKEN,
-    DOMAIN,
-    LOGGER,
-    OAUTH_SCOPES,
-)
+from .const import CONF_CHANNELS, DOMAIN, LOGGER, OAUTH_SCOPES
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -100,32 +92,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize entries."""
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-
-    await session.async_ensure_token_valid()
-
-    app_id = implementation.__dict__[CONF_CLIENT_ID]
-    app_secret = implementation.__dict__[CONF_CLIENT_SECRET]
-    access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
-    refresh_token = entry.data[CONF_TOKEN][CONF_REFRESH_TOKEN]
-
-    client = await Twitch(
-        app_id=app_id,
-        app_secret=app_secret,
-        target_app_auth_scope=OAUTH_SCOPES,
-    )
-    client.auto_refresh_auth = False
-    await client.set_user_authentication(
-        token=access_token,
-        refresh_token=refresh_token,
-        scope=OAUTH_SCOPES,
-        validate=True,
-    )
+    client = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
