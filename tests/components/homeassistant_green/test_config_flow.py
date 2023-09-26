@@ -15,7 +15,7 @@ def mock_get_green_settings():
     """Mock getting green settings."""
     with patch(
         "homeassistant.components.homeassistant_green.config_flow.async_get_green_settings",
-        return_value={"disk_led": True, "user_led": True, "power_led": True},
+        return_value={"disk_led": True, "power_led": True, "user_led": True},
     ) as get_green_settings:
         yield get_green_settings
 
@@ -123,7 +123,7 @@ async def test_option_flow_led_settings(
     assert result["type"] == FlowResultType.MENU
     assert result["step_id"] == "reboot_menu"
     set_green_settings.assert_called_once_with(
-        hass, {"disk_led": False, "user_led": False, "power_led": False}
+        hass, {"disk_led": False, "power_led": False, "user_led": False}
     )
 
     result = await hass.config_entries.options.async_configure(
@@ -157,7 +157,7 @@ async def test_option_flow_led_settings_unchanged(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {"disk_led": True, "user_led": True, "power_led": True},
+        {"disk_led": True, "power_led": True, "user_led": True},
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     set_green_settings.assert_not_called()
@@ -211,7 +211,7 @@ async def test_option_flow_led_settings_fail_2(
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            {"disk_led": False, "user_led": False, "power_led": False},
+            {"disk_led": False, "power_led": False, "user_led": False},
         )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "write_hw_settings_error"

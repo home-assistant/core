@@ -27,8 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 STEP_HW_SETTINGS_SCHEMA = vol.Schema(
     {
         vol.Required("disk_led"): selector.BooleanSelector(),
-        vol.Required("user_led"): selector.BooleanSelector(),
         vol.Required("power_led"): selector.BooleanSelector(),
+        vol.Required("user_led"): selector.BooleanSelector(),
     }
 )
 
