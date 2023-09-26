@@ -142,4 +142,3 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
     def available(self):
         """Return true is device is available."""
         return self.coordinator.dev_online
-
