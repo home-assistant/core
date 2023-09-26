@@ -1,6 +1,7 @@
 """Config flow for Twitch."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -8,6 +9,7 @@ from twitchAPI.helper import first
 from twitchAPI.twitch import Twitch
 from twitchAPI.types import AuthScope, InvalidTokenException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_TOKEN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
@@ -23,6 +25,7 @@ class OAuth2FlowHandler(
     """Config flow to handle Twitch OAuth2 authentication."""
 
     DOMAIN = DOMAIN
+    reauth_entry: ConfigEntry | None = None
 
     def __init__(self) -> None:
         """Initialize flow."""
@@ -55,17 +58,58 @@ class OAuth2FlowHandler(
         assert user
 
         user_id = user.id
-        await self.async_set_unique_id(user_id)
-        self._abort_if_unique_id_configured()
 
-        channels = [
-            channel.broadcaster_login
-            async for channel in client.get_followed_channels(user_id)
-        ]
+        if not self.reauth_entry:
+            await self.async_set_unique_id(user_id)
+            self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(
-            title=user.display_name, data=data, options={CONF_CHANNELS: channels}
+            channels = [
+                channel.broadcaster_login
+                async for channel in client.get_followed_channels(user_id)
+            ]
+
+            return self.async_create_entry(
+                title=user.display_name, data=data, options={CONF_CHANNELS: channels}
+            )
+
+        if self.reauth_entry.unique_id == user_id:
+            # Since we could not get all channels at import, we do it at the reauth
+            # immediately after.
+            if "imported" in self.reauth_entry.data:
+                channels = [
+                    channel.broadcaster_login
+                    async for channel in client.get_followed_channels(user_id)
+                ]
+                reauth_channels = self.reauth_entry.options[CONF_CHANNELS]
+                options = channels - reauth_channels
+
+            self.hass.config_entries.async_update_entry(
+                self.reauth_entry,
+                data=data,
+                options={CONF_CHANNELS: [*reauth_channels, *options]},
+            )
+            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
+        return self.async_abort(
+            reason="wrong_account",
+            description_placeholders={"title": self.reauth_entry.title},
         )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm reauth dialog."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import from yaml."""
