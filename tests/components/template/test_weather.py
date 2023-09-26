@@ -22,6 +22,7 @@ from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, STATE_UNKNO
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import assert_setup_component, mock_restore_cache_with_extra_data
 
@@ -634,3 +635,164 @@ async def test_trigger_action(
     assert state.state == "sunny"
     assert state.attributes["temperature"] == 3.0
     assert state.context is context
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": [
+                        {
+                            "variables": {
+                                "my_variable": "{{ trigger.event.data.information + 1 }}",
+                                "var_forecast_daily": "{{ trigger.event.data.forecast_daily }}",
+                                "var_forecast_hourly": "{{ trigger.event.data.forecast_hourly }}",
+                                "var_forecast_twice_daily": "{{ trigger.event.data.forecast_twice_daily }}",
+                            },
+                        },
+                    ],
+                    "weather": [
+                        {
+                            "name": "Test",
+                            "condition_template": "sunny",
+                            "precipitation_unit": "mm",
+                            "pressure_unit": "hPa",
+                            "visibility_unit": "km",
+                            "wind_speed_unit": "km/h",
+                            "temperature_unit": "°C",
+                            "temperature_template": "{{ my_variable + 1 }}",
+                            "humidity_template": "{{ my_variable + 1 }}",
+                            "wind_speed_template": "{{ my_variable + 1 }}",
+                            "wind_bearing_template": "{{ my_variable + 1 }}",
+                            "ozone_template": "{{ my_variable + 1 }}",
+                            "visibility_template": "{{ my_variable + 1 }}",
+                            "pressure_template": "{{ my_variable + 1 }}",
+                            "wind_gust_speed_template": "{{ my_variable + 1 }}",
+                            "cloud_coverage_template": "{{ my_variable + 1 }}",
+                            "dew_point_template": "{{ my_variable + 1 }}",
+                            "apparent_temperature_template": "{{ my_variable + 1 }}",
+                            "forecast_template": "{{ var_forecast_daily }}",
+                            "forecast_daily_template": "{{ var_forecast_daily }}",
+                            "forecast_hourly_template": "{{ var_forecast_hourly }}",
+                            "forecast_twice_daily_template": "{{ var_forecast_twice_daily }}",
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+async def test_trigger_weather_services(
+    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+) -> None:
+    """Test trigger entity with an action works."""
+    state = hass.states.get("weather.test")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    now = dt_util.now().isoformat()
+    hass.bus.async_fire(
+        "test_event",
+        {
+            "information": 1,
+            "forecast_daily": [
+                {
+                    "datetime": now,
+                    "condition": "sunny",
+                    "precipitation": 20,
+                    "temperature": 20,
+                    "templow": 15,
+                }
+            ],
+            "forecast_hourly": [
+                {
+                    "datetime": now,
+                    "condition": "sunny",
+                    "precipitation": 20,
+                    "temperature": 20,
+                    "templow": 15,
+                }
+            ],
+            "forecast_twice_daily": [
+                {
+                    "datetime": now,
+                    "condition": "sunny",
+                    "precipitation": 20,
+                    "temperature": 20,
+                    "templow": 15,
+                    "is_daytime": True,
+                }
+            ],
+        },
+        context=context,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("weather.test")
+    assert state.state == "sunny"
+    assert state.attributes["temperature"] == 3.0
+    assert state.attributes["humidity"] == 3.0
+    assert state.attributes["wind_speed"] == 3.0
+    assert state.attributes["wind_bearing"] == 3.0
+    assert state.attributes["ozone"] == 3.0
+    assert state.attributes["visibility"] == 3.0
+    assert state.attributes["pressure"] == 3.0
+    assert state.attributes["wind_gust_speed"] == 3.0
+    assert state.attributes["cloud_coverage"] == 3.0
+    assert state.attributes["dew_point"] == 3.0
+    assert state.attributes["apparent_temperature"] == 3.0
+    assert state.context is context
+
+    assert state.attributes["forecast"][0]["temperature"] == 20.0
+    assert state.attributes["forecast"][0]["templow"] == 15.0
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECAST,
+        {
+            "entity_id": state.entity_id,
+            "type": "daily",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "forecast": [
+            {
+                "datetime": now,
+                "condition": "sunny",
+                "precipitation": 20.0,
+                "temperature": 20.0,
+                "templow": 15.0,
+            }
+        ],
+    }
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECAST,
+        {
+            "entity_id": state.entity_id,
+            "type": "twice_daily",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "forecast": [
+            {
+                "datetime": now,
+                "condition": "sunny",
+                "precipitation": 20.0,
+                "temperature": 20.0,
+                "templow": 15.0,
+                "is_daytime": True,
+            }
+        ],
+    }

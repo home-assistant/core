@@ -537,6 +537,14 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
         self._attr_native_visibility_unit = config.get(CONF_VISIBILITY_UNIT)
         self._attr_native_wind_speed_unit = config.get(CONF_WIND_SPEED_UNIT)
 
+        self._attr_supported_features = 0
+        if config.get(CONF_FORECAST_DAILY_TEMPLATE):
+            self._attr_supported_features |= WeatherEntityFeature.FORECAST_DAILY
+        if config.get(CONF_FORECAST_HOURLY_TEMPLATE):
+            self._attr_supported_features |= WeatherEntityFeature.FORECAST_HOURLY
+        if config.get(CONF_FORECAST_TWICE_DAILY_TEMPLATE):
+            self._attr_supported_features |= WeatherEntityFeature.FORECAST_TWICE_DAILY
+
         for key in (
             CONF_WIND_SPEED_TEMPLATE,
             CONF_WIND_BEARING_TEMPLATE,
