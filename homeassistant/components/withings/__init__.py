@@ -50,7 +50,7 @@ from .const import (
 )
 from .coordinator import WithingsDataUpdateCoordinator
 
-PLATFORMS = [Platform.EVENT, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {

@@ -23,6 +23,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "in_bed": {
+        "name": "In bed"
+      }
+    },
     "event": {
       "sleep": {
         "name": "Bed activity",
