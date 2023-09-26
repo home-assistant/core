@@ -25,7 +25,7 @@ async def test_support(hass: HomeAssistant, init_wyoming_wake_word) -> None:
     assert entity is not None
 
     assert entity.supported_wake_words == [
-        wake_word.WakeWord(ww_id="Test Model", name="Test Model")
+        wake_word.WakeWord(id="Test Model", name="Test Model")
     ]
 
 
@@ -54,7 +54,7 @@ async def test_streaming_audio(
         "homeassistant.components.wyoming.wake_word.AsyncTcpClient",
         MockAsyncTcpClient(client_events),
     ):
-        result = await entity.async_process_audio_stream(audio_stream())
+        result = await entity.async_process_audio_stream(audio_stream(), None)
 
     assert result is not None
     assert result == snapshot
@@ -78,7 +78,7 @@ async def test_streaming_audio_connection_lost(
         "homeassistant.components.wyoming.wake_word.AsyncTcpClient",
         MockAsyncTcpClient([None]),
     ):
-        result = await entity.async_process_audio_stream(audio_stream())
+        result = await entity.async_process_audio_stream(audio_stream(), None)
 
     assert result is None
 
@@ -103,6 +103,6 @@ async def test_streaming_audio_oserror(
         "homeassistant.components.wyoming.wake_word.AsyncTcpClient",
         mock_client,
     ), patch.object(mock_client, "read_event", side_effect=OSError("Boom!")):
-        result = await entity.async_process_audio_stream(audio_stream())
+        result = await entity.async_process_audio_stream(audio_stream(), None)
 
     assert result is None

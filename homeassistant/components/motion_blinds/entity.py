@@ -8,7 +8,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DataUpdateCoordinatorMotionBlinds
 from .const import (
     ATTR_AVAILABLE,
     DEFAULT_GATEWAY_NAME,
@@ -16,6 +15,7 @@ from .const import (
     KEY_GATEWAY,
     MANUFACTURER,
 )
+from .coordinator import DataUpdateCoordinatorMotionBlinds
 from .gateway import device_name
 
 

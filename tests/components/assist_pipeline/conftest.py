@@ -184,16 +184,18 @@ class MockWakeWordEntity(wake_word.WakeWordDetectionEntity):
     @property
     def supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
-        return [wake_word.WakeWord(ww_id="test_ww", name="Test Wake Word")]
+        return [wake_word.WakeWord(id="test_ww", name="Test Wake Word")]
 
     async def _async_process_audio_stream(
-        self, stream: AsyncIterable[tuple[bytes, int]]
+        self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str | None
     ) -> wake_word.DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps."""
+        if wake_word_id is None:
+            wake_word_id = self.supported_wake_words[0].id
         async for chunk, timestamp in stream:
             if chunk.startswith(b"wake word"):
                 return wake_word.DetectionResult(
-                    ww_id=self.supported_wake_words[0].ww_id,
+                    wake_word_id=wake_word_id,
                     timestamp=timestamp,
                     queued_audio=[(b"queued audio", 0)],
                 )

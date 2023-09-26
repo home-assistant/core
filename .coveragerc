@@ -29,7 +29,8 @@ omit =
     homeassistant/components/adguard/switch.py
     homeassistant/components/ads/*
     homeassistant/components/aemet/weather_update_coordinator.py
-    homeassistant/components/aftership/*
+    homeassistant/components/aftership/__init__.py
+    homeassistant/components/aftership/sensor.py
     homeassistant/components/agent_dvr/alarm_control_panel.py
     homeassistant/components/agent_dvr/camera.py
     homeassistant/components/agent_dvr/helpers.py
@@ -246,6 +247,8 @@ omit =
     homeassistant/components/duotecno/switch.py
     homeassistant/components/duotecno/cover.py
     homeassistant/components/duotecno/light.py
+    homeassistant/components/duotecno/climate.py
+    homeassistant/components/duotecno/binary_sensor.py
     homeassistant/components/dwd_weather_warnings/const.py
     homeassistant/components/dwd_weather_warnings/coordinator.py
     homeassistant/components/dwd_weather_warnings/sensor.py
@@ -723,6 +726,8 @@ omit =
     homeassistant/components/matter/__init__.py
     homeassistant/components/meater/__init__.py
     homeassistant/components/meater/sensor.py
+    homeassistant/components/medcom_ble/__init__.py
+    homeassistant/components/medcom_ble/sensor.py
     homeassistant/components/mediaroom/media_player.py
     homeassistant/components/melcloud/__init__.py
     homeassistant/components/melcloud/climate.py
@@ -762,6 +767,7 @@ omit =
     homeassistant/components/moehlenhoff_alpha2/climate.py
     homeassistant/components/moehlenhoff_alpha2/sensor.py
     homeassistant/components/motion_blinds/__init__.py
+    homeassistant/components/motion_blinds/coordinator.py
     homeassistant/components/motion_blinds/cover.py
     homeassistant/components/motion_blinds/entity.py
     homeassistant/components/motion_blinds/sensor.py
