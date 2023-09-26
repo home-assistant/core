@@ -1,7 +1,6 @@
 """Sensor for checking the status of London Underground tube lines."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -74,6 +73,6 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
         return self.coordinator.data[self.name]["State"]
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return other details about the sensor state."""
         return {"Description": self.coordinator.data[self.name]["Description"]}
