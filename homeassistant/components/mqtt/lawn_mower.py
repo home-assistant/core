@@ -127,7 +127,6 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT lawn mower."""
-        self._attr_current_option = None
         LawnMowerEntity.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
