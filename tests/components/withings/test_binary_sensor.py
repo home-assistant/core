@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from withings_api.common import NotifyAppli
 
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import call_webhook, setup_integration
@@ -17,14 +17,14 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 
-async def test_sleep_event(
+async def test_binary_sensor(
     hass: HomeAssistant,
     withings: AsyncMock,
     webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test sleep event."""
+    """Test binary sensor."""
     await setup_integration(hass, webhook_config_entry)
 
     client = await hass_client_no_auth()
@@ -41,8 +41,7 @@ async def test_sleep_event(
     )
     assert resp.message_code == 0
     await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state.state == "on"
+    assert hass.states.get(entity_id).state == STATE_ON
 
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
@@ -55,8 +54,7 @@ async def test_sleep_event(
     )
     assert resp.message_code == 0
     await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state.state == "off"
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_polling_binary_sensor(
@@ -72,7 +70,7 @@ async def test_polling_binary_sensor(
 
     entity_id = "binary_sensor.henk_in_bed"
 
-    assert hass.states.get(entity_id).state is STATE_UNKNOWN
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     with pytest.raises(ClientResponseError):
         await call_webhook(
