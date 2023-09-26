@@ -149,5 +149,5 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
         _LOGGER.debug("Device connection successful, proceeding")
         return self.async_create_entry(
-            title=self.context["title_placeholders"]["name"], data={}
+            title=self._discovery_info.name, data={}
         )
