@@ -9,7 +9,6 @@ from functools import cached_property
 import logging
 from typing import TypeVar
 
-import async_timeout
 from pyrainbird.async_client import (
     AsyncRainbirdController,
     RainbirdApiException,
@@ -140,7 +139,7 @@ class RainbirdScheduleUpdateCoordinator(DataUpdateCoordinator[Schedule]):
     async def _async_update_data(self) -> Schedule:
         """Fetch data from Rain Bird device."""
         try:
-            async with async_timeout.timeout(TIMEOUT_SECONDS):
+            async with asyncio.timeout(TIMEOUT_SECONDS):
                 return await self._controller.get_schedule()
         except RainbirdApiException as err:
             raise UpdateFailed(f"Error communicating with Device: {err}") from err
