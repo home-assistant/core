@@ -243,7 +243,7 @@ class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
         assert self.coordinator.config_entry is not None
         return DeviceInfo(
             configuration_url="https://hub.upcloud.com",
-            default_model="Control Panel",
+            model="Control Panel",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={
                 (DOMAIN, f"{self.coordinator.config_entry.data[CONF_USERNAME]}@hub")

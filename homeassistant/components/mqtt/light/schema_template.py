@@ -179,6 +179,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             or self._topics[CONF_STATE_TOPIC] is None
             or CONF_STATE_TEMPLATE not in self._config
         )
+        self._attr_assumed_state = bool(self._optimistic)
 
         color_modes = {ColorMode.ONOFF}
         if CONF_BRIGHTNESS_TEMPLATE in config:
@@ -314,11 +315,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
             if last_state.attributes.get(ATTR_EFFECT):
                 self._attr_effect = last_state.attributes.get(ATTR_EFFECT)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return self._optimistic
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on.

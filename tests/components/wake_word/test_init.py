@@ -3,9 +3,11 @@ from collections.abc import AsyncIterable, Generator
 from pathlib import Path
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
@@ -147,7 +149,10 @@ async def test_config_entry_unload(
 
 
 async def test_detected_entity(
-    hass: HomeAssistant, tmp_path: Path, setup: MockProviderEntity
+    hass: HomeAssistant,
+    tmp_path: Path,
+    setup: MockProviderEntity,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test successful detection through entity."""
 
@@ -158,8 +163,12 @@ async def test_detected_entity(
             timestamp += _MS_PER_CHUNK
 
     # Need 2 seconds to trigger
+    state = setup.state
     result = await setup.async_process_audio_stream(three_second_stream())
     assert result == wake_word.DetectionResult("test_ww", 2048)
+
+    assert state != setup.state
+    assert state == snapshot
 
 
 async def test_not_detected_entity(
@@ -174,8 +183,12 @@ async def test_not_detected_entity(
             timestamp += _MS_PER_CHUNK
 
     # Need 2 seconds to trigger
+    state = setup.state
     result = await setup.async_process_audio_stream(one_second_stream())
     assert result is None
+
+    # State should only change when there's a detection
+    assert state == setup.state
 
 
 async def test_default_engine_none(hass: HomeAssistant, tmp_path: Path) -> None:
@@ -224,3 +237,10 @@ async def test_restore_state(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == timestamp
+
+
+async def test_entity_attributes(
+    hass: HomeAssistant, mock_provider_entity: MockProviderEntity
+) -> None:
+    """Test that the provider entity attributes match expectations."""
+    assert mock_provider_entity.entity_category == EntityCategory.DIAGNOSTIC

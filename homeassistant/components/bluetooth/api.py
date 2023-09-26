@@ -138,7 +138,7 @@ async def async_process_advertisements(
     timeout: int,
 ) -> BluetoothServiceInfoBleak:
     """Process advertisements until callback returns true or timeout expires."""
-    done: Future[BluetoothServiceInfoBleak] = Future()
+    done: Future[BluetoothServiceInfoBleak] = hass.loop.create_future()
 
     @hass_callback
     def _async_discovered_device(

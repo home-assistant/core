@@ -81,7 +81,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         except UnidentifiedImageError as ex:
             _LOGGER.error(
                 "Bad image from %s '%s' provided, are you sure it's an image? %s",
-                image_type,  # pylint: disable=used-before-assignment
+                image_type,
                 image_reference,
                 ex,
             )

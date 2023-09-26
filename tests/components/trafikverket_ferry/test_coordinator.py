@@ -24,6 +24,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_coordinator(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
+    freezer: FrozenDateTimeFactory,
     monkeypatch: pytest.MonkeyPatch,
     get_ferries: list[FerryStop],
 ) -> None:
@@ -59,7 +60,8 @@ async def test_coordinator(
             datetime(dt_util.now().year + 2, 5, 1, 12, 0, tzinfo=dt_util.UTC),
         )
 
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=6))
+        freezer.tick(timedelta(minutes=6))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         mock_data.assert_called_once()
         state1 = hass.states.get("sensor.harbor1_departure_from")
@@ -71,7 +73,8 @@ async def test_coordinator(
         mock_data.reset_mock()
 
         mock_data.side_effect = NoFerryFound()
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=6))
+        freezer.tick(timedelta(minutes=6))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         mock_data.assert_called_once()
         state1 = hass.states.get("sensor.harbor1_departure_from")
@@ -80,7 +83,8 @@ async def test_coordinator(
 
         mock_data.return_value = get_ferries
         mock_data.side_effect = None
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=6))
+        freezer.tick(timedelta(minutes=6))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         # mock_data.assert_called_once()
         state1 = hass.states.get("sensor.harbor1_departure_from")
@@ -88,7 +92,8 @@ async def test_coordinator(
         mock_data.reset_mock()
 
         mock_data.side_effect = InvalidAuthentication()
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=6))
+        freezer.tick(timedelta(minutes=6))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         mock_data.assert_called_once()
         state1 = hass.states.get("sensor.harbor1_departure_from")

@@ -1,13 +1,14 @@
 """Config flow for AEMET OpenData."""
 from __future__ import annotations
 
-from aemet_opendata import AEMET
+from aemet_opendata.exceptions import AuthError
+from aemet_opendata.interface import AEMET, ConnectionOptions
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
@@ -39,8 +40,11 @@ class AemetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
-            api_online = await _is_aemet_api_online(self.hass, user_input[CONF_API_KEY])
-            if not api_online:
+            options = ConnectionOptions(user_input[CONF_API_KEY], False)
+            aemet = AEMET(aiohttp_client.async_get_clientsession(self.hass), options)
+            try:
+                await aemet.select_coordinates(latitude, longitude)
+            except AuthError:
                 errors["base"] = "invalid_api_key"
 
             if not errors:
@@ -70,10 +74,3 @@ class AemetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
-
-
-async def _is_aemet_api_online(hass, api_key):
-    aemet = AEMET(api_key)
-    return await hass.async_add_executor_job(
-        aemet.get_conventional_observation_stations, False
-    )

@@ -78,7 +78,7 @@ async def test_hardware_info(
                     "description": "bla_description",
                 },
                 "name": "Home Assistant SkyConnect",
-                "url": None,
+                "url": "https://skyconnect.home-assistant.io/documentation/",
             },
             {
                 "board": None,
@@ -91,7 +91,7 @@ async def test_hardware_info(
                     "description": "bla_description_2",
                 },
                 "name": "Home Assistant SkyConnect",
-                "url": None,
+                "url": "https://skyconnect.home-assistant.io/documentation/",
             },
         ]
     }

@@ -60,6 +60,7 @@ def config_entry_fixture(hass, config, options, config_entry_version):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=AXIS_DOMAIN,
+        entry_id="676abe5b73621446e6550a2e86ffe3dd",
         unique_id=FORMATTED_MAC,
         data=config,
         options=options,

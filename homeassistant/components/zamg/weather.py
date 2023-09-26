@@ -32,6 +32,10 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
 
     def __init__(
         self, coordinator: ZamgDataUpdateCoordinator, name: str, station_id: str
@@ -48,16 +52,6 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
             configuration_url=MANUFACTURER_URL,
             name=coordinator.name,
         )
-        # set units of ZAMG API
-        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_native_pressure_unit = UnitOfPressure.HPA
-        self._attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
-        self._attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
-
-    @property
-    def condition(self) -> str | None:
-        """Return the current condition."""
-        return None
 
     @property
     def native_temperature(self) -> float | None:

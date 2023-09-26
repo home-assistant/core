@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from functools import partial
 import logging
-from typing import Any, Protocol, cast, final
+from typing import TYPE_CHECKING, Any, Protocol, cast, final
 
 import voluptuous as vol
 
@@ -69,9 +69,20 @@ from .const import (
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
+    CONF_CONFIGURATION_URL,
+    CONF_CONNECTIONS,
+    CONF_DEPRECATED_VIA_HUB,
     CONF_ENCODING,
+    CONF_HW_VERSION,
+    CONF_IDENTIFIERS,
+    CONF_MANUFACTURER,
+    CONF_OBJECT_ID,
+    CONF_ORIGIN,
     CONF_QOS,
+    CONF_SUGGESTED_AREA,
+    CONF_SW_VERSION,
     CONF_TOPIC,
+    CONF_VIA_DEVICE,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
@@ -84,6 +95,7 @@ from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
     MQTT_DISCOVERY_UPDATED,
+    MQTT_ORIGIN_INFO_SCHEMA,
     MQTTDiscoveryPayload,
     clear_discovery_hash,
     set_discovery_hash,
@@ -118,17 +130,6 @@ CONF_PAYLOAD_AVAILABLE = "payload_available"
 CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
 CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
 CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
-
-CONF_IDENTIFIERS = "identifiers"
-CONF_CONNECTIONS = "connections"
-CONF_MANUFACTURER = "manufacturer"
-CONF_HW_VERSION = "hw_version"
-CONF_SW_VERSION = "sw_version"
-CONF_VIA_DEVICE = "via_device"
-CONF_DEPRECATED_VIA_HUB = "via_hub"
-CONF_SUGGESTED_AREA = "suggested_area"
-CONF_CONFIGURATION_URL = "configuration_url"
-CONF_OBJECT_ID = "object_id"
 
 MQTT_ATTRIBUTES_BLOCKED = {
     "assumed_state",
@@ -228,6 +229,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
 MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        vol.Optional(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
         vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
@@ -848,7 +850,8 @@ class MqttDiscoveryUpdate(Entity):
                 discovery_hash,
                 payload,
             )
-            assert self._discovery_data
+            if TYPE_CHECKING:
+                assert self._discovery_data
             old_payload: DiscoveryInfoType
             old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
             debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
@@ -875,7 +878,8 @@ class MqttDiscoveryUpdate(Entity):
                     send_discovery_done(self.hass, self._discovery_data)
 
         if discovery_hash:
-            assert self._discovery_data is not None
+            if TYPE_CHECKING:
+                assert self._discovery_data is not None
             debug_info.add_entity_discovery_data(
                 self.hass, self._discovery_data, self.entity_id
             )
@@ -1133,6 +1137,11 @@ class MqttEntity(
         elif not self._default_to_device_class_name():
             # Assign the default name
             self._attr_name = self._default_name
+        elif hasattr(self, "_attr_name"):
+            # An entity name was not set in the config
+            # don't set the name attribute and derive
+            # the name from the device_class
+            delattr(self, "_attr_name")
         if CONF_DEVICE in config:
             device_name: str
             if CONF_NAME not in config[CONF_DEVICE]:
@@ -1144,11 +1153,8 @@ class MqttEntity(
                 )
             elif (device_name := config[CONF_DEVICE][CONF_NAME]) == entity_name:
                 self._attr_name = None
-                self._issue_key = (
-                    "entity_name_is_device_name_discovery"
-                    if self._discovery
-                    else "entity_name_is_device_name_yaml"
-                )
+                if not self._discovery:
+                    self._issue_key = "entity_name_is_device_name_yaml"
                 _LOGGER.warning(
                     "MQTT device name is equal to entity name in your config %s, "
                     "this is not expected. Please correct your configuration. "
@@ -1162,11 +1168,8 @@ class MqttEntity(
                 if device_name[:1].isupper():
                     # Ensure a capital if the device name first char is a capital
                     new_entity_name = new_entity_name[:1].upper() + new_entity_name[1:]
-                self._issue_key = (
-                    "entity_name_startswith_device_name_discovery"
-                    if self._discovery
-                    else "entity_name_startswith_device_name_yaml"
-                )
+                if not self._discovery:
+                    self._issue_key = "entity_name_startswith_device_name_yaml"
                 _LOGGER.warning(
                     "MQTT entity name starts with the device name in your config %s, "
                     "this is not expected. Please correct your configuration. "

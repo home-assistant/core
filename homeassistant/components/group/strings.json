@@ -8,6 +8,7 @@
         "menu_options": {
           "binary_sensor": "Binary sensor group",
           "cover": "Cover group",
+          "event": "Event group",
           "fan": "Fan group",
           "light": "Light group",
           "lock": "Lock group",
@@ -27,6 +28,14 @@
         }
       },
       "cover": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
+        }
+      },
+      "event": {
         "title": "[%key:component::group::config::step::user::title%]",
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",

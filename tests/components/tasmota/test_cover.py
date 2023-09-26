@@ -55,6 +55,7 @@ async def test_missing_relay(
 @pytest.mark.parametrize(
     ("relay_config", "num_covers"),
     [
+        ([3, 3, 3, 3, 3, 3, 1, 1, 3, 3] + [3, 3] * 12, 16),
         ([3, 3, 3, 3, 3, 3, 1, 1, 3, 3], 4),
         ([3, 3, 3, 3, 0, 0, 0, 0], 2),
         ([3, 3, 1, 1, 0, 0, 0, 0], 1),

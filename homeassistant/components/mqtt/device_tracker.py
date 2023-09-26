@@ -165,6 +165,11 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             },
         )
 
+    @property
+    def force_update(self) -> bool:
+        """Do not force updates if the state is the same."""
+        return False
+
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)

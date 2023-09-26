@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from doorbirdpy import DoorBird
 
@@ -131,7 +131,7 @@ class ConfiguredDoorBird:
 
         for fav_id in favs["http"]:
             if favs["http"][fav_id]["value"] == url:
-                return fav_id
+                return cast(str, fav_id)
 
         return None
 
@@ -145,3 +145,20 @@ class ConfiguredDoorBird:
             "html5_viewer_url": self._device.html5_viewer_url,
             ATTR_ENTITY_ID: self._event_entity_ids.get(event),
         }
+
+
+async def async_reset_device_favorites(
+    hass: HomeAssistant, door_station: ConfiguredDoorBird
+) -> None:
+    """Handle clearing favorites on device."""
+    await hass.async_add_executor_job(_reset_device_favorites, door_station)
+
+
+def _reset_device_favorites(door_station: ConfiguredDoorBird) -> None:
+    """Handle clearing favorites on device."""
+    # Clear webhooks
+    door_bird = door_station.device
+    favorites: dict[str, list[str]] = door_bird.favorites()
+    for favorite_type, favorite_ids in favorites.items():
+        for favorite_id in favorite_ids:
+            door_bird.delete_favorite(favorite_type, favorite_id)

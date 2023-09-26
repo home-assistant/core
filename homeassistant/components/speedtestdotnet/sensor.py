@@ -15,7 +15,6 @@ from homeassistant.const import UnitOfDataRate, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -77,10 +76,7 @@ async def async_setup_entry(
     )
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class SpeedtestSensor(
-    CoordinatorEntity[SpeedTestDataCoordinator], RestoreEntity, SensorEntity
-):
+class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], SensorEntity):
     """Implementation of a speedtest.net sensor."""
 
     entity_description: SpeedtestSensorEntityDescription
@@ -134,9 +130,3 @@ class SpeedtestSensor(
                 self._attrs[ATTR_BYTES_SENT] = self.coordinator.data[ATTR_BYTES_SENT]
 
         return self._attrs
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        if state := await self.async_get_last_state():
-            self._state = state.state

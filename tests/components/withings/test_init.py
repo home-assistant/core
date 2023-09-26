@@ -1,28 +1,24 @@
 """Tests for the Withings component."""
-from unittest.mock import MagicMock, patch
+from datetime import timedelta
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock
+from urllib.parse import urlparse
 
 import pytest
 import voluptuous as vol
-from withings_api.common import UnauthorizedException
+from withings_api.common import NotifyAppli
 
-import homeassistant.components.webhook as webhook
+from homeassistant.components.webhook import async_generate_url
 from homeassistant.components.withings import CONFIG_SCHEMA, DOMAIN, async_setup, const
-from homeassistant.components.withings.common import ConfigEntryWithingsApi, DataManager
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_EXTERNAL_URL,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_METRIC,
-)
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.setup import async_setup_component
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
-from .common import ComponentFactory, get_data_manager_by_user_id, new_profile_config
+from . import enable_webhooks, setup_integration
+from .conftest import WEBHOOK_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import ClientSessionGenerator
 
 
 def config_schema_validate(withings_config) -> dict:
@@ -106,121 +102,142 @@ async def test_async_setup_no_config(hass: HomeAssistant) -> None:
     hass.async_create_task.assert_not_called()
 
 
+async def test_data_manager_webhook_subscription(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    disable_webhook_delay,
+    config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test data manager webhook subscriptions."""
+    await enable_webhooks(hass)
+    await setup_integration(hass, config_entry)
+    await hass_client_no_auth()
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert withings.async_notify_subscribe.call_count == 4
+
+    webhook_url = "http://example.local:8123/api/webhook/55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
+
+    withings.async_notify_subscribe.assert_any_call(webhook_url, NotifyAppli.WEIGHT)
+    withings.async_notify_subscribe.assert_any_call(
+        webhook_url, NotifyAppli.CIRCULATORY
+    )
+    withings.async_notify_subscribe.assert_any_call(webhook_url, NotifyAppli.ACTIVITY)
+    withings.async_notify_subscribe.assert_any_call(webhook_url, NotifyAppli.SLEEP)
+
+    withings.async_notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_IN)
+    withings.async_notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_OUT)
+
+
 @pytest.mark.parametrize(
-    "exception",
+    "method",
     [
-        UnauthorizedException("401"),
-        UnauthorizedException("401"),
-        Exception("401, this is the message"),
+        "PUT",
+        "HEAD",
     ],
 )
-@patch("homeassistant.components.withings.common._RETRY_COEFFICIENT", 0)
-async def test_auth_failure(
+async def test_requests(
     hass: HomeAssistant,
-    component_factory: ComponentFactory,
-    exception: Exception,
-    current_request_with_host: None,
+    withings: AsyncMock,
+    config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    method: str,
+    disable_webhook_delay,
 ) -> None:
-    """Test auth failure."""
-    person0 = new_profile_config(
-        "person0",
-        0,
-        api_response_user_get_device=exception,
-        api_response_measure_get_meas=exception,
-        api_response_sleep_get_summary=exception,
+    """Test we handle request methods Withings sends."""
+    await setup_integration(hass, config_entry)
+    client = await hass_client_no_auth()
+    webhook_url = async_generate_url(hass, WEBHOOK_ID)
+
+    response = await client.request(
+        method=method,
+        path=urlparse(webhook_url).path,
     )
-
-    await component_factory.configure_component(profile_configs=(person0,))
-    assert not hass.config_entries.flow.async_progress()
-
-    await component_factory.setup_profile(person0.user_id)
-    data_manager = get_data_manager_by_user_id(hass, person0.user_id)
-    await data_manager.poll_data_update_coordinator.async_refresh()
-
-    flows = hass.config_entries.flow.async_progress()
-    assert flows
-    assert len(flows) == 1
-
-    flow = flows[0]
-    assert flow["handler"] == const.DOMAIN
-
-    result = await hass.config_entries.flow.async_configure(
-        flow["flow_id"], user_input={}
-    )
-    assert result
-    assert result["type"] == "external"
-    assert result["handler"] == const.DOMAIN
-    assert result["step_id"] == "auth"
-
-    await component_factory.unload(person0)
+    assert response.status == 200
 
 
-async def test_set_config_unique_id(
-    hass: HomeAssistant, component_factory: ComponentFactory
+@pytest.mark.parametrize(
+    ("config_entry"),
+    [
+        MockConfigEntry(
+            domain=DOMAIN,
+            unique_id="123",
+            data={
+                "token": {"userid": 123},
+                "profile": "henk",
+                "use_webhook": False,
+                "webhook_id": "3290798afaebd28519c4883d3d411c7197572e0cc9b8d507471f59a700a61a55",
+            },
+        ),
+        MockConfigEntry(
+            domain=DOMAIN,
+            unique_id="123",
+            data={
+                "token": {"userid": 123},
+                "profile": "henk",
+                "use_webhook": False,
+            },
+        ),
+    ],
+)
+async def test_config_flow_upgrade(
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test upgrading configs to use a unique id."""
-    person0 = new_profile_config("person0", 0)
-
-    await component_factory.configure_component(profile_configs=(person0,))
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "token": {"userid": "my_user_id"},
-            "auth_implementation": "withings",
-            "profile": person0.profile,
-        },
-    )
-
-    with patch("homeassistant.components.withings.async_get_data_manager") as mock:
-        data_manager: DataManager = MagicMock(spec=DataManager)
-        data_manager.poll_data_update_coordinator = MagicMock(
-            spec=DataUpdateCoordinator
-        )
-        data_manager.poll_data_update_coordinator.last_update_success = True
-        data_manager.subscription_update_coordinator = MagicMock(
-            spec=DataUpdateCoordinator
-        )
-        data_manager.subscription_update_coordinator.last_update_success = True
-        mock.return_value = data_manager
-        config_entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        assert config_entry.unique_id == "my_user_id"
-
-
-async def test_set_convert_unique_id_to_string(hass: HomeAssistant) -> None:
-    """Test upgrading configs to use a unique id."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "token": {"userid": 1234},
-            "auth_implementation": "withings",
-            "profile": "person0",
-        },
-    )
+    """Test config flow upgrade."""
     config_entry.add_to_hass(hass)
 
-    hass_config = {
-        HA_DOMAIN: {
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
-            CONF_EXTERNAL_URL: "http://127.0.0.1:8080/",
-        },
-        const.DOMAIN: {
-            CONF_CLIENT_ID: "my_client_id",
-            CONF_CLIENT_SECRET: "my_client_secret",
-            const.CONF_USE_WEBHOOK: False,
-        },
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+
+    assert entry.unique_id == "123"
+    assert entry.data["token"]["userid"] == 123
+    assert CONF_WEBHOOK_ID in entry.data
+    assert entry.options == {
+        "use_webhook": False,
     }
 
-    with patch(
-        "homeassistant.components.withings.common.ConfigEntryWithingsApi",
-        spec=ConfigEntryWithingsApi,
-    ):
-        await async_process_ha_core_config(hass, hass_config.get(HA_DOMAIN))
-        assert await async_setup_component(hass, HA_DOMAIN, {})
-        assert await async_setup_component(hass, webhook.DOMAIN, hass_config)
-        assert await async_setup_component(hass, const.DOMAIN, hass_config)
-        await hass.async_block_till_done()
 
-        assert config_entry.unique_id == "1234"
+@pytest.mark.parametrize(
+    ("body", "expected_code"),
+    [
+        [{"userid": 0, "appli": NotifyAppli.WEIGHT.value}, 0],  # Success
+        [{"userid": None, "appli": 1}, 0],  # Success, we ignore the user_id.
+        [{}, 12],  # No request body.
+        [{"userid": "GG"}, 20],  # appli not provided.
+        [{"userid": 0}, 20],  # appli not provided.
+        [{"userid": 0, "appli": 99}, 21],  # Invalid appli.
+        [
+            {"userid": 11, "appli": NotifyAppli.WEIGHT.value},
+            0,
+        ],  # Success, we ignore the user_id
+    ],
+)
+async def test_webhook_post(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    disable_webhook_delay,
+    body: dict[str, Any],
+    expected_code: int,
+    current_request_with_host: None,
+) -> None:
+    """Test webhook callback."""
+    await setup_integration(hass, config_entry)
+    client = await hass_client_no_auth()
+    webhook_url = async_generate_url(hass, WEBHOOK_ID)
+
+    resp = await client.post(urlparse(webhook_url).path, data=body)
+
+    # Wait for remaining tasks to complete.
+    await hass.async_block_till_done()
+
+    data = await resp.json()
+    resp.close()
+
+    assert data["code"] == expected_code

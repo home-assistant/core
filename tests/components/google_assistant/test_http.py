@@ -1,5 +1,5 @@
 """Test Google http services."""
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import ANY, patch
@@ -51,7 +51,7 @@ async def test_get_jwt(hass: HomeAssistant) -> None:
 
     jwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkdW1teUBkdW1teS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInNjb3BlIjoiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vYXV0aC9ob21lZ3JhcGgiLCJhdWQiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vby9vYXV0aDIvdG9rZW4iLCJpYXQiOjE1NzEwMTEyMDAsImV4cCI6MTU3MTAxNDgwMH0.akHbMhOflXdIDHVvUVwO0AoJONVOPUdCghN6hAdVz4gxjarrQeGYc_Qn2r84bEvCU7t6EvimKKr0fyupyzBAzfvKULs5mTHO3h2CwSgvOBMv8LnILboJmbO4JcgdnRV7d9G3ktQs7wWSCXJsI5i5jUr1Wfi9zWwxn2ebaAAgrp8"
     res = _get_homegraph_jwt(
-        datetime(2019, 10, 14, tzinfo=timezone.utc),
+        datetime(2019, 10, 14, tzinfo=UTC),
         DUMMY_CONFIG["service_account"]["client_email"],
         DUMMY_CONFIG["service_account"]["private_key"],
     )
@@ -85,7 +85,7 @@ async def test_update_access_token(hass: HomeAssistant) -> None:
     config = GoogleConfig(hass, DUMMY_CONFIG)
     await config.async_initialize()
 
-    base_time = datetime(2019, 10, 14, tzinfo=timezone.utc)
+    base_time = datetime(2019, 10, 14, tzinfo=UTC)
     with patch(
         "homeassistant.components.google_assistant.http._get_homegraph_token"
     ) as mock_get_token, patch(

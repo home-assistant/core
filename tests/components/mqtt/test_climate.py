@@ -70,7 +70,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 ENTITY_CLIMATE = "climate.test"
 
-
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
         climate.DOMAIN: {
@@ -82,7 +81,6 @@ DEFAULT_CONFIG = {
             "temperature_high_command_topic": "temperature-high-topic",
             "fan_mode_command_topic": "fan-mode-topic",
             "swing_mode_command_topic": "swing-mode-topic",
-            "aux_command_topic": "aux-topic",
             "preset_mode_command_topic": "preset-mode-topic",
             "preset_modes": [
                 "eco",
@@ -225,7 +223,6 @@ async def test_supported_features(
         | ClimateEntityFeature.SWING_MODE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.AUX_HEAT
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_HUMIDITY
     )
@@ -1249,11 +1246,16 @@ async def test_set_preset_mode_pessimistic(
     assert state.attributes.get("preset_mode") == "home"
 
 
+# Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
+# and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
+# Support will be removed in HA Core 2024.3
 @pytest.mark.parametrize(
     "hass_config",
     [
         help_custom_config(
-            climate.DOMAIN, DEFAULT_CONFIG, ({"aux_state_topic": "aux-state"},)
+            climate.DOMAIN,
+            DEFAULT_CONFIG,
+            ({"aux_command_topic": "aux-topic", "aux_state_topic": "aux-state"},),
         )
     ],
 )
@@ -1283,7 +1285,18 @@ async def test_set_aux_pessimistic(
     assert state.attributes.get("aux_heat") == "off"
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+# Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
+# and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
+# Support will be removed in HA Core 2024.3
+# "aux_command_topic": "aux-topic"
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            climate.DOMAIN, DEFAULT_CONFIG, ({"aux_command_topic": "aux-topic"},)
+        )
+    ],
+)
 async def test_set_aux(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -1302,6 +1315,18 @@ async def test_set_aux(
     mqtt_mock.async_publish.assert_called_once_with("aux-topic", "OFF", 0, False)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("aux_heat") == "off"
+
+    support = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.AUX_HEAT
+        | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TARGET_HUMIDITY
+    )
+
+    assert state.attributes.get("supported_features") == support
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -1548,6 +1573,10 @@ async def test_get_with_templates(
     assert state.attributes.get("preset_mode") == "eco"
 
     # Aux mode
+
+    # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
+    # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
+    # Support will be removed in HA Core 2024.3
     assert state.attributes.get("aux_heat") == "off"
     async_fire_mqtt_message(hass, "aux-state", "switchmeon")
     state = hass.states.get(ENTITY_CLIMATE)

@@ -11,7 +11,7 @@ from ipaddress import IPv4Address, IPv6Address
 import logging
 import re
 import sys
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
 import voluptuous as vol
 from zeroconf import (
@@ -303,7 +303,8 @@ def _match_against_data(
         if key not in match_data:
             return False
         match_val = matcher[key]
-        assert isinstance(match_val, str)
+        if TYPE_CHECKING:
+            assert isinstance(match_val, str)
 
         if not _memorized_fnmatch(match_data[key], match_val):
             return False
@@ -485,12 +486,14 @@ class ZeroconfDiscovery:
                     continue
                 if ATTR_PROPERTIES in matcher:
                     matcher_props = matcher[ATTR_PROPERTIES]
-                    assert isinstance(matcher_props, dict)
+                    if TYPE_CHECKING:
+                        assert isinstance(matcher_props, dict)
                     if not _match_against_props(matcher_props, props):
                         continue
 
             matcher_domain = matcher["domain"]
-            assert isinstance(matcher_domain, str)
+            if TYPE_CHECKING:
+                assert isinstance(matcher_domain, str)
             context = {
                 "source": config_entries.SOURCE_ZEROCONF,
             }
@@ -516,10 +519,10 @@ def async_get_homekit_discovery(
 
     Return the domain to forward the discovery data to
     """
-    if not (model := props.get(HOMEKIT_MODEL_LOWER) or props.get(HOMEKIT_MODEL_UPPER)):
+    if not (
+        model := props.get(HOMEKIT_MODEL_LOWER) or props.get(HOMEKIT_MODEL_UPPER)
+    ) or not isinstance(model, str):
         return None
-
-    assert isinstance(model, str)
 
     for split_str in _HOMEKIT_MODEL_SPLITS:
         key = (model.split(split_str))[0] if split_str else model

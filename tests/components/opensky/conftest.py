@@ -6,8 +6,18 @@ from unittest.mock import patch
 import pytest
 from python_opensky import StatesResponse
 
-from homeassistant.components.opensky.const import CONF_ALTITUDE, DOMAIN
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
+from homeassistant.components.opensky.const import (
+    CONF_ALTITUDE,
+    CONF_CONTRIBUTING_USER,
+    DOMAIN,
+)
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_PASSWORD,
+    CONF_RADIUS,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -46,6 +56,26 @@ def mock_config_entry_altitude() -> MockConfigEntry:
         options={
             CONF_RADIUS: 10.0,
             CONF_ALTITUDE: 12500.0,
+        },
+    )
+
+
+@pytest.fixture(name="config_entry_authenticated")
+def mock_config_entry_authenticated() -> MockConfigEntry:
+    """Create authenticated Opensky entry in Home Assistant."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenSky",
+        data={
+            CONF_LATITUDE: 0.0,
+            CONF_LONGITUDE: 0.0,
+        },
+        options={
+            CONF_RADIUS: 10.0,
+            CONF_ALTITUDE: 12500.0,
+            CONF_USERNAME: "asd",
+            CONF_PASSWORD: "secret",
+            CONF_CONTRIBUTING_USER: True,
         },
     )
 

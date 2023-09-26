@@ -129,15 +129,13 @@ async def async_setup_entry(
     workdays: list[str] = entry.options[CONF_WORKDAYS]
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
 
-    if country and country not in list_supported_countries():
-        LOGGER.error("There is no country %s", country)
-        return
-
-    if province and province not in list_supported_countries()[country]:
-        LOGGER.error("There is no subdivision %s in country %s", province, country)
-        return
-
-    obj_holidays: HolidayBase = country_holidays(country, subdiv=province, years=year)
+    cls: HolidayBase = country_holidays(country, subdiv=province, years=year)
+    obj_holidays: HolidayBase = country_holidays(
+        country,
+        subdiv=province,
+        years=year,
+        language=cls.default_language,
+    )
 
     # Add custom holidays
     try:

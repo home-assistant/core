@@ -8,6 +8,7 @@ import os
 from typing import Any
 
 import aiohttp
+from yarl import URL
 
 from homeassistant.components.http import (
     CONF_SERVER_HOST,
@@ -530,6 +531,11 @@ class HassIO:
 
         This method is a coroutine.
         """
+        url = f"http://{self._ip}{command}"
+        if url != str(URL(url)):
+            _LOGGER.error("Invalid request %s", command)
+            raise HassioAPIError()
+
         try:
             request = await self.websession.request(
                 method,

@@ -86,7 +86,7 @@ async def async_setup_entry(
                         coordinator,
                         LyricSensorEntityDescription(
                             key=f"{device.macID}_indoor_temperature",
-                            name="Indoor Temperature",
+                            translation_key="indoor_temperature",
                             device_class=SensorDeviceClass.TEMPERATURE,
                             state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement=native_temperature_unit,
@@ -102,7 +102,7 @@ async def async_setup_entry(
                         coordinator,
                         LyricSensorEntityDescription(
                             key=f"{device.macID}_indoor_humidity",
-                            name="Indoor Humidity",
+                            translation_key="indoor_humidity",
                             device_class=SensorDeviceClass.HUMIDITY,
                             state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement=PERCENTAGE,
@@ -123,7 +123,7 @@ async def async_setup_entry(
                         coordinator,
                         LyricSensorEntityDescription(
                             key=f"{device.macID}_outdoor_temperature",
-                            name="Outdoor Temperature",
+                            translation_key="outdoor_temperature",
                             device_class=SensorDeviceClass.TEMPERATURE,
                             state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement=native_temperature_unit,
@@ -139,7 +139,7 @@ async def async_setup_entry(
                         coordinator,
                         LyricSensorEntityDescription(
                             key=f"{device.macID}_outdoor_humidity",
-                            name="Outdoor Humidity",
+                            translation_key="outdoor_humidity",
                             device_class=SensorDeviceClass.HUMIDITY,
                             state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement=PERCENTAGE,
@@ -156,7 +156,7 @@ async def async_setup_entry(
                             coordinator,
                             LyricSensorEntityDescription(
                                 key=f"{device.macID}_next_period_time",
-                                name="Next Period Time",
+                                translation_key="next_period_time",
                                 device_class=SensorDeviceClass.TIMESTAMP,
                                 value=lambda device: get_datetime_from_future_time(
                                     device.changeableValues.nextPeriodTime
@@ -172,7 +172,7 @@ async def async_setup_entry(
                             coordinator,
                             LyricSensorEntityDescription(
                                 key=f"{device.macID}_setpoint_status",
-                                name="Setpoint Status",
+                                translation_key="setpoint_status",
                                 icon="mdi:thermostat",
                                 value=lambda device: get_setpoint_status(
                                     device.changeableValues.thermostatSetpointStatus,

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -360,51 +361,56 @@ async def expires_helper(hass: HomeAssistant) -> None:
     """Run the basic expiry code."""
     realnow = dt_util.utcnow()
     now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+    with freeze_time(now) as freezer:
+        freezer.move_to(now)
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "100")
         await hass.async_block_till_done()
 
-    # Value was set correctly.
-    state = hass.states.get("sensor.test")
-    assert state.state == "100"
+        # Value was set correctly.
+        state = hass.states.get("sensor.test")
+        assert state.state == "100"
 
-    # Time jump +3s
-    now = now + timedelta(seconds=3)
-    async_fire_time_changed(hass, now)
-    await hass.async_block_till_done()
+        # Time jump +3s
+        now += timedelta(seconds=3)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
 
-    # Value is not yet expired
-    state = hass.states.get("sensor.test")
-    assert state.state == "100"
+        # Value is not yet expired
+        state = hass.states.get("sensor.test")
+        assert state.state == "100"
 
-    # Next message resets timer
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+        # Next message resets timer
+        now += timedelta(seconds=0.5)
+        freezer.move_to(now)
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "101")
         await hass.async_block_till_done()
 
-    # Value was updated correctly.
-    state = hass.states.get("sensor.test")
-    assert state.state == "101"
+        # Value was updated correctly.
+        state = hass.states.get("sensor.test")
+        assert state.state == "101"
 
-    # Time jump +3s
-    now = now + timedelta(seconds=3)
-    async_fire_time_changed(hass, now)
-    await hass.async_block_till_done()
+        # Time jump +3s
+        now += timedelta(seconds=3)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
 
-    # Value is not yet expired
-    state = hass.states.get("sensor.test")
-    assert state.state == "101"
+        # Value is not yet expired
+        state = hass.states.get("sensor.test")
+        assert state.state == "101"
 
-    # Time jump +2s
-    now = now + timedelta(seconds=2)
-    async_fire_time_changed(hass, now)
-    await hass.async_block_till_done()
+        # Time jump +2s
+        now += timedelta(seconds=2)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
 
-    # Value is expired now
-    state = hass.states.get("sensor.test")
-    assert state.state == STATE_UNAVAILABLE
+        # Value is expired now
+        state = hass.states.get("sensor.test")
+        assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
