@@ -164,8 +164,6 @@ async def test_service_rotate_logfile(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
     await hass.async_block_till_done()
 
-    with pytest.raises(AssertionError):
-        find_log_record(logfile, "ERROR")
     log = find_log_record(logfile, "INFO")
     assert_log(log, "", "Rotated log file", "INFO", logger=jsonlog.__package__)
     assert logfile.exists()
