@@ -50,7 +50,7 @@ BUTTON_TYPES: Final = (
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda coordinator: coordinator.api.restart_connection("dsl"),
-        is_suitable=lambda info: info["dsl_ready"] == 1,
+        is_suitable=lambda info: info.get("dsl_ready") == "1",
     ),
     VodafoneStationEntityDescription(
         key="fiber_ready",
@@ -58,17 +58,17 @@ BUTTON_TYPES: Final = (
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda coordinator: coordinator.api.restart_connection("fiber"),
-        is_suitable=lambda info: info["fiber_ready"] == 1,
+        is_suitable=lambda info: info.get("fiber_ready") == "1",
     ),
     VodafoneStationEntityDescription(
-        key="internet_key_ready",
+        key="vf_internet_key_online_since",
         name="Internet key reconnect",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda coordinator: coordinator.api.restart_connection(
             "internet_key"
         ),
-        is_suitable=lambda info: info["internet_key_ready"] == 1,
+        is_suitable=lambda info: info.get("vf_internet_key_online_since") != "",
     ),
 )
 
