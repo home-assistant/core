@@ -358,7 +358,10 @@ class ObjectDetection(_Trait):
 
     @staticmethod
     def supported(domain, features, device_class, _) -> bool:
-        """Test if state is supported."""
+        """Test if state is supported.
+
+        Only event entities with device_class `doorbell` are supported.
+        """
         return (
             domain == event.DOMAIN and device_class == event.EventDeviceClass.DOORBELL
         )
@@ -382,10 +385,14 @@ class ObjectDetection(_Trait):
             return None
 
         # Only notify if last event was less then 30 seconds ago
-        time_stamp = datetime.fromisoformat(self.state.state)
+        time_stamp: datetime = datetime.fromisoformat(self.state.state)
         if (utcnow() - time_stamp) > timedelta(seconds=30):
             return None
 
+        # A doorbell event as treated as an object detection of 1 unclassified object.
+        # The implementation follows the pattern from the Smart Home Doorbell Guide:
+        # https://developers.home.google.com/cloud-to-cloud/guides/doorbell
+        # The detectionTimestamp is the time in ms from January 1, 1970, 00:00:00 (UTC)
         return {
             "ObjectDetection": {
                 "objects": {
