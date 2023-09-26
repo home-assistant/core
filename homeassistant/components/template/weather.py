@@ -494,18 +494,18 @@ class WeatherExtraStoredData(ExtraStoredData):
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored event state from a dict."""
         try:
-            return cls(  # type: ignore[misc]
-                restored["last_temperature"],
-                restored["last_humidity"],
-                restored["last_wind_speed"],
-                restored["last_wind_bearing"],
-                restored["last_ozone"],
-                restored["last_visibility"],
-                restored["last_pressure"],
-                restored["last_wind_gust_speed"],
-                restored["last_cloud_coverage"],
-                restored["last_dew_point"],
-                restored["last_apparent_temperature"],
+            return cls(
+                last_temperature=restored["last_temperature"],
+                last_humidity=restored["last_humidity"],
+                last_wind_speed=restored["last_wind_speed"],
+                last_wind_bearing=restored["last_wind_bearing"],
+                last_ozone=restored["last_ozone"],
+                last_visibility=restored["last_visibility"],
+                last_pressure=restored["last_pressure"],
+                last_wind_gust_speed=restored["last_wind_gust_speed"],
+                last_cloud_coverage=restored["last_cloud_coverage"],
+                last_dew_point=restored["last_dew_point"],
+                last_apparent_temperature=restored["last_apparent_temperature"],
             )
         except KeyError:
             return None
