@@ -112,6 +112,8 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                                         wake_word_id,
                                         detection.name,
                                     )
+                                    wake_task = asyncio.create_task(client.read_event())
+                                    pending.add(wake_task)
                                     continue
 
                                 # Retrieve queued audio
