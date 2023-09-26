@@ -148,6 +148,8 @@ async def async_enable_server_logging_if_needed(
         or driver.client.server_logging_enabled
     ):
         return
+
+    LOGGER.info("Enabling zwave-js-server logging")
     if (curr_server_log_level := driver.log_config.level) and (
         LOG_LEVEL_MAP[curr_server_log_level]
     ) > (lib_log_level := LIB_LOGGER.getEffectiveLevel()):
@@ -163,6 +165,7 @@ async def async_enable_server_logging_if_needed(
         hass.data[DOMAIN][entry_id][DATA_OLD_SERVER_LOG_LEVEL] = curr_server_log_level
         await driver.async_update_log_config(LogConfig(level=LogLevel.DEBUG))
     await driver.client.enable_server_logging()
+    LOGGER.info("Zwave-js-server logging is enabled")
 
 
 async def async_disable_server_logging_if_needed(
@@ -175,12 +178,27 @@ async def async_disable_server_logging_if_needed(
         or not driver.client.server_logging_enabled
     ):
         return
+    LOGGER.info("Disabling zwave_js server logging")
     entry_id = entry.entry_id
-    if DATA_OLD_SERVER_LOG_LEVEL in hass.data[DOMAIN][entry_id]:
+    if (
+        DATA_OLD_SERVER_LOG_LEVEL in hass.data[DOMAIN][entry_id]
+        and (
+            old_server_log_level := hass.data[DOMAIN][entry_id].pop(
+                DATA_OLD_SERVER_LOG_LEVEL
+            )
+        )
+        != driver.log_config.level
+    ):
+        LOGGER.info(
+            "Server logging was set to %s and is being reset to %s",
+            driver.log_config.level,
+            old_server_log_level,
+        )
         await driver.async_update_log_config(
             LogConfig(level=hass.data[DOMAIN][entry_id].pop(DATA_OLD_SERVER_LOG_LEVEL))
         )
     await driver.client.disable_server_logging()
+    LOGGER.info("Zwave-js-server logging is enabled")
 
 
 def get_valueless_base_unique_id(driver: Driver, node: ZwaveNode) -> str:

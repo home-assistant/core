@@ -1557,6 +1557,12 @@ async def test_identify_event(
 
 async def test_server_logging(hass: HomeAssistant, client) -> None:
     """Test automatic server logging functionality."""
+
+    def _reset_mocks():
+        client.async_send_command.reset_mock()
+        client.enable_server_logging.reset_mock()
+        client.disable_server_logging.reset_mock()
+
     # Set server logging to disabled
     client.server_logging_enabled = False
 
@@ -1585,9 +1591,7 @@ async def test_server_logging(hass: HomeAssistant, client) -> None:
     assert client.enable_server_logging.called
     assert not client.disable_server_logging.called
 
-    client.async_send_command.reset_mock()
-    client.enable_server_logging.reset_mock()
-    client.disable_server_logging.reset_mock()
+    _reset_mocks()
 
     # "Enable" server logging and unload the entry
     client.server_logging_enabled = True
@@ -1602,9 +1606,7 @@ async def test_server_logging(hass: HomeAssistant, client) -> None:
     assert not client.enable_server_logging.called
     assert client.disable_server_logging.called
 
-    client.async_send_command.reset_mock()
-    client.enable_server_logging.reset_mock()
-    client.disable_server_logging.reset_mock()
+    _reset_mocks()
 
     # Validate that the server logging doesn't get enabled because HA thinks it already
     # is enabled
@@ -1614,9 +1616,7 @@ async def test_server_logging(hass: HomeAssistant, client) -> None:
     assert not client.enable_server_logging.called
     assert not client.disable_server_logging.called
 
-    client.async_send_command.reset_mock()
-    client.enable_server_logging.reset_mock()
-    client.disable_server_logging.reset_mock()
+    _reset_mocks()
 
     # "Disable" server logging and unload the entry
     client.server_logging_enabled = False
