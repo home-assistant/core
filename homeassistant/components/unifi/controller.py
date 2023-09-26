@@ -406,6 +406,16 @@ class UniFiController:
         if self.ws_task is not None:
             self.ws_task.cancel()
 
+            _, pending = await asyncio.wait([self.ws_task], timeout=10)
+
+            if pending:
+                LOGGER.warning(
+                    "Unloading %s (%s) config entry. Task %s did not complete in time",
+                    self.config_entry.title,
+                    self.config_entry.domain,
+                    self.ws_task,
+                )
+
         unload_ok = await self.hass.config_entries.async_unload_platforms(
             self.config_entry, PLATFORMS
         )
