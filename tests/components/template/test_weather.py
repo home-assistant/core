@@ -776,6 +776,28 @@ async def test_trigger_weather_services(
         SERVICE_GET_FORECAST,
         {
             "entity_id": state.entity_id,
+            "type": "hourly",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "forecast": [
+            {
+                "datetime": now,
+                "condition": "sunny",
+                "precipitation": 20.0,
+                "temperature": 20.0,
+                "templow": 15.0,
+            }
+        ],
+    }
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECAST,
+        {
+            "entity_id": state.entity_id,
             "type": "twice_daily",
         },
         blocking=True,
