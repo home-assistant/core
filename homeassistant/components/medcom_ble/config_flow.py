@@ -43,10 +43,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if ble_device is None:
             _LOGGER.debug("no ble_device in _get_device_data")
-            raise AbortFlow(
-                "cannot_connect",
-                description_placeholders={"error connecting to": service_info.address},
-            )
+            raise AbortFlow("cannot_connect")
 
         inspector = MedcomBleDeviceData(_LOGGER)
 
@@ -140,6 +137,8 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._get_device_data(self._discovery_info)
         except BleakError:
             return self.async_abort(reason="cannot_connect")
+        except AbortFlow:
+            raise
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error occurred reading information from %s: %s",

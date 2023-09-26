@@ -49,7 +49,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
             )
         await hass.async_block_till_done()
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "InspectorBLE-D9A0 (0B00)"
+        assert result["title"] == "InspectorBLE-D9A0"
         assert result["result"].unique_id == "a0:d9:5a:57:0b:00"
 
 
