@@ -186,7 +186,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.2.1
+aioairzone-cloud==0.2.2
 
 # homeassistant.components.airzone
 aioairzone==0.6.8
@@ -369,7 +369,7 @@ aiounifi==62
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.3.0
+aiovodafone==0.3.1
 
 # homeassistant.components.waqi
 aiowaqi==0.2.1
@@ -1197,6 +1197,9 @@ mcstatus==11.0.0
 # homeassistant.components.meater
 meater-python==0.0.8
 
+# homeassistant.components.medcom_ble
+medcom-ble==0.1.1
+
 # homeassistant.components.melnor
 melnor-bluetooth==0.0.25
 
@@ -1868,9 +1871,6 @@ pymonoprice==0.4
 # homeassistant.components.msteams
 pymsteams==0.1.12
 
-# homeassistant.components.myq
-pymyq==3.1.4
-
 # homeassistant.components.mysensors
 pymysensors==0.24.0
 
@@ -2144,6 +2144,9 @@ python-miio==0.5.12
 
 # homeassistant.components.mpd
 python-mpd2==3.0.5
+
+# homeassistant.components.myq
+python-myq==3.1.9
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
@@ -2775,7 +2778,7 @@ zamg==0.3.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.114.0
+zeroconf==0.115.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

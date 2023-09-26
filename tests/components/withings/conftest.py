@@ -79,8 +79,29 @@ def webhook_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
             "profile": TITLE,
             "webhook_id": WEBHOOK_ID,
         },
-        options={
-            "use_webhook": True,
+    )
+
+
+@pytest.fixture
+def cloudhook_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
+    """Create Withings entry in Home Assistant."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=TITLE,
+        unique_id=str(USER_ID),
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "status": 0,
+                "userid": str(USER_ID),
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": ",".join(scopes),
+            },
+            "profile": TITLE,
+            "webhook_id": WEBHOOK_ID,
+            "cloudhook_url": "https://hooks.nabu.casa/ABCD",
         },
     )
 
@@ -104,9 +125,6 @@ def polling_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
             },
             "profile": TITLE,
             "webhook_id": WEBHOOK_ID,
-        },
-        options={
-            "use_webhook": False,
         },
     )
 
@@ -136,7 +154,7 @@ def mock_withings():
         yield mock
 
 
-@pytest.fixture(name="disable_webhook_delay")
+@pytest.fixture(name="disable_webhook_delay", autouse=True)
 def disable_webhook_delay():
     """Disable webhook delay."""
 

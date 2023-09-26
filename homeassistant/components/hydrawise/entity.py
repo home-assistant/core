@@ -15,6 +15,7 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
     """Entity class for Hydrawise devices."""
 
     _attr_attribution = "Data provided by hydrawise.com"
+    _attr_has_entity_name = True
 
     def __init__(
         self,

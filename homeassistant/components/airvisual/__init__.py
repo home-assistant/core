@@ -424,6 +424,7 @@ class AirVisualEntity(CoordinatorEntity):
     # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        await super().async_added_to_hass()
 
         @callback
         def update() -> None:

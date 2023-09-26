@@ -15,9 +15,7 @@ from withings_api.common import (
     query_measure_groups,
 )
 
-from homeassistant.components.webhook import async_generate_url
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -72,27 +70,20 @@ WITHINGS_MEASURE_TYPE_MAP: dict[
     NotifyAppli.BED_IN: Measurement.IN_BED,
 }
 
+UPDATE_INTERVAL = timedelta(minutes=10)
+
 
 class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]]):
     """Base coordinator."""
 
     config_entry: ConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, client: ConfigEntryWithingsApi, use_webhooks: bool
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, client: ConfigEntryWithingsApi) -> None:
         """Initialize the Withings data coordinator."""
-        update_interval: timedelta | None = timedelta(minutes=10)
-        if use_webhooks:
-            update_interval = None
-        super().__init__(hass, LOGGER, name="Withings", update_interval=update_interval)
+        super().__init__(hass, LOGGER, name="Withings", update_interval=UPDATE_INTERVAL)
         self._client = client
-        self._webhook_url = async_generate_url(
-            hass, self.config_entry.data[CONF_WEBHOOK_ID]
-        )
-        self.use_webhooks = use_webhooks
 
-    async def async_subscribe_webhooks(self) -> None:
+    async def async_subscribe_webhooks(self, webhook_url: str) -> None:
         """Subscribe to webhooks."""
         await self.async_unsubscribe_webhooks()
 
@@ -101,7 +92,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
         subscribed_notifications = frozenset(
             profile.appli
             for profile in current_webhooks.profiles
-            if profile.callbackurl == self._webhook_url
+            if profile.callbackurl == webhook_url
         )
 
         notification_to_subscribe = (
@@ -113,14 +104,15 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
         for notification in notification_to_subscribe:
             LOGGER.debug(
                 "Subscribing %s for %s in %s seconds",
-                self._webhook_url,
+                webhook_url,
                 notification,
                 SUBSCRIBE_DELAY.total_seconds(),
             )
             # Withings will HTTP HEAD the callback_url and needs some downtime
             # between each call or there is a higher chance of failure.
             await asyncio.sleep(SUBSCRIBE_DELAY.total_seconds())
-            await self._client.async_notify_subscribe(self._webhook_url, notification)
+            await self._client.async_notify_subscribe(webhook_url, notification)
+        self.update_interval = None
 
     async def async_unsubscribe_webhooks(self) -> None:
         """Unsubscribe to webhooks."""
@@ -139,6 +131,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
             await self._client.async_notify_revoke(
                 webhook_configuration.callbackurl, webhook_configuration.appli
             )
+        self.update_interval = UPDATE_INTERVAL
 
     async def _async_update_data(self) -> dict[Measurement, Any]:
         try:
