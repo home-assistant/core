@@ -92,23 +92,19 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
 class FreeboxPirSensor(FreeboxHomeBinarySensor):
     """Representation of a Freebox motion binary sensor."""
 
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return BinarySensorDeviceClass.MOTION
+    _attr_device_class = BinarySensorDeviceClass.MOTION
 
 
 class FreeboxDwsSensor(FreeboxHomeBinarySensor):
     """Representation of a Freebox door opener binary sensor."""
 
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return BinarySensorDeviceClass.DOOR
+    _attr_device_class = BinarySensorDeviceClass.DOOR
 
 
 class FreeboxCoverSensor(FreeboxHomeBinarySensor):
     """Representation of a cover Freebox plastic removal cover binary sensor (for some sensors: motion detector, door opener detector...)."""
+
+    _attr_device_class = BinarySensorDeviceClass.SAFETY
 
     def __init__(
         self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
@@ -130,11 +126,6 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
     async def async_update_signal(self):
         """Update name & state."""
         self._attr_is_on = await self.get_home_endpoint_value(self._cover_trigger)
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return BinarySensorDeviceClass.SAFETY
 
 
 class FreeboxRaidDegradedSensor(BinarySensorEntity):
