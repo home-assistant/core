@@ -8,7 +8,6 @@ import dataclasses
 import logging
 from typing import Any, Protocol
 
-import async_timeout
 import voluptuous as vol
 import yarl
 
@@ -74,7 +73,7 @@ class WaitingAddonManager(AddonManager):
 
     async def async_wait_until_addon_state(self, *states: AddonState) -> None:
         """Poll an addon's info until it is in a specific state."""
-        async with async_timeout.timeout(ADDON_INFO_POLL_TIMEOUT):
+        async with asyncio.timeout(ADDON_INFO_POLL_TIMEOUT):
             while True:
                 try:
                     info = await self.async_get_addon_info()

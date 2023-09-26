@@ -2,7 +2,7 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.4
+AEMET-OpenData==0.4.5
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -186,7 +186,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.2.1
+aioairzone-cloud==0.2.2
 
 # homeassistant.components.airzone
 aioairzone==0.6.8
@@ -216,7 +216,6 @@ aiocomelit==0.0.8
 aiodiscover==1.5.1
 
 # homeassistant.components.dnsip
-# homeassistant.components.minecraft_server
 aiodns==3.0.0
 
 # homeassistant.components.eafm
@@ -232,7 +231,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==16.0.5
+aioesphomeapi==16.0.6
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -250,7 +249,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.0.3
+aiohomekit==3.0.5
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -459,7 +458,7 @@ async-interrupt==1.1.1
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.35.1
+async-upnp-client==0.36.0
 
 # homeassistant.components.keyboard_remote
 asyncinotify==4.0.2
@@ -554,7 +553,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.11.0
+bluetooth-data-tools==1.12.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -646,7 +645,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==2.9.0
+dbus-fast==2.10.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -1127,7 +1126,7 @@ laundrify-aio==1.1.2
 ld2410-ble==0.1.1
 
 # homeassistant.components.led_ble
-led-ble==1.0.0
+led-ble==1.0.1
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -1539,7 +1538,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2023.8.4
+pyDuotecno==2023.9.0
 
 # homeassistant.components.eight_sleep
 pyEight==0.3.2
@@ -1831,7 +1830,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.5.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.5
+pylitterbot==2023.4.8
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.18.2
@@ -2695,7 +2694,7 @@ waterfurnace==1.1.0
 webexteamssdk==1.1.1
 
 # homeassistant.components.assist_pipeline
-webrtcvad==2.0.10
+webrtc-noise-gain==1.1.0
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.4
@@ -2770,7 +2769,7 @@ youless-api==1.0.1
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2023.7.6
+yt-dlp==2023.9.24
 
 # homeassistant.components.zamg
 zamg==0.3.0
@@ -2779,7 +2778,7 @@ zamg==0.3.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.112.0
+zeroconf==0.115.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
