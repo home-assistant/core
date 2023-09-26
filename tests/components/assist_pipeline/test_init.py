@@ -563,3 +563,67 @@ async def test_pipeline_saved_audio_write_error(
                 start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
                 end_stage=assist_pipeline.PipelineStage.STT,
             )
+
+
+async def test_wake_word_detection_aborted(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSttProvider,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test creating a pipeline from an audio stream with wake word."""
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    async def audio_data():
+        yield b"silence!"
+        yield b"wake word!"
+        yield b"part1"
+        yield b"part2"
+        yield b""
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        conversation_id=None,
+        device_id=None,
+        stt_metadata=stt.SpeechMetadata(
+            language="",
+            format=stt.AudioFormats.WAV,
+            codec=stt.AudioCodecs.PCM,
+            bit_rate=stt.AudioBitRates.BITRATE_16,
+            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+            channel=stt.AudioChannels.CHANNEL_MONO,
+        ),
+        stt_stream=audio_data(),
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+            end_stage=assist_pipeline.PipelineStage.TTS,
+            event_callback=events.append,
+            tts_audio_output=None,
+            wake_word_settings=assist_pipeline.WakeWordSettings(
+                audio_seconds_to_buffer=1.5
+            ),
+            audio_settings=assist_pipeline.AudioSettings(
+                is_vad_enabled=False, is_chunking_enabled=False
+            ),
+        ),
+    )
+    await pipeline_input.validate()
+
+    updates = pipeline.to_json()
+    updates.pop("id")
+    await pipeline_store.async_update_item(
+        pipeline_id,
+        updates,
+    )
+    await pipeline_input.execute()
+
+    assert process_events(events) == snapshot
