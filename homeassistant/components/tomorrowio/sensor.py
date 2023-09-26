@@ -124,6 +124,7 @@ SENSOR_TYPES = (
         name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_FEELS_LIKE,
@@ -146,6 +147,7 @@ SENSOR_TYPES = (
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_WIND_SPEED,
@@ -153,6 +155,7 @@ SENSOR_TYPES = (
         unit_imperial=UnitOfSpeed.MILES_PER_HOUR,
         unit_metric=UnitOfSpeed.METERS_PER_SECOND,
         device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
         imperial_conversion=lambda val: SpeedConverter.convert(
             val, UnitOfSpeed.METERS_PER_SECOND, UnitOfSpeed.MILES_PER_HOUR
         ),
@@ -162,6 +165,7 @@ SENSOR_TYPES = (
         name="Wind Direction",
         native_unit_of_measurement="°",
         icon="mdi:windsock",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Data comes in as m/s, convert to mi/h for imperial
     TomorrowioSensorEntityDescription(
@@ -170,6 +174,7 @@ SENSOR_TYPES = (
         unit_imperial=UnitOfSpeed.MILES_PER_HOUR,
         unit_metric=UnitOfSpeed.METERS_PER_SECOND,
         device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
         imperial_conversion=lambda val: SpeedConverter.convert(
             val, UnitOfSpeed.METERS_PER_SECOND, UnitOfSpeed.MILES_PER_HOUR
         ),
@@ -180,6 +185,7 @@ SENSOR_TYPES = (
         name="Pressure (Sea Level)",
         native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Data comes in as hPa
     TomorrowioSensorEntityDescription(
@@ -195,12 +201,14 @@ SENSOR_TYPES = (
         name="Precipitation Intensity",
         native_unit_of_measurement="mm/h",
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRECIPITATION_PROBABILITY,
         name="Precipitation Probability",
         icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRECIPITATION_TYPE,
@@ -208,18 +216,21 @@ SENSOR_TYPES = (
         value_map=PrecipitationType,
         translation_key="precipitation_type",
         icon="mdi:weather-snowy-rainy",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_VISIBILITY,
         name="Visibility",
         native_unit_of_measurement="km",
         device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_COVER,
         name="Cloud Cover",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:cloud-percent",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
@@ -236,7 +247,6 @@ SENSOR_TYPES = (
             UnitOfLength.KILOMETERS,
             UnitOfLength.MILES,
         ),
-        device_class=SensorDeviceClass.DISTANCE,
     ),
     # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
@@ -253,7 +263,6 @@ SENSOR_TYPES = (
             UnitOfLength.KILOMETERS,
             UnitOfLength.MILES,
         ),
-        device_class=SensorDeviceClass.DISTANCE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_UV_INDEX,
@@ -264,6 +273,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_UV_HEALTH_CONCERN,
         name="UV Radiation Health Concern",
+        state_class=SensorStateClass.MEASUREMENT,
         value_map=UVDescription,
         translation_key="uv_index",
         icon="mdi:sun-wireless",
@@ -273,12 +283,14 @@ SENSOR_TYPES = (
         name="Evapotranspiration",
         native_unit_of_measurement="mm",
         device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_WET_BULB_GLOBE_TEMPERATURE,
         name="Wet Bulb Globe Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Data comes in as W/m^2, convert to BTUs/(hr * ft^2) for imperial
     # https://www.theunitconverter.com/watt-square-meter-to-btu-hour-square-foot-conversion/
@@ -289,6 +301,7 @@ SENSOR_TYPES = (
         unit_metric=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         imperial_conversion=(1 / 3.15459),
         device_class=SensorDeviceClass.IRRADIANCE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Data comes in as ppb, convert to µg/m^3
     # Molecular weight of Ozone is 48
@@ -360,6 +373,7 @@ SENSOR_TYPES = (
         key="us_epa_primary_pollutant",
         attribute=TMRW_ATTR_EPA_PRIMARY_POLLUTANT,
         name="US EPA Primary Pollutant",
+        state_class=SensorStateClass.MEASUREMENT,
         value_map=PrimaryPollutantType,
         translation_key="primary_pollutant",
     ),
@@ -367,6 +381,7 @@ SENSOR_TYPES = (
         key="us_epa_health_concern",
         attribute=TMRW_ATTR_EPA_HEALTH_CONCERN,
         name="US EPA Health Concern",
+        state_class=SensorStateClass.MEASUREMENT,
         value_map=HealthConcernType,
         translation_key="health_concern",
         icon="mdi:hospital",
@@ -375,12 +390,14 @@ SENSOR_TYPES = (
         key="china_mep_air_quality_index",
         attribute=TMRW_ATTR_CHINA_AQI,
         name="China MEP Air Quality Index",
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
     ),
     TomorrowioSensorEntityDescription(
         key="china_mep_primary_pollutant",
         attribute=TMRW_ATTR_CHINA_PRIMARY_POLLUTANT,
         name="China MEP Primary Pollutant",
+        state_class=SensorStateClass.MEASUREMENT,
         value_map=PrimaryPollutantType,
         translation_key="primary_pollutant",
     ),
@@ -388,6 +405,7 @@ SENSOR_TYPES = (
         key="china_mep_health_concern",
         attribute=TMRW_ATTR_CHINA_HEALTH_CONCERN,
         name="China MEP Health Concern",
+        state_class=SensorStateClass.MEASUREMENT,
         value_map=HealthConcernType,
         translation_key="health_concern",
         icon="mdi:hospital",
@@ -396,6 +414,7 @@ SENSOR_TYPES = (
         key="tree_pollen_index",
         attribute=TMRW_ATTR_POLLEN_TREE,
         name="Tree Pollen Index",
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:tree",
         value_map=PollenIndex,
         translation_key="pollen_index",
@@ -404,6 +423,7 @@ SENSOR_TYPES = (
         key="weed_pollen_index",
         attribute=TMRW_ATTR_POLLEN_WEED,
         name="Weed Pollen Index",
+        state_class=SensorStateClass.MEASUREMENT,
         value_map=PollenIndex,
         translation_key="pollen_index",
         icon="mdi:flower-pollen",
@@ -412,6 +432,7 @@ SENSOR_TYPES = (
         key="grass_pollen_index",
         attribute=TMRW_ATTR_POLLEN_GRASS,
         name="Grass Pollen Index",
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:grass",
         value_map=PollenIndex,
         translation_key="pollen_index",
@@ -420,6 +441,7 @@ SENSOR_TYPES = (
         key="fire_index",
         attribute=TMRW_ATTR_FIRE_INDEX,
         name="Fire Index",
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:fire",
     ),
 )
