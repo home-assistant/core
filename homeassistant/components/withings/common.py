@@ -1,17 +1,9 @@
-"""Common code for Withings."""
-from __future__ import annotations
-
+"""Withings coordinator."""
 import asyncio
 from collections.abc import Callable
-from dataclasses import dataclass
-import datetime
 from datetime import timedelta
-from enum import IntEnum, StrEnum
-from http import HTTPStatus
-import re
 from typing import Any
 
-from aiohttp.web import Response
 from withings_api.common import (
     AuthFailedException,
     GetSleepSummaryField,
@@ -23,43 +15,19 @@ from withings_api.common import (
     query_measure_groups,
 )
 
-from homeassistant.components import webhook
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.webhook import async_generate_url
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import const
 from .api import ConfigEntryWithingsApi
 from .const import LOGGER, Measurement
 
-NOT_AUTHENTICATED_ERROR = re.compile(
-    f"^{HTTPStatus.UNAUTHORIZED},.*",
-    re.IGNORECASE,
-)
-DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
-SUBSCRIBE_DELAY = datetime.timedelta(seconds=5)
-UNSUBSCRIBE_DELAY = datetime.timedelta(seconds=1)
-
-
-class UpdateType(StrEnum):
-    """Data update type."""
-
-    POLL = "poll"
-    WEBHOOK = "webhook"
-
-
-@dataclass
-class WebhookConfig:
-    """Config for a webhook."""
-
-    id: str
-    url: str
-    enabled: bool
-
+SUBSCRIBE_DELAY = timedelta(seconds=5)
+UNSUBSCRIBE_DELAY = timedelta(seconds=1)
 
 WITHINGS_MEASURE_TYPE_MAP: dict[
     NotifyAppli | GetSleepSummaryField | MeasureType, Measurement
@@ -105,214 +73,91 @@ WITHINGS_MEASURE_TYPE_MAP: dict[
 }
 
 
-def json_message_response(message: str, message_code: int) -> Response:
-    """Produce common json output."""
-    return HomeAssistantView.json({"message": message, "code": message_code})
+class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]]):
+    """Base coordinator."""
 
-
-class WebhookAvailability(IntEnum):
-    """Represents various statuses of webhook availability."""
-
-    SUCCESS = 0
-    CONNECT_ERROR = 1
-    HTTP_ERROR = 2
-    NOT_WEBHOOK = 3
-
-
-class WebhookUpdateCoordinator:
-    """Coordinates webhook data updates across listeners."""
-
-    def __init__(self, hass: HomeAssistant, user_id: int) -> None:
-        """Initialize the object."""
-        self._hass = hass
-        self._user_id = user_id
-        self._listeners: list[CALLBACK_TYPE] = []
-        self.data: dict[Measurement, Any] = {}
-
-    def async_add_listener(self, listener: CALLBACK_TYPE) -> Callable[[], None]:
-        """Add a listener."""
-        self._listeners.append(listener)
-
-        @callback
-        def remove_listener() -> None:
-            self.async_remove_listener(listener)
-
-        return remove_listener
-
-    def async_remove_listener(self, listener: CALLBACK_TYPE) -> None:
-        """Remove a listener."""
-        self._listeners.remove(listener)
-
-    def update_data(self, measurement: Measurement, value: Any) -> None:
-        """Update the data object and notify listeners the data has changed."""
-        self.data[measurement] = value
-        self.notify_data_changed()
-
-    def notify_data_changed(self) -> None:
-        """Notify all listeners the data has changed."""
-        for listener in self._listeners:
-            listener()
-
-
-class DataManager:
-    """Manage withing data."""
+    in_bed: bool | None = None
+    config_entry: ConfigEntry
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        api: ConfigEntryWithingsApi,
-        user_id: int,
-        webhook_config: WebhookConfig,
+        self, hass: HomeAssistant, client: ConfigEntryWithingsApi, use_webhooks: bool
     ) -> None:
-        """Initialize the data manager."""
-        self._hass = hass
-        self._api = api
-        self._user_id = user_id
-        self._webhook_config = webhook_config
-        self._notify_subscribe_delay = SUBSCRIBE_DELAY
-        self._notify_unsubscribe_delay = UNSUBSCRIBE_DELAY
-
-        self._is_available = True
-        self._cancel_interval_update_interval: CALLBACK_TYPE | None = None
-        self._cancel_configure_webhook_subscribe_interval: CALLBACK_TYPE | None = None
-        self._api_notification_id = f"withings_{self._user_id}"
-
-        self.subscription_update_coordinator = DataUpdateCoordinator(
-            hass,
-            LOGGER,
-            name="subscription_update_coordinator",
-            update_interval=timedelta(minutes=120),
-            update_method=self.async_subscribe_webhook,
+        """Initialize the Withings data coordinator."""
+        update_interval: timedelta | None = timedelta(minutes=10)
+        if use_webhooks:
+            update_interval = None
+        super().__init__(hass, LOGGER, name="Withings", update_interval=update_interval)
+        self._client = client
+        self._webhook_url = async_generate_url(
+            hass, self.config_entry.data[CONF_WEBHOOK_ID]
         )
-        self.poll_data_update_coordinator = DataUpdateCoordinator[
-            dict[MeasureType, Any] | None
-        ](
-            hass,
-            LOGGER,
-            name="poll_data_update_coordinator",
-            update_interval=timedelta(minutes=120)
-            if self._webhook_config.enabled
-            else timedelta(minutes=10),
-            update_method=self.async_get_all_data,
-        )
-        self.webhook_update_coordinator = WebhookUpdateCoordinator(
-            self._hass, self._user_id
-        )
-        self._cancel_subscription_update: Callable[[], None] | None = None
-        self._subscribe_webhook_run_count = 0
+        self.use_webhooks = use_webhooks
 
-    @property
-    def webhook_config(self) -> WebhookConfig:
-        """Get the webhook config."""
-        return self._webhook_config
+    async def async_subscribe_webhooks(self) -> None:
+        """Subscribe to webhooks."""
+        await self.async_unsubscribe_webhooks()
 
-    @property
-    def user_id(self) -> int:
-        """Get the user_id of the authenticated user."""
-        return self._user_id
+        current_webhooks = await self._client.async_notify_list()
 
-    def async_start_polling_webhook_subscriptions(self) -> None:
-        """Start polling webhook subscriptions (if enabled) to reconcile their setup."""
-        self.async_stop_polling_webhook_subscriptions()
-
-        def empty_listener() -> None:
-            pass
-
-        self._cancel_subscription_update = (
-            self.subscription_update_coordinator.async_add_listener(empty_listener)
-        )
-
-    def async_stop_polling_webhook_subscriptions(self) -> None:
-        """Stop polling webhook subscriptions."""
-        if self._cancel_subscription_update:
-            self._cancel_subscription_update()
-            self._cancel_subscription_update = None
-
-    async def async_subscribe_webhook(self) -> None:
-        """Subscribe the webhook to withings data updates."""
-        LOGGER.debug("Configuring withings webhook")
-
-        # On first startup, perform a fresh re-subscribe. Withings stops pushing data
-        # if the webhook fails enough times but they don't remove the old subscription
-        # config. This ensures the subscription is setup correctly and they start
-        # pushing again.
-        if self._subscribe_webhook_run_count == 0:
-            LOGGER.debug("Refreshing withings webhook configs")
-            await self.async_unsubscribe_webhook()
-        self._subscribe_webhook_run_count += 1
-
-        # Get the current webhooks.
-        response = await self._api.async_notify_list()
-
-        subscribed_applis = frozenset(
+        subscribed_notifications = frozenset(
             profile.appli
-            for profile in response.profiles
-            if profile.callbackurl == self._webhook_config.url
+            for profile in current_webhooks.profiles
+            if profile.callbackurl == self._webhook_url
         )
 
-        # Determine what subscriptions need to be created.
-        ignored_applis = frozenset({NotifyAppli.USER, NotifyAppli.UNKNOWN})
-        to_add_applis = frozenset(
-            appli
-            for appli in NotifyAppli
-            if appli not in subscribed_applis and appli not in ignored_applis
+        notification_to_subscribe = (
+            set(NotifyAppli)
+            - subscribed_notifications
+            - {NotifyAppli.USER, NotifyAppli.UNKNOWN}
         )
 
-        # Subscribe to each one.
-        for appli in to_add_applis:
+        for notification in notification_to_subscribe:
             LOGGER.debug(
                 "Subscribing %s for %s in %s seconds",
-                self._webhook_config.url,
-                appli,
-                self._notify_subscribe_delay.total_seconds(),
+                self._webhook_url,
+                notification,
+                SUBSCRIBE_DELAY.total_seconds(),
             )
             # Withings will HTTP HEAD the callback_url and needs some downtime
             # between each call or there is a higher chance of failure.
-            await asyncio.sleep(self._notify_subscribe_delay.total_seconds())
-            await self._api.async_notify_subscribe(self._webhook_config.url, appli)
+            await asyncio.sleep(SUBSCRIBE_DELAY.total_seconds())
+            await self._client.async_notify_subscribe(self._webhook_url, notification)
 
-    async def async_unsubscribe_webhook(self) -> None:
-        """Unsubscribe webhook from withings data updates."""
-        # Get the current webhooks.
-        response = await self._api.async_notify_list()
+    async def async_unsubscribe_webhooks(self) -> None:
+        """Unsubscribe to webhooks."""
+        current_webhooks = await self._client.async_notify_list()
 
-        # Revoke subscriptions.
-        for profile in response.profiles:
+        for webhook_configuration in current_webhooks.profiles:
             LOGGER.debug(
                 "Unsubscribing %s for %s in %s seconds",
-                profile.callbackurl,
-                profile.appli,
-                self._notify_unsubscribe_delay.total_seconds(),
+                webhook_configuration.callbackurl,
+                webhook_configuration.appli,
+                UNSUBSCRIBE_DELAY.total_seconds(),
             )
             # Quick calls to Withings can result in the service returning errors.
             # Give them some time to cool down.
-            await asyncio.sleep(self._notify_subscribe_delay.total_seconds())
-            await self._api.async_notify_revoke(profile.callbackurl, profile.appli)
+            await asyncio.sleep(UNSUBSCRIBE_DELAY.total_seconds())
+            await self._client.async_notify_revoke(
+                webhook_configuration.callbackurl, webhook_configuration.appli
+            )
 
-    async def async_get_all_data(self) -> dict[MeasureType, Any] | None:
-        """Update all withings data."""
+    async def _async_update_data(self) -> dict[Measurement, Any]:
         try:
-            return {
-                **await self.async_get_measures(),
-                **await self.async_get_sleep_summary(),
-            }
-        except Exception as exception:
-            # User is not authenticated.
-            if isinstance(
-                exception, (UnauthorizedException, AuthFailedException)
-            ) or NOT_AUTHENTICATED_ERROR.match(str(exception)):
-                self._api.config_entry.async_start_reauth(self._hass)
-                return None
+            measurements = await self._get_measurements()
+            sleep_summary = await self._get_sleep_summary()
+        except (UnauthorizedException, AuthFailedException) as exc:
+            raise ConfigEntryAuthFailed from exc
+        return {
+            **measurements,
+            **sleep_summary,
+        }
 
-            raise exception
-
-    async def async_get_measures(self) -> dict[Measurement, Any]:
-        """Get the measures data."""
+    async def _get_measurements(self) -> dict[Measurement, Any]:
         LOGGER.debug("Updating withings measures")
         now = dt_util.utcnow()
-        startdate = now - datetime.timedelta(days=7)
+        startdate = now - timedelta(days=7)
 
-        response = await self._api.async_measure_get_meas(
+        response = await self._client.async_measure_get_meas(
             None, None, startdate, now, None, startdate
         )
 
@@ -334,17 +179,13 @@ class DataManager:
             if measure.type in WITHINGS_MEASURE_TYPE_MAP
         }
 
-    async def async_get_sleep_summary(self) -> dict[Measurement, Any]:
-        """Get the sleep summary data."""
-        LOGGER.debug("Updating withing sleep summary")
+    async def _get_sleep_summary(self) -> dict[Measurement, Any]:
         now = dt_util.now()
-        yesterday = now - datetime.timedelta(days=1)
-        yesterday_noon = dt_util.start_of_local_day(yesterday) + datetime.timedelta(
-            hours=12
-        )
+        yesterday = now - timedelta(days=1)
+        yesterday_noon = dt_util.start_of_local_day(yesterday) + timedelta(hours=12)
         yesterday_noon_utc = dt_util.as_utc(yesterday_noon)
 
-        response = await self._api.async_sleep_get_summary(
+        response = await self._client.async_sleep_get_summary(
             lastupdate=yesterday_noon_utc,
             data_fields=[
                 GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY,
@@ -415,81 +256,18 @@ class DataManager:
             for field, value in values.items()
         }
 
-    async def async_webhook_data_updated(self, data_category: NotifyAppli) -> None:
-        """Handle scenario when data is updated from a webook."""
+    async def async_webhook_data_updated(
+        self, notification_category: NotifyAppli
+    ) -> None:
+        """Update data when webhook is called."""
         LOGGER.debug("Withings webhook triggered")
-        if data_category in {
+        if notification_category in {
             NotifyAppli.WEIGHT,
             NotifyAppli.CIRCULATORY,
             NotifyAppli.SLEEP,
         }:
-            await self.poll_data_update_coordinator.async_request_refresh()
+            await self.async_request_refresh()
 
-        elif data_category in {NotifyAppli.BED_IN, NotifyAppli.BED_OUT}:
-            self.webhook_update_coordinator.update_data(
-                Measurement.IN_BED, data_category == NotifyAppli.BED_IN
-            )
-
-
-async def async_get_data_manager(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> DataManager:
-    """Get the data manager for a config entry."""
-    hass.data.setdefault(const.DOMAIN, {})
-    hass.data[const.DOMAIN].setdefault(config_entry.entry_id, {})
-    config_entry_data = hass.data[const.DOMAIN][config_entry.entry_id]
-
-    if const.DATA_MANAGER not in config_entry_data:
-        LOGGER.debug(
-            "Creating withings data manager for profile: %s", config_entry.title
-        )
-        config_entry_data[const.DATA_MANAGER] = DataManager(
-            hass,
-            ConfigEntryWithingsApi(
-                hass=hass,
-                config_entry=config_entry,
-                implementation=await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                    hass, config_entry
-                ),
-            ),
-            config_entry.data["token"]["userid"],
-            WebhookConfig(
-                id=config_entry.data[CONF_WEBHOOK_ID],
-                url=webhook.async_generate_url(
-                    hass, config_entry.data[CONF_WEBHOOK_ID]
-                ),
-                enabled=config_entry.options[const.CONF_USE_WEBHOOK],
-            ),
-        )
-
-    return config_entry_data[const.DATA_MANAGER]
-
-
-def get_data_manager_by_webhook_id(
-    hass: HomeAssistant, webhook_id: str
-) -> DataManager | None:
-    """Get a data manager by it's webhook id."""
-    return next(
-        iter(
-            [
-                data_manager
-                for data_manager in get_all_data_managers(hass)
-                if data_manager.webhook_config.id == webhook_id
-            ]
-        ),
-        None,
-    )
-
-
-def get_all_data_managers(hass: HomeAssistant) -> tuple[DataManager, ...]:
-    """Get all configured data managers."""
-    return tuple(
-        config_entry_data[const.DATA_MANAGER]
-        for config_entry_data in hass.data[const.DOMAIN].values()
-        if const.DATA_MANAGER in config_entry_data
-    )
-
-
-def async_remove_data_manager(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Remove a data manager for a config entry."""
-    del hass.data[const.DOMAIN][config_entry.entry_id][const.DATA_MANAGER]
+        elif notification_category in {NotifyAppli.BED_IN, NotifyAppli.BED_OUT}:
+            self.in_bed = notification_category == NotifyAppli.BED_IN
+            self.async_update_listeners()
