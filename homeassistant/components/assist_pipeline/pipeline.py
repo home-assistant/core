@@ -32,6 +32,7 @@ from homeassistant.components.tts.media_source import (
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.collection import (
+    CHANGE_UPDATED,
     CollectionError,
     ItemNotFound,
     SerializedStorageCollection,
@@ -507,9 +508,7 @@ class PipelineRun:
                 size_limit=STORED_PIPELINE_RUNS
             )
         pipeline_data.pipeline_debug[self.pipeline.id][self.id] = PipelineRunDebug()
-        if self.pipeline.id not in pipeline_data.pipeline_runs:
-            pipeline_data.pipeline_runs[self.pipeline.id] = []
-        pipeline_data.pipeline_runs[self.pipeline.id].append(self)
+        pipeline_data.pipeline_runs.add_run(self)
 
         # Initialize with audio settings
         self.audio_processor_buffer = AudioBuffer(AUDIO_PROCESSOR_BYTES)
@@ -555,7 +554,7 @@ class PipelineRun:
         )
 
         pipeline_data: PipelineData = self.hass.data[DOMAIN]
-        pipeline_data.pipeline_runs[self.pipeline.id].remove(self)
+        pipeline_data.pipeline_runs.remove_run(self)
 
     async def prepare_wake_word_detection(self) -> None:
         """Prepare wake-word-detection."""
@@ -707,6 +706,9 @@ class PipelineRun:
         """
         chunk_seconds = AUDIO_PROCESSOR_SAMPLES / sample_rate
         async for chunk in audio_stream:
+            if self.abort_wake_word_detection:
+                raise WakeWordDetectionAborted
+
             if self.debug_recording_queue is not None:
                 self.debug_recording_queue.put_nowait(chunk.audio)
 
@@ -723,9 +725,6 @@ class PipelineRun:
                     raise WakeWordTimeoutError(
                         code="wake-word-timeout", message="Wake word was not detected"
                     )
-
-            if self.abort_wake_word_detection:
-                raise WakeWordDetectionAborted
 
     async def prepare_speech_to_text(self, metadata: stt.SpeechMetadata) -> None:
         """Prepare speech-to-text."""
@@ -1422,12 +1421,6 @@ class PipelineStorageCollection(
 
     async def _update_data(self, item: Pipeline, update_data: dict) -> Pipeline:
         """Return a new updated item."""
-        pipeline_data: PipelineData = self.hass.data[DOMAIN]
-        if pipeline_runs := pipeline_data.pipeline_runs.get(item.id):
-            # Create a temporary list in case the list is modified while we iterate
-            for pipeline_run in list(pipeline_runs):
-                pipeline_run.abort_wake_word_detection = True
-
         update_data = validate_language(update_data)
         return Pipeline(id=item.id, **update_data)
 
@@ -1574,19 +1567,48 @@ class PipelineStorageCollectionWebsocket(
         connection.send_result(msg["id"])
 
 
-@dataclass
+class PipelineRuns:
+    """Class managing pipelineruns."""
+
+    def __init__(self, pipeline_store: PipelineStorageCollection) -> None:
+        """Initialize."""
+        self._pipeline_runs: dict[str, list[PipelineRun]] = {}
+        self._pipeline_store = pipeline_store
+        pipeline_store.async_add_listener(self._change_listener)
+
+    def add_run(self, pipeline_run: PipelineRun) -> None:
+        """Add pipeline run."""
+        pipeline_id = pipeline_run.pipeline.id
+        if pipeline_id not in self._pipeline_runs:
+            self._pipeline_runs[pipeline_id] = []
+        self._pipeline_runs[pipeline_id].append(pipeline_run)
+
+    def remove_run(self, pipeline_run: PipelineRun) -> None:
+        """Remove pipeline run."""
+        pipeline_id = pipeline_run.pipeline.id
+        self._pipeline_runs[pipeline_id].remove(pipeline_run)
+
+    async def _change_listener(
+        self, change_type: str, item_id: str, change: dict
+    ) -> None:
+        """Handle pipeline store changes."""
+        if change_type != CHANGE_UPDATED:
+            return
+        if pipeline_runs := self._pipeline_runs.get(item_id):
+            # Create a temporary list in case the list is modified while we iterate
+            for pipeline_run in list(pipeline_runs):
+                pipeline_run.abort_wake_word_detection = True
+
+
 class PipelineData:
     """Store and debug data stored in hass.data."""
 
-    pipeline_store: PipelineStorageCollection
-
-    pipeline_debug: dict[str, LimitedSizeDict[str, PipelineRunDebug]] = field(
-        default_factory=dict, init=False
-    )
-    pipeline_runs: dict[str, list[PipelineRun]] = field(
-        default_factory=dict, init=False
-    )
-    pipeline_devices: set[str] = field(default_factory=set, init=False)
+    def __init__(self, pipeline_store: PipelineStorageCollection) -> None:
+        """Initialize."""
+        self.pipeline_store = pipeline_store
+        self.pipeline_debug: dict[str, LimitedSizeDict[str, PipelineRunDebug]] = {}
+        self.pipeline_devices: set[str] = set()
+        self.pipeline_runs = PipelineRuns(pipeline_store)
 
 
 @dataclass
