@@ -543,7 +543,7 @@ async def test_trigger_entity_restore_state(
     restored_humidity,
     initial_state,
 ) -> None:
-    """Test restoring trigger template binary sensor."""
+    """Test restoring trigger template weather."""
 
     restored_attributes = {
         "temperature": 10,
@@ -697,7 +697,7 @@ async def test_trigger_action(
 async def test_trigger_weather_services(
     hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test trigger entity with an action works."""
+    """Test trigger weather entity with services."""
     state = hass.states.get("weather.test")
     assert state is not None
     assert state.state == STATE_UNKNOWN
@@ -828,7 +828,7 @@ async def test_restore_sensor_save_state(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test RestoreSensor."""
+    """Test Restore saved state for Weather trigger template."""
     assert await async_setup_component(
         hass,
         "template",
@@ -876,3 +876,57 @@ async def test_restore_sensor_save_state(
         "last_wind_gust_speed": None,
         "last_wind_speed": None,
     }
+
+
+async def test_trigger_entity_restore_state_fail(
+    hass: HomeAssistant,
+) -> None:
+    """Test restoring trigger template weather fails due to missing attribute."""
+
+    restored_attributes = {
+        "temperature": 10,
+        "humidity": 20,
+    }
+
+    fake_state = State(
+        "weather.test",
+        None,
+        restored_attributes,
+    )
+    fake_extra_data = {
+        "last_temperature": 20,
+        "last_humidity": 20,
+        "last_wind_speed": None,
+        "last_wind_bearing": None,
+        "last_ozone": None,
+        "last_visibility": None,
+        "last_pressure": None,
+        "last_wind_gust_speed": None,
+        "last_cloud_coverage": None,
+        "last_dew_point": None,
+    }
+    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "weather": {
+                    "name": "test",
+                    "condition_template": "{{ trigger.event.data.condition }}",
+                    "temperature_template": "{{ trigger.event.data.temperature | float }}",
+                    "temperature_unit": "°C",
+                    "humidity_template": "{{ trigger.event.data.humidity | float }}",
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("weather.test")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("temperature") is None
