@@ -23,7 +23,6 @@ from .entity import HydrawiseEntity
 
 BINARY_SENSOR_STATUS = BinarySensorEntityDescription(
     key="status",
-    translation_key="connectivity",
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 
