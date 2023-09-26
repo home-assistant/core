@@ -1168,7 +1168,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2023.8.4
+pyDuotecno==2023.9.0
 
 # homeassistant.components.eight_sleep
 pyEight==0.3.2
