@@ -40,7 +40,7 @@ from .const import CONF_USE_WEBHOOK, CONFIG, LOGGER
 from .coordinator import WithingsDataUpdateCoordinator
 
 DOMAIN = const.DOMAIN
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.EVENT, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {

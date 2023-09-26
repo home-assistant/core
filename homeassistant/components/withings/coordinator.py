@@ -269,5 +269,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
             await self.async_request_refresh()
 
         elif notification_category in {NotifyAppli.BED_IN, NotifyAppli.BED_OUT}:
-            self.in_bed = notification_category == NotifyAppli.BED_IN
-            self.async_update_listeners()
+            self.hass.bus.async_fire(
+                f"withings_{self.config_entry.unique_id}_sleep",
+                {"type": notification_category},
+            )

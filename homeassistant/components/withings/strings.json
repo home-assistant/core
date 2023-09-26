@@ -32,9 +32,17 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "in_bed": {
-        "name": "In bed"
+    "event": {
+      "sleep": {
+        "name": "Bed activity",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "in_bed": "In bed",
+              "out_bed": "Out bed"
+            }
+          }
+        }
       }
     },
     "sensor": {
