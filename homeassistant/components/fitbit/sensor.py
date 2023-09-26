@@ -550,7 +550,7 @@ async def async_setup_entry(
     monitored_resources = entry.data.get(CONF_MONITORED_RESOURCES)
     scopes = entry.data["token"].get("scope", "").split(" ")
 
-    def is_explict_enable(description: FitbitSensorEntityDescription) -> bool:
+    def is_explicit_enable(description: FitbitSensorEntityDescription) -> bool:
         """Determine if entity is enabled by default."""
         if monitored_resources is not None:
             return description.key in monitored_resources

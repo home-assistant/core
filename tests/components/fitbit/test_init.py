@@ -1,6 +1,6 @@
 """Test fitbit component."""
 
-from collections.abc import Awaitable, Callable
+from typing import Awaitable, Callable
 from http import HTTPStatus
 
 import pytest
