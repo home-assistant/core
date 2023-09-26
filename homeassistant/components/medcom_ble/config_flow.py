@@ -91,9 +91,6 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             self._discovery_info = self._discovered_devices[address]
-            self.context["title_placeholders"] = {
-                "name": self._discovery_info.name,
-            }
             return await self.async_step_check_connection()
 
         current_addresses = self._async_current_ids()
