@@ -38,7 +38,6 @@ class VodafoneStationEntityDescription(
 BUTTON_TYPES: Final = (
     VodafoneStationEntityDescription(
         key="reboot",
-        translation_key="reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda coordinator: coordinator.api.restart_router(),

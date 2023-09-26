@@ -32,7 +32,6 @@
   },
   "entity": {
     "button": {
-      "reboot": { "name": "Reboot" },
       "dsl_reconnect": { "name": "DSL reconnect" },
       "fiber_reconnect": { "name": "Fiber reconnect" },
       "internet_key_reconnect": { "name": "Internet key reconnect" }
