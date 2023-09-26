@@ -7,7 +7,7 @@ from typing import Any
 
 from twitchAPI.helper import first
 from twitchAPI.twitch import Twitch
-from twitchAPI.type import AuthScope, InvalidTokenException
+from twitchAPI.type import InvalidTokenException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_TOKEN
@@ -117,12 +117,14 @@ class OAuth2FlowHandler(
         """Import from yaml."""
         client = await Twitch(
             app_id=config[CONF_CLIENT_ID],
-            target_app_auth_scope=[AuthScope.USER_READ_SUBSCRIPTIONS],
+            authenticate_app=False,
         )
         client.auto_refresh_auth = False
         token = config[CONF_TOKEN]
         try:
-            client.set_user_authentication(token, validate=True)
+            await client.set_user_authentication(
+                token, validate=True, scope=OAUTH_SCOPES
+            )
         except InvalidTokenException:
             async_create_issue(
                 self.hass,
