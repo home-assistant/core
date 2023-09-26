@@ -34,6 +34,7 @@ from homeassistant.components.weather import (
     DOMAIN,
     ROUNDING_PRECISION,
     SERVICE_GET_FORECAST,
+    SERVICE_GET_FORECAST_VALUE,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
@@ -1033,3 +1034,100 @@ async def test_issue_forecast_deprecated_no_logging(
         "custom_components.test_weather.weather::weather.test is using a forecast attribute on an instance of WeatherEntity"
         not in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    (
+        "forecast_attribute",
+        "forecast_limit_hours",
+        "forecast_min_max",
+        "supported_features",
+        "extra",
+    ),
+    [
+        ("temperature", 24, "max", WeatherEntityFeature.FORECAST_HOURLY, {}),
+    ],
+)
+async def test_get_forecast_value(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    forecast_attribute: str,
+    forecast_limit_hours: int,
+    forecast_min_max: str,
+    supported_features: int,
+    extra: dict[str, Any],
+) -> None:
+    """Test get forecast service."""
+
+    entity0 = await create_entity(
+        hass,
+        native_temperature=38,
+        native_temperature_unit=UnitOfTemperature.CELSIUS,
+        supported_features=supported_features,
+    )
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECAST_VALUE,
+        {
+            "entity_id": entity0.entity_id,
+            "attribute": forecast_attribute,
+            "limit_hours": forecast_limit_hours,
+            "min_max": forecast_min_max,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "forecast": {
+            "temperature": 38.0,
+        }
+        | extra,
+    }
+
+
+@pytest.mark.parametrize(
+    (
+        "forecast_attribute",
+        "forecast_min_max",
+        "supported_features",
+        "extra",
+    ),
+    [
+        ("temperature", "max", WeatherEntityFeature.FORECAST_HOURLY, {}),
+    ],
+)
+async def test_get_forecast_value_no_limit(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    forecast_attribute: str,
+    forecast_min_max: str,
+    supported_features: int,
+    extra: dict[str, Any],
+) -> None:
+    """Test get forecast service."""
+
+    entity0 = await create_entity(
+        hass,
+        native_temperature=38,
+        native_temperature_unit=UnitOfTemperature.CELSIUS,
+        supported_features=supported_features,
+    )
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECAST_VALUE,
+        {
+            "entity_id": entity0.entity_id,
+            "attribute": forecast_attribute,
+            "min_max": forecast_min_max,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "forecast": {
+            "temperature": 38.0,
+        }
+        | extra,
+    }

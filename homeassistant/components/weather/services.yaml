@@ -16,3 +16,39 @@ get_forecast:
             - "hourly"
             - "twice_daily"
           translation_key: forecast_type
+
+get_forecast_value:
+  target:
+    entity:
+      domain: weather
+      supported_features:
+        - weather.WeatherEntityFeature.FORECAST_HOURLY
+  fields:
+    attribute:
+      required: true
+      selector:
+        select:
+          options:
+            - "temperature"
+            - "templow"
+            - "precipitation"
+            - "precipitation_probability"
+            - "wind_speed"
+            - "humidity"
+          translation_key: forecast_value_attribute
+    limit_hours:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 216
+          mode: slider
+          unit_of_measurement: hours
+    min_max:
+      required: false
+      selector:
+        select:
+          options:
+            - "min"
+            - "max"
+          translation_key: forecast_value_min_max

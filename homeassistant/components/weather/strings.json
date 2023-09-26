@@ -85,6 +85,22 @@
         "hourly": "Hourly",
         "twice_daily": "Twice daily"
       }
+    },
+    "forecast_value_attribute": {
+      "options": {
+        "temperature": "Temperature High",
+        "templow": "Temperature Low",
+        "precipitation": "Precipitation",
+        "precipitation_probability": "Precipitation probability",
+        "wind_speed": "Wind speed",
+        "humidity": "Humidity"
+      }
+    },
+    "forecast_value_min_max": {
+      "options": {
+        "min": "Min",
+        "max": "Max"
+      }
     }
   },
   "services": {
@@ -95,6 +111,24 @@
         "type": {
           "name": "Forecast type",
           "description": "Forecast type: daily, hourly or twice daily."
+        }
+      }
+    },
+    "get_forecast_value": {
+      "name": "Get forecast value",
+      "description": "Get the min or max value of a weather forecast field within the next hours.",
+      "fields": {
+        "attribute": {
+          "name": "Weather attribute",
+          "description": "Weather attribute: temperature, humidity ..."
+        },
+        "limit_hours": {
+          "name": "Next hours",
+          "description": "Next hours: time range between 1-216 hours. Leave blank to not filter by time."
+        },
+        "min_max": {
+          "name": "Min or max value",
+          "description": "Min or max value: highest or lowest seen value within the next hours."
         }
       }
     }

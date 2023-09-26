@@ -136,6 +136,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 ROUNDING_PRECISION = 2
 
 SERVICE_GET_FORECAST: Final = "get_forecast"
+SERVICE_GET_FORECAST_VALUE: Final = "get_forecast_value"
 
 _ObservationUpdateCoordinatorT = TypeVar(
     "_ObservationUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
@@ -218,6 +219,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             WeatherEntityFeature.FORECAST_DAILY,
             WeatherEntityFeature.FORECAST_HOURLY,
             WeatherEntityFeature.FORECAST_TWICE_DAILY,
+        ],
+        supports_response=SupportsResponse.ONLY,
+    )
+    component.async_register_entity_service(
+        SERVICE_GET_FORECAST_VALUE,
+        {
+            vol.Required("attribute"): vol.In(
+                (
+                    "temperature",
+                    "templow",
+                    "precipitation",
+                    "precipitation_probability",
+                    "wind_speed",
+                    "humidty",
+                )
+            ),
+            vol.Optional("limit_hours"): vol.Range(1, 216),
+            vol.Optional("min_max", default="max"): vol.In(("min", "max")),
+        },
+        async_get_forecast_value_service,
+        required_features=[
+            WeatherEntityFeature.FORECAST_HOURLY,
         ],
         supports_response=SupportsResponse.ONLY,
     )
@@ -1085,6 +1108,51 @@ async def async_get_forecast_service(
         converted_forecast_list = weather._convert_forecast(native_forecast_list)
     return {
         "forecast": converted_forecast_list,
+    }
+
+
+async def async_get_forecast_value_service(
+    weather: WeatherEntity, service_call: ServiceCall
+) -> ServiceResponse:
+    """Get weather forecast for specified attribute."""
+    forecast_attribute = service_call.data.get("attribute")
+    forecast_limit_hours = service_call.data.get("limit_hours")
+    forecast_min_max = service_call.data.get("min_max")
+
+    supported_features = weather.supported_features or 0
+    forecast_type = "hourly"
+    if (supported_features & WeatherEntityFeature.FORECAST_HOURLY) == 0:
+        raise_unsupported_forecast(weather.entity_id, forecast_type)
+    native_forecast_list = await weather.async_forecast_hourly()
+    if native_forecast_list is None:
+        result = None
+    else:
+        # pylint: disable-next=protected-access
+        converted_forecast_list = weather._convert_forecast(native_forecast_list)
+
+        # Check if forecast_limit_hours is valid number
+        if forecast_limit_hours is not None and forecast_limit_hours > 0:
+            # Cut list length according to forecast_limit_hours
+            converted_forecast_list = converted_forecast_list[:forecast_limit_hours]
+
+        # Check if key forecast_attribute is in list
+        if forecast_attribute not in converted_forecast_list[0]:
+            raise HomeAssistantError(
+                f"Forecast attribute '{forecast_attribute}' does not exist in forecast"
+            )
+
+        # Filter list to only get the key in forecast_attribute
+        converted_forecast_list = [
+            forecast[forecast_attribute] for forecast in converted_forecast_list
+        ]
+
+        # Get the min or max value
+        if forecast_min_max == "min":
+            result = min(converted_forecast_list)
+        else:
+            result = max(converted_forecast_list)
+    return {
+        "forecast": {forecast_attribute: result},
     }
 
 
