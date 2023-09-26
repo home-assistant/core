@@ -163,7 +163,6 @@ class MqttSiren(MqttEntity, SirenEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT siren."""
-        self._extra_attributes: dict[str, Any] = {}
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
