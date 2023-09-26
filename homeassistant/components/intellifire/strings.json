@@ -1,39 +1,46 @@
 {
-  "config": {
-    "flow_title": "{serial} ({host})",
+  "options": {
     "step": {
-      "manual_device_entry": {
-        "description": "Local Configuration",
+      "options": {
         "data": {
-          "host": "Host (IP Address)"
-        }
+          "cloud_read": "What is your desired read mode",
+          "cloud_control": "Select your desired control mode"
+        },
+        "data_description": {
+          "cloud_read": "In the case that your selected mode is not reachable - the integration will automatically switch to the other mode.",
+          "cloud_control": "In the case that your selected mode is not reachable - the integration will automatically switch to the other mode."
+        },
+        "description": "Please select if you wish to use Cloud or Local APIs",
+        "title": "Local/Cloud API Selection."
+      }
+    }
+  },
+  "config": {
+    "flow_title": "{serial}",
+    "step": {
+      "pick_cloud_device": {
+        "title": "Configure fireplace",
+        "description": "Select Fireplace by Serial Number:"
       },
-      "api_config": {
+      "cloud_api": {
+        "description": "Authenticate against IntelliFire Cloud",
+        "data_description": {
+          "username": "IntelliFire Username",
+          "password": "IntelliFire Password"
+        },
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
-      },
-      "dhcp_confirm": {
-        "description": "Do you want to set up {host}\nSerial: {serial}?"
-      },
-      "pick_device": {
-        "title": "Device Selection",
-        "description": "The following IntelliFire devices were discovered. Please select which you wish to configure.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "api_error": "Login failed",
-      "iftapi_connect": "Error conecting to iftapi.net"
+      "api_error": "Login failed"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "not_intellifire_device": "Not an IntelliFire Device."
+      "not_intellifire_device": "Not an IntelliFire Device.",
+      "all_devices_already_configured": "All available devices have already been configured."
     }
   },
   "entity": {
@@ -103,6 +110,13 @@
       "flame_height": {
         "name": "Flame height"
       },
+      "control_mode": {
+        "name": "Control mode"
+      },
+      "read_mode": {
+        "name": "Read mode"
+      },
+
       "target_temp": {
         "name": "Target temperature"
       },

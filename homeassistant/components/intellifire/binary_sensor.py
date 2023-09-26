@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from intellifire4py import IntellifirePollData
+from intellifire4py.model import IntelliFirePollData
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -25,7 +25,7 @@ from .entity import IntellifireEntity
 class IntellifireBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[IntellifirePollData], bool]
+    value_fn: Callable[[IntelliFirePollData], bool]
 
 
 @dataclass(frozen=True)
@@ -139,6 +139,23 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
         value_fn=lambda data: data.error_offline,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
+    #
+    #
+    #
+    # IntellifireBinarySensorEntityDescription(
+    #     key="local_poll",
+    #     translation_key="local_poll",
+    #     entity_category=EntityCategory.DIAGNOSTIC,
+    #     value_fn=lambda data: data.error_offline,
+    #     device_class=BinarySensorDeviceClass.PROBLEM,
+    # ),
+    # IntellifireBinarySensorEntityDescription(
+    #     key="cloud_poll",
+    #     translation_key="cloud_poll",
+    #     entity_category=EntityCategory.DIAGNOSTIC,
+    #     value_fn=lambda data: data.error_offline,
+    #     device_class=BinarySensorDeviceClass.PROBLEM,
+    # ),
 )
 
 
