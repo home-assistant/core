@@ -1405,9 +1405,6 @@ pymodbus==3.5.2
 # homeassistant.components.monoprice
 pymonoprice==0.4
 
-# homeassistant.components.myq
-pymyq==3.1.4
-
 # homeassistant.components.mysensors
 pymysensors==0.24.0
 
@@ -1597,6 +1594,9 @@ python-matter-server==3.7.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
+
+# homeassistant.components.myq
+python-myq==3.1.9
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0

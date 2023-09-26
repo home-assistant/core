@@ -1871,9 +1871,6 @@ pymonoprice==0.4
 # homeassistant.components.msteams
 pymsteams==0.1.12
 
-# homeassistant.components.myq
-pymyq==3.1.4
-
 # homeassistant.components.mysensors
 pymysensors==0.24.0
 
@@ -2147,6 +2144,9 @@ python-miio==0.5.12
 
 # homeassistant.components.mpd
 python-mpd2==3.0.5
+
+# homeassistant.components.myq
+python-myq==3.1.9
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
