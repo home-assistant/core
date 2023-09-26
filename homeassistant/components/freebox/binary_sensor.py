@@ -76,13 +76,13 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
     ) -> None:
         """Initialize a Freebox binary sensor."""
         super().__init__(hass, router, node, sub_node)
-        self._command_trigger = self.get_command_id(
+        self._command_id = self.get_command_id(
             node["type"]["endpoints"], "signal", "trigger"
         )
 
     async def async_update_signal(self):
         """Watch states."""
-        detection = await self.get_home_endpoint_value(self._command_trigger)
+        detection = await self.get_home_endpoint_value(self._command_id)
         if detection is not None:
             if self._attr_is_on == detection or self._attr_is_on is None:
                 self._attr_is_on = not detection
@@ -118,14 +118,14 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
             None,
         )
         super().__init__(hass, router, node, cover_node)
-        self._cover_trigger = self.get_command_id(
+        self._command_id = self.get_command_id(
             node["type"]["endpoints"], "signal", "cover"
         )
         self._attr_is_on = self.get_value("signal", "cover")
 
     async def async_update_signal(self):
         """Update name & state."""
-        self._attr_is_on = await self.get_home_endpoint_value(self._cover_trigger)
+        self._attr_is_on = await self.get_home_endpoint_value(self._command_id)
 
 
 class FreeboxRaidDegradedSensor(BinarySensorEntity):
