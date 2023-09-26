@@ -1,4 +1,6 @@
 """The tests for the Template Weather platform."""
+from typing import Any
+
 import pytest
 
 from homeassistant.components.weather import (
@@ -21,10 +23,15 @@ from homeassistant.components.weather import (
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import assert_setup_component, mock_restore_cache_with_extra_data
+from tests.common import (
+    assert_setup_component,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
+)
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
@@ -814,4 +821,58 @@ async def test_trigger_weather_services(
                 "is_daytime": True,
             }
         ],
+    }
+
+
+async def test_restore_sensor_save_state(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test RestoreSensor."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "weather": {
+                    "name": "test",
+                    "condition_template": "{{ trigger.event.data.condition }}",
+                    "temperature_template": "{{ trigger.event.data.temperature | float }}",
+                    "temperature_unit": "°C",
+                    "humidity_template": "{{ trigger.event.data.humidity | float }}",
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(
+        "test_event", {"condition": "cloudy", "temperature": 15, "humidity": 25}
+    )
+    await hass.async_block_till_done()
+    entity = hass.states.get("weather.test")
+
+    # Trigger saving state
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
+    assert state["entity_id"] == entity.entity_id
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == {
+        "last_apparent_temperature": None,
+        "last_cloud_coverage": None,
+        "last_dew_point": None,
+        "last_humidity": "25.0",
+        "last_ozone": None,
+        "last_pressure": None,
+        "last_temperature": "15.0",
+        "last_visibility": None,
+        "last_wind_bearing": None,
+        "last_wind_gust_speed": None,
+        "last_wind_speed": None,
     }
