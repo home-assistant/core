@@ -43,7 +43,9 @@ async def test_sleep_event(
     )
     assert resp.message_code == 0
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == "2023-08-01T00:00:00.000+00:00"
+    state = hass.states.get(entity_id)
+    assert state.state == "2023-08-01T00:00:00.000+00:00"
+    assert state.attributes["event_type"] == "in_bed"
 
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
@@ -56,4 +58,6 @@ async def test_sleep_event(
     )
     assert resp.message_code == 0
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == "2023-08-01T00:10:00.000+00:00"
+    state = hass.states.get(entity_id)
+    assert state.state == "2023-08-01T00:10:00.000+00:00"
+    assert state.attributes["event_type"] == "out_bed"
