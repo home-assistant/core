@@ -156,6 +156,7 @@ async def test_notifications(
             "source": "node",
             "event": "notification",
             "nodeId": 32,
+            "endpointIndex": 0,
             "ccId": 113,
             "args": {
                 "type": 6,
@@ -187,6 +188,7 @@ async def test_notifications(
             "source": "node",
             "event": "notification",
             "nodeId": 32,
+            "endpointIndex": 0,
             "ccId": 111,
             "args": {
                 "eventType": 5,
@@ -219,6 +221,7 @@ async def test_notifications(
             "source": "node",
             "event": "notification",
             "nodeId": 32,
+            "endpointIndex": 0,
             "ccId": 38,
             "args": {"eventType": 4, "eventTypeLabel": "test1", "direction": "up"},
         },
@@ -320,6 +323,7 @@ async def test_power_level_notification(
             "source": "node",
             "event": "notification",
             "nodeId": 7,
+            "endpointIndex": 0,
             "ccId": 115,
             "args": {
                 "commandClassName": "Powerlevel",
@@ -363,6 +367,7 @@ async def test_unknown_notification(
             "source": "node",
             "event": "notification",
             "nodeId": node.node_id,
+            "endpointIndex": 0,
             "ccId": 0,
             "args": {
                 "commandClassName": "No Operation",
