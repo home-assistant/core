@@ -76,6 +76,7 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self):
         """Subscribe to updates."""
+        await super().async_added_to_hass()
         self.async_on_remove(self.coordinator.async_add_listener(self._state_update))
 
         # If the background update finished before
