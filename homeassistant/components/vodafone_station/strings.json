@@ -26,8 +26,10 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
+      "already_logged": "User already logged-in, please try again later.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "model_not_supported": "The device model is currently unsupported.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
