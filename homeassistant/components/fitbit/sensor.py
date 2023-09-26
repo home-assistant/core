@@ -558,7 +558,7 @@ async def async_setup_entry(
 
     def is_allowed_resource(description: FitbitSensorEntityDescription) -> bool:
         """Determine if an entity is allowed to be created."""
-        if is_explict_enable(description):
+        if is_explicit_enable(description):
             return True
         return description.scope in scopes
 
@@ -573,7 +573,7 @@ async def async_setup_entry(
             user_profile.encoded_id,
             description,
             units=description.unit_fn(unit_system),
-            enable_default_override=is_explict_enable(description),
+            enable_default_override=is_explicit_enable(description),
         )
         for description in resource_list
         if is_allowed_resource(description)
@@ -587,7 +587,7 @@ async def async_setup_entry(
                     user_profile.encoded_id,
                     FITBIT_RESOURCE_BATTERY,
                     device=device,
-                    enable_default_override=is_explict_enable(FITBIT_RESOURCE_BATTERY),
+                    enable_default_override=is_explicit_enable(FITBIT_RESOURCE_BATTERY),
                 )
                 for device in devices
             ]
