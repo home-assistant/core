@@ -1,10 +1,10 @@
 """Tests for the Twitch component."""
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
 from dataclasses import dataclass
 from typing import Any
 
-from twitchAPI.object import FollowedChannelsResult, TwitchUser
+from twitchAPI.object.api import FollowedChannelsResult, TwitchUser
 from twitchAPI.twitch import (
     InvalidTokenException,
     MissingScopeException,
@@ -12,7 +12,9 @@ from twitchAPI.twitch import (
     TwitchAuthorizationException,
     TwitchResourceNotFound,
 )
-from twitchAPI.types import AuthScope, AuthType
+from twitchAPI.type import AuthScope, AuthType
+
+import homeassistant.util.dt as dt_util
 
 
 def _get_twitch_user(user_id: str = "123") -> TwitchUser:
@@ -25,6 +27,12 @@ def _get_twitch_user(user_id: str = "123") -> TwitchUser:
     )
 
 
+async def async_iterator(iterable) -> AsyncIterator:
+    """Return async iterator."""
+    for i in iterable:
+        yield i
+
+
 class TwitchUserFollowResultMock:
     """Mock for twitch user follow result."""
 
@@ -32,6 +40,10 @@ class TwitchUserFollowResultMock:
         """Initialize mock."""
         self.total = len(follows)
         self.data = follows
+
+    def __aiter__(self):
+        """Return async iterator."""
+        return async_iterator(self.data)
 
 
 @dataclass
@@ -43,9 +55,10 @@ class UserSubscriptionMock:
 
 
 @dataclass
-class UserFollowMock:
-    """User follow mock."""
+class FollowedChannelMock:
+    """Followed channel mock."""
 
+    broadcaster_login: str
     followed_at: str
 
 
@@ -109,16 +122,6 @@ class TwitchMock:
         """Return if auth required."""
         return True
 
-    async def get_users_follows(
-        self, to_id: str | None = None, from_id: str | None = None
-    ) -> TwitchUserFollowResultMock:
-        """Return the followers of the user."""
-        if self._is_following:
-            return TwitchUserFollowResultMock(
-                follows=[UserFollowMock("2020-01-20T21:22:42") for _ in range(0, 24)]
-            )
-        return TwitchUserFollowResultMock(follows=[])
-
     async def check_user_subscription(
         self, broadcaster_id: str, user_id: str
     ) -> UserSubscriptionMock:
@@ -133,7 +136,6 @@ class TwitchMock:
         self,
         token: str,
         scope: list[AuthScope],
-        refresh_token: str,
         validate: bool = True,
     ) -> None:
         """Set user authentication."""
@@ -141,7 +143,13 @@ class TwitchMock:
 
     async def get_followed_channels(self, user_id: str) -> FollowedChannelsResult:
         """Get followed channels."""
-        return TwitchUserFollowResultMock([])
+        return TwitchUserFollowResultMock(
+            [
+                FollowedChannelMock(
+                    followed_at=dt_util.utcnow, broadcaster_login="internetofthings"
+                )
+            ]
+        )
 
     async def get_streams(
         self, user_id: list[str], first: int
