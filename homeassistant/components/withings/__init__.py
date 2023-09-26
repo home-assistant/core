@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 
+from aiohttp.hdrs import METH_HEAD, METH_POST
 from aiohttp.web import Request, Response
 import voluptuous as vol
 from withings_api.common import NotifyAppli
@@ -185,10 +186,10 @@ def get_webhook_handler(
     ) -> Response | None:
         # Handle http head calls to the path.
         # When creating a notify subscription, Withings will check that the endpoint is running by sending a HEAD request.
-        if request.method.upper() == "HEAD":
+        if request.method == METH_HEAD:
             return Response()
 
-        if request.method.upper() != "POST":
+        if request.method != METH_POST:
             return json_message_response("Invalid method", message_code=2)
 
         # Handle http post calls to the path.

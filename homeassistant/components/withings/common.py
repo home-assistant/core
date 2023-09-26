@@ -20,7 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .api import ConfigEntryWithingsApi
@@ -145,13 +145,8 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
         try:
             measurements = await self._get_measurements()
             sleep_summary = await self._get_sleep_summary()
-        except UnauthorizedException as exc:
+        except (UnauthorizedException, AuthFailedException) as exc:
             raise ConfigEntryAuthFailed from exc
-        except AuthFailedException as exc:
-            raise ConfigEntryAuthFailed from exc
-        except Exception as exc:
-            LOGGER.exception("Something went wrong")
-            raise UpdateFailed from exc
         return {
             **measurements,
             **sleep_summary,
