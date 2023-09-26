@@ -271,6 +271,7 @@ FLOWS = {
         "matter",
         "mazda",
         "meater",
+        "medcom_ble",
         "melcloud",
         "melnor",
         "met",
