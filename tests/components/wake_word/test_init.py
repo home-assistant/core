@@ -22,6 +22,7 @@ from tests.common import (
     mock_platform,
     mock_restore_cache,
 )
+from tests.typing import WebSocketGenerator
 
 TEST_DOMAIN = "test"
 
@@ -259,3 +260,29 @@ async def test_entity_attributes(
 ) -> None:
     """Test that the provider entity attributes match expectations."""
     assert mock_provider_entity.entity_category == EntityCategory.DIAGNOSTIC
+
+
+async def test_list_wake_words(
+    hass: HomeAssistant,
+    setup: MockProviderEntity,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that the list_wake_words websocket command works."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "wake_word/info",
+            "entity_id": setup.entity_id,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "wake_words": [
+            {"ww_id": "test_ww", "name": "Test Wake Word"},
+            {"ww_id": "test_ww_2", "name": "Test Wake Word 2"},
+        ]
+    }

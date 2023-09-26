@@ -3,9 +3,13 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import AsyncIterable
+import dataclasses
 import logging
 from typing import final
 
+import voluptuous as vol
+
+from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -49,7 +53,9 @@ def async_get_wake_word_detection_entity(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up STT."""
+    """Set up wake word."""
+    websocket_api.async_register_command(hass, websocket_entity_info)
+
     component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
     component.register_shutdown()
 
@@ -120,3 +126,29 @@ class WakeWordDetectionEntity(RestoreEntity):
             and state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
         ):
             self.__last_detected = state.state
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "wake_word/info",
+        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
+    }
+)
+@callback
+def websocket_entity_info(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Get info about wake word entity."""
+    component: EntityComponent[WakeWordDetectionEntity] = hass.data[DOMAIN]
+    entity = component.get_entity(msg["entity_id"])
+
+    if entity is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        {"wake_words": [dataclasses.asdict(ww) for ww in entity.supported_wake_words]},
+    )
