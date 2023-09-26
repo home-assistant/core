@@ -29,6 +29,8 @@ PIPELINE_DATA = {
             "tts_engine": "cloud",
             "tts_language": "language_1",
             "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": None,
+            "wake_word_id": None,
         },
         {
             "conversation_engine": "conversation_engine_2",
@@ -41,6 +43,8 @@ PIPELINE_DATA = {
             "tts_engine": "tts_engine_2",
             "tts_language": "language_2",
             "tts_voice": "The Voice",
+            "wake_word_entity": None,
+            "wake_word_id": None,
         },
         {
             "conversation_engine": "conversation_engine_3",
@@ -53,6 +57,8 @@ PIPELINE_DATA = {
             "tts_engine": None,
             "tts_language": None,
             "tts_voice": None,
+            "wake_word_entity": None,
+            "wake_word_id": None,
         },
     ],
     "preferred_item": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
@@ -186,5 +192,7 @@ async def test_migrating_pipelines(
         hass_storage[STORAGE_KEY]["data"]["items"][0]["tts_voice"]
         == "Arnold Schwarzenegger"
     )
+    assert hass_storage[STORAGE_KEY]["data"]["items"][0]["wake_word_entity"] is None
+    assert hass_storage[STORAGE_KEY]["data"]["items"][0]["wake_word_id"] is None
     assert hass_storage[STORAGE_KEY]["data"]["items"][1] == PIPELINE_DATA["items"][1]
     assert hass_storage[STORAGE_KEY]["data"]["items"][2] == PIPELINE_DATA["items"][2]
