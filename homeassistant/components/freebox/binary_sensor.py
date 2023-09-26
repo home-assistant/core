@@ -81,12 +81,9 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
         )
 
     async def async_update_signal(self):
-        """Watch states."""
-        detection = await self.get_home_endpoint_value(self._command_id)
-        if detection is not None:
-            if self._attr_is_on == detection or self._attr_is_on is None:
-                self._attr_is_on = not detection
-                self.async_write_ha_state()
+        """Update state."""
+        self._attr_is_on = await self.get_home_endpoint_value(self._command_id)
+        await FreeboxHomeEntity.async_update_signal(self)
 
 
 class FreeboxPirSensor(FreeboxHomeBinarySensor):
@@ -128,6 +125,7 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
     async def async_update_signal(self):
         """Update name & state."""
         self._attr_is_on = await self.get_home_endpoint_value(self._command_id)
+        await FreeboxHomeEntity.async_update_signal(self)
 
 
 class FreeboxRaidDegradedSensor(BinarySensorEntity):

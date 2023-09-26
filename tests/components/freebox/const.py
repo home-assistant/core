@@ -513,19 +513,22 @@ DATA_LAN_GET_HOSTS_LIST = [
     },
 ]
 
-# device_home_values
+# Home
+# PIR node id 26, endpoint id 6
 DATA_HOME_GET_VALUES = {
     "category": "",
     "ep_type": "slot",
-    "id": 0,
+    "id": 6,
     "label": "Détection",
-    "name": "detection",
+    "name": "trigger",
     "ui": {"access": "w", "display": "toggle"},
     "value": False,
     "value_type": "bool",
     "visibility": "normal",
 }
 
+# Home
+# ALL
 DATA_HOME_GET_NODES = [
     {
         "adapter": 2,
