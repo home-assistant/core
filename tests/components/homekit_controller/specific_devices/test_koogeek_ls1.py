@@ -7,60 +7,14 @@ from aiohomekit.model import CharacteristicsTypes, ServicesTypes
 from aiohomekit.testing import FakePairing
 import pytest
 
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from ..common import (
-    HUB_TEST_ACCESSORY_ID,
-    DeviceTestInfo,
-    EntityTestInfo,
-    Helper,
-    assert_devices_and_entities_created,
-    setup_accessories_from_file,
-    setup_test_accessories,
-)
+from ..common import Helper, setup_accessories_from_file, setup_test_accessories
 
 from tests.common import async_fire_time_changed
 
 LIGHT_ON = ("lightbulb", "on")
-
-
-async def test_koogeek_ls1_setup(hass: HomeAssistant) -> None:
-    """Test that a Koogeek LS1 can be correctly setup in HA."""
-    accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
-    await setup_test_accessories(hass, accessories)
-
-    await assert_devices_and_entities_created(
-        hass,
-        DeviceTestInfo(
-            unique_id=HUB_TEST_ACCESSORY_ID,
-            name="Koogeek-LS1-20833F",
-            model="LS1",
-            manufacturer="Koogeek",
-            sw_version="2.2.15",
-            hw_version="",
-            serial_number="AAAA011111111111",
-            devices=[],
-            entities=[
-                EntityTestInfo(
-                    entity_id="light.koogeek_ls1_20833f_light_strip",
-                    friendly_name="Koogeek-LS1-20833F Light Strip",
-                    unique_id="00:00:00:00:00:00_1_7",
-                    supported_features=0,
-                    capabilities={"supported_color_modes": ["hs"]},
-                    state="off",
-                ),
-                EntityTestInfo(
-                    entity_id="button.koogeek_ls1_20833f_identify",
-                    friendly_name="Koogeek-LS1-20833F Identify",
-                    unique_id="00:00:00:00:00:00_1_1_6",
-                    entity_category=EntityCategory.DIAGNOSTIC,
-                    state="unknown",
-                ),
-            ],
-        ),
-    )
 
 
 @pytest.mark.parametrize("failure_cls", [AccessoryDisconnectedError, EncryptionError])

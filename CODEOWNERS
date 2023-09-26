@@ -390,6 +390,8 @@ build.json @home-assistant/supervisor
 /tests/components/fireservicerota/ @cyberjunky
 /homeassistant/components/firmata/ @DaAwesomeP
 /tests/components/firmata/ @DaAwesomeP
+/homeassistant/components/fitbit/ @allenporter
+/tests/components/fitbit/ @allenporter
 /homeassistant/components/fivem/ @Sander0542
 /tests/components/fivem/ @Sander0542
 /homeassistant/components/fjaraskupan/ @elupus
@@ -560,6 +562,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/hvv_departures/ @vigonotion
 /tests/components/hvv_departures/ @vigonotion
 /homeassistant/components/hydrawise/ @dknowles2 @ptcryan
+/tests/components/hydrawise/ @dknowles2 @ptcryan
 /homeassistant/components/hyperion/ @dermotduffy
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/ialarm/ @RyuzakiKK
@@ -740,6 +743,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/meater/ @Sotolotl @emontnemery
 /tests/components/meater/ @Sotolotl @emontnemery
 /homeassistant/components/media_extractor/ @joostlek
+/tests/components/media_extractor/ @joostlek
 /homeassistant/components/media_player/ @home-assistant/core
 /tests/components/media_player/ @home-assistant/core
 /homeassistant/components/media_source/ @hunterjm
