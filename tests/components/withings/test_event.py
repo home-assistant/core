@@ -65,7 +65,6 @@ async def test_sleep_event(
 async def test_polling_binary_sensor(
     hass: HomeAssistant,
     withings: AsyncMock,
-    disable_webhook_delay,
     polling_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
