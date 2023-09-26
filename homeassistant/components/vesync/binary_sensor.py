@@ -23,13 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .common import VeSyncBaseEntity
-from .const import (
-    DEV_TYPE_TO_HA,
-    DOMAIN,
-    SKU_TO_BASE_DEVICE,
-    VS_BINARY_SENSORS,
-    VS_DISCOVERY,
-)
+from .const import DOMAIN, SKU_TO_BASE_DEVICE, VS_BINARY_SENSORS, VS_DISCOVERY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,11 +52,6 @@ class VeSyncBinarySensorEntityDescription(
 def sku_supported(device, supported) -> bool:
     """Get the base device of which a device is an instance."""
     return SKU_TO_BASE_DEVICE.get(device.device_type) in supported
-
-
-def ha_dev_type(device) -> str | None:
-    """Get the homeassistant device_type for a given device."""
-    return DEV_TYPE_TO_HA.get(device.device_type)
 
 
 LIGHT_DETECTION_SUPPORTED = ["Vital200S"]
