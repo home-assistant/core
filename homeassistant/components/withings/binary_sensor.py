@@ -14,8 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import WithingsDataUpdateCoordinator
 from .const import DOMAIN, Measurement
+from .coordinator import WithingsDataUpdateCoordinator
 from .entity import WithingsEntity, WithingsEntityDescription
 
 

@@ -36,8 +36,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import const
 from .api import ConfigEntryWithingsApi
-from .common import WithingsDataUpdateCoordinator
 from .const import CONF_USE_WEBHOOK, CONFIG, LOGGER
+from .coordinator import WithingsDataUpdateCoordinator
 
 DOMAIN = const.DOMAIN
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
