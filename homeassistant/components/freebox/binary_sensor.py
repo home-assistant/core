@@ -105,6 +105,7 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
     """Representation of a cover Freebox plastic removal cover binary sensor (for some sensors: motion detector, door opener detector...)."""
 
     _attr_device_class = BinarySensorDeviceClass.SAFETY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
