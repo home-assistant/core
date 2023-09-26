@@ -25,7 +25,7 @@ async def test_support(hass: HomeAssistant, init_wyoming_wake_word) -> None:
     assert entity is not None
 
     assert entity.supported_wake_words == [
-        wake_word.WakeWord(ww_id="Test Model", name="Test Model")
+        wake_word.WakeWord(wake_word_id="Test Model", name="Test Model")
     ]
 
 

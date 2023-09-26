@@ -46,7 +46,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
         wake_service = service.info.wake[0]
 
         self._supported_wake_words = [
-            wake_word.WakeWord(ww_id=ww.name, name=ww.name)
+            wake_word.WakeWord(wake_word_id=ww.name, name=ww.name)
             for ww in wake_service.models
         ]
         self._attr_name = wake_service.name
@@ -111,7 +111,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                                     queued_audio = [audio_task.result()]
 
                                 return wake_word.DetectionResult(
-                                    ww_id=detection.name,
+                                    wake_word_id=detection.name,
                                     timestamp=detection.timestamp,
                                     queued_audio=queued_audio,
                                 )

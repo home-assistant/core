@@ -41,8 +41,8 @@ class MockProviderEntity(wake_word.WakeWordDetectionEntity):
     def supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
         return [
-            wake_word.WakeWord(ww_id="test_ww", name="Test Wake Word"),
-            wake_word.WakeWord(ww_id="test_ww_2", name="Test Wake Word 2"),
+            wake_word.WakeWord(wake_word_id="test_ww", name="Test Wake Word"),
+            wake_word.WakeWord(wake_word_id="test_ww_2", name="Test Wake Word 2"),
         ]
 
     async def _async_process_audio_stream(
@@ -50,12 +50,12 @@ class MockProviderEntity(wake_word.WakeWordDetectionEntity):
     ) -> wake_word.DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps."""
         if wake_word_id is None:
-            wake_word_id = self.supported_wake_words[0].ww_id
+            wake_word_id = self.supported_wake_words[0].wake_word_id
 
         async for _chunk, timestamp in stream:
             if timestamp >= 2000:
                 return wake_word.DetectionResult(
-                    ww_id=wake_word_id, timestamp=timestamp
+                    wake_word_id=wake_word_id, timestamp=timestamp
                 )
 
         # Not detected
@@ -157,7 +157,7 @@ async def test_config_entry_unload(
 
 @freeze_time("2023-06-22 10:30:00+00:00")
 @pytest.mark.parametrize(
-    ("ww_id", "expected_ww"),
+    ("wake_word_id", "expected_ww"),
     [
         (None, "test_ww"),
         ("test_ww_2", "test_ww_2"),
@@ -167,7 +167,7 @@ async def test_detected_entity(
     hass: HomeAssistant,
     tmp_path: Path,
     setup: MockProviderEntity,
-    ww_id: str | None,
+    wake_word_id: str | None,
     expected_ww: str,
 ) -> None:
     """Test successful detection through entity."""
@@ -181,7 +181,7 @@ async def test_detected_entity(
     # Need 2 seconds to trigger
     state = setup.state
     assert state is None
-    result = await setup.async_process_audio_stream(three_second_stream(), ww_id)
+    result = await setup.async_process_audio_stream(three_second_stream(), wake_word_id)
     assert result == wake_word.DetectionResult(expected_ww, 2048)
 
     assert state != setup.state
@@ -283,7 +283,7 @@ async def test_list_wake_words(
     assert msg["success"]
     assert msg["result"] == {
         "wake_words": [
-            {"ww_id": "test_ww", "name": "Test Wake Word"},
-            {"ww_id": "test_ww_2", "name": "Test Wake Word 2"},
+            {"wake_word_id": "test_ww", "name": "Test Wake Word"},
+            {"wake_word_id": "test_ww_2", "name": "Test Wake Word 2"},
         ]
     }
