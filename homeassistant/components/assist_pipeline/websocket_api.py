@@ -258,18 +258,18 @@ def websocket_list_runs(
     pipeline_data: PipelineData = hass.data[DOMAIN]
     pipeline_id = msg["pipeline_id"]
 
-    if pipeline_id not in pipeline_data.pipeline_runs:
+    if pipeline_id not in pipeline_data.pipeline_debug:
         connection.send_result(msg["id"], {"pipeline_runs": []})
         return
 
-    pipeline_runs = pipeline_data.pipeline_runs[pipeline_id]
+    pipeline_debug = pipeline_data.pipeline_debug[pipeline_id]
 
     connection.send_result(
         msg["id"],
         {
             "pipeline_runs": [
                 {"pipeline_run_id": id, "timestamp": pipeline_run.timestamp}
-                for id, pipeline_run in pipeline_runs.items()
+                for id, pipeline_run in pipeline_debug.items()
             ]
         },
     )
@@ -294,7 +294,7 @@ def websocket_get_run(
     pipeline_id = msg["pipeline_id"]
     pipeline_run_id = msg["pipeline_run_id"]
 
-    if pipeline_id not in pipeline_data.pipeline_runs:
+    if pipeline_id not in pipeline_data.pipeline_debug:
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_NOT_FOUND,
@@ -302,9 +302,9 @@ def websocket_get_run(
         )
         return
 
-    pipeline_runs = pipeline_data.pipeline_runs[pipeline_id]
+    pipeline_debug = pipeline_data.pipeline_debug[pipeline_id]
 
-    if pipeline_run_id not in pipeline_runs:
+    if pipeline_run_id not in pipeline_debug:
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_NOT_FOUND,
@@ -314,7 +314,7 @@ def websocket_get_run(
 
     connection.send_result(
         msg["id"],
-        {"events": pipeline_runs[pipeline_run_id].events},
+        {"events": pipeline_debug[pipeline_run_id].events},
     )
 
 
