@@ -1,6 +1,7 @@
 """Support for the Fitbit API."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
@@ -518,8 +519,12 @@ def setup_platform(
             authd_client.client.refresh_token()
 
         api = FitbitApi(hass, authd_client, config[CONF_UNIT_SYSTEM])
-        user_profile = api.get_user_profile()
-        unit_system = api.get_unit_system()
+        user_profile = asyncio.run_coroutine_threadsafe(
+            api.async_get_user_profile(), hass.loop
+        ).result()
+        unit_system = asyncio.run_coroutine_threadsafe(
+            api.async_get_unit_system(), hass.loop
+        ).result()
 
         clock_format = config[CONF_CLOCK_FORMAT]
         monitored_resources = config[CONF_MONITORED_RESOURCES]
@@ -539,7 +544,10 @@ def setup_platform(
             if description.key in monitored_resources
         ]
         if "devices/battery" in monitored_resources:
-            devices = api.get_devices()
+            devices = asyncio.run_coroutine_threadsafe(
+                api.async_get_devices(),
+                hass.loop,
+            ).result()
             entities.extend(
                 [
                     FitbitSensor(
@@ -708,21 +716,24 @@ class FitbitSensor(SensorEntity):
 
         return attrs
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data from the Fitbit API and update the states."""
         resource_type = self.entity_description.key
         if resource_type == "devices/battery" and self.device is not None:
             device_id = self.device.id
-            registered_devs: list[FitbitDevice] = self.api.get_devices()
+            registered_devs: list[FitbitDevice] = await self.api.async_get_devices()
             self.device = next(
                 device for device in registered_devs if device.id == device_id
             )
             self._attr_native_value = self.device.battery
 
         else:
-            result = self.api.get_latest_time_series(resource_type)
+            result = await self.api.async_get_latest_time_series(resource_type)
             self._attr_native_value = self.entity_description.value_fn(result)
 
+        self.hass.async_add_executor_job(self._update_token)
+
+    def _update_token(self) -> None:
         token = self.api.client.client.session.token
         config_contents = {
             ATTR_ACCESS_TOKEN: token.get("access_token"),
