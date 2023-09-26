@@ -749,9 +749,6 @@ async def test_trigger_weather_services(
     assert state.attributes["apparent_temperature"] == 3.0
     assert state.context is context
 
-    assert state.attributes["forecast"][0]["temperature"] == 20.0
-    assert state.attributes["forecast"][0]["templow"] == 15.0
-
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
         SERVICE_GET_FORECAST,

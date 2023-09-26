@@ -485,7 +485,6 @@ class WeatherExtraStoredData(ExtraStoredData):
     last_cloud_coverage: int | None
     last_dew_point: float | None
     last_apparent_temperature: float | None
-    last_forecast: list[Forecast] | None
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the event data."""
@@ -507,7 +506,6 @@ class WeatherExtraStoredData(ExtraStoredData):
                 restored["last_cloud_coverage"],
                 restored["last_dew_point"],
                 restored["last_apparent_temperature"],
-                restored["last_forecast"],
             )
         except KeyError:
             return None
@@ -555,7 +553,6 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
             CONF_CLOUD_COVERAGE_TEMPLATE,
             CONF_DEW_POINT_TEMPLATE,
             CONF_APPARENT_TEMPERATURE_TEMPLATE,
-            CONF_FORECAST_TEMPLATE,
             CONF_FORECAST_DAILY_TEMPLATE,
             CONF_FORECAST_HOURLY_TEMPLATE,
             CONF_FORECAST_TWICE_DAILY_TEMPLATE,
@@ -591,7 +588,6 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
             self._rendered[
                 CONF_APPARENT_TEMPERATURE_TEMPLATE
             ] = weather_data.last_apparent_temperature
-            self._rendered[CONF_FORECAST_TEMPLATE] = weather_data.last_forecast
 
     @property
     def condition(self) -> str | None:
@@ -675,13 +671,6 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
             self._rendered.get(CONF_APPARENT_TEMPERATURE_TEMPLATE)
         )
 
-    @property
-    def forecast(self) -> list[Forecast]:
-        """Return the forecast."""
-        return vol.Any(vol.Coerce(list), None)(
-            self._rendered.get(CONF_FORECAST_TEMPLATE)
-        )
-
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return vol.Any(vol.Coerce(list), None)(
@@ -717,7 +706,6 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
             last_apparent_temperature=self._rendered.get(
                 CONF_APPARENT_TEMPERATURE_TEMPLATE
             ),
-            last_forecast=self._rendered.get(CONF_FORECAST_TEMPLATE),
         )
 
     async def async_get_last_weather_data(self) -> WeatherExtraStoredData | None:
