@@ -23,6 +23,7 @@ FLOWS = {
         "adguard",
         "advantage_air",
         "aemet",
+        "aftership",
         "agent_dvr",
         "airly",
         "airnow",
