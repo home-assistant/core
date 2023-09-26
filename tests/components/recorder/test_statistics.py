@@ -1,7 +1,5 @@
 """The tests for sensor recorder platform."""
 from collections.abc import Callable
-
-# pylint: disable=invalid-name
 from datetime import timedelta
 from unittest.mock import patch
 

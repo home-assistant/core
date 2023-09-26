@@ -3,10 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances_api.exceptions import GlancesApiError
+from glances_api.exceptions import (
+    GlancesApiAuthorizationError,
+    GlancesApiConnectionError,
+)
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -15,7 +18,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from . import get_api
@@ -41,15 +43,6 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect."""
-    api = get_api(hass, data)
-    try:
-        await api.get_ha_sensor_data()
-    except GlancesApiError as err:
-        raise CannotConnect from err
-
-
 class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Glances config flow."""
 
@@ -61,19 +54,22 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
+            api = get_api(self.hass, user_input)
             try:
-                await validate_input(self.hass, user_input)
-                return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
-                )
-            except CannotConnect:
+                await api.get_ha_sensor_data()
+            except GlancesApiAuthorizationError:
+                errors["base"] = "invalid_auth"
+            except GlancesApiConnectionError:
                 errors["base"] = "cannot_connect"
+            if not errors:
+                return self.async_create_entry(
+                    title=f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""

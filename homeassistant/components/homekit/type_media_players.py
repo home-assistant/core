@@ -1,5 +1,6 @@
 """Class to hold all media player accessories."""
 import logging
+from typing import Any
 
 from pyhap.const import CATEGORY_SWITCH
 
@@ -36,6 +37,7 @@ from homeassistant.core import callback
 from .accessories import TYPES, HomeAccessory
 from .const import (
     ATTR_KEY_NAME,
+    CATEGORY_RECEIVER,
     CHAR_ACTIVE,
     CHAR_MUTE,
     CHAR_NAME,
@@ -218,18 +220,20 @@ class MediaPlayer(HomeAccessory):
 class TelevisionMediaPlayer(RemoteInputSelectAccessory):
     """Generate a Television Media Player accessory."""
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize a Television Media Player accessory object."""
         super().__init__(
             MediaPlayerEntityFeature.SELECT_SOURCE,
             ATTR_INPUT_SOURCE,
             ATTR_INPUT_SOURCE_LIST,
             *args,
+            **kwargs,
         )
         state = self.hass.states.get(self.entity_id)
+        assert state
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        self.chars_speaker = []
+        self.chars_speaker: list[str] = []
 
         self._supports_play_pause = features & (
             MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE
@@ -358,3 +362,17 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
             self.char_mute.set_value(current_mute_state)
 
         self._async_update_input_state(hk_state, new_state)
+
+
+@TYPES.register("ReceiverMediaPlayer")
+class ReceiverMediaPlayer(TelevisionMediaPlayer):
+    """Generate a Receiver Media Player accessory.
+
+    For HomeKit, a Receiver Media Player is exactly the same as a
+    Television Media Player except it has a different category
+    which will tell HomeKit how to render the device.
+    """
+
+    def __init__(self, *args: Any) -> None:
+        """Initialize a Receiver Media Player accessory object."""
+        super().__init__(*args, category=CATEGORY_RECEIVER)

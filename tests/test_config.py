@@ -311,7 +311,6 @@ def test_remove_lib_on_upgrade(
     mock_open = mock.mock_open()
     with patch("homeassistant.config.open", mock_open, create=True):
         opened_file = mock_open.return_value
-        # pylint: disable=no-member
         opened_file.readline.return_value = ha_version
         hass.config.path = mock.Mock()
         config_util.process_ha_config_upgrade(hass)
@@ -335,7 +334,6 @@ def test_remove_lib_on_upgrade_94(
     mock_open = mock.mock_open()
     with patch("homeassistant.config.open", mock_open, create=True):
         opened_file = mock_open.return_value
-        # pylint: disable=no-member
         opened_file.readline.return_value = ha_version
         hass.config.path = mock.Mock()
         config_util.process_ha_config_upgrade(hass)
@@ -356,7 +354,6 @@ def test_process_config_upgrade(hass: HomeAssistant) -> None:
         config_util, "__version__", "0.91.0"
     ):
         opened_file = mock_open.return_value
-        # pylint: disable=no-member
         opened_file.readline.return_value = ha_version
 
         config_util.process_ha_config_upgrade(hass)
@@ -372,7 +369,6 @@ def test_config_upgrade_same_version(hass: HomeAssistant) -> None:
     mock_open = mock.mock_open()
     with patch("homeassistant.config.open", mock_open, create=True):
         opened_file = mock_open.return_value
-        # pylint: disable=no-member
         opened_file.readline.return_value = ha_version
 
         config_util.process_ha_config_upgrade(hass)
@@ -386,7 +382,6 @@ def test_config_upgrade_no_file(hass: HomeAssistant) -> None:
     mock_open.side_effect = [FileNotFoundError(), mock.DEFAULT, mock.DEFAULT]
     with patch("homeassistant.config.open", mock_open, create=True):
         opened_file = mock_open.return_value
-        # pylint: disable=no-member
         config_util.process_ha_config_upgrade(hass)
         assert opened_file.write.call_count == 1
         assert opened_file.write.call_args == mock.call(__version__)

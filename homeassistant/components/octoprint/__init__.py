@@ -1,14 +1,11 @@
 """Support for monitoring OctoPrint 3D printers."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
-from typing import cast
 
-from pyoctoprintapi import ApiError, OctoprintClient, PrinterOffline
-from pyoctoprintapi.exceptions import UnauthorizedException
+import aiohttp
+from pyoctoprintapi import OctoprintClient
 import voluptuous as vol
-from yarl import URL
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -22,19 +19,16 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify as util_slugify
-import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
+from .coordinator import OctoprintDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -163,14 +157,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data = {**entry.data, CONF_VERIFY_SSL: True}
         hass.config_entries.async_update_entry(entry, data=data)
 
-    verify_ssl = entry.data[CONF_VERIFY_SSL]
-    websession = async_get_clientsession(hass, verify_ssl=verify_ssl)
+    connector = aiohttp.TCPConnector(
+        force_close=True,
+        ssl=False if not entry.data[CONF_VERIFY_SSL] else None,
+    )
+    session = aiohttp.ClientSession(connector=connector)
+
+    @callback
+    def _async_close_websession(event: Event) -> None:
+        """Close websession."""
+        session.detach()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close_websession)
+
     client = OctoprintClient(
-        entry.data[CONF_HOST],
-        websession,
-        entry.data[CONF_PORT],
-        entry.data[CONF_SSL],
-        entry.data[CONF_PATH],
+        host=entry.data[CONF_HOST],
+        session=session,
+        port=entry.data[CONF_PORT],
+        ssl=entry.data[CONF_SSL],
+        path=entry.data[CONF_PATH],
     )
 
     client.set_api_key(entry.data[CONF_API_KEY])
@@ -197,74 +202,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching Octoprint data."""
-
-    config_entry: ConfigEntry
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        octoprint: OctoprintClient,
-        config_entry: ConfigEntry,
-        interval: int,
-    ) -> None:
-        """Initialize."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=f"octoprint-{config_entry.entry_id}",
-            update_interval=timedelta(seconds=interval),
-        )
-        self.config_entry = config_entry
-        self._octoprint = octoprint
-        self._printer_offline = False
-        self.data = {"printer": None, "job": None, "last_read_time": None}
-
-    async def _async_update_data(self):
-        """Update data via API."""
-        printer = None
-        try:
-            job = await self._octoprint.get_job_info()
-        except UnauthorizedException as err:
-            raise ConfigEntryAuthFailed from err
-        except ApiError as err:
-            raise UpdateFailed(err) from err
-
-        # If octoprint is on, but the printer is disconnected
-        # printer will return a 409, so continue using the last
-        # reading if there is one
-        try:
-            printer = await self._octoprint.get_printer_info()
-        except PrinterOffline:
-            if not self._printer_offline:
-                _LOGGER.debug("Unable to retrieve printer information: Printer offline")
-                self._printer_offline = True
-        except UnauthorizedException as err:
-            raise ConfigEntryAuthFailed from err
-        except ApiError as err:
-            raise UpdateFailed(err) from err
-        else:
-            self._printer_offline = False
-
-        return {"job": job, "printer": printer, "last_read_time": dt_util.utcnow()}
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info."""
-        unique_id = cast(str, self.config_entry.unique_id)
-        configuration_url = URL.build(
-            scheme=self.config_entry.data[CONF_SSL] and "https" or "http",
-            host=self.config_entry.data[CONF_HOST],
-            port=self.config_entry.data[CONF_PORT],
-            path=self.config_entry.data[CONF_PATH],
-        )
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            manufacturer="OctoPrint",
-            name="OctoPrint",
-            configuration_url=str(configuration_url),
-        )

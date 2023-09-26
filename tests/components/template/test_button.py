@@ -97,7 +97,7 @@ async def test_all_optional_config(hass: HomeAssistant, calls) -> None:
         _TEST_OPTIONS_BUTTON,
     )
 
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         await hass.services.async_call(

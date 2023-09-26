@@ -1221,7 +1221,7 @@ def test_enum() -> None:
         schema("value3")
 
 
-def test_socket_timeout():  # pylint: disable=invalid-name
+def test_socket_timeout():
     """Test socket timeout validator."""
     schema = vol.Schema(cv.socket_timeout)
 

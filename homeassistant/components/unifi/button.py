@@ -24,7 +24,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
 from .entity import (
     HandlerT,
@@ -87,13 +86,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up button platform for UniFi Network integration."""
-    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
-    if not controller.is_admin:
-        return
-
-    controller.register_platform_add_entities(
-        UnifiButtonEntity, ENTITY_DESCRIPTIONS, async_add_entities
+    UniFiController.register_platform(
+        hass,
+        config_entry,
+        async_add_entities,
+        UnifiButtonEntity,
+        ENTITY_DESCRIPTIONS,
+        requires_admin=True,
     )
 
 

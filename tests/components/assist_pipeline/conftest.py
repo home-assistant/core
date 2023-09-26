@@ -187,13 +187,15 @@ class MockWakeWordEntity(wake_word.WakeWordDetectionEntity):
         return [wake_word.WakeWord(ww_id="test_ww", name="Test Wake Word")]
 
     async def _async_process_audio_stream(
-        self, stream: AsyncIterable[tuple[bytes, int]]
+        self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str | None
     ) -> wake_word.DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps."""
+        if wake_word_id is None:
+            wake_word_id = self.supported_wake_words[0].ww_id
         async for chunk, timestamp in stream:
-            if chunk == b"wake word":
+            if chunk.startswith(b"wake word"):
                 return wake_word.DetectionResult(
-                    ww_id=self.supported_wake_words[0].ww_id,
+                    ww_id=wake_word_id,
                     timestamp=timestamp,
                     queued_audio=[(b"queued audio", 0)],
                 )
@@ -301,7 +303,6 @@ async def init_supporting_components(
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
     assert await async_setup_component(hass, stt.DOMAIN, {"stt": {"platform": "test"}})
-    # assert await async_setup_component(hass, wake_word.DOMAIN, {"wake_word": {}})
     assert await async_setup_component(hass, "media_source", {})
 
     config_entry = MockConfigEntry(domain="test")

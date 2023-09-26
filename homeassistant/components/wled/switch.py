@@ -55,7 +55,7 @@ class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
 
     _attr_icon = "mdi:weather-night"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_name = "Nightlight"
+    _attr_translation_key = "nightlight"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED nightlight switch."""
@@ -93,7 +93,7 @@ class WLEDSyncSendSwitch(WLEDEntity, SwitchEntity):
 
     _attr_icon = "mdi:upload-network-outline"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_name = "Sync send"
+    _attr_translation_key = "sync_send"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED sync send switch."""
@@ -126,7 +126,7 @@ class WLEDSyncReceiveSwitch(WLEDEntity, SwitchEntity):
 
     _attr_icon = "mdi:download-network-outline"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_name = "Sync receive"
+    _attr_translation_key = "sync_receive"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED sync receive switch."""

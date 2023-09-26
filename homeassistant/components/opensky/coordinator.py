@@ -41,8 +41,10 @@ class OpenSkyDataUpdateCoordinator(DataUpdateCoordinator[int]):
             hass,
             LOGGER,
             name=DOMAIN,
-            # OpenSky free user has 400 credits, with 4 credits per API call. 100/24 = ~4 requests per hour
-            update_interval=timedelta(minutes=15),
+            update_interval={
+                True: timedelta(seconds=90),
+                False: timedelta(minutes=15),
+            }.get(opensky.is_authenticated),
         )
         self._opensky = opensky
         self._previously_tracked: set[str] | None = None

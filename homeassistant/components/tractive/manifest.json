@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "cloud_push",
   "loggers": ["aiotractive"],
-  "requirements": ["aiotractive==0.5.5"]
+  "requirements": ["aiotractive==0.5.6"]
 }

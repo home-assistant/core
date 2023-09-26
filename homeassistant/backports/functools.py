@@ -8,7 +8,7 @@ from typing import Any, Generic, Self, TypeVar, overload
 _T = TypeVar("_T")
 
 
-class cached_property(Generic[_T]):  # pylint: disable=invalid-name
+class cached_property(Generic[_T]):
     """Backport of Python 3.12's cached_property.
 
     Includes https://github.com/python/cpython/pull/101890/files

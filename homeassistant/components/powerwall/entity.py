@@ -20,6 +20,8 @@ from .models import PowerwallData, PowerwallRuntimeData
 class PowerWallEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
     """Base class for powerwall entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, powerwall_data: PowerwallRuntimeData) -> None:
         """Initialize the entity."""
         base_info = powerwall_data[POWERWALL_BASE_INFO]

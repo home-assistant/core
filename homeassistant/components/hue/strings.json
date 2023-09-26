@@ -31,7 +31,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "not_hue_bridge": "Not a Hue bridge",
-      "invalid_host": "Invalid host"
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
     }
   },
   "device_automation": {
@@ -92,6 +92,16 @@
               "counter_clock_wise": "Counter clockwise"
             }
           }
+        }
+      }
+    },
+    "sensor": {
+      "zigbee_connectivity": {
+        "state": {
+          "connected": "[%key:common::state::connected%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "connectivity_issue": "Connectivity issue",
+          "unidirectional_incoming": "Unidirectional incoming"
         }
       }
     }

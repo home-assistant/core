@@ -195,6 +195,8 @@ class TemplateFan(TemplateEntity, FanEntity):
         if self._direction_template:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
 
+        self._attr_assumed_state = self._template is None
+
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
@@ -351,8 +353,9 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         self._state = False
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         if self._template:
             self.add_template_attribute(
                 "_state", self._template, None, self._update_state
@@ -390,7 +393,7 @@ class TemplateFan(TemplateEntity, FanEntity):
                 self._update_direction,
                 none_on_template_error=True,
             )
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     @callback
     def _update_percentage(self, percentage):
@@ -466,8 +469,3 @@ class TemplateFan(TemplateEntity, FanEntity):
                 ", ".join(_VALID_DIRECTIONS),
             )
             self._direction = None
-
-    @property
-    def assumed_state(self) -> bool:
-        """State is assumed, if no template given."""
-        return self._template is None

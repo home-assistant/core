@@ -143,7 +143,6 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
     )
     async def post(self, request):
         """Handle a POST request."""
-        # pylint: disable=no-value-for-parameter
         try:
             return await super().post(request)
         except DependencyError as exc:
@@ -175,7 +174,6 @@ class ConfigManagerFlowResourceView(FlowManagerResourceView):
     )
     async def post(self, request, flow_id):
         """Handle a POST request."""
-        # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)
 
     def _prepare_result_json(self, result):
@@ -212,7 +210,6 @@ class OptionManagerFlowIndexView(FlowManagerIndexView):
 
         handler in request is entry_id.
         """
-        # pylint: disable=no-value-for-parameter
         return await super().post(request)
 
 
@@ -234,7 +231,6 @@ class OptionManagerFlowResourceView(FlowManagerResourceView):
     )
     async def post(self, request, flow_id):
         """Handle a POST request."""
-        # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)
 
 
