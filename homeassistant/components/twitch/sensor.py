@@ -72,21 +72,26 @@ async def async_setup_platform(
         DOMAIN,
         ClientCredential(config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET]),
     )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    if CONF_TOKEN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            )
         )
-    )
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2024.4.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_credentials_imported",
+            breaks_in_ha_version="2024.4.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_credentials_imported",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Twitch",
+            },
+        )
 
 
 async def async_setup_entry(
