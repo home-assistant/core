@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
+from homeassistant.core import async_get_hass
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -94,10 +95,11 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_is_bedrock_server_online(self, address: str) -> bool:
         """Check Bedrock Edition server connection."""
+        hass = async_get_hass()
 
         # Parse and check server address.
         try:
-            server = BedrockServer.lookup(address)
+            server = await hass.async_add_executor_job(BedrockServer.lookup, address)
         except ValueError as error:
             _LOGGER.debug(
                 (
