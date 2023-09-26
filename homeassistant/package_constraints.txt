@@ -2,7 +2,6 @@ aiodiscover==1.5.1
 aiohttp==3.8.5
 aiohttp_cors==0.7.0
 astral==2.2
-async-timeout==4.0.3
 async-upnp-client==0.36.0
 atomicwrites-homeassistant==1.4.1
 attrs==23.1.0
