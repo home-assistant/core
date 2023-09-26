@@ -474,17 +474,17 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
 class WeatherExtraStoredData(ExtraStoredData):
     """Object to hold extra stored data."""
 
-    last_temperature: float | None
-    last_humidity: float | None
-    last_wind_speed: float | None
-    last_wind_bearing: float | str | None
-    last_ozone: float | None
-    last_visibility: float | None
-    last_pressure: float | None
-    last_wind_gust_speed: float | None
+    last_apparent_temperature: float | None
     last_cloud_coverage: int | None
     last_dew_point: float | None
-    last_apparent_temperature: float | None
+    last_humidity: float | None
+    last_ozone: float | None
+    last_pressure: float | None
+    last_temperature: float | None
+    last_visibility: float | None
+    last_wind_bearing: float | str | None
+    last_wind_gust_speed: float | None
+    last_wind_speed: float | None
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the event data."""
@@ -495,17 +495,17 @@ class WeatherExtraStoredData(ExtraStoredData):
         """Initialize a stored event state from a dict."""
         try:
             return cls(
-                last_temperature=restored["last_temperature"],
-                last_humidity=restored["last_humidity"],
-                last_wind_speed=restored["last_wind_speed"],
-                last_wind_bearing=restored["last_wind_bearing"],
-                last_ozone=restored["last_ozone"],
-                last_visibility=restored["last_visibility"],
-                last_pressure=restored["last_pressure"],
-                last_wind_gust_speed=restored["last_wind_gust_speed"],
+                last_apparent_temperature=restored["last_apparent_temperature"],
                 last_cloud_coverage=restored["last_cloud_coverage"],
                 last_dew_point=restored["last_dew_point"],
-                last_apparent_temperature=restored["last_apparent_temperature"],
+                last_humidity=restored["last_humidity"],
+                last_ozone=restored["last_ozone"],
+                last_pressure=restored["last_pressure"],
+                last_temperature=restored["last_temperature"],
+                last_visibility=restored["last_visibility"],
+                last_wind_bearing=restored["last_wind_bearing"],
+                last_wind_gust_speed=restored["last_wind_gust_speed"],
+                last_wind_speed=restored["last_wind_speed"],
             )
         except KeyError:
             return None
@@ -544,18 +544,18 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_TWICE_DAILY
 
         for key in (
-            CONF_WIND_SPEED_TEMPLATE,
-            CONF_WIND_BEARING_TEMPLATE,
-            CONF_OZONE_TEMPLATE,
-            CONF_VISIBILITY_TEMPLATE,
-            CONF_PRESSURE_TEMPLATE,
-            CONF_WIND_GUST_SPEED_TEMPLATE,
+            CONF_APPARENT_TEMPERATURE_TEMPLATE,
             CONF_CLOUD_COVERAGE_TEMPLATE,
             CONF_DEW_POINT_TEMPLATE,
-            CONF_APPARENT_TEMPERATURE_TEMPLATE,
             CONF_FORECAST_DAILY_TEMPLATE,
             CONF_FORECAST_HOURLY_TEMPLATE,
             CONF_FORECAST_TWICE_DAILY_TEMPLATE,
+            CONF_OZONE_TEMPLATE,
+            CONF_PRESSURE_TEMPLATE,
+            CONF_VISIBILITY_TEMPLATE,
+            CONF_WIND_BEARING_TEMPLATE,
+            CONF_WIND_GUST_SPEED_TEMPLATE,
+            CONF_WIND_SPEED_TEMPLATE,
         ):
             if isinstance(config.get(key), template.Template):
                 self._to_render_simple.append(key)
@@ -570,24 +570,24 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
             and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             and (weather_data := await self.async_get_last_weather_data())
         ):
-            self._rendered[CONF_CONDITION_TEMPLATE] = state.state
-            self._rendered[CONF_TEMPERATURE_TEMPLATE] = weather_data.last_temperature
-            self._rendered[CONF_HUMIDITY_TEMPLATE] = weather_data.last_humidity
-            self._rendered[CONF_WIND_SPEED_TEMPLATE] = weather_data.last_wind_speed
-            self._rendered[CONF_WIND_BEARING_TEMPLATE] = weather_data.last_wind_bearing
-            self._rendered[CONF_OZONE_TEMPLATE] = weather_data.last_ozone
-            self._rendered[CONF_VISIBILITY_TEMPLATE] = weather_data.last_visibility
-            self._rendered[CONF_PRESSURE_TEMPLATE] = weather_data.last_pressure
-            self._rendered[
-                CONF_WIND_GUST_SPEED_TEMPLATE
-            ] = weather_data.last_wind_gust_speed
-            self._rendered[
-                CONF_CLOUD_COVERAGE_TEMPLATE
-            ] = weather_data.last_cloud_coverage
-            self._rendered[CONF_DEW_POINT_TEMPLATE] = weather_data.last_dew_point
             self._rendered[
                 CONF_APPARENT_TEMPERATURE_TEMPLATE
             ] = weather_data.last_apparent_temperature
+            self._rendered[
+                CONF_CLOUD_COVERAGE_TEMPLATE
+            ] = weather_data.last_cloud_coverage
+            self._rendered[CONF_CONDITION_TEMPLATE] = state.state
+            self._rendered[CONF_DEW_POINT_TEMPLATE] = weather_data.last_dew_point
+            self._rendered[CONF_HUMIDITY_TEMPLATE] = weather_data.last_humidity
+            self._rendered[CONF_OZONE_TEMPLATE] = weather_data.last_ozone
+            self._rendered[CONF_PRESSURE_TEMPLATE] = weather_data.last_pressure
+            self._rendered[CONF_TEMPERATURE_TEMPLATE] = weather_data.last_temperature
+            self._rendered[CONF_VISIBILITY_TEMPLATE] = weather_data.last_visibility
+            self._rendered[CONF_WIND_BEARING_TEMPLATE] = weather_data.last_wind_bearing
+            self._rendered[
+                CONF_WIND_GUST_SPEED_TEMPLATE
+            ] = weather_data.last_wind_gust_speed
+            self._rendered[CONF_WIND_SPEED_TEMPLATE] = weather_data.last_wind_speed
 
     @property
     def condition(self) -> str | None:
@@ -693,19 +693,19 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
     def extra_restore_state_data(self) -> WeatherExtraStoredData:
         """Return weather specific state data to be restored."""
         return WeatherExtraStoredData(
-            last_temperature=self._rendered.get(CONF_TEMPERATURE_TEMPLATE),
-            last_humidity=self._rendered.get(CONF_HUMIDITY_TEMPLATE),
-            last_wind_speed=self._rendered.get(CONF_WIND_SPEED_TEMPLATE),
-            last_wind_bearing=self._rendered.get(CONF_WIND_BEARING_TEMPLATE),
-            last_ozone=self._rendered.get(CONF_OZONE_TEMPLATE),
-            last_visibility=self._rendered.get(CONF_VISIBILITY_TEMPLATE),
-            last_pressure=self._rendered.get(CONF_PRESSURE_TEMPLATE),
-            last_wind_gust_speed=self._rendered.get(CONF_WIND_GUST_SPEED_TEMPLATE),
-            last_cloud_coverage=self._rendered.get(CONF_CLOUD_COVERAGE_TEMPLATE),
-            last_dew_point=self._rendered.get(CONF_DEW_POINT_TEMPLATE),
             last_apparent_temperature=self._rendered.get(
                 CONF_APPARENT_TEMPERATURE_TEMPLATE
             ),
+            last_cloud_coverage=self._rendered.get(CONF_CLOUD_COVERAGE_TEMPLATE),
+            last_dew_point=self._rendered.get(CONF_DEW_POINT_TEMPLATE),
+            last_humidity=self._rendered.get(CONF_HUMIDITY_TEMPLATE),
+            last_ozone=self._rendered.get(CONF_OZONE_TEMPLATE),
+            last_pressure=self._rendered.get(CONF_PRESSURE_TEMPLATE),
+            last_temperature=self._rendered.get(CONF_TEMPERATURE_TEMPLATE),
+            last_visibility=self._rendered.get(CONF_VISIBILITY_TEMPLATE),
+            last_wind_bearing=self._rendered.get(CONF_WIND_BEARING_TEMPLATE),
+            last_wind_gust_speed=self._rendered.get(CONF_WIND_GUST_SPEED_TEMPLATE),
+            last_wind_speed=self._rendered.get(CONF_WIND_SPEED_TEMPLATE),
         )
 
     async def async_get_last_weather_data(self) -> WeatherExtraStoredData | None:
