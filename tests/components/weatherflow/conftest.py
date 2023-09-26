@@ -7,30 +7,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED
 from pyweatherflowudp.device import WeatherFlowDevice
-from pyweatherflowudp.errors import AddressInUseError
 
 from homeassistant.components.weatherflow.const import DOMAIN
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
-    """Mock setting up a config entry."""
-    with patch(
-        "homeassistant.components.weatherflow.async_setup_entry", return_value=True
-    ) as mock_setup:
-        yield mock_setup
-
-
-@pytest.fixture
-def mock_has_devices_error_address_in_use() -> Generator[AsyncMock, None, None]:
-    """Return a mock has_devices returning an error."""
-    with patch(
-        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
-        side_effect=AddressInUseError,
-    ) as mock_has_devices:
-        yield mock_has_devices
 
 
 @pytest.fixture

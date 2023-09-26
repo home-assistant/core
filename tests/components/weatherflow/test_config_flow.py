@@ -3,6 +3,8 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
+from pyweatherflowudp.errors import AddressInUseError
+
 from homeassistant import config_entries
 from homeassistant.components.weatherflow.const import (
     DOMAIN,
@@ -14,30 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-
-
-async def test_address_in_use(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_has_devices_error_address_in_use: AsyncMock,
-) -> None:
-    """Test the address in use error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["errors"]["base"] == ERROR_MSG_ADDRESS_IN_USE
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    with patch(
-        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["data"] == {}
 
 
 async def test_single_instance(
@@ -104,10 +82,23 @@ async def test_devices_with_various_mocks_errors(
         assert result2["errors"]["base"] == ERROR_MSG_CANNOT_CONNECT
         assert result2["step_id"] == "user"
 
-    result3 = await hass.config_entries.flow.async_init(
+    with patch(
+        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
+        side_effect=AddressInUseError,
+    ):
+        result3 = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        await hass.async_block_till_done()
+        assert result3["type"] == FlowResultType.FORM
+        assert result3["errors"]["base"] == ERROR_MSG_ADDRESS_IN_USE
+        assert result3["step_id"] == "user"
+
+    result4 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     await hass.async_block_till_done()
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["data"] == {}
+    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["data"] == {}
