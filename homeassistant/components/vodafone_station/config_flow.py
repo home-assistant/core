@@ -68,10 +68,14 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
+        except aiovodafone_exceptions.AlreadyLogged:
+            errors["base"] = "already_logged"
         except aiovodafone_exceptions.CannotConnect:
             errors["base"] = "cannot_connect"
         except aiovodafone_exceptions.CannotAuthenticate:
             errors["base"] = "invalid_auth"
+        except aiovodafone_exceptions.ModelNotSupported:
+            errors["base"] = "model_not_supported"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -99,6 +103,8 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, {**self.entry.data, **user_input})
+            except aiovodafone_exceptions.AlreadyLogged:
+                errors["base"] = "already_logged"
             except aiovodafone_exceptions.CannotConnect:
                 errors["base"] = "cannot_connect"
             except aiovodafone_exceptions.CannotAuthenticate:
