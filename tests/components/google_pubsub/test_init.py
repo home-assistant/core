@@ -8,8 +8,7 @@ import pytest
 
 import homeassistant.components.google_pubsub as google_pubsub
 from homeassistant.components.google_pubsub import DateTimeJSONEncoder as victim
-from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 GOOGLE_PUBSUB_PATH = "homeassistant.components.google_pubsub"
@@ -60,9 +59,8 @@ def mock_is_file_fixture():
 
 
 @pytest.fixture(autouse=True)
-def mock_bus_and_json(hass, monkeypatch):
+def mock_json(hass, monkeypatch):
     """Mock the event bus listener and os component."""
-    hass.bus.listen = mock.MagicMock()
     monkeypatch.setattr(
         f"{GOOGLE_PUBSUB_PATH}.json.dumps", mock.Mock(return_value=mock.MagicMock())
     )
@@ -80,8 +78,6 @@ async def test_minimal_config(hass: HomeAssistant, mock_client) -> None:
     }
     assert await async_setup_component(hass, google_pubsub.DOMAIN, config)
     await hass.async_block_till_done()
-    assert hass.bus.listen.called
-    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert mock_client.from_service_account_json.call_count == 1
     assert mock_client.from_service_account_json.call_args[0][0] == os.path.join(
         hass.config.config_dir, "creds"
@@ -107,25 +103,10 @@ async def test_full_config(hass: HomeAssistant, mock_client) -> None:
     }
     assert await async_setup_component(hass, google_pubsub.DOMAIN, config)
     await hass.async_block_till_done()
-    assert hass.bus.listen.called
-    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert mock_client.from_service_account_json.call_count == 1
     assert mock_client.from_service_account_json.call_args[0][0] == os.path.join(
         hass.config.config_dir, "creds"
     )
-
-
-def make_event(entity_id):
-    """Make a mock event for test."""
-    domain = split_entity_id(entity_id)[0]
-    state = mock.MagicMock(
-        state="not blank",
-        domain=domain,
-        entity_id=entity_id,
-        object_id="entity",
-        attributes={},
-    )
-    return mock.MagicMock(data={"new_state": state}, time_fired=12345)
 
 
 async def _setup(hass, filter_config):
@@ -140,12 +121,11 @@ async def _setup(hass, filter_config):
     }
     assert await async_setup_component(hass, google_pubsub.DOMAIN, config)
     await hass.async_block_till_done()
-    return hass.bus.listen.call_args_list[0][0][1]
 
 
 async def test_allowlist(hass: HomeAssistant, mock_client) -> None:
     """Test an allowlist only config."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "include_domains": ["light"],
@@ -165,8 +145,8 @@ async def test_allowlist(hass: HomeAssistant, mock_client) -> None:
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "not blank")
+        await hass.async_block_till_done()
 
         was_called = publish_client.publish.call_count == 1
         assert test.should_pass == was_called
@@ -175,7 +155,7 @@ async def test_allowlist(hass: HomeAssistant, mock_client) -> None:
 
 async def test_denylist(hass: HomeAssistant, mock_client) -> None:
     """Test a denylist only config."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "exclude_domains": ["climate"],
@@ -195,8 +175,8 @@ async def test_denylist(hass: HomeAssistant, mock_client) -> None:
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "not blank")
+        await hass.async_block_till_done()
 
         was_called = publish_client.publish.call_count == 1
         assert test.should_pass == was_called
@@ -205,7 +185,7 @@ async def test_denylist(hass: HomeAssistant, mock_client) -> None:
 
 async def test_filtered_allowlist(hass: HomeAssistant, mock_client) -> None:
     """Test an allowlist config with a filtering denylist."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "include_domains": ["light"],
@@ -226,8 +206,8 @@ async def test_filtered_allowlist(hass: HomeAssistant, mock_client) -> None:
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "not blank")
+        await hass.async_block_till_done()
 
         was_called = publish_client.publish.call_count == 1
         assert test.should_pass == was_called
@@ -236,7 +216,7 @@ async def test_filtered_allowlist(hass: HomeAssistant, mock_client) -> None:
 
 async def test_filtered_denylist(hass: HomeAssistant, mock_client) -> None:
     """Test a denylist config with a filtering allowlist."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "include_entities": ["climate.included", "sensor.excluded_test"],
@@ -257,8 +237,8 @@ async def test_filtered_denylist(hass: HomeAssistant, mock_client) -> None:
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "not blank")
+        await hass.async_block_till_done()
 
         was_called = publish_client.publish.call_count == 1
         assert test.should_pass == was_called

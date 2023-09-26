@@ -7,22 +7,6 @@ from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Demo camera platform."""
-    async_add_entities(
-        [
-            DemoCamera("Demo camera", "image/jpg"),
-            DemoCamera("Demo camera png", "image/png"),
-        ]
-    )
 
 
 async def async_setup_entry(
@@ -31,7 +15,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
+    async_add_entities(
+        [
+            DemoCamera("Demo camera", "image/jpg"),
+            DemoCamera("Demo camera png", "image/png"),
+        ]
+    )
 
 
 class DemoCamera(Camera):

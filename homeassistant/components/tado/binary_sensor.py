@@ -1,14 +1,21 @@
 """Support for Tado sensors for each zone."""
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import (
     DATA,
@@ -24,31 +31,95 @@ from .entity import TadoDeviceEntity, TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+
+@dataclass
+class TadoBinarySensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    state_fn: Callable[[Any], bool]
+
+
+@dataclass
+class TadoBinarySensorEntityDescription(
+    BinarySensorEntityDescription, TadoBinarySensorEntityDescriptionMixin
+):
+    """Describes Tado binary sensor entity."""
+
+    attributes_fn: Callable[[Any], dict[Any, StateType]] | None = None
+
+
+BATTERY_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
+    key="battery state",
+    state_fn=lambda data: data["batteryState"] == "LOW",
+    device_class=BinarySensorDeviceClass.BATTERY,
+)
+CONNECTION_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
+    key="connection state",
+    translation_key="connection_state",
+    state_fn=lambda data: data.get("connectionState", {}).get("value", False),
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+)
+POWER_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
+    key="power",
+    state_fn=lambda data: data.power == "ON",
+    device_class=BinarySensorDeviceClass.POWER,
+)
+LINK_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
+    key="link",
+    state_fn=lambda data: data.link == "ONLINE",
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+)
+OVERLAY_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
+    key="overlay",
+    translation_key="overlay",
+    state_fn=lambda data: data.overlay_active,
+    attributes_fn=lambda data: {"termination": data.overlay_termination_type}
+    if data.overlay_active
+    else {},
+    device_class=BinarySensorDeviceClass.POWER,
+)
+OPEN_WINDOW_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
+    key="open window",
+    state_fn=lambda data: bool(data.open_window or data.open_window_detected),
+    attributes_fn=lambda data: data.open_window_attr,
+    device_class=BinarySensorDeviceClass.WINDOW,
+)
+EARLY_START_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
+    key="early start",
+    translation_key="early_start",
+    state_fn=lambda data: data.preparation,
+    device_class=BinarySensorDeviceClass.POWER,
+)
+
 DEVICE_SENSORS = {
     TYPE_BATTERY: [
-        "battery state",
-        "connection state",
+        BATTERY_STATE_ENTITY_DESCRIPTION,
+        CONNECTION_STATE_ENTITY_DESCRIPTION,
     ],
     TYPE_POWER: [
-        "connection state",
+        CONNECTION_STATE_ENTITY_DESCRIPTION,
     ],
 }
 
 ZONE_SENSORS = {
     TYPE_HEATING: [
-        "power",
-        "link",
-        "overlay",
-        "early start",
-        "open window",
+        POWER_ENTITY_DESCRIPTION,
+        LINK_ENTITY_DESCRIPTION,
+        OVERLAY_ENTITY_DESCRIPTION,
+        OPEN_WINDOW_ENTITY_DESCRIPTION,
+        EARLY_START_ENTITY_DESCRIPTION,
     ],
     TYPE_AIR_CONDITIONING: [
-        "power",
-        "link",
-        "overlay",
-        "open window",
+        POWER_ENTITY_DESCRIPTION,
+        LINK_ENTITY_DESCRIPTION,
+        OVERLAY_ENTITY_DESCRIPTION,
+        OPEN_WINDOW_ENTITY_DESCRIPTION,
     ],
-    TYPE_HOT_WATER: ["power", "link", "overlay"],
+    TYPE_HOT_WATER: [
+        POWER_ENTITY_DESCRIPTION,
+        LINK_ENTITY_DESCRIPTION,
+        OVERLAY_ENTITY_DESCRIPTION,
+    ],
 }
 
 
@@ -71,8 +142,8 @@ async def async_setup_entry(
 
         entities.extend(
             [
-                TadoDeviceBinarySensor(tado, device, variable)
-                for variable in DEVICE_SENSORS[device_type]
+                TadoDeviceBinarySensor(tado, device, entity_description)
+                for entity_description in DEVICE_SENSORS[device_type]
             ]
         )
 
@@ -85,8 +156,8 @@ async def async_setup_entry(
 
         entities.extend(
             [
-                TadoZoneBinarySensor(tado, zone["name"], zone["id"], variable)
-                for variable in ZONE_SENSORS[zone_type]
+                TadoZoneBinarySensor(tado, zone["name"], zone["id"], entity_description)
+                for entity_description in ZONE_SENSORS[zone_type]
             ]
         )
 
@@ -96,16 +167,19 @@ async def async_setup_entry(
 class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
     """Representation of a tado Sensor."""
 
-    def __init__(self, tado, device_info, device_variable):
+    entity_description: TadoBinarySensorEntityDescription
+
+    def __init__(
+        self, tado, device_info, entity_description: TadoBinarySensorEntityDescription
+    ) -> None:
         """Initialize of the Tado Sensor."""
+        self.entity_description = entity_description
         self._tado = tado
         super().__init__(device_info)
 
-        self.device_variable = device_variable
-
-        self._unique_id = f"{device_variable} {self.device_id} {tado.home_id}"
-
-        self._state = None
+        self._attr_unique_id = (
+            f"{entity_description.key} {self.device_id} {tado.home_id}"
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
@@ -121,30 +195,6 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
         )
         self._async_update_device_data()
 
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.device_name} {self.device_variable}"
-
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        if self.device_variable == "battery state":
-            return BinarySensorDeviceClass.BATTERY
-        if self.device_variable == "connection state":
-            return BinarySensorDeviceClass.CONNECTIVITY
-        return None
-
     @callback
     def _async_update_callback(self):
         """Update and write state."""
@@ -159,29 +209,31 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
         except KeyError:
             return
 
-        if self.device_variable == "battery state":
-            self._state = self._device_info["batteryState"] == "LOW"
-        elif self.device_variable == "connection state":
-            self._state = self._device_info.get("connectionState", {}).get(
-                "value", False
+        self._attr_is_on = self.entity_description.state_fn(self._device_info)
+        if self.entity_description.attributes_fn is not None:
+            self._attr_extra_state_attributes = self.entity_description.attributes_fn(
+                self._device_info
             )
 
 
 class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
     """Representation of a tado Sensor."""
 
-    def __init__(self, tado, zone_name, zone_id, zone_variable):
+    entity_description: TadoBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        tado,
+        zone_name,
+        zone_id,
+        entity_description: TadoBinarySensorEntityDescription,
+    ) -> None:
         """Initialize of the Tado Sensor."""
+        self.entity_description = entity_description
         self._tado = tado
         super().__init__(zone_name, tado.home_id, zone_id)
 
-        self.zone_variable = zone_variable
-
-        self._unique_id = f"{zone_variable} {zone_id} {tado.home_id}"
-
-        self._state = None
-        self._state_attributes = None
-        self._tado_zone_data = None
+        self._attr_unique_id = f"{entity_description.key} {zone_id} {tado.home_id}"
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
@@ -197,41 +249,6 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
         )
         self._async_update_zone_data()
 
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.zone_name} {self.zone_variable}"
-
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        if self.zone_variable == "early start":
-            return BinarySensorDeviceClass.POWER
-        if self.zone_variable == "link":
-            return BinarySensorDeviceClass.CONNECTIVITY
-        if self.zone_variable == "open window":
-            return BinarySensorDeviceClass.WINDOW
-        if self.zone_variable == "overlay":
-            return BinarySensorDeviceClass.POWER
-        if self.zone_variable == "power":
-            return BinarySensorDeviceClass.POWER
-        return None
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._state_attributes
-
     @callback
     def _async_update_callback(self):
         """Update and write state."""
@@ -242,29 +259,12 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
     def _async_update_zone_data(self):
         """Handle update callbacks."""
         try:
-            self._tado_zone_data = self._tado.data["zone"][self.zone_id]
+            tado_zone_data = self._tado.data["zone"][self.zone_id]
         except KeyError:
             return
 
-        if self.zone_variable == "power":
-            self._state = self._tado_zone_data.power == "ON"
-
-        elif self.zone_variable == "link":
-            self._state = self._tado_zone_data.link == "ONLINE"
-
-        elif self.zone_variable == "overlay":
-            self._state = self._tado_zone_data.overlay_active
-            if self._tado_zone_data.overlay_active:
-                self._state_attributes = {
-                    "termination": self._tado_zone_data.overlay_termination_type
-                }
-
-        elif self.zone_variable == "early start":
-            self._state = self._tado_zone_data.preparation
-
-        elif self.zone_variable == "open window":
-            self._state = bool(
-                self._tado_zone_data.open_window
-                or self._tado_zone_data.open_window_detected
+        self._attr_is_on = self.entity_description.state_fn(tado_zone_data)
+        if self.entity_description.attributes_fn is not None:
+            self._attr_extra_state_attributes = self.entity_description.attributes_fn(
+                tado_zone_data
             )
-            self._state_attributes = self._tado_zone_data.open_window_attr

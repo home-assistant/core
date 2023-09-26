@@ -1,15 +1,34 @@
 """The tests for the Button component."""
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.button import DOMAIN, SERVICE_PRESS, ButtonEntity
+from homeassistant.components.button import (
+    DOMAIN,
+    SERVICE_PRESS,
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import mock_restore_cache
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+)
+
+TEST_DOMAIN = "test"
 
 
 async def test_button(hass: HomeAssistant) -> None:
@@ -68,3 +87,95 @@ async def test_restore_state(
     await hass.async_block_till_done()
 
     assert hass.states.get("button.button_1").state == "2021-01-01T23:59:59+00:00"
+
+
+class MockFlow(ConfigFlow):
+    """Test flow."""
+
+
+@pytest.fixture(autouse=True)
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+    """Mock config flow."""
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+
+    with mock_config_flow(TEST_DOMAIN, MockFlow):
+        yield
+
+
+async def test_name(hass: HomeAssistant) -> None:
+    """Test button name."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        return True
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+        ),
+    )
+
+    # Unnamed button without device class -> no name
+    entity1 = ButtonEntity()
+    entity1.entity_id = "button.test1"
+
+    # Unnamed button with device class but has_entity_name False -> no name
+    entity2 = ButtonEntity()
+    entity2.entity_id = "button.test2"
+    entity2._attr_device_class = ButtonDeviceClass.RESTART
+
+    # Unnamed button with device class and has_entity_name True -> named
+    entity3 = ButtonEntity()
+    entity3.entity_id = "button.test3"
+    entity3._attr_device_class = ButtonDeviceClass.RESTART
+    entity3._attr_has_entity_name = True
+
+    # Unnamed button with device class and has_entity_name True -> named
+    entity4 = ButtonEntity()
+    entity4.entity_id = "sensor.test4"
+    entity4.entity_description = ButtonEntityDescription(
+        "test",
+        ButtonDeviceClass.RESTART,
+        has_entity_name=True,
+    )
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test button platform via config entry."""
+        async_add_entities([entity1, entity2, entity3, entity4])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity1.entity_id)
+    assert state
+    assert state.attributes == {}
+
+    state = hass.states.get(entity2.entity_id)
+    assert state
+    assert state.attributes == {"device_class": "restart"}
+
+    state = hass.states.get(entity3.entity_id)
+    assert state
+    assert state.attributes == {"device_class": "restart", "friendly_name": "Restart"}
+
+    state = hass.states.get(entity4.entity_id)
+    assert state
+    assert state.attributes == {"device_class": "restart", "friendly_name": "Restart"}

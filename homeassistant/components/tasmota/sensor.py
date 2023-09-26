@@ -88,12 +88,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     hc.SENSOR_COLOR_GREEN: {ICON: "mdi:palette"},
     hc.SENSOR_COLOR_RED: {ICON: "mdi:palette"},
     hc.SENSOR_CURRENT: {
-        ICON: "mdi:alpha-a-circle-outline",
         DEVICE_CLASS: SensorDeviceClass.CURRENT,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_CURRENTNEUTRAL: {
-        ICON: "mdi:alpha-a-circle-outline",
         DEVICE_CLASS: SensorDeviceClass.CURRENT,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
@@ -103,11 +101,14 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_DISTANCE: {
-        ICON: "mdi:leak",
         DEVICE_CLASS: SensorDeviceClass.DISTANCE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_ECO2: {ICON: "mdi:molecule-co2"},
+    hc.SENSOR_ENERGY: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL,
+    },
     hc.SENSOR_FREQUENCY: {
         DEVICE_CLASS: SensorDeviceClass.FREQUENCY,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -122,10 +123,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     },
     hc.SENSOR_STATUS_IP: {ICON: "mdi:ip-network"},
     hc.SENSOR_STATUS_LINK_COUNT: {ICON: "mdi:counter"},
-    hc.SENSOR_MOISTURE: {
-        DEVICE_CLASS: SensorDeviceClass.MOISTURE,
-        ICON: "mdi:cup-water",
-    },
+    hc.SENSOR_MOISTURE: {DEVICE_CLASS: SensorDeviceClass.MOISTURE},
     hc.SENSOR_STATUS_MQTT_COUNT: {ICON: "mdi:counter"},
     hc.SENSOR_PB0_3: {ICON: "mdi:flask"},
     hc.SENSOR_PB0_5: {ICON: "mdi:flask"},
@@ -146,7 +144,6 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_POWERFACTOR: {
-        ICON: "mdi:alpha-f-circle-outline",
         DEVICE_CLASS: SensorDeviceClass.POWER_FACTOR,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
@@ -162,7 +159,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.PRESSURE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_PROXIMITY: {DEVICE_CLASS: SensorDeviceClass.DISTANCE, ICON: "mdi:ruler"},
+    hc.SENSOR_PROXIMITY: {ICON: "mdi:ruler"},
     hc.SENSOR_REACTIVE_ENERGYEXPORT: {STATE_CLASS: SensorStateClass.TOTAL},
     hc.SENSOR_REACTIVE_ENERGYIMPORT: {STATE_CLASS: SensorStateClass.TOTAL},
     hc.SENSOR_REACTIVE_POWERUSAGE: {
@@ -195,11 +192,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     hc.SENSOR_TOTAL_START_TIME: {ICON: "mdi:progress-clock"},
     hc.SENSOR_TVOC: {ICON: "mdi:air-filter"},
     hc.SENSOR_VOLTAGE: {
-        ICON: "mdi:alpha-v-circle-outline",
+        DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_WEIGHT: {
-        ICON: "mdi:scale",
         DEVICE_CLASS: SensorDeviceClass.WEIGHT,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
@@ -220,7 +216,6 @@ SENSOR_UNIT_MAP = {
     hc.LIGHT_LUX: LIGHT_LUX,
     hc.MASS_KILOGRAMS: UnitOfMass.KILOGRAMS,
     hc.PERCENTAGE: PERCENTAGE,
-    hc.POWER_FACTOR: None,
     hc.POWER_WATT: UnitOfPower.WATT,
     hc.PRESSURE_HPA: UnitOfPressure.HPA,
     hc.REACTIVE_POWER: POWER_VOLT_AMPERE_REACTIVE,
@@ -268,7 +263,6 @@ async def async_setup_entry(
 class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     """Representation of a Tasmota sensor."""
 
-    _attr_force_update = True
     _tasmota_entity: tasmota_sensor.TasmotaSensor
 
     def __init__(self, **kwds: Any) -> None:
@@ -278,6 +272,26 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
 
         super().__init__(
             **kwds,
+        )
+
+        class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
+            self._tasmota_entity.quantity, {}
+        )
+        self._attr_device_class = class_or_icon.get(DEVICE_CLASS)
+        self._attr_state_class = class_or_icon.get(STATE_CLASS)
+        if self._tasmota_entity.quantity in status_sensor.SENSORS:
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        # Hide fast changing status sensors
+        if self._tasmota_entity.quantity in (
+            hc.SENSOR_STATUS_IP,
+            hc.SENSOR_STATUS_RSSI,
+            hc.SENSOR_STATUS_SIGNAL,
+            hc.SENSOR_STATUS_VERSION,
+        ):
+            self._attr_entity_registry_enabled_default = False
+        self._attr_icon = class_or_icon.get(ICON)
+        self._attr_native_unit_of_measurement = SENSOR_UNIT_MAP.get(
+            self._tasmota_entity.unit, self._tasmota_entity.unit
         )
 
     async def async_added_to_hass(self) -> None:
@@ -295,57 +309,8 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the device class of the sensor."""
-        class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
-            self._tasmota_entity.quantity, {}
-        )
-        return class_or_icon.get(DEVICE_CLASS)
-
-    @property
-    def state_class(self) -> str | None:
-        """Return the state class of the sensor."""
-        class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
-            self._tasmota_entity.quantity, {}
-        )
-        return class_or_icon.get(STATE_CLASS)
-
-    @property
-    def entity_category(self) -> EntityCategory | None:
-        """Return the category of the entity, if any."""
-        if self._tasmota_entity.quantity in status_sensor.SENSORS:
-            return EntityCategory.DIAGNOSTIC
-        return None
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        # Hide fast changing status sensors
-        if self._tasmota_entity.quantity in (
-            hc.SENSOR_STATUS_IP,
-            hc.SENSOR_STATUS_RSSI,
-            hc.SENSOR_STATUS_SIGNAL,
-            hc.SENSOR_STATUS_VERSION,
-        ):
-            return False
-        return True
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
-            self._tasmota_entity.quantity, {}
-        )
-        return class_or_icon.get(ICON)
-
-    @property
     def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
         if self._state_timestamp and self.device_class == SensorDeviceClass.TIMESTAMP:
             return self._state_timestamp
         return self._state
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit this state is expressed in."""
-        return SENSOR_UNIT_MAP.get(self._tasmota_entity.unit, self._tasmota_entity.unit)

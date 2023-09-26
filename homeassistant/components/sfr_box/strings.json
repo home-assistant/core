@@ -31,8 +31,35 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "dsl_status": {
+        "name": "DSL status"
+      },
+      "ftth_status": {
+        "name": "FTTH status"
+      },
+      "wan_status": {
+        "name": "WAN status"
+      }
+    },
     "sensor": {
-      "line_status": {
+      "dsl_attenuation_down": {
+        "name": "DSL attenuation down"
+      },
+      "dsl_attenuation_up": {
+        "name": "DSL attenuation up"
+      },
+      "dsl_crc": {
+        "name": "DSL CRC"
+      },
+      "dsl_counter": {
+        "name": "DSL counter"
+      },
+      "dsl_linemode": {
+        "name": "DSL line mode"
+      },
+      "dsl_line_status": {
+        "name": "DSL line status",
         "state": {
           "no_defect": "No Defect",
           "of_frame": "Of Frame",
@@ -42,17 +69,22 @@
           "unknown": "Unknown"
         }
       },
-      "net_infra": {
-        "state": {
-          "adsl": "ADSL",
-          "ftth": "FTTH",
-          "gprs": "GPRS",
-          "unknown": "Unknown"
-        }
+      "dsl_noise_down": {
+        "name": "DSL noise down"
       },
-      "training": {
+      "dsl_noise_up": {
+        "name": "DSL noise up"
+      },
+      "dsl_rate_down": {
+        "name": "DSL rate down"
+      },
+      "dsl_rate_up": {
+        "name": "DSL rate up"
+      },
+      "dsl_training": {
+        "name": "DSL training",
         "state": {
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "g_994_training": "G.994 Training",
           "g_992_started": "G.992 Started",
           "g_922_channel_analysis": "G.922 Channel Analysis",
@@ -64,7 +96,17 @@
           "unknown": "Unknown"
         }
       },
+      "net_infra": {
+        "name": "Network infrastructure",
+        "state": {
+          "adsl": "ADSL",
+          "ftth": "FTTH",
+          "gprs": "GPRS",
+          "unknown": "Unknown"
+        }
+      },
       "wan_mode": {
+        "name": "WAN mode",
         "state": {
           "adsl_ppp": "ADSL (PPP)",
           "adsl_routed": "ADSL (Routed)",

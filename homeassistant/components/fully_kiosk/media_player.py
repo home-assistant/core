@@ -33,6 +33,7 @@ async def async_setup_entry(
 class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
     """Representation of a Fully Kiosk Browser media player entity."""
 
+    _attr_name = None
     _attr_supported_features = MEDIA_SUPPORT_FULLYKIOSK
     _attr_assumed_state = True
 
@@ -72,7 +73,7 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
 
     async def async_browse_media(
         self,
-        media_content_type: str | None = None,
+        media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the WebSocket media browsing helper."""

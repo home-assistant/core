@@ -19,7 +19,7 @@ async def test_full_user_flow(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -46,7 +46,7 @@ async def test_full_flow_with_authentication_error(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
 
     mock_rdw_config_flow.vehicle.side_effect = RDWUnknownLicensePlateError
     result2 = await hass.config_entries.flow.async_configure(
@@ -57,7 +57,7 @@ async def test_full_flow_with_authentication_error(
     )
 
     assert result2.get("type") == FlowResultType.FORM
-    assert result2.get("step_id") == SOURCE_USER
+    assert result2.get("step_id") == "user"
     assert result2.get("errors") == {"base": "unknown_license_plate"}
 
     mock_rdw_config_flow.vehicle.side_effect = None

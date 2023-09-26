@@ -20,7 +20,7 @@ MANAGER: BluetoothManager | None = None
 MONOTONIC_TIME: Final = monotonic_time_coarse
 
 
-@dataclass
+@dataclass(slots=True)
 class HaBluetoothConnector:
     """Data for how to connect a BLEDevice from a given scanner."""
 

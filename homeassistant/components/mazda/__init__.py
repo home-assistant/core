@@ -1,11 +1,11 @@
 """The Mazda Connected Services integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-import async_timeout
 from pymazda import (
     Client as MazdaAPI,
     MazdaAccountLockedException,
@@ -29,7 +29,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -51,9 +51,9 @@ PLATFORMS = [
 ]
 
 
-async def with_timeout(task, timeout_seconds=10):
+async def with_timeout(task, timeout_seconds=30):
     """Run an async task with a timeout."""
-    async with async_timeout.timeout(timeout_seconds):
+    async with asyncio.timeout(timeout_seconds):
         return await task
 
 

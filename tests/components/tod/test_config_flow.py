@@ -1,7 +1,6 @@
 """Test the Times of the Day config flow."""
 from unittest.mock import patch
 
-from freezegun import freeze_time
 import pytest
 
 from homeassistant import config_entries
@@ -66,7 +65,7 @@ def get_suggested(schema, key):
     raise Exception
 
 
-@freeze_time("2022-03-16 17:37:00", tz_offset=-7)
+@pytest.mark.freeze_time("2022-03-16 17:37:00", tz_offset=-7)
 async def test_options(hass: HomeAssistant) -> None:
     """Test reconfiguring."""
     # Setup the config entry

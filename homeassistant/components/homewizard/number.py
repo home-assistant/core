@@ -20,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up numbers for device."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    if coordinator.data.state:
+    if coordinator.supports_state():
         async_add_entities([HWEnergyNumberEntity(coordinator, entry)])
 
 
@@ -29,7 +29,7 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:lightbulb-on"
-    _attr_name = "Status light brightness"
+    _attr_translation_key = "status_light_brightness"
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
@@ -55,4 +55,5 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
             or self.coordinator.data.state.brightness is None
         ):
             return None
-        return round(self.coordinator.data.state.brightness * (100 / 255))
+        brightness: float = self.coordinator.data.state.brightness
+        return round(brightness * (100 / 255))

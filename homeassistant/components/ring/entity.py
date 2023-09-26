@@ -1,6 +1,7 @@
 """Base class for Ring entity."""
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from . import ATTRIBUTION, DOMAIN
 
@@ -10,6 +11,7 @@ class RingEntityMixin(Entity):
 
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, config_entry_id, device):
         """Initialize a sensor for Ring device."""
@@ -17,6 +19,12 @@ class RingEntityMixin(Entity):
         self._config_entry_id = config_entry_id
         self._device = device
         self._attr_extra_state_attributes = {}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.device_id)},
+            manufacturer="Ring",
+            model=device.model,
+            name=device.name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -35,13 +43,3 @@ class RingEntityMixin(Entity):
     def ring_objects(self):
         """Return the Ring API objects."""
         return self.hass.data[DOMAIN][self._config_entry_id]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device.device_id)},
-            manufacturer="Ring",
-            model=self._device.model,
-            name=self._device.name,
-        )

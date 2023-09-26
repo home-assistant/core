@@ -18,5 +18,15 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_serial_ports": "No com ports found.  Need a valid RS485 device to communicate."
     }
+  },
+  "entity": {
+    "sensor": {
+      "power_output": {
+        "name": "Power Output"
+      },
+      "total_energy": {
+        "name": "Total Energy"
+      }
+    }
   }
 }

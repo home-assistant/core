@@ -85,7 +85,6 @@ class MpdDevice(MediaPlayerEntity):
 
     _attr_media_content_type = MediaType.MUSIC
 
-    # pylint: disable=no-member
     def __init__(self, server, port, password, name):
         """Initialize the MPD device."""
         self.server = server
@@ -509,7 +508,9 @@ class MpdDevice(MediaPlayerEntity):
         await self._client.seekcur(position)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

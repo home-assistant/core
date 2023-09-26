@@ -6,8 +6,7 @@ from astral import moon
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
@@ -47,17 +46,16 @@ class MoonSensorEntity(SensorEntity):
     """Representation of a Moon sensor."""
 
     _attr_has_entity_name = True
-    _attr_name = "Phase"
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = [
-        STATE_FIRST_QUARTER,
-        STATE_FULL_MOON,
-        STATE_LAST_QUARTER,
         STATE_NEW_MOON,
-        STATE_WANING_CRESCENT,
-        STATE_WANING_GIBBOUS,
         STATE_WAXING_CRESCENT,
+        STATE_FIRST_QUARTER,
         STATE_WAXING_GIBBOUS,
+        STATE_FULL_MOON,
+        STATE_WANING_GIBBOUS,
+        STATE_LAST_QUARTER,
+        STATE_WANING_CRESCENT,
     ]
     _attr_translation_key = "phase"
 

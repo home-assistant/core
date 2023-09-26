@@ -15,6 +15,7 @@ from typing import Any
 
 from homeassistant.const import ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback as async_callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
@@ -43,6 +44,8 @@ STATE_CONFIGURE = "configure"
 STATE_CONFIGURED = "configured"
 
 ConfiguratorCallback = Callable[[list[dict[str, str]]], None]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @bind_hass

@@ -12,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import (
@@ -20,7 +19,6 @@ from homeassistant.const import (
     COMPRESSED_STATE_LAST_CHANGED,
     COMPRESSED_STATE_LAST_UPDATED,
     COMPRESSED_STATE_STATE,
-    EVENT_STATE_CHANGED,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -29,23 +27,24 @@ from homeassistant.core import (
     State,
     callback,
     is_callback,
+    valid_entity_id,
 )
-from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_point_in_utc_time,
     async_track_state_change_event,
 )
 from homeassistant.helpers.json import JSON_DUMP
+from homeassistant.helpers.typing import EventType
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, EVENT_COALESCE_TIME, MAX_PENDING_HISTORY_STATES
+from .const import EVENT_COALESCE_TIME, MAX_PENDING_HISTORY_STATES
 from .helpers import entities_may_have_state_changes_after
-from .models import HistoryConfig
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class HistoryLiveStream:
     """Track a history live stream."""
 
@@ -69,7 +68,6 @@ def _ws_get_significant_states(
     start_time: dt,
     end_time: dt | None,
     entity_ids: list[str] | None,
-    filters: Filters | None,
     include_start_time_state: bool,
     significant_changes_only: bool,
     minimal_response: bool,
@@ -84,7 +82,7 @@ def _ws_get_significant_states(
                 start_time,
                 end_time,
                 entity_ids,
-                filters,
+                None,
                 include_start_time_state,
                 significant_changes_only,
                 minimal_response,
@@ -100,7 +98,7 @@ def _ws_get_significant_states(
         vol.Required("type"): "history/history_during_period",
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
-        vol.Optional("entity_ids"): [str],
+        vol.Required("entity_ids"): [str],
         vol.Optional("include_start_time_state", default=True): bool,
         vol.Optional("significant_changes_only", default=True): bool,
         vol.Optional("minimal_response", default=False): bool,
@@ -134,7 +132,12 @@ async def ws_get_history_during_period(
         connection.send_result(msg["id"], {})
         return
 
-    entity_ids = msg.get("entity_ids")
+    entity_ids: list[str] = msg["entity_ids"]
+    for entity_id in entity_ids:
+        if not hass.states.get(entity_id) and not valid_entity_id(entity_id):
+            connection.send_error(msg["id"], "invalid_entity_ids", "Invalid entity_ids")
+            return
+
     include_start_time_state = msg["include_start_time_state"]
     no_attributes = msg["no_attributes"]
 
@@ -150,7 +153,6 @@ async def ws_get_history_during_period(
 
     significant_changes_only = msg["significant_changes_only"]
     minimal_response = msg["minimal_response"]
-    history_config: HistoryConfig = hass.data[DOMAIN]
 
     connection.send_message(
         await get_instance(hass).async_add_executor_job(
@@ -160,7 +162,6 @@ async def ws_get_history_during_period(
             start_time,
             end_time,
             entity_ids,
-            history_config.sqlalchemy_filter,
             include_start_time_state,
             significant_changes_only,
             minimal_response,
@@ -214,7 +215,6 @@ def _generate_historical_response(
     start_time: dt,
     end_time: dt,
     entity_ids: list[str] | None,
-    filters: Filters | None,
     include_start_time_state: bool,
     significant_changes_only: bool,
     minimal_response: bool,
@@ -229,7 +229,7 @@ def _generate_historical_response(
             start_time,
             end_time,
             entity_ids,
-            filters,
+            None,
             include_start_time_state,
             significant_changes_only,
             minimal_response,
@@ -270,7 +270,6 @@ async def _async_send_historical_states(
     start_time: dt,
     end_time: dt,
     entity_ids: list[str] | None,
-    filters: Filters | None,
     include_start_time_state: bool,
     significant_changes_only: bool,
     minimal_response: bool,
@@ -286,7 +285,6 @@ async def _async_send_historical_states(
         start_time,
         end_time,
         entity_ids,
-        filters,
         include_start_time_state,
         significant_changes_only,
         minimal_response,
@@ -365,8 +363,7 @@ def _async_subscribe_events(
     hass: HomeAssistant,
     subscriptions: list[CALLBACK_TYPE],
     target: Callable[[Event], None],
-    entities_filter: EntityFilter | None,
-    entity_ids: list[str] | None,
+    entity_ids: list[str],
     significant_changes_only: bool,
     minimal_response: bool,
 ) -> None:
@@ -378,15 +375,13 @@ def _async_subscribe_events(
     assert is_callback(target), "target must be a callback"
 
     @callback
-    def _forward_state_events_filtered(event: Event) -> None:
+    def _forward_state_events_filtered(event: EventType[EventStateChangedData]) -> None:
         """Filter state events and forward them."""
-        if (new_state := event.data.get("new_state")) is None or (
-            old_state := event.data.get("old_state")
+        if (new_state := event.data["new_state"]) is None or (
+            old_state := event.data["old_state"]
         ) is None:
             return
-        assert isinstance(new_state, State)
-        assert isinstance(old_state, State)
-        if (entities_filter and not entities_filter(new_state.entity_id)) or (
+        if (
             (significant_changes_only or minimal_response)
             and new_state.state == old_state.state
             and new_state.domain not in history.SIGNIFICANT_DOMAINS
@@ -394,21 +389,8 @@ def _async_subscribe_events(
             return
         target(event)
 
-    if entity_ids:
-        subscriptions.append(
-            async_track_state_change_event(
-                hass, entity_ids, _forward_state_events_filtered
-            )
-        )
-        return
-
-    # We want the firehose
     subscriptions.append(
-        hass.bus.async_listen(
-            EVENT_STATE_CHANGED,
-            _forward_state_events_filtered,
-            run_immediately=True,
-        )
+        async_track_state_change_event(hass, entity_ids, _forward_state_events_filtered)
     )
 
 
@@ -417,7 +399,7 @@ def _async_subscribe_events(
         vol.Required("type"): "history/stream",
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
-        vol.Optional("entity_ids"): [str],
+        vol.Required("entity_ids"): [str],
         vol.Optional("include_start_time_state", default=True): bool,
         vol.Optional("significant_changes_only", default=True): bool,
         vol.Optional("minimal_response", default=False): bool,
@@ -431,15 +413,7 @@ async def ws_stream(
     """Handle history stream websocket command."""
     start_time_str = msg["start_time"]
     msg_id: int = msg["id"]
-    entity_ids: list[str] | None = msg.get("entity_ids")
     utc_now = dt_util.utcnow()
-    filters: Filters | None = None
-    entities_filter: EntityFilter | None = None
-
-    if not entity_ids:
-        history_config: HistoryConfig = hass.data[DOMAIN]
-        filters = history_config.sqlalchemy_filter
-        entities_filter = history_config.entity_filter
 
     if start_time := dt_util.parse_datetime(start_time_str):
         start_time = dt_util.as_utc(start_time)
@@ -459,7 +433,12 @@ async def ws_stream(
             connection.send_error(msg_id, "invalid_end_time", "Invalid end_time")
             return
 
-    entity_ids = msg.get("entity_ids")
+    entity_ids: list[str] = msg["entity_ids"]
+    for entity_id in entity_ids:
+        if not hass.states.get(entity_id) and not valid_entity_id(entity_id):
+            connection.send_error(msg["id"], "invalid_entity_ids", "Invalid entity_ids")
+            return
+
     include_start_time_state = msg["include_start_time_state"]
     significant_changes_only = msg["significant_changes_only"]
     no_attributes = msg["no_attributes"]
@@ -485,7 +464,6 @@ async def ws_stream(
             start_time,
             end_time,
             entity_ids,
-            filters,
             include_start_time_state,
             significant_changes_only,
             minimal_response,
@@ -535,7 +513,6 @@ async def ws_stream(
         hass,
         subscriptions,
         _queue_or_cancel,
-        entities_filter,
         entity_ids,
         significant_changes_only=significant_changes_only,
         minimal_response=minimal_response,
@@ -551,7 +528,6 @@ async def ws_stream(
         start_time,
         subscriptions_setup_complete_time,
         entity_ids,
-        filters,
         include_start_time_state,
         significant_changes_only,
         minimal_response,
@@ -593,7 +569,6 @@ async def ws_stream(
         last_event_time or start_time,
         subscriptions_setup_complete_time,
         entity_ids,
-        filters,
         False,  # We don't want the start time state again
         significant_changes_only,
         minimal_response,

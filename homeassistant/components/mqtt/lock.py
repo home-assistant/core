@@ -37,7 +37,7 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    warn_for_legacy_schema,
+    write_state_on_attr_change,
 )
 from .models import (
     MqttCommandTemplate,
@@ -46,7 +46,6 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
 
 CONF_CODE_FORMAT = "code_format"
 
@@ -81,7 +80,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_CODE_FORMAT): cv.is_regex,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_LOCK, default=DEFAULT_PAYLOAD_LOCK): cv.string,
         vol.Optional(CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK): cv.string,
         vol.Optional(CONF_PAYLOAD_OPEN): cv.string,
@@ -93,12 +92,6 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-
-# Configuring MQTT Locks under the lock platform key was deprecated in HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(lock.DOMAIN),
-)
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
@@ -137,6 +130,7 @@ async def _async_setup_entity(
 class MqttLock(MqttEntity, LockEntity):
     """Representation of a lock that can be toggled using MQTT."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = lock.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LOCK_ATTRIBUTES_BLOCKED
 
@@ -148,17 +142,6 @@ class MqttLock(MqttEntity, LockEntity):
     ]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the lock."""
-        self._attr_is_locked = False
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""
@@ -166,9 +149,13 @@ class MqttLock(MqttEntity, LockEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._optimistic = (
-            config[CONF_OPTIMISTIC] or self._config.get(CONF_STATE_TOPIC) is None
-        )
+        if (
+            optimistic := config[CONF_OPTIMISTIC]
+            or config.get(CONF_STATE_TOPIC) is None
+        ):
+            self._attr_is_locked = False
+        self._optimistic = optimistic
+        self._attr_assumed_state = bool(optimistic)
 
         self._compiled_pattern = config.get(CONF_CODE_FORMAT)
         self._attr_code_format = (
@@ -199,6 +186,15 @@ class MqttLock(MqttEntity, LockEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(
+            self,
+            {
+                "_attr_is_jammed",
+                "_attr_is_locked",
+                "_attr_is_locking",
+                "_attr_is_unlocking",
+            },
+        )
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new lock state messages."""
             payload = self._value_template(msg.payload)
@@ -207,8 +203,6 @@ class MqttLock(MqttEntity, LockEntity):
                 self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]
                 self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
                 self._attr_is_jammed = payload == self._config[CONF_STATE_JAMMED]
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
@@ -230,11 +224,6 @@ class MqttLock(MqttEntity, LockEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device.

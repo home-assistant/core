@@ -16,5 +16,36 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "admin": {
+        "name": "Admin"
+      },
+      "creation_date": {
+        "name": "Created"
+      },
+      "days_until_expiration": {
+        "name": "Days until expiration"
+      },
+      "expiration_date": {
+        "name": "Expires"
+      },
+      "last_updated": {
+        "name": "Last updated"
+      },
+      "owner": {
+        "name": "Owner"
+      },
+      "registrant": {
+        "name": "Registrant"
+      },
+      "registrar": {
+        "name": "Registrar"
+      },
+      "reseller": {
+        "name": "Reseller"
+      }
+    }
   }
 }

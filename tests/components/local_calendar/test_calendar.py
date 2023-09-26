@@ -1,6 +1,7 @@
 """Tests for calendar platform of local calendar."""
 
 import datetime
+import textwrap
 
 import pytest
 
@@ -37,10 +38,27 @@ async def test_empty_calendar(
     }
 
 
+@pytest.mark.parametrize(
+    ("dtstart", "dtend"),
+    [
+        ("1997-07-14T18:00:00+01:00", "1997-07-15T05:00:00+01:00"),
+        ("1997-07-14T17:00:00+00:00", "1997-07-15T04:00:00+00:00"),
+        ("1997-07-14T11:00:00-06:00", "1997-07-14T22:00:00-06:00"),
+        ("1997-07-14T10:00:00-07:00", "1997-07-14T21:00:00-07:00"),
+    ],
+)
 async def test_api_date_time_event(
-    ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
+    ws_client: ClientFixture,
+    setup_integration: None,
+    get_events: GetEventsFn,
+    dtstart: str,
+    dtend: str,
 ) -> None:
-    """Test an event with a start/end date time."""
+    """Test an event with a start/end date time.
+
+    Events created in various timezones are ultimately returned relative
+    to local home assistant timezone.
+    """
     client = await ws_client()
     await client.cmd_result(
         "create",
@@ -48,8 +66,8 @@ async def test_api_date_time_event(
             "entity_id": TEST_ENTITY,
             "event": {
                 "summary": "Bastille Day Party",
-                "dtstart": "1997-07-14T17:00:00+00:00",
-                "dtend": "1997-07-15T04:00:00+00:00",
+                "dtstart": dtstart,
+                "dtend": dtend,
             },
         },
     )
@@ -63,6 +81,8 @@ async def test_api_date_time_event(
         }
     ]
 
+    # Query events in UTC
+
     # Time range before event
     events = await get_events("1997-07-13T00:00:00Z", "1997-07-14T16:00:00Z")
     assert len(events) == 0
@@ -75,6 +95,12 @@ async def test_api_date_time_event(
     assert len(events) == 1
     # Overlap with event end
     events = await get_events("1997-07-15T03:00:00Z", "1997-07-15T06:00:00Z")
+    assert len(events) == 1
+
+    # Query events overlapping with start and end but in another timezone
+    events = await get_events("1997-07-12T23:00:00-01:00", "1997-07-14T17:00:00-01:00")
+    assert len(events) == 1
+    events = await get_events("1997-07-15T02:00:00-01:00", "1997-07-15T05:00:00-01:00")
     assert len(events) == 1
 
 
@@ -873,6 +899,7 @@ async def test_create_event_service(
             "start_date_time": start_date_time,
             "end_date_time": end_date_time,
             "summary": "Bastille Day Party",
+            "location": "Test Location",
         },
         target={"entity_id": TEST_ENTITY},
         blocking=True,
@@ -886,6 +913,7 @@ async def test_create_event_service(
             "summary": "Bastille Day Party",
             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+            "location": "Test Location",
         }
     ]
 
@@ -895,6 +923,7 @@ async def test_create_event_service(
             "summary": "Bastille Day Party",
             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+            "location": "Test Location",
         }
     ]
 
@@ -909,5 +938,94 @@ async def test_create_event_service(
             "summary": "Bastille Day Party",
             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+            "location": "Test Location",
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    "ics_content",
+    [
+        textwrap.dedent(
+            """\
+            BEGIN:VCALENDAR
+            BEGIN:VEVENT
+            SUMMARY:Bastille Day Party
+            DTSTART:19970714
+            DTEND:19970714
+            END:VEVENT
+            END:VCALENDAR
+        """
+        ),
+        textwrap.dedent(
+            """\
+            BEGIN:VCALENDAR
+            BEGIN:VEVENT
+            SUMMARY:Bastille Day Party
+            DTSTART:19970714
+            DTEND:19970710
+            END:VEVENT
+            END:VCALENDAR
+        """
+        ),
+    ],
+    ids=["no_duration", "negative"],
+)
+async def test_invalid_all_day_event(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    get_events: GetEventsFn,
+) -> None:
+    """Test all day events with invalid durations, which are coerced to be valid."""
+    events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"date": "1997-07-14"},
+            "end": {"date": "1997-07-15"},
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    "ics_content",
+    [
+        textwrap.dedent(
+            """\
+            BEGIN:VCALENDAR
+            BEGIN:VEVENT
+            SUMMARY:Bastille Day Party
+            DTSTART:19970714T110000
+            DTEND:19970714T110000
+            END:VEVENT
+            END:VCALENDAR
+        """
+        ),
+        textwrap.dedent(
+            """\
+            BEGIN:VCALENDAR
+            BEGIN:VEVENT
+            SUMMARY:Bastille Day Party
+            DTSTART:19970714T110000
+            DTEND:19970710T100000
+            END:VEVENT
+            END:VCALENDAR
+        """
+        ),
+    ],
+    ids=["no_duration", "negative"],
+)
+async def test_invalid_event_duration(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    get_events: GetEventsFn,
+) -> None:
+    """Test events with invalid durations, which are coerced to be valid."""
+    events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T11:30:00-06:00"},
         }
     ]

@@ -3,7 +3,7 @@
   dict({
     'ics': '''
       BEGIN:VCALENDAR
-      PRODID:-//github.com/allenporter/ical//4.5.0//EN
+      PRODID:-//homeassistant.io//local_calendar 1.0//EN
       VERSION:***
       BEGIN:VEVENT
       DTSTAMP:20230313T190500

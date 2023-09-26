@@ -5,9 +5,6 @@
   "config_flow": true,
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/landisgyr_heat_meter",
-  "homekit": {},
   "iot_class": "local_polling",
-  "requirements": ["ultraheat-api==0.5.1"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["ultraheat-api==0.5.7"]
 }

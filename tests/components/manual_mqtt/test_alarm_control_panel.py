@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -280,12 +281,13 @@ async def test_with_invalid_code(
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
-    await hass.services.async_call(
-        alarm_control_panel.DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: f"{CODE}2"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+        await hass.services.async_call(
+            alarm_control_panel.DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: f"{CODE}2"},
+            blocking=True,
+        )
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
@@ -881,7 +883,8 @@ async def test_disarm_during_trigger_with_invalid_code(
 
     assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
 
-    await common.async_alarm_disarm(hass, entity_id=entity_id)
+    with pytest.raises(HomeAssistantError, match=r"Invalid alarm code provided$"):
+        await common.async_alarm_disarm(hass, entity_id=entity_id)
 
     assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
 
@@ -1307,7 +1310,8 @@ async def test_disarm_with_template_code(
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_ARMED_HOME
 
-    await common.async_alarm_disarm(hass, "def")
+    with pytest.raises(HomeAssistantError, match=r"Invalid alarm code provided$"):
+        await common.async_alarm_disarm(hass, "def")
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_ARMED_HOME
@@ -1502,3 +1506,24 @@ async def test_state_changes_are_published_to_mqtt(
     mqtt_mock.async_publish.assert_called_once_with(
         "alarm/state", STATE_ALARM_DISARMED, 0, True
     )
+
+
+async def test_no_mqtt(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test publishing of MQTT messages when state changes."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            alarm_control_panel.DOMAIN: {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "state_topic": "alarm/state",
+                "command_topic": "alarm/command",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+    assert hass.states.get(entity_id) is None
+    assert "MQTT integration is not available" in caplog.text

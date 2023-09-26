@@ -122,9 +122,7 @@ async def test_one_lock_operation(hass: HomeAssistant) -> None:
     )
 
     data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
-    assert await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True
-    )
+    await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
     await hass.async_block_till_done()
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
@@ -136,9 +134,7 @@ async def test_one_lock_operation(hass: HomeAssistant) -> None:
         == "online_with_doorsense Name"
     )
 
-    assert await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True
-    )
+    await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
     await hass.async_block_till_done()
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
@@ -176,9 +172,7 @@ async def test_one_lock_operation_pubnub_connected(hass: HomeAssistant) -> None:
     )
 
     data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
-    assert await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True
-    )
+    await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
     await hass.async_block_till_done()
 
     pubnub.message(
@@ -203,9 +197,7 @@ async def test_one_lock_operation_pubnub_connected(hass: HomeAssistant) -> None:
         == "online_with_doorsense Name"
     )
 
-    assert await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True
-    )
+    await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
     await hass.async_block_till_done()
 
     pubnub.message(
@@ -262,9 +254,7 @@ async def test_lock_jammed(hass: HomeAssistant) -> None:
     )
 
     data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
-    assert await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True
-    )
+    await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
     await hass.async_block_till_done()
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
@@ -300,9 +290,7 @@ async def test_lock_throws_exception_on_unknown_status_code(
 
     data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
     with pytest.raises(ClientResponseError):
-        assert await hass.services.async_call(
-            LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True
-        )
+        await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
         await hass.async_block_till_done()
 
 

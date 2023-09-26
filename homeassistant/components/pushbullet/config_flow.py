@@ -24,11 +24,6 @@ CONFIG_SCHEMA = vol.Schema(
 class PushBulletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for pushbullet integration."""
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Handle import from config."""
-        import_config[CONF_NAME] = import_config.get(CONF_NAME, DEFAULT_NAME)
-        return await self.async_step_user(import_config)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:

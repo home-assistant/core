@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for WLED."""
 from __future__ import annotations
 
-from wled import WLED, Device as WLEDDevice, WLEDConnectionClosed, WLEDError
+from wled import WLED, Device as WLEDDevice, WLEDConnectionClosedError, WLEDError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
@@ -46,7 +46,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 
     @property
     def has_master_light(self) -> bool:
-        """Return if the coordinated device has an master light."""
+        """Return if the coordinated device has a master light."""
         return self.keep_master_light or (
             self.data is not None and len(self.data.state.segments) > 1
         )
@@ -68,7 +68,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 
             try:
                 await self.wled.listen(callback=self.async_set_updated_data)
-            except WLEDConnectionClosed as err:
+            except WLEDConnectionClosedError as err:
                 self.last_update_success = False
                 self.logger.info(err)
             except WLEDError as err:

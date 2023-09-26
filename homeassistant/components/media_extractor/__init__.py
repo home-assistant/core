@@ -1,9 +1,11 @@
 """Decorator service for the media_player.play_media service."""
+from collections.abc import Callable
 import logging
+from typing import Any, cast
 
 import voluptuous as vol
-from youtube_dl import YoutubeDL
-from youtube_dl.utils import DownloadError, ExtractorError
+from yt_dlp import YoutubeDL
+from yt_dlp.utils import DownloadError, ExtractorError
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
@@ -68,21 +70,26 @@ class MEQueryException(Exception):
 class MediaExtractor:
     """Class which encapsulates all extraction logic."""
 
-    def __init__(self, hass, component_config, call_data):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        component_config: dict[str, Any],
+        call_data: dict[str, Any],
+    ) -> None:
         """Initialize media extractor."""
         self.hass = hass
         self.config = component_config
         self.call_data = call_data
 
-    def get_media_url(self):
+    def get_media_url(self) -> str:
         """Return media content url."""
-        return self.call_data.get(ATTR_MEDIA_CONTENT_ID)
+        return cast(str, self.call_data[ATTR_MEDIA_CONTENT_ID])
 
-    def get_entities(self):
+    def get_entities(self) -> list[str]:
         """Return list of entities."""
         return self.call_data.get(ATTR_ENTITY_ID, [])
 
-    def extract_and_send(self):
+    def extract_and_send(self) -> None:
         """Extract exact stream format for each entity_id and play it."""
         try:
             stream_selector = self.get_stream_selector()
@@ -97,7 +104,7 @@ class MediaExtractor:
             for entity_id in entities:
                 self.call_media_player_service(stream_selector, entity_id)
 
-    def get_stream_selector(self):
+    def get_stream_selector(self) -> Callable[[str], str]:
         """Return format selector for the media URL."""
         ydl = YoutubeDL({"quiet": True, "logger": _LOGGER})
 
@@ -118,7 +125,7 @@ class MediaExtractor:
         else:
             selected_media = all_media
 
-        def stream_selector(query):
+        def stream_selector(query: str) -> str:
             """Find stream URL that matches query."""
             try:
                 ydl.params["format"] = query
@@ -127,11 +134,18 @@ class MediaExtractor:
                 _LOGGER.error("Could not extract stream for the query: %s", query)
                 raise MEQueryException() from err
 
-            return requested_stream["url"]
+            if "formats" in requested_stream:
+                best_stream = requested_stream["formats"][
+                    len(requested_stream["formats"]) - 1
+                ]
+                return str(best_stream["url"])
+            return str(requested_stream["url"])
 
         return stream_selector
 
-    def call_media_player_service(self, stream_selector, entity_id):
+    def call_media_player_service(
+        self, stream_selector: Callable[[str], str], entity_id: str | None
+    ) -> None:
         """Call Media player play_media service."""
         stream_query = self.get_stream_query_for_entity(entity_id)
 
@@ -147,20 +161,20 @@ class MediaExtractor:
         if entity_id:
             data[ATTR_ENTITY_ID] = entity_id
 
-        self.hass.async_create_task(
+        self.hass.create_task(
             self.hass.services.async_call(MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA, data)
         )
 
-    def get_stream_query_for_entity(self, entity_id):
+    def get_stream_query_for_entity(self, entity_id: str | None) -> str:
         """Get stream format query for entity."""
-        default_stream_query = self.config.get(
+        default_stream_query: str = self.config.get(
             CONF_DEFAULT_STREAM_QUERY, DEFAULT_STREAM_QUERY
         )
 
         if entity_id:
             media_content_type = self.call_data.get(ATTR_MEDIA_CONTENT_TYPE)
 
-            return (
+            return str(
                 self.config.get(CONF_CUSTOMIZE_ENTITIES, {})
                 .get(entity_id, {})
                 .get(media_content_type, default_stream_query)

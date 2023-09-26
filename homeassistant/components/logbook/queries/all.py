@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from sqlalchemy import lambda_stmt
-from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
@@ -11,6 +10,7 @@ from homeassistant.components.recorder.db_schema import (
     Events,
     States,
 )
+from homeassistant.components.recorder.filters import Filters
 
 from .common import apply_states_filters, select_events_without_states, select_states
 
@@ -18,14 +18,13 @@ from .common import apply_states_filters, select_events_without_states, select_s
 def all_stmt(
     start_day: float,
     end_day: float,
-    event_types: tuple[str, ...],
-    states_entity_filter: ColumnElement | None = None,
-    events_entity_filter: ColumnElement | None = None,
+    event_type_ids: tuple[int, ...],
+    filters: Filters | None,
     context_id_bin: bytes | None = None,
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
     stmt = lambda_stmt(
-        lambda: select_events_without_states(start_day, end_day, event_types)
+        lambda: select_events_without_states(start_day, end_day, event_type_ids)
     )
     if context_id_bin is not None:
         stmt += lambda s: s.where(Events.context_id_bin == context_id_bin).union_all(
@@ -36,19 +35,17 @@ def all_stmt(
                 context_id_bin,  # type:ignore[arg-type]
             ),
         )
-    else:
-        if events_entity_filter is not None:
-            stmt += lambda s: s.where(events_entity_filter)
-
-        if states_entity_filter is not None:
-            stmt += lambda s: s.union_all(
+    elif filters and filters.has_config:
+        stmt = stmt.add_criteria(
+            lambda q: q.filter(filters.events_entity_filter()).union_all(  # type: ignore[union-attr]
                 _states_query_for_all(start_day, end_day).where(
-                    # https://github.com/python/mypy/issues/2608
-                    states_entity_filter  # type:ignore[arg-type]
+                    filters.states_metadata_entity_filter()  # type: ignore[union-attr]
                 )
-            )
-        else:
-            stmt += lambda s: s.union_all(_states_query_for_all(start_day, end_day))
+            ),
+            track_on=[filters],
+        )
+    else:
+        stmt += lambda s: s.union_all(_states_query_for_all(start_day, end_day))
 
     stmt += lambda s: s.order_by(Events.time_fired_ts)
     return stmt

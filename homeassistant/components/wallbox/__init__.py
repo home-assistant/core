@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -246,6 +246,8 @@ class InvalidAuth(HomeAssistantError):
 class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):
     """Defines a base Wallbox entity."""
 
+    _attr_has_entity_name = True
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this Wallbox device."""
@@ -256,7 +258,7 @@ class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):
                     self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY],
                 )
             },
-            name=f"Wallbox - {self.coordinator.data[CHARGER_NAME_KEY]}",
+            name=f"Wallbox {self.coordinator.data[CHARGER_NAME_KEY]}",
             manufacturer="Wallbox",
             model=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY],
             sw_version=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SOFTWARE_KEY][

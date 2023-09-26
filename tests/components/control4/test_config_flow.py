@@ -1,5 +1,4 @@
 """Test the Control4 config flow."""
-import datetime
 from unittest.mock import AsyncMock, patch
 
 from pyControl4.account import C4Account
@@ -25,10 +24,7 @@ def _get_mock_c4_account(
         "href": "https://apis.control4.com/account/v3/rest/accounts/000000",
         "name": "Name",
     },
-    getDirectorBearerToken={
-        "token": "token",
-        "token_expiration": datetime.datetime(2020, 7, 15, 13, 50, 15, 26940),
-    },
+    getDirectorBearerToken={"token": "token"},
 ):
     c4_account_mock = AsyncMock(C4Account)
 

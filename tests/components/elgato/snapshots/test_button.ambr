@@ -2,8 +2,8 @@
 # name: test_buttons[button.frenck_identify-identify-key-light-mini]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'identify',
       'friendly_name': 'Frenck Identify',
-      'icon': 'mdi:help',
     }),
     'context': <ANY>,
     'entity_id': 'button.frenck_identify',
@@ -32,8 +32,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:help',
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
     'original_name': 'Identify',
     'platform': 'elgato',
     'supported_features': 0,

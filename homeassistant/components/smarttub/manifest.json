@@ -3,7 +3,6 @@
   "name": "SmartTub",
   "codeowners": ["@mdz"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/smarttub",
   "iot_class": "cloud_polling",
   "loggers": ["smarttub"],

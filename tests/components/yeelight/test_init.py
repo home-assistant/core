@@ -618,3 +618,28 @@ async def test_async_setup_with_discovery_not_working(hass: HomeAssistant) -> No
         assert config_entry.state is ConfigEntryState.LOADED
 
     assert hass.states.get("light.yeelight_color_0x15243f").state == STATE_ON
+
+
+async def test_async_setup_retries_with_wrong_device(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the config entry enters a retry state with the wrong device."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_ID: "0x0000000000999999"},
+        options={},
+        unique_id="0x0000000000999999",
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        "Unexpected device found at 192.168.1.239; expected 0x0000000000999999, "
+        "found 0x000000000015243f; Retrying in background"
+    ) in caplog.text

@@ -61,8 +61,6 @@ async def test_config_mqtt(hass: HomeAssistant, mqtt: None) -> None:
     flow_id = step["flow_id"]
 
     with patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -89,7 +87,6 @@ async def test_config_mqtt(hass: HomeAssistant, mqtt: None) -> None:
         CONF_VERSION: "2.4",
         CONF_GATEWAY_TYPE: "MQTT",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -121,8 +118,6 @@ async def test_config_serial(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
     ), patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -146,7 +141,6 @@ async def test_config_serial(hass: HomeAssistant) -> None:
         CONF_VERSION: "2.4",
         CONF_GATEWAY_TYPE: "Serial",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -158,8 +152,6 @@ async def test_config_tcp(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
     ), patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -183,7 +175,6 @@ async def test_config_tcp(hass: HomeAssistant) -> None:
         CONF_VERSION: "2.4",
         CONF_GATEWAY_TYPE: "TCP",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -195,8 +186,6 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=False
     ), patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -215,7 +204,6 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
     errors = result["errors"]
     assert errors
     assert errors.get("base") == "cannot_connect"
-    assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
 
 
@@ -358,8 +346,6 @@ async def test_config_invalid(
         "homeassistant.components.mysensors.gateway.socket.getaddrinfo",
         side_effect=OSError,
     ), patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -375,7 +361,6 @@ async def test_config_invalid(
     assert errors
     assert err_field in errors
     assert errors[err_field] == err_string
-    assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
 
 

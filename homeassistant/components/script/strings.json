@@ -6,7 +6,48 @@
       "state": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "current": {
+          "name": "[%key:component::automation::entity_component::_::state_attributes::current::name%]"
+        },
+        "last_action": {
+          "name": "Last action"
+        },
+        "last_triggered": {
+          "name": "[%key:component::automation::entity_component::_::state_attributes::last_triggered::name%]"
+        },
+        "max": {
+          "name": "Max running scripts"
+        },
+        "mode": {
+          "name": "[%key:component::automation::entity_component::_::state_attributes::mode::name%]",
+          "state": {
+            "parallel": "[%key:component::automation::entity_component::_::state_attributes::mode::state::parallel%]",
+            "queued": "[%key:component::automation::entity_component::_::state_attributes::mode::state::queued%]",
+            "restart": "[%key:component::automation::entity_component::_::state_attributes::mode::state::restart%]",
+            "single": "[%key:component::automation::entity_component::_::state_attributes::mode::state::single%]"
+          }
+        }
       }
+    }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads all the available scripts."
+    },
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Runs the sequence of actions defined in a script."
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Stops a running script."
+    },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggle a script. Starts it, if isn't running, stops it otherwise."
     }
   }
 }

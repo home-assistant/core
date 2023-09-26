@@ -28,11 +28,10 @@ async def async_setup_entry(
 class CoolmasterCleanFilter(CoolmasterEntity, SensorEntity):
     """Representation of a unit's error code."""
 
-    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="error_code",
+        translation_key="error_code",
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Error code",
         icon="mdi:alert",
     )
 

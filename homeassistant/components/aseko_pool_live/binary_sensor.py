@@ -15,8 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AsekoDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import AsekoDataUpdateCoordinator
 from .entity import AsekoEntity
 
 
@@ -31,25 +31,24 @@ class AsekoBinarySensorDescriptionMixin:
 class AsekoBinarySensorEntityDescription(
     BinarySensorEntityDescription, AsekoBinarySensorDescriptionMixin
 ):
-    """Describes a Aseko binary sensor entity."""
+    """Describes an Aseko binary sensor entity."""
 
 
 UNIT_BINARY_SENSORS: tuple[AsekoBinarySensorEntityDescription, ...] = (
     AsekoBinarySensorEntityDescription(
         key="water_flow",
-        name="Water Flow",
+        translation_key="water_flow",
         icon="mdi:waves-arrow-right",
         value_fn=lambda unit: unit.water_flow,
     ),
     AsekoBinarySensorEntityDescription(
         key="has_alarm",
-        name="Alarm",
+        translation_key="alarm",
         value_fn=lambda unit: unit.has_alarm,
         device_class=BinarySensorDeviceClass.SAFETY,
     ),
     AsekoBinarySensorEntityDescription(
         key="has_error",
-        name="Error",
         value_fn=lambda unit: unit.has_error,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),

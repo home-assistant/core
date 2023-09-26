@@ -31,7 +31,7 @@ async def test_pr3000rt2u(hass: HomeAssistant) -> None:
 
     expected_attributes = {
         "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
+        "friendly_name": "Ups1 Battery charge",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -56,7 +56,7 @@ async def test_cp1350c(hass: HomeAssistant) -> None:
 
     expected_attributes = {
         "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
+        "friendly_name": "Ups1 Battery charge",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -80,7 +80,7 @@ async def test_5e850i(hass: HomeAssistant) -> None:
 
     expected_attributes = {
         "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
+        "friendly_name": "Ups1 Battery charge",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -104,7 +104,7 @@ async def test_5e650i(hass: HomeAssistant) -> None:
 
     expected_attributes = {
         "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
+        "friendly_name": "Ups1 Battery charge",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -131,7 +131,7 @@ async def test_backupsses600m1(hass: HomeAssistant) -> None:
 
     expected_attributes = {
         "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
+        "friendly_name": "Ups1 Battery charge",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -155,7 +155,7 @@ async def test_cp1500pfclcd(hass: HomeAssistant) -> None:
 
     expected_attributes = {
         "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
+        "friendly_name": "Ups1 Battery charge",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -179,7 +179,7 @@ async def test_dl650elcd(hass: HomeAssistant) -> None:
 
     expected_attributes = {
         "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
+        "friendly_name": "Ups1 Battery charge",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -203,7 +203,7 @@ async def test_eaton5p1550(hass: HomeAssistant) -> None:
 
     expected_attributes = {
         "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
+        "friendly_name": "Ups1 Battery charge",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -227,7 +227,7 @@ async def test_blazer_usb(hass: HomeAssistant) -> None:
 
     expected_attributes = {
         "device_class": "battery",
-        "friendly_name": "Ups1 Battery Charge",
+        "friendly_name": "Ups1 Battery charge",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case

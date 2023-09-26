@@ -10,7 +10,7 @@ from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
@@ -36,7 +36,6 @@ async def async_setup_entry(
         VerisureSmartcam.capture_smartcam.__name__,
     )
 
-    assert hass.config.config_dir
     async_add_entities(
         VerisureSmartcam(coordinator, serial_number, hass.config.config_dir)
         for serial_number in coordinator.data["cameras"]
@@ -47,6 +46,7 @@ class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera)
     """Representation of a Verisure camera."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -63,12 +63,12 @@ class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera)
         self.serial_number = serial_number
         self._directory_path = directory_path
         self._image: str | None = None
-        self._image_id = None
+        self._image_id: str | None = None
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
-        area = self.coordinator.data["cameras"][self.serial_number]["area"]
+        area = self.coordinator.data["cameras"][self.serial_number]["device"]["area"]
         return DeviceInfo(
             name=area,
             suggested_area=area,
@@ -95,16 +95,16 @@ class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera)
         """Check the contents of the image list."""
         self.coordinator.update_smartcam_imageseries()
 
-        images = self.coordinator.imageseries.get("imageSeries", [])
-        new_image_id = None
-        for image in images:
+        new_image = None
+        for image in self.coordinator.imageseries:
             if image["deviceLabel"] == self.serial_number:
-                new_image_id = image["image"][0]["imageId"]
+                new_image = image
                 break
 
-        if not new_image_id:
+        if not new_image:
             return
 
+        new_image_id = new_image["mediaId"]
         if new_image_id in ("-1", self._image_id):
             LOGGER.debug("The image is the same, or loading image_id")
             return
@@ -113,9 +113,8 @@ class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera)
         new_image_path = os.path.join(
             self._directory_path, "{}{}".format(new_image_id, ".jpg")
         )
-        self.coordinator.verisure.download_image(
-            self.serial_number, new_image_id, new_image_path
-        )
+        new_image_url = new_image["contentUrl"]
+        self.coordinator.verisure.download_image(new_image_url, new_image_path)
         LOGGER.debug("Old image_id=%s", self._image_id)
         self.delete_image()
 

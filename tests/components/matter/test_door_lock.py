@@ -11,22 +11,10 @@ from homeassistant.components.lock import (
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import ATTR_CODE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    set_node_attribute,
-    setup_integration_with_node_fixture,
-    trigger_subscription_callback,
-)
-
-
-@pytest.fixture(name="door_lock")
-async def door_lock_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a door lock node."""
-    return await setup_integration_with_node_fixture(hass, "door-lock", matter_client)
+from .common import set_node_attribute, trigger_subscription_callback
 
 
 # This tests needs to be adjusted to remove lingering tasks
@@ -104,3 +92,46 @@ async def test_lock(
     state = hass.states.get("lock.mock_door_lock")
     assert state
     assert state.state == STATE_UNKNOWN
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_lock_requires_pin(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    door_lock: MatterNode,
+) -> None:
+    """Test door lock with PINCode."""
+
+    code = "1234567"
+
+    # set RequirePINforRemoteOperation
+    set_node_attribute(door_lock, 1, 257, 51, True)
+    # set door state to unlocked
+    set_node_attribute(door_lock, 1, 257, 0, 2)
+
+    with pytest.raises(ValueError):
+        # Lock door using invalid code format
+        await trigger_subscription_callback(hass, matter_client)
+        await hass.services.async_call(
+            "lock",
+            "lock",
+            {"entity_id": "lock.mock_door_lock", ATTR_CODE: "1234"},
+            blocking=True,
+        )
+
+    # Lock door using valid code
+    await trigger_subscription_callback(hass, matter_client)
+    await hass.services.async_call(
+        "lock",
+        "lock",
+        {"entity_id": "lock.mock_door_lock", ATTR_CODE: code},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=door_lock.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.LockDoor(code.encode()),
+        timed_request_timeout_ms=1000,
+    )

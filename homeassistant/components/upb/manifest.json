@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/upb",
   "iot_class": "local_push",
   "loggers": ["upb_lib"],
-  "requirements": ["upb_lib==0.5.3"]
+  "requirements": ["upb-lib==0.5.4"]
 }

@@ -7,7 +7,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -109,6 +109,8 @@ class SyncThruMainSensor(SyncThruSensor):
     the displayed current status message.
     """
 
+    _attr_entity_registry_enabled_default = False
+
     def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, name)
@@ -125,11 +127,6 @@ class SyncThruMainSensor(SyncThruSensor):
         return {
             "display_text": self.syncthru.device_status_details(),
         }
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Disable entity by default."""
-        return False
 
 
 class SyncThruTonerSensor(SyncThruSensor):

@@ -20,26 +20,22 @@ async def test_binary_Sensor(hass: HomeAssistant) -> None:
 
     await init_integration(hass)
 
-    state = hass.states.get(
-        "binary_sensor.fake_profile_this_device_nextdns_connection_status"
-    )
+    state = hass.states.get("binary_sensor.fake_profile_device_connection_status")
     assert state
     assert state.state == STATE_ON
 
-    entry = registry.async_get(
-        "binary_sensor.fake_profile_this_device_nextdns_connection_status"
-    )
+    entry = registry.async_get("binary_sensor.fake_profile_device_connection_status")
     assert entry
     assert entry.unique_id == "xyz12_this_device_nextdns_connection_status"
 
     state = hass.states.get(
-        "binary_sensor.fake_profile_this_device_profile_connection_status"
+        "binary_sensor.fake_profile_device_profile_connection_status"
     )
     assert state
     assert state.state == STATE_OFF
 
     entry = registry.async_get(
-        "binary_sensor.fake_profile_this_device_profile_connection_status"
+        "binary_sensor.fake_profile_device_profile_connection_status"
     )
     assert entry
     assert entry.unique_id == "xyz12_this_device_profile_connection_status"
@@ -49,9 +45,7 @@ async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     await init_integration(hass)
 
-    state = hass.states.get(
-        "binary_sensor.fake_profile_this_device_nextdns_connection_status"
-    )
+    state = hass.states.get("binary_sensor.fake_profile_device_connection_status")
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == STATE_ON
@@ -64,9 +58,7 @@ async def test_availability(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states.get(
-        "binary_sensor.fake_profile_this_device_nextdns_connection_status"
-    )
+    state = hass.states.get("binary_sensor.fake_profile_device_connection_status")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
@@ -78,9 +70,7 @@ async def test_availability(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    state = hass.states.get(
-        "binary_sensor.fake_profile_this_device_nextdns_connection_status"
-    )
+    state = hass.states.get("binary_sensor.fake_profile_device_connection_status")
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == STATE_ON

@@ -37,7 +37,9 @@ def check_device_registry(
 ) -> None:
     """Ensure that the expected_device is correctly registered."""
     assert len(device_registry.devices) == 1
-    registry_entry = device_registry.async_get_device(expected_device[ATTR_IDENTIFIERS])
+    registry_entry = device_registry.async_get_device(
+        identifiers=expected_device[ATTR_IDENTIFIERS]
+    )
     assert registry_entry is not None
     assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
     assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
@@ -92,7 +94,7 @@ def check_entities_unavailable(
     for expected_entity in expected_entities:
         entity_id = expected_entity[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
+        assert registry_entry is not None, f"{entity_id} not found in registry"
         assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
         state = hass.states.get(entity_id)
         assert state.state == STATE_UNAVAILABLE

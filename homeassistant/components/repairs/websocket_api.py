@@ -12,6 +12,7 @@ from homeassistant import data_entry_flow
 from homeassistant.auth.permissions.const import POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.components.http.decorators import require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers.data_entry_flow import (
@@ -88,6 +89,7 @@ class RepairsFlowIndexView(FlowManagerIndexView):
     url = "/api/repairs/issues/fix"
     name = "api:repairs:issues:fix"
 
+    @require_admin(error=Unauthorized(permission=POLICY_EDIT))
     @RequestDataValidator(
         vol.Schema(
             {
@@ -99,9 +101,6 @@ class RepairsFlowIndexView(FlowManagerIndexView):
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle a POST request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(permission=POLICY_EDIT)
-
         try:
             result = await self._flow_mgr.async_init(
                 data["handler"],
@@ -125,18 +124,12 @@ class RepairsFlowResourceView(FlowManagerResourceView):
     url = "/api/repairs/issues/fix/{flow_id}"
     name = "api:repairs:issues:fix:resource"
 
-    async def get(self, request: web.Request, flow_id: str) -> web.Response:
+    @require_admin(error=Unauthorized(permission=POLICY_EDIT))
+    async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(permission=POLICY_EDIT)
-
         return await super().get(request, flow_id)
 
-    # pylint: disable=arguments-differ
+    @require_admin(error=Unauthorized(permission=POLICY_EDIT))
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(permission=POLICY_EDIT)
-
-        # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)

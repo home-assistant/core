@@ -1,72 +1,67 @@
 open_path:
-  name: Open Path
-  description: Open a file on the server using the default application.
   fields:
     bridge:
-      name: Bridge
-      description: The server to talk to.
       required: true
       selector:
         device:
           integration: system_bridge
     path:
-      name: Path
-      description: Path to open.
       required: true
       example: "C:\\test\\image.png"
       selector:
         text:
 open_url:
-  name: Open URL
-  description: Open a URL on the server using the default application.
   fields:
     bridge:
-      name: Bridge
-      description: The server to talk to.
       required: true
       selector:
         device:
           integration: system_bridge
     url:
-      name: URL
-      description: URL to open.
       required: true
       example: "https://www.home-assistant.io"
       selector:
         text:
 send_keypress:
-  name: Send Keyboard Keypress
-  description: Sends a keyboard keypress.
   fields:
     bridge:
-      name: Bridge
-      description: The server to send the command to.
       required: true
       selector:
         device:
           integration: system_bridge
     key:
-      name: Key
-      description: "Key to press. List available here: http://robotjs.io/docs/syntax#keys"
       required: true
       example: "audio_play"
       selector:
         text:
 send_text:
-  name: Send Keyboard Text
-  description: Sends text for the server to type.
   fields:
     bridge:
-      name: Bridge
-      description: The server to send the command to.
       required: true
       selector:
         device:
           integration: system_bridge
     text:
-      name: Text
-      description: "Text to type."
       required: true
       example: "Hello world"
       selector:
         text:
+power_command:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    command:
+      required: true
+      example: "sleep"
+      selector:
+        select:
+          options:
+            - "hibernate"
+            - "lock"
+            - "logout"
+            - "restart"
+            - "shutdown"
+            - "sleep"

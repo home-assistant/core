@@ -1,6 +1,8 @@
 """Matter sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
 
@@ -14,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
+    EntityCategory,
     Platform,
     UnitOfPressure,
     UnitOfTemperature,
@@ -22,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -37,10 +40,16 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.SENSOR, async_add_entities)
 
 
+@dataclass
+class MatterSensorEntityDescription(SensorEntityDescription, MatterEntityDescription):
+    """Describe Matter sensor entities."""
+
+
 class MatterSensor(MatterEntity, SensorEntity):
     """Representation of a Matter sensor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
+    entity_description: MatterSensorEntityDescription
 
     @callback
     def _update_from_device(self) -> None:
@@ -49,7 +58,7 @@ class MatterSensor(MatterEntity, SensorEntity):
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
         if value in (None, NullValue):
             value = None
-        elif value_convert := self._entity_info.measurement_to_ha:
+        elif value_convert := self.entity_description.measurement_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
 
@@ -58,77 +67,72 @@ class MatterSensor(MatterEntity, SensorEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
-        entity_description=SensorEntityDescription(
+        entity_description=MatterSensorEntityDescription(
             key="TemperatureSensor",
-            name="Temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
+            measurement_to_ha=lambda x: x / 100,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.TemperatureMeasurement.Attributes.MeasuredValue,),
-        measurement_to_ha=lambda x: x / 100,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
-        entity_description=SensorEntityDescription(
+        entity_description=MatterSensorEntityDescription(
             key="PressureSensor",
-            name="Pressure",
             native_unit_of_measurement=UnitOfPressure.KPA,
             device_class=SensorDeviceClass.PRESSURE,
+            measurement_to_ha=lambda x: x / 10,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.PressureMeasurement.Attributes.MeasuredValue,),
-        measurement_to_ha=lambda x: x / 10,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
-        entity_description=SensorEntityDescription(
+        entity_description=MatterSensorEntityDescription(
             key="FlowSensor",
-            name="Flow",
             native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-            device_class=SensorDeviceClass.WATER,  # what is the device class here ?
+            translation_key="flow",
+            measurement_to_ha=lambda x: x / 10,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.FlowMeasurement.Attributes.MeasuredValue,),
-        measurement_to_ha=lambda x: x / 10,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
-        entity_description=SensorEntityDescription(
+        entity_description=MatterSensorEntityDescription(
             key="HumiditySensor",
-            name="Humidity",
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.HUMIDITY,
+            measurement_to_ha=lambda x: x / 100,
         ),
         entity_class=MatterSensor,
         required_attributes=(
             clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue,
         ),
-        measurement_to_ha=lambda x: x / 100,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
-        entity_description=SensorEntityDescription(
+        entity_description=MatterSensorEntityDescription(
             key="LightSensor",
-            name="Illuminance",
             native_unit_of_measurement=LIGHT_LUX,
             device_class=SensorDeviceClass.ILLUMINANCE,
+            measurement_to_ha=lambda x: round(pow(10, ((x - 1) / 10000)), 1),
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.IlluminanceMeasurement.Attributes.MeasuredValue,),
-        measurement_to_ha=lambda x: round(pow(10, ((x - 1) / 10000)), 1),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
-        entity_description=SensorEntityDescription(
+        entity_description=MatterSensorEntityDescription(
             key="PowerSource",
-            name="Battery",
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.BATTERY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            # value has double precision
+            measurement_to_ha=lambda x: int(x / 2),
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.PowerSource.Attributes.BatPercentRemaining,),
-        # value has double precision
-        measurement_to_ha=lambda x: int(x / 2),
     ),
 ]

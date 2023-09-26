@@ -13,16 +13,16 @@ DEVICE_SENSORS_TUPLE = (
     (
         DUMMY_PLUG_DEVICE,
         [
-            "power_consumption",
-            "electric_current",
+            ("power", "power_consumption"),
+            ("current", "electric_current"),
         ],
     ),
     (
         DUMMY_WATER_HEATER_DEVICE,
         [
-            "power_consumption",
-            "electric_current",
-            "remaining_time",
+            ("power", "power_consumption"),
+            ("current", "electric_current"),
+            ("remaining_time", "remaining_time"),
         ],
     ),
 )
@@ -39,10 +39,10 @@ async def test_sensor_platform(hass: HomeAssistant, mock_bridge) -> None:
     assert len(hass.data[DOMAIN][DATA_DEVICE]) == 2
 
     for device, sensors in DEVICE_SENSORS_TUPLE:
-        for sensor in sensors:
+        for sensor, field in sensors:
             entity_id = f"sensor.{slugify(device.name)}_{sensor}"
             state = hass.states.get(entity_id)
-            assert state.state == str(getattr(device, sensor))
+            assert state.state == str(getattr(device, field))
 
 
 async def test_sensor_disabled(hass: HomeAssistant, mock_bridge) -> None:
@@ -80,13 +80,13 @@ async def test_sensor_update(hass: HomeAssistant, mock_bridge, monkeypatch) -> N
     assert mock_bridge
 
     device = DUMMY_WATER_HEATER_DEVICE
-    sensor = "power_consumption"
-    entity_id = f"sensor.{slugify(device.name)}_{sensor}"
+    field = "power_consumption"
+    entity_id = f"sensor.{slugify(device.name)}_power"
 
     state = hass.states.get(entity_id)
-    assert state.state == str(getattr(device, sensor))
+    assert state.state == str(getattr(device, field))
 
-    monkeypatch.setattr(device, sensor, 1431)
+    monkeypatch.setattr(device, field, 1431)
     mock_bridge.mock_callbacks([DUMMY_WATER_HEATER_DEVICE])
     await hass.async_block_till_done()
 

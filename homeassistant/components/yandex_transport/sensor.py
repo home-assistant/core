@@ -29,7 +29,7 @@ CONF_STOP_ID = "stop_id"
 CONF_ROUTE = "routes"
 
 DEFAULT_NAME = "Yandex Transport"
-ICON = "mdi:bus"
+
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -70,6 +70,7 @@ class DiscoverYandexTransport(SensorEntity):
     """Implementation of yandex_transport sensor."""
 
     _attr_attribution = "Data provided by maps.yandex.ru"
+    _attr_icon = "mdi:bus"
 
     def __init__(self, requester: YandexMapsRequester, stop_id, routes, name) -> None:
         """Initialize sensor."""
@@ -168,8 +169,3 @@ class DiscoverYandexTransport(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON

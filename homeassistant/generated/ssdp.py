@@ -130,6 +130,11 @@ SSDP = {
             "st": "urn:schemas-upnp-org:device:fritzbox:1",
         },
     ],
+    "frontier_silicon": [
+        {
+            "st": "urn:schemas-frontier-silicon-com:undok:fsapi:1",
+        },
+    ],
     "harmony": [
         {
             "deviceType": "urn:myharmony-com:device:harmony:1",
@@ -219,6 +224,20 @@ SSDP = {
             "manufacturer": "The OctoPrint Project",
         },
     ],
+    "openhome": [
+        {
+            "st": "urn:av-openhome-org:service:Product:1",
+        },
+        {
+            "st": "urn:av-openhome-org:service:Product:2",
+        },
+        {
+            "st": "urn:av-openhome-org:service:Product:3",
+        },
+        {
+            "st": "urn:av-openhome-org:service:Product:4",
+        },
+    ],
     "roku": [
         {
             "deviceType": "urn:roku-com:device:player:1-0",
@@ -299,6 +318,12 @@ SSDP = {
         },
         {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2",
+        },
+        {
+            "nt": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+        },
+        {
+            "nt": "urn:schemas-upnp-org:device:InternetGatewayDevice:2",
         },
     ],
     "webostv": [

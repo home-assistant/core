@@ -12,11 +12,23 @@
         }
       }
     },
-    "error": { "name_exists": "Name already exists" }
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
   },
   "system_health": {
     "info": {
       "api_endpoint_reachable": "IPMA API endpoint reachable"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "fire_risk": {
+        "name": "Fire risk"
+      }
     }
   }
 }

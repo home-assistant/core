@@ -85,6 +85,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         *,
         depth: int = 0,
         exclude: PropertyFilter | None = None,
+        include: PropertyFilter | None = None,
         matcher: PropertyMatcher | None = None,
         path: PropertyPath = (),
         visited: set[Any] | None = None,
@@ -111,10 +112,10 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serializable_data = cls._serializable_config_entry(data)
         elif dataclasses.is_dataclass(data):
             serializable_data = dataclasses.asdict(data)
-        elif isinstance(data, IntFlag) and data == 0:
+        elif isinstance(data, IntFlag):
             # The repr of an enum.IntFlag has changed between Python 3.10 and 3.11
-            # This only concerns the 0 case, which we normalize here
-            serializable_data = 0
+            # so we normalize it here.
+            serializable_data = _IntFlagWrapper(data)
         else:
             serializable_data = data
             with suppress(TypeError):
@@ -125,6 +126,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serializable_data,
             depth=depth,
             exclude=exclude,
+            include=include,
             matcher=matcher,
             path=path,
             visited=visited,
@@ -156,7 +158,6 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         )
         if serialized["via_device_id"] is not None:
             serialized["via_device_id"] = ANY
-        serialized.pop("_json_repr")
         return serialized
 
     @classmethod
@@ -164,17 +165,15 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         cls, data: er.RegistryEntry
     ) -> SerializableData:
         """Prepare a Home Assistant entity registry entry for serialization."""
-        serialized = EntityRegistryEntrySnapshot(
+        return EntityRegistryEntrySnapshot(
             attrs.asdict(data)
             | {
                 "config_entry_id": ANY,
                 "device_id": ANY,
                 "id": ANY,
+                "options": {k: dict(v) for k, v in data.options.items()},
             }
         )
-        serialized.pop("_partial_repr")
-        serialized.pop("_display_repr")
-        return serialized
 
     @classmethod
     def _serializable_flow_result(cls, data: FlowResult) -> SerializableData:
@@ -199,6 +198,17 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
                 "last_updated": ANY,
             }
         )
+
+
+class _IntFlagWrapper:
+    def __init__(self, flag: IntFlag) -> None:
+        self._flag = flag
+
+    def __repr__(self) -> str:
+        # 3.10: <ClimateEntityFeature.SWING_MODE|PRESET_MODE|FAN_MODE|TARGET_TEMPERATURE: 57>
+        # 3.11: <ClimateEntityFeature.TARGET_TEMPERATURE|FAN_MODE|PRESET_MODE|SWING_MODE: 57>
+        # Syrupy: <ClimateEntityFeature: 57>
+        return f"<{self._flag.__class__.__name__}: {self._flag.value}>"
 
 
 class HomeAssistantSnapshotExtension(AmberSnapshotExtension):

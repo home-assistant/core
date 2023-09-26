@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from yarl import URL
 
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PresenceData, XboxUpdateCoordinator
@@ -21,11 +20,15 @@ class XboxBaseSensorEntity(CoordinatorEntity[XboxUpdateCoordinator]):
         super().__init__(coordinator)
         self.xuid = xuid
         self.attribute = attribute
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self.xuid}_{self.attribute}"
+        self._attr_unique_id = f"{xuid}_{attribute}"
+        self._attr_entity_registry_enabled_default = attribute == "online"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, "xbox_live")},
+            manufacturer="Microsoft",
+            model="Xbox Live",
+            name="Xbox Live",
+        )
 
     @property
     def data(self) -> PresenceData | None:
@@ -62,19 +65,3 @@ class XboxBaseSensorEntity(CoordinatorEntity[XboxUpdateCoordinator]):
         query = dict(url.query)
         query.pop("mode", None)
         return str(url.with_query(query))
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self.attribute == "online"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, "xbox_live")},
-            manufacturer="Microsoft",
-            model="Xbox Live",
-            name="Xbox Live",
-        )

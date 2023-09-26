@@ -1,26 +1,33 @@
 """Base entity for the Nextcloud integration."""
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import StateType
+from urllib.parse import urlparse
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import NextcloudDataUpdateCoordinator
 
 
-class NextcloudEntity(Entity):
+class NextcloudEntity(CoordinatorEntity[NextcloudDataUpdateCoordinator]):
     """Base Nextcloud entity."""
 
-    _attr_icon = "mdi:cloud"
+    _attr_has_entity_name = True
 
-    def __init__(self, item: str) -> None:
-        """Initialize the Nextcloud entity."""
-        self._attr_name = item
-        self.item = item
-        self._state: StateType = None
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this sensor."""
-        return f"{self.hass.data[DOMAIN]['instance']}#{self.item}"
-
-    def update(self) -> None:
-        """Update the sensor."""
-        self._state = self.hass.data[DOMAIN][self.item]
+    def __init__(
+        self,
+        coordinator: NextcloudDataUpdateCoordinator,
+        entry: ConfigEntry,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the Nextcloud sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}#{description.key}"
+        self._attr_device_info = DeviceInfo(
+            configuration_url=coordinator.url,
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=urlparse(coordinator.url).netloc,
+            sw_version=coordinator.data.get("system_version"),
+        )
+        self.entity_description = description
