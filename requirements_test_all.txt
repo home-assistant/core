@@ -1593,7 +1593,7 @@ python-matter-server==3.7.0
 python-miio==0.5.12
 
 # homeassistant.components.myq
-python-myq==3.1.8
+python-myq==3.1.9
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
