@@ -305,6 +305,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         advertisement_monotonic_time: float,
     ) -> None:
         """Call the registered callback."""
+        self.scanning = not self._connecting
         self._last_detection = advertisement_monotonic_time
         try:
             prev_discovery = self._discovered_device_advertisement_datas[address]
