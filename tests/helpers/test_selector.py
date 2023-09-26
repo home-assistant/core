@@ -481,6 +481,26 @@ def test_config_entry_selector_schema(
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {"options": ["DE", "SE"]},
+            ("DE", "SE"),
+            ("cat", 0, None, ["red"]),
+        ),
+        (
+            {"options": ["DE", "SE"], "multiple": True},
+            (["DE"], ["DE", "SE"], []),
+            ("cat", 0, None, "red"),
+        ),
+    ),
+)
+def test_country_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test country selector."""
+    _test_selector("country", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
     (({}, ("00:00:00",), ("blah", None)),),
 )
 def test_time_selector_schema(schema, valid_selections, invalid_selections) -> None:

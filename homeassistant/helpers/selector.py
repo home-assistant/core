@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
+from homeassistant.generated.countries import COUNTRIES
 from homeassistant.util import decorator
 from homeassistant.util.yaml import dumper
 
@@ -562,6 +563,44 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
         """Validate the passed selection."""
         agent: str = vol.Schema(str)(data)
         return agent
+
+
+class CountrySelectorConfig(TypedDict, total=False):
+    """Class to represent a country selector config."""
+
+    options: Required[Sequence[str]]
+    multiple: bool
+
+
+@SELECTORS.register("country")
+class CountrySelector(Selector[CountrySelectorConfig]):
+    """Selector for an single-choice country select."""
+
+    selector_type = "country"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("options"): vol.All(vol.Any([str], COUNTRIES)),
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: CountrySelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        options: Sequence[str] = []
+        if config_options := self.config["options"]:
+            options = config_options
+
+        parent_schema = vol.In(options)
+        if not self.config["multiple"]:
+            return parent_schema(vol.Schema(str)(data))
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
 class DateSelectorConfig(TypedDict):
