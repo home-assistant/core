@@ -44,7 +44,9 @@ class AfterShipConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title="AfterShip", data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema({CONF_API_KEY: str}), errors=errors
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            errors=errors,
         )
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
