@@ -1,8 +1,7 @@
-"""Tests for binary sensor entity."""
+"""Tests for the Withings component."""
 from unittest.mock import AsyncMock
 
 from aiohttp.client_exceptions import ClientResponseError
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from withings_api.common import NotifyAppli
 
@@ -21,7 +20,6 @@ async def test_binary_sensor(
     withings: AsyncMock,
     webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test binary sensor."""
     await setup_integration(hass, webhook_config_entry)
