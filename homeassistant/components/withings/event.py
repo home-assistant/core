@@ -49,7 +49,11 @@ class WithingsSleepEvent(EventEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.async_on_remove(self.hass.bus.async_listen(f"withings_{self._user_id}_sleep", self.handle_event))
+        self.async_on_remove(
+            self.hass.bus.async_listen(
+                f"withings_{self._user_id}_sleep", self.handle_event
+            )
+        )
 
     @callback
     def handle_event(self, event: Event) -> None:
