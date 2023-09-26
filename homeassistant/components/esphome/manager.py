@@ -16,8 +16,8 @@ from aioesphomeapi import (
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArgType,
-    VoiceAssistantEventType,
     VoiceAssistantAudioSettings,
+    VoiceAssistantEventType,
 )
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
