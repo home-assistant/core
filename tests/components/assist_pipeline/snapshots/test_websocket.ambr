@@ -281,7 +281,7 @@
     'wake_word_output': dict({
       'queued_audio': None,
       'timestamp': 1000,
-      'ww_id': 'test_ww',
+      'wake_word_id': 'test_ww',
     }),
   })
 # ---
@@ -379,7 +379,7 @@
   dict({
     'wake_word_output': dict({
       'timestamp': 0,
-      'ww_id': 'test_ww',
+      'wake_word_id': 'test_ww',
     }),
   })
 # ---
