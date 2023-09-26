@@ -374,7 +374,7 @@ async def test_activity_scope_config_entry(
     assert await integration_setup()
 
     states = hass.states.async_all()
-    assert [s.entity_id for s in states] == [
+    assert {s.entity_id for s in states} == {
         "sensor.activity_calories",
         "sensor.calories",
         "sensor.distance",
@@ -385,7 +385,7 @@ async def test_activity_scope_config_entry(
         "sensor.minutes_sedentary",
         "sensor.minutes_very_active",
         "sensor.steps",
-    ]
+    }
 
 
 @pytest.mark.parametrize(
@@ -408,9 +408,9 @@ async def test_heartrate_scope_config_entry(
     assert await integration_setup()
 
     states = hass.states.async_all()
-    assert [s.entity_id for s in states] == [
+    assert {s.entity_id for s in states} == {
         "sensor.resting_heart_rate",
-    ]
+    }
 
 
 @pytest.mark.parametrize(
@@ -443,7 +443,7 @@ async def test_sleep_scope_config_entry(
     assert await integration_setup()
 
     states = hass.states.async_all()
-    assert [s.entity_id for s in states] == [
+    assert {s.entity_id for s in states} == {
         "sensor.awakenings_count",
         "sensor.sleep_efficiency",
         "sensor.minutes_after_wakeup",
@@ -452,7 +452,7 @@ async def test_sleep_scope_config_entry(
         "sensor.sleep_minutes_to_fall_asleep",
         "sensor.sleep_time_in_bed",
         "sensor.sleep_start_time",
-    ]
+    }
 
 
 @pytest.mark.parametrize(
