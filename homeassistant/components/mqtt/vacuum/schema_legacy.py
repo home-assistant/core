@@ -215,9 +215,8 @@ async def async_setup_entity_legacy(
 class MqttVacuum(MqttEntity, VacuumEntity):
     """Representation of a MQTT-controlled legacy vacuum."""
 
-    _attr_battery_level: int | None = 0
-    _attr_is_on: bool | None = False
-    _attr_fan_speed: str | None = "unknown"
+    _attr_battery_level = 0
+    _attr_is_on = False
     _attributes_extra_blocked = MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED
     _charging: bool = False
     _cleaning: bool = False

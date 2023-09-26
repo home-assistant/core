@@ -608,7 +608,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     """Representation of an MQTT climate device."""
 
     _attr_fan_mode: str | None = None
-    _attr_hvac_action: HVACAction | None = None
     _attr_hvac_mode: HVACMode | None = None
     _attr_is_aux_heat: bool | None = None
     _attr_swing_mode: str | None = None
