@@ -618,21 +618,11 @@ async def test_wake_word_detection_aborted(
     )
     await pipeline_input.validate()
 
+    updates = pipeline.to_json()
+    updates.pop("id")
     await pipeline_store.async_update_item(
         pipeline_id,
-        {
-            "conversation_engine": pipeline.conversation_engine,
-            "conversation_language": pipeline.conversation_language,
-            "language": pipeline.language,
-            "name": pipeline.name,
-            "stt_engine": pipeline.stt_engine,
-            "stt_language": pipeline.stt_language,
-            "tts_engine": pipeline.tts_engine,
-            "tts_language": pipeline.tts_language,
-            "tts_voice": pipeline.tts_voice,
-            "wake_word_entity": pipeline.wake_word_entity,
-            "wake_word_id": pipeline.wake_word_id,
-        },
+        updates,
     )
     await pipeline_input.execute()
 
