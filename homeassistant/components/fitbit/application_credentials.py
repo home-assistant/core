@@ -1,4 +1,8 @@
-"""application_credentials platform the fitbit integration."""
+"""application_credentials platform the fitbit integration.
+
+See https://dev.fitbit.com/build/reference/web-api/authorization/ for additional
+details on Fitbit authorization.
+"""
 
 import base64
 import logging
@@ -33,13 +37,29 @@ class FitbitOAuth2Implementation(AuthImplementation):
             "code": external_data["code"],
             "redirect_uri": external_data["state"]["redirect_uri"],
         }
+        resp = await session.post(self.token_url, data=data, headers=self._headers)
+        resp.raise_for_status()
+        return cast(dict, await resp.json())
+
+    async def _token_request(self, data: dict) -> dict:
+        """Make a token request."""
+        session = async_get_clientsession(self.hass)
+
+        data["client_id"] = self.client_id
+        if self.client_secret is not None:
+            data["client_secret"] = self.client_secret
+
+        resp = await session.post(self.token_url, data=data, headers=self._headers)
+        resp.raise_for_status()
+        return cast(dict, await resp.json())
+
+    @property
+    def _headers(self) -> dict[str, str]:
+        """Build necessary authorization headers."""
         basic_auth = base64.b64encode(
             f"{self.client_id}:{self.client_secret}".encode()
         ).decode()
-        headers = {"Authorization": f"Basic {basic_auth}"}
-        resp = await session.post(self.token_url, data=data, headers=headers)
-        resp.raise_for_status()
-        return cast(dict, await resp.json())
+        return {"Authorization": f"Basic {basic_auth}"}
 
 
 async def async_get_auth_implementation(

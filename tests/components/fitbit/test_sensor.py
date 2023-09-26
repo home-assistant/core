@@ -341,3 +341,165 @@ async def test_sleep_time_clock_format(
     state = hass.states.get("sensor.sleep_start_time")
     assert state
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("scopes"),
+    [(["activity"])],
+)
+async def test_activity_scope_config_entry(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    register_timeseries: Callable[[str, dict[str, Any]], None],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test activity sensors are enabled."""
+
+    for api_resource in (
+        "activities/activityCalories",
+        "activities/calories",
+        "activities/distance",
+        "activities/elevation",
+        "activities/floors",
+        "activities/minutesFairlyActive",
+        "activities/minutesLightlyActive",
+        "activities/minutesSedentary",
+        "activities/minutesVeryActive",
+        "activities/steps",
+    ):
+        register_timeseries(
+            api_resource, timeseries_response(api_resource.replace("/", "-"), "0")
+        )
+    assert await integration_setup()
+
+    states = hass.states.async_all()
+    assert [s.entity_id for s in states] == [
+        "sensor.activity_calories",
+        "sensor.calories",
+        "sensor.distance",
+        "sensor.elevation",
+        "sensor.floors",
+        "sensor.minutes_fairly_active",
+        "sensor.minutes_lightly_active",
+        "sensor.minutes_sedentary",
+        "sensor.minutes_very_active",
+        "sensor.steps",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("scopes"),
+    [(["heartrate"])],
+)
+async def test_heartrate_scope_config_entry(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    register_timeseries: Callable[[str, dict[str, Any]], None],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test heartrate sensors are enabled."""
+
+    register_timeseries(
+        "activities/heart",
+        timeseries_response("activities-heart", {"restingHeartRate": "0"}),
+    )
+    assert await integration_setup()
+
+    states = hass.states.async_all()
+    assert [s.entity_id for s in states] == [
+        "sensor.resting_heart_rate",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("scopes"),
+    [(["sleep"])],
+)
+async def test_sleep_scope_config_entry(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    register_timeseries: Callable[[str, dict[str, Any]], None],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sleep sensors are enabled."""
+
+    for api_resource in (
+        "sleep/startTime",
+        "sleep/timeInBed",
+        "sleep/minutesToFallAsleep",
+        "sleep/minutesAwake",
+        "sleep/minutesAsleep",
+        "sleep/minutesAfterWakeup",
+        "sleep/efficiency",
+        "sleep/awakeningsCount",
+    ):
+        register_timeseries(
+            api_resource,
+            timeseries_response(api_resource.replace("/", "-"), "0"),
+        )
+    assert await integration_setup()
+
+    states = hass.states.async_all()
+    assert [s.entity_id for s in states] == [
+        "sensor.awakenings_count",
+        "sensor.sleep_efficiency",
+        "sensor.minutes_after_wakeup",
+        "sensor.sleep_minutes_asleep",
+        "sensor.sleep_minutes_awake",
+        "sensor.sleep_minutes_to_fall_asleep",
+        "sensor.sleep_time_in_bed",
+        "sensor.sleep_start_time",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("scopes"),
+    [(["weight"])],
+)
+async def test_weight_scope_config_entry(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    register_timeseries: Callable[[str, dict[str, Any]], None],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sleep sensors are enabled."""
+
+    register_timeseries("body/weight", timeseries_response("body-weight", "0"))
+    assert await integration_setup()
+
+    states = hass.states.async_all()
+    assert [s.entity_id for s in states] == [
+        "sensor.weight",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("scopes", "devices_response"),
+    [(["settings"], [DEVICE_RESPONSE_CHARGE_2])],
+)
+async def test_settings_scope_config_entry(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    register_timeseries: Callable[[str, dict[str, Any]], None],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test heartrate sensors are enabled."""
+
+    for api_resource in ("activities/heart",):
+        register_timeseries(
+            api_resource,
+            timeseries_response(
+                api_resource.replace("/", "-"), {"restingHeartRate": "0"}
+            ),
+        )
+    assert await integration_setup()
+
+    states = hass.states.async_all()
+    assert [s.entity_id for s in states] == [
+        "sensor.charge_2_battery",
+    ]

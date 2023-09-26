@@ -127,6 +127,8 @@ class FitbitSensorEntityDescription(SensorEntityDescription):
     unit_type: str | None = None
     value_fn: Callable[[dict[str, Any]], Any] = _default_value_fn
     unit_fn: Callable[[FitbitUnitSystem], str | None] = lambda x: None
+    scope: str | None = None
+    disabled_by_default: bool = False
 
 
 FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
@@ -135,18 +137,22 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Activity Calories",
         native_unit_of_measurement="cal",
         icon="mdi:fire",
+        scope="activity",
     ),
     FitbitSensorEntityDescription(
         key="activities/calories",
         name="Calories",
         native_unit_of_measurement="cal",
         icon="mdi:fire",
+        scope="activity",
     ),
     FitbitSensorEntityDescription(
         key="activities/caloriesBMR",
         name="Calories BMR",
         native_unit_of_measurement="cal",
         icon="mdi:fire",
+        scope="activity",
+        entity_registry_enabled_default=False,
     ),
     FitbitSensorEntityDescription(
         key="activities/distance",
@@ -155,6 +161,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.DISTANCE,
         value_fn=_distance_value_fn,
         unit_fn=_distance_unit,
+        scope="activity",
     ),
     FitbitSensorEntityDescription(
         key="activities/elevation",
@@ -162,12 +169,14 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         icon="mdi:walk",
         device_class=SensorDeviceClass.DISTANCE,
         unit_fn=_elevation_unit,
+        scope="activity",
     ),
     FitbitSensorEntityDescription(
         key="activities/floors",
         name="Floors",
         native_unit_of_measurement="floors",
         icon="mdi:walk",
+        scope="activity",
     ),
     FitbitSensorEntityDescription(
         key="activities/heart",
@@ -175,6 +184,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement="bpm",
         icon="mdi:heart-pulse",
         value_fn=lambda result: int(result["value"]["restingHeartRate"]),
+        scope="heartrate",
     ),
     FitbitSensorEntityDescription(
         key="activities/minutesFairlyActive",
@@ -182,6 +192,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DURATION,
+        scope="activity",
     ),
     FitbitSensorEntityDescription(
         key="activities/minutesLightlyActive",
@@ -189,6 +200,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DURATION,
+        scope="activity",
     ),
     FitbitSensorEntityDescription(
         key="activities/minutesSedentary",
@@ -196,6 +208,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:seat-recline-normal",
         device_class=SensorDeviceClass.DURATION,
+        scope="activity",
     ),
     FitbitSensorEntityDescription(
         key="activities/minutesVeryActive",
@@ -203,24 +216,30 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:run",
         device_class=SensorDeviceClass.DURATION,
+        scope="activity",
     ),
     FitbitSensorEntityDescription(
         key="activities/steps",
         name="Steps",
         native_unit_of_measurement="steps",
         icon="mdi:walk",
+        scope="activity",
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/activityCalories",
         name="Tracker Activity Calories",
         native_unit_of_measurement="cal",
         icon="mdi:fire",
+        scope="activity",
+        entity_registry_enabled_default=False,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/calories",
         name="Tracker Calories",
         native_unit_of_measurement="cal",
         icon="mdi:fire",
+        scope="activity",
+        entity_registry_enabled_default=False,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/distance",
@@ -229,6 +248,8 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.DISTANCE,
         value_fn=_distance_value_fn,
         unit_fn=_distance_unit,
+        scope="activity",
+        entity_registry_enabled_default=False,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/elevation",
@@ -236,12 +257,16 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         icon="mdi:walk",
         device_class=SensorDeviceClass.DISTANCE,
         unit_fn=_elevation_unit,
+        scope="activity",
+        entity_registry_enabled_default=False,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/floors",
         name="Tracker Floors",
         native_unit_of_measurement="floors",
         icon="mdi:walk",
+        scope="activity",
+        entity_registry_enabled_default=False,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/minutesFairlyActive",
@@ -249,6 +274,8 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DURATION,
+        scope="activity",
+        entity_registry_enabled_default=False,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/minutesLightlyActive",
@@ -256,6 +283,8 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DURATION,
+        scope="activity",
+        entity_registry_enabled_default=False,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/minutesSedentary",
@@ -263,6 +292,8 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:seat-recline-normal",
         device_class=SensorDeviceClass.DURATION,
+        scope="activity",
+        entity_registry_enabled_default=False,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/minutesVeryActive",
@@ -270,12 +301,16 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:run",
         device_class=SensorDeviceClass.DURATION,
+        scope="activity",
+        entity_registry_enabled_default=False,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/steps",
         name="Tracker Steps",
         native_unit_of_measurement="steps",
         icon="mdi:walk",
+        scope="activity",
+        entity_registry_enabled_default=False,
     ),
     FitbitSensorEntityDescription(
         key="body/bmi",
@@ -284,6 +319,8 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         icon="mdi:human",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_body_value_fn,
+        scope="weight",
+        entity_registry_enabled_default=False,
     ),
     FitbitSensorEntityDescription(
         key="body/fat",
@@ -292,6 +329,8 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         icon="mdi:human",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_body_value_fn,
+        scope="weight",
+        entity_registry_enabled_default=False,
     ),
     FitbitSensorEntityDescription(
         key="body/weight",
@@ -301,12 +340,14 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.WEIGHT,
         value_fn=_body_value_fn,
         unit_fn=_weight_unit,
+        scope="weight",
     ),
     FitbitSensorEntityDescription(
         key="sleep/awakeningsCount",
         name="Awakenings Count",
         native_unit_of_measurement="times awaken",
         icon="mdi:sleep",
+        scope="sleep",
     ),
     FitbitSensorEntityDescription(
         key="sleep/efficiency",
@@ -314,6 +355,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:sleep",
         state_class=SensorStateClass.MEASUREMENT,
+        scope="sleep",
     ),
     FitbitSensorEntityDescription(
         key="sleep/minutesAfterWakeup",
@@ -321,6 +363,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
+        scope="sleep",
     ),
     FitbitSensorEntityDescription(
         key="sleep/minutesAsleep",
@@ -328,6 +371,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
+        scope="sleep",
     ),
     FitbitSensorEntityDescription(
         key="sleep/minutesAwake",
@@ -335,6 +379,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
+        scope="sleep",
     ),
     FitbitSensorEntityDescription(
         key="sleep/minutesToFallAsleep",
@@ -342,6 +387,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
+        scope="sleep",
     ),
     FitbitSensorEntityDescription(
         key="sleep/timeInBed",
@@ -349,6 +395,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:hotel",
         device_class=SensorDeviceClass.DURATION,
+        scope="sleep",
     ),
 )
 
@@ -357,18 +404,21 @@ SLEEP_START_TIME = FitbitSensorEntityDescription(
     key="sleep/startTime",
     name="Sleep Start Time",
     icon="mdi:clock",
+    scope="sleep",
 )
 SLEEP_START_TIME_12HR = FitbitSensorEntityDescription(
     key="sleep/startTime",
     name="Sleep Start Time",
     icon="mdi:clock",
     value_fn=_clock_format_12h,
+    scope="sleep",
 )
 
 FITBIT_RESOURCE_BATTERY = FitbitSensorEntityDescription(
     key="devices/battery",
     name="Battery",
     icon="mdi:battery",
+    scope="settings",
 )
 
 FITBIT_RESOURCES_KEYS: Final[list[str]] = [
@@ -481,14 +531,32 @@ async def async_setup_entry(
 
     api: FitbitApi = hass.data[DOMAIN][entry.entry_id]
 
-    (user_profile, devices, unit_system) = await asyncio.gather(
-        api.async_get_user_profile(),
-        api.async_get_devices(),
-        api.async_get_unit_system(),
+    # Note: This will only be one rpc since it will
+    (user_profile, unit_system) = await asyncio.gather(
+        api.async_get_user_profile(), api.async_get_unit_system()
     )
 
     clock_format = entry.data.get(CONF_CLOCK_FORMAT)
-    monitored_resources = entry.data.get(CONF_MONITORED_RESOURCES, [])
+
+    # Originally entities were configured explicitly from yaml config. Newer
+    # configurations will infer which entities to enable based on the allowed
+    # scopes the user selected during OAuth. When creating entities based on
+    # scopes, some entities are disabled by default.
+    monitored_resources = entry.data.get(CONF_MONITORED_RESOURCES)
+    scopes = entry.data["token"].get("scope", "").split(" ")
+
+    def is_explict_enable(description: FitbitSensorEntityDescription) -> bool:
+        """Determine if entity is enabled by default."""
+        if monitored_resources is not None:
+            return description.key in monitored_resources
+        return False
+
+    def is_allowed_resource(description: FitbitSensorEntityDescription) -> bool:
+        """Determine if an entity is allowed to be created."""
+        if is_explict_enable(description):
+            return True
+        return description.scope in scopes
+
     resource_list = [
         *FITBIT_RESOURCES_LIST,
         SLEEP_START_TIME_12HR if clock_format == "12H" else SLEEP_START_TIME,
@@ -500,11 +568,13 @@ async def async_setup_entry(
             user_profile.encoded_id,
             description,
             units=description.unit_fn(unit_system),
+            enable_default_override=is_explict_enable(description),
         )
         for description in resource_list
-        if description.key in monitored_resources
+        if is_allowed_resource(description)
     ]
-    if "devices/battery" in monitored_resources:
+    if is_allowed_resource(FITBIT_RESOURCE_BATTERY):
+        devices = await api.async_get_devices()
         entities.extend(
             [
                 FitbitSensor(
@@ -512,6 +582,7 @@ async def async_setup_entry(
                     user_profile.encoded_id,
                     FITBIT_RESOURCE_BATTERY,
                     device=device,
+                    enable_default_override=is_explict_enable(FITBIT_RESOURCE_BATTERY),
                 )
                 for device in devices
             ]
@@ -532,6 +603,7 @@ class FitbitSensor(SensorEntity):
         description: FitbitSensorEntityDescription,
         device: FitbitDevice | None = None,
         units: str | None = None,
+        enable_default_override: bool = False,
     ) -> None:
         """Initialize the Fitbit sensor."""
         self.entity_description = description
@@ -545,6 +617,9 @@ class FitbitSensor(SensorEntity):
 
         if units is not None:
             self._attr_native_unit_of_measurement = units
+
+        if enable_default_override:
+            self._attr_entity_registry_enabled_default = True
 
     @property
     def icon(self) -> str | None:
