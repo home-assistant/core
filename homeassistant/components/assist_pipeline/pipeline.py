@@ -54,6 +54,7 @@ from .error import (
     PipelineNotFound,
     SpeechToTextError,
     TextToSpeechError,
+    WakeWordDetectionAborted,
     WakeWordDetectionError,
     WakeWordTimeoutError,
 )
@@ -470,11 +471,13 @@ class PipelineRun:
     audio_settings: AudioSettings = field(default_factory=AudioSettings)
 
     id: str = field(default_factory=ulid_util.ulid)
-    stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False)
-    tts_engine: str = field(init=False)
+    stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False, repr=False)
+    tts_engine: str = field(init=False, repr=False)
     tts_options: dict | None = field(init=False, default=None)
-    wake_word_entity_id: str = field(init=False)
-    wake_word_entity: wake_word.WakeWordDetectionEntity = field(init=False)
+    wake_word_entity_id: str = field(init=False, repr=False)
+    wake_word_entity: wake_word.WakeWordDetectionEntity = field(init=False, repr=False)
+
+    abort_wake_word_detection: bool = field(init=False, default=False)
 
     debug_recording_thread: Thread | None = None
     """Thread that records audio to debug_recording_dir"""
@@ -485,7 +488,7 @@ class PipelineRun:
     audio_processor: AudioProcessor | None = None
     """VAD/noise suppression/auto gain"""
 
-    audio_processor_buffer: AudioBuffer = field(init=False)
+    audio_processor_buffer: AudioBuffer = field(init=False, repr=False)
     """Buffer used when splitting audio into chunks for audio processing"""
 
     def __post_init__(self) -> None:
@@ -504,6 +507,9 @@ class PipelineRun:
                 size_limit=STORED_PIPELINE_RUNS
             )
         pipeline_data.pipeline_debug[self.pipeline.id][self.id] = PipelineRunDebug()
+        if self.pipeline.id not in pipeline_data.pipeline_runs:
+            pipeline_data.pipeline_runs[self.pipeline.id] = []
+        pipeline_data.pipeline_runs[self.pipeline.id].append(self)
 
         # Initialize with audio settings
         self.audio_processor_buffer = AudioBuffer(AUDIO_PROCESSOR_BYTES)
@@ -547,6 +553,9 @@ class PipelineRun:
                 PipelineEventType.RUN_END,
             )
         )
+
+        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        pipeline_data.pipeline_runs[self.pipeline.id].remove(self)
 
     async def prepare_wake_word_detection(self) -> None:
         """Prepare wake-word-detection."""
@@ -638,6 +647,8 @@ class PipelineRun:
                 # All audio kept from right before the wake word was detected as
                 # a single chunk.
                 audio_chunks_for_stt.extend(stt_audio_buffer)
+        except WakeWordDetectionAborted:
+            raise
         except WakeWordTimeoutError:
             _LOGGER.debug("Timeout during wake word detection")
             raise
@@ -712,6 +723,9 @@ class PipelineRun:
                     raise WakeWordTimeoutError(
                         code="wake-word-timeout", message="Wake word was not detected"
                     )
+
+            if self.abort_wake_word_detection:
+                raise WakeWordDetectionAborted
 
     async def prepare_speech_to_text(self, metadata: stt.SpeechMetadata) -> None:
         """Prepare speech-to-text."""
@@ -1408,6 +1422,12 @@ class PipelineStorageCollection(
 
     async def _update_data(self, item: Pipeline, update_data: dict) -> Pipeline:
         """Return a new updated item."""
+        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        if pipeline_runs := pipeline_data.pipeline_runs.get(item.id):
+            # Create a temporary list in case the list is modified while we iterate
+            for pipeline_run in list(pipeline_runs):
+                pipeline_run.abort_wake_word_detection = True
+
         update_data = validate_language(update_data)
         return Pipeline(id=item.id, **update_data)
 
@@ -1558,8 +1578,14 @@ class PipelineStorageCollectionWebsocket(
 class PipelineData:
     """Store and debug data stored in hass.data."""
 
-    pipeline_debug: dict[str, LimitedSizeDict[str, PipelineRunDebug]]
     pipeline_store: PipelineStorageCollection
+
+    pipeline_debug: dict[str, LimitedSizeDict[str, PipelineRunDebug]] = field(
+        default_factory=dict, init=False
+    )
+    pipeline_runs: dict[str, list[PipelineRun]] = field(
+        default_factory=dict, init=False
+    )
     pipeline_devices: set[str] = field(default_factory=set, init=False)
 
 
@@ -1612,4 +1638,4 @@ async def async_setup_pipeline_store(hass: HomeAssistant) -> PipelineData:
         PIPELINE_FIELDS,
         PIPELINE_FIELDS,
     ).async_setup(hass)
-    return PipelineData({}, pipeline_store)
+    return PipelineData(pipeline_store)
