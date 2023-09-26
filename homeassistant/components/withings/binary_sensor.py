@@ -47,7 +47,11 @@ class WithingSleepBinarySensor(BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Listen to events after being added."""
         await super().async_added_to_hass()
-        self.hass.bus.async_listen(f"withings_{self._user_id}_sleep", self.handle_event)
+        self.async_on_remove(
+            self.hass.bus.async_listen(
+                f"withings_{self._user_id}_sleep", self.handle_event
+            )
+        )
 
     @callback
     def handle_event(self, event: Event) -> None:
