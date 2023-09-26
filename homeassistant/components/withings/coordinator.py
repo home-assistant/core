@@ -76,7 +76,6 @@ WITHINGS_MEASURE_TYPE_MAP: dict[
 class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]]):
     """Base coordinator."""
 
-    in_bed: bool | None = None
     config_entry: ConfigEntry
 
     def __init__(
