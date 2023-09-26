@@ -1,7 +1,7 @@
 """Support for Modbus Register sensors."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -106,12 +107,16 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         """Update the state of the sensor."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
+        self._cancel_call = None
         raw_result = await self._hub.async_pb_call(
             self._slave, self._address, self._count, self._input_type
         )
         if raw_result is None:
             if self._lazy_errors:
                 self._lazy_errors -= 1
+                self._cancel_call = async_call_later(
+                    self.hass, timedelta(seconds=1), self.async_update
+                )
                 return
             self._lazy_errors = self._lazy_error_count
             self._attr_available = False

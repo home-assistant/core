@@ -77,8 +77,8 @@ class TriggerBaseEntity(Entity):
     """Template Base entity based on trigger data."""
 
     domain: str
-    extra_template_keys: tuple | None = None
-    extra_template_keys_complex: tuple | None = None
+    extra_template_keys: tuple[str, ...] | None = None
+    extra_template_keys_complex: tuple[str, ...] | None = None
     _unique_id: str | None
 
     def __init__(
@@ -94,7 +94,7 @@ class TriggerBaseEntity(Entity):
         self._config = config
 
         self._static_rendered = {}
-        self._to_render_simple = []
+        self._to_render_simple: list[str] = []
         self._to_render_complex: list[str] = []
 
         for itm in (

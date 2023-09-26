@@ -49,6 +49,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
+    CONF_SWAP_WORD_BYTE,
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
     RTUOVERTCP,
@@ -182,6 +183,30 @@ async def test_nan_validator() -> None:
             CONF_DATA_TYPE: DataType.CUSTOM,
             CONF_STRUCTURE: ">i",
         },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_SLAVE: 5,
+            CONF_DATA_TYPE: DataType.INT32,
+            CONF_SWAP: CONF_SWAP_BYTE,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_SLAVE: 5,
+            CONF_DATA_TYPE: DataType.INT32,
+            CONF_SWAP: CONF_SWAP_WORD,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_SLAVE: 5,
+            CONF_DATA_TYPE: DataType.INT32,
+            CONF_SWAP: CONF_SWAP_WORD_BYTE,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_SLAVE: 5,
+            CONF_DATA_TYPE: DataType.INT16,
+            CONF_SWAP: CONF_SWAP_BYTE,
+        },
     ],
 )
 async def test_ok_struct_validator(do_config) -> None:
@@ -253,6 +278,16 @@ async def test_ok_struct_validator(do_config) -> None:
             CONF_COUNT: 2,
             CONF_SLAVE_COUNT: 2,
             CONF_DATA_TYPE: DataType.INT32,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_DATA_TYPE: DataType.INT16,
+            CONF_SWAP: CONF_SWAP_WORD,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_DATA_TYPE: DataType.INT16,
+            CONF_SWAP: CONF_SWAP_WORD_BYTE,
         },
     ],
 )

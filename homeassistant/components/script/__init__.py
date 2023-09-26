@@ -563,7 +563,8 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         )
         coro = self._async_run(variables, context)
         if wait:
-            return await coro
+            script_result = await coro
+            return script_result.service_response if script_result else None
 
         # Caller does not want to wait for called script to finish so let script run in
         # separate Task. Make a new empty script stack; scripts are allowed to

@@ -26,8 +26,8 @@ from . import setup_mocked_integration
         ("sensor.i3_rex_remaining_fuel", IMPERIAL, "1.59", "gal"),
         ("sensor.i3_rex_remaining_range_fuel", METRIC, "105", "km"),
         ("sensor.i3_rex_remaining_range_fuel", IMPERIAL, "65.24", "mi"),
-        ("sensor.i3_rex_remaining_fuel_percent", METRIC, "65", "%"),
-        ("sensor.i3_rex_remaining_fuel_percent", IMPERIAL, "65", "%"),
+        ("sensor.m340i_xdrive_remaining_fuel_percent", METRIC, "80", "%"),
+        ("sensor.m340i_xdrive_remaining_fuel_percent", IMPERIAL, "80", "%"),
     ],
 )
 async def test_unit_conversion(

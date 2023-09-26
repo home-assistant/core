@@ -148,7 +148,6 @@ class ZHAGateway:
         self._log_relay_handler = LogRelayHandler(hass, self)
         self.config_entry = config_entry
         self._unsubs: list[Callable[[], None]] = []
-        self.initialized: bool = False
 
     def get_application_controller_data(self) -> tuple[ControllerApplication, dict]:
         """Get an uninitialized instance of a zigpy `ControllerApplication`."""
@@ -199,12 +198,15 @@ class ZHAGateway:
         self.ha_entity_registry = er.async_get(self._hass)
 
         app_controller_cls, app_config = self.get_application_controller_data()
+        self.application_controller = await app_controller_cls.new(
+            config=app_config,
+            auto_form=False,
+            start_radio=False,
+        )
 
         for attempt in range(STARTUP_RETRIES):
             try:
-                self.application_controller = await app_controller_cls.new(
-                    app_config, auto_form=True, start_radio=True
-                )
+                await self.application_controller.startup(auto_form=True)
             except zigpy.exceptions.TransientConnectionError as exc:
                 raise ConfigEntryNotReady from exc
             except Exception as exc:  # pylint: disable=broad-except
@@ -223,21 +225,34 @@ class ZHAGateway:
             else:
                 break
 
-        self.application_controller.add_listener(self)
-        self.application_controller.groups.add_listener(self)
         self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(self.coordinator_ieee)
+
+        self.coordinator_zha_device = self._async_get_or_create_device(
+            self._find_coordinator_device(), restored=True
+        )
+
         self.async_load_devices()
         self.async_load_groups()
-        self.initialized = True
+
+        self.application_controller.add_listener(self)
+        self.application_controller.groups.add_listener(self)
+
+    def _find_coordinator_device(self) -> zigpy.device.Device:
+        if last_backup := self.application_controller.backups.most_recent_backup():
+            zigpy_coordinator = self.application_controller.get_device(
+                ieee=last_backup.node_info.ieee
+            )
+        else:
+            zigpy_coordinator = self.application_controller.get_device(nwk=0x0000)
+
+        return zigpy_coordinator
 
     @callback
     def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""
         for zigpy_device in self.application_controller.devices.values():
             zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
-            if zha_device.ieee == self.coordinator_ieee:
-                self.coordinator_zha_device = zha_device
             delta_msg = "not known"
             if zha_device.last_seen is not None:
                 delta = round(time.time() - zha_device.last_seen)
@@ -735,7 +750,15 @@ class ZHAGateway:
             unsubscribe()
         for device in self.devices.values():
             device.async_cleanup_handles()
-        await self.application_controller.shutdown()
+        # shutdown is called when the config entry unloads are processed
+        # there are cases where unloads are processed because of a failure of
+        # some sort and the application controller may not have been
+        # created yet
+        if (
+            hasattr(self, "application_controller")
+            and self.application_controller is not None
+        ):
+            await self.application_controller.shutdown()
 
     def handle_message(
         self,

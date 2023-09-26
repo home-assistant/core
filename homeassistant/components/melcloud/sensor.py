@@ -41,28 +41,30 @@ class MelcloudSensorEntityDescription(
 ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     MelcloudSensorEntityDescription(
         key="room_temperature",
-        name="Room Temperature",
+        translation_key="room_temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.device.room_temperature,
         enabled=lambda x: True,
     ),
     MelcloudSensorEntityDescription(
         key="energy",
-        name="Energy",
         icon="mdi:factory",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda x: x.device.total_energy_consumed,
         enabled=lambda x: x.device.has_energy_consumed_meter,
     ),
     MelcloudSensorEntityDescription(
         key="daily_energy",
-        name="Daily Energy Consumed",
+        translation_key="daily_energy",
         icon="mdi:factory",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda x: x.device.daily_energy_consumed,
         enabled=lambda x: True,
     ),
@@ -70,28 +72,31 @@ ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
 ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     MelcloudSensorEntityDescription(
         key="outside_temperature",
-        name="Outside Temperature",
+        translation_key="outside_temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.device.outside_temperature,
         enabled=lambda x: True,
     ),
     MelcloudSensorEntityDescription(
         key="tank_temperature",
-        name="Tank Temperature",
+        translation_key="tank_temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.device.tank_temperature,
         enabled=lambda x: True,
     ),
     MelcloudSensorEntityDescription(
         key="daily_energy",
-        name="Daily Energy Consumed",
+        translation_key="daily_energy",
         icon="mdi:factory",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda x: x.device.daily_energy_consumed,
         enabled=lambda x: True,
     ),
@@ -99,28 +104,31 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
 ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     MelcloudSensorEntityDescription(
         key="room_temperature",
-        name="Room Temperature",
+        translation_key="room_temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda zone: zone.room_temperature,
         enabled=lambda x: True,
     ),
     MelcloudSensorEntityDescription(
         key="flow_temperature",
-        name="Flow Temperature",
+        translation_key="flow_temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda zone: zone.flow_temperature,
         enabled=lambda x: True,
     ),
     MelcloudSensorEntityDescription(
         key="return_temperature",
-        name="Flow Return Temperature",
+        translation_key="return_temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda zone: zone.return_temperature,
         enabled=lambda x: True,
     ),
@@ -160,6 +168,7 @@ class MelDeviceSensor(SensorEntity):
     """Representation of a Sensor."""
 
     entity_description: MelcloudSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -170,27 +179,17 @@ class MelDeviceSensor(SensorEntity):
         self._api = api
         self.entity_description = description
 
-        self._attr_name = f"{api.name} {description.name}"
         self._attr_unique_id = f"{api.device.serial}-{api.device.mac}-{description.key}"
-
-        if description.device_class == SensorDeviceClass.ENERGY:
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        else:
-            self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_device_info = api.device_info
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._api)
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
         await self._api.async_update()
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._api.device_info
 
 
 class AtwZoneSensor(MelDeviceSensor):
@@ -206,10 +205,11 @@ class AtwZoneSensor(MelDeviceSensor):
         if zone.zone_index != 1:
             description.key = f"{description.key}-zone-{zone.zone_index}"
         super().__init__(api, description)
+
+        self._attr_device_info = api.zone_device_info(zone)
         self._zone = zone
-        self._attr_name = f"{api.name} {zone.name} {description.name}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return zone based state."""
         return self.entity_description.value_fn(self._zone)

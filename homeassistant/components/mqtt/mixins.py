@@ -1135,6 +1135,11 @@ class MqttEntity(
         elif not self._default_to_device_class_name():
             # Assign the default name
             self._attr_name = self._default_name
+        elif hasattr(self, "_attr_name"):
+            # An entity name was not set in the config
+            # don't set the name attribute and derive
+            # the name from the device_class
+            delattr(self, "_attr_name")
         if CONF_DEVICE in config:
             device_name: str
             if CONF_NAME not in config[CONF_DEVICE]:

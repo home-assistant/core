@@ -123,11 +123,6 @@ class LogiCam(Camera):
         return self._id
 
     @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return DeviceInfo(

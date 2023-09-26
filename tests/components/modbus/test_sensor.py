@@ -1,4 +1,6 @@
 """The tests for the Modbus sensor component."""
+import struct
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -267,7 +269,6 @@ async def test_config_wrong_struct_sensor(
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_SCAN_INTERVAL: 1,
                 },
             ],
         },
@@ -627,6 +628,21 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
     [
         (
             {
+                CONF_SLAVE_COUNT: 1,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_DATA_TYPE: DataType.FLOAT32,
+            },
+            [
+                0x5102,
+                0x0304,
+                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
+                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+            ],
+            False,
+            ["34899771392", "0"],
+        ),
+        (
+            {
                 CONF_SLAVE_COUNT: 0,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
             },
@@ -710,7 +726,6 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                    CONF_SCAN_INTERVAL: 1,
                 },
             ],
         },
@@ -910,6 +925,65 @@ async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 1,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("config_addon", "register_words", "expected"),
+    [
+        (
+            {
+                CONF_DATA_TYPE: DataType.FLOAT32,
+            },
+            [
+                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
+                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+            ],
+            STATE_UNAVAILABLE,
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.FLOAT32,
+            },
+            [0x6E61, 0x6E00],
+            STATE_UNAVAILABLE,
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_COUNT: 2,
+                CONF_STRUCTURE: "4s",
+            },
+            [0x6E61, 0x6E00],
+            STATE_UNAVAILABLE,
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_COUNT: 2,
+                CONF_STRUCTURE: "4s",
+            },
+            [0x6161, 0x6100],
+            "aaa\x00",
+        ),
+    ],
+)
+async def test_unpack_ok(hass: HomeAssistant, mock_do_cycle, expected) -> None:
+    """Run test for sensor."""
+    assert hass.states.get(ENTITY_ID).state == expected
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
                     CONF_SCAN_INTERVAL: 10,
                     CONF_LAZY_ERROR: 1,
                 },
@@ -918,27 +992,23 @@ async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    ("register_words", "do_exception", "start_expect", "end_expect"),
+    ("register_words", "do_exception"),
     [
         (
             [0x8000],
             True,
-            "17",
-            STATE_UNAVAILABLE,
         ),
     ],
 )
 async def test_lazy_error_sensor(
-    hass: HomeAssistant, mock_do_cycle: FrozenDateTimeFactory, start_expect, end_expect
+    hass: HomeAssistant, mock_do_cycle: FrozenDateTimeFactory
 ) -> None:
     """Run test for sensor."""
     hass.states.async_set(ENTITY_ID, 17)
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    await do_next_cycle(hass, mock_do_cycle, 11)
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    await do_next_cycle(hass, mock_do_cycle, 11)
-    assert hass.states.get(ENTITY_ID).state == end_expect
+    assert hass.states.get(ENTITY_ID).state == "17"
+    await do_next_cycle(hass, mock_do_cycle, 5)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -965,10 +1035,35 @@ async def test_lazy_error_sensor(
                 CONF_DATA_TYPE: DataType.CUSTOM,
                 CONF_STRUCTURE: ">4f",
             },
-            # floats: 7.931250095367432, 10.600000381469727,
+            # floats: nan, 10.600000381469727,
             #         1.000879611487865e-28, 10.566553115844727
-            [0x40FD, 0xCCCD, 0x4129, 0x999A, 0x10FD, 0xC0CD, 0x4129, 0x109A],
-            "7.93,10.60,0.00,10.57",
+            [
+                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
+                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                0x4129,
+                0x999A,
+                0x10FD,
+                0xC0CD,
+                0x4129,
+                0x109A,
+            ],
+            "0,10.60,0.00,10.57",
+        ),
+        (
+            {
+                CONF_COUNT: 4,
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_STRUCTURE: ">2i",
+                CONF_NAN_VALUE: 0x0000000F,
+            },
+            # int: nan, 10,
+            [
+                0x0000,
+                0x000F,
+                0x0000,
+                0x000A,
+            ],
+            "0,10",
         ),
         (
             {
@@ -988,6 +1083,18 @@ async def test_lazy_error_sensor(
             [0x0101],
             "257",
         ),
+        (
+            {
+                CONF_COUNT: 8,
+                CONF_PRECISION: 2,
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_STRUCTURE: ">4f",
+            },
+            # floats: 7.931250095367432, 10.600000381469727,
+            #         1.000879611487865e-28, 10.566553115844727
+            [0x40FD, 0xCCCD, 0x4129, 0x999A, 0x10FD, 0xC0CD, 0x4129, 0x109A],
+            "7.93,10.60,0.00,10.57",
+        ),
     ],
 )
 async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
@@ -1003,7 +1110,6 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 201,
-                    CONF_SCAN_INTERVAL: 1,
                 },
             ],
         },

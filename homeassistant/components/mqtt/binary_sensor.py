@@ -215,7 +215,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                         "Empty template output for entity: %s with state topic: %s."
                         " Payload: '%s', with value template '%s'"
                     ),
-                    self._config[CONF_NAME],
+                    self.entity_id,
                     self._config[CONF_STATE_TOPIC],
                     msg.payload,
                     self._config.get(CONF_VALUE_TEMPLATE),
@@ -240,7 +240,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                         "No matching payload found for entity: %s with state topic: %s."
                         " Payload: '%s'%s"
                     ),
-                    self._config[CONF_NAME],
+                    self.entity_id,
                     self._config[CONF_STATE_TOPIC],
                     msg.payload,
                     template_info,

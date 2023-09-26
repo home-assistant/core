@@ -138,14 +138,17 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
             await super().async_added_to_hass()
             if state := await self.async_get_last_state():
                 self._state = state.state == STATE_ON
+        await super().async_added_to_hass()
 
-            # no need to listen for events
-        else:
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
+        if self._template is not None:
             self.add_template_attribute(
                 "_state", self._template, None, self._update_state
             )
 
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     @property
     def is_on(self) -> bool | None:

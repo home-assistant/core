@@ -73,6 +73,7 @@ from .errors import (
     AlexaSecurityPanelAuthorizationRequired,
     AlexaTempRangeError,
     AlexaUnsupportedThermostatModeError,
+    AlexaUnsupportedThermostatTargetStateError,
     AlexaVideoActionNotPermittedForContentError,
 )
 from .state_report import AlexaDirective, AlexaResponse, async_enable_proactive_mode
@@ -911,7 +912,13 @@ async def async_api_adjust_target_temp(
             }
         )
     else:
-        target_temp = float(entity.attributes[ATTR_TEMPERATURE]) + temp_delta
+        current_target_temp: str | None = entity.attributes.get(ATTR_TEMPERATURE)
+        if current_target_temp is None:
+            raise AlexaUnsupportedThermostatTargetStateError(
+                "The current target temperature is not set, "
+                "cannot adjust target temperature"
+            )
+        target_temp = float(current_target_temp) + temp_delta
 
         if target_temp < min_temp or target_temp > max_temp:
             raise AlexaTempRangeError(hass, target_temp, min_temp, max_temp)

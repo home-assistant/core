@@ -692,6 +692,10 @@ class Recorder(threading.Thread):
         """Run the recorder thread."""
         try:
             self._run()
+        except Exception:  # pylint: disable=broad-exception-caught
+            _LOGGER.exception(
+                "Recorder._run threw unexpected exception, recorder shutting down"
+            )
         finally:
             # Ensure shutdown happens cleanly if
             # anything goes wrong in the run loop

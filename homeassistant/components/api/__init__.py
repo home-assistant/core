@@ -28,7 +28,13 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
+from homeassistant.exceptions import (
+    InvalidEntityFormatError,
+    InvalidStateError,
+    ServiceNotFound,
+    TemplateError,
+    Unauthorized,
+)
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.service import async_get_all_descriptions
@@ -222,7 +228,7 @@ class APIEntityStateView(HomeAssistantView):
         """Update state of entity."""
         if not request["hass_user"].is_admin:
             raise Unauthorized(entity_id=entity_id)
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
         try:
             data = await request.json()
         except ValueError:
@@ -237,9 +243,16 @@ class APIEntityStateView(HomeAssistantView):
         is_new_state = hass.states.get(entity_id) is None
 
         # Write state
-        hass.states.async_set(
-            entity_id, new_state, attributes, force_update, self.context(request)
-        )
+        try:
+            hass.states.async_set(
+                entity_id, new_state, attributes, force_update, self.context(request)
+            )
+        except InvalidEntityFormatError:
+            return self.json_message(
+                "Invalid entity ID specified.", HTTPStatus.BAD_REQUEST
+            )
+        except InvalidStateError:
+            return self.json_message("Invalid state specified.", HTTPStatus.BAD_REQUEST)
 
         # Read the state back for our response
         status_code = HTTPStatus.CREATED if is_new_state else HTTPStatus.OK

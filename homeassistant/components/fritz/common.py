@@ -1096,7 +1096,7 @@ class FritzBoxBaseEntity:
 class FritzRequireKeysMixin:
     """Fritz entity description mix in."""
 
-    value_fn: Callable[[FritzStatus, Any], Any]
+    value_fn: Callable[[FritzStatus, Any], Any] | None
 
 
 @dataclass
@@ -1118,9 +1118,12 @@ class FritzBoxBaseCoordinatorEntity(update_coordinator.CoordinatorEntity[AvmWrap
     ) -> None:
         """Init device info class."""
         super().__init__(avm_wrapper)
-        self.async_on_remove(
-            avm_wrapper.register_entity_updates(description.key, description.value_fn)
-        )
+        if description.value_fn is not None:
+            self.async_on_remove(
+                avm_wrapper.register_entity_updates(
+                    description.key, description.value_fn
+                )
+            )
         self.entity_description = description
         self._device_name = device_name
         self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
