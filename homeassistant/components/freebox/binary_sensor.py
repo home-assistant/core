@@ -80,20 +80,13 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
             node["type"]["endpoints"], "signal", "trigger"
         )
 
-        self._detection = False
-
     async def async_update_signal(self):
         """Watch states."""
         detection = await self.get_home_endpoint_value(self._command_trigger)
         if detection is not None:
-            if self._detection == detection:
-                self._detection = not detection
+            if self._attr_is_on == detection:
+                self._attr_is_on = not detection
                 self.async_write_ha_state()
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
-        return self._detection
 
 
 class FreeboxPirSensor(FreeboxHomeBinarySensor):
@@ -132,16 +125,11 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
         self._cover_trigger = self.get_command_id(
             node["type"]["endpoints"], "signal", "cover"
         )
-        self._open = self.get_value("signal", "cover")
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
-        return self._open
+        self._attr_is_on = self.get_value("signal", "cover")
 
     async def async_update_signal(self):
         """Update name & state."""
-        self._open = await self.get_home_endpoint_value(self._cover_trigger)
+        self._attr_is_on = await self.get_home_endpoint_value(self._cover_trigger)
 
     @property
     def device_class(self) -> BinarySensorDeviceClass:
