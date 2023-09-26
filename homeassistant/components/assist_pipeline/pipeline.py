@@ -1228,7 +1228,6 @@ class PipelineInput:
                 )
                 if detect_result is None:
                     # No wake word. Abort the rest of the pipeline.
-                    await self.run.end()
                     return
 
                 current_stage = PipelineStage.STT
