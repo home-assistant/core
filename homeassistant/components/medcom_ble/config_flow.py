@@ -118,7 +118,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         titles = {
             address: discovery.name
-            for (address, discovery) in self._discovered_devices.items()
+            for address, discovery in self._discovered_devices.items()
         }
         return self.async_show_form(
             step_id="user",
