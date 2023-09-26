@@ -6,9 +6,10 @@ from withings_api.common import NotifyAppli
 from homeassistant.components.event import EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import WithingsEntity
+from .const import DOMAIN
 
 EVENT_IN_BED = "in_bed"
 EVENT_OUT_BED = "out_bed"
@@ -30,17 +31,21 @@ async def async_setup_entry(
     async_add_entities([WithingsSleepEvent(user_id)])
 
 
-class WithingsSleepEvent(WithingsEntity, EventEntity):
+class WithingsSleepEvent(EventEntity):
     """Representation of a Withings sleep event."""
 
+    _attr_has_entity_name = True
     _attr_event_types = [EVENT_IN_BED, EVENT_OUT_BED]
     _attr_translation_key = "sleep"
 
     def __init__(self, user_id: str) -> None:
         """Initialize the Withings event entity."""
-        super().__init__(user_id)
         self._attr_unique_id = f"{user_id}_sleep"
         self._user_id = user_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, user_id)},
+            manufacturer="Withings",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

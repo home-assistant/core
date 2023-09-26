@@ -33,7 +33,7 @@ from .const import (
     Measurement,
 )
 from .coordinator import WithingsDataUpdateCoordinator
-from .entity import WithingsCoordinatedEntity, WithingsEntityDescription
+from .entity import WithingsEntity, WithingsEntityDescription
 
 
 @dataclass
@@ -367,7 +367,7 @@ async def async_setup_entry(
     async_add_entities(WithingsSensor(coordinator, attribute) for attribute in SENSORS)
 
 
-class WithingsSensor(WithingsCoordinatedEntity, SensorEntity):
+class WithingsSensor(WithingsEntity, SensorEntity):
     """Implementation of a Withings sensor."""
 
     entity_description: WithingsSensorEntityDescription
