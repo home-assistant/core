@@ -230,6 +230,17 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     )
     assert stats == {}
 
+    # Delete again, and manually wipe the cache since we deleted all the data
+    instance.get_session().query(StatisticsShortTerm).delete()
+    run_cache = get_short_term_statistics_run_cache(instance.hass)
+    run_cache._latest_id_by_metadata_id = {}
+
+    # And test again to make sure there is no data
+    stats = get_latest_short_term_statistics(
+        hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
+    )
+    assert stats == {}
+
 
 @pytest.fixture
 def mock_sensor_statistics():
