@@ -6,7 +6,7 @@ from dataclasses import dataclass
 class WakeWord:
     """Wake word model."""
 
-    wake_word_id: str
+    id: str
     name: str
 
 

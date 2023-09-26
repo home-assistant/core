@@ -46,8 +46,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
         wake_service = service.info.wake[0]
 
         self._supported_wake_words = [
-            wake_word.WakeWord(wake_word_id=ww.name, name=ww.name)
-            for ww in wake_service.models
+            wake_word.WakeWord(id=ww.name, name=ww.name) for ww in wake_service.models
         ]
         self._attr_name = wake_service.name
         self._attr_unique_id = f"{config_entry.entry_id}-wake_word"

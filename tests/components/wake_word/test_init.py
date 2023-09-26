@@ -41,8 +41,8 @@ class MockProviderEntity(wake_word.WakeWordDetectionEntity):
     def supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
         return [
-            wake_word.WakeWord(wake_word_id="test_ww", name="Test Wake Word"),
-            wake_word.WakeWord(wake_word_id="test_ww_2", name="Test Wake Word 2"),
+            wake_word.WakeWord(id="test_ww", name="Test Wake Word"),
+            wake_word.WakeWord(id="test_ww_2", name="Test Wake Word 2"),
         ]
 
     async def _async_process_audio_stream(
@@ -50,7 +50,7 @@ class MockProviderEntity(wake_word.WakeWordDetectionEntity):
     ) -> wake_word.DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps."""
         if wake_word_id is None:
-            wake_word_id = self.supported_wake_words[0].wake_word_id
+            wake_word_id = self.supported_wake_words[0].id
 
         async for _chunk, timestamp in stream:
             if timestamp >= 2000:
@@ -282,7 +282,7 @@ async def test_list_wake_words(
     assert msg["success"]
     assert msg["result"] == {
         "wake_words": [
-            {"wake_word_id": "test_ww", "name": "Test Wake Word"},
-            {"wake_word_id": "test_ww_2", "name": "Test Wake Word 2"},
+            {"id": "test_ww", "name": "Test Wake Word"},
+            {"id": "test_ww_2", "name": "Test Wake Word 2"},
         ]
     }
