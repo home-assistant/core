@@ -77,6 +77,7 @@ async def async_setup_entry(
             data=hydrawise.current_controller,
             coordinator=coordinator,
             description=BINARY_SENSOR_STATUS,
+            device_id_key="controller_id",
         )
     ]
 
