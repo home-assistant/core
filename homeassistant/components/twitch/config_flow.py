@@ -7,7 +7,7 @@ from typing import Any
 
 from twitchAPI.helper import first
 from twitchAPI.twitch import Twitch
-from twitchAPI.types import AuthScope, InvalidTokenException
+from twitchAPI.type import AuthScope, InvalidTokenException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_TOKEN
@@ -50,10 +50,12 @@ class OAuth2FlowHandler(
 
         client = await Twitch(
             app_id=self.flow_impl.__dict__[CONF_CLIENT_ID],
-            target_app_auth_scope=OAUTH_SCOPES,
+            authenticate_app=False,
         )
         client.auto_refresh_auth = False
-        await client.set_user_authentication(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+        await client.set_user_authentication(
+            data[CONF_TOKEN][CONF_ACCESS_TOKEN], scope=OAUTH_SCOPES
+        )
         user = await first(client.get_users())
         assert user
 
@@ -65,7 +67,7 @@ class OAuth2FlowHandler(
 
             channels = [
                 channel.broadcaster_login
-                async for channel in client.get_followed_channels(user_id)
+                async for channel in await client.get_followed_channels(user_id)
             ]
 
             return self.async_create_entry(

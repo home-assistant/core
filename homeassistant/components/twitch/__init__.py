@@ -35,10 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
     client = await Twitch(
         app_id=app_id,
-        target_app_auth_scope=OAUTH_SCOPES,
+        authenticate_app=False,
     )
     client.auto_refresh_auth = False
-    await client.set_user_authentication(access_token)
+    await client.set_user_authentication(access_token, scope=OAUTH_SCOPES)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
 
