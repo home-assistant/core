@@ -18,6 +18,7 @@ from homeassistant.util import language as language_util
 from .const import DOMAIN
 from .error import PipelineNotFound
 from .pipeline import (
+    AudioSettings,
     PipelineData,
     PipelineError,
     PipelineEvent,
@@ -71,6 +72,13 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                             vol.Optional("audio_seconds_to_buffer"): vol.Any(
                                 float, int
                             ),
+                            # Audio enhancement
+                            vol.Optional("noise_suppression_level"): int,
+                            vol.Optional("auto_gain_dbfs"): int,
+                            vol.Optional("volume_multiplier"): float,
+                            # Advanced use cases/testing
+                            vol.Optional("no_vad"): bool,
+                            vol.Optional("no_chunking"): bool,
                         }
                     },
                     extra=vol.ALLOW_EXTRA,
@@ -115,6 +123,7 @@ async def websocket_run(
     handler_id: int | None = None
     unregister_handler: Callable[[], None] | None = None
     wake_word_settings: WakeWordSettings | None = None
+    audio_settings: AudioSettings | None = None
 
     # Arguments to PipelineInput
     input_args: dict[str, Any] = {
@@ -124,13 +133,14 @@ async def websocket_run(
 
     if start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
         # Audio pipeline that will receive audio as binary websocket messages
+        msg_input = msg["input"]
         audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
-        incoming_sample_rate = msg["input"]["sample_rate"]
+        incoming_sample_rate = msg_input["sample_rate"]
 
         if start_stage == PipelineStage.WAKE_WORD:
             wake_word_settings = WakeWordSettings(
                 timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT),
-                audio_seconds_to_buffer=msg["input"].get("audio_seconds_to_buffer", 0),
+                audio_seconds_to_buffer=msg_input.get("audio_seconds_to_buffer", 0),
             )
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:
@@ -166,6 +176,15 @@ async def websocket_run(
             channel=stt.AudioChannels.CHANNEL_MONO,
         )
         input_args["stt_stream"] = stt_stream()
+
+        # Audio settings
+        audio_settings = AudioSettings(
+            noise_suppression_level=msg_input.get("noise_suppression_level", 0),
+            auto_gain_dbfs=msg_input.get("auto_gain_dbfs", 0),
+            volume_multiplier=msg_input.get("volume_multiplier", 1.0),
+            is_vad_enabled=not msg_input.get("no_vad", False),
+            is_chunking_enabled=not msg_input.get("no_chunking", False),
+        )
     elif start_stage == PipelineStage.INTENT:
         # Input to conversation agent
         input_args["intent_input"] = msg["input"]["text"]
@@ -185,6 +204,7 @@ async def websocket_run(
             "timeout": timeout,
         },
         wake_word_settings=wake_word_settings,
+        audio_settings=audio_settings or AudioSettings(),
     )
 
     pipeline_input = PipelineInput(**input_args)

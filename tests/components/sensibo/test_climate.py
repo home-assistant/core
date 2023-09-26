@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from voluptuous import MultipleInvalid
 
 from homeassistant.components.climate import (
@@ -80,6 +81,7 @@ async def test_climate(
     caplog: pytest.LogCaptureFixture,
     get_data: SensiboData,
     load_int: ConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Sensibo climate."""
 
@@ -88,38 +90,18 @@ async def test_climate(
     state3 = hass.states.get("climate.bedroom")
 
     assert state1.state == "heat"
-    assert state1.attributes == {
-        "hvac_modes": [
-            "heat_cool",
-            "cool",
-            "dry",
-            "fan_only",
-            "heat",
-            "off",
-        ],
-        "min_temp": 10,
-        "max_temp": 20,
-        "target_temp_step": 1,
-        "fan_modes": ["low", "medium", "quiet"],
-        "swing_modes": ["fixedmiddletop", "fixedtop", "stopped"],
-        "current_temperature": 21.2,
-        "temperature": 25,
-        "current_humidity": 32.9,
-        "fan_mode": "high",
-        "swing_mode": "stopped",
-        "friendly_name": "Hallway",
-        "supported_features": 41,
-    }
+    assert state1.attributes == snapshot
 
     assert state2.state == "off"
 
-    assert not state3
+    assert state3
+    assert state3.state == "off"
     found_log = False
     logs = caplog.get_records("setup")
     for log in logs:
         if (
             log.message
-            == "Device Bedroom not correctly registered with Sensibo cloud. Skipping device"
+            == "Device Bedroom not correctly registered with remote on Sensibo cloud."
         ):
             found_log = True
             break

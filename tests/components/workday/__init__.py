@@ -40,6 +40,22 @@ async def init_integration(
     return config_entry
 
 
+TEST_CONFIG_NO_COUNTRY = {
+    "name": DEFAULT_NAME,
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": [],
+    "remove_holidays": [],
+}
+TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY = {
+    "name": DEFAULT_NAME,
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": ["2020-02-24"],
+    "remove_holidays": [],
+}
 TEST_CONFIG_WITH_PROVINCE = {
     "name": DEFAULT_NAME,
     "country": "DE",

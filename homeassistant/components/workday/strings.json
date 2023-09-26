@@ -66,6 +66,11 @@
     }
   },
   "selector": {
+    "country": {
+      "options": {
+        "none": "No country"
+      }
+    },
     "province": {
       "options": {
         "none": "No subdivision"
@@ -81,6 +86,49 @@
         "sat": "[%key:common::time::saturday%]",
         "sun": "[%key:common::time::sunday%]",
         "holiday": "Holidays"
+      }
+    }
+  },
+  "issues": {
+    "bad_country": {
+      "title": "Configured Country for {title} does not exist",
+      "fix_flow": {
+        "step": {
+          "country": {
+            "title": "Select country for {title}",
+            "description": "Select a country to use for your Workday sensor.",
+            "data": {
+              "country": "[%key:component::workday::config::step::user::data::country%]"
+            }
+          },
+          "province": {
+            "title": "Select province for {title}",
+            "description": "Select a province in country {country} to use for your Workday sensor.",
+            "data": {
+              "province": "[%key:component::workday::config::step::options::data::province%]"
+            },
+            "data_description": {
+              "province": "State, Territory, Province, Region of Country"
+            }
+          }
+        }
+      }
+    },
+    "bad_province": {
+      "title": "Configured province in country {country} for {title} does not exist",
+      "fix_flow": {
+        "step": {
+          "province": {
+            "title": "[%key:component::workday::issues::bad_country::fix_flow::step::province::title%]",
+            "description": "[%key:component::workday::issues::bad_country::fix_flow::step::province::description%]",
+            "data": {
+              "province": "[%key:component::workday::config::step::options::data::province%]"
+            },
+            "data_description": {
+              "province": "[%key:component::workday::issues::bad_country::fix_flow::step::province::data_description::province%]"
+            }
+          }
+        }
       }
     }
   }
