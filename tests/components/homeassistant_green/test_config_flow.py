@@ -88,6 +88,31 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
     mock_setup_entry.assert_not_called()
 
 
+async def test_option_flow_non_hassio(
+    hass: HomeAssistant,
+) -> None:
+    """Test installing the multi pan addon on a Core installation, without hassio."""
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Green",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_green.config_flow.is_hassio",
+        return_value=False,
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "not_hassio"
+
+
 @pytest.mark.parametrize(
     ("reboot_menu_choice", "reboot_calls"),
     [("reboot_now", 1), ("reboot_later", 0)],
