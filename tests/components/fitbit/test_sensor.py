@@ -244,11 +244,27 @@ async def test_device_battery_level(
 
 
 @pytest.mark.parametrize(
-    ("monitored_resources", "profile_locale", "expected_unit"),
+    (
+        "monitored_resources",
+        "profile_locale",
+        "configured_unit_system",
+        "expected_unit",
+    ),
     [
-        (["body/weight"], "en_US", "kg"),
-        (["body/weight"], "en_GB", "st"),
-        (["body/weight"], "es_ES", "kg"),
+        # Defaults to home assistant unit system unless UK
+        (["body/weight"], "en_US", "default", "kg"),
+        (["body/weight"], "en_GB", "default", "st"),
+        (["body/weight"], "es_ES", "default", "kg"),
+        # Use the configured unit system from yaml
+        (["body/weight"], "en_US", "en_US", "lb"),
+        (["body/weight"], "en_GB", "en_US", "lb"),
+        (["body/weight"], "es_ES", "en_US", "lb"),
+        (["body/weight"], "en_US", "en_GB", "st"),
+        (["body/weight"], "en_GB", "en_GB", "st"),
+        (["body/weight"], "es_ES", "en_GB", "st"),
+        (["body/weight"], "en_US", "metric", "kg"),
+        (["body/weight"], "en_GB", "metric", "kg"),
+        (["body/weight"], "es_ES", "metric", "kg"),
     ],
 )
 async def test_profile_local(
