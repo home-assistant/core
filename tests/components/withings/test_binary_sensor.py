@@ -1,5 +1,4 @@
 """Tests for binary sensor entity."""
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from aiohttp.client_exceptions import ClientResponseError
@@ -13,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from . import call_webhook, setup_integration
 from .conftest import USER_ID, WEBHOOK_ID
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 
@@ -42,9 +41,6 @@ async def test_binary_sensor(
     assert resp.message_code == 0
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON
-
-    freezer.tick(timedelta(minutes=10))
-    async_fire_time_changed(hass)
 
     resp = await call_webhook(
         hass,
