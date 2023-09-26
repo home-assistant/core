@@ -153,7 +153,7 @@ async def async_enable_server_logging_if_needed(
     if (curr_server_log_level := driver.log_config.level) and (
         LOG_LEVEL_MAP[curr_server_log_level]
     ) > (lib_log_level := LIB_LOGGER.getEffectiveLevel()):
-        entry_id = entry.entry_id
+        entry_data = hass.data[DOMAIN][entry.entry_id]
         LOGGER.warning(
             (
                 "Server logging is set to %s and is currently less verbose "
@@ -162,7 +162,7 @@ async def async_enable_server_logging_if_needed(
             curr_server_log_level,
             logging.getLevelName(lib_log_level),
         )
-        hass.data[DOMAIN][entry_id][DATA_OLD_SERVER_LOG_LEVEL] = curr_server_log_level
+        entry_data[DATA_OLD_SERVER_LOG_LEVEL] = curr_server_log_level
         await driver.async_update_log_config(LogConfig(level=LogLevel.DEBUG))
     await driver.client.enable_server_logging()
     LOGGER.info("Zwave-js-server logging is enabled")
@@ -172,6 +172,7 @@ async def async_disable_server_logging_if_needed(
     hass: HomeAssistant, entry: ConfigEntry, driver: Driver
 ) -> None:
     """Disable logging of zwave-js-server in the lib if still connected to server."""
+    entry_data = hass.data[DOMAIN][entry.entry_id]
     if (
         not driver
         or not driver.client.connected
@@ -179,24 +180,20 @@ async def async_disable_server_logging_if_needed(
     ):
         return
     LOGGER.info("Disabling zwave_js server logging")
-    entry_id = entry.entry_id
     if (
-        DATA_OLD_SERVER_LOG_LEVEL in hass.data[DOMAIN][entry_id]
-        and (
-            old_server_log_level := hass.data[DOMAIN][entry_id].pop(
-                DATA_OLD_SERVER_LOG_LEVEL
-            )
-        )
+        DATA_OLD_SERVER_LOG_LEVEL in entry_data
+        and (old_server_log_level := entry_data.pop(DATA_OLD_SERVER_LOG_LEVEL))
         != driver.log_config.level
     ):
         LOGGER.info(
-            "Server logging was set to %s and is being reset to %s",
+            (
+                "Server logging is currently set to %s as a result of server logging "
+                "being enabled. It is now being reset to %s"
+            ),
             driver.log_config.level,
             old_server_log_level,
         )
-        await driver.async_update_log_config(
-            LogConfig(level=hass.data[DOMAIN][entry_id].pop(DATA_OLD_SERVER_LOG_LEVEL))
-        )
+        await driver.async_update_log_config(LogConfig(level=old_server_log_level))
     await driver.client.disable_server_logging()
     LOGGER.info("Zwave-js-server logging is enabled")
 
