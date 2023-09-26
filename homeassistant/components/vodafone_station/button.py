@@ -38,7 +38,7 @@ class VodafoneStationEntityDescription(
 BUTTON_TYPES: Final = (
     VodafoneStationEntityDescription(
         key="reboot",
-        name="Reboot",
+        translation_key="reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda coordinator: coordinator.api.restart_router(),
@@ -46,7 +46,7 @@ BUTTON_TYPES: Final = (
     ),
     VodafoneStationEntityDescription(
         key="dsl_ready",
-        name="DSL reconnect",
+        translation_key="dsl_reconnect",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda coordinator: coordinator.api.restart_connection("dsl"),
@@ -54,7 +54,7 @@ BUTTON_TYPES: Final = (
     ),
     VodafoneStationEntityDescription(
         key="fiber_ready",
-        name="Fiber reconnect",
+        translation_key="fiber_reconnect",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda coordinator: coordinator.api.restart_connection("fiber"),
@@ -62,7 +62,7 @@ BUTTON_TYPES: Final = (
     ),
     VodafoneStationEntityDescription(
         key="vf_internet_key_online_since",
-        name="Internet key reconnect",
+        translation_key="internet_key_reconnect",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda coordinator: coordinator.api.restart_connection(
