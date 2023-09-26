@@ -9,8 +9,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .common import WithingsDataUpdateCoordinator
 from .const import DOMAIN, Measurement
+from .coordinator import WithingsDataUpdateCoordinator
 
 
 @dataclass
