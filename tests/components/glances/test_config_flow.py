@@ -1,7 +1,10 @@
 """Tests for Glances config flow."""
 from unittest.mock import MagicMock
 
-from glances_api.exceptions import GlancesApiConnectionError
+from glances_api.exceptions import (
+    GlancesApiAuthorizationError,
+    GlancesApiConnectionError,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -9,7 +12,7 @@ from homeassistant.components import glances
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_USER_INPUT
+from . import HA_SENSOR_DATA, MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry, patch
 
@@ -39,10 +42,19 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["data"] == MOCK_USER_INPUT
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, mock_api: MagicMock) -> None:
-    """Test to return error if we cannot connect."""
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        (GlancesApiAuthorizationError, "invalid_auth"),
+        (GlancesApiConnectionError, "cannot_connect"),
+    ],
+)
+async def test_form_fails(
+    hass: HomeAssistant, error: Exception, message: str, mock_api: MagicMock
+) -> None:
+    """Test flow fails when api exception is raised."""
 
-    mock_api.return_value.get_ha_sensor_data.side_effect = GlancesApiConnectionError
+    mock_api.return_value.get_ha_sensor_data.side_effect = [error, HA_SENSOR_DATA]
     result = await hass.config_entries.flow.async_init(
         glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -51,7 +63,13 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_api: MagicMock) -> 
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": message}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_INPUT
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 async def test_form_already_configured(hass: HomeAssistant) -> None:
