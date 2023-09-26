@@ -1,11 +1,10 @@
 """NextBus data update coordinator."""
 from datetime import timedelta
-from json.decoder import JSONDecodeError
 import logging
-from typing import Any, NamedTuple
-from urllib.error import HTTPError
+from typing import Any
 
 from py_nextbus import NextBusClient
+from py_nextbus.client import NextBusFormatError, NextBusHTTPError, RouteStop
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -14,13 +13,6 @@ from .const import DOMAIN
 from .util import listify
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class StopRoute(NamedTuple):
-    """Contains a stop and a route tag for looking up predictions."""
-
-    stop_tag: str
-    route_tag: str
 
 
 class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
@@ -36,16 +28,16 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.client = NextBusClient(output_format="json", agency=agency)
         self._agency = agency
-        self._stop_routes: set[StopRoute] = set()
+        self._stop_routes: set[RouteStop] = set()
         self._data: dict[str, Any] = {}
 
     def add_stop_route(self, stop_tag: str, route_tag: str) -> None:
         """Tell coordinator to start tracking a given stop and route."""
-        self._stop_routes.add(StopRoute(stop_tag, route_tag))
+        self._stop_routes.add(RouteStop(route_tag, stop_tag))
 
     def remove_stop_route(self, stop_tag: str, route_tag: str) -> None:
         """Tell coordinator to stop tracking a given stop and route."""
-        self._stop_routes.remove(StopRoute(stop_tag, route_tag))
+        self._stop_routes.remove(RouteStop(route_tag, stop_tag))
 
     def get_prediction_data(
         self, stop_tag: str, route_tag: str
@@ -68,7 +60,7 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
         """Check if this coordinator is tracking any routes."""
         return len(self._stop_routes) > 0
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from NextBus."""
         self.logger.debug("Updating data from API. Routes: %s", str(self._stop_routes))
 
@@ -76,16 +68,12 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
             """Fetch data from NextBus."""
             self.logger.debug("Updating data from API (executor)")
             try:
-                return self.client.get_predictions_for_multi_stops(
-                    [sr._asdict() for sr in self._stop_routes]
-                )
-            except HTTPError as ex:
+                return self.client.get_predictions_for_multi_stops(self._stop_routes)
+            except NextBusHTTPError as ex:
                 raise UpdateFailed("failed connecting to nextbus api", ex) from ex
-            except JSONDecodeError as ex:
+            except NextBusFormatError as ex:
                 raise UpdateFailed(
                     "failed reading response from nextbus api", ex
                 ) from ex
-            except Exception as ex:
-                raise UpdateFailed("failed updating nextbus data", ex) from ex
 
         return await self.hass.async_add_executor_job(_update_data)

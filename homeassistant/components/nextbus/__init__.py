@@ -34,7 +34,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         entry_agency = entry.data.get(CONF_AGENCY)
-        coordinator: NextBusDataUpdateCoordinator = hass.data[DOMAIN].get(entry_agency)
+        coordinator: NextBusDataUpdateCoordinator = hass.data[DOMAIN][entry_agency]
         coordinator.remove_stop_route(entry.data[CONF_STOP], entry.data[CONF_ROUTE])
         if not coordinator.has_routes():
             hass.data[DOMAIN].pop(entry_agency)

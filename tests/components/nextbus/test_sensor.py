@@ -1,10 +1,10 @@
 """The tests for the nexbus sensor component."""
 from collections.abc import Generator
 from copy import deepcopy
-from json.decoder import JSONDecodeError
 from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError
 
+from py_nextbus.client import NextBusFormatError, NextBusHTTPError, RouteStop
 import pytest
 
 from homeassistant.components import sensor
@@ -150,7 +150,7 @@ async def test_verify_valid_state(
     assert entity
 
     mock_nextbus_predictions.assert_called_once_with(
-        [{"stop_tag": VALID_STOP, "route_tag": VALID_ROUTE}]
+        {RouteStop(VALID_ROUTE, VALID_STOP)}
     )
 
     state = hass.states.get(SENSOR_ID)
@@ -279,9 +279,8 @@ async def test_direction_list(
 @pytest.mark.parametrize(
     "client_exception",
     (
-        HTTPError("url", 500, "error", MagicMock(), None),
-        JSONDecodeError("error with json", "{}", 0),
-        Exception,
+        NextBusHTTPError("failed", HTTPError("url", 500, "error", MagicMock(), None)),
+        NextBusFormatError("failed"),
     ),
 )
 async def test_prediction_exceptions(
