@@ -216,9 +216,11 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         device_id: str,
         conversation_id: str | None,
         flags: int = 0,
-        audio_settings: VoiceAssistantAudioSettings = None,
+        audio_settings: VoiceAssistantAudioSettings | None = None,
     ) -> None:
         """Run the Voice Assistant pipeline."""
+        if audio_settings is None:
+            audio_settings = VoiceAssistantAudioSettings()
 
         tts_audio_output = (
             "raw" if self.device_info.voice_assistant_version >= 2 else "mp3"
