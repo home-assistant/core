@@ -80,6 +80,10 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         ):
             return
 
+        # For doorbell events we use notitication and we need to synchronize
+        # them using a `SYNC` response together with other state changes.
+        # See: https://developers.home.google.com/cloud-to-cloud/guides/doorbell#objectdetection
+        # We do not support a combined camera stream.
         if (notifications := entity.notifications_serialize()) is not None:
             event_id = uuid4().hex
             payload = {
