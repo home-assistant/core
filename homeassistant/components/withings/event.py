@@ -5,8 +5,9 @@ from withings_api.common import NotifyAppli
 
 from homeassistant.components.event import EventEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -50,13 +51,13 @@ class WithingsSleepEvent(EventEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
-            self.hass.bus.async_listen(
-                f"withings_{self._user_id}_sleep", self.handle_event
+            async_dispatcher_connect(
+                self.hass, f"withings_{self._user_id}_sleep", self.handle_event
             )
         )
 
     @callback
-    def handle_event(self, event: Event) -> None:
+    def handle_event(self, notification_type: NotifyAppli) -> None:
         """Handle received event."""
-        self._trigger_event(APPLI_TO_EVENT[event.data["type"]])
+        self._trigger_event(APPLI_TO_EVENT[notification_type])
         self.async_write_ha_state()

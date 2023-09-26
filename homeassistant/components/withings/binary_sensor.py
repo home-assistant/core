@@ -8,8 +8,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, Measurement
@@ -48,13 +49,13 @@ class WithingSleepBinarySensor(BinarySensorEntity):
         """Listen to events after being added."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.hass.bus.async_listen(
-                f"withings_{self._user_id}_sleep", self.handle_event
+            async_dispatcher_connect(
+                self.hass, f"withings_{self._user_id}_sleep", self.handle_event
             )
         )
 
     @callback
-    def handle_event(self, event: Event) -> None:
+    def handle_event(self, notification_type: NotifyAppli) -> None:
         """Handle received event."""
-        self._attr_is_on = event.data["type"] == NotifyAppli.BED_IN
+        self._attr_is_on = notification_type == NotifyAppli.BED_IN
         self.async_write_ha_state()

@@ -18,6 +18,7 @@ from withings_api.common import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
@@ -261,7 +262,8 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
             await self.async_request_refresh()
 
         elif notification_category in {NotifyAppli.BED_IN, NotifyAppli.BED_OUT}:
-            self.hass.bus.async_fire(
+            async_dispatcher_send(
+                self.hass,
                 f"withings_{self.config_entry.unique_id}_sleep",
-                {"type": notification_category},
+                notification_category,
             )
