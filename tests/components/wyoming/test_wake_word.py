@@ -147,7 +147,7 @@ async def test_detect_message_with_wrong_wake_word(
         yield b"chunk1", 1000
 
     mock_client = MockAsyncTcpClient(
-        [Detection(name="not-my-wake-word", timestamp=1000).event()]
+        [Detection(name="not-my-wake-word", timestamp=1000).event()],
     )
 
     with patch(
