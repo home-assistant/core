@@ -2,8 +2,8 @@
 from collections.abc import AsyncIterable, Generator
 from pathlib import Path
 
+from freezegun import freeze_time
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -155,6 +155,7 @@ async def test_config_entry_unload(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
+@freeze_time("2023-06-22 10:30:00+00:00")
 @pytest.mark.parametrize(
     ("ww_id", "expected_ww"),
     [
@@ -166,7 +167,6 @@ async def test_detected_entity(
     hass: HomeAssistant,
     tmp_path: Path,
     setup: MockProviderEntity,
-    snapshot: SnapshotAssertion,
     ww_id: str | None,
     expected_ww: str,
 ) -> None:
@@ -180,11 +180,12 @@ async def test_detected_entity(
 
     # Need 2 seconds to trigger
     state = setup.state
+    assert state is None
     result = await setup.async_process_audio_stream(three_second_stream(), ww_id)
     assert result == wake_word.DetectionResult(expected_ww, 2048)
 
     assert state != setup.state
-    assert state == snapshot
+    assert setup.state == "2023-06-22T10:30:00+00:00"
 
 
 async def test_not_detected_entity(
