@@ -80,7 +80,7 @@ class OAuth2FlowHandler(
             if "imported" in self.reauth_entry.data:
                 channels = [
                     channel.broadcaster_login
-                    async for channel in client.get_followed_channels(user_id)
+                    async for channel in await client.get_followed_channels(user_id)
                 ]
                 reauth_channels = self.reauth_entry.options[CONF_CHANNELS]
                 options = channels - reauth_channels
