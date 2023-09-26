@@ -78,5 +78,3 @@ OAUTH_SCOPES = [
     "sleep",
     "weight",
 ]
-# Authentication domain for credentials imported from the legacy fitbit.conf
-AUTH_IMPL_IMPORTED = "fitbit-conf-imported"

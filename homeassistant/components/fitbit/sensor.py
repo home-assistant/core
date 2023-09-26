@@ -47,7 +47,6 @@ from .const import (
     ATTR_LAST_SAVED_AT,
     ATTR_REFRESH_TOKEN,
     ATTRIBUTION,
-    AUTH_IMPL_IMPORTED,
     BATTERY_LEVELS,
     CONF_CLOCK_FORMAT,
     CONF_MONITORED_RESOURCES,
@@ -487,14 +486,13 @@ async def async_setup_platform(
             ClientCredential(
                 config_file[CONF_CLIENT_ID], config_file[CONF_CLIENT_SECRET]
             ),
-            auth_domain=AUTH_IMPL_IMPORTED,
         )
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
                 data={
-                    "auth_implementation": AUTH_IMPL_IMPORTED,
+                    "auth_implementation": DOMAIN,
                     CONF_TOKEN: {
                         ATTR_ACCESS_TOKEN: config_file[ATTR_ACCESS_TOKEN],
                         ATTR_REFRESH_TOKEN: config_file[ATTR_REFRESH_TOKEN],

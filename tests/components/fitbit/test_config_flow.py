@@ -7,12 +7,7 @@ from unittest.mock import patch
 from requests_mock.mocker import Mocker
 
 from homeassistant import config_entries
-from homeassistant.components.fitbit.const import (
-    AUTH_IMPL_IMPORTED,
-    DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
-)
+from homeassistant.components.fitbit.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
@@ -171,7 +166,7 @@ async def test_import_fitbit_config(
     del data["token"]["expires_at"]
     # Verify imported values from fitbit.conf and configuration.yaml
     assert dict(config_entry.data) == {
-        "auth_implementation": AUTH_IMPL_IMPORTED,
+        "auth_implementation": DOMAIN,
         "clock_format": "24H",
         "monitored_resources": ["activities/steps"],
         "token": {
