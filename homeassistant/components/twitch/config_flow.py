@@ -83,7 +83,7 @@ class OAuth2FlowHandler(
                     async for channel in await client.get_followed_channels(user_id)
                 ]
                 reauth_channels = self.reauth_entry.options[CONF_CHANNELS]
-                options = channels - reauth_channels
+                options = list(set(channels) - set(reauth_channels))
 
             self.hass.config_entries.async_update_entry(
                 self.reauth_entry,
