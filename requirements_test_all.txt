@@ -1403,7 +1403,7 @@ pymodbus==3.5.2
 pymonoprice==0.4
 
 # homeassistant.components.myq
-pymyq==3.1.4
+python-myq==3.1.7
 
 # homeassistant.components.mysensors
 pymysensors==0.24.0
