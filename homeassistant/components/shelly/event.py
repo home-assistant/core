@@ -22,7 +22,7 @@ from .coordinator import ShellyRpcCoordinator, get_entry_data
 from .utils import (
     async_remove_shelly_entity,
     get_device_entry_gen,
-    get_rpc_input_name,
+    get_rpc_entity_name,
     get_rpc_key_instances,
     is_rpc_momentary_input,
 )
@@ -90,7 +90,7 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
         self._attr_unique_id = f"{coordinator.mac}-{key}"
-        self._attr_name = get_rpc_input_name(coordinator.device, key)
+        self._attr_name = get_rpc_entity_name(coordinator.device, key)
         self.entity_description = description
 
     async def async_added_to_hass(self) -> None:

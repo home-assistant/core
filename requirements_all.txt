@@ -513,7 +513,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.36.3
+bellows==0.36.4
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.0
@@ -2367,7 +2367,7 @@ satel-integra==0.3.7
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.9.0
+screenlogicpy==0.9.1
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
@@ -2623,7 +2623,7 @@ unifi-discovery==1.1.7
 unifiled==0.11
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.13
+universal-silabs-flasher==0.0.14
 
 # homeassistant.components.upb
 upb-lib==0.5.4
