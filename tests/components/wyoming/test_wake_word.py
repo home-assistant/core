@@ -106,3 +106,54 @@ async def test_streaming_audio_oserror(
         result = await entity.async_process_audio_stream(audio_stream(), None)
 
     assert result is None
+
+
+async def test_detect_message_with_wake_word(
+    hass: HomeAssistant, init_wyoming_wake_word
+) -> None:
+    """Test that specifying a wake word id produces a Detect message with that id."""
+    entity = wake_word.async_get_wake_word_detection_entity(
+        hass, "wake_word.test_wake_word"
+    )
+    assert entity is not None
+
+    async def audio_stream():
+        yield b"chunk1", 1000
+
+    mock_client = MockAsyncTcpClient(
+        [Detection(name="my-wake-word", timestamp=1000).event()]
+    )
+
+    with patch(
+        "homeassistant.components.wyoming.wake_word.AsyncTcpClient",
+        mock_client,
+    ):
+        result = await entity.async_process_audio_stream(audio_stream(), "my-wake-word")
+
+    assert isinstance(result, wake_word.DetectionResult)
+    assert result.wake_word_id == "my-wake-word"
+
+
+async def test_detect_message_with_wrong_wake_word(
+    hass: HomeAssistant, init_wyoming_wake_word
+) -> None:
+    """Test that specifying a wake word id filters invalid detections."""
+    entity = wake_word.async_get_wake_word_detection_entity(
+        hass, "wake_word.test_wake_word"
+    )
+    assert entity is not None
+
+    async def audio_stream():
+        yield b"chunk1", 1000
+
+    mock_client = MockAsyncTcpClient(
+        [Detection(name="not-my-wake-word", timestamp=1000).event()],
+    )
+
+    with patch(
+        "homeassistant.components.wyoming.wake_word.AsyncTcpClient",
+        mock_client,
+    ):
+        result = await entity.async_process_audio_stream(audio_stream(), "my-wake-word")
+
+    assert result is None
