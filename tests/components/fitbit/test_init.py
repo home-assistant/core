@@ -9,6 +9,8 @@ from homeassistant.components.fitbit.const import OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from .conftest import FAKE_ACCESS_TOKEN, SERVER_ACCESS_TOKEN
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -47,3 +49,28 @@ async def test_token_refresh_failure(
 
     assert not await integration_setup()
     assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("token_expiration_time", [12345])
+async def test_token_refresh_success(
+    integration_setup: Callable[[], Awaitable[bool]],
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials: None,
+) -> None:
+    """Test where token is expired and the refresh attempt succeeds."""
+
+    assert config_entry.data["token"]["access_token"] == FAKE_ACCESS_TOKEN
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json=SERVER_ACCESS_TOKEN,
+    )
+
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    assert (
+        config_entry.data["token"]["access_token"]
+        == SERVER_ACCESS_TOKEN["access_token"]
+    )

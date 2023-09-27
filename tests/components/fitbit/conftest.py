@@ -20,6 +20,7 @@ from homeassistant.components.fitbit.const import (
     DOMAIN,
     OAUTH_SCOPES,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -37,6 +38,14 @@ DEVICES_API_URL = "https://api.fitbit.com/1/user/-/devices.json"
 TIMESERIES_API_URL_FORMAT = (
     "https://api.fitbit.com/1/user/-/{resource}/date/today/7d.json"
 )
+
+# These constants differ from values in the config entry or fitbit.conf
+SERVER_ACCESS_TOKEN = {
+    "refresh_token": "server-access-token",
+    "access_token": "server-refresh-token",
+    "type": "Bearer",
+    "expires_in": 60,
+}
 
 
 @pytest.fixture(name="token_expiration_time")
@@ -170,17 +179,25 @@ async def mock_sensor_platform_setup(
     return run
 
 
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return []
+
+
 @pytest.fixture(name="integration_setup")
 async def mock_integration_setup(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    platforms: list[str],
 ) -> Callable[[], Awaitable[bool]]:
     """Fixture to set up the integration."""
     config_entry.add_to_hass(hass)
 
     async def run() -> bool:
-        result = await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
+            result = await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
         return result
 
     return run

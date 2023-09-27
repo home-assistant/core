@@ -8,6 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fitbit.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -31,6 +32,12 @@ DEVICE_RESPONSE_ARIA_AIR = {
     "mac": "06ADD56D54GD",
     "type": "SCALE",
 }
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.SENSOR]
 
 
 @pytest.mark.parametrize(

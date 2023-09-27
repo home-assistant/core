@@ -19,6 +19,7 @@ from .conftest import (
     FAKE_REFRESH_TOKEN,
     PROFILE_API_URL,
     PROFILE_USER_ID,
+    SERVER_ACCESS_TOKEN,
 )
 
 from tests.common import MockConfigEntry
@@ -26,14 +27,6 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 REDIRECT_URL = "https://example.com/auth/external/callback"
-
-# These constants differ from values in the config entry or fitbit.conf
-SERVER_ACCESS_TOKEN = {
-    "refresh_token": "server-access-token",
-    "access_token": "server-refresh-token",
-    "type": "Bearer",
-    "expires_in": 60,
-}
 
 
 async def test_full_flow(
