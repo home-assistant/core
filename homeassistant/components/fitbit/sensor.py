@@ -457,9 +457,7 @@ FITBIT_CONF_KEYS = [
 def load_config_file(config_path: str) -> dict[str, Any] | None:
     """Load existing valid fitbit.conf from disk for import."""
     if os.path.isfile(config_path):
-        _LOGGER.debug("is file=yes")
         config_file = load_json_object(config_path)
-        _LOGGER.debug("config_file=%s", config_file)
         if config_file != DEFAULT_CONFIG and all(
             key in config_file for key in FITBIT_CONF_KEYS
         ):

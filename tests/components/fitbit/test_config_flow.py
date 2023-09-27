@@ -21,6 +21,7 @@ from .conftest import (
     PROFILE_USER_ID,
 )
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -205,6 +206,43 @@ async def test_import_fitbit_config_failure_cannot_connect(
         DOMAIN,
         "deprecated_yaml_import_issue_cannot_connect",
     ) in issue_registry.issues
+
+
+async def test_import_fitbit_config_already_exists(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    fitbit_config_setup: None,
+    sensor_platform_setup: Callable[[], Awaitable[bool]],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that platform configuration is not imported if it already exists."""
+
+    # Verify existing config entry
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    with patch(
+        "homeassistant.components.fitbit.async_setup_entry", return_value=True
+    ) as mock_config_entry_setup:
+        await integration_setup()
+
+    assert len(mock_config_entry_setup.mock_calls) == 1
+
+    with patch(
+        "homeassistant.components.fitbit.async_setup_entry", return_value=True
+    ) as mock_import_setup:
+        await sensor_platform_setup()
+
+    assert len(mock_import_setup.mock_calls) == 0
+
+    # Still one config entry
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    # Verify an issue is raised for deprecated configuration.yaml
+    assert (DOMAIN, "deprecated_yaml_import") in issue_registry.issues
 
 
 async def test_platform_setup_without_import(
