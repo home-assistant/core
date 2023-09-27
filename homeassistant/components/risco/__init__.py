@@ -35,6 +35,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_COMMUNICATION_DELAY,
     DATA_COORDINATOR,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -81,7 +82,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = entry.data
-    risco = RiscoLocal(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
+    risco = RiscoLocal(
+        data[CONF_HOST],
+        data[CONF_PORT],
+        data[CONF_PIN],
+        **{CONF_COMMUNICATION_DELAY: data[CONF_COMMUNICATION_DELAY]},
+    )
 
     try:
         await risco.connect()

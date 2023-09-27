@@ -28,6 +28,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
+    CONF_COMMUNICATION_DELAY,
     CONF_HA_STATES_TO_RISCO,
     CONF_RISCO_STATES_TO_HA,
     DEFAULT_OPTIONS,
@@ -51,6 +52,7 @@ LOCAL_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=1000): int,
         vol.Required(CONF_PIN): str,
+        vol.Optional(CONF_COMMUNICATION_DELAY, default=0): int,
     }
 )
 HA_STATES = [
@@ -83,7 +85,13 @@ async def validate_local_input(
 
     Data has the keys from LOCAL_SCHEMA with values provided by the user.
     """
-    risco = RiscoLocal(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
+
+    risco = RiscoLocal(
+        data[CONF_HOST],
+        data[CONF_PORT],
+        data[CONF_PIN],
+        **{CONF_COMMUNICATION_DELAY: data[CONF_COMMUNICATION_DELAY]},
+    )
     await risco.connect()
     site_id = risco.id
     await risco.disconnect()
