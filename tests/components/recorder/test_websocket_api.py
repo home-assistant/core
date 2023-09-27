@@ -15,6 +15,7 @@ from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
     get_metadata,
+    get_short_term_statistics_run_cache,
     list_statistic_ids,
 )
 from homeassistant.components.recorder.websocket_api import UNIT_SCHEMA
@@ -301,6 +302,13 @@ async def test_statistic_during_period(
         StatisticsShortTerm,
     )
     await async_wait_recording_done(hass)
+
+    metadata = get_metadata(hass, statistic_ids={"sensor.test"})
+    metadata_id = metadata["sensor.test"][0]
+    run_cache = get_short_term_statistics_run_cache(hass)
+    # Verify the import of the short term statistics
+    # also updates the run cache
+    assert run_cache.get_latest_ids({metadata_id}) is not None
 
     # No data for this period yet
     await client.send_json(

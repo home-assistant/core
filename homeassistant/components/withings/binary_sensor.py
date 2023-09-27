@@ -47,12 +47,11 @@ async def async_setup_entry(
     """Set up the sensor config entry."""
     coordinator: WithingsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    if coordinator.use_webhooks:
-        entities = [
-            WithingsBinarySensor(coordinator, attribute) for attribute in BINARY_SENSORS
-        ]
+    entities = [
+        WithingsBinarySensor(coordinator, attribute) for attribute in BINARY_SENSORS
+    ]
 
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class WithingsBinarySensor(WithingsEntity, BinarySensorEntity):

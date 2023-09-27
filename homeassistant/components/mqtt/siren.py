@@ -155,17 +155,6 @@ class MqttSiren(MqttEntity, SirenEntity):
     _state_off: str
     _optimistic: bool
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT siren."""
-        self._extra_attributes: dict[str, Any] = {}
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""
