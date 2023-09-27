@@ -1,5 +1,6 @@
 """Test config flow."""
 import asyncio
+from ipaddress import ip_address
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -121,8 +122,8 @@ async def test_user_sets_unique_id(
 ) -> None:
     """Test that the user flow sets the unique id."""
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
@@ -198,8 +199,8 @@ async def test_user_causes_zeroconf_to_abort(
 ) -> None:
     """Test that the user flow sets the unique id and aborts the zeroconf flow."""
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
@@ -558,8 +559,8 @@ async def test_discovery_initiation(
 ) -> None:
     """Test discovery importing works."""
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         hostname="test.local.",
         name="mock_name",
         port=6053,
@@ -590,8 +591,8 @@ async def test_discovery_no_mac(
 ) -> None:
     """Test discovery aborted if old ESPHome without mac in zeroconf."""
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
@@ -618,8 +619,8 @@ async def test_discovery_already_configured(
     entry.add_to_hass(hass)
 
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
@@ -639,8 +640,8 @@ async def test_discovery_duplicate_data(
 ) -> None:
     """Test discovery aborts if same mDNS packet arrives."""
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         hostname="test.local.",
         name="mock_name",
         port=6053,
@@ -674,8 +675,8 @@ async def test_discovery_updates_unique_id(
     entry.add_to_hass(hass)
 
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
@@ -1173,8 +1174,8 @@ async def test_zeroconf_encryption_key_via_dashboard(
 ) -> None:
     """Test encryption key retrieved from dashboard."""
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
@@ -1239,8 +1240,8 @@ async def test_zeroconf_encryption_key_via_dashboard_with_api_encryption_prop(
 ) -> None:
     """Test encryption key retrieved from dashboard with api_encryption property set."""
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
@@ -1305,8 +1306,8 @@ async def test_zeroconf_no_encryption_key_via_dashboard(
 ) -> None:
     """Test encryption key not retrieved from dashboard."""
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,

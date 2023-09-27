@@ -14,6 +14,7 @@ class GaragesAmsterdamEntity(CoordinatorEntity):
     """Base Entity for garages amsterdam data."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, garage_name: str, info_type: str

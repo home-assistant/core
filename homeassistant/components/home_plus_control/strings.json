@@ -18,7 +18,7 @@
     }
   },
   "issues": {
-    "move_to_netamo": {
+    "move_to_netatmo": {
       "title": "Legrand Home+ Control deprecation",
       "description": "Home Assistant has been informed that the platform the Legrand Home+ Control integration is using, will be shutting down upcoming December.\n\nOnce that happens, it means this integration is no longer functional. We advise you to remove this integration and switch to the [Netatmo]({url}) integration, which provides a replacement for controlling your Legrand Home+ Control devices."
     }

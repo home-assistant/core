@@ -54,7 +54,7 @@ PLATFORMS = [Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
-_ISSUE_MOTE_TO_NETAMO = "move_to_netamo"
+_ISSUE_MOVE_TO_NETATMO = "move_to_netatmo"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -67,12 +67,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_create_issue(
         hass,
         DOMAIN,
-        _ISSUE_MOTE_TO_NETAMO,
+        _ISSUE_MOVE_TO_NETATMO,
         is_fixable=False,
         is_persistent=False,
-        breaks_in_ha_version="2023.12.0",  # Netamo decided to shutdown the api in december
+        breaks_in_ha_version="2023.12.0",  # Netatmo decided to shutdown the api in december
         severity=IssueSeverity.WARNING,
-        translation_key=_ISSUE_MOTE_TO_NETAMO,
+        translation_key=_ISSUE_MOVE_TO_NETATMO,
         translation_placeholders={
             "url": "https://www.home-assistant.io/integrations/netatmo/"
         },
@@ -94,12 +94,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_create_issue(
         hass,
         DOMAIN,
-        _ISSUE_MOTE_TO_NETAMO,
+        _ISSUE_MOVE_TO_NETATMO,
         is_fixable=False,
         is_persistent=False,
-        breaks_in_ha_version="2023.12.0",  # Netamo decided to shutdown the api in december
+        breaks_in_ha_version="2023.12.0",  # Netatmo decided to shutdown the api in december
         severity=IssueSeverity.WARNING,
-        translation_key=_ISSUE_MOTE_TO_NETAMO,
+        translation_key=_ISSUE_MOVE_TO_NETATMO,
         translation_placeholders={
             "url": "https://www.home-assistant.io/integrations/netatmo/"
         },
@@ -203,6 +203,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         # And finally unload the domain config entry data
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    async_delete_issue(hass, DOMAIN, _ISSUE_MOTE_TO_NETAMO)
+    async_delete_issue(hass, DOMAIN, _ISSUE_MOVE_TO_NETATMO)
 
     return unload_ok

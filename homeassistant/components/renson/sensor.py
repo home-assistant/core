@@ -46,8 +46,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RensonCoordinator, RensonData
+from . import RensonData
 from .const import DOMAIN
+from .coordinator import RensonCoordinator
 from .entity import RensonEntity
 
 OPTIONS_MAPPING = {
@@ -265,6 +266,8 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
 
 class RensonSensor(RensonEntity, SensorEntity):
     """Get a sensor data from the Renson API and store it in the state of the class."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

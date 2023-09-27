@@ -152,20 +152,20 @@ async def test_rpc_device_services(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_name_test_switch_0"},
+        {ATTR_ENTITY_ID: "switch.test_switch_0"},
         blocking=True,
     )
-    assert hass.states.get("switch.test_name_test_switch_0").state == STATE_ON
+    assert hass.states.get("switch.test_switch_0").state == STATE_ON
 
     monkeypatch.setitem(mock_rpc_device.status["switch:0"], "output", False)
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_name_test_switch_0"},
+        {ATTR_ENTITY_ID: "switch.test_switch_0"},
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert hass.states.get("switch.test_name_test_switch_0").state == STATE_OFF
+    assert hass.states.get("switch.test_switch_0").state == STATE_OFF
 
 
 async def test_rpc_device_switch_type_lights_mode(
@@ -176,7 +176,7 @@ async def test_rpc_device_switch_type_lights_mode(
         mock_rpc_device.config["sys"]["ui_data"], "consumption_types", ["lights"]
     )
     await init_integration(hass, 2)
-    assert hass.states.get("switch.test_name_test_switch_0") is None
+    assert hass.states.get("switch.test_switch_0") is None
 
 
 @pytest.mark.parametrize("exc", [DeviceConnectionError, RpcCallError(-1, "error")])
@@ -191,7 +191,7 @@ async def test_rpc_set_state_errors(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test_name_test_switch_0"},
+            {ATTR_ENTITY_ID: "switch.test_switch_0"},
             blocking=True,
         )
 
@@ -212,7 +212,7 @@ async def test_rpc_auth_error(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_name_test_switch_0"},
+        {ATTR_ENTITY_ID: "switch.test_switch_0"},
         blocking=True,
     )
     await hass.async_block_till_done()

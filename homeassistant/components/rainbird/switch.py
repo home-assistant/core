@@ -33,7 +33,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry for a Rain Bird irrigation switches."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id].coordinator
     async_add_entities(
         RainBirdSwitch(
             coordinator,
@@ -71,7 +71,6 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         else:
             self._attr_name = None
             self._attr_has_entity_name = True
-        self._state = None
         self._duration_minutes = duration_minutes
         self._attr_unique_id = f"{coordinator.serial_number}-{zone}"
         self._attr_device_info = DeviceInfo(

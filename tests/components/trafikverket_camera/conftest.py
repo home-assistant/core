@@ -22,7 +22,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def load_integration_from_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, get_camera: CameraInfo
 ) -> MockConfigEntry:
-    """Set up the Trafikverket Ferry integration in Home Assistant."""
+    """Set up the Trafikverket Camera integration in Home Assistant."""
     aioclient_mock.get(
         "https://www.testurl.com/test_photo.jpg?type=fullsize", content=b"0123456789"
     )

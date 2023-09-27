@@ -1,5 +1,6 @@
 """The sensor tests for the Airzone platform."""
 
+import copy
 from unittest.mock import patch
 
 from aioairzone.const import API_DATA, API_SYSTEMS
@@ -87,7 +88,7 @@ async def test_airzone_sensors_availability(
 
     await async_init_integration(hass)
 
-    HVAC_MOCK_UNAVAILABLE_ZONE = {**HVAC_MOCK}
+    HVAC_MOCK_UNAVAILABLE_ZONE = copy.deepcopy(HVAC_MOCK)
     del HVAC_MOCK_UNAVAILABLE_ZONE[API_SYSTEMS][0][API_DATA][1]
 
     with patch(

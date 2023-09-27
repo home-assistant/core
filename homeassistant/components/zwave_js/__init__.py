@@ -5,6 +5,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Coroutine
 from contextlib import suppress
+import logging
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
@@ -21,6 +22,7 @@ from zwave_js_server.model.notification import (
 from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.persistent_notification import async_create
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -28,6 +30,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_URL,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGGING_CHANGED,
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
@@ -92,6 +95,7 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    LIB_LOGGER,
     LOGGER,
     USER_AGENT,
     ZWAVE_JS_NOTIFICATION_EVENT,
@@ -104,6 +108,8 @@ from .discovery import (
     async_discover_single_value,
 )
 from .helpers import (
+    async_disable_server_logging_if_needed,
+    async_enable_server_logging_if_needed,
     async_enable_statistics,
     get_device_id,
     get_device_id_ext,
@@ -248,6 +254,24 @@ class DriverEvents:
         elif opted_in is False:
             await driver.async_disable_statistics()
 
+        async def handle_logging_changed(_: Event | None = None) -> None:
+            """Handle logging changed event."""
+            if LIB_LOGGER.isEnabledFor(logging.DEBUG):
+                await async_enable_server_logging_if_needed(
+                    self.hass, self.config_entry, driver
+                )
+            else:
+                await async_disable_server_logging_if_needed(
+                    self.hass, self.config_entry, driver
+                )
+
+        # Set up server logging on setup if needed
+        await handle_logging_changed()
+
+        self.config_entry.async_on_unload(
+            self.hass.bus.async_listen(EVENT_LOGGING_CHANGED, handle_logging_changed)
+        )
+
         # Check for nodes that no longer exist and remove them
         stored_devices = dr.async_entries_for_config_entry(
             self.dev_reg, self.config_entry.entry_id
@@ -288,6 +312,11 @@ class DriverEvents:
         # NOTE: This will not remove nodes that were removed when HA was not running
         self.config_entry.async_on_unload(
             controller.on("node removed", self.controller_events.async_on_node_removed)
+        )
+
+        # listen for identify events for the controller
+        self.config_entry.async_on_unload(
+            controller.on("identify", self.controller_events.async_on_identify)
         )
 
     async def async_setup_platform(self, platform: Platform) -> None:
@@ -347,8 +376,13 @@ class ControllerEvents:
             )
         )
 
-        # No need for a ping button or node status sensor for controller nodes
-        if not node.is_controller_node:
+        if node.is_controller_node:
+            # Create a controller status sensor for each device
+            async_dispatcher_send(
+                self.hass,
+                f"{DOMAIN}_{self.config_entry.entry_id}_add_controller_status_sensor",
+            )
+        else:
             # Create a node status sensor for each device
             async_dispatcher_send(
                 self.hass,
@@ -416,6 +450,41 @@ class ControllerEvents:
             )
         else:
             self.remove_device(device)
+
+    @callback
+    def async_on_identify(self, event: dict) -> None:
+        """Handle identify event."""
+        # Get node device
+        node: ZwaveNode = event["node"]
+        dev_id = get_device_id(self.driver_events.driver, node)
+        device = self.dev_reg.async_get_device(identifiers={dev_id})
+        assert device
+        device_name = device.name_by_user or device.name
+        home_id = self.driver_events.driver.controller.home_id
+        # We do this because we know at this point the controller has its home ID as
+        # as it is part of the device ID
+        assert home_id
+        # In case the user has multiple networks, we should give them more information
+        # about the network for the controller being identified.
+        identifier = ""
+        if len(self.hass.config_entries.async_entries(DOMAIN)) > 1:
+            if str(home_id) != self.config_entry.title:
+                identifier = (
+                    f"`{self.config_entry.title}`, with the home ID `{home_id}`, "
+                )
+            else:
+                identifier = f"with the home ID `{home_id}` "
+        async_create(
+            self.hass,
+            (
+                f"`{device_name}` has just requested the controller for your Z-Wave "
+                f"network {identifier}to identify itself. No action is needed from "
+                "you other than to note the source of the request, and you can safely "
+                "dismiss this notification when ready."
+            ),
+            "New Z-Wave Identify Controller Request",
+            f"{DOMAIN}.identify_controller.{dev_id[1]}",
+        )
 
     @callback
     def register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
@@ -550,6 +619,23 @@ class NodeEvents:
                 node,
             )
 
+        # After ensuring the node is set up in HA, we should check if the node's
+        # device config has changed, and if so, issue a repair registry entry for a
+        # possible reinterview
+        if not node.is_controller_node and await node.async_has_device_config_changed():
+            device_name = device.name_by_user or device.name or "Unnamed device"
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"device_config_file_changed.{device.id}",
+                data={"device_id": device.id, "device_name": device_name},
+                is_fixable=True,
+                is_persistent=False,
+                translation_key="device_config_file_changed",
+                translation_placeholders={"device_name": device_name},
+                severity=IssueSeverity.WARNING,
+            )
+
     async def async_handle_discovery_info(
         self,
         device: dr.DeviceEntry,
@@ -678,6 +764,7 @@ class NodeEvents:
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
             ATTR_HOME_ID: driver.controller.home_id,
+            ATTR_ENDPOINT: notification.endpoint_idx,
             ATTR_DEVICE_ID: device.id,
             ATTR_COMMAND_CLASS: notification.command_class,
         }
@@ -838,6 +925,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     unload_ok = all(await asyncio.gather(*tasks)) if tasks else True
 
+    if hasattr(driver_events, "driver"):
+        await async_disable_server_logging_if_needed(hass, entry, driver_events.driver)
     if DATA_CLIENT_LISTEN_TASK in info:
         await disconnect_client(hass, entry)
 
