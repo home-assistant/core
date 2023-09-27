@@ -48,9 +48,6 @@
           "unknown": "Unknown"
         }
       },
-      "rain_amount": {
-        "name": "Rain amount"
-      },
       "station_pressure": {
         "name": "Air pressure"
       },
