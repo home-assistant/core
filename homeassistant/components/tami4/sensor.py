@@ -97,7 +97,7 @@ class Tami4EdgeSensorEntity(Tami4EdgeBaseEntity, CoordinatorEntity[Tami4EdgeWate
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: Tami4EdgeWaterQualityCoordinator,
         api: Tami4EdgeAPI,
         entity_description: SensorEntityDescription,
     ) -> None:
