@@ -79,10 +79,11 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
         self._command_id = self.get_command_id(
             node["type"]["endpoints"], "signal", "trigger"
         )
+        self._attr_is_on = not self.get_value("signal", "trigger")
 
     async def async_update_signal(self):
         """Update state."""
-        self._attr_is_on = await self.get_home_endpoint_value(self._command_id)
+        self._attr_is_on = not await self.get_home_endpoint_value(self._command_id)
         await FreeboxHomeEntity.async_update_signal(self)
 
 
