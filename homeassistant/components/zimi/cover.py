@@ -128,7 +128,7 @@ class ZimiCover(CoverEntity):
         self.logger.debug("open_cover() for %s", self.name)
         await self._cover.open_door()
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Open the cover/door to a specified percentage."""
         position = kwargs.get("position", None)
         if position:
