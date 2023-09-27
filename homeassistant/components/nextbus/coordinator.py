@@ -1,7 +1,7 @@
 """NextBus data update coordinator."""
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from py_nextbus import NextBusClient
 from py_nextbus.client import NextBusFormatError, NextBusHTTPError, RouteStop
@@ -29,7 +29,7 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
         self.client = NextBusClient(output_format="json", agency=agency)
         self._agency = agency
         self._stop_routes: set[RouteStop] = set()
-        self._data: dict[str, Any] = {}
+        self._predictions: dict[RouteStop, dict[str, Any]] = {}
 
     def add_stop_route(self, stop_tag: str, route_tag: str) -> None:
         """Tell coordinator to start tracking a given stop and route."""
@@ -43,14 +43,13 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
         self, stop_tag: str, route_tag: str
     ) -> dict[str, Any] | None:
         """Get prediction result for a given stop and route."""
-        for prediction in listify(self.data.get("predictions", [])):
-            if (
-                prediction["stopTag"] == stop_tag
-                and prediction["routeTag"] == route_tag
-            ):
-                return prediction
+        return self._predictions.get(RouteStop(route_tag, stop_tag))
 
-        return None
+    def _calc_predictions(self, data: dict[str, Any]) -> None:
+        self._predictions = {
+            RouteStop(prediction["routeTag"], prediction["stopTag"]): prediction
+            for prediction in listify(data.get("predictions", []))
+        }
 
     def get_attribution(self) -> str | None:
         """Get attribution from api results."""
@@ -68,7 +67,10 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
             """Fetch data from NextBus."""
             self.logger.debug("Updating data from API (executor)")
             try:
-                return self.client.get_predictions_for_multi_stops(self._stop_routes)
+                data = self.client.get_predictions_for_multi_stops(self._stop_routes)
+                data = cast(dict[str, Any], data)
+                self._calc_predictions(data)
+                return data
             except NextBusHTTPError as ex:
                 raise UpdateFailed("failed connecting to nextbus api", ex) from ex
             except NextBusFormatError as ex:
