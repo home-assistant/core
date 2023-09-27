@@ -36,7 +36,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_HEATING_TYPE, DOMAIN, HEATING_TYPE_TO_CREATOR_METHOD, VICARE_DEVICE_LIST, HeatingType
+from .const import (
+    CONF_HEATING_TYPE,
+    DOMAIN,
+    HEATING_TYPE_TO_CREATOR_METHOD,
+    VICARE_DEVICE_LIST,
+    HeatingType,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
