@@ -6,7 +6,7 @@ from .const import ATTRIBUTION
 from .coordinator import PoolSenseDataUpdateCoordinator
 
 
-class PoolSenseEntity(CoordinatorEntity):
+class PoolSenseEntity(CoordinatorEntity[PoolSenseDataUpdateCoordinator]):
     """Implements a common class elements representing the PoolSense component."""
 
     _attr_attribution = ATTRIBUTION
