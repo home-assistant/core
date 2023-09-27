@@ -14,11 +14,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.network import get_url
 
-from . import (
-    CONF_TRUSTED_NETWORKS,
-    CONF_URL,
-    BaseTelegramBotEntity,
-)
+from . import CONF_TRUSTED_NETWORKS, CONF_URL, BaseTelegramBotEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,9 +28,7 @@ async def async_setup_platform(hass, bot, config):
 
     # Generate a ephemeral secret token
     alphabet = string.ascii_letters + string.digits + "-_"
-    secret_token = "".join(
-        secrets.choice(alphabet) for _ in range(SECRET_TOKEN_LENGTH)
-    )
+    secret_token = "".join(secrets.choice(alphabet) for _ in range(SECRET_TOKEN_LENGTH))
 
     pushbot = PushBot(hass, bot, config, secret_token)
 
