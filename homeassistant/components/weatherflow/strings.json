@@ -44,8 +44,7 @@
           "none": "None",
           "rain": "Rain",
           "hail": "Hail",
-          "rain_hail": "Rain and hail",
-          "unknown": "Unknown"
+          "rain_hail": "Rain and hail"
         }
       },
       "station_pressure": {
