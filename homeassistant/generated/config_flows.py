@@ -529,6 +529,7 @@ FLOWS = {
         "waqi",
         "watttime",
         "waze_travel_time",
+        "weatherflow",
         "weatherkit",
         "webostv",
         "wemo",
