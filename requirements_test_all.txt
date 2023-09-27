@@ -1147,7 +1147,7 @@ py-canary==0.5.3
 py-cpuinfo==8.0.0
 
 # homeassistant.components.dormakaba_dkey
-py-dormakaba-dkey==1.0.4
+py-dormakaba-dkey==1.0.5
 
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4
@@ -1934,7 +1934,7 @@ twentemilieu==1.0.0
 twilio==6.32.0
 
 # homeassistant.components.twitch
-twitchAPI==3.10.0
+twitchAPI==4.0.0
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
