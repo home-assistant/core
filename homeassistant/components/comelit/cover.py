@@ -37,6 +37,7 @@ class ComelitCoverEntity(CoordinatorEntity[ComelitSerialBridge], CoverEntity):
 
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
