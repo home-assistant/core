@@ -1,8 +1,6 @@
 """Get data from Smart Weather station via UDP."""
 from __future__ import annotations
 
-import logging
-
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
 from pyweatherflowudp.device import EVENT_LOAD_COMPLETE, WeatherFlowDevice
 from pyweatherflowudp.errors import ListenerError
@@ -14,9 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 
-from .const import DOMAIN, format_dispatch_call
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER, format_dispatch_call
 
 PLATFORMS = [
     Platform.SENSOR,
@@ -30,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     @callback
     def _async_device_discovered(device: WeatherFlowDevice) -> None:
-        _LOGGER.debug("Found a device: %s", device)
+        LOGGER.debug("Found a device: %s", device)
 
         @callback
         def _async_add_device_if_started(device: WeatherFlowDevice):

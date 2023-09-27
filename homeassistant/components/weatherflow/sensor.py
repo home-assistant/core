@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 
 from pyweatherflowudp.const import EVENT_RAPID_WIND
 from pyweatherflowudp.device import (
@@ -51,6 +52,13 @@ class WeatherFlowSensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     raw_data_conv_fn: Callable[[WeatherFlowDevice], datetime | StateType]
+
+
+def precipitation_raw_conversion_fn(raw_data: Enum):
+    """Parse parse precipitation type."""
+    if raw_data.name.lower() == "unknown":
+        return None
+    return raw_data.name.lower()
 
 
 @dataclass
@@ -152,7 +160,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["none", "rain", "hail", "rain_hail", "unknown"],
         icon="mdi:weather-rainy",
-        raw_data_conv_fn=lambda raw_data: raw_data.name.lower(),
+        raw_data_conv_fn=precipitation_raw_conversion_fn,
     ),
     WeatherFlowSensorEntityDescription(
         key="rain_accumulation_previous_minute",
