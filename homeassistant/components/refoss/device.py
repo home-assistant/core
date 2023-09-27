@@ -5,17 +5,17 @@ from __future__ import annotations
 from refoss_ha.controller.device import BaseDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, REFOSS_HA_SIGNAL_UPDATE_ENTITY
+from .const import DOMAIN
 
 
-class RefossEntity(Entity):
+class RefossEntity(
+    Entity,
+):
     """Entity for refoss."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(self, device: BaseDevice, channel: int) -> None:
         """__init__."""
@@ -39,31 +39,6 @@ class RefossEntity(Entity):
         """Return True if the device is online."""
         return self.device.online
 
-    async def _async_push_notification_received(
-        self, namespace: str, data: dict, uuid: str
-    ):
-        """Synchronize the status of device push."""
-        await self.device.async_update_push_state(
-            namespace=namespace, data=data, uuid=uuid
-        )
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added to hass."""
-        self.device.register_push_notification_handler_coroutine(
-            self._async_push_notification_received
-        )
-        self.async_write_ha_state()
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{REFOSS_HA_SIGNAL_UPDATE_ENTITY}_{self.device.uuid}",
-                self.async_write_ha_state,
-            )
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """async_will_remove_from_hass."""
-        self.device.unregister_push_notification_handler_coroutine(
-            self._async_push_notification_received
-        )
+    async def async_device_update(self, warning: bool = True) -> None:
+        """Async update device status."""
+        await self.device.async_handle_update()

@@ -8,12 +8,11 @@ from refoss_ha.controller.toggle import ToggleXMix
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantRefossData
-from .const import DOMAIN, REFOSS_DISCOVERY_NEW
+from .const import DOMAIN
 from .device import RefossEntity
 
 
@@ -24,28 +23,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches for device."""
     hass_data: HomeAssistantRefossData = hass.data[DOMAIN][entry.entry_id]
+    device = hass_data.base_device
 
-    @callback
-    def entity_add_callback(device_ids: list[str]) -> None:
-        """entity_add_callback."""
-        new_entities = []
-        for uuid in device_ids:
-            device = hass_data.device_manager.base_device_map[uuid]
-            if device is None:
-                continue
-            if not isinstance(device, ToggleXMix):
-                continue
+    new_entities = []
+    if not isinstance(device, ToggleXMix):
+        return
 
-            for channel in device.channels:
-                w = RefossSwitchEntity(device=device, channel=channel)
-                new_entities.append(w)
-        async_add_entities(new_entities, True)
-
-    entity_add_callback([*hass_data.device_manager.base_device_map])
-
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, REFOSS_DISCOVERY_NEW, entity_add_callback)
-    )
+    for channel in device.channels:
+        w = RefossSwitchEntity(device=device, channel=channel)
+        new_entities.append(w)
+    async_add_entities(new_entities, True)
 
 
 class RefossSwitchEntity(RefossEntity, SwitchEntity):

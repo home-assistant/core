@@ -14,6 +14,8 @@ async def get_refoss_socket_server(hass: HomeAssistant) -> SocketServerProtocol:
     socket_server = SocketServerProtocol()
     await socket_server.initialize()
 
+    hass.async_create_task(socket_server.broadcast_msg())
+
     @callback
     def shutdown_listener(ev: Event) -> None:
         """Shutdown socket_server."""
