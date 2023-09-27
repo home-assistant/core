@@ -1,7 +1,6 @@
 """Fixtures for Weatherflow integration tests."""
 import asyncio
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -10,7 +9,7 @@ from pyweatherflowudp.device import WeatherFlowDevice
 
 from homeassistant.components.weatherflow.const import DOMAIN
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -56,22 +55,10 @@ def mock_stop() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_start() -> Generator[AsyncMock, None, None]:
     """Return fixture for starting upd."""
-    DEVICE_JSON = """
-{
-  "serial_number": "ST-00000001",
-  "type": "device_status",
-  "hub_sn": "HB-00000001",
-  "timestamp": 1510855923,
-  "uptime": 2189,
-  "voltage": 3.50,
-  "firmware_revision": 17,
-  "rssi": -17,
-  "hub_rssi": -87,
-  "sensor_status": 0,
-  "debug": 0
-}"""
+
     device = WeatherFlowDevice(
-        serial_number="HB-00000001", data=json.loads(DEVICE_JSON)
+        serial_number="HB-00000001",
+        data=load_json_object_fixture("weatherflow/device.json"),
     )
 
     async def device_discovery_task(self):

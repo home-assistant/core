@@ -346,7 +346,7 @@ class WeatherFlowSensorEntity(SensorEntity):
             identifiers={(DOMAIN, device.serial_number)},
             manufacturer="WeatherFlow",
             model=device.model,
-            name=str(device.serial_number),
+            name=device.serial_number,
             sw_version=device.firmware_revision,
         )
 
