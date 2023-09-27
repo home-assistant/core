@@ -54,9 +54,6 @@
       "rain_rate": {
         "name": "Rain rate"
       },
-      "humidity": {
-        "name": "Humidity"
-      },
       "station_pressure": {
         "name": "Air pressure"
       },
