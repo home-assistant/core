@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         entity_entry: er.RegistryEntry,
     ) -> dict[str, str] | None:
         """Update unique ID of entity entry."""
-        if config_entry.entry_id not in entity_entry.unique_id:
+        if not entity_entry.unique_id.startswith(f"{config_entry.entry_id}-"):
             new_unique_id = f"{config_entry.entry_id}-{entity_entry.unique_id}"
             return {"new_unique_id": new_unique_id}
         return None
