@@ -51,9 +51,6 @@
       "station_pressure": {
         "name": "Air pressure"
       },
-      "solar_radiation": {
-        "name": "Solar radiation"
-      },
       "uptime": {
         "name": "Uptime"
       },
