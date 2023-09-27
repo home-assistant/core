@@ -46,5 +46,5 @@ class ObihaiButton(ObihaiEntity, ButtonEntity):
     def press(self) -> None:
         """Press button."""
 
-        if not self._pyobihai.call_reboot():
+        if not self.pyobihai.call_reboot():
             raise HomeAssistantError("Reboot failed!")
