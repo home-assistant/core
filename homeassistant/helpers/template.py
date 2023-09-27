@@ -2446,11 +2446,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
         self.tests["is_number"] = is_number
-        self.tests["is_list"] = is_list
-        self.tests["is_set"] = is_set
-        self.tests["is_tuple"] = is_tuple
-        self.tests["is_datetime"] = is_datetime
-        self.tests["is_non_string_iterable"] = is_non_string_iterable
+        self.tests["list"] = is_list
+        self.tests["set"] = is_set
+        self.tests["tuple"] = is_tuple
+        self.tests["datetime"] = is_datetime
+        self.tests["non_string_iterable"] = is_non_string_iterable
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
         self.tests["contains"] = contains

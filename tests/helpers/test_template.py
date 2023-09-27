@@ -502,7 +502,7 @@ def test_islist(hass: HomeAssistant, value, expected) -> None:
         == expected
     )
     assert (
-        template.Template("{{ value is is_list }}", hass).async_render({"value": value})
+        template.Template("{{ value is list }}", hass).async_render({"value": value})
         == expected
     )
 
@@ -532,7 +532,7 @@ def test_isset(hass: HomeAssistant, value, expected) -> None:
         == expected
     )
     assert (
-        template.Template("{{ value is is_set }}", hass).async_render({"value": value})
+        template.Template("{{ value is set }}", hass).async_render({"value": value})
         == expected
     )
 
@@ -562,9 +562,7 @@ def test_istuple(hass: HomeAssistant, value, expected) -> None:
         == expected
     )
     assert (
-        template.Template("{{ value is is_tuple }}", hass).async_render(
-            {"value": value}
-        )
+        template.Template("{{ value is tuple }}", hass).async_render({"value": value})
         == expected
     )
 
@@ -661,7 +659,7 @@ def test_isdatetime(hass: HomeAssistant, value, expected) -> None:
         == expected
     )
     assert (
-        template.Template("{{ value is is_datetime }}", hass).async_render(
+        template.Template("{{ value is datetime }}", hass).async_render(
             {"value": value}
         )
         == expected
@@ -697,7 +695,7 @@ def test_isnonstringiterable(hass: HomeAssistant, value, expected) -> None:
         == expected
     )
     assert (
-        template.Template("{{ value is is_non_string_iterable }}", hass).async_render(
+        template.Template("{{ value is non_string_iterable }}", hass).async_render(
             {"value": value}
         )
         == expected
