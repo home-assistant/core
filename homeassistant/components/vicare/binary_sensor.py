@@ -209,7 +209,6 @@ class ViCareBinarySensor(BinarySensorEntity):
         self._device_config = device_config
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=device_config.getModel(),
             name=f"{device_config.getModel()}-{device_config.getConfig().serial}",
             manufacturer="Viessmann",
             model=device_config.getModel(),
