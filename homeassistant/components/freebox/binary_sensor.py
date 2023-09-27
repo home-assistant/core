@@ -67,6 +67,8 @@ async def async_setup_entry(
 class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
     """Representation of a Freebox binary sensor."""
 
+    _sensor_name = "trigger"
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -77,14 +79,24 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
         """Initialize a Freebox binary sensor."""
         super().__init__(hass, router, node, sub_node)
         self._command_id = self.get_command_id(
-            node["type"]["endpoints"], "signal", "trigger"
+            node["type"]["endpoints"], "signal", self._sensor_name
         )
-        self._attr_is_on = not self.get_value("signal", "trigger")
+        self._attr_is_on = self._edit_state(self.get_value("signal", self._sensor_name))
 
     async def async_update_signal(self):
-        """Update state."""
-        self._attr_is_on = not await self.get_home_endpoint_value(self._command_id)
+        """Update name & state."""
+        self._attr_is_on = self._edit_state(
+            await self.get_home_endpoint_value(self._command_id)
+        )
         await FreeboxHomeEntity.async_update_signal(self)
+
+    def _edit_state(self, state: bool | None) -> bool | None:
+        """Edit state depending on sensor name."""
+        if state is None:
+            return None
+        if self._sensor_name == "trigger":
+            return not state
+        return state
 
 
 class FreeboxPirSensor(FreeboxHomeBinarySensor):
@@ -106,6 +118,8 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
+    _sensor_name = "cover"
+
     def __init__(
         self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
     ) -> None:
@@ -118,15 +132,6 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
             None,
         )
         super().__init__(hass, router, node, cover_node)
-        self._command_id = self.get_command_id(
-            node["type"]["endpoints"], "signal", "cover"
-        )
-        self._attr_is_on = self.get_value("signal", "cover")
-
-    async def async_update_signal(self):
-        """Update name & state."""
-        self._attr_is_on = await self.get_home_endpoint_value(self._command_id)
-        await FreeboxHomeEntity.async_update_signal(self)
 
 
 class FreeboxRaidDegradedSensor(BinarySensorEntity):

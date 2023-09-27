@@ -517,7 +517,7 @@ DATA_LAN_GET_HOSTS_LIST = [
 # PIR node id 26, endpoint id 6
 DATA_HOME_GET_VALUES = {
     "category": "",
-    "ep_type": "slot",
+    "ep_type": "signal",
     "id": 6,
     "label": "Détection",
     "name": "trigger",
@@ -2128,6 +2128,17 @@ DATA_HOME_GET_NODES = [
             {
                 "category": "",
                 "ep_type": "signal",
+                "id": 6,
+                "label": "Détection",
+                "name": "trigger",
+                "ui": {"access": "w", "display": "toggle"},
+                "value": False,
+                "value_type": "bool",
+                "visibility": "normal",
+            },
+            {
+                "category": "",
+                "ep_type": "signal",
                 "id": 7,
                 "label": "Couvercle",
                 "name": "cover",
@@ -2336,6 +2347,17 @@ DATA_HOME_GET_NODES = [
             {
                 "category": "",
                 "ep_type": "signal",
+                "id": 6,
+                "label": "Détection",
+                "name": "trigger",
+                "ui": {"access": "w", "display": "toggle"},
+                "value": False,
+                "value_type": "bool",
+                "visibility": "normal",
+            },
+            {
+                "category": "",
+                "ep_type": "signal",
                 "id": 7,
                 "label": "Couvercle",
                 "name": "cover",
@@ -2345,7 +2367,7 @@ DATA_HOME_GET_NODES = [
                     "display": "warning",
                     "icon_url": "/resources/images/home/pictos/warning.png",
                 },
-                "value": True,
+                "value": False,
                 "value_type": "bool",
                 "visibility": "normal",
             },
