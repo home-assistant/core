@@ -22,8 +22,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -55,12 +56,12 @@ from .coordinator import DwdWeatherWarningsCoordinator
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=CURRENT_WARNING_SENSOR,
-        name="Current Warning Level",
+        translation_key=CURRENT_WARNING_SENSOR,
         icon="mdi:close-octagon-outline",
     ),
     SensorEntityDescription(
         key=ADVANCE_WARNING_SENSOR,
-        name="Advance Warning Level",
+        translation_key=ADVANCE_WARNING_SENSOR,
         icon="mdi:close-octagon-outline",
     ),
 )
@@ -89,12 +90,17 @@ async def async_setup_platform(
     # Show issue as long as the YAML configuration exists.
     async_create_issue(
         hass,
-        DOMAIN,
-        "deprecated_yaml",
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
         breaks_in_ha_version="2023.12.0",
         is_fixable=False,
+        issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Deutscher Wetterdienst (DWD) Weather Warnings",
+        },
     )
 
     hass.async_create_task(
@@ -125,6 +131,7 @@ class DwdWeatherWarningsSensor(
     """Representation of a DWD-Weather-Warnings sensor."""
 
     _attr_attribution = "Data provided by DWD"
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -136,8 +143,11 @@ class DwdWeatherWarningsSensor(
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_name = f"{DEFAULT_NAME} {entry.title} {description.name}"
         self._attr_unique_id = f"{entry.unique_id}-{description.key}"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)}, name=f"{DEFAULT_NAME} {entry.title}"
+        )
 
         self.api = coordinator.api
 

@@ -53,7 +53,7 @@ CONF_KNX_DEFAULT_RATE_LIMIT: Final = 0
 DEFAULT_ROUTING_IA: Final = "0.0.240"
 
 CONF_KNX_TELEGRAM_LOG_SIZE: Final = "telegram_log_size"
-TELEGRAM_LOG_DEFAULT: Final = 50
+TELEGRAM_LOG_DEFAULT: Final = 200
 TELEGRAM_LOG_MAX: Final = 5000  # ~2 MB or ~5 hours of reasonable bus load
 
 ##
@@ -127,6 +127,8 @@ SUPPORTED_PLATFORMS: Final = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DATE,
+    Platform.DATETIME,
     Platform.FAN,
     Platform.LIGHT,
     Platform.NOTIFY,

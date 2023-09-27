@@ -5,15 +5,13 @@ from collections.abc import Iterable
 import csv
 import dataclasses
 from datetime import timedelta
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 import logging
 import os
-from typing import Any, cast, final
+from typing import Any, Self, cast, final
 
-from typing_extensions import Self
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,
@@ -786,6 +784,17 @@ class LightEntityDescription(ToggleEntityDescription):
 
 class LightEntity(ToggleEntity):
     """Base class for light entities."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            ATTR_SUPPORTED_COLOR_MODES,
+            ATTR_EFFECT_LIST,
+            ATTR_MIN_MIREDS,
+            ATTR_MAX_MIREDS,
+            ATTR_MIN_COLOR_TEMP_KELVIN,
+            ATTR_MAX_COLOR_TEMP_KELVIN,
+        }
+    )
 
     entity_description: LightEntityDescription
     _attr_brightness: int | None = None

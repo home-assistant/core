@@ -35,7 +35,12 @@ from .const import (
     CONF_STATE_TOPIC,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import (
     MessageCallbackType,
     MqttCommandTemplate,
@@ -44,7 +49,6 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +82,7 @@ def valid_text_size_configuration(config: ConfigType) -> ConfigType:
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_MAX, default=MAX_LENGTH_STATE_STATE): cv.positive_int,
         vol.Optional(CONF_MIN, default=0): cv.positive_int,
         vol.Optional(CONF_MODE, default=text.TextMode.TEXT): vol.In(
@@ -124,24 +128,15 @@ async def _async_setup_entity(
 class MqttTextEntity(MqttEntity, TextEntity):
     """Representation of the MQTT text entity."""
 
+    _attr_native_value: str | None = None
     _attributes_extra_blocked = MQTT_TEXT_ATTRIBUTES_BLOCKED
+    _default_name = DEFAULT_NAME
     _entity_id_format = text.ENTITY_ID_FORMAT
 
     _compiled_pattern: re.Pattern[Any] | None
     _optimistic: bool
     _command_template: Callable[[PublishPayloadType], PublishPayloadType]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None = None,
-    ) -> None:
-        """Initialize MQTT text entity."""
-        self._attr_native_value = None
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -168,6 +163,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
         ).async_render_with_possible_json_value
         optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or config.get(CONF_STATE_TOPIC) is None
+        self._attr_assumed_state = bool(self._optimistic)
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -186,11 +182,11 @@ class MqttTextEntity(MqttEntity, TextEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_native_value"})
         def handle_state_message_received(msg: ReceiveMessage) -> None:
             """Handle receiving state message via MQTT."""
             payload = str(self._value_template(msg.payload))
             self._attr_native_value = payload
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscription(topics, CONF_STATE_TOPIC, handle_state_message_received)
 
@@ -201,11 +197,6 @@ class MqttTextEntity(MqttEntity, TextEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     async def async_set_value(self, value: str) -> None:
         """Change the text."""

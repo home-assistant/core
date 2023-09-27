@@ -721,7 +721,7 @@ async def test_enable_entity_disabled_device(
     config_entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=config_entry.entry_id,
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",

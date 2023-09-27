@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.typing import ConfigType
 
-from . import flash_briefings, intent, smart_home_http
+from . import flash_briefings, intent, smart_home
 from .const import (
     CONF_AUDIO,
     CONF_DISPLAY_CATEGORIES,
@@ -100,6 +100,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if CONF_SMART_HOME in config:
         smart_home_config: dict[str, Any] | None = config[CONF_SMART_HOME]
         smart_home_config = smart_home_config or SMART_HOME_SCHEMA({})
-        await smart_home_http.async_setup(hass, smart_home_config)
+        await smart_home.async_setup(hass, smart_home_config)
 
     return True

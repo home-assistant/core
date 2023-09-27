@@ -4,5 +4,17 @@
     "_": {
       "name": "[%key:component::datetime::title%]"
     }
+  },
+  "services": {
+    "set_value": {
+      "name": "Set date/time",
+      "description": "Sets the date/time for a datetime entity.",
+      "fields": {
+        "datetime": {
+          "name": "Date & Time",
+          "description": "The date/time to set. The time zone of the Home Assistant instance is assumed."
+        }
+      }
+    }
   }
 }

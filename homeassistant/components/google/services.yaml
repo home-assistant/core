@@ -1,111 +1,75 @@
 add_event:
-  name: Add event
-  description: Add a new calendar event.
   fields:
     calendar_id:
-      name: Calendar ID
-      description: The id of the calendar you want.
       required: true
       example: "Your email"
       selector:
         text:
     summary:
-      name: Summary
-      description: Acts as the title of the event.
       required: true
       example: "Bowling"
       selector:
         text:
     description:
-      name: Description
-      description: The description of the event. Optional.
       example: "Birthday bowling"
       selector:
         text:
     start_date_time:
-      name: Start time
-      description: The date and time the event should start.
       example: "2019-03-22 20:00:00"
       selector:
         text:
     end_date_time:
-      name: End time
-      description: The date and time the event should end.
       example: "2019-03-22 22:00:00"
       selector:
         text:
     start_date:
-      name: Start date
-      description: The date the whole day event should start.
       example: "2019-03-10"
       selector:
         text:
     end_date:
-      name: End date
-      description: The date the whole day event should end.
       example: "2019-03-11"
       selector:
         text:
     in:
-      name: In
-      description: Days or weeks that you want to create the event in.
       example: '"days": 2 or "weeks": 2'
       selector:
         object:
 create_event:
-  name: Create event
-  description: Add a new calendar event.
   target:
     entity:
       integration: google
       domain: calendar
   fields:
     summary:
-      name: Summary
-      description: Acts as the title of the event.
       required: true
       example: "Bowling"
       selector:
         text:
     description:
-      name: Description
-      description: The description of the event. Optional.
       example: "Birthday bowling"
       selector:
         text:
     start_date_time:
-      name: Start time
-      description: The date and time the event should start.
       example: "2022-03-22 20:00:00"
       selector:
         text:
     end_date_time:
-      name: End time
-      description: The date and time the event should end.
       example: "2022-03-22 22:00:00"
       selector:
         text:
     start_date:
-      name: Start date
-      description: The date the whole day event should start.
       example: "2022-03-10"
       selector:
         text:
     end_date:
-      name: End date
-      description: The date the whole day event should end.
       example: "2022-03-11"
       selector:
         text:
     in:
-      name: In
-      description: Days or weeks that you want to create the event in.
       example: '"days": 2 or "weeks": 2'
       selector:
         object:
     location:
-      name: Location
-      description: The location of the event. Optional.
       example: "Conference Room - F123, Bldg. 002"
       selector:
         text:

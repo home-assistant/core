@@ -1,0 +1,25 @@
+{
+  "title": "Event",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::button::title%]",
+      "state_attributes": {
+        "event_type": {
+          "name": "Event type"
+        },
+        "event_types": {
+          "name": "Event types"
+        }
+      }
+    },
+    "doorbell": {
+      "name": "Doorbell"
+    },
+    "button": {
+      "name": "Button"
+    },
+    "motion": {
+      "name": "Motion"
+    }
+  }
+}

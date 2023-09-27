@@ -50,8 +50,7 @@ def run(args):
 
 async def run_command(args):
     """Run the command."""
-    hass = HomeAssistant()
-    hass.config.config_dir = os.path.join(os.getcwd(), args.config)
+    hass = HomeAssistant(os.path.join(os.getcwd(), args.config))
     hass.auth = await auth_manager_from_config(hass, [{"type": "homeassistant"}], [])
     provider = hass.auth.auth_providers[0]
     await provider.async_initialize()

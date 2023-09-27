@@ -123,7 +123,7 @@ async def test_device_info(
     device_registry = dr.async_get(hass)
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
 
     assert device.entry_type is dr.DeviceEntryType.SERVICE
     assert device.identifiers == {(DOMAIN, entry.entry_id)}

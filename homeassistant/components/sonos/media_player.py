@@ -195,6 +195,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
         | MediaPlayerEntityFeature.GROUPING
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.PLAY

@@ -37,5 +37,45 @@
         "name": "Vacation end date"
       }
     }
+  },
+  "services": {
+    "set_vacation": {
+      "name": "Set vacation",
+      "description": "Sets vacation responder settings for Google Mail.",
+      "fields": {
+        "enabled": {
+          "name": "[%key:common::state::enabled%]",
+          "description": "Turn this off to end vacation responses."
+        },
+        "title": {
+          "name": "Title",
+          "description": "The subject for the email."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Body of the email."
+        },
+        "plain_text": {
+          "name": "Plain text",
+          "description": "Choose to send message in plain text or HTML."
+        },
+        "restrict_contacts": {
+          "name": "Restrict to contacts",
+          "description": "Restrict automatic reply to contacts."
+        },
+        "restrict_domain": {
+          "name": "Restrict to domain",
+          "description": "Restrict automatic reply to domain. This only affects GSuite accounts."
+        },
+        "start": {
+          "name": "[%key:common::action::start%]",
+          "description": "First day of the vacation."
+        },
+        "end": {
+          "name": "End",
+          "description": "Last day of the vacation."
+        }
+      }
+    }
   }
 }

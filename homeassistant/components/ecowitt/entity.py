@@ -5,7 +5,8 @@ import time
 
 from aioecowitt import EcoWittSensor
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
@@ -25,7 +26,7 @@ class EcowittEntity(Entity):
             identifiers={
                 (DOMAIN, sensor.station.key),
             },
-            name=sensor.station.station,
+            name=sensor.station.model,
             model=sensor.station.model,
             sw_version=sensor.station.version,
         )

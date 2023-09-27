@@ -73,7 +73,7 @@ async def test_binary_sensor_generic_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == hass_state
 
@@ -104,7 +104,7 @@ async def test_status_binary_sensor(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -134,7 +134,7 @@ async def test_binary_sensor_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -164,12 +164,12 @@ async def test_binary_sensor_has_state_false(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
     mock_device.set_state(BinarySensorState(key=1, state=True, missing_state=False))
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_ON

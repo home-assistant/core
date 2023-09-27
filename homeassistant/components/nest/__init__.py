@@ -46,23 +46,22 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 
-from . import api, config_flow
+from . import api
 from .const import (
     CONF_PROJECT_ID,
     CONF_SUBSCRIBER_ID,
     CONF_SUBSCRIBER_ID_IMPORTED,
     DATA_DEVICE_MANAGER,
-    DATA_NEST_CONFIG,
     DATA_SDM,
     DATA_SUBSCRIBER,
     DOMAIN,
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
-from .legacy import async_setup_legacy, async_setup_legacy_entry
 from .media_source import (
     async_get_media_event_store,
     async_get_media_source_devices,
@@ -114,15 +113,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(NestEventMediaView(hass))
     hass.http.register_view(NestEventMediaThumbnailView(hass))
 
-    if DOMAIN not in config:
-        return True  # ConfigMode.SDM_APPLICATION_CREDENTIALS
-
-    hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
-
-    config_mode = config_flow.get_config_mode(hass)
-    if config_mode == config_flow.ConfigMode.LEGACY:
-        return await async_setup_legacy(hass, config)
-
+    if DOMAIN in config and CONF_PROJECT_ID not in config[DOMAIN]:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "legacy_nest_deprecated",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="legacy_nest_removed",
+            translation_placeholders={
+                "documentation_url": "https://www.home-assistant.io/integrations/nest/",
+            },
+        )
+        return False
     return True
 
 
@@ -148,7 +152,9 @@ class SignalUpdateCallback:
             return
         _LOGGER.debug("Event Update %s", events.keys())
         device_registry = dr.async_get(self._hass)
-        device_entry = device_registry.async_get_device({(DOMAIN, device_id)})
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
         if not device_entry:
             return
         for api_event_type, image_event in events.items():
@@ -167,9 +173,9 @@ class SignalUpdateCallback:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nest from a config entry with dispatch between old/new flows."""
-    config_mode = config_flow.get_config_mode(hass)
-    if DATA_SDM not in entry.data or config_mode == config_flow.ConfigMode.LEGACY:
-        return await async_setup_legacy_entry(hass, entry)
+    if DATA_SDM not in entry.data:
+        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+        return False
 
     if entry.unique_id != entry.data[CONF_PROJECT_ID]:
         hass.config_entries.async_update_entry(

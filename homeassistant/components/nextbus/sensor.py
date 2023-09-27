@@ -12,14 +12,16 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import CONF_AGENCY, CONF_ROUTE, CONF_STOP
+from .const import CONF_AGENCY, CONF_ROUTE, CONF_STOP, DOMAIN
 from .util import listify, maybe_first
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,59 +36,54 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def validate_value(value_name, value, value_list):
-    """Validate tag value is in the list of items and logs error if not."""
-    valid_values = {v["tag"]: v["title"] for v in value_list}
-    if value not in valid_values:
-        _LOGGER.error(
-            "Invalid %s tag `%s`. Please use one of the following: %s",
-            value_name,
-            value,
-            ", ".join(f"{title}: {tag}" for tag, title in valid_values.items()),
-        )
-        return False
-
-    return True
-
-
-def validate_tags(client, agency, route, stop):
-    """Validate provided tags."""
-    # Validate agencies
-    if not validate_value("agency", agency, client.get_agency_list()["agency"]):
-        return False
-
-    # Validate the route
-    if not validate_value("route", route, client.get_route_list(agency)["route"]):
-        return False
-
-    # Validate the stop
-    route_config = client.get_route_config(route, agency)["route"]
-    if not validate_value("stop", stop, route_config["stop"]):
-        return False
-
-    return True
-
-
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Load values from configuration and initialize the platform."""
-    agency = config[CONF_AGENCY]
-    route = config[CONF_ROUTE]
-    stop = config[CONF_STOP]
-    name = config.get(CONF_NAME)
+    """Initialize nextbus import from config."""
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        breaks_in_ha_version="2024.4.0",
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "NextBus",
+        },
+    )
 
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Load values from configuration and initialize the platform."""
     client = NextBusClient(output_format="json")
 
-    # Ensures that the tags provided are valid, also logs out valid values
-    if not validate_tags(client, agency, route, stop):
-        _LOGGER.error("Invalid config value(s)")
-        return
+    _LOGGER.debug(config.data)
 
-    add_entities([NextBusDepartureSensor(client, agency, route, stop, name)], True)
+    sensor = NextBusDepartureSensor(
+        client,
+        config.unique_id,
+        config.data[CONF_AGENCY],
+        config.data[CONF_ROUTE],
+        config.data[CONF_STOP],
+        config.data.get(CONF_NAME) or config.title,
+    )
+
+    async_add_entities((sensor,), True)
 
 
 class NextBusDepartureSensor(SensorEntity):
@@ -103,17 +100,14 @@ class NextBusDepartureSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_icon = "mdi:bus"
 
-    def __init__(self, client, agency, route, stop, name=None):
+    def __init__(self, client, unique_id, agency, route, stop, name):
         """Initialize sensor with all required config."""
         self.agency = agency
         self.route = route
         self.stop = stop
         self._attr_extra_state_attributes = {}
-
-        # Maybe pull a more user friendly name from the API here
-        self._attr_name = f"{agency} {route}"
-        if name:
-            self._attr_name = name
+        self._attr_unique_id = unique_id
+        self._attr_name = name
 
         self._client = client
 

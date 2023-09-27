@@ -5,14 +5,13 @@ import abc
 from collections.abc import Callable, Iterable, Mapping
 import copy
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict
+from typing import Any, Required, TypedDict
 
-from typing_extensions import Required
 import voluptuous as vol
 
-from .backports.enum import StrEnum
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers.frame import report
@@ -96,6 +95,7 @@ class FlowResult(TypedDict, total=False):
     last_step: bool | None
     menu_options: list[str] | dict[str, str]
     options: Mapping[str, Any]
+    preview: str | None
     progress_action: str
     reason: str
     required: bool
@@ -136,9 +136,10 @@ class FlowManager(abc.ABC):
     ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
+        self._preview: set[str] = set()
         self._progress: dict[str, FlowHandler] = {}
-        self._handler_progress_index: dict[str, set[str]] = {}
-        self._init_data_process_index: dict[type, set[str]] = {}
+        self._handler_progress_index: dict[str, set[FlowHandler]] = {}
+        self._init_data_process_index: dict[type, set[FlowHandler]] = {}
 
     @abc.abstractmethod
     async def async_create_flow(
@@ -220,9 +221,9 @@ class FlowManager(abc.ABC):
         """Return flows in progress init matching by data type as a partial FlowResult."""
         return _async_flow_handler_to_flow_result(
             (
-                self._progress[flow_id]
-                for flow_id in self._init_data_process_index.get(init_data_type, {})
-                if matcher(self._progress[flow_id].init_data)
+                progress
+                for progress in self._init_data_process_index.get(init_data_type, set())
+                if matcher(progress.init_data)
             ),
             include_uninitialized,
         )
@@ -236,18 +237,13 @@ class FlowManager(abc.ABC):
         If match_context is specified, only return flows with a context that
         is a superset of match_context.
         """
-        match_context_items = match_context.items() if match_context else None
+        if not match_context:
+            return list(self._handler_progress_index.get(handler, []))
+        match_context_items = match_context.items()
         return [
             progress
-            for flow_id in self._handler_progress_index.get(handler, {})
-            if (progress := self._progress[flow_id])
-            and (
-                not match_context_items
-                or (
-                    (context := progress.context)
-                    and match_context_items <= context.items()
-                )
-            )
+            for progress in self._handler_progress_index.get(handler, set())
+            if match_context_items <= progress.context.items()
         ]
 
     async def async_init(
@@ -347,22 +343,20 @@ class FlowManager(abc.ABC):
         """Add a flow to in progress."""
         if flow.init_data is not None:
             init_data_type = type(flow.init_data)
-            self._init_data_process_index.setdefault(init_data_type, set()).add(
-                flow.flow_id
-            )
+            self._init_data_process_index.setdefault(init_data_type, set()).add(flow)
         self._progress[flow.flow_id] = flow
-        self._handler_progress_index.setdefault(flow.handler, set()).add(flow.flow_id)
+        self._handler_progress_index.setdefault(flow.handler, set()).add(flow)
 
     @callback
     def _async_remove_flow_from_index(self, flow: FlowHandler) -> None:
         """Remove a flow from in progress."""
         if flow.init_data is not None:
             init_data_type = type(flow.init_data)
-            self._init_data_process_index[init_data_type].remove(flow.flow_id)
+            self._init_data_process_index[init_data_type].remove(flow)
             if not self._init_data_process_index[init_data_type]:
                 del self._init_data_process_index[init_data_type]
         handler = flow.handler
-        self._handler_progress_index[handler].remove(flow.flow_id)
+        self._handler_progress_index[handler].remove(flow)
         if not self._handler_progress_index[handler]:
             del self._handler_progress_index[handler]
 
@@ -395,6 +389,10 @@ class FlowManager(abc.ABC):
             result = _create_abort_data(
                 flow.flow_id, flow.handler, err.reason, err.description_placeholders
             )
+
+        # Setup the flow handler's preview if needed
+        if result.get("preview") is not None:
+            await self._async_setup_preview(flow)
 
         if not isinstance(result["type"], FlowResultType):
             result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
@@ -429,6 +427,12 @@ class FlowManager(abc.ABC):
         self._async_remove_flow_progress(flow.flow_id)
 
         return result
+
+    async def _async_setup_preview(self, flow: FlowHandler) -> None:
+        """Set up preview for a flow handler."""
+        if flow.handler not in self._preview:
+            self._preview.add(flow.handler)
+            await flow.async_setup_preview(self.hass)
 
 
 class FlowHandler:
@@ -505,6 +509,7 @@ class FlowHandler:
         errors: dict[str, str] | None = None,
         description_placeholders: Mapping[str, str | None] | None = None,
         last_step: bool | None = None,
+        preview: str | None = None,
     ) -> FlowResult:
         """Return the definition of a form to gather user input."""
         return FlowResult(
@@ -516,6 +521,7 @@ class FlowHandler:
             errors=errors,
             description_placeholders=description_placeholders,
             last_step=last_step,  # Display next or submit button in frontend
+            preview=preview,  # Display preview component in frontend
         )
 
     @callback
@@ -635,6 +641,10 @@ class FlowHandler:
     @callback
     def async_remove(self) -> None:
         """Notification that the flow has been removed."""
+
+    @staticmethod
+    async def async_setup_preview(hass: HomeAssistant) -> None:
+        """Set up preview."""
 
 
 @callback

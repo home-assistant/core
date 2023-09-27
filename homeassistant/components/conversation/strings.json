@@ -1,1 +1,37 @@
-{ "title": "Conversation" }
+{
+  "title": "Conversation",
+  "services": {
+    "process": {
+      "name": "Process",
+      "description": "Launches a conversation from a transcribed text.",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "Transcribed text input."
+        },
+        "language": {
+          "name": "Language",
+          "description": "Language of text. Defaults to server language."
+        },
+        "agent_id": {
+          "name": "Agent",
+          "description": "Conversation agent to process your request. The conversation agent is the brains of your assistant. It processes the incoming text commands."
+        }
+      }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads the intent configuration.",
+      "fields": {
+        "language": {
+          "name": "[%key:component::conversation::services::process::fields::language::name%]",
+          "description": "Language to clear cached intents for. Defaults to server language."
+        },
+        "agent_id": {
+          "name": "[%key:component::conversation::services::process::fields::agent_id::name%]",
+          "description": "Conversation agent to reload."
+        }
+      }
+    }
+  }
+}

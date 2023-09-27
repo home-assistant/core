@@ -4,8 +4,12 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Any
 
-import holidays
-from holidays import DateLike, HolidayBase
+from holidays import (
+    HolidayBase,
+    __version__ as python_holidays_version,
+    country_holidays,
+    list_supported_countries,
+)
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -14,10 +18,9 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -41,10 +44,29 @@ from .const import (
 )
 
 
+def validate_dates(holiday_list: list[str]) -> list[str]:
+    """Validate and adds to list of dates to add or remove."""
+    calc_holidays: list[str] = []
+    for add_date in holiday_list:
+        if add_date.find(",") > 0:
+            dates = add_date.split(",", maxsplit=1)
+            d1 = dt_util.parse_date(dates[0])
+            d2 = dt_util.parse_date(dates[1])
+            if d1 is None or d2 is None:
+                LOGGER.error("Incorrect dates in date range: %s", add_date)
+                continue
+            _range: timedelta = d2 - d1
+            for i in range(_range.days + 1):
+                day = d1 + timedelta(days=i)
+                calc_holidays.append(day.strftime("%Y-%m-%d"))
+            continue
+        calc_holidays.append(add_date)
+    return calc_holidays
+
+
 def valid_country(value: Any) -> str:
     """Validate that the given country is supported."""
     value = cv.string(value)
-    all_supported_countries = holidays.list_supported_countries()
 
     try:
         raw_value = value.encode("utf-8")
@@ -54,7 +76,7 @@ def valid_country(value: Any) -> str:
         ) from err
     if not raw_value:
         raise vol.Invalid("Country name or the abbreviation must not be empty.")
-    if value not in all_supported_countries:
+    if value not in list_supported_countries():
         raise vol.Invalid("Country is not supported.")
     return value
 
@@ -90,12 +112,17 @@ async def async_setup_platform(
     """Set up the Workday sensor."""
     async_create_issue(
         hass,
-        DOMAIN,
-        "deprecated_yaml",
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
         breaks_in_ha_version="2023.11.0",
         is_fixable=False,
+        issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Workday",
+        },
     )
 
     hass.async_create_task(
@@ -111,9 +138,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Workday sensor."""
-    add_holidays: list[DateLike] = entry.options[CONF_ADD_HOLIDAYS]
+    add_holidays: list[str] = entry.options[CONF_ADD_HOLIDAYS]
     remove_holidays: list[str] = entry.options[CONF_REMOVE_HOLIDAYS]
-    country: str = entry.options[CONF_COUNTRY]
+    country: str | None = entry.options.get(CONF_COUNTRY)
     days_offset: int = int(entry.options[CONF_OFFSET])
     excludes: list[str] = entry.options[CONF_EXCLUDES]
     province: str | None = entry.options.get(CONF_PROVINCE)
@@ -121,23 +148,29 @@ async def async_setup_entry(
     workdays: list[str] = entry.options[CONF_WORKDAYS]
 
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
-    obj_holidays: HolidayBase = getattr(holidays, country)(years=year)
 
-    if province:
-        try:
-            obj_holidays = getattr(holidays, country)(subdiv=province, years=year)
-        except NotImplementedError:
-            LOGGER.error("There is no subdivision %s in country %s", province, country)
-            return
+    if country:
+        cls: HolidayBase = country_holidays(country, subdiv=province, years=year)
+        obj_holidays: HolidayBase = country_holidays(
+            country,
+            subdiv=province,
+            years=year,
+            language=cls.default_language,
+        )
+    else:
+        obj_holidays = HolidayBase()
+
+    calc_add_holidays: list[str] = validate_dates(add_holidays)
+    calc_remove_holidays: list[str] = validate_dates(remove_holidays)
 
     # Add custom holidays
     try:
-        obj_holidays.append(add_holidays)
+        obj_holidays.append(calc_add_holidays)  # type: ignore[arg-type]
     except ValueError as error:
         LOGGER.error("Could not add custom holidays: %s", error)
 
     # Remove holidays
-    for remove_holiday in remove_holidays:
+    for remove_holiday in calc_remove_holidays:
         try:
             # is this formatted as a date?
             if dt_util.parse_date(remove_holiday):
@@ -204,7 +237,7 @@ class IsWorkdaySensor(BinarySensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer="python-holidays",
-            model=holidays.__version__,
+            model=python_holidays_version,
             name=name,
         )
 

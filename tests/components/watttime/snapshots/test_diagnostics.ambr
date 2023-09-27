@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'ba': 'CAISO_NORTH',
+      'freq': '300',
+      'moer': '850.743982',
+      'percent': '53',
+      'point_time': '2019-01-29T14:55:00.00Z',
+    }),
+    'entry': dict({
+      'data': dict({
+        'balancing_authority': '**REDACTED**',
+        'balancing_authority_abbreviation': '**REDACTED**',
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'watttime',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---

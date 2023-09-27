@@ -1,10 +1,6 @@
 send:
-  name: Send
-  description: Sends a raw event on radio.
   fields:
     event:
-      name: Event
-      description: A hexadecimal string to send.
       required: true
       example: "0b11009e00e6116202020070"
       selector:

@@ -16,10 +16,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import create_rfx_test_cfg
 
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-)
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 class DeviceTestData(NamedTuple):
@@ -86,7 +83,9 @@ async def test_get_actions(
     """Test we get the expected actions from a rfxtrx."""
     await setup_entry(hass, {device.code: {}})
 
-    device_entry = device_registry.async_get_device(device.device_identifiers, set())
+    device_entry = device_registry.async_get_device(
+        identifiers=device.device_identifiers
+    )
     assert device_entry
 
     # Add alternate identifiers, to make sure we can handle future formats
@@ -94,7 +93,9 @@ async def test_get_actions(
     device_registry.async_update_device(
         device_entry.id, merge_identifiers={(identifiers[0], "_".join(identifiers[1:]))}
     )
-    device_entry = device_registry.async_get_device(device.device_identifiers, set())
+    device_entry = device_registry.async_get_device(
+        identifiers=device.device_identifiers
+    )
     assert device_entry
 
     actions = await async_get_device_automations(
@@ -142,7 +143,9 @@ async def test_action(
 
     await setup_entry(hass, {device.code: {}})
 
-    device_entry = device_registry.async_get_device(device.device_identifiers, set())
+    device_entry = device_registry.async_get_device(
+        identifiers=device.device_identifiers
+    )
     assert device_entry
 
     assert await async_setup_component(
@@ -181,8 +184,8 @@ async def test_invalid_action(
 
     await setup_entry(hass, {device.code: {}})
 
-    device_identifers: Any = device.device_identifiers
-    device_entry = device_registry.async_get_device(device_identifers, set())
+    device_identifiers: Any = device.device_identifiers
+    device_entry = device_registry.async_get_device(identifiers=device_identifiers)
     assert device_entry
 
     assert await async_setup_component(

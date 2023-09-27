@@ -38,7 +38,7 @@
         "name": "Barometer"
       },
       "barometerfcnamenl": {
-        "name": "Barometer"
+        "name": "[%key:component::buienradar::entity::sensor::barometerfcname::name%]"
       },
       "condition": {
         "name": "Condition",
@@ -84,17 +84,8 @@
       "feeltemperature": {
         "name": "Feel temperature"
       },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
       "groundtemperature": {
         "name": "Ground temperature"
-      },
-      "windspeed": {
-        "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
       },
       "windforce": {
         "name": "Wind force"
@@ -105,20 +96,11 @@
       "windazimuth": {
         "name": "Wind direction azimuth"
       },
-      "pressure": {
-        "name": "[%key:component::sensor::entity_component::pressure::name%]"
-      },
       "visibility": {
         "name": "[%key:component::weather::entity_component::_::state_attributes::visibility::name%]"
       },
       "windgust": {
         "name": "Wind gust"
-      },
-      "precipitation": {
-        "name": "[%key:component::sensor::entity_component::precipitation::name%]"
-      },
-      "irradiance": {
-        "name": "[%key:component::sensor::entity_component::irradiance::name%]"
       },
       "precipitation_forecast_average": {
         "name": "Precipitation forecast average"
@@ -301,55 +283,55 @@
         "name": "Condition 1d",
         "state": {
           "clear": "[%key:component::buienradar::entity::sensor::condition::state::clear%]",
-          "cloudy": "[%key:component::buienradar::entity::sensor::condition::state::cloudy%]",
-          "fog": "[%key:component::buienradar::entity::sensor::condition::state::fog%]",
-          "rainy": "[%key:component::buienradar::entity::sensor::condition::state::rainy%]",
-          "snowy": "[%key:component::buienradar::entity::sensor::condition::state::snowy%]",
-          "lightning": "[%key:component::buienradar::entity::sensor::condition::state::lightning%]"
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
         }
       },
       "condition_2d": {
         "name": "Condition 2d",
         "state": {
           "clear": "[%key:component::buienradar::entity::sensor::condition::state::clear%]",
-          "cloudy": "[%key:component::buienradar::entity::sensor::condition::state::cloudy%]",
-          "fog": "[%key:component::buienradar::entity::sensor::condition::state::fog%]",
-          "rainy": "[%key:component::buienradar::entity::sensor::condition::state::rainy%]",
-          "snowy": "[%key:component::buienradar::entity::sensor::condition::state::snowy%]",
-          "lightning": "[%key:component::buienradar::entity::sensor::condition::state::lightning%]"
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
         }
       },
       "condition_3d": {
         "name": "Condition 3d",
         "state": {
           "clear": "[%key:component::buienradar::entity::sensor::condition::state::clear%]",
-          "cloudy": "[%key:component::buienradar::entity::sensor::condition::state::cloudy%]",
-          "fog": "[%key:component::buienradar::entity::sensor::condition::state::fog%]",
-          "rainy": "[%key:component::buienradar::entity::sensor::condition::state::rainy%]",
-          "snowy": "[%key:component::buienradar::entity::sensor::condition::state::snowy%]",
-          "lightning": "[%key:component::buienradar::entity::sensor::condition::state::lightning%]"
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
         }
       },
       "condition_4d": {
         "name": "Condition 4d",
         "state": {
           "clear": "[%key:component::buienradar::entity::sensor::condition::state::clear%]",
-          "cloudy": "[%key:component::buienradar::entity::sensor::condition::state::cloudy%]",
-          "fog": "[%key:component::buienradar::entity::sensor::condition::state::fog%]",
-          "rainy": "[%key:component::buienradar::entity::sensor::condition::state::rainy%]",
-          "snowy": "[%key:component::buienradar::entity::sensor::condition::state::snowy%]",
-          "lightning": "[%key:component::buienradar::entity::sensor::condition::state::lightning%]"
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
         }
       },
       "condition_5d": {
         "name": "Condition 5d",
         "state": {
           "clear": "[%key:component::buienradar::entity::sensor::condition::state::clear%]",
-          "cloudy": "[%key:component::buienradar::entity::sensor::condition::state::cloudy%]",
-          "fog": "[%key:component::buienradar::entity::sensor::condition::state::fog%]",
-          "rainy": "[%key:component::buienradar::entity::sensor::condition::state::rainy%]",
-          "snowy": "[%key:component::buienradar::entity::sensor::condition::state::snowy%]",
-          "lightning": "[%key:component::buienradar::entity::sensor::condition::state::lightning%]"
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
         }
       },
       "conditioncode_1d": {
@@ -371,76 +353,76 @@
         "name": "Detailed condition 1d",
         "state": {
           "clear": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::clear%]",
-          "partlycloudy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
           "partlycloudy-fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-fog%]",
           "partlycloudy-light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-rain%]",
           "partlycloudy-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-rain%]",
-          "cloudy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::cloudy%]",
-          "fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::fog%]",
-          "rainy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::rainy%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
           "light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-rain%]",
           "light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-snow%]",
           "partlycloudy-light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-snow%]",
           "partlycloudy-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-snow%]",
           "partlycloudy-lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-lightning%]",
-          "snowy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::snowy%]",
-          "snowy-rainy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::snowy-rainy%]",
-          "lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::lightning%]"
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
         }
       },
       "conditiondetailed_2d": {
         "name": "Detailed condition 2d",
         "state": {
           "clear": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::clear%]",
-          "partlycloudy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
           "partlycloudy-fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-fog%]",
           "partlycloudy-light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-rain%]",
           "partlycloudy-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-rain%]",
-          "cloudy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::cloudy%]",
-          "fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::fog%]",
-          "rainy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::rainy%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
           "light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-rain%]",
           "light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-snow%]",
           "partlycloudy-light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-snow%]",
           "partlycloudy-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-snow%]",
           "partlycloudy-lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-lightning%]",
-          "snowy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::snowy%]",
-          "snowy-rainy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::snowy-rainy%]",
-          "lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::lightning%]"
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
         }
       },
       "conditiondetailed_3d": {
         "name": "Detailed condition 3d",
         "state": {
           "clear": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::clear%]",
-          "partlycloudy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
           "partlycloudy-fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-fog%]",
           "partlycloudy-light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-rain%]",
           "partlycloudy-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-rain%]",
-          "cloudy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::cloudy%]",
-          "fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::fog%]",
-          "rainy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::rainy%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
           "light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-rain%]",
           "light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-snow%]",
           "partlycloudy-light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-snow%]",
           "partlycloudy-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-snow%]",
           "partlycloudy-lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-lightning%]",
-          "snowy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::snowy%]",
-          "snowy-rainy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::snowy-rainy%]",
-          "lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::lightning%]"
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
         }
       },
       "conditiondetailed_4d": {
         "name": "Detailed condition 4d",
         "state": {
           "clear": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::clear%]",
-          "partlycloudy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
           "partlycloudy-fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-fog%]",
           "partlycloudy-light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-rain%]",
           "partlycloudy-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-rain%]",
-          "cloudy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::cloudy%]",
-          "fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::fog%]",
-          "rainy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::rainy%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
           "light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-rain%]",
           "light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-snow%]",
           "partlycloudy-light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-snow%]",
@@ -455,21 +437,21 @@
         "name": "Detailed condition 5d",
         "state": {
           "clear": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::clear%]",
-          "partlycloudy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
           "partlycloudy-fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-fog%]",
           "partlycloudy-light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-rain%]",
           "partlycloudy-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-rain%]",
-          "cloudy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::cloudy%]",
-          "fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::fog%]",
-          "rainy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::rainy%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
           "light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-rain%]",
           "light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-snow%]",
           "partlycloudy-light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-snow%]",
           "partlycloudy-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-snow%]",
           "partlycloudy-lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-lightning%]",
-          "snowy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::snowy%]",
-          "snowy-rainy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::snowy-rainy%]",
-          "lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::lightning%]"
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
         }
       },
       "conditionexact_1d": {

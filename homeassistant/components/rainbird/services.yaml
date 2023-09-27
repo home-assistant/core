@@ -1,14 +1,10 @@
 start_irrigation:
-  name: Start irrigation
-  description: Start the irrigation
   target:
     entity:
       integration: rainbird
       domain: switch
   fields:
     duration:
-      name: Duration
-      description: Duration for this sprinkler to be turned on
       required: true
       selector:
         number:
@@ -16,19 +12,13 @@ start_irrigation:
           max: 1440
           unit_of_measurement: "minutes"
 set_rain_delay:
-  name: Set rain delay
-  description: Set how long automatic irrigation is turned off.
   fields:
     config_entry_id:
-      name: Rainbird Controller Configuration Entry
-      description: The setting will be adjusted on the specified controller
       required: true
       selector:
         config_entry:
           integration: rainbird
     duration:
-      name: Duration
-      description: Duration for this system to be turned off.
       required: true
       selector:
         number:
