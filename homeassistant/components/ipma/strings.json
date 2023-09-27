@@ -28,6 +28,9 @@
     "sensor": {
       "fire_risk": {
         "name": "Fire risk"
+      },
+      "uv_index": {
+        "name": "UV index"
       }
     }
   }

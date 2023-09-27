@@ -1,6 +1,7 @@
 """Class to hold remote accessories."""
 from abc import ABC, abstractmethod
 import logging
+from typing import Any
 
 from pyhap.const import CATEGORY_TELEVISION
 
@@ -80,19 +81,21 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
 
     def __init__(
         self,
-        required_feature,
-        source_key,
-        source_list_key,
-        *args,
-        **kwargs,
-    ):
+        required_feature: int,
+        source_key: str,
+        source_list_key: str,
+        *args: Any,
+        category: int = CATEGORY_TELEVISION,
+        **kwargs: Any,
+    ) -> None:
         """Initialize a InputSelect accessory object."""
-        super().__init__(*args, category=CATEGORY_TELEVISION, **kwargs)
+        super().__init__(*args, category=category, **kwargs)
         state = self.hass.states.get(self.entity_id)
+        assert state
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        self._mapped_sources_list = []
-        self._mapped_sources = {}
+        self._mapped_sources_list: list[str] = []
+        self._mapped_sources: dict[str, str] = {}
         self.source_key = source_key
         self.source_list_key = source_list_key
         self.sources = []

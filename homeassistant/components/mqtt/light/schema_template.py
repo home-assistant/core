@@ -138,16 +138,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     _fixed_color_mode: ColorMode | str | None
     _topics: dict[str, str | None]
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize a MQTT Template light."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""
