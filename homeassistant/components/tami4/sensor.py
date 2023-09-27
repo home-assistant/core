@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DATA_API, DATA_COORDINATOR, DOMAIN
 from .coordinator import Tami4EdgeWaterQualityCoordinator
 from .entity import Tami4EdgeBaseEntity
 
@@ -71,9 +71,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Perform the setup for Tami4Edge."""
-    api = hass.data[DOMAIN][entry.entry_id]
-
-    coordinator = Tami4EdgeWaterQualityCoordinator(hass, api)
+    data = hass.data[DOMAIN][entry.entry_id]
+    api = data[DATA_API]
+    coordinator = data[DATA_COORDINATOR]
 
     entities = []
     for entity_description in ENTITY_DESCRIPTIONS:
@@ -86,7 +86,6 @@ async def async_setup_entry(
         )
 
     async_add_entities(entities)
-    await coordinator.async_config_entry_first_refresh()
 
 
 class Tami4EdgeSensorEntity(
