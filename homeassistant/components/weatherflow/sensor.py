@@ -57,7 +57,7 @@ class WeatherFlowSensorRequiredKeysMixin:
 class WeatherFlowSensorEntityDescription(
     SensorEntityDescription, WeatherFlowSensorRequiredKeysMixin
 ):
-    """Describes August binary_sensor entity."""
+    """Describes WeatherFlow sensor entity."""
 
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
     imperial_suggested_unit: None | str = None
