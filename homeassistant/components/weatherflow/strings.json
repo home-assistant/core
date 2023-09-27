@@ -51,9 +51,6 @@
       "rain_amount": {
         "name": "Rain amount"
       },
-      "rain_rate": {
-        "name": "Rain rate"
-      },
       "station_pressure": {
         "name": "Air pressure"
       },
