@@ -51,6 +51,7 @@ async def test_home(
     await setup_platform(hass, BINARY_SENSOR_DOMAIN)
 
     assert hass.states.get("binary_sensor.detecteur").state == "on"
+    assert hass.states.get("binary_sensor.detecteur_couvercle").state == "on"
     assert hass.states.get("binary_sensor.ouverture_porte").state == "on"
     assert hass.states.get("binary_sensor.ouverture_porte_couvercle").state == "off"
 
@@ -69,6 +70,7 @@ async def test_home(
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.detecteur").state == "on"
+    assert hass.states.get("binary_sensor.detecteur_couvercle").state == "off"
     assert hass.states.get("binary_sensor.ouverture_porte").state == "on"
     assert hass.states.get("binary_sensor.ouverture_porte_couvercle").state == "off"
 
@@ -83,5 +85,6 @@ async def test_home(
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.detecteur").state == "off"
+    assert hass.states.get("binary_sensor.detecteur_couvercle").state == "on"
     assert hass.states.get("binary_sensor.ouverture_porte").state == "off"
     assert hass.states.get("binary_sensor.ouverture_porte_couvercle").state == "on"
