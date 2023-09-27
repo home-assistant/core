@@ -22,7 +22,6 @@ from zwave_js_server.model.notification import (
 from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
-from homeassistant.components.logger import EVENT_LOGGING_CHANGED
 from homeassistant.components.persistent_notification import async_create
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -31,6 +30,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_URL,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGGING_CHANGED,
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
