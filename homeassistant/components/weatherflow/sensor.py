@@ -1,4 +1,4 @@
-"""Sensors for the smartweatherudp integration."""
+"""Sensors for the weatherflow integration."""
 from __future__ import annotations
 
 from collections.abc import Callable
