@@ -115,3 +115,11 @@ class Tami4EdgeSensorEntity(Tami4EdgeBaseEntity, CoordinatorEntity, SensorEntity
         except KeyError:
             return
         self.async_write_ha_state()
+        
+    @property
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        return (
+            super().available
+            and self.entity_description.key in self.coordinator.data
+        )
