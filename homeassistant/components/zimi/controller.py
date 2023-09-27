@@ -35,11 +35,6 @@ class ZimiController:
         # store (this) bridge object in hass data
         hass.data.setdefault(DOMAIN, {})[self.config.entry_id] = self
 
-    # @property
-    # def debug(self) -> bool:
-    #     """Return the debug flag for this hub."""
-    #     return self.config.data.get(DEBUG, False)
-
     @property
     def host(self) -> str:
         """Return the host of this hub."""
@@ -53,8 +48,6 @@ class ZimiController:
     @property
     def timeout(self) -> int:
         """Return the timeout of this hub."""
-        # if self.config.data[TIMEOUT] == 0:
-        #     self.config.data[TIMEOUT] = 3
         return self.config.data[TIMEOUT]
 
     async def connect(self) -> bool:
@@ -101,19 +94,9 @@ class ZimiController:
     @property
     def verbosity(self) -> int:
         """Return the verbosity of this hub."""
-        try:
-            # if self.config.data[VERBOSITY] is None:
-            #     self.config.data[VERBOSITY] = 1
-            return self.config.data[VERBOSITY]
-        except KeyError:
-            return 1
+        return self.config.data[VERBOSITY]
 
     @property
     def watchdog(self) -> int:
         """Return the watchdog timer of this hub."""
-        try:
-            # if self.config.data[WATCHDOG] is None:
-            #     self.config.data[WATCHDOG] = 1800
-            return self.config.data[WATCHDOG]
-        except KeyError:
-            return 0
+        return self.config.data[WATCHDOG]
