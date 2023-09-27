@@ -15,15 +15,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import (
-    CONF_HEATING_TYPE,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    HEATING_TYPE_TO_CREATOR_METHOD,
-    PLATFORMS,
-    VICARE_DEVICE_LIST,
-    HeatingType,
-)
++from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS, VICARE_DEVICE_LIST
 
 _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
