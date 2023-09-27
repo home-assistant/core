@@ -58,4 +58,4 @@ class Tami4EdgeWaterQualityCoordinator(DataUpdateCoordinator[FlattenedWaterQuali
 
             return FlattenedWaterQuality(water_quality)
         except Exception as ex:
-            raise UpdateFailed(f"Error communicating with API: {ex}") from ex
+            raise UpdateFailed("Error communicating with API") from ex
