@@ -507,6 +507,38 @@ async def test_forecast_format_error(
     assert "Forecast in list is not a dict, see Weather documentation" in caplog.text
 
 
+SAVED_EXTRA_DATA = {
+    "last_apparent_temperature": None,
+    "last_cloud_coverage": None,
+    "last_dew_point": None,
+    "last_forecast": None,
+    "last_humidity": 10,
+    "last_ozone": None,
+    "last_pressure": None,
+    "last_temperature": 20,
+    "last_visibility": None,
+    "last_wind_bearing": None,
+    "last_wind_gust_speed": None,
+    "last_wind_speed": None,
+}
+
+SAVED_EXTRA_DATA_WITH_FUTURE_KEY = {
+    "last_apparent_temperature": None,
+    "last_cloud_coverage": None,
+    "last_dew_point": None,
+    "last_forecast": None,
+    "last_humidity": 10,
+    "last_ozone": None,
+    "last_pressure": None,
+    "last_temperature": 20,
+    "last_visibility": None,
+    "last_wind_bearing": None,
+    "last_wind_gust_speed": None,
+    "last_wind_speed": None,
+    "some_key_added_in_the_future": 123,
+}
+
+
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
@@ -526,50 +558,36 @@ async def test_forecast_format_error(
     ],
 )
 @pytest.mark.parametrize(
-    ("restored_state", "restored_temperature", "restored_humidity", "initial_state"),
+    ("saved_state", "saved_extra_data", "initial_state"),
     [
-        ("sunny", 10, 20, "sunny"),
-        (STATE_UNAVAILABLE, 10, 20, STATE_UNKNOWN),
-        (STATE_UNKNOWN, 10, 20, STATE_UNKNOWN),
+        ("sunny", SAVED_EXTRA_DATA, "sunny"),
+        ("sunny", SAVED_EXTRA_DATA_WITH_FUTURE_KEY, "sunny"),
+        (STATE_UNAVAILABLE, SAVED_EXTRA_DATA, STATE_UNKNOWN),
+        (STATE_UNKNOWN, SAVED_EXTRA_DATA, STATE_UNKNOWN),
     ],
 )
 async def test_trigger_entity_restore_state(
     hass: HomeAssistant,
-    count,
-    domain,
-    config,
-    restored_state,
-    restored_temperature,
-    restored_humidity,
-    initial_state,
+    count: int,
+    domain: str,
+    config: dict,
+    saved_state: str,
+    saved_extra_data: dict | None,
+    initial_state: str,
 ) -> None:
     """Test restoring trigger template weather."""
 
-    restored_attributes = {
-        "temperature": 10,
-        "humidity": 20,
+    restored_attributes = {  # These should be ignored
+        "temperature": -10,
+        "humidity": 50,
     }
 
     fake_state = State(
         "weather.test",
-        restored_state,
+        saved_state,
         restored_attributes,
     )
-    fake_extra_data = {
-        "last_temperature": restored_temperature,
-        "last_humidity": restored_humidity,
-        "last_wind_speed": None,
-        "last_wind_bearing": None,
-        "last_ozone": None,
-        "last_visibility": None,
-        "last_pressure": None,
-        "last_wind_gust_speed": None,
-        "last_cloud_coverage": None,
-        "last_dew_point": None,
-        "last_apparent_temperature": None,
-        "last_forecast": None,
-    }
-    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
+    mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
     with assert_setup_component(count, domain):
         assert await async_setup_component(
             hass,
@@ -824,7 +842,7 @@ async def test_trigger_weather_services(
     }
 
 
-async def test_restore_sensor_save_state(
+async def test_restore_weather_save_state(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
 ) -> None:
@@ -878,34 +896,45 @@ async def test_restore_sensor_save_state(
     }
 
 
+SAVED_ATTRIBUTES_1 = {
+    "humidity": 20,
+    "temperature": 10,
+}
+
+SAVED_EXTRA_DATA_MISSING_KEY = {
+    "last_cloud_coverage": None,
+    "last_dew_point": None,
+    "last_humidity": 20,
+    "last_ozone": None,
+    "last_pressure": None,
+    "last_temperature": 20,
+    "last_visibility": None,
+    "last_wind_bearing": None,
+    "last_wind_gust_speed": None,
+    "last_wind_speed": None,
+}
+
+
+@pytest.mark.parametrize(
+    ("saved_attributes", "saved_extra_data"),
+    [
+        (SAVED_ATTRIBUTES_1, SAVED_EXTRA_DATA_MISSING_KEY),
+        (SAVED_ATTRIBUTES_1, None),
+    ],
+)
 async def test_trigger_entity_restore_state_fail(
     hass: HomeAssistant,
+    saved_attributes: dict,
+    saved_extra_data: dict | None,
 ) -> None:
     """Test restoring trigger template weather fails due to missing attribute."""
 
-    restored_attributes = {
-        "temperature": 10,
-        "humidity": 20,
-    }
-
-    fake_state = State(
+    saved_state = State(
         "weather.test",
         None,
-        restored_attributes,
+        saved_attributes,
     )
-    fake_extra_data = {
-        "last_temperature": 20,
-        "last_humidity": 20,
-        "last_wind_speed": None,
-        "last_wind_bearing": None,
-        "last_ozone": None,
-        "last_visibility": None,
-        "last_pressure": None,
-        "last_wind_gust_speed": None,
-        "last_cloud_coverage": None,
-        "last_dew_point": None,
-    }
-    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
+    mock_restore_cache_with_extra_data(hass, ((saved_state, saved_extra_data),))
     assert await async_setup_component(
         hass,
         "template",
