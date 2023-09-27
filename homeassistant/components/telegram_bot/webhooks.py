@@ -15,7 +15,15 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
 
-from . import CONF_TRUSTED_NETWORKS, CONF_URL, BaseTelegramBotEntity, DOMAIN, STORE_VERSION, STORE_SECRET_TOKEN, SECRET_TOKEN_LENGTH
+from . import (
+    CONF_TRUSTED_NETWORKS,
+    CONF_URL,
+    BaseTelegramBotEntity,
+    DOMAIN,
+    STORE_VERSION,
+    STORE_SECRET_TOKEN,
+    SECRET_TOKEN_LENGTH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,8 +37,10 @@ async def async_setup_platform(hass, bot, config):
     # Obtain secret token from storage, or create a new one if it does not exist
     store = Store(hass, STORE_VERSION, DOMAIN)
     if (data := await store.async_load()) is None:
-        alphabet = string.ascii_letters + string.digits + '-_'
-        secret_token = ''.join(secrets.choice(alphabet) for _ in range(SECRET_TOKEN_LENGTH))
+        alphabet = string.ascii_letters + string.digits + "-_"
+        secret_token = "".join(
+            secrets.choice(alphabet) for _ in range(SECRET_TOKEN_LENGTH)
+        )
         data = {
             STORE_SECRET_TOKEN: secret_token,
         }
@@ -48,7 +58,13 @@ async def async_setup_platform(hass, bot, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pushbot.deregister_webhook)
     hass.http.register_view(
-        PushBotView(hass, bot, pushbot.dispatcher, config[CONF_TRUSTED_NETWORKS], data[STORE_SECRET_TOKEN])
+        PushBotView(
+            hass,
+            bot,
+            pushbot.dispatcher,
+            config[CONF_TRUSTED_NETWORKS],
+            data[STORE_SECRET_TOKEN],
+        )
     )
     return True
 
@@ -76,7 +92,11 @@ class PushBot(BaseTelegramBotEntity):
         retry_num = 0
         while retry_num < 3:
             try:
-                return self.bot.set_webhook(self.webhook_url, api_kwargs={'secret_token': self.secret_token}, timeout=5)
+                return self.bot.set_webhook(
+                    self.webhook_url,
+                    api_kwargs={"secret_token": self.secret_token},
+                    timeout=5,
+                )
             except TimedOut:
                 retry_num += 1
                 _LOGGER.warning("Timeout trying to set webhook (retry #%d)", retry_num)
@@ -137,7 +157,7 @@ class PushBotView(HomeAssistantView):
         if not any(real_ip in net for net in self.trusted_networks):
             _LOGGER.warning("Access denied from %s", real_ip)
             return self.json_message("Access denied", HTTPStatus.UNAUTHORIZED)
-        if not self.secret_token == request.headers['X-Telegram-Bot-Api-Secret-Token']:
+        if self.secret_token != request.headers["X-Telegram-Bot-Api-Secret-Token"]:
             _LOGGER.warning("Invalid secret token from %s", real_ip)
             return self.json_message("Access denied", HTTPStatus.UNAUTHORIZED)
 
