@@ -19,6 +19,7 @@ from roborock.containers import (
     UserData,
 )
 from roborock.exceptions import RoborockException
+from roborock.local_api import RoborockLocalClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
@@ -78,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("There are no devices that can currently be reached.")
     updated_cached: dict[str, dict] = {}
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    disconnect_requests = []
     for coord in valid_coordinators:
         updated_cached.update(
             {
@@ -89,6 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
             }
         )
+        if isinstance(coord.api, RoborockLocalClient):
+            # If we are using the local client, disconnect from the cloud client so we don't try to keep it alive.
+            disconnect_requests.append(coord.cloud_api.async_disconnect())
+    await asyncio.gather(*disconnect_requests)
     hass.config_entries.async_update_entry(
         entry, data={**entry.data, CONF_CACHED_INFORMATION: updated_cached}
     )
