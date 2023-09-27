@@ -1137,7 +1137,7 @@ async def _async_component_dependencies(
     loaded = set()
 
     async def component_dependencies_impl(integration: Integration) -> None:
-        """Recursive async impl to get component dependencies."""
+        """Recursively get component dependencies."""
         domain = integration.domain
         loading.add(domain)
 
