@@ -1,8 +1,6 @@
 """Sensor platform for the PoolSense sensor."""
 from __future__ import annotations
 
-from typing import cast
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -98,4 +96,4 @@ class PoolSenseSensor(PoolSenseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """State of the sensor."""
-        return cast(StateType, self.coordinator.data[self.entity_description.key])
+        return self.coordinator.data[self.entity_description.key]
