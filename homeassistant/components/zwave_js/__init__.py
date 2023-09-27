@@ -764,6 +764,7 @@ class NodeEvents:
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
             ATTR_HOME_ID: driver.controller.home_id,
+            ATTR_ENDPOINT: notification.endpoint_idx,
             ATTR_DEVICE_ID: device.id,
             ATTR_COMMAND_CLASS: notification.command_class,
         }
