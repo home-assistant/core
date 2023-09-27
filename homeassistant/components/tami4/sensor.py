@@ -101,7 +101,7 @@ class Tami4EdgeSensorEntity(Tami4EdgeBaseEntity, CoordinatorEntity[Tami4EdgeWate
         api: Tami4EdgeAPI,
         entity_description: SensorEntityDescription,
     ) -> None:
-        """Initialize the Tami4Edge entity."""
+        """Initialize the Tami4Edge sensor entity."""
         Tami4EdgeBaseEntity.__init__(self, api, entity_description)
         CoordinatorEntity.__init__(self, coordinator)
 
