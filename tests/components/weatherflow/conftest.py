@@ -37,7 +37,7 @@ def mock_stop() -> Generator[AsyncMock, None, None]:
         self._udp_task.cancel()
 
     with patch(
-        "pyweatherflowudp.client.WeatherFlowListener.stop_listening",
+        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.stop_listening",
         autospec=True,
         side_effect=mock_stop_listening,
     ) as mock_function:
