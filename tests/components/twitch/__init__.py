@@ -109,28 +109,17 @@ STREAMS = StreamMock(
 class TwitchMock:
     """Mock for the twitch object."""
 
+    _is_streaming = True
+    _is_gifted = False
+    _is_subscribed = False
+    _is_following = True
+    _different_user_id = False
+
     def __await__(self):
         """Add async capabilities to the mock."""
         t = asyncio.create_task(self._noop())
         yield from t
         return self
-
-    def __init__(
-        self,
-        is_streaming: bool = True,
-        is_gifted: bool = False,
-        is_subscribed: bool = False,
-        is_following: bool = True,
-        user_found: bool = True,
-        different_user_id: bool = False,
-    ) -> None:
-        """Initialize mock."""
-        self._is_streaming = is_streaming
-        self._is_gifted = is_gifted
-        self._is_subscribed = is_subscribed
-        self._is_following = is_following
-        self._user_found = user_found
-        self._different_user_id = different_user_id
 
     def is_streaming(self, state: bool) -> None:
         """Set if the channel is streaming."""
@@ -157,8 +146,6 @@ class TwitchMock:
     ) -> AsyncGenerator[TwitchUser, None]:
         """Get list of mock users."""
         users = [_get_twitch_user("234" if self._different_user_id else "123")]
-        if not self._user_found:
-            users = []
         for user in users:
             yield user
 
