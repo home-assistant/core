@@ -500,6 +500,7 @@ FLOWS = {
         "twentemilieu",
         "twilio",
         "twinkly",
+        "twitch",
         "ukraine_alarm",
         "unifi",
         "unifiprotect",
