@@ -1419,6 +1419,8 @@ build.json @home-assistant/supervisor
 /tests/components/waze_travel_time/ @eifinger
 /homeassistant/components/weather/ @home-assistant/core
 /tests/components/weather/ @home-assistant/core
+/homeassistant/components/weatherflow/ @natekspencer @jeeftor
+/tests/components/weatherflow/ @natekspencer @jeeftor
 /homeassistant/components/weatherkit/ @tjhorner
 /tests/components/weatherkit/ @tjhorner
 /homeassistant/components/webhook/ @home-assistant/core
