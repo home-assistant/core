@@ -198,6 +198,8 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
 
         if not (state := await self.async_get_last_state()):
             return
+        if state.state == STATE_UNKNOWN:
+            return
         self._state = state.state == STATE_ON
 
     async def async_update(self) -> None:

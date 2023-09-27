@@ -2,6 +2,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config as hass_config, setup
 from homeassistant.components.trend.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
@@ -416,9 +418,15 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert hass.states.get("binary_sensor.second_test_trend_sensor")
 
 
-async def test_restore_state(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("saved_state", "restored_state"),
+    [("on", "on"), ("off", "off"), ("unknown", "unknown")],
+)
+async def test_restore_state(
+    hass: HomeAssistant, saved_state: str, restored_state: str
+) -> None:
     """Test we restore the trend state."""
-    mock_restore_cache(hass, (State("binary_sensor.test_trend_sensor", "on"),))
+    mock_restore_cache(hass, (State("binary_sensor.test_trend_sensor", saved_state),))
 
     assert await setup.async_setup_component(
         hass,
@@ -432,4 +440,4 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.test_trend_sensor").state == "on"
+    assert hass.states.get("binary_sensor.test_trend_sensor").state == restored_state
