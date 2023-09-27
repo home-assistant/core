@@ -1,4 +1,5 @@
 """Sensor entities for Tami4Edge."""
+from datetime import date
 import logging
 
 from Tami4EdgeAPI import Tami4EdgeAPI
@@ -72,8 +73,8 @@ async def async_setup_entry(
 ) -> None:
     """Perform the setup for Tami4Edge."""
     data = hass.data[DOMAIN][entry.entry_id]
-    api = data[DATA_API]
-    coordinator = data[DATA_COORDINATOR]
+    api: Tami4EdgeAPI = data[DATA_API]
+    coordinator: Tami4EdgeWaterQualityCoordinator = data[DATA_COORDINATOR]
 
     entities = []
     for entity_description in ENTITY_DESCRIPTIONS:
@@ -105,15 +106,17 @@ class Tami4EdgeSensorEntity(
         Tami4EdgeBaseEntity.__init__(self, api, entity_description)
         CoordinatorEntity.__init__(self, coordinator)
 
+    @property
+    def native_value(self) -> date | str | float:
+        """Return the state of the device."""
+        return getattr(self.coordinator.data, self.entity_description.key)  # type: ignore[no-any-return]
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        try:
-            self._attr_native_value = getattr(
-                self.coordinator.data, self.entity_description.key
-            )
-        except KeyError:
-            return
+        self._attr_native_value = getattr(
+            self.coordinator.data, self.entity_description.key
+        )
         self.async_write_ha_state()
 
     @property
