@@ -1,6 +1,5 @@
 """Support for exposing regular REST commands as services."""
 import asyncio
-import contextlib
 from http import HTTPStatus
 import logging
 
@@ -64,7 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all rest_commands and load new ones from config."""
-        conf = await async_integration_yaml_config(hass, DOMAIN)
+        conf = await async_integration_yaml_config(hass, DOMAIN) or {}
 
         existing = hass.services.async_services().get(DOMAIN, {})
         for existing_service in existing:
