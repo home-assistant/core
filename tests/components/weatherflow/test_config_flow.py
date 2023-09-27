@@ -35,7 +35,10 @@ async def test_single_instance(
 
 
 async def test_devices_with_mocks(
-    hass: HomeAssistant, mock_start: AsyncMock, mock_stop: AsyncMock
+    hass: HomeAssistant,
+    mock_start: AsyncMock,
+    mock_stop: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test getting user input."""
 
@@ -60,7 +63,7 @@ async def test_devices_with_various_mocks_errors(
     hass: HomeAssistant,
     mock_start: AsyncMock,
     mock_stop: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
     exception,
     error_msg,
 ) -> None:
