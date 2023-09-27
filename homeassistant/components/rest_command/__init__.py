@@ -64,11 +64,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all rest_commands and load new ones from config."""
-        conf = None
-        with contextlib.suppress(HomeAssistantError):
-            conf = await async_integration_yaml_config(hass, DOMAIN)
-        if conf is None or DOMAIN not in conf:
-            return
+        conf = await async_integration_yaml_config(hass, DOMAIN)
 
         existing = hass.services.async_services().get(DOMAIN, {})
         for existing_service in existing:
