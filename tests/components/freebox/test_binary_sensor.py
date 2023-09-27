@@ -50,8 +50,9 @@ async def test_home(
     """Test home binary sensors."""
     await setup_platform(hass, BINARY_SENSOR_DOMAIN)
 
-    assert hass.states.get("binary_sensor.detecteur").state == "unknown"
-    assert hass.states.get("binary_sensor.ouverture_porte").state == "unknown"
+    assert hass.states.get("binary_sensor.detecteur").state == "on"
+    assert hass.states.get("binary_sensor.ouverture_porte").state == "on"
+    assert hass.states.get("binary_sensor.ouverture_porte_couvercle").state == "off"
 
     assert (
         hass.states.get("binary_sensor.detecteur").attributes[ATTR_DEVICE_CLASS]
@@ -67,8 +68,9 @@ async def test_home(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.detecteur").state == "off"
-    assert hass.states.get("binary_sensor.ouverture_porte").state == "off"
+    assert hass.states.get("binary_sensor.detecteur").state == "on"
+    assert hass.states.get("binary_sensor.ouverture_porte").state == "on"
+    assert hass.states.get("binary_sensor.ouverture_porte_couvercle").state == "off"
 
     # Now simulate a changed status
     data_home_get_values_changed = deepcopy(DATA_HOME_GET_VALUES)
@@ -80,5 +82,6 @@ async def test_home(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.detecteur").state == "on"
-    assert hass.states.get("binary_sensor.ouverture_porte").state == "on"
+    assert hass.states.get("binary_sensor.detecteur").state == "off"
+    assert hass.states.get("binary_sensor.ouverture_porte").state == "off"
+    assert hass.states.get("binary_sensor.ouverture_porte_couvercle").state == "on"

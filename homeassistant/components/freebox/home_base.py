@@ -104,7 +104,9 @@ class FreeboxHomeEntity(Entity):
             None,
         )
         if not node:
-            _LOGGER.warning("The Freebox Home device has no value for: %s", name)
+            _LOGGER.warning(
+                "The Freebox Home device has no command value for: %s/%s", name, ep_type
+            )
             return None
         return node["id"]
 
@@ -137,7 +139,7 @@ class FreeboxHomeEntity(Entity):
         )
         if not node:
             _LOGGER.warning(
-                "The Freebox Home device has no node for: %s/%s", ep_type, name
+                "The Freebox Home device has no node value for: %s/%s", ep_type, name
             )
             return None
         return node.get("value")
