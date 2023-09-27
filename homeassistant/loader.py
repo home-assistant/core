@@ -996,7 +996,7 @@ class IntegrationNotLoaded(LoaderError):
 class CircularDependency(LoaderError):
     """Raised when a circular dependency is found when resolving components."""
 
-    def __init__(self, from_domain: str, to_domain: str) -> None:
+    def __init__(self, from_domain: str | set[str], to_domain: str) -> None:
         """Initialize circular dependency error."""
         super().__init__(f"Circular dependency detected: {from_domain} -> {to_domain}.")
         self.from_domain = from_domain
@@ -1148,7 +1148,7 @@ async def _async_component_dependencies(
             # We have to check it here to make sure that every integration that
             # depends on us, does not appear in our own after_dependencies.
             if conflict := loading.intersection(dep_integration.after_dependencies):
-                raise CircularDependency(conflict.pop(), dependency_domain)
+                raise CircularDependency(conflict, dependency_domain)
 
             # If we have already loaded it, no point doing it again.
             if dependency_domain in loaded:
