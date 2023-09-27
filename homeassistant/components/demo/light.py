@@ -12,6 +12,7 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
+    ATTR_XY_COLOR,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -88,6 +89,14 @@ async def async_setup_entry(
                 supported_color_modes=SUPPORT_DEMO_HS_WHITE,
                 unique_id="light_6",
             ),
+            DemoLight(
+                available=True,
+                device_name="Lamp XY Lights",
+                xy_color=(0.73, 0.22),
+                state=True,
+                supported_color_modes={ColorMode.XY},
+                unique_id="light_7",
+            ),
         ]
     )
 
@@ -112,6 +121,7 @@ class DemoLight(LightEntity):
         hs_color: tuple[int, int] | None = None,
         rgbw_color: tuple[int, int, int, int] | None = None,
         rgbww_color: tuple[int, int, int, int, int] | None = None,
+        xy_color: tuple[float, float] | None = None,
         supported_color_modes: set[ColorMode] | None = None,
     ) -> None:
         """Initialize the light."""
@@ -123,6 +133,7 @@ class DemoLight(LightEntity):
         self._hs_color = hs_color
         self._rgbw_color = rgbw_color
         self._rgbww_color = rgbww_color
+        self._xy_color = xy_color
         self._state = state
         self._unique_id = unique_id
         if hs_color:
@@ -131,6 +142,8 @@ class DemoLight(LightEntity):
             self._color_mode = ColorMode.RGBW
         elif rgbww_color:
             self._color_mode = ColorMode.RGBWW
+        elif xy_color:
+            self._color_mode = ColorMode.XY
         else:
             self._color_mode = ColorMode.COLOR_TEMP
         if not supported_color_modes:
@@ -184,6 +197,11 @@ class DemoLight(LightEntity):
         return self._rgbww_color
 
     @property
+    def xy_color(self) -> tuple[float, float] | None:
+        """Return the xy color value."""
+        return self._xy_color
+
+    @property
     def color_temp(self) -> int:
         """Return the CT color temperature."""
         return self._ct
@@ -233,6 +251,10 @@ class DemoLight(LightEntity):
         if ATTR_RGBWW_COLOR in kwargs:
             self._color_mode = ColorMode.RGBWW
             self._rgbww_color = kwargs[ATTR_RGBWW_COLOR]
+
+        if ATTR_XY_COLOR in kwargs:
+            self._color_mode = ColorMode.XY
+            self._xy_color = kwargs[ATTR_XY_COLOR]
 
         if ATTR_WHITE in kwargs:
             self._color_mode = ColorMode.WHITE
