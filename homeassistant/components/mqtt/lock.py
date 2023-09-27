@@ -142,17 +142,6 @@ class MqttLock(MqttEntity, LockEntity):
     ]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the lock."""
-        self._attr_is_locked = False
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""
@@ -160,10 +149,13 @@ class MqttLock(MqttEntity, LockEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._optimistic = (
-            config[CONF_OPTIMISTIC] or self._config.get(CONF_STATE_TOPIC) is None
-        )
-        self._attr_assumed_state = bool(self._optimistic)
+        if (
+            optimistic := config[CONF_OPTIMISTIC]
+            or config.get(CONF_STATE_TOPIC) is None
+        ):
+            self._attr_is_locked = False
+        self._optimistic = optimistic
+        self._attr_assumed_state = bool(optimistic)
 
         self._compiled_pattern = config.get(CONF_CODE_FORMAT)
         self._attr_code_format = (

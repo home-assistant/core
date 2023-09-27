@@ -93,24 +93,13 @@ async def _async_setup_entity(
 class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     """representation of an MQTT select."""
 
+    _attr_current_option: str | None = None
     _default_name = DEFAULT_NAME
     _entity_id_format = select.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SELECT_ATTRIBUTES_BLOCKED
     _command_template: Callable[[PublishPayloadType], PublishPayloadType]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
     _optimistic: bool = False
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT select."""
-        self._attr_current_option = None
-        SelectEntity.__init__(self)
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:

@@ -23,14 +23,13 @@ from .entity import HydrawiseEntity
 
 BINARY_SENSOR_STATUS = BinarySensorEntityDescription(
     key="status",
-    name="Status",
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="is_watering",
-        name="Watering",
+        translation_key="watering",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
 )
@@ -77,6 +76,7 @@ async def async_setup_entry(
             data=hydrawise.current_controller,
             coordinator=coordinator,
             description=BINARY_SENSOR_STATUS,
+            device_id_key="controller_id",
         )
     ]
 

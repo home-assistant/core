@@ -114,24 +114,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
 
     _default_name = DEFAULT_NAME
     _entity_id_format = update.ENTITY_ID_FORMAT
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None = None,
-    ) -> None:
-        """Initialize the MQTT update."""
-        self._config = config
-        self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
-        self._attr_release_summary = self._config.get(CONF_RELEASE_SUMMARY)
-        self._attr_release_url = self._config.get(CONF_RELEASE_URL)
-        self._attr_title = self._config.get(CONF_TITLE)
-        self._entity_picture: str | None = self._config.get(CONF_ENTITY_PICTURE)
-
-        UpdateEntity.__init__(self)
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
+    _entity_picture: str | None
 
     @property
     def entity_picture(self) -> str | None:
@@ -148,6 +131,11 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
+        self._attr_release_summary = self._config.get(CONF_RELEASE_SUMMARY)
+        self._attr_release_url = self._config.get(CONF_RELEASE_URL)
+        self._attr_title = self._config.get(CONF_TITLE)
+        self._entity_picture: str | None = self._config.get(CONF_ENTITY_PICTURE)
         self._templates = {
             CONF_VALUE_TEMPLATE: MqttValueTemplate(
                 config.get(CONF_VALUE_TEMPLATE),

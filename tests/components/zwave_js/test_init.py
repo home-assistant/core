@@ -1,6 +1,7 @@
 """Test the Z-Wave JS init module."""
 import asyncio
 from copy import deepcopy
+import logging
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
@@ -11,6 +12,7 @@ from zwave_js_server.model.node import Node
 from zwave_js_server.model.version import VersionInfo
 
 from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
@@ -23,6 +25,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.setup import async_setup_component
 
 from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
@@ -1550,3 +1553,94 @@ async def test_identify_event(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+
+
+async def test_server_logging(hass: HomeAssistant, client) -> None:
+    """Test automatic server logging functionality."""
+
+    def _reset_mocks():
+        client.async_send_command.reset_mock()
+        client.enable_server_logging.reset_mock()
+        client.disable_server_logging.reset_mock()
+
+    # Set server logging to disabled
+    client.server_logging_enabled = False
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Setup logger and set log level to debug to trigger event listener
+    assert await async_setup_component(hass, "logger", {"logger": {}})
+    assert logging.getLogger("zwave_js_server").getEffectiveLevel() == logging.INFO
+    client.async_send_command.reset_mock()
+    await hass.services.async_call(
+        LOGGER_DOMAIN, SERVICE_SET_LEVEL, {"zwave_js_server": "debug"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert logging.getLogger("zwave_js_server").getEffectiveLevel() == logging.DEBUG
+
+    # Validate that the server logging was enabled
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "driver.update_log_config",
+        "config": {"level": "debug"},
+    }
+    assert client.enable_server_logging.called
+    assert not client.disable_server_logging.called
+
+    _reset_mocks()
+
+    # Emulate server by setting log level to debug
+    event = Event(
+        type="log config updated",
+        data={
+            "source": "driver",
+            "event": "log config updated",
+            "config": {
+                "enabled": False,
+                "level": "debug",
+                "logToFile": True,
+                "filename": "test",
+                "forceConsole": True,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+
+    # "Enable" server logging and unload the entry
+    client.server_logging_enabled = True
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    # Validate that the server logging was disabled
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "driver.update_log_config",
+        "config": {"level": "info"},
+    }
+    assert not client.enable_server_logging.called
+    assert client.disable_server_logging.called
+
+    _reset_mocks()
+
+    # Validate that the server logging doesn't get enabled because HA thinks it already
+    # is enabled
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(client.async_send_command.call_args_list) == 0
+    assert not client.enable_server_logging.called
+    assert not client.disable_server_logging.called
+
+    _reset_mocks()
+
+    # "Disable" server logging and unload the entry
+    client.server_logging_enabled = False
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    # Validate that the server logging was not disabled because HA thinks it is already
+    # is disabled
+    assert len(client.async_send_command.call_args_list) == 0
+    assert not client.enable_server_logging.called
+    assert not client.disable_server_logging.called
