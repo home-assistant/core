@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from aiohttp import ClientError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.const import SUPPORTED_SERVERS
+from pyoverkiz.enums import OverkizState
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
@@ -17,9 +18,9 @@ from pyoverkiz.models import Device, Scenario
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
@@ -54,6 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = OverkizClient(
         username=username, password=password, session=session, server=server
     )
+
+    await _async_migrate_entries(hass, entry)
 
     try:
         await client.login()
@@ -144,3 +147,43 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def _async_migrate_entries(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    entity_registry = er.async_get(hass)
+
+    @callback
+    def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
+        if (key := entry.unique_id.split("-")[-1]).startswith("OverkizState"):
+            state = key.split(".")[1]
+            new_unique_id = entry.unique_id.replace(key, OverkizState[state])
+
+            LOGGER.debug(
+                "Migrating entity '%s' unique_id from '%s' to '%s'",
+                entry.entity_id,
+                entry.unique_id,
+                new_unique_id,
+            )
+
+            if existing_entity_id := entity_registry.async_get_entity_id(
+                entry.domain, entry.platform, new_unique_id
+            ):
+                LOGGER.debug(
+                    "Cannot migrate to unique_id '%s', already exists for '%s'",
+                    new_unique_id,
+                    existing_entity_id,
+                )
+                return None
+
+            return {
+                "new_unique_id": new_unique_id,
+            }
+
+        return None
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
+    return True
