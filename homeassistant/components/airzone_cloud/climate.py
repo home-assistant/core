@@ -98,6 +98,9 @@ async def async_setup_entry(
 class AirzoneClimate(AirzoneEntity, ClimateEntity):
     """Define an Airzone Cloud climate."""
 
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         params = {
@@ -168,9 +171,7 @@ class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneClimate):
         super().__init__(coordinator, system_zone_id, zone_data)
 
         self._attr_unique_id = system_zone_id
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_hvac_modes = [
             HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
         ]
