@@ -164,8 +164,6 @@ class AzureDataExplorer:
         """Test the connection to the Azure Data Explorer service."""
         await self.hass.async_add_executor_job(self._client.test_connection)
 
-        return
-
     def _schedule_next_send(self) -> None:
         """Schedule the next send."""
         if not self._shutdown:
@@ -196,7 +194,6 @@ class AzureDataExplorer:
             )
 
         if adx_events:
-
             event_string = "".join(adx_events)
 
             try:

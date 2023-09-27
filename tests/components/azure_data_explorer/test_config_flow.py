@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
-    "step_config, step_id",
+    ("step_config", "step_id"),
     [
         (BASE_CONFIG, STEP_USER),
     ],

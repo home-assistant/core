@@ -11,14 +11,15 @@
         "step": {
             "user": {
                 "data": {
+                    "authority_id": "Authority ID",
+                    "client_id": "Client ID",
+                    "client_secret": "Client secret",
                     "clusteringesturi": "Cluster Ingest URI",
                     "database": "Database name",
-                    "table": "Table name",
-                    "client_id": "Application ID",
-                    "client_secret": "Application secret",
-                    "authority_id": "Directory ID",
-                    "use_free_cluster": "Use Queueing client"
-                }
+                    "table": "Table name"
+                },
+                "description": "Enter connection details.",
+                "title": "Setup your Azure Data Explorer integration"
             }
         }
     }
