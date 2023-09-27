@@ -126,6 +126,7 @@ async def test_controlling_state_via_topic(
         (CONFIG_WITH_STATES, "closing", STATE_LOCKING),
         (CONFIG_WITH_STATES, "open", STATE_UNLOCKED),
         (CONFIG_WITH_STATES, "opening", STATE_UNLOCKING),
+        (CONFIG_WITH_STATES, "None", STATE_UNKNOWN),
     ],
 )
 async def test_controlling_non_default_state_via_topic(
@@ -185,6 +186,15 @@ async def test_controlling_non_default_state_via_topic(
             ),
             '{"val":"open"}',
             STATE_UNLOCKED,
+        ),
+        (
+            help_custom_config(
+                lock.DOMAIN,
+                CONFIG_WITH_STATES,
+                ({"value_template": "{{ value_json.val }}"},),
+            ),
+            '{"val":null}',
+            STATE_UNKNOWN,
         ),
     ],
 )

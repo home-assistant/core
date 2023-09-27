@@ -876,7 +876,7 @@
     "color_extractor": {
       "name": "ColorExtractor",
       "integration_type": "hub",
-      "config_flow": false
+      "config_flow": true
     },
     "comed": {
       "name": "Commonwealth Edison (ComEd)",

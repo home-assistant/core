@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import call_webhook, enable_webhooks, setup_integration
+from . import call_webhook, setup_integration
 from .conftest import USER_ID, WEBHOOK_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -95,11 +95,9 @@ async def test_sensor_default_enabled_entities(
     hass: HomeAssistant,
     withings: AsyncMock,
     webhook_config_entry: MockConfigEntry,
-    disable_webhook_delay,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test entities enabled by default."""
-    await enable_webhooks(hass)
     await setup_integration(hass, webhook_config_entry)
     entity_registry: EntityRegistry = er.async_get(hass)
 
@@ -137,7 +135,6 @@ async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     withings: AsyncMock,
-    disable_webhook_delay,
     polling_config_entry: MockConfigEntry,
 ) -> None:
     """Test all entities."""
@@ -156,7 +153,7 @@ async def test_update_failed(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test all entities."""
-    await setup_integration(hass, polling_config_entry)
+    await setup_integration(hass, polling_config_entry, False)
 
     withings.async_measure_get_meas.side_effect = Exception
     freezer.tick(timedelta(minutes=10))
