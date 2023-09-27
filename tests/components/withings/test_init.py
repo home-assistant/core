@@ -11,11 +11,7 @@ from withings_api import NotifyListResponse
 from withings_api.common import AuthFailedException, NotifyAppli, UnauthorizedException
 
 from homeassistant import config_entries
-from homeassistant.components.cloud import (
-    SIGNAL_CLOUD_CONNECTION_STATE,
-    CloudConnectionState,
-    CloudNotAvailable,
-)
+from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.components.withings import CONFIG_SCHEMA, async_setup
 from homeassistant.components.withings.const import CONF_USE_WEBHOOK, DOMAIN
@@ -26,7 +22,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
 from . import call_webhook, setup_integration
@@ -35,6 +30,7 @@ from .conftest import USER_ID, WEBHOOK_ID
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_mock_cloud_connection_status,
     load_json_object_fixture,
 )
 from tests.components.cloud import mock_cloud
@@ -506,16 +502,12 @@ async def test_cloud_disconnect(
 
         assert withings.async_notify_subscribe.call_count == 6
 
-        async_dispatcher_send(
-            hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_DISCONNECTED
-        )
+        async_mock_cloud_connection_status(hass, False)
         await hass.async_block_till_done()
 
         assert withings.async_notify_revoke.call_count == 3
 
-        async_dispatcher_send(
-            hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_CONNECTED
-        )
+        async_mock_cloud_connection_status(hass, True)
         await hass.async_block_till_done()
 
         assert withings.async_notify_subscribe.call_count == 12
