@@ -43,13 +43,13 @@ class ComelitCoverEntity(CoordinatorEntity[ComelitSerialBridge], CoverEntity):
         self,
         coordinator: ComelitSerialBridge,
         device: ComelitSerialBridgeObject,
-        config_entry_unique_id: str,
+        config_entry_entry_id: str,
     ) -> None:
         """Init cover entity."""
         self._api = coordinator.api
         self._device = device
         super().__init__(coordinator)
-        self._attr_unique_id = f"{config_entry_unique_id}-{device.index}"
+        self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
         self._attr_device_info = coordinator.platform_device_info(device, COVER)
         # Device doesn't provide a status so we assume CLOSE at startup
         self._last_action = COVER_STATUS.index("closing")
