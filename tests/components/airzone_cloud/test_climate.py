@@ -37,6 +37,25 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
+    # Aidoos
+    state = hass.states.get("climate.bron")
+    assert state.state == HVACMode.OFF
+    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) is None
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 21.0
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
+    assert state.attributes.get(ATTR_HVAC_MODES) == [
+        HVACMode.HEAT_COOL,
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.FAN_ONLY,
+        HVACMode.DRY,
+        HVACMode.OFF,
+    ]
+    assert state.attributes.get(ATTR_MAX_TEMP) == 30
+    assert state.attributes.get(ATTR_MIN_TEMP) == 15
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
+    assert state.attributes.get(ATTR_TEMPERATURE) == 22.0
+
     # Zones
     state = hass.states.get("climate.dormitorio")
     assert state.state == HVACMode.OFF
@@ -78,6 +97,23 @@ async def test_airzone_climate_turn_on_off(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
+    # Aidoos
+    with patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
+        return_value=None,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "climate.bron",
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.bron")
+    assert state.state == HVACMode.HEAT
+
     # Zones
     with patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
@@ -116,6 +152,41 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
     """Test setting the HVAC mode."""
 
     await async_init_integration(hass)
+
+    # Aidoos
+    with patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
+        return_value=None,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.bron",
+                ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.bron")
+    assert state.state == HVACMode.HEAT_COOL
+
+    with patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
+        return_value=None,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.bron",
+                ATTR_HVAC_MODE: HVACMode.OFF,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.bron")
+    assert state.state == HVACMode.OFF
 
     # Zones
     with patch(
@@ -204,6 +275,24 @@ async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
     """Test error when setting the target temperature."""
 
     await async_init_integration(hass)
+
+    # Aidoos
+    with patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
+        side_effect=AirzoneCloudError,
+    ), pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "climate.bron",
+                ATTR_TEMPERATURE: 20.5,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.bron")
+    assert state.attributes.get(ATTR_TEMPERATURE) == 22.0
 
     # Zones
     with patch(
