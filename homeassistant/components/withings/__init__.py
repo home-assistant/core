@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from typing import Any
 
 from aiohttp.hdrs import METH_HEAD, METH_POST
 from aiohttp.web import Request, Response
@@ -33,12 +33,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    Event,
-    HomeAssistant,
-    ServiceCall,
-)
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -134,14 +129,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     async def unregister_webhook(
-        call_or_event_or_dt: ServiceCall | Event | datetime | None,
+        _: Any,
     ) -> None:
         LOGGER.debug("Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID])
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         await hass.data[DOMAIN][entry.entry_id].async_unsubscribe_webhooks()
 
     async def register_webhook(
-        call_or_event_or_dt: ServiceCall | Event | HomeAssistant | datetime | None,
+        _: Any,
     ) -> None:
         if cloud.async_active_subscription(hass):
             webhook_url = await async_cloudhook_generate_url(hass, entry)
