@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.components.hassio import (
     HassioAPIError,
     async_get_green_settings,
-    async_reboot_host,
     async_set_green_settings,
     is_hassio,
 )
@@ -83,7 +82,7 @@ class HomeAssistantGreenOptionsFlow(OptionsFlow):
             except (aiohttp.ClientError, TimeoutError, HassioAPIError) as err:
                 _LOGGER.warning("Failed to write hardware settings", exc_info=err)
                 return self.async_abort(reason="write_hw_settings_error")
-            return await self.async_step_confirm_reboot()
+            return self.async_create_entry(data={})
 
         try:
             async with asyncio.timeout(10):
@@ -99,28 +98,3 @@ class HomeAssistantGreenOptionsFlow(OptionsFlow):
         )
 
         return self.async_show_form(step_id="hardware_settings", data_schema=schema)
-
-    async def async_step_confirm_reboot(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Confirm reboot host."""
-        return self.async_show_menu(
-            step_id="reboot_menu",
-            menu_options=[
-                "reboot_now",
-                "reboot_later",
-            ],
-        )
-
-    async def async_step_reboot_now(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Reboot now."""
-        await async_reboot_host(self.hass)
-        return self.async_create_entry(data={})
-
-    async def async_step_reboot_later(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Reboot later."""
-        return self.async_create_entry(data={})

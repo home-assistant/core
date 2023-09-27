@@ -33,15 +33,6 @@ def mock_set_green_settings():
         yield set_green_settings
 
 
-@pytest.fixture(name="reboot_host")
-def mock_reboot_host():
-    """Mock rebooting host."""
-    with patch(
-        "homeassistant.components.homeassistant_green.config_flow.async_reboot_host",
-    ) as reboot_host:
-        yield reboot_host
-
-
 async def test_config_flow(hass: HomeAssistant) -> None:
     """Test the config flow."""
     mock_integration(hass, MockModule("hassio"))
@@ -117,17 +108,10 @@ async def test_option_flow_non_hassio(
     assert result["reason"] == "not_hassio"
 
 
-@pytest.mark.parametrize(
-    ("reboot_menu_choice", "reboot_calls"),
-    [("reboot_now", 1), ("reboot_later", 0)],
-)
 async def test_option_flow_led_settings(
     hass: HomeAssistant,
     get_green_settings,
     set_green_settings,
-    reboot_host,
-    reboot_menu_choice,
-    reboot_calls,
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
@@ -149,18 +133,10 @@ async def test_option_flow_led_settings(
         result["flow_id"],
         {"activity_led": False, "power_led": False, "system_health_led": False},
     )
-    assert result["type"] == FlowResultType.MENU
-    assert result["step_id"] == "reboot_menu"
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     set_green_settings.assert_called_once_with(
         hass, {"activity_led": False, "power_led": False, "system_health_led": False}
     )
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {"next_step_id": reboot_menu_choice},
-    )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert len(reboot_host.mock_calls) == reboot_calls
 
 
 async def test_option_flow_led_settings_unchanged(
