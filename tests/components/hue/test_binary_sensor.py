@@ -39,6 +39,18 @@ async def test_binary_sensors(
     assert sensor.state == "off"
     assert sensor.name == "Test contact sensor Contact"
     assert sensor.attributes["device_class"] == "opening"
+    # test contact sensor disabled == state unknown
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "enabled": False,
+            "id": "18802b4a-b2f6-45dc-8813-99cde47f3a4a",
+            "type": "contact",
+        },
+    )
+    await hass.async_block_till_done()
+    sensor = hass.states.get("binary_sensor.test_contact_sensor_contact")
+    assert sensor.state == "unknown"
 
     # test tamper sensor
     sensor = hass.states.get("binary_sensor.test_contact_sensor_tamper")
@@ -46,6 +58,18 @@ async def test_binary_sensors(
     assert sensor.state == "off"
     assert sensor.name == "Test contact sensor Tamper"
     assert sensor.attributes["device_class"] == "tamper"
+    # test tamper sensor when no tamper reports exist
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "id": "d7fcfab0-69e1-4afb-99df-6ed505211db4",
+            "tamper_reports": [],
+            "type": "tamper",
+        },
+    )
+    await hass.async_block_till_done()
+    sensor = hass.states.get("binary_sensor.test_contact_sensor_tamper")
+    assert sensor.state == "off"
 
     # test camera_motion sensor
     sensor = hass.states.get("binary_sensor.test_camera_motion")
