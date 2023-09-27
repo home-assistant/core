@@ -74,16 +74,16 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Perform the setup for Tami4Edge."""
-    edge = hass.data[DOMAIN][entry.entry_id]
+    api = hass.data[DOMAIN][entry.entry_id]
 
-    coordinator = Tami4EdgeWaterQualityCoordinator(hass, edge)
+    coordinator = Tami4EdgeWaterQualityCoordinator(hass, api)
 
     entities = []
     for entity_description in ENTITY_DESCRIPTIONS:
         entities.append(
             Tami4EdgeSensorEntity(
                 coordinator=coordinator,
-                edge=edge,
+                api=api,
                 entity_description=entity_description,
             )
         )
@@ -98,11 +98,11 @@ class Tami4EdgeSensorEntity(Tami4EdgeBaseEntity, CoordinatorEntity, SensorEntity
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        edge: Tami4EdgeAPI,
+        api: Tami4EdgeAPI,
         entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the Tami4Edge entity."""
-        Tami4EdgeBaseEntity.__init__(self, edge, entity_description)
+        Tami4EdgeBaseEntity.__init__(self, api, entity_description)
         CoordinatorEntity.__init__(self, coordinator)
 
     @callback

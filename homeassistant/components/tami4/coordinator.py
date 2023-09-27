@@ -39,7 +39,7 @@ class FlattenedWaterQuality:
 class Tami4EdgeWaterQualityCoordinator(DataUpdateCoordinator[FlattenedWaterQuality]):
     """Tami4Edge water quality coordinator."""
 
-    def __init__(self, hass: HomeAssistant, edge: Tami4EdgeAPI) -> None:
+    def __init__(self, hass: HomeAssistant, api: Tami4EdgeAPI) -> None:
         """Initialize the water quality coordinator."""
         super().__init__(
             hass,
@@ -47,13 +47,13 @@ class Tami4EdgeWaterQualityCoordinator(DataUpdateCoordinator[FlattenedWaterQuali
             name="Tami4Edge water quality coordinator",
             update_interval=timedelta(minutes=60),
         )
-        self.edge = edge
+        self._api = api
 
     async def _async_update_data(self) -> FlattenedWaterQuality:
         """Fetch data from the API endpoint."""
         try:
             water_quality = await self.hass.async_add_executor_job(
-                self.edge.get_water_quality
+                self._api.get_water_quality
             )
 
             return FlattenedWaterQuality(water_quality)

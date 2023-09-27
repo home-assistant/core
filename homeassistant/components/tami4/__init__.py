@@ -14,15 +14,15 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up edge from a config entry."""
+    """Set up tami4 from a config entry."""
     refresh_token = entry.data.get(CONF_REFRESH_TOKEN)
 
     try:
-        edge = await hass.async_add_executor_job(Tami4EdgeAPI, refresh_token)
+        api = await hass.async_add_executor_job(Tami4EdgeAPI, refresh_token)
     except Exception as ex:
         raise ConfigEntryNotReady("Error connecting to API") from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = edge
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

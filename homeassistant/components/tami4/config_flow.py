@@ -68,7 +68,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 refresh_token = await self.hass.async_add_executor_job(
                     Tami4EdgeAPI.submit_otp, self.phone, otp
                 )
-                edge = await self.hass.async_add_executor_job(
+                api = await self.hass.async_add_executor_job(
                     Tami4EdgeAPI, refresh_token
                 )
             except Exception:  # pylint: disable=broad-except
@@ -76,7 +76,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=edge.device.name, data={"refresh_token": refresh_token}
+                    title=api.device.name, data={"refresh_token": refresh_token}
                 )
 
         return self.async_show_form(
