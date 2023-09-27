@@ -16,6 +16,7 @@ from aioesphomeapi import (
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArgType,
+    VoiceAssistantAudioSettings,
     VoiceAssistantEventType,
 )
 from awesomeversion import AwesomeVersion
@@ -319,7 +320,10 @@ class ESPHomeManager:
             self.voice_assistant_udp_server = None
 
     async def _handle_pipeline_start(
-        self, conversation_id: str, flags: int
+        self,
+        conversation_id: str,
+        flags: int,
+        audio_settings: VoiceAssistantAudioSettings,
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_udp_server is not None:
@@ -340,6 +344,7 @@ class ESPHomeManager:
                 device_id=self.device_id,
                 conversation_id=conversation_id or None,
                 flags=flags,
+                audio_settings=audio_settings,
             ),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )

@@ -1,6 +1,7 @@
 {
   "domain": "withings",
   "name": "Withings",
+  "after_dependencies": ["cloud"],
   "codeowners": ["@vangorra", "@joostlek"],
   "config_flow": true,
   "dependencies": ["application_credentials", "http", "webhook"],

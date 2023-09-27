@@ -29,8 +29,7 @@ from typing import TYPE_CHECKING, Any, Final, cast
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components.logger import EVENT_LOGGING_CHANGED
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv

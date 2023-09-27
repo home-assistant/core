@@ -23,6 +23,8 @@ from homeassistant.components.bluetooth.advertisement_tracker import (
 from homeassistant.components.bluetooth.const import (
     CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    SCANNER_WATCHDOG_INTERVAL,
+    SCANNER_WATCHDOG_TIMEOUT,
     UNAVAILABLE_TRACK_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -554,6 +556,85 @@ async def test_device_with_ten_minute_advertising_interval(
     )
     assert bparasite_device_went_unavailable is True
     bparasite_device_unavailable_cancel()
+
+    cancel()
+    unsetup()
+
+
+async def test_scanner_stops_responding(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, enable_bluetooth: None
+) -> None:
+    """Test we mark a scanner are not scanning when it stops responding."""
+    manager = _get_manager()
+
+    class FakeScanner(BaseHaRemoteScanner):
+        """A fake remote scanner."""
+
+        def inject_advertisement(
+            self, device: BLEDevice, advertisement_data: AdvertisementData
+        ) -> None:
+            """Inject an advertisement."""
+            self._async_on_advertisement(
+                device.address,
+                advertisement_data.rssi,
+                device.name,
+                advertisement_data.service_uuids,
+                advertisement_data.service_data,
+                advertisement_data.manufacturer_data,
+                advertisement_data.tx_power,
+                {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
+            )
+
+    new_info_callback = manager.scanner_adv_received
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, False)
+    unsetup = scanner.async_setup()
+    cancel = manager.async_register_scanner(scanner, True)
+
+    start_time_monotonic = time.monotonic()
+
+    assert scanner.scanning is True
+    failure_reached_time = (
+        start_time_monotonic
+        + SCANNER_WATCHDOG_TIMEOUT
+        + SCANNER_WATCHDOG_INTERVAL.total_seconds()
+    )
+    # We hit the timer with no detections, so we reset the adapter and restart the scanner
+    with patch(
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        return_value=failure_reached_time,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert scanner.scanning is False
+
+    bparasite_device = generate_ble_device(
+        "44:44:33:11:23:45",
+        "bparasite",
+        {},
+        rssi=-100,
+    )
+    bparasite_device_adv = generate_advertisement_data(
+        local_name="bparasite",
+        service_uuids=[],
+        manufacturer_data={1: b"\x01"},
+        rssi=-100,
+    )
+
+    failure_reached_time += 1
+
+    with patch(
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        return_value=failure_reached_time,
+    ):
+        scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
+
+    # As soon as we get a detection, we know the scanner is working again
+    assert scanner.scanning is True
 
     cancel()
     unsetup()
