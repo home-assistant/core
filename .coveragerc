@@ -175,6 +175,7 @@ omit =
     homeassistant/components/comed_hourly_pricing/sensor.py
     homeassistant/components/comelit/__init__.py
     homeassistant/components/comelit/const.py
+    homeassistant/components/comelit/cover.py
     homeassistant/components/comelit/coordinator.py
     homeassistant/components/comelit/light.py
     homeassistant/components/comfoconnect/fan.py
@@ -767,6 +768,7 @@ omit =
     homeassistant/components/moehlenhoff_alpha2/climate.py
     homeassistant/components/moehlenhoff_alpha2/sensor.py
     homeassistant/components/motion_blinds/__init__.py
+    homeassistant/components/motion_blinds/coordinator.py
     homeassistant/components/motion_blinds/cover.py
     homeassistant/components/motion_blinds/entity.py
     homeassistant/components/motion_blinds/sensor.py
@@ -977,6 +979,8 @@ omit =
     homeassistant/components/point/sensor.py
     homeassistant/components/poolsense/__init__.py
     homeassistant/components/poolsense/binary_sensor.py
+    homeassistant/components/poolsense/coordinator.py
+    homeassistant/components/poolsense/entity.py
     homeassistant/components/poolsense/sensor.py
     homeassistant/components/powerwall/__init__.py
     homeassistant/components/progettihwsw/__init__.py
@@ -1478,6 +1482,7 @@ omit =
     homeassistant/components/vlc_telnet/__init__.py
     homeassistant/components/vlc_telnet/media_player.py
     homeassistant/components/vodafone_station/__init__.py
+    homeassistant/components/vodafone_station/button.py
     homeassistant/components/vodafone_station/const.py
     homeassistant/components/vodafone_station/coordinator.py
     homeassistant/components/vodafone_station/device_tracker.py

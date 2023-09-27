@@ -100,17 +100,6 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     _state_off: str
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT switch."""
-
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""

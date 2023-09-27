@@ -13,6 +13,7 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import aiohttp_client
@@ -58,8 +59,20 @@ def _get_color(file_handler) -> tuple:
     return color
 
 
-async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
-    """Set up services for color_extractor integration."""
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Color extractor component."""
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data={}
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Load a config entry."""
 
     async def async_handle_service(service_call: ServiceCall) -> None:
         """Decide which color_extractor method to call based on service."""
