@@ -1499,7 +1499,7 @@ pvo==1.0.0
 py-canary==0.5.3
 
 # homeassistant.components.cpuspeed
-py-cpuinfo==8.0.0
+py-cpuinfo==9.0.0
 
 # homeassistant.components.dormakaba_dkey
 py-dormakaba-dkey==1.0.5
