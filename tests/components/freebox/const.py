@@ -2128,17 +2128,6 @@ DATA_HOME_GET_NODES = [
             {
                 "category": "",
                 "ep_type": "signal",
-                "id": 6,
-                "label": "Détection",
-                "name": "trigger",
-                "ui": {"access": "w", "display": "toggle"},
-                "value": False,
-                "value_type": "bool",
-                "visibility": "normal",
-            },
-            {
-                "category": "",
-                "ep_type": "signal",
                 "id": 7,
                 "label": "Couvercle",
                 "name": "cover",

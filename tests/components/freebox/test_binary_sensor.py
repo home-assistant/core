@@ -69,7 +69,7 @@ async def test_home(
     # Initial state
     assert hass.states.get("binary_sensor.detecteur").state == "on"
     assert hass.states.get("binary_sensor.detecteur_couvercle").state == "off"
-    assert hass.states.get("binary_sensor.ouverture_porte").state == "on"
+    assert hass.states.get("binary_sensor.ouverture_porte").state == "unknown"
     assert hass.states.get("binary_sensor.ouverture_porte_couvercle").state == "off"
 
     # Now simulate a changed status
