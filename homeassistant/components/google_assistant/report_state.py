@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import deque
 import logging
 from typing import Any
+from uuid import uuid4
 
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
@@ -30,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @callback
 def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig):
-    """Enable state reporting."""
+    """Enable state and notification reporting."""
     checker = None
     unsub_pending: CALLBACK_TYPE | None = None
     pending: deque[dict[str, Any]] = deque([{}])
@@ -78,6 +79,23 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
             )
         ):
             return
+
+        if (notifications := entity.notifications_serialize()) is not None:
+            event_id = uuid4().hex
+            payload = {
+                "devices": {"notifications": {entity.state.entity_id: notifications}}
+            }
+            _LOGGER.info(
+                "Sending event notification for entity %s",
+                entity.state.entity_id,
+            )
+            result = await google_config.async_sync_notification_all(event_id, payload)
+            if result != 200:
+                _LOGGER.error(
+                    "Unable to send notification with result code: %s, check log for more"
+                    " info",
+                    result,
+                )
 
         try:
             entity_data = entity.query_serialize()

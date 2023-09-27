@@ -57,7 +57,6 @@ async def test_no_zones(
 async def test_zones(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    responses: list[AiohttpClientMockResponse],
 ) -> None:
     """Test switch platform with fake data that creates 7 zones with one enabled."""
 

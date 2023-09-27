@@ -92,7 +92,11 @@ class MockAsyncTcpClient:
     async def read_event(self):
         """Receive."""
         await asyncio.sleep(0)  # force context switch
-        return self.responses.pop(0)
+
+        if self.responses:
+            return self.responses.pop(0)
+
+        return None
 
     async def __aenter__(self):
         """Enter."""
