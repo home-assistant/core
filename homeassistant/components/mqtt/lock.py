@@ -28,6 +28,7 @@ from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
+    CONF_PAYLOAD_RESET,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
@@ -63,6 +64,7 @@ DEFAULT_NAME = "MQTT Lock"
 DEFAULT_PAYLOAD_LOCK = "LOCK"
 DEFAULT_PAYLOAD_UNLOCK = "UNLOCK"
 DEFAULT_PAYLOAD_OPEN = "OPEN"
+DEFAULT_PAYLOAD_RESET = "None"
 DEFAULT_STATE_LOCKED = "LOCKED"
 DEFAULT_STATE_LOCKING = "LOCKING"
 DEFAULT_STATE_UNLOCKED = "UNLOCKED"
@@ -84,6 +86,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_PAYLOAD_LOCK, default=DEFAULT_PAYLOAD_LOCK): cv.string,
         vol.Optional(CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK): cv.string,
         vol.Optional(CONF_PAYLOAD_OPEN): cv.string,
+        vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
         vol.Optional(CONF_STATE_JAMMED, default=DEFAULT_STATE_JAMMED): cv.string,
         vol.Optional(CONF_STATE_LOCKED, default=DEFAULT_STATE_LOCKED): cv.string,
         vol.Optional(CONF_STATE_LOCKING, default=DEFAULT_STATE_LOCKING): cv.string,
@@ -207,8 +210,12 @@ class MqttLock(MqttEntity, LockEntity):
         )
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new lock state messages."""
-            payload = self._value_template(msg.payload)
-            if payload in self._valid_states:
+            if (payload := self._value_template(msg.payload)) == self._config[
+                CONF_PAYLOAD_RESET
+            ]:
+                # Reset the state to `unknown`
+                self._attr_is_locked = None
+            elif payload in self._valid_states:
                 self._attr_is_locked = payload == self._config[CONF_STATE_LOCKED]
                 self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]
                 self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
