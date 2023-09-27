@@ -4,9 +4,9 @@
       "hardware_settings": {
         "title": "Configure hardware settings",
         "data": {
-          "disk_led": "Green: activity LED",
           "power_led": "White: power LED",
-          "user_led": "Yellow: system health LED"
+          "activity_led": "Green: activity LED",
+          "system_health_led": "Yellow: system health LED"
         }
       },
       "reboot_menu": {
