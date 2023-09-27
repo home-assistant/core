@@ -113,10 +113,6 @@ SERVICE_ANSWER_CALLBACK_QUERY = "answer_callback_query"
 SERVICE_DELETE_MESSAGE = "delete_message"
 SERVICE_LEAVE_CHAT = "leave_chat"
 
-STORE_VERSION = 1
-STORE_SECRET_TOKEN = "secret_token"
-SECRET_TOKEN_LENGTH = 32
-
 EVENT_TELEGRAM_CALLBACK = "telegram_callback"
 EVENT_TELEGRAM_COMMAND = "telegram_command"
 EVENT_TELEGRAM_TEXT = "telegram_text"

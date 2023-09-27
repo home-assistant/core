@@ -13,40 +13,30 @@ from telegram.ext import Dispatcher, TypeHandler
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.network import get_url
-from homeassistant.helpers.storage import Store
 
 from . import (
     CONF_TRUSTED_NETWORKS,
     CONF_URL,
     BaseTelegramBotEntity,
-    DOMAIN,
-    STORE_VERSION,
-    STORE_SECRET_TOKEN,
-    SECRET_TOKEN_LENGTH,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 TELEGRAM_WEBHOOK_URL = "/api/telegram_webhooks"
 REMOVE_WEBHOOK_URL = ""
+SECRET_TOKEN_LENGTH = 32
 
 
 async def async_setup_platform(hass, bot, config):
     """Set up the Telegram webhooks platform."""
 
-    # Obtain secret token from storage, or create a new one if it does not exist
-    store = Store(hass, STORE_VERSION, DOMAIN)
-    if (data := await store.async_load()) is None:
-        alphabet = string.ascii_letters + string.digits + "-_"
-        secret_token = "".join(
-            secrets.choice(alphabet) for _ in range(SECRET_TOKEN_LENGTH)
-        )
-        data = {
-            STORE_SECRET_TOKEN: secret_token,
-        }
-    await store.async_save(data)
+    # Generate a ephemeral secret token
+    alphabet = string.ascii_letters + string.digits + "-_"
+    secret_token = "".join(
+        secrets.choice(alphabet) for _ in range(SECRET_TOKEN_LENGTH)
+    )
 
-    pushbot = PushBot(hass, bot, config, data[STORE_SECRET_TOKEN])
+    pushbot = PushBot(hass, bot, config, secret_token)
 
     if not pushbot.webhook_url.startswith("https"):
         _LOGGER.error("Invalid telegram webhook %s must be https", pushbot.webhook_url)
@@ -63,7 +53,7 @@ async def async_setup_platform(hass, bot, config):
             bot,
             pushbot.dispatcher,
             config[CONF_TRUSTED_NETWORKS],
-            data[STORE_SECRET_TOKEN],
+            secret_token,
         )
     )
     return True
