@@ -11,7 +11,7 @@ from homeassistant.components.twitch.const import (
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
 
 from . import setup_integration
@@ -22,18 +22,12 @@ from tests.components.twitch.conftest import CLIENT_ID, TITLE
 from tests.typing import ClientSessionGenerator
 
 
-async def test_full_flow(
+async def _do_get_token(
     hass: HomeAssistant,
+    result: FlowResult,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
-    mock_setup_entry,
-    twitch: TwitchMock,
     scopes: list[str],
 ) -> None:
-    """Check full flow."""
-    result = await hass.config_entries.flow.async_init(
-        "twitch", context={"source": SOURCE_USER}
-    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -52,6 +46,21 @@ async def test_full_flow(
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+
+async def test_full_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    current_request_with_host: None,
+    mock_setup_entry,
+    twitch: TwitchMock,
+    scopes: list[str],
+) -> None:
+    """Check full flow."""
+    result = await hass.config_entries.flow.async_init(
+        "twitch", context={"source": SOURCE_USER}
+    )
+    await _do_get_token(hass, result, hass_client_no_auth, scopes)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -81,24 +90,7 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_init(
         "twitch", context={"source": SOURCE_USER}
     )
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
-    )
-
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope={'+'.join(scopes)}"
-    )
-
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+    await _do_get_token(hass, result, hass_client_no_auth, scopes)
 
     with patch(
         "homeassistant.components.twitch.config_flow.Twitch", return_value=TwitchMock()
@@ -133,24 +125,7 @@ async def test_reauth(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
-    )
-
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope={'+'.join(scopes)}"
-    )
-
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+    await _do_get_token(hass, result, hass_client_no_auth, scopes)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -184,43 +159,15 @@ async def test_reauth_from_import(
         },
         options={"channels": ["internetofthings"]},
     )
-    await setup_integration(hass, config_entry)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    state = config_entry_oauth2_flow._encode_jwt(
+    await test_reauth(
         hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
+        hass_client_no_auth,
+        current_request_with_host,
+        config_entry,
+        mock_setup_entry,
+        twitch,
+        scopes,
     )
-
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope={'+'.join(scopes)}"
-    )
-
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
     entries = hass.config_entries.async_entries(DOMAIN)
     entry = entries[0]
     assert "imported" not in entry.data
@@ -252,24 +199,7 @@ async def test_reauth_wrong_account(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
-    )
-
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope={'+'.join(scopes)}"
-    )
-
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+    await _do_get_token(hass, result, hass_client_no_auth, scopes)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

@@ -144,10 +144,10 @@ async def test_oauth_with_follow(
     "twitch_mock",
     [TwitchUnauthorizedMock(), TwitchMissingScopeMock(), TwitchInvalidTokenMock()],
 )
-async def test_auth_with_invalid_credentials(
+async def test_auth_invalid(
     hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
-    """Test auth with invalid credentials."""
+    """Test auth failures."""
     await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
