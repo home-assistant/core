@@ -4,6 +4,7 @@ import logging
 from unittest.mock import patch
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
+import pytest
 
 from homeassistant.components import azure_data_explorer
 from homeassistant.components.azure_data_explorer.const import (
@@ -15,6 +16,7 @@ from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
+from .conftest import FilterTest
 from .const import (
     AZURE_DATA_EXPLORER_PATH,
     BASE_CONFIG_FULL,
@@ -246,116 +248,98 @@ async def test_late_event(
         mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.assert_not_called()
 
 
-# @pytest.mark.parametrize(
-#     ("filter_schema", "tests"),
-#     [
-#         (
-#             {
-#                 "include_domains": ["light"],
-#                 "include_entity_globs": ["sensor.included_*"],
-#                 "include_entities": ["binary_sensor.included"],
-#             },
-#             [
-#                 FilterTest("climate.excluded", 0),
-#                 FilterTest("light.included", 1),
-#                 FilterTest("sensor.excluded_test", 0),
-#                 FilterTest("sensor.included_test", 1),
-#                 FilterTest("binary_sensor.included", 1),
-#                 FilterTest("binary_sensor.excluded", 0),
-#             ],
-#         ),
-#         (
-#             {
-#                 "exclude_domains": ["climate"],
-#                 "exclude_entity_globs": ["sensor.excluded_*"],
-#                 "exclude_entities": ["binary_sensor.excluded"],
-#             },
-#             [
-#                 FilterTest("climate.excluded", 0),
-#                 FilterTest("light.included", 1),
-#                 FilterTest("sensor.excluded_test", 0),
-#                 FilterTest("sensor.included_test", 1),
-#                 FilterTest("binary_sensor.included", 1),
-#                 FilterTest("binary_sensor.excluded", 0),
-#             ],
-#         ),
-#         (
-#             {
-#                 "include_domains": ["light"],
-#                 "include_entity_globs": ["*.included_*"],
-#                 "exclude_domains": ["climate"],
-#                 "exclude_entity_globs": ["*.excluded_*"],
-#                 "exclude_entities": ["light.excluded"],
-#             },
-#             [
-#                 FilterTest("light.included", 1),
-#                 FilterTest("light.excluded_test", 0),
-#                 FilterTest("light.excluded", 0),
-#                 FilterTest("sensor.included_test", 1),
-#                 FilterTest("climate.included_test", 0),
-#             ],
-#         ),
-#         (
-#             {
-#                 "include_entities": ["climate.included", "sensor.excluded_test"],
-#                 "exclude_domains": ["climate"],
-#                 "exclude_entity_globs": ["*.excluded_*"],
-#                 "exclude_entities": ["light.excluded"],
-#             },
-#             [
-#                 FilterTest("climate.excluded", 0),
-#                 FilterTest("climate.included", 1),
-#                 FilterTest("switch.excluded_test", 0),
-#                 FilterTest("sensor.excluded_test", 1),
-#                 FilterTest("light.excluded", 0),
-#                 FilterTest("light.included", 1),
-#             ],
-#         ),
-#     ],
-#     ids=["allowlist", "denylist", "filtered_allowlist", "filtered_denylist"],
-# )
-# async def test_filter(
-#     hass,
-#     entry_managed,
-#     tests,
-#     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
-# ):
-# """Test different filters.
+@pytest.mark.parametrize(
+    ("filter_schema", "tests"),
+    [
+        (
+            {
+                "include_domains": ["light"],
+                "include_entity_globs": ["sensor.included_*"],
+                "include_entities": ["binary_sensor.included"],
+            },
+            [
+                FilterTest("climate.excluded", 0),
+                FilterTest("light.included", 1),
+                FilterTest("sensor.excluded_test", 0),
+                FilterTest("sensor.included_test", 1),
+                FilterTest("binary_sensor.included", 1),
+                FilterTest("binary_sensor.excluded", 0),
+            ],
+        ),
+        (
+            {
+                "exclude_domains": ["climate"],
+                "exclude_entity_globs": ["sensor.excluded_*"],
+                "exclude_entities": ["binary_sensor.excluded"],
+            },
+            [
+                FilterTest("climate.excluded", 0),
+                FilterTest("light.included", 1),
+                FilterTest("sensor.excluded_test", 0),
+                FilterTest("sensor.included_test", 1),
+                FilterTest("binary_sensor.included", 1),
+                FilterTest("binary_sensor.excluded", 0),
+            ],
+        ),
+        (
+            {
+                "include_domains": ["light"],
+                "include_entity_globs": ["*.included_*"],
+                "exclude_domains": ["climate"],
+                "exclude_entity_globs": ["*.excluded_*"],
+                "exclude_entities": ["light.excluded"],
+            },
+            [
+                FilterTest("light.included", 1),
+                FilterTest("light.excluded_test", 0),
+                FilterTest("light.excluded", 0),
+                FilterTest("sensor.included_test", 1),
+                FilterTest("climate.included_test", 1),
+            ],
+        ),
+        (
+            {
+                "include_entities": ["climate.included", "sensor.excluded_test"],
+                "exclude_domains": ["climate"],
+                "exclude_entity_globs": ["*.excluded_*"],
+                "exclude_entities": ["light.excluded"],
+            },
+            [
+                FilterTest("climate.excluded", 0),
+                FilterTest("climate.included", 1),
+                FilterTest("switch.excluded_test", 0),
+                FilterTest("sensor.excluded_test", 1),
+                FilterTest("light.excluded", 0),
+                FilterTest("light.included", 1),
+            ],
+        ),
+    ],
+    ids=["allowlist", "denylist", "filtered_allowlist", "filtered_denylist"],
+)
+async def test_filter(
+    hass,
+    entry_managed,
+    tests,
+    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
+):
+    """Test different filters.
 
-# Filter_schema is also a fixture which is replaced by the filter_schema
-# in the parametrize and added to the entry fixture.
-# """
-# count = 0
+    Filter_schema is also a fixture which is replaced by the filter_schema
+    in the parametrize and added to the entry fixture.
+    """
+    count = 0
 
-# for test in tests:
-#     count += test.expected_count
+    for test in tests:
+        count += test.expected_count
 
-#     hass.states.async_set(test.entity_id, STATE_ON)
-#     async_fire_time_changed(
-#         hass,
-#         utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL]),
-#     )
-#     await hass.async_block_till_done()
-#     assert (
-#         mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.call_count
-#         == count
-#     )
-#     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.reset_mock()
-
-
-#     async def test_filter(hass: HomeAssistant, entry, tests, mock_create_batch) -> None:
-
-
-# """Test different filters.
-
-# Filter_schema is also a fixture which is replaced by the filter_schema
-# in the parametrize and added to the entry fixture.
-# """
-# for test in tests:
-#     hass.states.async_set(test.entity_id, STATE_ON)
-#     async_fire_time_changed(
-#         hass, utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL])
-#     )
-#     await hass.async_block_till_done()
-#     assert mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.call_count == test.expected_count
-#     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.reset_mock()
+        hass.states.async_set(test.entity_id, STATE_ON)
+        async_fire_time_changed(
+            hass,
+            utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL]),
+        )
+        await hass.async_block_till_done()
+        assert (
+            mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.call_count
+            == count
+        )
+        mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.reset_mock()
