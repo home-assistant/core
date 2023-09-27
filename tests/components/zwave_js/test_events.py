@@ -173,6 +173,7 @@ async def test_notifications(
     assert len(events) == 1
     assert events[0].data["home_id"] == client.driver.controller.home_id
     assert events[0].data["node_id"] == 32
+    assert events[0].data["endpoint"] == 0
     assert events[0].data["type"] == 6
     assert events[0].data["event"] == 5
     assert events[0].data["label"] == "Access Control"
@@ -206,6 +207,7 @@ async def test_notifications(
     assert len(events) == 2
     assert events[1].data["home_id"] == client.driver.controller.home_id
     assert events[1].data["node_id"] == 32
+    assert events[0].data["endpoint"] == 0
     assert events[1].data["event_type"] == 5
     assert events[1].data["event_type_label"] == "test1"
     assert events[1].data["data_type"] == 2
@@ -233,6 +235,7 @@ async def test_notifications(
     assert len(events) == 3
     assert events[2].data["home_id"] == client.driver.controller.home_id
     assert events[2].data["node_id"] == 32
+    assert events[0].data["endpoint"] == 0
     assert events[2].data["event_type"] == 4
     assert events[2].data["event_type_label"] == "test1"
     assert events[2].data["direction"] == "up"

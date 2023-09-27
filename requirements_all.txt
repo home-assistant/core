@@ -997,7 +997,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230911.0
+home-assistant-frontend==20230926.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.9.22
@@ -2694,7 +2694,7 @@ waterfurnace==1.1.0
 webexteamssdk==1.1.1
 
 # homeassistant.components.assist_pipeline
-webrtc-noise-gain==1.1.0
+webrtc-noise-gain==1.2.1
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.4
@@ -2718,7 +2718,7 @@ wled==0.16.0
 wolf-smartset==0.1.11
 
 # homeassistant.components.wyoming
-wyoming==1.1.0
+wyoming==1.2.0
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
@@ -2784,7 +2784,7 @@ zeroconf==0.115.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.103
+zha-quirks==0.0.104
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.9
