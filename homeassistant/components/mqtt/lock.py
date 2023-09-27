@@ -33,7 +33,12 @@ from .const import (
     CONF_STATE_TOPIC,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -41,7 +46,6 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
 
 CONF_CODE_FORMAT = "code_format"
 
@@ -138,17 +142,6 @@ class MqttLock(MqttEntity, LockEntity):
     ]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the lock."""
-        self._attr_is_locked = False
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""
@@ -156,10 +149,13 @@ class MqttLock(MqttEntity, LockEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._optimistic = (
-            config[CONF_OPTIMISTIC] or self._config.get(CONF_STATE_TOPIC) is None
-        )
-        self._attr_assumed_state = bool(self._optimistic)
+        if (
+            optimistic := config[CONF_OPTIMISTIC]
+            or config.get(CONF_STATE_TOPIC) is None
+        ):
+            self._attr_is_locked = False
+        self._optimistic = optimistic
+        self._attr_assumed_state = bool(optimistic)
 
         self._compiled_pattern = config.get(CONF_CODE_FORMAT)
         self._attr_code_format = (
@@ -190,6 +186,15 @@ class MqttLock(MqttEntity, LockEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(
+            self,
+            {
+                "_attr_is_jammed",
+                "_attr_is_locked",
+                "_attr_is_locking",
+                "_attr_is_unlocking",
+            },
+        )
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new lock state messages."""
             payload = self._value_template(msg.payload)
@@ -198,8 +203,6 @@ class MqttLock(MqttEntity, LockEntity):
                 self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]
                 self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
                 self._attr_is_jammed = payload == self._config[CONF_STATE_JAMMED]
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
