@@ -506,7 +506,7 @@ async def test_restore_number_save_state(
     assert state["entity_id"] == entity0.entity_id
     extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
     assert extra_data == RESTORE_DATA
-    assert type(extra_data["native_value"]) == float
+    assert isinstance(extra_data["native_value"], float)
 
 
 @pytest.mark.parametrize(
@@ -818,22 +818,22 @@ async def test_name(hass: HomeAssistant) -> None:
         ),
     )
 
-    # Unnamed sensor without device class -> no name
+    # Unnamed number without device class -> no name
     entity1 = NumberEntity()
     entity1.entity_id = "number.test1"
 
-    # Unnamed sensor with device class but has_entity_name False -> no name
+    # Unnamed number with device class but has_entity_name False -> no name
     entity2 = NumberEntity()
     entity2.entity_id = "number.test2"
     entity2._attr_device_class = NumberDeviceClass.TEMPERATURE
 
-    # Unnamed sensor with device class and has_entity_name True -> named
+    # Unnamed number with device class and has_entity_name True -> named
     entity3 = NumberEntity()
     entity3.entity_id = "number.test3"
     entity3._attr_device_class = NumberDeviceClass.TEMPERATURE
     entity3._attr_has_entity_name = True
 
-    # Unnamed sensor with device class and has_entity_name True -> named
+    # Unnamed number with device class and has_entity_name True -> named
     entity4 = NumberEntity()
     entity4.entity_id = "number.test4"
     entity4.entity_description = NumberEntityDescription(

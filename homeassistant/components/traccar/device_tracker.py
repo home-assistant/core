@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from pytraccar import (
@@ -38,13 +38,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
 from . import DOMAIN, TRACKER_UPDATE
 from .const import (
@@ -334,7 +334,8 @@ class TraccarScanner:
 
     async def import_events(self):
         """Import events from Traccar."""
-        start_intervel = datetime.utcnow()
+        # get_reports_events requires naive UTC datetimes as of 1.0.0
+        start_intervel = dt_util.utcnow().replace(tzinfo=None)
         events = await self._api.get_reports_events(
             devices=[device.id for device in self._devices],
             start_time=start_intervel,

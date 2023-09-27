@@ -1,9 +1,9 @@
 """Websocket API for blueprint."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any, cast
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -72,7 +72,7 @@ async def ws_import_blueprint(
     msg: dict[str, Any],
 ) -> None:
     """Import a blueprint."""
-    async with async_timeout.timeout(10):
+    async with asyncio.timeout(10):
         imported_blueprint = await importer.fetch_blueprint_from_url(hass, msg["url"])
 
     if imported_blueprint is None:

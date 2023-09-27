@@ -1,11 +1,11 @@
 """The GIOS component."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 from gios import Gios
 from gios.exceptions import GiosError
 from gios.model import GiosSensors
@@ -88,7 +88,7 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
     async def _async_update_data(self) -> GiosSensors:
         """Update data via library."""
         try:
-            async with timeout(API_TIMEOUT):
+            async with asyncio.timeout(API_TIMEOUT):
                 return await self.gios.async_update()
         except (GiosError, ClientConnectorError) as error:
             raise UpdateFailed(error) from error

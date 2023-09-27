@@ -12,7 +12,8 @@ from matter_server.common.helpers.util import create_attribute_path
 from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 from .helpers import get_device_id

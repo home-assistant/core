@@ -10,7 +10,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
-import async_timeout
 import attr
 import numpy as np
 
@@ -332,7 +331,7 @@ class StreamOutput:
     async def part_recv(self, timeout: float | None = None) -> bool:
         """Wait for an event signalling the latest part segment."""
         try:
-            async with async_timeout.timeout(timeout):
+            async with asyncio.timeout(timeout):
                 await self._part_event.wait()
         except asyncio.TimeoutError:
             return False
@@ -442,7 +441,8 @@ class KeyFrameConverter:
         # pylint: disable-next=import-outside-toplevel
         from homeassistant.components.camera.img_util import TurboJPEGSingleton
 
-        self.packet: Packet = None
+        self._packet: Packet = None
+        self._event: asyncio.Event = asyncio.Event()
         self._hass = hass
         self._image: bytes | None = None
         self._turbojpeg = TurboJPEGSingleton.instance()
@@ -450,6 +450,14 @@ class KeyFrameConverter:
         self._codec_context: CodecContext | None = None
         self._stream_settings = stream_settings
         self._dynamic_stream_settings = dynamic_stream_settings
+
+    def stash_keyframe_packet(self, packet: Packet) -> None:
+        """Store the keyframe and set the asyncio.Event from the event loop.
+
+        This is called from the worker thread.
+        """
+        self._packet = packet
+        self._hass.loop.call_soon_threadsafe(self._event.set)
 
     def create_codec_context(self, codec_context: CodecContext) -> None:
         """Create a codec context to be used for decoding the keyframes.
@@ -483,10 +491,10 @@ class KeyFrameConverter:
         at a time per instance.
         """
 
-        if not (self._turbojpeg and self.packet and self._codec_context):
+        if not (self._turbojpeg and self._packet and self._codec_context):
             return
-        packet = self.packet
-        self.packet = None
+        packet = self._packet
+        self._packet = None
         for _ in range(2):  # Retry once if codec context needs to be flushed
             try:
                 # decode packet (flush afterwards)
@@ -520,10 +528,14 @@ class KeyFrameConverter:
         self,
         width: int | None = None,
         height: int | None = None,
+        wait_for_next_keyframe: bool = False,
     ) -> bytes | None:
         """Fetch an image from the Stream and return it as a jpeg in bytes."""
 
         # Use a lock to ensure only one thread is working on the keyframe at a time
+        if wait_for_next_keyframe:
+            self._event.clear()
+            await self._event.wait()
         async with self._lock:
             await self._hass.async_add_executor_job(self._generate_image, width, height)
         return self._image

@@ -61,8 +61,9 @@ def allow_name_translation(integration: Integration) -> bool:
     """Validate that the translation name is not the same as the integration name."""
     # Only enforce for core because custom integrations can't be
     # added to allow list.
-    return integration.core and (
-        integration.domain in ALLOW_NAME_TRANSLATION
+    return (
+        not integration.core
+        or integration.domain in ALLOW_NAME_TRANSLATION
         or integration.quality_scale == "internal"
     )
 

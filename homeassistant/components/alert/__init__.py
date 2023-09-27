@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HassJob, HomeAssistant
+from homeassistant.exceptions import ServiceNotFound
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -293,9 +294,15 @@ class Alert(Entity):
         LOGGER.debug(msg_payload)
 
         for target in self._notifiers:
-            await self.hass.services.async_call(
-                DOMAIN_NOTIFY, target, msg_payload, context=self._context
-            )
+            try:
+                await self.hass.services.async_call(
+                    DOMAIN_NOTIFY, target, msg_payload, context=self._context
+                )
+            except ServiceNotFound:
+                LOGGER.error(
+                    "Failed to call notify.%s, retrying at next notification interval",
+                    target,
+                )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async Unacknowledge alert."""

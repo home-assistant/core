@@ -1,6 +1,6 @@
 """Tests for the IPMA component."""
 from collections import namedtuple
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME
 
@@ -87,7 +87,7 @@ class MockLocation:
             return [
                 Forecast(
                     "7.7",
-                    datetime(2020, 1, 15, 1, 0, 0, tzinfo=timezone.utc),
+                    datetime(2020, 1, 15, 1, 0, 0, tzinfo=UTC),
                     1,
                     "86.9",
                     12.0,
@@ -101,7 +101,7 @@ class MockLocation:
                 ),
                 Forecast(
                     "5.7",
-                    datetime(2020, 1, 15, 2, 0, 0, tzinfo=timezone.utc),
+                    datetime(2020, 1, 15, 2, 0, 0, tzinfo=UTC),
                     1,
                     "86.9",
                     12.0,

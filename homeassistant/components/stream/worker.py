@@ -14,6 +14,7 @@ import attr
 import av
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import redact_credentials
 from .const import (
@@ -140,7 +141,7 @@ class StreamMuxer:
         self._part_has_keyframe = False
         self._stream_settings = stream_settings
         self._stream_state = stream_state
-        self._start_time = datetime.datetime.utcnow()
+        self._start_time = dt_util.utcnow()
 
     def make_new_av(
         self,
@@ -623,4 +624,4 @@ def stream_worker(
             muxer.mux_packet(packet)
 
             if packet.is_keyframe and is_video(packet):
-                keyframe_converter.packet = packet
+                keyframe_converter.stash_keyframe_packet(packet)

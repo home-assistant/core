@@ -30,6 +30,7 @@
         'id': 'homeassistant',
         'name': 'Home Assistant',
         'supported_languages': list([
+          'af',
           'ar',
           'bg',
           'bn',
