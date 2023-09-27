@@ -133,6 +133,11 @@ class NextBusDepartureSensor(
         """Log error message with prefix."""
         _LOGGER.error(":".join((self.agency, self.route, self.stop, message)), *args)
 
+    async def async_added_to_hass(self) -> None:
+        """Read data from coordinator after adding to hass."""
+        self._handle_coordinator_update()
+        await super().async_added_to_hass()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update sensor with new departures times."""
