@@ -1132,12 +1132,12 @@ async def _async_component_dependencies(
     hass: HomeAssistant,
     integration: Integration,
 ) -> set[str]:
-    """Async function to get component dependencies."""
+    """Get component dependencies."""
     loading = set()
     loaded = set()
 
-    async def helper(integration: Integration) -> None:
-        """Recursive async helper to get component dependencies."""
+    async def component_dependencies_impl(integration: Integration) -> None:
+        """Recursive async impl to get component dependencies."""
         domain = integration.domain
         loading.add(domain)
 
@@ -1145,7 +1145,8 @@ async def _async_component_dependencies(
             dep_integration = await async_get_integration(hass, dependency_domain)
 
             # If we are already loading it, we have a circular dependency.
-            # We have to check it here, because we need to cover all possible dependants.
+            # We have to check it here to make sure that every integration that
+            # depends on us, does not appear in our own after_dependencies.
             if conflict := loading.intersection(dep_integration.after_dependencies):
                 raise CircularDependency(conflict.pop(), dependency_domain)
 
@@ -1157,12 +1158,12 @@ async def _async_component_dependencies(
             if dependency_domain in loading:
                 raise CircularDependency(dependency_domain, domain)
 
-            await helper(dep_integration)
+            await component_dependencies_impl(dep_integration)
 
         loading.remove(domain)
         loaded.add(domain)
 
-    await helper(integration)
+    await component_dependencies_impl(integration)
 
     return loaded
 
