@@ -1,12 +1,12 @@
 {
   "domain": "rainforest_raven",
   "name": "Rainforest RAVEn",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/rainforest_raven",
-  "requirements": ["aioraven==0.2.0"],
   "codeowners": ["@cottsay"],
+  "config_flow": true,
   "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/rainforest_raven",
   "iot_class": "local_polling",
+  "requirements": ["aioraven==0.2.0", "iso4217==1.11.20220401"],
   "usb": [
     {
       "vid": "0403",

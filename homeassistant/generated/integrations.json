@@ -4579,16 +4579,16 @@
       "name": "Rainforest Automation",
       "integrations": {
         "rainforest_eagle": {
-          "name": "Rainforest Eagle",
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "local_polling"
+          "iot_class": "local_polling",
+          "name": "Rainforest Eagle"
         },
         "rainforest_raven": {
-          "name": "Rainforest RAVEn",
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "local_polling"
+          "iot_class": "local_polling",
+          "name": "Rainforest RAVEn"
         }
       }
     },

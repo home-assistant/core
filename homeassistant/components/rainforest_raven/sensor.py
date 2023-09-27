@@ -14,12 +14,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MAC,
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    POWER_KILO_WATT,
+    EntityCategory,
+    UnitOfEnergy,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -40,7 +41,7 @@ SENSORS = (
         message_key="CurrentSummationDelivered",
         key="summation_delivered",
         name="Total Meter Energy Delivered",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -48,7 +49,7 @@ SENSORS = (
         message_key="CurrentSummationDelivered",
         key="summation_received",
         name="Total Meter Energy Received",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -56,7 +57,7 @@ SENSORS = (
         message_key="InstantaneousDemand",
         key="demand",
         name="Meter Power Demand",
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -103,7 +104,7 @@ async def async_setup_entry(
                         message_key="PriceCluster",
                         key="price",
                         name="Meter Price",
-                        native_unit_of_measurement=f"{meter_data['PriceCluster']['currency'].value}/{ENERGY_KILO_WATT_HOUR}",
+                        native_unit_of_measurement=f"{meter_data['PriceCluster']['currency'].value}/{UnitOfEnergy.KILO_WATT_HOUR}",
                         device_class=SensorDeviceClass.MONETARY,
                         state_class=SensorStateClass.MEASUREMENT,
                         attribute_keys={

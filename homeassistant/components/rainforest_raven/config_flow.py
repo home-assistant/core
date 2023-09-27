@@ -35,26 +35,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _validate_device(self, dev_path: str) -> None:
         self._abort_if_unique_id_configured(updates={CONF_DEVICE: dev_path})
-        async with async_timeout.timeout(5):
-            async with RAVEnSerialDevice(dev_path) as raven_device:
-                await asyncio.sleep(0.05)
-                for _try in range(3, -1, -1):
-                    try:
-                        # Try a few times to communicate with the device,
-                        # allowing any data already in the buffer to flush.
-                        meters = await raven_device.get_meter_list()
-                    except ParseError:
-                        if not _try:
-                            raise
-                    else:
-                        break
-                for meter in meters.meter_mac_ids:
-                    meter_info = await raven_device.get_meter_info(meter=meter)
-                    self._meter_macs[meter] = (
-                        "unknown"
-                        if meter_info.meter_type is None
-                        else str(meter_info.meter_type)
-                    )
+        async with (
+            async_timeout.timeout(5),
+            RAVEnSerialDevice(dev_path) as raven_device,
+        ):
+            await asyncio.sleep(0.05)
+            for _try in range(3, -1, -1):
+                try:
+                    # Try a few times to communicate with the device,
+                    # allowing any data already in the buffer to flush.
+                    meters = await raven_device.get_meter_list()
+                except ParseError:
+                    if not _try:
+                        raise
+                else:
+                    break
+            for meter in meters.meter_mac_ids:
+                meter_info = await raven_device.get_meter_info(meter=meter)
+                self._meter_macs[meter] = (
+                    "unknown"
+                    if meter_info.meter_type is None
+                    else str(meter_info.meter_type)
+                )
         self._dev_path = dev_path
 
     async def async_step_meters(
@@ -109,8 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="timeout_connect")
         except (ParseError, SerialException):
             return self.async_abort(reason="cannot_connect")
-        else:
-            return await self.async_step_meters()
+        return await self.async_step_meters()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

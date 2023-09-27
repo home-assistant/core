@@ -1080,6 +1080,9 @@ iperf3==0.1.11
 # homeassistant.components.gogogate2
 ismartgate==5.0.1
 
+# homeassistant.components.rainforest_raven
+iso4217==1.11.20220401
+
 # homeassistant.components.file_upload
 janus==1.0.0
 

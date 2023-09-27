@@ -1,6 +1,9 @@
 """Diagnostics support for a Rainforest RAVEn device."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC
@@ -30,7 +33,7 @@ def async_redact_meter_macs(data: dict) -> dict:
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict:
+) -> Mapping[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator: RAVEnDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
