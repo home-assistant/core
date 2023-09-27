@@ -90,7 +90,7 @@ async def test_offline(
     hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
     """Test offline state."""
-    twitch.is_streaming(False)
+    twitch.is_streaming = False
     await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
@@ -115,7 +115,7 @@ async def test_oauth_without_sub_and_follow(
     hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
     """Test state with oauth."""
-    twitch.is_following(False)
+    twitch.is_following = False
     await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
@@ -127,8 +127,8 @@ async def test_oauth_with_sub(
     hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
     """Test state with oauth and sub."""
-    twitch.is_subscribed(True)
-    twitch.is_following(False)
+    twitch.is_subscribed = True
+    twitch.is_following = False
     await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)

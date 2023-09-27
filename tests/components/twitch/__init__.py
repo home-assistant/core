@@ -3,7 +3,6 @@ import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
 
 from twitchAPI.object.api import FollowedChannelsResult, TwitchUser
 from twitchAPI.twitch import (
@@ -91,7 +90,7 @@ class TwitchUserFollowResultMock:
 class ChannelFollowersResultMock:
     """Mock for twitch channel follow result."""
 
-    def __init__(self, follows: list[dict[str, Any]]) -> None:
+    def __init__(self, follows: list[ChannelFollowerMock]) -> None:
         """Initialize mock."""
         self.total = len(follows)
         self.data = follows
@@ -109,33 +108,17 @@ STREAMS = StreamMock(
 class TwitchMock:
     """Mock for the twitch object."""
 
-    _is_streaming = True
-    _is_gifted = False
-    _is_subscribed = False
-    _is_following = True
-    _different_user_id = False
+    is_streaming = True
+    is_gifted = False
+    is_subscribed = False
+    is_following = True
+    different_user_id = False
 
     def __await__(self):
         """Add async capabilities to the mock."""
         t = asyncio.create_task(self._noop())
         yield from t
         return self
-
-    def is_streaming(self, state: bool) -> None:
-        """Set if the channel is streaming."""
-        self._is_streaming = state
-
-    def is_following(self, state: bool) -> None:
-        """Set if the channel is followed."""
-        self._is_following = state
-
-    def is_subscribed(self, state: bool) -> None:
-        """Set if the channel is subscribed."""
-        self._is_subscribed = state
-
-    def different_user_id(self, state: bool) -> None:
-        """Set if the user id should be different."""
-        self._different_user_id = state
 
     async def _noop(self):
         """Fake function to create task."""
@@ -145,7 +128,7 @@ class TwitchMock:
         self, user_ids: list[str] | None = None, logins: list[str] | None = None
     ) -> AsyncGenerator[TwitchUser, None]:
         """Get list of mock users."""
-        users = [_get_twitch_user("234" if self._different_user_id else "123")]
+        users = [_get_twitch_user("234" if self.different_user_id else "123")]
         for user in users:
             yield user
 
@@ -159,9 +142,9 @@ class TwitchMock:
         self, broadcaster_id: str, user_id: str
     ) -> UserSubscriptionMock:
         """Check if the user is subscribed."""
-        if self._is_subscribed:
+        if self.is_subscribed:
             return UserSubscriptionMock(
-                broadcaster_id=broadcaster_id, is_gift=self._is_gifted
+                broadcaster_id=broadcaster_id, is_gift=self.is_gifted
             )
         raise TwitchResourceNotFound
 
@@ -178,7 +161,7 @@ class TwitchMock:
         self, user_id: str, broadcaster_id: str | None = None
     ) -> FollowedChannelsResult:
         """Get followed channels."""
-        if self._is_following:
+        if self.is_following:
             return TwitchUserFollowResultMock(
                 [
                     FollowedChannelMock(
@@ -204,7 +187,7 @@ class TwitchMock:
     ) -> AsyncGenerator[StreamMock, None]:
         """Get streams for the user."""
         streams = []
-        if self._is_streaming:
+        if self.is_streaming:
             streams = [STREAMS]
         for stream in streams:
             yield stream

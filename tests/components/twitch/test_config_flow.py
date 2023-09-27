@@ -235,7 +235,7 @@ async def test_reauth_wrong_account(
 ) -> None:
     """Check reauth flow."""
     await setup_integration(hass, config_entry)
-    twitch.different_user_id(True)
+    twitch.different_user_id = True
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
