@@ -128,7 +128,7 @@ class FreeboxHomeEntity(Entity):
         """Register state update callback."""
         self._remove_signal_update = dispacher
 
-    def get_value(self, ep_type: str, name: str) -> bool | int | str | None:
+    def get_value(self, ep_type: str, name: str):
         """Get the value."""
         node = next(
             filter(
