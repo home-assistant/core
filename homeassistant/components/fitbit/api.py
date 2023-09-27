@@ -23,7 +23,7 @@ CONF_EXPIRES_AT = "expires_at"
 class FitbitApi(ABC):
     """Fitbit client library wrapper base class.
 
-    This can be subclassed with different implementations for provindg an access
+    This can be subclassed with different implementations for providing an access
     token depending on the use case.
     """
 
