@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 _STEP_PHONE_NUMBER_SCHEMA = vol.Schema({vol.Required(CONF_PHONE): cv.string})
 
 _STEP_OTP_CODE_SCHEMA = vol.Schema({vol.Required("otp"): cv.string})
-
+_PHONE_MATCHER = re.compile(r"^(\+?972)?0?(?P<number>\d{8,9})$")
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tami4Edge."""
@@ -38,7 +38,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             phone = user_input[CONF_PHONE].strip()
 
             try:
-                if m := re.match(r"^(\+?972)?0?(?P<number>\d{8,9})$", phone):
+                if m := _PHONE_MATCHER.match(phone):
                     self.phone = f"+972{m.group('number')}"
                 else:
                     raise InvalidPhoneNumber
