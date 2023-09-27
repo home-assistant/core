@@ -118,3 +118,35 @@ async def test_bedrock_connection_succeeded(hass: HomeAssistant) -> None:
         assert result["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
         assert result["data"][CONF_ADDRESS] == TEST_ADDRESS
         assert result["data"][CONF_TYPE] == MinecraftServerType.BEDROCK_EDITION
+
+
+async def test_recovery(hass: HomeAssistant) -> None:
+    """Test config flow recovery (successful connection after a failed connection)."""
+    with patch(
+        "mcstatus.server.BedrockServer.lookup",
+        side_effect=ValueError,
+    ), patch(
+        "mcstatus.server.JavaServer.async_lookup",
+        side_effect=ValueError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "mcstatus.server.BedrockServer.lookup",
+        return_value=BedrockServer(host=TEST_HOST, port=TEST_PORT),
+    ), patch(
+        "mcstatus.server.BedrockServer.async_status",
+        return_value=TEST_JAVA_STATUS_RESPONSE,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"], user_input=USER_INPUT
+        )
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["title"] == USER_INPUT[CONF_ADDRESS]
+        assert result2["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
+        assert result2["data"][CONF_ADDRESS] == TEST_ADDRESS
+        assert result2["data"][CONF_TYPE] == MinecraftServerType.BEDROCK_EDITION
