@@ -1593,6 +1593,23 @@ async def test_server_logging(hass: HomeAssistant, client) -> None:
 
     _reset_mocks()
 
+    # Emulate server by setting log level to debug
+    event = Event(
+        type="log config updated",
+        data={
+            "source": "driver",
+            "event": "log config updated",
+            "config": {
+                "enabled": False,
+                "level": "debug",
+                "logToFile": True,
+                "filename": "test",
+                "forceConsole": True,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+
     # "Enable" server logging and unload the entry
     client.server_logging_enabled = True
     await hass.config_entries.async_unload(entry.entry_id)
