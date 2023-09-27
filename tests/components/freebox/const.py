@@ -56,17 +56,6 @@ DATA_CONNECTION_GET_STATUS = {
 DATA_CALL_GET_CALLS_LOG = [
     {
         "number": "0988290475",
-        "type": "accepted",
-        "id": 95,
-        "duration": 15,
-        "datetime": 1613752718,
-        "contact_id": 0,
-        "line_id": 0,
-        "name": "0988290475",
-        "new": False,
-    },
-    {
-        "number": "0988290475",
         "type": "missed",
         "id": 94,
         "duration": 15,
