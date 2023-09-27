@@ -42,9 +42,14 @@ from .const import (
     CONF_SUPPORTED_FEATURES,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
-from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,16 +158,6 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     _entity_id_format = alarm.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_ALARM_ATTRIBUTES_BLOCKED
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Init the MQTT Alarm Control Panel."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""
@@ -196,6 +191,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_state"})
         def message_received(msg: ReceiveMessage) -> None:
             """Run when new MQTT message has been received."""
             payload = self._value_template(msg.payload)
@@ -214,7 +210,6 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return
             self._attr_state = str(payload)
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,

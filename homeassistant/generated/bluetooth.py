@@ -305,6 +305,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "AP-*",
     },
     {
+        "domain": "medcom_ble",
+        "service_uuid": "39b31fec-b63a-4ef7-b163-a7317872007f",
+    },
+    {
         "domain": "melnor",
         "manufacturer_data_start": [
             89,

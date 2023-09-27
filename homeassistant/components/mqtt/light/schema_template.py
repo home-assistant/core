@@ -46,7 +46,7 @@ from ..const import (
     PAYLOAD_NONE,
 )
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
 from ..models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -54,7 +54,6 @@ from ..models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from ..util import get_mqtt_data
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
@@ -139,16 +138,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     _fixed_color_mode: ColorMode | str | None
     _topics: dict[str, str | None]
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize a MQTT Template light."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""
@@ -215,6 +204,17 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(
+            self,
+            {
+                "_attr_brightness",
+                "_attr_color_mode",
+                "_attr_color_temp",
+                "_attr_effect",
+                "_attr_hs_color",
+                "_attr_is_on",
+            },
+        )
         def state_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             state = self._value_templates[CONF_STATE_TEMPLATE](msg.payload)
@@ -282,8 +282,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                     self._attr_effect = effect
                 else:
                     _LOGGER.warning("Unsupported effect value received")
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topics[CONF_STATE_TOPIC] is not None:
             self._sub_state = subscription.async_prepare_subscribe_topics(
