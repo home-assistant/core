@@ -4,8 +4,8 @@
       "hardware_settings": {
         "title": "Configure hardware settings",
         "data": {
-          "power_led": "White: power LED",
           "activity_led": "Green: activity LED",
+          "power_led": "White: power LED",
           "system_health_led": "Yellow: system health LED"
         }
       },

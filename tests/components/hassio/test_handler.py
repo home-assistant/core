@@ -372,13 +372,17 @@ async def test_api_get_green_settings(
         "http://127.0.0.1/os/boards/green",
         json={
             "result": "ok",
-            "data": {"power_led": True, "activity_led": True, "system_health_led": True},
+            "data": {
+                "activity_led": True,
+                "power_led": True,
+                "system_health_led": True,
+            },
         },
     )
 
     assert await handler.async_get_green_settings(hass) == {
-        "power_led": True,
         "activity_led": True,
+        "power_led": True,
         "system_health_led": True,
     }
     assert aioclient_mock.call_count == 1
@@ -395,7 +399,7 @@ async def test_api_set_green_settings(
 
     assert (
         await handler.async_set_green_settings(
-            hass, {"power_led": True, "activity_led": True, "system_health_led": True}
+            hass, {"activity_led": True, "power_led": True, "system_health_led": True}
         )
         == {}
     )
