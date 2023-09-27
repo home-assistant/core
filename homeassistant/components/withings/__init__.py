@@ -30,13 +30,11 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_TOKEN,
     CONF_WEBHOOK_ID,
-    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
-    CoreState,
     Event,
     HomeAssistant,
     ServiceCall,
@@ -44,6 +42,7 @@ from homeassistant.core import (
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from .api import ConfigEntryWithingsApi
@@ -142,7 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.data[DOMAIN][entry.entry_id].async_unsubscribe_webhooks()
 
     async def register_webhook(
-        call_or_event_or_dt: ServiceCall | Event | datetime | None,
+        call_or_event_or_dt: ServiceCall | Event | HomeAssistant | datetime | None,
     ) -> None:
         if cloud.async_active_subscription(hass):
             webhook_url = await async_cloudhook_generate_url(hass, entry)
@@ -182,11 +181,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if cloud.async_is_connected(hass):
             await register_webhook(None)
         cloud.async_listen_connection_change(hass, manage_cloudhook)
-
-    elif hass.state == CoreState.running:
-        await register_webhook(None)
     else:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, register_webhook)
+        async_at_started(hass, register_webhook)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
