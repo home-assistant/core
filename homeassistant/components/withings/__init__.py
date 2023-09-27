@@ -34,20 +34,20 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    CoreState,
+    Event,
+    HomeAssistant,
+    ServiceCall,
+)
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .api import ConfigEntryWithingsApi
-from .const import (
-    CONF_CLOUDHOOK_URL,
-    CONF_PROFILES,
-    CONF_USE_WEBHOOK,
-    CONFIG,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_CLOUDHOOK_URL, CONF_PROFILES, CONF_USE_WEBHOOK, DOMAIN, LOGGER
 from .coordinator import WithingsDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -81,30 +81,29 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Withings component."""
-    if not (conf := config.get(DOMAIN)):
-        # Apply the defaults.
-        conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
-        hass.data[DOMAIN] = {CONFIG: conf}
-        return True
 
-    hass.data[DOMAIN] = {CONFIG: conf}
-
-    # Setup the oauth2 config flow.
-    if CONF_CLIENT_ID in conf:
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2024.4.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Withings",
+        },
+    )
+    if CONF_CLIENT_ID in config:
         await async_import_client_credential(
             hass,
             DOMAIN,
             ClientCredential(
-                conf[CONF_CLIENT_ID],
-                conf[CONF_CLIENT_SECRET],
+                config[CONF_CLIENT_ID],
+                config[CONF_CLIENT_SECRET],
             ),
-        )
-        LOGGER.warning(
-            "Configuration of Withings integration OAuth2 credentials in YAML "
-            "is deprecated and will be removed in a future release; Your "
-            "existing OAuth Application Credentials have been imported into "
-            "the UI automatically and can be safely removed from your "
-            "configuration.yaml file"
         )
 
     return True
