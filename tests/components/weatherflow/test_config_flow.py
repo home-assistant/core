@@ -46,6 +46,7 @@ async def test_devices_with_mocks(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
+
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
@@ -64,8 +65,8 @@ async def test_devices_with_various_mocks_errors(
     mock_start: AsyncMock,
     mock_stop: AsyncMock,
     mock_setup_entry: AsyncMock,
-    exception,
-    error_msg,
+    exception: Exception,
+    error_msg: str,
 ) -> None:
     """Test the various on error states - then finally complete the test."""
 
@@ -83,9 +84,7 @@ async def test_devices_with_various_mocks_errors(
         assert result["errors"]["base"] == error_msg
         assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
