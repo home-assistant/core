@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 import logging
 
+from requests.exceptions import RequestException
 from Tami4EdgeAPI import Tami4EdgeAPI
 from Tami4EdgeAPI.water_quality import WaterQuality
 
@@ -57,5 +58,5 @@ class Tami4EdgeWaterQualityCoordinator(DataUpdateCoordinator[FlattenedWaterQuali
             )
 
             return FlattenedWaterQuality(water_quality)
-        except Exception as ex:
+        except RequestException as ex:
             raise UpdateFailed("Error communicating with API") from ex
