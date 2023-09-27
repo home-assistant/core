@@ -92,7 +92,7 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
 
-class Tami4EdgeSensorEntity(Tami4EdgeBaseEntity, CoordinatorEntity, SensorEntity):
+class Tami4EdgeSensorEntity(Tami4EdgeBaseEntity, CoordinatorEntity[Tami4EdgeWaterQualityCoordinator], SensorEntity):
     """Representation of the entity."""
 
     def __init__(
