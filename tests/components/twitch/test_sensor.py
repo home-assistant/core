@@ -76,16 +76,6 @@ async def test_legacy_migration_without_token(
     assert len(issue_registry.issues) == 1
 
 
-async def test_init(
-    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
-) -> None:
-    """Test initial config."""
-    await setup_integration(hass, config_entry)
-
-    sensor_state = hass.states.get(ENTITY_ID)
-    assert sensor_state
-
-
 async def test_offline(
     hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
@@ -150,30 +140,11 @@ async def test_oauth_with_follow(
     )
 
 
-@pytest.mark.parametrize("twitch_mock", [TwitchUnauthorizedMock()])
+@pytest.mark.parametrize(
+    "twitch_mock",
+    [TwitchUnauthorizedMock(), TwitchMissingScopeMock(), TwitchInvalidTokenMock()],
+)
 async def test_auth_with_invalid_credentials(
-    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
-) -> None:
-    """Test auth with invalid credentials."""
-    await setup_integration(hass, config_entry)
-
-    sensor_state = hass.states.get(ENTITY_ID)
-    assert sensor_state is None
-
-
-@pytest.mark.parametrize("twitch_mock", [TwitchMissingScopeMock()])
-async def test_auth_with_missing_scope(
-    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
-) -> None:
-    """Test auth with invalid credentials."""
-    await setup_integration(hass, config_entry)
-
-    sensor_state = hass.states.get(ENTITY_ID)
-    assert sensor_state is None
-
-
-@pytest.mark.parametrize("twitch_mock", [TwitchInvalidTokenMock()])
-async def test_auth_with_invalid_token(
     hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
     """Test auth with invalid credentials."""

@@ -6,12 +6,11 @@ from unittest.mock import patch
 from aiohttp.client_exceptions import ClientError
 import pytest
 
-from homeassistant.components.twitch.const import DOMAIN
+from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import TwitchMock, setup_integration
-from .conftest import TWITCH_TOKEN_URI
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -44,7 +43,7 @@ async def test_expired_token_refresh_success(
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        TWITCH_TOKEN_URI,
+        OAUTH2_TOKEN,
         json={
             "access_token": "updated-access-token",
             "refresh_token": "updated-refresh-token",
@@ -90,7 +89,7 @@ async def test_expired_token_refresh_failure(
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        TWITCH_TOKEN_URI,
+        OAUTH2_TOKEN,
         status=status,
     )
 

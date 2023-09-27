@@ -9,7 +9,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.twitch.const import DOMAIN
+from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN, OAUTH_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -22,10 +22,6 @@ ComponentSetup = Callable[[TwitchMock | None], Awaitable[None]]
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 TITLE = "Test"
-SCOPES = ["user:read:subscriptions", "user:read:follows"]
-
-TWITCH_TOKEN_URI = "https://id.twitch.tv/oauth2/token"
-TWITCH_AUTHORIZE_URI = "https://id.twitch.tv/oauth2/authorize"
 
 
 @pytest.fixture
@@ -40,7 +36,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture(name="scopes")
 def mock_scopes() -> list[str]:
     """Fixture to set the scopes present in the OAuth token."""
-    return SCOPES
+    return [scope.value for scope in OAUTH_SCOPES]
 
 
 @pytest.fixture(autouse=True)
@@ -85,7 +81,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock Twitch connection."""
     aioclient_mock.post(
-        TWITCH_TOKEN_URI,
+        OAUTH2_TOKEN,
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",

@@ -3,7 +3,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.twitch.const import CONF_CHANNELS, DOMAIN
+from homeassistant.components.twitch.const import (
+    CONF_CHANNELS,
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -14,12 +18,7 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry
 from tests.components.twitch import TwitchInvalidTokenMock, TwitchMock
-from tests.components.twitch.conftest import (
-    CLIENT_ID,
-    SCOPES,
-    TITLE,
-    TWITCH_AUTHORIZE_URI,
-)
+from tests.components.twitch.conftest import CLIENT_ID, TITLE
 from tests.typing import ClientSessionGenerator
 
 
@@ -29,6 +28,7 @@ async def test_full_flow(
     current_request_with_host: None,
     mock_setup_entry,
     twitch: TwitchMock,
+    scopes: list[str],
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -43,9 +43,9 @@ async def test_full_flow(
     )
 
     assert result["url"] == (
-        f"{TWITCH_AUTHORIZE_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope={'+'.join(SCOPES)}"
+        f"&state={state}&scope={'+'.join(scopes)}"
     )
 
     client = await hass_client_no_auth()
@@ -74,6 +74,7 @@ async def test_already_configured(
     config_entry: MockConfigEntry,
     mock_setup_entry,
     twitch: TwitchMock,
+    scopes: list[str],
 ) -> None:
     """Check flow aborts when account already configured."""
     await setup_integration(hass, config_entry)
@@ -89,9 +90,9 @@ async def test_already_configured(
     )
 
     assert result["url"] == (
-        f"{TWITCH_AUTHORIZE_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope={'+'.join(SCOPES)}"
+        f"&state={state}&scope={'+'.join(scopes)}"
     )
 
     client = await hass_client_no_auth()
@@ -115,6 +116,7 @@ async def test_reauth(
     config_entry: MockConfigEntry,
     mock_setup_entry,
     twitch: TwitchMock,
+    scopes: list[str],
 ) -> None:
     """Check reauth flow."""
     await setup_integration(hass, config_entry)
@@ -126,7 +128,7 @@ async def test_reauth(
         },
         data=config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -140,9 +142,9 @@ async def test_reauth(
     )
 
     assert result["url"] == (
-        f"{TWITCH_AUTHORIZE_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope={'+'.join(SCOPES)}"
+        f"&state={state}&scope={'+'.join(scopes)}"
     )
 
     client = await hass_client_no_auth()
@@ -163,7 +165,7 @@ async def test_reauth_from_import(
     mock_setup_entry,
     twitch: TwitchMock,
     expires_at,
-    scopes,
+    scopes: list[str],
 ) -> None:
     """Check reauth flow."""
     config_entry = MockConfigEntry(
@@ -191,7 +193,7 @@ async def test_reauth_from_import(
         },
         data=config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -205,9 +207,9 @@ async def test_reauth_from_import(
     )
 
     assert result["url"] == (
-        f"{TWITCH_AUTHORIZE_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope={'+'.join(SCOPES)}"
+        f"&state={state}&scope={'+'.join(scopes)}"
     )
 
     client = await hass_client_no_auth()
@@ -232,6 +234,7 @@ async def test_reauth_wrong_account(
     config_entry: MockConfigEntry,
     mock_setup_entry,
     twitch: TwitchMock,
+    scopes: list[str],
 ) -> None:
     """Check reauth flow."""
     await setup_integration(hass, config_entry)
@@ -244,7 +247,7 @@ async def test_reauth_wrong_account(
         },
         data=config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -258,9 +261,9 @@ async def test_reauth_wrong_account(
     )
 
     assert result["url"] == (
-        f"{TWITCH_AUTHORIZE_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope={'+'.join(SCOPES)}"
+        f"&state={state}&scope={'+'.join(scopes)}"
     )
 
     client = await hass_client_no_auth()
@@ -295,7 +298,7 @@ async def test_import(
             "channels": ["channel123"],
         },
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "channel123"
     assert "result" in result
     assert "token" in result["result"].data
@@ -327,7 +330,7 @@ async def test_import_invalid_token(
             "channels": ["channel123"],
         },
     )
-    assert result["type"] == "abort"
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "invalid_token"
     issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == 1
@@ -356,7 +359,7 @@ async def test_import_already_imported(
             "channels": ["channel123"],
         },
     )
-    assert result["type"] == "abort"
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == 1
