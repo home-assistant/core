@@ -13,10 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import Tami4EdgeWaterQualityCoordinator
@@ -92,7 +89,11 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
 
-class Tami4EdgeSensorEntity(Tami4EdgeBaseEntity, CoordinatorEntity[Tami4EdgeWaterQualityCoordinator], SensorEntity):
+class Tami4EdgeSensorEntity(
+    Tami4EdgeBaseEntity,
+    CoordinatorEntity[Tami4EdgeWaterQualityCoordinator],
+    SensorEntity,
+):
     """Representation of the entity."""
 
     def __init__(
@@ -115,11 +116,10 @@ class Tami4EdgeSensorEntity(Tami4EdgeBaseEntity, CoordinatorEntity[Tami4EdgeWate
         except KeyError:
             return
         self.async_write_ha_state()
-        
+
     @property
     def available(self) -> bool:
         """Return if the sensor is available."""
         return (
-            super().available
-            and self.entity_description.key in self.coordinator.data
+            super().available and self.entity_description.key in self.coordinator.data
         )

@@ -22,6 +22,7 @@ _STEP_PHONE_NUMBER_SCHEMA = vol.Schema({vol.Required(CONF_PHONE): cv.string})
 _STEP_OTP_CODE_SCHEMA = vol.Schema({vol.Required("otp"): cv.string})
 _PHONE_MATCHER = re.compile(r"^(\+?972)?0?(?P<number>\d{8,9})$")
 
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tami4Edge."""
 
