@@ -77,9 +77,6 @@
       },
       "wind_lull": {
         "name": "Wind lull"
-      },
-      "wind_speed": {
-        "name": "Wind speed"
       }
     }
   }
