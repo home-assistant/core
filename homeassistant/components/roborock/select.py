@@ -72,19 +72,7 @@ async def async_setup_entry(
     coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    async_add_entities(
-        RoborockSelectEntity(
-            f"{description.key}_{slugify(device_id)}",
-            coordinator,
-            description,
-        )
-        for device_id, coordinator in coordinators.items()
-        for description in SELECT_DESCRIPTIONS
-        if f"{description.key}_{slugify(device_id)}" in coordinator.supported_entities
-        or coordinator.api.is_available
-        and description.options_lambda(coordinator.roborock_device_info.props.status)
-        is not None
-    )
+    async_add_entities(determine_valid_select_entities(coordinators))
 
 
 class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
@@ -122,3 +110,29 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
         return self.entity_description.value_fn(self._device_status)
+
+
+def determine_valid_select_entities(
+    coordinators: dict[str, RoborockDataUpdateCoordinator]
+) -> list[RoborockSelectEntity]:
+    """Determine which select entities to create."""
+    valid_select_entities = []
+    for device_id, coordinator in coordinators.items():
+        for description in SELECT_DESCRIPTIONS:
+            if (
+                f"{description.key}_{slugify(device_id)}"
+                in coordinator.supported_entities
+                or coordinator.api.is_available
+                and description.options_lambda(
+                    coordinator.roborock_device_info.props.status
+                )
+                is not None
+            ):
+                valid_select_entities.append(
+                    RoborockSelectEntity(
+                        f"{description.key}_{slugify(device_id)}",
+                        coordinator,
+                        description,
+                    )
+                )
+    return valid_select_entities

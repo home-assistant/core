@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
+import contextlib
 from dataclasses import asdict
 from datetime import timedelta
 import logging
+from typing import Any
 
 from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
@@ -52,32 +55,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_map: dict[str, HomeDataDevice] = {
         device.duid: device for device in home_data.devices + home_data.received_devices
     }
-    product_info = {product.id: product for product in home_data.products}
+    product_info: dict[str, HomeDataProduct] = {
+        product.id: product for product in home_data.products
+    }
     # Get a Coordinator if the device is available or if we have connected to the device before
     coordinators = await asyncio.gather(
-        *(
-            setup_device(
-                hass,
-                user_data,
-                device,
-                product_info[device.product_id],
-                CachedCoordinatorInformation(
-                    network_info=NetworkInfo(
-                        **entry.data[CONF_CACHED_INFORMATION][device.duid][
-                            "network_info"
-                        ]
-                    ),
-                    supported_entities=set(
-                        entry.data[CONF_CACHED_INFORMATION][device.duid][
-                            "supported_entities"
-                        ]
-                    ),
-                )
-                if device.duid in entry.data[CONF_CACHED_INFORMATION]
-                else None,
-            )
-            for device in device_map.values()
-        )
+        *build_setup_functions(hass, device_map, user_data, product_info, entry)
     )
     # Valid coordinators are those where we had networking cached or we could get networking
     valid_coordinators: list[RoborockDataUpdateCoordinator] = [
@@ -112,6 +95,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+def build_setup_functions(
+    hass: HomeAssistant,
+    device_map: dict[str, HomeDataDevice],
+    user_data: UserData,
+    product_info: dict[str, HomeDataProduct],
+    entry: ConfigEntry,
+) -> list[Coroutine[Any, Any, RoborockDataUpdateCoordinator | None]]:
+    """Create a list of setup functions that can later be called asynchronously."""
+    setup_functions = []
+    for device in device_map.values():
+        cached_info = None
+        if device.duid in entry.data[CONF_CACHED_INFORMATION]:
+            cached_info = CachedCoordinatorInformation(
+                network_info=NetworkInfo(
+                    **entry.data[CONF_CACHED_INFORMATION][device.duid]["network_info"]
+                ),
+                supported_entities=set(
+                    entry.data[CONF_CACHED_INFORMATION][device.duid][
+                        "supported_entities"
+                    ]
+                ),
+            )
+        setup_functions.append(
+            setup_device(
+                hass, user_data, device, product_info[device.product_id], cached_info
+            )
+        )
+    return setup_functions
+
+
 async def setup_device(
     hass: HomeAssistant,
     user_data: UserData,
@@ -144,11 +157,8 @@ async def setup_device(
     # Verify we can communicate locally - if we can't, switch to cloud api
     await coordinator.verify_api()
     coordinator.api.is_available = True
-    exception = None
-    try:
+    with contextlib.suppress(ConfigEntryNotReady):
         await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady as ex:
-        exception = ex.__cause__
     if not coordinator.last_update_success:
         if isinstance(coordinator.api, RoborockMqttClient):
             _LOGGER.warning(
@@ -159,16 +169,15 @@ async def setup_device(
             )
             # Most of the time if we fail to connect using the mqtt client, the problem is due to firewall,
             # but in case if it isn't, the error can be included in debug logs for the user to grab.
-            if exception:
-                _LOGGER.debug(exception)
+            if coordinator.last_exception:
+                _LOGGER.debug(coordinator.last_exception)
         else:
             # If this is reached, we have verified that we can communicate with the Vacuum locally,
             # so if there is an error here - it is not a communication issue but some other problem
-            extra_error = (
-                f"Please create an issue with the following error included: {exception}"
-                if exception is not None
-                else "Setting up of the coordinator failed, but no exceptions were thrown."
-            )
+            if coordinator.last_exception:
+                extra_error = f"Please create an issue with the following error included: {coordinator.last_exception}"
+            else:
+                extra_error = "Setting up of the coordinator failed, but no exceptions were thrown."
             _LOGGER.warning(
                 "Not setting up %s because the coordinator failed to get data for the first time using the offline client %s",
                 device.name,

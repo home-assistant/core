@@ -81,18 +81,7 @@ async def async_setup_entry(
     coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    async_add_entities(
-        RoborockBinarySensorEntity(
-            f"{description.key}_{slugify(device_id)}",
-            coordinator,
-            description,
-        )
-        for device_id, coordinator in coordinators.items()
-        for description in BINARY_SENSOR_DESCRIPTIONS
-        if f"{description.key}_{slugify(device_id)}" in coordinator.supported_entities
-        or coordinator.api.is_available
-        and description.value_fn(coordinator.roborock_device_info.props) is not None
-    )
+    async_add_entities(determine_valid_binary_sensor_entities(coordinators))
 
 
 class RoborockBinarySensorEntity(RoborockCoordinatedEntity, BinarySensorEntity):
@@ -118,3 +107,27 @@ class RoborockBinarySensorEntity(RoborockCoordinatedEntity, BinarySensorEntity):
                 self.coordinator.roborock_device_info.props
             )
         )
+
+
+def determine_valid_binary_sensor_entities(
+    coordinators: dict[str, RoborockDataUpdateCoordinator]
+) -> list[RoborockBinarySensorEntity]:
+    """Determine which binary sensor entities to create."""
+    valid_select_entities = []
+    for device_id, coordinator in coordinators.items():
+        for description in BINARY_SENSOR_DESCRIPTIONS:
+            if (
+                f"{description.key}_{slugify(device_id)}"
+                in coordinator.supported_entities
+                or coordinator.api.is_available
+                and description.value_fn(coordinator.roborock_device_info.props)
+                is not None
+            ):
+                valid_select_entities.append(
+                    RoborockBinarySensorEntity(
+                        f"{description.key}_{slugify(device_id)}",
+                        coordinator,
+                        description,
+                    )
+                )
+    return valid_select_entities
