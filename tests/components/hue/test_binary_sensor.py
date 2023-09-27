@@ -14,8 +14,8 @@ async def test_binary_sensors(
     await setup_platform(hass, mock_bridge_v2, "binary_sensor")
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
-    # 2 binary_sensors should be created from test data
-    assert len(hass.states.async_all()) == 2
+    # 5 binary_sensors should be created from test data
+    assert len(hass.states.async_all()) == 5
 
     # test motion sensor
     sensor = hass.states.get("binary_sensor.hue_motion_sensor_motion")
@@ -23,7 +23,6 @@ async def test_binary_sensors(
     assert sensor.state == "off"
     assert sensor.name == "Hue motion sensor Motion"
     assert sensor.attributes["device_class"] == "motion"
-    assert sensor.attributes["motion_valid"] is True
 
     # test entertainment room active sensor
     sensor = hass.states.get(
@@ -33,6 +32,27 @@ async def test_binary_sensors(
     assert sensor.state == "off"
     assert sensor.name == "Entertainmentroom 1: Entertainment Configuration"
     assert sensor.attributes["device_class"] == "running"
+
+    # test contact sensor
+    sensor = hass.states.get("binary_sensor.test_contact_sensor_contact")
+    assert sensor is not None
+    assert sensor.state == "off"
+    assert sensor.name == "Test contact sensor Contact"
+    assert sensor.attributes["device_class"] == "opening"
+
+    # test tamper sensor
+    sensor = hass.states.get("binary_sensor.test_contact_sensor_tamper")
+    assert sensor is not None
+    assert sensor.state == "off"
+    assert sensor.name == "Test contact sensor Tamper"
+    assert sensor.attributes["device_class"] == "tamper"
+
+    # test camera_motion sensor
+    sensor = hass.states.get("binary_sensor.test_camera_motion")
+    assert sensor is not None
+    assert sensor.state == "on"
+    assert sensor.name == "Test Camera Motion"
+    assert sensor.attributes["device_class"] == "motion"
 
 
 async def test_binary_sensor_add_update(hass: HomeAssistant, mock_bridge_v2) -> None:
