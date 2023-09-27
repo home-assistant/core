@@ -187,12 +187,14 @@ class DefaultAgent(AbstractConversationAgent):
             _LOGGER.warning("No intents were loaded for language: %s", language)
             return None
 
-        intent_context = None
+        intent_context: dict[str, Any] | None = None
 
-        if user_input.device_id:
-            if device := dr.async_get(self.hass).async_get(user_input.device_id):
-                if (device is not None) and device.area_id:
-                    intent_context = {"area": device.area_id, "device_id": device.id}
+        if user_input.device_id and (
+            device := dr.async_get(self.hass).async_get(user_input.device_id)
+        ):
+            intent_context = {"device_id": device.id}
+            if device.area_id:
+                intent_context["area"] = device.area_id
 
         slot_lists = self._make_slot_lists()
         result = await self.hass.async_add_executor_job(

@@ -208,7 +208,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vol.Optional("conversation_id"): vol.Any(str, None),
         vol.Optional("language"): str,
         vol.Optional("agent_id"): agent_id_validator,
-        vol.Optional("device_id"): str,
     }
 )
 @websocket_api.async_response
@@ -225,7 +224,6 @@ async def websocket_process(
         context=connection.context(msg),
         language=msg.get("language"),
         agent_id=msg.get("agent_id"),
-        device_id=msg.get("device_id"),
     )
     connection.send_result(msg["id"], result.as_dict())
 
