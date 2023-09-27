@@ -1,13 +1,16 @@
 """The tests for an update of the Twitch component."""
-from unittest.mock import patch
+from datetime import datetime
 
-from homeassistant.components import sensor
+import pytest
+
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.twitch.const import CONF_CHANNELS, DOMAIN
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
+from ...common import MockConfigEntry
 from . import (
     TwitchAPIExceptionMock,
     TwitchInvalidTokenMock,
@@ -15,8 +18,8 @@ from . import (
     TwitchMissingScopeMock,
     TwitchMock,
     TwitchUnauthorizedMock,
+    setup_integration,
 )
-from .conftest import ComponentSetup
 
 ENTITY_ID = "sensor.channel123"
 CONFIG = {
@@ -25,8 +28,8 @@ CONFIG = {
     CONF_CLIENT_SECRET: "abcd",
 }
 
-LEGACY_CONFIG = {
-    sensor.DOMAIN: {
+LEGACY_CONFIG_WITHOUT_TOKEN = {
+    SENSOR_DOMAIN: {
         "platform": "twitch",
         CONF_CLIENT_ID: "1234",
         CONF_CLIENT_SECRET: "abcd",
@@ -34,33 +37,61 @@ LEGACY_CONFIG = {
     }
 }
 
+LEGACY_CONFIG = {
+    SENSOR_DOMAIN: {
+        "platform": "twitch",
+        CONF_CLIENT_ID: "1234",
+        CONF_CLIENT_SECRET: "abcd",
+        CONF_TOKEN: "efgh",
+        "channels": ["channel123"],
+    }
+}
+
 OPTIONS = {CONF_CHANNELS: ["channel123"]}
 
 
-async def test_legacy_migration(hass: HomeAssistant) -> None:
+async def test_legacy_migration(
+    hass: HomeAssistant, twitch: TwitchMock, mock_setup_entry
+) -> None:
     """Test importing legacy yaml."""
-    with patch(
-        "homeassistant.components.twitch.sensor.Twitch", return_value=TwitchMock()
-    ):
-        assert await async_setup_component(hass, Platform.SENSOR, LEGACY_CONFIG)
-        await hass.async_block_till_done()
-        entries = hass.config_entries.async_entries(DOMAIN)
-        assert len(entries) == 0
-        issue_registry = ir.async_get(hass)
-        assert len(issue_registry.issues) == 1
+    assert await async_setup_component(hass, Platform.SENSOR, LEGACY_CONFIG)
+    await hass.async_block_till_done()
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
 
 
-async def test_init(hass: HomeAssistant, setup_integration: ComponentSetup) -> None:
+async def test_legacy_migration_without_token(
+    hass: HomeAssistant, twitch: TwitchMock
+) -> None:
+    """Test importing legacy yaml."""
+    assert await async_setup_component(
+        hass, Platform.SENSOR, LEGACY_CONFIG_WITHOUT_TOKEN
+    )
+    await hass.async_block_till_done()
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 0
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
+
+
+async def test_init(
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
+) -> None:
     """Test initial config."""
-    await setup_integration()
+    await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state
 
 
-async def test_offline(hass: HomeAssistant, setup_integration: ComponentSetup) -> None:
+async def test_offline(
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
+) -> None:
     """Test offline state."""
-    await setup_integration(TwitchMock(is_streaming=False))
+    twitch.is_streaming(False)
+    await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.state == "offline"
@@ -68,10 +99,10 @@ async def test_offline(hass: HomeAssistant, setup_integration: ComponentSetup) -
 
 
 async def test_streaming(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
     """Test streaming state."""
-    await setup_integration()
+    await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.state == "streaming"
@@ -81,10 +112,11 @@ async def test_streaming(
 
 
 async def test_oauth_without_sub_and_follow(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
     """Test state with oauth."""
-    await setup_integration(TwitchMock(is_following=False))
+    twitch.is_following(False)
+    await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.attributes["subscribed"] is False
@@ -92,12 +124,12 @@ async def test_oauth_without_sub_and_follow(
 
 
 async def test_oauth_with_sub(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
     """Test state with oauth and sub."""
-    await setup_integration(
-        TwitchMock(is_subscribed=True, is_gifted=False, is_following=False)
-    )
+    twitch.is_subscribed(True)
+    twitch.is_following(False)
+    await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.attributes["subscribed"] is True
@@ -106,61 +138,68 @@ async def test_oauth_with_sub(
 
 
 async def test_oauth_with_follow(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
     """Test state with oauth and follow."""
-    await setup_integration()
+    await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.attributes["following"] is True
-    assert sensor_state.attributes["following_since"] == "2020-01-20T21:22:42"
+    assert sensor_state.attributes["following_since"] == datetime(
+        year=2023, month=8, day=1
+    )
 
 
+@pytest.mark.parametrize("twitch_mock", [TwitchUnauthorizedMock()])
 async def test_auth_with_invalid_credentials(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
     """Test auth with invalid credentials."""
-    await setup_integration(TwitchUnauthorizedMock())
+    await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state is None
 
 
+@pytest.mark.parametrize("twitch_mock", [TwitchMissingScopeMock()])
 async def test_auth_with_missing_scope(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
     """Test auth with invalid credentials."""
-    await setup_integration(TwitchMissingScopeMock())
+    await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state is None
 
 
+@pytest.mark.parametrize("twitch_mock", [TwitchInvalidTokenMock()])
 async def test_auth_with_invalid_token(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
     """Test auth with invalid credentials."""
-    await setup_integration(TwitchInvalidTokenMock())
+    await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state is None
 
 
+@pytest.mark.parametrize("twitch_mock", [TwitchInvalidUserMock()])
 async def test_auth_with_invalid_user(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
     """Test auth with invalid user."""
-    await setup_integration(TwitchInvalidUserMock())
+    await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert "subscribed" not in sensor_state.attributes
 
 
+@pytest.mark.parametrize("twitch_mock", [TwitchAPIExceptionMock()])
 async def test_auth_with_api_exception(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
     """Test auth with invalid user."""
-    await setup_integration(TwitchAPIExceptionMock())
+    await setup_integration(hass, config_entry)
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.attributes["subscribed"] is False

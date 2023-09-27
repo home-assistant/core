@@ -75,6 +75,7 @@ class OAuth2FlowHandler(
             )
 
         if self.reauth_entry.unique_id == user_id:
+            new_channels = self.reauth_entry.options[CONF_CHANNELS]
             # Since we could not get all channels at import, we do it at the reauth
             # immediately after.
             if "imported" in self.reauth_entry.data:
@@ -84,11 +85,12 @@ class OAuth2FlowHandler(
                 ]
                 reauth_channels = self.reauth_entry.options[CONF_CHANNELS]
                 options = list(set(channels) - set(reauth_channels))
+                new_channels = [*reauth_channels, *options]
 
             self.hass.config_entries.async_update_entry(
                 self.reauth_entry,
                 data=data,
-                options={CONF_CHANNELS: [*reauth_channels, *options]},
+                options={CONF_CHANNELS: new_channels},
             )
             await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")

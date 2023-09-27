@@ -1,8 +1,7 @@
 """Configure tests for the Twitch integration."""
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Generator
 import time
-from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -27,6 +26,15 @@ SCOPES = ["user:read:subscriptions", "user:read:follows"]
 
 TWITCH_TOKEN_URI = "https://id.twitch.tv/oauth2/token"
 TWITCH_AUTHORIZE_URI = "https://id.twitch.tv/oauth2/authorize"
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.twitch.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(name="scopes")
@@ -87,24 +95,20 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
     )
 
 
-@pytest.fixture(name="setup_integration")
-async def mock_setup_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> Callable[[TwitchMock], Coroutine[Any, Any, None]]:
-    """Fixture for setting up the component."""
-    config_entry.add_to_hass(hass)
+@pytest.fixture(name="twitch_mock")
+def twitch_mock() -> TwitchMock:
+    """Return as fixture to inject other mocks."""
+    return TwitchMock()
 
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
-        DOMAIN,
-    )
 
-    async def func(mock: TwitchMock = TwitchMock()) -> None:
-        with patch("homeassistant.components.twitch.sensor.Twitch", return_value=mock):
-            assert await async_setup_component(hass, DOMAIN, {})
-            await hass.async_block_till_done()
-
-    return func
+@pytest.fixture(name="twitch")
+def mock_twitch(twitch_mock: TwitchMock):
+    """Mock Twitch."""
+    with patch(
+        "homeassistant.components.twitch.Twitch",
+        return_value=twitch_mock,
+    ), patch(
+        "homeassistant.components.twitch.config_flow.Twitch",
+        return_value=twitch_mock,
+    ):
+        yield twitch_mock

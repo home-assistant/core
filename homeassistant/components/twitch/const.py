@@ -12,8 +12,6 @@ PLATFORMS = [Platform.SENSOR]
 OAUTH2_AUTHORIZE = "https://id.twitch.tv/oauth2/authorize"
 OAUTH2_TOKEN = "https://id.twitch.tv/oauth2/token"
 
-CONF_TOKEN = "token"
-CONF_ACCESS_TOKEN = "access_token"
 CONF_REFRESH_TOKEN = "refresh_token"
 
 DOMAIN = "twitch"
