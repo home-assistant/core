@@ -17,7 +17,6 @@ from aioairzone_cloud.const import (
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
-    AZD_NAME,
     AZD_POWER,
     AZD_TEMP,
     AZD_TEMP_SET,
@@ -110,6 +109,7 @@ async def async_setup_entry(
 class AirzoneClimate(AirzoneEntity, ClimateEntity):
     """Define an Airzone Cloud climate."""
 
+    _attr_has_entity_name = True
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -180,7 +180,6 @@ class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneClimate):
         """Initialize Airzone Cloud Aidoo climate."""
         super().__init__(coordinator, aidoo_id, aidoo_data)
 
-        self._attr_name = f"{aidoo_data[AZD_NAME]}"
         self._attr_unique_id = aidoo_id
         self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
         self._attr_hvac_modes = [
@@ -211,8 +210,6 @@ class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneClimate):
 
 class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneClimate):
     """Define an Airzone Cloud Zone climate."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
