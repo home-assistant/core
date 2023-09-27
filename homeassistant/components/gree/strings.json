@@ -6,7 +6,7 @@
       },
       "user": {
         "title": "[%key:common::action::connect%]",
-        "description": "Enter IP address of your Gree unit, or leave blank to scan your network.",
+        "description": "Enter the IP address of the network to scan, or leave blank to scan the HomeAssistant network.",
         "data": {
           "ip": "[%key:common::config_flow::data::ip%]"
         }
