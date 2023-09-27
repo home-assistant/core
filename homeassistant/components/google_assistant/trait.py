@@ -389,7 +389,7 @@ class ObjectDetection(_Trait):
         if (utcnow() - time_stamp) > timedelta(seconds=30):
             return None
 
-        # A doorbell event as treated as an object detection of 1 unclassified object.
+        # A doorbell event is treated as an object detection of 1 unclassified object.
         # The implementation follows the pattern from the Smart Home Doorbell Guide:
         # https://developers.home.google.com/cloud-to-cloud/guides/doorbell
         # The detectionTimestamp is the time in ms from January 1, 1970, 00:00:00 (UTC)
