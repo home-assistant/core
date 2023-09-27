@@ -3,14 +3,20 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION
+from .coordinator import PoolSenseDataUpdateCoordinator
 
 
-class PoolSenseEntity(CoordinatorEntity):
+class PoolSenseEntity(CoordinatorEntity[PoolSenseDataUpdateCoordinator]):
     """Implements a common class elements representing the PoolSense component."""
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, coordinator, email, description: EntityDescription) -> None:
+    def __init__(
+        self,
+        coordinator: PoolSenseDataUpdateCoordinator,
+        email: str,
+        description: EntityDescription,
+    ) -> None:
         """Initialize poolsense sensor."""
         super().__init__(coordinator)
         self.entity_description = description
