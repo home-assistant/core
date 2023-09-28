@@ -54,17 +54,13 @@ class OpenhomeUpdateEntity(UpdateEntity):
         """Initialize a Linn DS update entity."""
         self._device = device
         self._attr_unique_id = f"{device.uuid()}-update"
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self._device.uuid()),
+                (DOMAIN, device.uuid()),
             },
-            manufacturer=self._device.manufacturer(),
-            model=self._device.model_name(),
-            name=self._device.friendly_name(),
+            manufacturer=device.manufacturer(),
+            model=device.model_name(),
+            name=device.friendly_name(),
         )
 
     async def async_update(self) -> None:

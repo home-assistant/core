@@ -13,6 +13,16 @@
     }
   },
   "entity": {
+    "button": {
+      "sync_time": {
+        "name": "Sync time with device"
+      }
+    },
+    "number": {
+      "filter_change": {
+        "name": "Filter clean/replacement"
+      }
+    },
     "binary_sensor": {
       "frost_protection_active": {
         "name": "Frost protection active"

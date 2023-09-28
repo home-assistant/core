@@ -946,7 +946,7 @@ async def test_restoring_client(
     await setup_unifi_integration(
         hass,
         aioclient_mock,
-        options={CONF_BLOCK_CLIENT: True},
+        options={CONF_BLOCK_CLIENT: [restored["mac"]]},
         clients_response=[client],
         clients_all_response=[restored, not_restored],
     )

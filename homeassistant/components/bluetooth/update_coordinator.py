@@ -39,6 +39,8 @@ class BasePassiveBluetoothCoordinator(ABC):
         self.mode = mode
         self._last_unavailable_time = 0.0
         self._last_name = address
+        # Subclasses are responsible for setting _available to True
+        # when the abstractmethod _async_handle_bluetooth_event is called.
         self._available = async_address_present(hass, address, connectable)
 
     @callback
@@ -89,22 +91,12 @@ class BasePassiveBluetoothCoordinator(ABC):
         return self._available
 
     @callback
-    def _async_handle_bluetooth_event_internal(
-        self,
-        service_info: BluetoothServiceInfoBleak,
-        change: BluetoothChange,
-    ) -> None:
-        """Handle a bluetooth event."""
-        self._available = True
-        self._async_handle_bluetooth_event(service_info, change)
-
-    @callback
     def _async_start(self) -> None:
         """Start the callbacks."""
         self._on_stop.append(
             async_register_callback(
                 self.hass,
-                self._async_handle_bluetooth_event_internal,
+                self._async_handle_bluetooth_event,
                 BluetoothCallbackMatcher(
                     address=self.address, connectable=self.connectable
                 ),

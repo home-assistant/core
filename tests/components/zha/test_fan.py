@@ -21,6 +21,7 @@ from homeassistant.components.fan import (
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.discovery import GROUP_PROBE
 from homeassistant.components.zha.core.group import GroupMember
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.components.zha.fan import (
     PRESET_MODE_AUTO,
     PRESET_MODE_ON,
@@ -45,7 +46,6 @@ from .common import (
     async_test_rejoin,
     async_wait_for_updates,
     find_entity_id,
-    get_zha_gateway,
     send_attributes_report,
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE

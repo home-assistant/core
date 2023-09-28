@@ -460,6 +460,9 @@ ATTR_HIDDEN: Final = "hidden"
 ATTR_LATITUDE: Final = "latitude"
 ATTR_LONGITUDE: Final = "longitude"
 
+# Elevation of the entity
+ATTR_ELEVATION: Final = "elevation"
+
 # Accuracy of location in meters
 ATTR_GPS_ACCURACY: Final = "gps_accuracy"
 

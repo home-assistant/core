@@ -600,19 +600,16 @@ class NodeEvents:
         # device config has changed, and if so, issue a repair registry entry for a
         # possible reinterview
         if not node.is_controller_node and await node.async_has_device_config_changed():
+            device_name = device.name_by_user or device.name or "Unnamed device"
             async_create_issue(
                 self.hass,
                 DOMAIN,
                 f"device_config_file_changed.{device.id}",
-                data={"device_id": device.id},
+                data={"device_id": device.id, "device_name": device_name},
                 is_fixable=True,
                 is_persistent=False,
                 translation_key="device_config_file_changed",
-                translation_placeholders={
-                    "device_name": device.name_by_user
-                    or device.name
-                    or "Unnamed device"
-                },
+                translation_placeholders={"device_name": device_name},
                 severity=IssueSeverity.WARNING,
             )
 
@@ -744,6 +741,7 @@ class NodeEvents:
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
             ATTR_HOME_ID: driver.controller.home_id,
+            ATTR_ENDPOINT: notification.endpoint_idx,
             ATTR_DEVICE_ID: device.id,
             ATTR_COMMAND_CLASS: notification.command_class,
         }
