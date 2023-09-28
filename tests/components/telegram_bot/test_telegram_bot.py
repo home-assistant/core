@@ -168,7 +168,7 @@ async def test_webhook_endpoint_without_secret_token_is_denied(
         TELEGRAM_WEBHOOK_URL,
         json=update_message_text,
     )
-    assert response.status == 403
+    assert response.status == 401
 
 
 async def test_webhook_endpoint_invalid_secret_token_is_denied(
@@ -187,4 +187,4 @@ async def test_webhook_endpoint_invalid_secret_token_is_denied(
         json=update_message_text,
         headers={"X-Telegram-Bot-Api-Secret-Token": incorrect_secret_token},
     )
-    assert response.status == 403
+    assert response.status == 401
