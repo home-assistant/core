@@ -320,8 +320,8 @@ async def test_api_ingress_panels(
     ],
 )
 async def test_api_headers(
+    aiohttp_raw_server,  # 'aiohttp_raw_server' must be before 'hass'!
     hass,
-    aiohttp_raw_server,
     socket_enabled,
     api_call: str,
     method: Literal["GET", "POST"],
@@ -413,3 +413,10 @@ async def test_api_reboot_host(
 
     assert await handler.async_reboot_host(hass) == {}
     assert aioclient_mock.call_count == 1
+
+
+async def test_send_command_invalid_command(hass: HomeAssistant, hassio_stubs) -> None:
+    """Test send command fails when command is invalid."""
+    hassio: HassIO = hass.data["hassio"]
+    with pytest.raises(HassioAPIError):
+        await hassio.send_command("/test/../bad")

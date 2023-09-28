@@ -8,9 +8,8 @@ from datetime import timedelta
 import inspect
 import logging
 from math import ceil, floor
-from typing import Any, final
+from typing import Any, Self, final
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -156,6 +155,10 @@ def floor_decimal(value: float, precision: float = 0) -> float:
 
 class NumberEntity(Entity):
     """Representation of a Number entity."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_MIN, ATTR_MAX, ATTR_STEP, ATTR_MODE}
+    )
 
     entity_description: NumberEntityDescription
     _attr_device_class: NumberDeviceClass | None

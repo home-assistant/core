@@ -6,7 +6,7 @@ import logging
 from epson_projector import Projector, ProjectorUnavailableError
 from epson_projector.const import (
     BACK,
-    BUSY,
+    BUSY_CODES,
     CMODE,
     CMODE_LIST,
     CMODE_LIST_SET,
@@ -37,7 +37,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
@@ -147,7 +147,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
                     self._attr_volume_level = float(volume)
                 except ValueError:
                     self._attr_volume_level = None
-        elif power_state == BUSY:
+        elif power_state in BUSY_CODES:
             self._attr_state = MediaPlayerState.ON
         else:
             self._attr_state = MediaPlayerState.OFF

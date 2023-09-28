@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import attr
 import voluptuous as vol
@@ -269,7 +269,8 @@ async def async_setup_trigger(
     config = TRIGGER_DISCOVERY_SCHEMA(config)
     device_id = update_device(hass, config_entry, config)
 
-    assert isinstance(device_id, str)
+    if TYPE_CHECKING:
+        assert isinstance(device_id, str)
     mqtt_device_trigger = MqttDeviceTrigger(
         hass, config, device_id, discovery_data, config_entry
     )
@@ -286,7 +287,8 @@ async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None
         if device_trigger:
             device_trigger.detach_trigger()
             discovery_data = device_trigger.discovery_data
-            assert discovery_data is not None
+            if TYPE_CHECKING:
+                assert discovery_data is not None
             discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
             debug_info.remove_trigger_discovery_data(hass, discovery_hash)
 

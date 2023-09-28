@@ -1,21 +1,6 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'fanLevel': 'high',
-    'horizontalSwing': 'stopped',
-    'light': 'on',
-    'mode': 'heat',
-    'on': True,
-    'swing': 'stopped',
-    'targetTemperature': 25,
-    'timestamp': dict({
-      'secondsAgo': -1,
-      'time': '2022-04-30T11:23:30.019722Z',
-    }),
-  })
-# ---
-# name: test_diagnostics.1
-  dict({
     'modes': dict({
       'auto': dict({
         'fanLevels': list([
@@ -206,28 +191,28 @@
     }),
   })
 # ---
-# name: test_diagnostics.2
+# name: test_diagnostics.1
   dict({
     'low': 'low',
     'medium': 'medium',
     'quiet': 'quiet',
   })
 # ---
-# name: test_diagnostics.3
+# name: test_diagnostics.2
   dict({
     'fixedmiddletop': 'fixedMiddleTop',
     'fixedtop': 'fixedTop',
     'stopped': 'stopped',
   })
 # ---
-# name: test_diagnostics.4
+# name: test_diagnostics.3
   dict({
     'fixedcenterleft': 'fixedCenterLeft',
     'fixedleft': 'fixedLeft',
     'stopped': 'stopped',
   })
 # ---
-# name: test_diagnostics.5
+# name: test_diagnostics.4
   dict({
     'fanlevel': 'low',
     'horizontalswing': 'stopped',
@@ -239,7 +224,7 @@
     'temperatureunit': 'c',
   })
 # ---
-# name: test_diagnostics.6
+# name: test_diagnostics.5
   dict({
     'fanlevel': 'high',
     'horizontalswing': 'stopped',
@@ -251,7 +236,7 @@
     'temperatureunit': 'c',
   })
 # ---
-# name: test_diagnostics.7
+# name: test_diagnostics.6
   dict({
   })
 # ---

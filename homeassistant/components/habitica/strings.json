@@ -18,5 +18,25 @@
         "description": "Connect your Habitica profile to allow monitoring of your user's profile and tasks. Note that api_id and api_key must be gotten from https://habitica.com/user/settings/api"
       }
     }
+  },
+  "services": {
+    "api_call": {
+      "name": "API name",
+      "description": "Calls Habitica API.",
+      "fields": {
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "Habitica's username to call for."
+        },
+        "path": {
+          "name": "[%key:common::config_flow::data::path%]",
+          "description": "Items from API URL in form of an array with method attached at the end. Consult https://habitica.com/apidoc/. Example uses https://habitica.com/apidoc/#api-Task-CreateUserTasks."
+        },
+        "args": {
+          "name": "Args",
+          "description": "Any additional JSON or URL parameter arguments. See apidoc mentioned for path. Example uses same API endpoint."
+        }
+      }
+    }
   }
 }

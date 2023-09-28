@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/rainbird",
   "iot_class": "local_polling",
   "loggers": ["pyrainbird"],
-  "requirements": ["pyrainbird==2.1.0"]
+  "requirements": ["pyrainbird==4.0.0"]
 }

@@ -9,7 +9,7 @@ from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEFAULT_BRAND, DOMAIN, SERVICE_TRIGGER
@@ -38,6 +38,7 @@ async def async_setup_entry(
 class BlinkCamera(Camera):
     """An implementation of a Blink Camera."""
 
+    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, data, name, camera):

@@ -75,7 +75,7 @@
       },
       "secure_routing_manual": {
         "title": "Secure routing",
-        "description": "Please enter your IP secure information.",
+        "description": "[%key:component::knx::config::step::secure_tunnel_manual::description%]",
         "data": {
           "backbone_key": "Backbone key",
           "sync_latency_tolerance": "Network latency tolerance"
@@ -130,7 +130,7 @@
         }
       },
       "communication_settings": {
-        "title": "Communication settings",
+        "title": "[%key:component::knx::options::step::options_init::menu_options::communication_settings%]",
         "data": {
           "state_updater": "State updater",
           "rate_limit": "Rate limit",
@@ -144,9 +144,9 @@
       },
       "connection_type": {
         "title": "[%key:component::knx::config::step::connection_type::title%]",
-        "description": "Please enter the connection type we should use for your KNX connection. \n AUTOMATIC - The integration takes care of the connectivity to your KNX Bus by performing a gateway scan. \n TUNNELING - The integration will connect to your KNX bus via tunneling. \n ROUTING - The integration will connect to your KNX bus via routing.",
+        "description": "[%key:component::knx::config::step::connection_type::description%]",
         "data": {
-          "connection_type": "KNX Connection Type"
+          "connection_type": "[%key:component::knx::config::step::connection_type::data::connection_type%]"
         }
       },
       "tunnel": {
@@ -259,7 +259,7 @@
   "entity": {
     "sensor": {
       "individual_address": {
-        "name": "Individual address"
+        "name": "[%key:component::knx::config::step::routing::data::individual_address%]"
       },
       "connected_since": {
         "name": "Connection established"
@@ -287,6 +287,92 @@
   "device_automation": {
     "trigger_type": {
       "telegram": "Telegram sent or received"
+    }
+  },
+  "services": {
+    "send": {
+      "name": "Send to KNX bus",
+      "description": "Sends arbitrary data directly to the KNX bus.",
+      "fields": {
+        "address": {
+          "name": "Group address",
+          "description": "Group address(es) to write to. Lists will send to multiple group addresses successively."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length."
+        },
+        "type": {
+          "name": "Value type",
+          "description": "If set, the payload will not be sent as raw bytes, but encoded as given DPT. KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types)."
+        },
+        "response": {
+          "name": "Send as Response",
+          "description": "If set to `True`, the telegram will be sent as a `GroupValueResponse` instead of a `GroupValueWrite`."
+        }
+      }
+    },
+    "read": {
+      "name": "Reads from KNX bus",
+      "description": "Send GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities.",
+      "fields": {
+        "address": {
+          "name": "[%key:component::knx::services::send::fields::address::name%]",
+          "description": "Group address(es) to send read request to. Lists will read multiple group addresses."
+        }
+      }
+    },
+    "event_register": {
+      "name": "Registers knx_event",
+      "description": "Add or remove group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed.",
+      "fields": {
+        "address": {
+          "name": "[%key:component::knx::services::send::fields::address::name%]",
+          "description": "Group address(es) that shall be added or removed. Lists are allowed."
+        },
+        "type": {
+          "name": "Value type",
+          "description": "If set, the payload will be decoded as given DPT in the event data `value` key. KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types)."
+        },
+        "remove": {
+          "name": "Remove event registration",
+          "description": "If `True` the group address(es) will be removed."
+        }
+      }
+    },
+    "exposure_register": {
+      "name": "Expose to KNX bus",
+      "description": "Adds or remove exposures to KNX bus. Only exposures added with this service can be removed.",
+      "fields": {
+        "address": {
+          "name": "[%key:component::knx::services::send::fields::address::name%]",
+          "description": "Group address state or attribute updates will be sent to. GroupValueRead requests will be answered. Per address only one exposure can be registered."
+        },
+        "type": {
+          "name": "Value type",
+          "description": "Telegrams will be encoded as given DPT. 'binary' and all KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types)."
+        },
+        "entity_id": {
+          "name": "Entity",
+          "description": "Entity id whose state or attribute shall be exposed."
+        },
+        "attribute": {
+          "name": "Entity attribute",
+          "description": "Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is eigther “on” or “off” - with attribute you can expose its “brightness”."
+        },
+        "default": {
+          "name": "Default value",
+          "description": "Default value to send to the bus if the state or attribute value is None. Eg. a light with state “off” has no brightness attribute so a default value of 0 could be used. If not set (or None) no value would be sent to the bus and a GroupReadRequest to the address would return the last known value."
+        },
+        "remove": {
+          "name": "Remove exposure",
+          "description": "If `True` the exposure will be removed. Only `address` is required for removal."
+        }
+      }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads the KNX integration."
     }
   }
 }

@@ -75,7 +75,7 @@ async def async_validate_device_automation_config(
     # config entry is loaded
     registry = dr.async_get(hass)
     if not (device := registry.async_get(validated_config[CONF_DEVICE_ID])):
-        # The device referenced by the device trigger does not exist
+        # The device referenced by the device automation does not exist
         raise InvalidDeviceAutomationConfig(
             f"Unknown device '{validated_config[CONF_DEVICE_ID]}'"
         )
@@ -91,7 +91,7 @@ async def async_validate_device_automation_config(
         break
 
     if not device_config_entry:
-        # The config entry referenced by the device trigger does not exist
+        # The config entry referenced by the device automation does not exist
         raise InvalidDeviceAutomationConfig(
             f"Device '{validated_config[CONF_DEVICE_ID]}' has no config entry from "
             f"domain '{validated_config[CONF_DOMAIN]}'"

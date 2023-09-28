@@ -1,9 +1,10 @@
 """Support for Tuya Alarm."""
 from __future__ import annotations
 
+from enum import StrEnum
+
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityDescription,

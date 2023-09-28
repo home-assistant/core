@@ -1,7 +1,5 @@
 # Describes the format for available fan services
 set_preset_mode:
-  name: Set preset mode
-  description: Set preset mode for a fan device.
   target:
     entity:
       domain: fan
@@ -9,16 +7,12 @@ set_preset_mode:
         - fan.FanEntityFeature.PRESET_MODE
   fields:
     preset_mode:
-      name: Preset mode
-      description: New value of preset mode.
       required: true
       example: "auto"
       selector:
         text:
 
 set_percentage:
-  name: Set speed percentage
-  description: Set fan speed percentage.
   target:
     entity:
       domain: fan
@@ -26,8 +20,6 @@ set_percentage:
         - fan.FanEntityFeature.SET_SPEED
   fields:
     percentage:
-      name: Percentage
-      description: Percentage speed setting.
       required: true
       selector:
         number:
@@ -36,15 +28,11 @@ set_percentage:
           unit_of_measurement: "%"
 
 turn_on:
-  name: Turn on
-  description: Turn fan on.
   target:
     entity:
       domain: fan
   fields:
     percentage:
-      name: Percentage
-      description: Percentage speed setting.
       filter:
         supported_features:
           - fan.FanEntityFeature.SET_SPEED
@@ -54,8 +42,6 @@ turn_on:
           max: 100
           unit_of_measurement: "%"
     preset_mode:
-      name: Preset mode
-      description: Preset mode setting.
       example: "auto"
       filter:
         supported_features:
@@ -64,15 +50,11 @@ turn_on:
         text:
 
 turn_off:
-  name: Turn off
-  description: Turn fan off.
   target:
     entity:
       domain: fan
 
 oscillate:
-  name: Oscillate
-  description: Oscillate the fan.
   target:
     entity:
       domain: fan
@@ -80,22 +62,16 @@ oscillate:
         - fan.FanEntityFeature.OSCILLATE
   fields:
     oscillating:
-      name: Oscillating
-      description: Flag to turn on/off oscillation.
       required: true
       selector:
         boolean:
 
 toggle:
-  name: Toggle
-  description: Toggle the fan on/off.
   target:
     entity:
       domain: fan
 
 set_direction:
-  name: Set direction
-  description: Set the fan rotation.
   target:
     entity:
       domain: fan
@@ -103,20 +79,14 @@ set_direction:
         - fan.FanEntityFeature.DIRECTION
   fields:
     direction:
-      name: Direction
-      description: The direction to rotate.
       required: true
       selector:
         select:
           options:
-            - label: "Forward"
-              value: "forward"
-            - label: "Reverse"
-              value: "reverse"
-
+            - "forward"
+            - "reverse"
+          translation_key: direction
 increase_speed:
-  name: Increase speed
-  description: Increase the speed of the fan by one speed or a percentage_step.
   target:
     entity:
       domain: fan
@@ -126,7 +96,6 @@ increase_speed:
     percentage_step:
       advanced: true
       required: false
-      description: Increase speed by a percentage.
       selector:
         number:
           min: 0
@@ -134,8 +103,6 @@ increase_speed:
           unit_of_measurement: "%"
 
 decrease_speed:
-  name: Decrease speed
-  description: Decrease the speed of the fan by one speed or a percentage_step.
   target:
     entity:
       domain: fan
@@ -145,7 +112,6 @@ decrease_speed:
     percentage_step:
       advanced: true
       required: false
-      description: Decrease speed by a percentage.
       selector:
         number:
           min: 0

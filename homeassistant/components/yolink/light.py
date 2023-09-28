@@ -35,7 +35,6 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
     """YoLink Dimmer Entity."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_color_modes: set[ColorMode] = {ColorMode.BRIGHTNESS}
 

@@ -9,8 +9,11 @@ from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.zigbee_connectivity import ConnectivityServiceStatus
 
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import (
+    DeviceInfo,
+    async_get as async_get_device_registry,
+)
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from ..bridge import HueBridge
@@ -147,7 +150,9 @@ class HueBaseEntity(Entity):
             # regular devices are removed automatically by the logic in device.py.
             if resource.type in (ResourceTypes.ROOM, ResourceTypes.ZONE):
                 dev_reg = async_get_device_registry(self.hass)
-                if device := dev_reg.async_get_device({(DOMAIN, resource.id)}):
+                if device := dev_reg.async_get_device(
+                    identifiers={(DOMAIN, resource.id)}
+                ):
                     dev_reg.async_remove_device(device.id)
             # cleanup entities that are not strictly device-bound and have the bridge as parent
             if self.device is None:

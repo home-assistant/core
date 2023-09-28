@@ -218,7 +218,7 @@ async def test_device_properties(
 ) -> None:
     """Test device properties."""
     registry = dr.async_get(hass)
-    device = registry.async_get_device({(DOMAIN, "AC000Wxxxxxxxxx")})
+    device = registry.async_get_device(identifiers={(DOMAIN, "AC000Wxxxxxxxxx")})
     assert getattr(device, device_property) == target_value
 
 

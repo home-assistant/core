@@ -1,7 +1,6 @@
 """Support for power sensors in WeMo Insight devices."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
@@ -15,11 +14,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN as WEMO_DOMAIN
+from . import async_wemo_dispatcher_connect
 from .entity import WemoEntity
 from .wemo_device import DeviceCoordinator
 
@@ -59,7 +57,7 @@ ATTRIBUTE_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    _config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WeMo sensors."""
@@ -72,14 +70,7 @@ async def async_setup_entry(
             if hasattr(coordinator.wemo, description.key)
         )
 
-    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.sensor", _discovered_wemo)
-
-    await asyncio.gather(
-        *(
-            _discovered_wemo(coordinator)
-            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("sensor")
-        )
-    )
+    await async_wemo_dispatcher_connect(hass, _discovered_wemo)
 
 
 class AttributeSensor(WemoEntity, SensorEntity):

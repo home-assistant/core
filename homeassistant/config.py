@@ -257,10 +257,10 @@ CORE_CONFIG_SCHEMA = vol.All(
             vol.Optional(CONF_INTERNAL_URL): cv.url,
             vol.Optional(CONF_EXTERNAL_URL): cv.url,
             vol.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): vol.All(
-                cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+                cv.ensure_list, [vol.IsDir()]
             ),
             vol.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
-                cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+                cv.ensure_list, [vol.IsDir()]
             ),
             vol.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): vol.All(
                 cv.ensure_list, [cv.url]
@@ -297,7 +297,6 @@ CORE_CONFIG_SCHEMA = vol.All(
                 ],
                 _no_duplicate_auth_mfa_module,
             ),
-            # pylint: disable-next=no-value-for-parameter
             vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
             vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
             vol.Optional(CONF_CURRENCY): _validate_currency,
@@ -337,7 +336,6 @@ async def async_create_default_config(hass: HomeAssistant) -> bool:
 
     Return if creation was successful.
     """
-    assert hass.config.config_dir
     return await hass.async_add_executor_job(
         _write_default_config, hass.config.config_dir
     )
@@ -390,10 +388,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     This function allow a component inside the asyncio loop to reload its
     configuration by itself. Include package merge.
     """
-    if hass.config.config_dir is None:
-        secrets = None
-    else:
-        secrets = Secrets(Path(hass.config.config_dir))
+    secrets = Secrets(Path(hass.config.config_dir))
 
     # Not using async_add_executor_job because this is an internal method.
     config = await hass.loop.run_in_executor(

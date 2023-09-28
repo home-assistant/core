@@ -50,7 +50,7 @@
         "title": "Configure Android state detection rules",
         "description": "Configure detection rule for application id {rule_id}",
         "data": {
-          "rule_id": "Application ID",
+          "rule_id": "[%key:component::androidtv::options::step::apps::data::app_id%]",
           "rule_values": "List of state detection rules (see documentation)",
           "rule_delete": "Check to delete this rule"
         }
@@ -58,6 +58,50 @@
     },
     "error": {
       "invalid_det_rules": "Invalid state detection rules"
+    }
+  },
+  "services": {
+    "adb_command": {
+      "name": "ADB command",
+      "description": "Sends an ADB command to an Android / Fire TV device.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "Either a key command or an ADB shell command."
+        }
+      }
+    },
+    "download": {
+      "name": "Download",
+      "description": "Downloads a file from your Android / Fire TV device to your Home Assistant instance.",
+      "fields": {
+        "device_path": {
+          "name": "Device path",
+          "description": "The filepath on the Android / Fire TV device."
+        },
+        "local_path": {
+          "name": "Local path",
+          "description": "The filepath on your Home Assistant instance."
+        }
+      }
+    },
+    "upload": {
+      "name": "Upload",
+      "description": "Uploads a file from your Home Assistant instance to an Android / Fire TV device.",
+      "fields": {
+        "device_path": {
+          "name": "[%key:component::androidtv::services::download::fields::device_path::name%]",
+          "description": "[%key:component::androidtv::services::download::fields::device_path::description%]"
+        },
+        "local_path": {
+          "name": "[%key:component::androidtv::services::download::fields::local_path::name%]",
+          "description": "[%key:component::androidtv::services::download::fields::local_path::description%]"
+        }
+      }
+    },
+    "learn_sendevent": {
+      "name": "Learn sendevent",
+      "description": "Translates a key press on a remote into ADB 'sendevent' commands. You must press one button on the remote within 8 seconds of calling this service."
     }
   }
 }

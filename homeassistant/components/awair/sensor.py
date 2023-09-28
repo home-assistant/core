@@ -27,11 +27,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AwairDataUpdateCoordinator, AwairResult
 from .const import (
     API_CO2,
     API_DUST,
@@ -46,6 +45,7 @@ from .const import (
     ATTRIBUTION,
     DOMAIN,
 )
+from .coordinator import AwairDataUpdateCoordinator, AwairResult
 
 DUST_ALIASES = [API_PM25, API_PM10]
 

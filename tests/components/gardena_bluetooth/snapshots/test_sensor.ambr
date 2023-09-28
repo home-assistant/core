@@ -1,0 +1,100 @@
+# serializer version: 1
+# name: test_connected_state
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Mock Title Sensor battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_sensor_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_connected_state.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Mock Title Sensor battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_sensor_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45',
+  })
+# ---
+# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-sensor.mock_title_valve_closing]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Valve closing',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_valve_closing',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-01-01T01:01:40+00:00',
+  })
+# ---
+# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-sensor.mock_title_valve_closing].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Valve closing',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_valve_closing',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-01-01T01:01:10+00:00',
+  })
+# ---
+# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-sensor.mock_title_valve_closing].2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Valve closing',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_valve_closing',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_setup[98bd2a19-0b0e-421a-84e5-ddbf75dc6de4-raw0-sensor.mock_title_battery]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Mock Title Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_setup[98bd2a19-0b0e-421a-84e5-ddbf75dc6de4-raw0-sensor.mock_title_battery].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Mock Title Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---

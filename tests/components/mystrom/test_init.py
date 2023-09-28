@@ -68,7 +68,7 @@ async def test_init_switch_and_unload(
         (110, "sensor", ConfigEntryState.SETUP_ERROR, True),
         (113, "switch", ConfigEntryState.SETUP_ERROR, True),
         (118, "button", ConfigEntryState.SETUP_ERROR, True),
-        (120, "switch", ConfigEntryState.SETUP_ERROR, True),
+        (120, "switch", ConfigEntryState.LOADED, False),
     ],
 )
 async def test_init_bulb(

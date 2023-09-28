@@ -20,6 +20,31 @@
         "turn_off": "Turn off {entity_name}"
       }
     },
+    "action": {
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "enable": "Enable",
+      "disable": "Disable",
+      "open": "Open",
+      "close": "Close",
+      "reload": "Reload",
+      "restart": "Restart",
+      "start": "Start",
+      "stop": "Stop",
+      "pause": "Pause",
+      "turn_on": "Turn on",
+      "turn_off": "Turn off",
+      "toggle": "Toggle"
+    },
+    "time": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    },
     "state": {
       "off": "Off",
       "on": "On",
@@ -27,6 +52,8 @@
       "no": "No",
       "open": "Open",
       "closed": "Closed",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
       "connected": "Connected",
       "disconnected": "Disconnected",
       "locked": "Locked",

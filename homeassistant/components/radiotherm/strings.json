@@ -27,5 +27,12 @@
         }
       }
     }
+  },
+  "entity": {
+    "switch": {
+      "hold": {
+        "name": "Hold"
+      }
+    }
   }
 }

@@ -127,6 +127,7 @@ async def test_window_cover(
     assert args["value"]
 
     client.async_send_command.reset_mock()
+
     # Test stop after opening
     await hass.services.async_call(
         DOMAIN,
@@ -266,6 +267,7 @@ async def test_fibaro_fgr222_shutter_cover(
     assert args["value"] == 99
 
     client.async_send_command.reset_mock()
+
     # Test closing tilts
     await hass.services.async_call(
         DOMAIN,
@@ -287,6 +289,7 @@ async def test_fibaro_fgr222_shutter_cover(
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
+
     # Test setting tilt position
     await hass.services.async_call(
         DOMAIN,
@@ -460,6 +463,7 @@ async def test_aeotec_nano_shutter_cover(
     assert args["value"]
 
     client.async_send_command.reset_mock()
+
     # Test stop after opening
     await hass.services.async_call(
         DOMAIN,
