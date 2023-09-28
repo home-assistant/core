@@ -180,9 +180,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             DEFAULT_SETUP_TIMEOUT,
             websession,
             hass.loop,
-            _LOGGER,
-            username=username,
-            password=password,
+            _LOGGER
         )
         try:
             product = await Box.async_from_host(api_host)
