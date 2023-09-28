@@ -49,7 +49,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.loader import bind_hass
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import now
 
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState  # noqa: F401
 from .addon_panel import async_setup_addon_panel
@@ -177,7 +177,7 @@ SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
 SCHEMA_BACKUP_FULL = vol.Schema(
     {
         vol.Optional(
-            ATTR_NAME, default=lambda: utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            ATTR_NAME, default=lambda: now().strftime("%Y-%m-%d %H:%M:%S")
         ): cv.string,
         vol.Optional(ATTR_PASSWORD): cv.string,
         vol.Optional(ATTR_COMPRESSED): cv.boolean,

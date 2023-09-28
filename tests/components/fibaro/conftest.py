@@ -47,10 +47,7 @@ async def setup_platform(
     controller_mock = Mock()
     controller_mock.hub_serial = "HC2-111111"
     controller_mock.get_room_name.return_value = room_name
-    controller_mock.fibaro_devices = {Platform.SCENE: scenes}
-
-    for scene in scenes:
-        scene.fibaro_controller = controller_mock
+    controller_mock.read_scenes.return_value = scenes
 
     hass.data[DOMAIN] = {config_entry.entry_id: controller_mock}
     await hass.config_entries.async_forward_entry_setup(config_entry, platform)

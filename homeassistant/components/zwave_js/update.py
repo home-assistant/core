@@ -62,7 +62,12 @@ class ZWaveNodeFirmwareUpdateExtraStoredData(ExtraStoredData):
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ZWaveNodeFirmwareUpdateExtraStoredData:
         """Initialize the extra data from a dict."""
-        if not (firmware_dict := data[ATTR_LATEST_VERSION_FIRMWARE]):
+        # If there was no firmware info stored, or if it's stale info, we don't restore
+        # anything.
+        if (
+            not (firmware_dict := data[ATTR_LATEST_VERSION_FIRMWARE])
+            or "normalizedVersion" not in firmware_dict
+        ):
             return cls(None)
 
         return cls(NodeFirmwareUpdateInfo.from_dict(firmware_dict))
@@ -267,9 +272,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         )
 
         try:
-            await self.driver.controller.async_firmware_update_ota(
-                self.node, firmware.files
-            )
+            await self.driver.controller.async_firmware_update_ota(self.node, firmware)
         except BaseZwaveJSServerError as err:
             self._unsub_firmware_events_and_reset_progress()
             raise HomeAssistantError(err) from err
