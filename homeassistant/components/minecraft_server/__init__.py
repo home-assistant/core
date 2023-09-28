@@ -12,8 +12,9 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
+from .api import MinecraftServerType
 from .const import DOMAIN, KEY_LATENCY, KEY_MOTD
-from .coordinator import MinecraftServerCoordinator, MinecraftServerType
+from .coordinator import MinecraftServerCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 

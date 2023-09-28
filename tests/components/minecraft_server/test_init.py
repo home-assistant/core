@@ -4,8 +4,8 @@ from unittest.mock import patch
 from mcstatus import JavaServer
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.minecraft_server.api import MinecraftServerType
 from homeassistant.components.minecraft_server.const import DEFAULT_NAME, DOMAIN
-from homeassistant.components.minecraft_server.coordinator import MinecraftServerType
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant

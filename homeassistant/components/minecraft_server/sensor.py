@@ -12,12 +12,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .api import MinecraftServerData, MinecraftServerType
 from .const import DOMAIN, KEY_LATENCY, KEY_MOTD
-from .coordinator import (
-    MinecraftServerCoordinator,
-    MinecraftServerData,
-    MinecraftServerType,
-)
+from .coordinator import MinecraftServerCoordinator
 from .entity import MinecraftServerEntity
 
 ATTR_PLAYERS_LIST = "players_list"

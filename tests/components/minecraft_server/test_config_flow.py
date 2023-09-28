@@ -2,16 +2,17 @@
 
 from unittest.mock import patch
 
-from mcstatus import BedrockServer, JavaServer
-
+from homeassistant.components.minecraft_server.api import (
+    MinecraftServerAddressError,
+    MinecraftServerType,
+)
 from homeassistant.components.minecraft_server.const import DEFAULT_NAME, DOMAIN
-from homeassistant.components.minecraft_server.coordinator import MinecraftServerType
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import TEST_ADDRESS, TEST_HOST, TEST_JAVA_STATUS_RESPONSE, TEST_PORT
+from .const import TEST_ADDRESS
 
 USER_INPUT = {
     CONF_NAME: DEFAULT_NAME,
@@ -29,14 +30,12 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_lookup_failed(hass: HomeAssistant) -> None:
+async def test_address_validation_failed(hass: HomeAssistant) -> None:
     """Test error in case of a failed connection."""
     with patch(
-        "mcstatus.server.BedrockServer.lookup",
-        side_effect=ValueError,
-    ), patch(
-        "mcstatus.server.JavaServer.async_lookup",
-        side_effect=ValueError,
+        "homeassistant.components.minecraft_server.api.MinecraftServer.__init__",
+        side_effect=[MinecraftServerAddressError, MinecraftServerAddressError],
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
@@ -47,14 +46,15 @@ async def test_lookup_failed(hass: HomeAssistant) -> None:
 
 
 async def test_java_connection_failed(hass: HomeAssistant) -> None:
-    """Test error in case of a failed connection."""
+    """Test error in case of a failed connection to a Java Edition server."""
     with patch(
-        "mcstatus.server.BedrockServer.lookup",
-        side_effect=ValueError,
+        "homeassistant.components.minecraft_server.api.MinecraftServer.__init__",
+        side_effect=[MinecraftServerAddressError, None],
+        return_value=None,
     ), patch(
-        "mcstatus.server.JavaServer.async_lookup",
-        return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
-    ), patch("mcstatus.server.JavaServer.async_status", side_effect=OSError):
+        "homeassistant.components.minecraft_server.api.MinecraftServer.async_is_online",
+        return_value=False,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
@@ -64,11 +64,15 @@ async def test_java_connection_failed(hass: HomeAssistant) -> None:
 
 
 async def test_bedrock_connection_failed(hass: HomeAssistant) -> None:
-    """Test error in case of a failed connection."""
+    """Test error in case of a failed connection to a Bedrock Edition server."""
     with patch(
-        "mcstatus.server.BedrockServer.lookup",
-        return_value=BedrockServer(host=TEST_HOST, port=TEST_PORT),
-    ), patch("mcstatus.server.BedrockServer.async_status", side_effect=OSError):
+        "homeassistant.components.minecraft_server.api.MinecraftServer.__init__",
+        side_effect=[None, MinecraftServerAddressError],
+        return_value=None,
+    ), patch(
+        "homeassistant.components.minecraft_server.api.MinecraftServer.async_is_online",
+        return_value=False,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
@@ -80,14 +84,12 @@ async def test_bedrock_connection_failed(hass: HomeAssistant) -> None:
 async def test_java_connection_succeeded(hass: HomeAssistant) -> None:
     """Test config entry in case of a successful connection with a host name."""
     with patch(
-        "mcstatus.server.BedrockServer.lookup",
-        side_effect=ValueError,
+        "homeassistant.components.minecraft_server.api.MinecraftServer.__init__",
+        side_effect=[MinecraftServerAddressError, None],
+        return_value=None,
     ), patch(
-        "mcstatus.server.JavaServer.async_lookup",
-        return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
-    ), patch(
-        "mcstatus.server.JavaServer.async_status",
-        return_value=TEST_JAVA_STATUS_RESPONSE,
+        "homeassistant.components.minecraft_server.api.MinecraftServer.async_is_online",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
@@ -103,11 +105,12 @@ async def test_java_connection_succeeded(hass: HomeAssistant) -> None:
 async def test_bedrock_connection_succeeded(hass: HomeAssistant) -> None:
     """Test config entry in case of a successful connection with a host name."""
     with patch(
-        "mcstatus.server.BedrockServer.lookup",
-        return_value=BedrockServer(host=TEST_HOST, port=TEST_PORT),
+        "homeassistant.components.minecraft_server.api.MinecraftServer.__init__",
+        side_effect=None,
+        return_value=None,
     ), patch(
-        "mcstatus.server.BedrockServer.async_status",
-        return_value=TEST_JAVA_STATUS_RESPONSE,
+        "homeassistant.components.minecraft_server.api.MinecraftServer.async_is_online",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
@@ -123,11 +126,9 @@ async def test_bedrock_connection_succeeded(hass: HomeAssistant) -> None:
 async def test_recovery(hass: HomeAssistant) -> None:
     """Test config flow recovery (successful connection after a failed connection)."""
     with patch(
-        "mcstatus.server.BedrockServer.lookup",
-        side_effect=ValueError,
-    ), patch(
-        "mcstatus.server.JavaServer.async_lookup",
-        side_effect=ValueError,
+        "homeassistant.components.minecraft_server.api.MinecraftServer.__init__",
+        side_effect=[MinecraftServerAddressError, MinecraftServerAddressError],
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
@@ -136,11 +137,12 @@ async def test_recovery(hass: HomeAssistant) -> None:
         assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "mcstatus.server.BedrockServer.lookup",
-        return_value=BedrockServer(host=TEST_HOST, port=TEST_PORT),
+        "homeassistant.components.minecraft_server.api.MinecraftServer.__init__",
+        side_effect=None,
+        return_value=None,
     ), patch(
-        "mcstatus.server.BedrockServer.async_status",
-        return_value=TEST_JAVA_STATUS_RESPONSE,
+        "homeassistant.components.minecraft_server.api.MinecraftServer.async_is_online",
+        return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input=USER_INPUT
