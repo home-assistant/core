@@ -73,6 +73,7 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
     SPEED_RANGE = (1, 6)  # off is not included
 
     _attr_supported_features = FanEntityFeature.DIRECTION | FanEntityFeature.SET_SPEED
+    _attr_translation_key = "fan"
 
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
@@ -81,7 +82,6 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         super().__init__(
             entry_id=entry_id,
             coordinator=coordinator,
-            name=f"{coordinator.data.info.device_name} Fan",
         )
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}"
 

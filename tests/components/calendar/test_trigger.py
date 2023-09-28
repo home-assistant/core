@@ -100,7 +100,7 @@ class FakeSchedule:
 
     async def fire_time(self, trigger_time: datetime.datetime) -> None:
         """Fire an alarm and wait."""
-        _LOGGER.debug(f"Firing alarm @ {dt_util.as_local(trigger_time)}")
+        _LOGGER.debug("Firing alarm @ %s", dt_util.as_local(trigger_time))
         self.freezer.move_to(trigger_time)
         async_fire_time_changed(self.hass, trigger_time)
         await self.hass.async_block_till_done()
@@ -119,14 +119,6 @@ class FakeSchedule:
         while dt_util.utcnow() < end:
             self.freezer.tick(TEST_TIME_ADVANCE_INTERVAL)
             await self.fire_time(dt_util.utcnow())
-
-
-@pytest.fixture
-def set_time_zone(hass: HomeAssistant) -> None:
-    """Set the time zone for the tests."""
-    # Set our timezone to CST/Regina so we can check calculations
-    # This keeps UTC-6 all year round
-    hass.config.set_time_zone("America/Regina")
 
 
 @pytest.fixture

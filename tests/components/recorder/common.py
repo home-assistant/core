@@ -13,6 +13,7 @@ import time
 from typing import Any, Literal, cast
 from unittest.mock import patch, sentinel
 
+from freezegun import freeze_time
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import Session
 
@@ -282,9 +283,7 @@ def record_states(hass):
     four = three + timedelta(seconds=15 * 5)
 
     states = {mp: [], sns1: [], sns2: [], sns3: [], sns4: []}
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
-    ):
+    with freeze_time(one) as freezer:
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
@@ -293,25 +292,18 @@ def record_states(hass):
         states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))
         states[sns4].append(set_state(sns4, "10", attributes=sns4_attr))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=one + timedelta(microseconds=1),
-    ):
+        freezer.move_to(one + timedelta(microseconds=1))
         states[mp].append(
             set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
-    ):
+        freezer.move_to(two)
         states[sns1].append(set_state(sns1, "15", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "15", attributes=sns2_attr))
         states[sns3].append(set_state(sns3, "15", attributes=sns3_attr))
         states[sns4].append(set_state(sns4, "15", attributes=sns4_attr))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
-    ):
+        freezer.move_to(three)
         states[sns1].append(set_state(sns1, "20", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "20", attributes=sns2_attr))
         states[sns3].append(set_state(sns3, "20", attributes=sns3_attr))
@@ -358,8 +350,9 @@ def convert_pending_events_to_event_types(instance: Recorder, session: Session) 
             events.add(object)
 
     event_type_to_event_type_ids = instance.event_type_manager.get_many(
-        event_types, session
+        event_types, session, True
     )
+    manually_added_event_types: list[str] = []
 
     for event in events:
         event_type = event.event_type
@@ -371,7 +364,11 @@ def convert_pending_events_to_event_types(instance: Recorder, session: Session) 
             continue
         if event_type not in event_types_objects:
             event_types_objects[event_type] = EventTypes(event_type=event_type)
+            manually_added_event_types.append(event_type)
         event.event_type_rel = event_types_objects[event_type]
+
+    for event_type in manually_added_event_types:
+        instance.event_type_manager._non_existent_event_types.pop(event_type, None)
 
 
 def create_engine_test_for_schema_version_postfix(

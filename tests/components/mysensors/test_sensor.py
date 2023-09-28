@@ -77,6 +77,25 @@ async def test_ir_transceiver(
     assert state.state == "new_code"
 
 
+async def test_battery_entity(
+    hass: HomeAssistant,
+    battery_sensor: Sensor,
+    receive_message: Callable[[str], None],
+) -> None:
+    """Test sensor with battery level reporting."""
+    battery_entity_id = "sensor.battery_sensor_1_battery"
+    state = hass.states.get(battery_entity_id)
+    assert state
+    assert state.state == "42"
+
+    receive_message("1;255;3;0;0;84\n")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(battery_entity_id)
+    assert state
+    assert state.state == "84"
+
+
 async def test_power_sensor(
     hass: HomeAssistant,
     power_sensor: Sensor,

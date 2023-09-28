@@ -4,8 +4,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AuroraEntity
 from .const import COORDINATOR, DOMAIN
+from .entity import AuroraEntity
 
 
 async def async_setup_entry(
@@ -13,9 +13,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the binary_sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
-    name = f"{coordinator.name} Aurora Visibility Alert"
 
-    entity = AuroraSensor(coordinator=coordinator, name=name, icon="mdi:hazard-lights")
+    entity = AuroraSensor(
+        coordinator=coordinator,
+        translation_key="visibility_alert",
+        icon="mdi:hazard-lights",
+    )
 
     async_add_entries([entity])
 

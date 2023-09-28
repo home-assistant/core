@@ -88,31 +88,31 @@
     }),
   ])
 # ---
-# name: test_binary_sensors[adsl][binary_sensor.sfr_box_dsl_status]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'SFR Box DSL status',
+# name: test_binary_sensors[adsl].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'connectivity',
+        'friendly_name': 'SFR Box WAN status',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.sfr_box_wan_status',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
     }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.sfr_box_dsl_status',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_binary_sensors[adsl][binary_sensor.sfr_box_wan_status]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'SFR Box WAN status',
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'connectivity',
+        'friendly_name': 'SFR Box DSL status',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.sfr_box_dsl_status',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
     }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.sfr_box_wan_status',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
+  ])
 # ---
 # name: test_binary_sensors[ftth]
   list([
@@ -203,29 +203,29 @@
     }),
   ])
 # ---
-# name: test_binary_sensors[ftth][binary_sensor.sfr_box_ftth_status]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'SFR Box FTTH status',
+# name: test_binary_sensors[ftth].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'connectivity',
+        'friendly_name': 'SFR Box WAN status',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.sfr_box_wan_status',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
     }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.sfr_box_ftth_status',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[ftth][binary_sensor.sfr_box_wan_status]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'SFR Box WAN status',
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'connectivity',
+        'friendly_name': 'SFR Box FTTH status',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.sfr_box_ftth_status',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
     }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.sfr_box_wan_status',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
+  ])
 # ---

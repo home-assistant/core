@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "trigger_missing_local_only": {
-            "description": "A choice needs to be made about whether the {webhook_id} webhook automation trigger is accessible from the internet. [Edit the automation]({edit}) \"{automation_name}\", (`{entity_id}`) and click the gear icon beside the Webhook ID to choose a value for 'Only accessible from the local network'",
-            "title": "Update webhook trigger: {webhook_id}"
-        }
-    }
-}

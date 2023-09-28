@@ -9,7 +9,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -47,7 +48,6 @@ class VerisureThermometer(
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_has_entity_name = True
-    _attr_translation_key = "temperature"
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -99,7 +99,6 @@ class VerisureHygrometer(
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_has_entity_name = True
-    _attr_translation_key = "humidity"
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 

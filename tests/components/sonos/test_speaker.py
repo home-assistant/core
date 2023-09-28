@@ -17,6 +17,7 @@ async def test_fallback_to_polling(
     speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
     assert speaker.soco is soco
     assert speaker._subscriptions
+    assert not speaker.subscriptions_failed
 
     caplog.clear()
 
@@ -29,7 +30,6 @@ async def test_fallback_to_polling(
 
     assert not speaker._subscriptions
     assert speaker.subscriptions_failed
-    assert "falling back to polling" in caplog.text
     assert "Activity on Zone A from SonosSpeaker.update_volume" in caplog.text
 
 

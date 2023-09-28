@@ -44,8 +44,9 @@ def _async_init_flow(
     # as ones in progress as it may cause additional device probing
     # which can overload devices since zeroconf/ssdp updates can happen
     # multiple times in the same minute
-    if hass.is_stopping or hass.config_entries.flow.async_has_matching_flow(
-        domain, context, data
+    if (
+        hass.config_entries.flow.async_has_matching_flow(domain, context, data)
+        or hass.is_stopping
     ):
         return None
 

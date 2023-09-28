@@ -1,9 +1,8 @@
-"""Handle legacy speech to text platforms."""
+"""Handle legacy speech-to-text platforms."""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, Coroutine
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -20,10 +19,19 @@ from .const import (
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
-    SpeechResultState,
 )
+from .models import SpeechMetadata, SpeechResult
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def async_default_provider(hass: HomeAssistant) -> str | None:
+    """Return the domain of the default provider."""
+    if "cloud" in hass.data[DATA_PROVIDERS]:
+        return "cloud"
+
+    return next(iter(hass.data[DATA_PROVIDERS]), None)
 
 
 @callback
@@ -34,30 +42,25 @@ def async_get_provider(
     if domain:
         return hass.data[DATA_PROVIDERS].get(domain)
 
-    if not hass.data[DATA_PROVIDERS]:
-        return None
-
-    if "cloud" in hass.data[DATA_PROVIDERS]:
-        return hass.data[DATA_PROVIDERS]["cloud"]
-
-    return next(iter(hass.data[DATA_PROVIDERS].values()))
+    provider = async_default_provider(hass)
+    return hass.data[DATA_PROVIDERS][provider] if provider is not None else None
 
 
 @callback
 def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
 ) -> list[Coroutine[Any, Any, None]]:
-    """Set up legacy speech to text providers."""
+    """Set up legacy speech-to-text providers."""
     providers = hass.data[DATA_PROVIDERS] = {}
 
     async def async_setup_platform(p_type, p_config=None, discovery_info=None):
-        """Set up a TTS platform."""
+        """Set up an STT platform."""
         if p_config is None:
             p_config = {}
 
         platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
         if platform is None:
-            _LOGGER.error("Unknown speech to text platform specified")
+            _LOGGER.error("Unknown speech-to-text platform specified")
             return
 
         try:
@@ -82,32 +85,6 @@ def async_setup_legacy(
         async_setup_platform(p_type, p_config)
         for p_type, p_config in config_per_platform(config, DOMAIN)
     ]
-
-
-@dataclass
-class SpeechMetadata:
-    """Metadata of audio stream."""
-
-    language: str
-    format: AudioFormats
-    codec: AudioCodecs
-    bit_rate: AudioBitRates
-    sample_rate: AudioSampleRates
-    channel: AudioChannels
-
-    def __post_init__(self) -> None:
-        """Finish initializing the metadata."""
-        self.bit_rate = AudioBitRates(int(self.bit_rate))
-        self.sample_rate = AudioSampleRates(int(self.sample_rate))
-        self.channel = AudioChannels(int(self.channel))
-
-
-@dataclass
-class SpeechResult:
-    """Result of audio Speech."""
-
-    text: str | None
-    result: SpeechResultState
 
 
 class Provider(ABC):

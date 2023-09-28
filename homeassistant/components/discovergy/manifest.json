@@ -1,0 +1,10 @@
+{
+  "domain": "discovergy",
+  "name": "Discovergy",
+  "codeowners": ["@jpbede"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/discovergy",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["pydiscovergy==2.0.3"]
+}

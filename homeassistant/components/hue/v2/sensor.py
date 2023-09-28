@@ -100,12 +100,7 @@ class HueTemperatureSensor(HueSensorBase):
     @property
     def native_value(self) -> float:
         """Return the value reported by the sensor."""
-        return round(self.resource.temperature.temperature, 1)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the optional state attributes."""
-        return {"temperature_valid": self.resource.temperature.temperature_valid}
+        return round(self.resource.temperature.value, 1)
 
 
 class HueLightLevelSensor(HueSensorBase):
@@ -122,14 +117,13 @@ class HueLightLevelSensor(HueSensorBase):
         # scale used because the human eye adjusts to light levels and small
         # changes at low lux levels are more noticeable than at high lux
         # levels.
-        return int(10 ** ((self.resource.light.light_level - 1) / 10000))
+        return int(10 ** ((self.resource.light.value - 1) / 10000))
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         return {
-            "light_level": self.resource.light.light_level,
-            "light_level_valid": self.resource.light.light_level_valid,
+            "light_level": self.resource.light.value,
         }
 
 
@@ -149,6 +143,8 @@ class HueBatterySensor(HueSensorBase):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
+        if self.resource.power_state.battery_state is None:
+            return {}
         return {"battery_state": self.resource.power_state.battery_state.value}
 
 
@@ -156,6 +152,14 @@ class HueZigbeeConnectivitySensor(HueSensorBase):
     """Representation of a Hue ZigbeeConnectivity sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "zigbee_connectivity"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = [
+        "connected",
+        "disconnected",
+        "connectivity_issue",
+        "unidirectional_incoming",
+    ]
     _attr_entity_registry_enabled_default = False
 
     @property

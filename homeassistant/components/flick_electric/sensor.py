@@ -1,14 +1,14 @@
 """Support for Flick Electric Pricing data."""
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from pyflick import FlickAPI, FlickPrice
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_FRIENDLY_NAME, CURRENCY_CENT, UnitOfEnergy
+from homeassistant.const import CURRENCY_CENT, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -18,8 +18,6 @@ from .const import ATTR_COMPONENTS, ATTR_END_AT, ATTR_START_AT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
-
-FRIENDLY_NAME = "Flick Power Price"
 
 
 async def async_setup_entry(
@@ -36,19 +34,14 @@ class FlickPricingSensor(SensorEntity):
 
     _attr_attribution = "Data provided by Flick Electric"
     _attr_native_unit_of_measurement = f"{CURRENCY_CENT}/{UnitOfEnergy.KILO_WATT_HOUR}"
+    _attr_has_entity_name = True
+    _attr_translation_key = "power_price"
+    _attributes: dict[str, Any] = {}
 
     def __init__(self, api: FlickAPI) -> None:
         """Entity object for Flick Electric sensor."""
         self._api: FlickAPI = api
         self._price: FlickPrice = None
-        self._attributes: dict[str, Any] = {
-            ATTR_FRIENDLY_NAME: FRIENDLY_NAME,
-        }
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return FRIENDLY_NAME
 
     @property
     def native_value(self):
@@ -65,7 +58,7 @@ class FlickPricingSensor(SensorEntity):
         if self._price and self._price.end_at >= utcnow():
             return  # Power price data is still valid
 
-        async with async_timeout.timeout(60):
+        async with asyncio.timeout(60):
             self._price = await self._api.getPricing()
 
         _LOGGER.debug("Pricing data: %s", self._price)

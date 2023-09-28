@@ -45,6 +45,7 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
     """Representation of a Broadlink light."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device):
         """Initialize the light."""

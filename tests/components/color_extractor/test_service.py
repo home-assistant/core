@@ -32,6 +32,12 @@ LIGHT_ENTITY = "light.kitchen_lights"
 CLOSE_THRESHOLD = 10
 
 
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
+
+
 def _close_enough(actual_rgb, testing_rgb):
     """Validate the given RGB value is in acceptable tolerance."""
     # Convert the given RGB values to hue / saturation and then back again
@@ -57,7 +63,7 @@ def _close_enough(actual_rgb, testing_rgb):
 
 
 @pytest.fixture(autouse=True)
-async def setup_light(hass):
+async def setup_light(hass: HomeAssistant):
     """Configure our light component to work against for testing."""
     assert await async_setup_component(
         hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": "demo"}}
@@ -133,9 +139,7 @@ async def _async_load_color_extractor_url(hass, service_data):
     assert state.state == STATE_OFF
 
     # Call the shared service, our above mock should return the base64 decoded fixture 1x1 pixel
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
-    )
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data, blocking=True)
 
     await hass.async_block_till_done()
 

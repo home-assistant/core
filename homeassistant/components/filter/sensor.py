@@ -18,10 +18,8 @@ from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
-    STATE_CLASSES as SENSOR_STATE_CLASSES,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -36,12 +34,21 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    EventType,
+    StateType,
+)
 from homeassistant.util.decorator import Registry
 import homeassistant.util.dt as dt_util
 
@@ -218,10 +225,12 @@ class SensorFilter(SensorEntity):
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_id}
 
     @callback
-    def _update_filter_sensor_state_event(self, event: Event) -> None:
+    def _update_filter_sensor_state_event(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Handle device state changes."""
         _LOGGER.debug("Update filter on event: %s", event)
-        self._update_filter_sensor_state(event.data.get("new_state"))
+        self._update_filter_sensor_state(event.data["new_state"])
 
     @callback
     def _update_filter_sensor_state(
@@ -236,10 +245,17 @@ class SensorFilter(SensorEntity):
             self.async_write_ha_state()
             return
 
-        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            self._state = new_state.state
+        if new_state.state == STATE_UNKNOWN:
+            self._state = None
             self.async_write_ha_state()
             return
+
+        if new_state.state == STATE_UNAVAILABLE:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+
+        self._attr_available = True
 
         temp_state = _State(new_state.last_updated, new_state.state)
 
@@ -266,22 +282,15 @@ class SensorFilter(SensorEntity):
 
         self._state = temp_state.state
 
-        if self._attr_icon is None:
-            self._attr_icon = new_state.attributes.get(ATTR_ICON, ICON)
+        self._attr_icon = new_state.attributes.get(ATTR_ICON, ICON)
+        self._attr_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+        self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
 
-        if (
-            self._attr_device_class is None
-            and new_state.attributes.get(ATTR_DEVICE_CLASS) in SENSOR_DEVICE_CLASSES
+        if self._attr_native_unit_of_measurement != new_state.attributes.get(
+            ATTR_UNIT_OF_MEASUREMENT
         ):
-            self._attr_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
-
-        if (
-            self._attr_state_class is None
-            and new_state.attributes.get(ATTR_STATE_CLASS) in SENSOR_STATE_CLASSES
-        ):
-            self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
-
-        if self._attr_native_unit_of_measurement is None:
+            for filt in self._filters:
+                filt.reset()
             self._attr_native_unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT
             )
@@ -353,11 +362,16 @@ class SensorFilter(SensorEntity):
                 if state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE, None]:
                     self._update_filter_sensor_state(state, False)
 
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, [self._entity], self._update_filter_sensor_state_event
+        @callback
+        def _async_hass_started(hass: HomeAssistant) -> None:
+            """Delay source entity tracking."""
+            self.async_on_remove(
+                async_track_state_change_event(
+                    self.hass, [self._entity], self._update_filter_sensor_state_event
+                )
             )
-        )
+
+        self.async_on_remove(async_at_started(self.hass, _async_hass_started))
 
     @property
     def native_value(self) -> datetime | StateType:
@@ -452,6 +466,10 @@ class Filter:
     def skip_processing(self) -> bool:
         """Return whether the current filter_state should be skipped."""
         return self._skip_processing
+
+    def reset(self) -> None:
+        """Reset filter."""
+        self.states.clear()
 
     def _filter_state(self, new_state: FilterState) -> FilterState:
         """Implement filter."""

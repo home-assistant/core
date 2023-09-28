@@ -16,8 +16,6 @@ from homeassistant.components.climate import (
 from homeassistant.components.modbus import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
-    CALL_TYPE_WRITE_REGISTER,
-    CONF_HUB,
     DEFAULT_HUB,
     ModbusHub,
     get_hub,
@@ -33,6 +31,9 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+CALL_TYPE_WRITE_REGISTER = "write_register"
+CONF_HUB = "hub"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -177,9 +178,7 @@ class Flexit(ClimateEntity):
         self, register_type: str, register: int
     ) -> int:
         """Read register using the Modbus hub slave."""
-        result = await self._hub.async_pymodbus_call(
-            self._slave, register, 1, register_type
-        )
+        result = await self._hub.async_pb_call(self._slave, register, 1, register_type)
         if result is None:
             _LOGGER.error("Error reading value from Flexit modbus adapter")
             return -1
@@ -192,14 +191,14 @@ class Flexit(ClimateEntity):
         result = float(
             await self._async_read_int16_from_register(register_type, register)
         )
-        if result == -1:
+        if not result:
             return -1
         return result / 10.0
 
     async def _async_write_int16_to_register(self, register: int, value: int) -> bool:
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, register, value, CALL_TYPE_WRITE_REGISTER
         )
-        if result == -1:
+        if not result:
             return False
         return True

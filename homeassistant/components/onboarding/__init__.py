@@ -2,6 +2,7 @@
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -18,6 +19,8 @@ from .const import (
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 4
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 class OnboadingStorage(Store):

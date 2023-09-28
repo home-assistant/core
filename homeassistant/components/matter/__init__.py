@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 
-import async_timeout
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
-from matter_server.common.errors import MatterError, NodeCommissionFailed
+from matter_server.common.errors import MatterError, NodeCommissionFailed, NodeNotExists
 import voluptuous as vol
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     matter_client = MatterClient(entry.data[CONF_URL], async_get_clientsession(hass))
     try:
-        async with async_timeout.timeout(CONNECT_TIMEOUT):
+        async with asyncio.timeout(CONNECT_TIMEOUT):
             await matter_client.connect()
     except (CannotConnect, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady("Failed to connect to matter server") from err
@@ -86,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        async with async_timeout.timeout(LISTEN_READY_TIMEOUT):
+        async with asyncio.timeout(LISTEN_READY_TIMEOUT):
             await init_ready.wait()
     except asyncio.TimeoutError as err:
         listen_task.cancel()
@@ -195,8 +195,21 @@ async def async_remove_config_entry_device(
     if node is None:
         return True
 
+    if node.is_bridge_device:
+        device_registry = dr.async_get(hass)
+        devices = dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        )
+        for device in devices:
+            if device.via_device_id == device_entry.id:
+                device_registry.async_update_device(
+                    device.id, remove_config_entry_id=config_entry.entry_id
+                )
+
     matter = get_matter(hass)
-    await matter.matter_client.remove_node(node.node_id)
+    with suppress(NodeNotExists):
+        # ignore if the server has already removed the node.
+        await matter.matter_client.remove_node(node.node_id)
 
     return True
 

@@ -39,7 +39,6 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "source",
     [
-        config_entries.SOURCE_IMPORT,
         config_entries.SOURCE_USER,
         config_entries.SOURCE_ZEROCONF,
     ],

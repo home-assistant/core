@@ -10,7 +10,6 @@ import logging
 import time
 from typing import Any, cast
 
-import async_timeout
 import defusedxml.ElementTree as ET
 from soco.core import SoCo
 from soco.events_base import Event as SonosEvent, SubscriptionBase
@@ -145,6 +144,7 @@ class SonosSpeaker:
         self.volume: int | None = None
         self.muted: bool | None = None
         self.cross_fade: bool | None = None
+        self.balance: tuple[int, int] | None = None
         self.bass: int | None = None
         self.treble: int | None = None
         self.loudness: bool | None = None
@@ -536,7 +536,10 @@ class SonosSpeaker:
         variables = event.variables
 
         if "volume" in variables:
-            self.volume = int(variables["volume"]["Master"])
+            volume = variables["volume"]
+            self.volume = int(volume["Master"])
+            if "LF" in volume and "RF" in volume:
+                self.balance = (int(volume["LF"]), int(volume["RF"]))
 
         if "mute" in variables:
             self.muted = variables["mute"]["Master"] == "1"
@@ -1118,7 +1121,7 @@ class SonosSpeaker:
             return True
 
         try:
-            async with async_timeout.timeout(5):
+            async with asyncio.timeout(5):
                 while not _test_groups(groups):
                     await hass.data[DATA_SONOS].topology_condition.wait()
         except asyncio.TimeoutError:

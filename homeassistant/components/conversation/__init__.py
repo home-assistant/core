@@ -2,24 +2,30 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
+from dataclasses import dataclass
 import logging
 import re
-from typing import Any, TypedDict
+from typing import Any, Literal
 
+from hassil.recognize import RecognizeResult
 import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util import language as language_util
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import HOME_ASSISTANT_AGENT
-from .default_agent import DefaultAgent
+from .default_agent import DefaultAgent, async_setup as async_setup_default_agent
 
 __all__ = [
     "DOMAIN",
@@ -89,7 +95,9 @@ CONFIG_SCHEMA = vol.Schema(
 @core.callback
 def _get_agent_manager(hass: HomeAssistant) -> AgentManager:
     """Get the active agent."""
-    return AgentManager(hass)
+    manager = AgentManager(hass)
+    manager.async_setup()
+    return manager
 
 
 @core.callback
@@ -113,6 +121,34 @@ def async_unset_agent(
     _get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
 
 
+async def async_get_conversation_languages(
+    hass: HomeAssistant, agent_id: str | None = None
+) -> set[str] | Literal["*"]:
+    """Return languages supported by conversation agents.
+
+    If an agent is specified, returns a set of languages supported by that agent.
+    If no agent is specified, return a set with the union of languages supported by
+    all conversation agents.
+    """
+    agent_manager = _get_agent_manager(hass)
+    languages = set()
+
+    agent_ids: Iterable[str]
+    if agent_id is None:
+        agent_ids = iter(info.id for info in agent_manager.async_get_agent_info())
+    else:
+        agent_ids = (agent_id,)
+
+    for _agent_id in agent_ids:
+        agent = await agent_manager.async_get_agent(_agent_id)
+        if agent.supported_languages == MATCH_ALL:
+            return MATCH_ALL
+        for language_tag in agent.supported_languages:
+            languages.add(language_tag)
+
+    return languages
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
     agent_manager = _get_agent_manager(hass)
@@ -120,12 +156,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if config_intents := config.get(DOMAIN, {}).get("intents"):
         hass.data[DATA_CONFIG] = config_intents
 
-    async def handle_process(service: core.ServiceCall) -> None:
+    async def handle_process(service: core.ServiceCall) -> core.ServiceResponse:
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         _LOGGER.debug("Processing: <%s>", text)
         try:
-            await async_converse(
+            result = await async_converse(
                 hass=hass,
                 text=text,
                 conversation_id=None,
@@ -134,7 +170,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 agent_id=service.data.get(ATTR_AGENT_ID),
             )
         except intent.IntentHandleError as err:
-            _LOGGER.error("Error processing %s: %s", text, err)
+            raise HomeAssistantError(f"Error processing {text}: {err}") from err
+
+        if service.return_response:
+            return result.as_dict()
+
+        return None
 
     async def handle_reload(service: core.ServiceCall) -> None:
         """Reload intents."""
@@ -142,7 +183,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await agent.async_reload(language=service.data.get(ATTR_LANGUAGE))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_PROCESS, handle_process, schema=SERVICE_PROCESS_SCHEMA
+        DOMAIN,
+        SERVICE_PROCESS,
+        handle_process,
+        schema=SERVICE_PROCESS_SCHEMA,
+        supports_response=core.SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, handle_reload, schema=SERVICE_RELOAD_SCHEMA
@@ -150,8 +195,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(ConversationProcessView())
     websocket_api.async_register_command(hass, websocket_process)
     websocket_api.async_register_command(hass, websocket_prepare)
-    websocket_api.async_register_command(hass, websocket_get_agent_info)
     websocket_api.async_register_command(hass, websocket_list_agents)
+    websocket_api.async_register_command(hass, websocket_hass_agent_debug)
 
     return True
 
@@ -205,48 +250,144 @@ async def websocket_prepare(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "conversation/agent/info",
-        vol.Optional("agent_id"): agent_id_validator,
+        vol.Required("type"): "conversation/agent/list",
+        vol.Optional("language"): str,
+        vol.Optional("country"): str,
     }
 )
 @websocket_api.async_response
-async def websocket_get_agent_info(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
+async def websocket_list_agents(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """Info about the agent in use."""
-    agent = await _get_agent_manager(hass).async_get_agent(msg.get("agent_id"))
+    """List conversation agents and, optionally, if they support a given language."""
+    manager = _get_agent_manager(hass)
 
-    connection.send_result(
-        msg["id"],
-        {
-            "attribution": agent.attribution,
-        },
-    )
+    country = msg.get("country")
+    language = msg.get("language")
+    agents = []
+
+    for agent_info in manager.async_get_agent_info():
+        agent = await manager.async_get_agent(agent_info.id)
+
+        supported_languages = agent.supported_languages
+        if language and supported_languages != MATCH_ALL:
+            supported_languages = language_util.matches(
+                language, supported_languages, country
+            )
+
+        agent_dict: dict[str, Any] = {
+            "id": agent_info.id,
+            "name": agent_info.name,
+            "supported_languages": supported_languages,
+        }
+        agents.append(agent_dict)
+
+    connection.send_message(websocket_api.result_message(msg["id"], {"agents": agents}))
 
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "conversation/agent/list",
+        vol.Required("type"): "conversation/agent/homeassistant/debug",
+        vol.Required("sentences"): [str],
+        vol.Optional("language"): str,
+        vol.Optional("device_id"): vol.Any(str, None),
     }
 )
-@core.callback
-def websocket_list_agents(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
+@websocket_api.async_response
+async def websocket_hass_agent_debug(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """List available agents."""
-    manager = _get_agent_manager(hass)
+    """Return intents that would be matched by the default agent for a list of sentences."""
+    agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
+    assert isinstance(agent, DefaultAgent)
+    results = [
+        await agent.async_recognize(
+            ConversationInput(
+                text=sentence,
+                context=connection.context(msg),
+                conversation_id=None,
+                device_id=msg.get("device_id"),
+                language=msg.get("language", hass.config.language),
+            )
+        )
+        for sentence in msg["sentences"]
+    ]
 
+    # Return results for each sentence in the same order as the input.
     connection.send_result(
         msg["id"],
         {
-            "default_agent": manager.default_agent,
-            "agents": manager.async_get_agent_info(),
+            "results": [
+                {
+                    "intent": {
+                        "name": result.intent.name,
+                    },
+                    "slots": {  # direct access to values
+                        entity_key: entity.value
+                        for entity_key, entity in result.entities.items()
+                    },
+                    "details": {
+                        entity_key: {
+                            "name": entity.name,
+                            "value": entity.value,
+                            "text": entity.text,
+                        }
+                        for entity_key, entity in result.entities.items()
+                    },
+                    "targets": {
+                        state.entity_id: {"matched": is_matched}
+                        for state, is_matched in _get_debug_targets(hass, result)
+                    },
+                }
+                if result is not None
+                else None
+                for result in results
+            ]
         },
     )
+
+
+def _get_debug_targets(
+    hass: HomeAssistant,
+    result: RecognizeResult,
+) -> Iterable[tuple[core.State, bool]]:
+    """Yield state/is_matched pairs for a hassil recognition."""
+    entities = result.entities
+
+    name: str | None = None
+    area_name: str | None = None
+    domains: set[str] | None = None
+    device_classes: set[str] | None = None
+    state_names: set[str] | None = None
+
+    if "name" in entities:
+        name = str(entities["name"].value)
+
+    if "area" in entities:
+        area_name = str(entities["area"].value)
+
+    if "domain" in entities:
+        domains = set(cv.ensure_list(entities["domain"].value))
+
+    if "device_class" in entities:
+        device_classes = set(cv.ensure_list(entities["device_class"].value))
+
+    if "state" in entities:
+        # HassGetState only
+        state_names = set(cv.ensure_list(entities["state"].value))
+
+    states = intent.async_match_states(
+        hass,
+        name=name,
+        area_name=area_name,
+        domains=domains,
+        device_classes=device_classes,
+    )
+
+    for state in states:
+        # For queries, a target is "matched" based on its state
+        is_matched = (state_names is None) or (state.state in state_names)
+        yield state, is_matched
 
 
 class ConversationProcessView(http.HomeAssistantView):
@@ -281,8 +422,9 @@ class ConversationProcessView(http.HomeAssistantView):
         return self.json(result.as_dict())
 
 
-class AgentInfo(TypedDict):
-    """Dictionary holding agent info."""
+@dataclass(frozen=True)
+class AgentInfo:
+    """Container for conversation agent info."""
 
     id: str
     name: str
@@ -300,7 +442,7 @@ def async_get_agent_info(
         agent_id = manager.default_agent
 
     for agent_info in manager.async_get_agent_info():
-        if agent_info["id"] == agent_id:
+        if agent_info.id == agent_id:
             return agent_info
 
     return None
@@ -313,6 +455,7 @@ async def async_converse(
     context: core.Context,
     language: str | None = None,
     agent_id: str | None = None,
+    device_id: str | None = None,
 ) -> ConversationResult:
     """Process text and get intent."""
     agent = await _get_agent_manager(hass).async_get_agent(agent_id)
@@ -326,6 +469,7 @@ async def async_converse(
             text=text,
             context=context,
             conversation_id=conversation_id,
+            device_id=device_id,
             language=language,
         )
     )
@@ -342,7 +486,11 @@ class AgentManager:
         """Initialize the conversation agents."""
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
-        self._default_agent_init_lock = asyncio.Lock()
+        self._builtin_agent_init_lock = asyncio.Lock()
+
+    def async_setup(self) -> None:
+        """Set up the conversation agents."""
+        async_setup_default_agent(self.hass)
 
     async def async_get_agent(
         self, agent_id: str | None = None
@@ -355,7 +503,7 @@ class AgentManager:
             if self._builtin_agent is not None:
                 return self._builtin_agent
 
-            async with self._default_agent_init_lock:
+            async with self._builtin_agent_init_lock:
                 if self._builtin_agent is not None:
                     return self._builtin_agent
 
@@ -375,26 +523,28 @@ class AgentManager:
     def async_get_agent_info(self) -> list[AgentInfo]:
         """List all agents."""
         agents: list[AgentInfo] = [
-            {
-                "id": HOME_ASSISTANT_AGENT,
-                "name": "Home Assistant",
-            }
+            AgentInfo(
+                id=HOME_ASSISTANT_AGENT,
+                name="Home Assistant",
+            )
         ]
         for agent_id, agent in self._agents.items():
             config_entry = self.hass.config_entries.async_get_entry(agent_id)
 
-            # This is a bug, agent should have been unset when config entry was unloaded
+            # Guard against potential bugs in conversation agents where the agent is not
+            # removed from the manager when the config entry is removed
             if config_entry is None:
                 _LOGGER.warning(
-                    "Agent was still loaded while config entry is gone: %s", agent
+                    "Conversation agent %s is still loaded after config entry removal",
+                    agent,
                 )
                 continue
 
             agents.append(
-                {
-                    "id": agent_id,
-                    "name": config_entry.title,
-                }
+                AgentInfo(
+                    id=agent_id,
+                    name=config_entry.title or config_entry.domain,
+                )
             )
         return agents
 
@@ -407,12 +557,8 @@ class AgentManager:
     def async_set_agent(self, agent_id: str, agent: AbstractConversationAgent) -> None:
         """Set the agent."""
         self._agents[agent_id] = agent
-        if self.default_agent == HOME_ASSISTANT_AGENT:
-            self.default_agent = agent_id
 
     @core.callback
     def async_unset_agent(self, agent_id: str) -> None:
         """Unset the agent."""
-        if self.default_agent == agent_id:
-            self.default_agent = HOME_ASSISTANT_AGENT
         self._agents.pop(agent_id, None)

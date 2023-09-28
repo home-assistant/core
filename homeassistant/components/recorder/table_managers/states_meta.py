@@ -8,11 +8,11 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
 
-from . import BaseLRUTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import StatesMeta
 from ..queries import find_all_states_metadata_ids, find_states_metadata_ids
 from ..util import chunked, execute_stmt_lambda_element
+from . import BaseLRUTableManager
 
 if TYPE_CHECKING:
     from ..core import Recorder
@@ -67,7 +67,7 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
                 cast(
                     Sequence[tuple[int, str]],
                     execute_stmt_lambda_element(
-                        session, find_all_states_metadata_ids()
+                        session, find_all_states_metadata_ids(), orm_rows=False
                     ),
                 )
             )

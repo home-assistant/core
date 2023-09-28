@@ -2,27 +2,22 @@
   "config": {
     "step": {
       "user": {
-        "data": {
-          "ip_address": "IP Address"
-        }
+        "description": "Receive Voice over IP calls to interact with Assist."
       }
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
-    "error": {
-      "invalid_ip_address": "Invalid IPv4 address."
     }
   },
   "entity": {
     "binary_sensor": {
-      "call_active": {
-        "name": "Call Active"
+      "call_in_progress": {
+        "name": "Call in progress"
       }
     },
     "switch": {
       "allow_call": {
-        "name": "Allow Calls"
+        "name": "Allow calls"
       }
     },
     "select": {
@@ -30,6 +25,23 @@
         "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
         "state": {
           "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
+      },
+      "vad_sensitivity": {
+        "name": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::name%]",
+        "state": {
+          "default": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::default%]",
+          "aggressive": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::aggressive%]",
+          "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "sip_port": "SIP port"
         }
       }
     }

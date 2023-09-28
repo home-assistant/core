@@ -10,7 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, entity_registry as er, restore_state
 
 from .const import DOMAIN
-from .pipeline import PipelineStorageCollection
+from .pipeline import PipelineData, PipelineStorageCollection
+from .vad import VadSensitivity
 
 OPTION_PREFERRED = "preferred"
 
@@ -31,11 +32,30 @@ def get_chosen_pipeline(
     if state is None or state.state == OPTION_PREFERRED:
         return None
 
-    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
+    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN].pipeline_store
     return next(
         (item.id for item in pipeline_store.async_items() if item.name == state.state),
         None,
     )
+
+
+@callback
+def get_vad_sensitivity(
+    hass: HomeAssistant, domain: str, unique_id_prefix: str
+) -> VadSensitivity:
+    """Get the chosen vad sensitivity for a domain."""
+    ent_reg = er.async_get(hass)
+    sensitivity_entity_id = ent_reg.async_get_entity_id(
+        Platform.SELECT, domain, f"{unique_id_prefix}-vad_sensitivity"
+    )
+    if sensitivity_entity_id is None:
+        return VadSensitivity.DEFAULT
+
+    state = hass.states.get(sensitivity_entity_id)
+    if state is None:
+        return VadSensitivity.DEFAULT
+
+    return VadSensitivity(state.state)
 
 
 class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
@@ -60,14 +80,23 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
 
-        pipeline_store: PipelineStorageCollection = self.hass.data[
-            DOMAIN
-        ].pipeline_store
-        pipeline_store.async_add_change_set_listener(self._pipelines_updated)
+        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        pipeline_store = pipeline_data.pipeline_store
+        self.async_on_remove(
+            pipeline_store.async_add_change_set_listener(self._pipelines_updated)
+        )
 
         state = await self.async_get_last_state()
         if state is not None and state.state in self.options:
             self._attr_current_option = state.state
+
+        if self.registry_entry and (device_id := self.registry_entry.device_id):
+            pipeline_data.pipeline_devices.add(device_id)
+            self.async_on_remove(
+                lambda: pipeline_data.pipeline_devices.discard(
+                    device_id  # type: ignore[arg-type]
+                )
+            )
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
@@ -93,3 +122,34 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
 
         if self._attr_current_option not in options:
             self._attr_current_option = OPTION_PREFERRED
+
+
+class VadSensitivitySelect(SelectEntity, restore_state.RestoreEntity):
+    """Entity to represent VAD sensitivity."""
+
+    entity_description = SelectEntityDescription(
+        key="vad_sensitivity",
+        translation_key="vad_sensitivity",
+        entity_category=EntityCategory.CONFIG,
+    )
+    _attr_should_poll = False
+    _attr_current_option = VadSensitivity.DEFAULT.value
+    _attr_options = [vs.value for vs in VadSensitivity]
+
+    def __init__(self, hass: HomeAssistant, unique_id_prefix: str) -> None:
+        """Initialize a pipeline selector."""
+        self._attr_unique_id = f"{unique_id_prefix}-vad_sensitivity"
+        self.hass = hass
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+
+        state = await self.async_get_last_state()
+        if state is not None and state.state in self.options:
+            self._attr_current_option = state.state
+
+    async def async_select_option(self, option: str) -> None:
+        """Select an option."""
+        self._attr_current_option = option
+        self.async_write_ha_state()

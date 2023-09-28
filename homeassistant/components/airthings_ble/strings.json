@@ -19,5 +19,21 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "radon_1day_avg": {
+        "name": "Radon 1-day average"
+      },
+      "radon_longterm_avg": {
+        "name": "Radon longterm average"
+      },
+      "radon_1day_level": {
+        "name": "Radon 1-day level"
+      },
+      "radon_longterm_level": {
+        "name": "Radon longterm level"
+      }
+    }
   }
 }

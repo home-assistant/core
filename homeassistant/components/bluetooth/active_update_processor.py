@@ -103,7 +103,7 @@ class ActiveBluetoothProcessorCoordinator(
             return False
         poll_age: float | None = None
         if self._last_poll:
-            poll_age = monotonic_time_coarse() - self._last_poll
+            poll_age = service_info.time - self._last_poll
         return self._needs_poll_method(service_info, poll_age)
 
     async def _async_poll_data(
@@ -158,3 +158,9 @@ class ActiveBluetoothProcessorCoordinator(
         # possible after a device comes online or back in range, if a poll is due
         if self.needs_poll(service_info):
             self.hass.async_create_task(self._debounced_poll.async_call())
+
+    @callback
+    def _async_stop(self) -> None:
+        """Cancel debouncer and stop the callbacks."""
+        self._debounced_poll.async_cancel()
+        super()._async_stop()

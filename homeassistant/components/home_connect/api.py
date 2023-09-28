@@ -74,6 +74,8 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
                 device = Dryer(self.hass, app)
             elif app.type == "Washer":
                 device = Washer(self.hass, app)
+            elif app.type == "WasherDryer":
+                device = WasherDryer(self.hass, app)
             elif app.type == "Dishwasher":
                 device = Dishwasher(self.hass, app)
             elif app.type == "FridgeFreezer":
@@ -342,6 +344,30 @@ class Washer(
     DeviceWithRemoteStart,
 ):
     """Washer class."""
+
+    def get_entity_info(self):
+        """Get a dictionary with infos about the associated entities."""
+        door_entity = self.get_door_entity()
+        remote_control = self.get_remote_control()
+        remote_start = self.get_remote_start()
+        op_state_sensor = self.get_opstate_sensor()
+        program_sensors = self.get_program_sensors()
+        program_switches = self.get_program_switches()
+        return {
+            "binary_sensor": [door_entity, remote_control, remote_start],
+            "switch": program_switches,
+            "sensor": program_sensors + op_state_sensor,
+        }
+
+
+class WasherDryer(
+    DeviceWithDoor,
+    DeviceWithOpState,
+    DeviceWithPrograms,
+    DeviceWithRemoteControl,
+    DeviceWithRemoteStart,
+):
+    """WasherDryer class."""
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""

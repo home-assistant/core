@@ -5,7 +5,7 @@ import logging
 
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.const import SUPPORTS_IDENTIFY, SUPPORTS_STATE, SUPPORTS_SYSTEM
-from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
 from homewizard_energy.models import Device
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +23,8 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
 
     api: HomeWizardEnergy
     api_disabled: bool = False
+
+    _unsupported_error: bool = False
 
     def __init__(
         self,
@@ -43,11 +45,22 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                 data=await self.api.data(),
             )
 
-            if self.supports_state(data.device):
-                data.state = await self.api.state()
+            try:
+                if self.supports_state(data.device):
+                    data.state = await self.api.state()
 
-            if self.supports_system(data.device):
-                data.system = await self.api.system()
+                if self.supports_system(data.device):
+                    data.system = await self.api.system()
+
+            except UnsupportedError as ex:
+                # Old firmware, ignore
+                if not self._unsupported_error:
+                    self._unsupported_error = True
+                    _LOGGER.warning(
+                        "%s is running an outdated firmware version (%s). Contact HomeWizard support to update your device",
+                        self.entry.title,
+                        ex,
+                    )
 
         except RequestError as ex:
             raise UpdateFailed(ex) from ex
