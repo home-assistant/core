@@ -51,10 +51,12 @@ def _base_schema(discovery_info=None):
         base_schema.update({vol.Required(CONF_PORT, default=DEFAULT_PORT): int})
 
     base_schema.update(
-        {vol.Optional(CONF_USERNAME): str, vol.Optional(CONF_PASSWORD): str}
+        {
+            vol.Optional(CONF_USERNAME): str, 
+            vol.Optional(CONF_PASSWORD): str,
+            vol.Optional(CONF_HTTPS, default=False): bool
+        }
     )
-
-    base_schema.update({vol.Optional(CONF_HTTPS, default=False): bool})
 
     return vol.Schema(base_schema)
 
