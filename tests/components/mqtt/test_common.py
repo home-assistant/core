@@ -1925,3 +1925,28 @@ async def help_test_discovery_setup(
     await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{name}")
     assert state and state.state is not None
+
+
+async def help_test_skipped_async_ha_write_state(
+    hass: HomeAssistant, topic: str, payload1: str, payload2: str
+) -> None:
+    """Test entity.async_ha_write_state is only called on changes."""
+    with patch(
+        "homeassistant.components.mqtt.mixins.MqttEntity.async_write_ha_state"
+    ) as mock_async_ha_write_state:
+        assert len(mock_async_ha_write_state.mock_calls) == 0
+        async_fire_mqtt_message(hass, topic, payload1)
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 1
+
+        async_fire_mqtt_message(hass, topic, payload1)
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 1
+
+        async_fire_mqtt_message(hass, topic, payload2)
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 2
+
+        async_fire_mqtt_message(hass, topic, payload2)
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 2

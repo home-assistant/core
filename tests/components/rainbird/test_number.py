@@ -73,7 +73,7 @@ async def test_set_value(
     device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL_NUMBER)})
     assert device
     assert device.name == "Rain Bird Controller"
-    assert device.model == "ST8x-WiFi"
+    assert device.model == "ESP-TM2"
     assert device.sw_version == "9.12"
 
     aioclient_mock.mock_calls.clear()

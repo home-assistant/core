@@ -74,17 +74,19 @@ async def test_garage_door_open_close(hass: HomeAssistant, hk_driver, events) ->
     assert acc.char_obstruction_detected.value is True
 
     hass.states.async_set(
-        entity_id, STATE_UNAVAILABLE, {ATTR_OBSTRUCTION_DETECTED: False}
+        entity_id, STATE_UNAVAILABLE, {ATTR_OBSTRUCTION_DETECTED: True}
     )
     await hass.async_block_till_done()
     assert acc.char_current_state.value == HK_DOOR_OPEN
     assert acc.char_target_state.value == HK_DOOR_OPEN
-    assert acc.char_obstruction_detected.value is False
+    assert acc.char_obstruction_detected.value is True
+    assert acc.available is False
 
     hass.states.async_set(entity_id, STATE_UNKNOWN)
     await hass.async_block_till_done()
     assert acc.char_current_state.value == HK_DOOR_OPEN
     assert acc.char_target_state.value == HK_DOOR_OPEN
+    assert acc.available is True
 
     # Set from HomeKit
     call_close_cover = async_mock_service(hass, DOMAIN, "close_cover")

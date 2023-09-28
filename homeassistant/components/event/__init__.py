@@ -105,6 +105,8 @@ class EventExtraStoredData(ExtraStoredData):
 class EventEntity(RestoreEntity):
     """Representation of an Event entity."""
 
+    _entity_component_unrecorded_attributes = frozenset({ATTR_EVENT_TYPES})
+
     entity_description: EventEntityDescription
     _attr_device_class: EventDeviceClass | None
     _attr_event_types: list[str]

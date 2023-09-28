@@ -115,6 +115,9 @@ TYPE_SPRINKLER = "sprinkler"
 TYPE_SWITCH = "switch"
 TYPE_VALVE = "valve"
 
+# #### Categories ####
+CATEGORY_RECEIVER = 34
+
 # #### Services ####
 SERV_ACCESSORY_INFO = "AccessoryInformation"
 SERV_AIR_QUALITY_SENSOR = "AirQualitySensor"

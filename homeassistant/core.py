@@ -95,6 +95,7 @@ if TYPE_CHECKING:
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
+    from .helpers.entity import StateInfo
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
@@ -1249,6 +1250,7 @@ class State:
         last_updated: datetime.datetime | None = None,
         context: Context | None = None,
         validate_entity_id: bool | None = True,
+        state_info: StateInfo | None = None,
     ) -> None:
         """Initialize a new state."""
         state = str(state)
@@ -1267,6 +1269,7 @@ class State:
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
+        self.state_info = state_info
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
@@ -1637,6 +1640,7 @@ class StateMachine:
         attributes: Mapping[str, Any] | None = None,
         force_update: bool = False,
         context: Context | None = None,
+        state_info: StateInfo | None = None,
     ) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -1688,6 +1692,7 @@ class StateMachine:
             now,
             context,
             old_state is None,
+            state_info,
         )
         if old_state is not None:
             old_state.expire()

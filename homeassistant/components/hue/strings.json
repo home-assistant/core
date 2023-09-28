@@ -94,6 +94,16 @@
           }
         }
       }
+    },
+    "sensor": {
+      "zigbee_connectivity": {
+        "state": {
+          "connected": "[%key:common::state::connected%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "connectivity_issue": "Connectivity issue",
+          "unidirectional_incoming": "Unidirectional incoming"
+        }
+      }
     }
   },
   "options": {

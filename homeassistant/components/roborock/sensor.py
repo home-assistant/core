@@ -143,6 +143,22 @@ SENSOR_DESCRIPTIONS = [
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
     ),
+    RoborockSensorDescription(
+        key="last_clean_start",
+        translation_key="last_clean_start",
+        icon="mdi:clock-time-twelve",
+        value_fn=lambda data: data.last_clean_record.begin_datetime,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    RoborockSensorDescription(
+        key="last_clean_end",
+        translation_key="last_clean_end",
+        icon="mdi:clock-time-twelve",
+        value_fn=lambda data: data.last_clean_record.end_datetime,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
     # Only available on some newer models
     RoborockSensorDescription(
         key="clean_percent",

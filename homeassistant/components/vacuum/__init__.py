@@ -228,6 +228,8 @@ class _BaseVacuum(Entity):
     Contains common properties and functions for all vacuum devices.
     """
 
+    _entity_component_unrecorded_attributes = frozenset({ATTR_FAN_SPEED_LIST})
+
     _attr_battery_icon: str
     _attr_battery_level: int | None = None
     _attr_fan_speed: str | None = None
