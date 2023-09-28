@@ -1,4 +1,5 @@
 """Test the ROMY config flow."""
+from ipaddress import ip_address
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from homeassistant import config_entries, data_entry_flow
