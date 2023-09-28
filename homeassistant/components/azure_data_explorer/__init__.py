@@ -224,8 +224,12 @@ class AzureDataExplorer:
             return None, dropped
         if (utcnow() - time_fired).seconds > DEFAULT_MAX_DELAY + self._send_interval:
             return None, dropped + 1
-        json_string = bytes(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
-        json_dictionary = json.loads(json_string)
-        json_event = json.dumps(json_dictionary)
+        try:
+            json_string = bytes(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
+            json_dictionary = json.loads(json_string)
+            json_event = json.dumps(json_dictionary)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error("Unknown error: %s, %s", err, state)
+            return None, dropped + 1
 
         return (json_event, dropped)
