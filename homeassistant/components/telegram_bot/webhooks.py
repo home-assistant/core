@@ -145,7 +145,6 @@ class PushBotView(HomeAssistantView):
         if not any(real_ip in net for net in self.trusted_networks):
             _LOGGER.warning("Access denied from %s", real_ip)
             return self.json_message("Access denied", HTTPStatus.UNAUTHORIZED)
-        # If a secret token is expected, verify the header
         secret_token_header = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
         if secret_token_header is None or self.secret_token != secret_token_header:
             _LOGGER.warning("Invalid secret token from %s", real_ip)
