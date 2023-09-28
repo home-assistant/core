@@ -19,6 +19,70 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "post_heater": {
+        "name": "Post heater"
+      }
+    },
+    "number": {
+      "supply_air_target_home": {
+        "name": "Supply air temperature (Home)"
+      },
+      "supply_air_target_away": {
+        "name": "Supply air temperature (Away)"
+      },
+      "supply_air_target_boost": {
+        "name": "Supply air temperature (Boost)"
+      }
+    },
+    "sensor": {
+      "current_profile": {
+        "name": "Current profile"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
+      },
+      "extract_fan_speed": {
+        "name": "Extract fan speed"
+      },
+      "supply_fan_speed": {
+        "name": "Supply fan speed"
+      },
+      "remaining_time_for_filter": {
+        "name": "Remaining time for filter"
+      },
+      "cell_state": {
+        "name": "Cell state"
+      },
+      "extract_air": {
+        "name": "Extract air"
+      },
+      "exhaust_air": {
+        "name": "Exhaust air"
+      },
+      "outdoor_air": {
+        "name": "Outdoor air"
+      },
+      "supply_air": {
+        "name": "Supply air"
+      },
+      "supply_cell_air": {
+        "name": "Supply cell air"
+      },
+      "optional_air": {
+        "name": "Optional air"
+      },
+      "efficiency": {
+        "name": "Efficiency"
+      }
+    },
+    "switch": {
+      "bypass_locked": {
+        "name": "Bypass locked"
+      }
+    }
+  },
   "services": {
     "set_profile_fan_speed_home": {
       "name": "Set profile fan speed home",
@@ -36,7 +100,7 @@
       "fields": {
         "fan_speed": {
           "name": "Fan speed",
-          "description": "Fan speed."
+          "description": "[%key:component::vallox::services::set_profile_fan_speed_home::fields::fan_speed::description%]"
         }
       }
     },
@@ -46,7 +110,7 @@
       "fields": {
         "fan_speed": {
           "name": "Fan speed",
-          "description": "Fan speed."
+          "description": "[%key:component::vallox::services::set_profile_fan_speed_home::fields::fan_speed::description%]"
         }
       }
     }

@@ -25,7 +25,7 @@
         "title": "Hive Configuration."
       },
       "reauth": {
-        "title": "Hive Login",
+        "title": "[%key:component::hive::config::step::user::title%]",
         "description": "Re-enter your Hive login information.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
@@ -58,20 +58,6 @@
     }
   },
   "services": {
-    "boost_heating": {
-      "name": "Boost heating (to be deprecated)",
-      "description": "To be deprecated please use boost_heating_on.",
-      "fields": {
-        "time_period": {
-          "name": "Time period",
-          "description": "Set the time period for the boost."
-        },
-        "temperature": {
-          "name": "Temperature",
-          "description": "Set the target temperature for the boost period."
-        }
-      }
-    },
     "boost_heating_on": {
       "name": "Boost heating on",
       "description": "Sets the boost mode ON defining the period of time and the desired target temperature for the boost.",
@@ -109,7 +95,7 @@
           "description": "Set the time period for the boost."
         },
         "on_off": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "Set the boost function on or off."
         }
       }

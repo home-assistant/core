@@ -112,7 +112,7 @@
       "description": "Loads a URL on Fully Kiosk Browser.",
       "fields": {
         "url": {
-          "name": "URL",
+          "name": "[%key:common::config_flow::data::url%]",
           "description": "URL to load."
         }
       }

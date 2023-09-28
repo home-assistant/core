@@ -20,6 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import UNDEFINED
 
 from .const import X_HASS_SOURCE, X_INGRESS_PATH
+from .http import should_compress
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,7 +183,9 @@ class HassIOIngress(HomeAssistantView):
                     content_type=result.content_type,
                     body=body,
                 )
-                if content_length_int > MIN_COMPRESSED_SIZE:
+                if content_length_int > MIN_COMPRESSED_SIZE and should_compress(
+                    simple_response.content_type
+                ):
                     simple_response.enable_compression()
                 await simple_response.prepare(request)
                 return simple_response
@@ -192,7 +195,8 @@ class HassIOIngress(HomeAssistantView):
             response.content_type = result.content_type
 
             try:
-                response.enable_compression()
+                if should_compress(response.content_type):
+                    response.enable_compression()
                 await response.prepare(request)
                 async for data in result.content.iter_chunked(8192):
                     await response.write(data)

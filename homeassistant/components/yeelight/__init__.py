@@ -144,6 +144,7 @@ async def _async_initialize(
     entry: ConfigEntry,
     device: YeelightDevice,
 ) -> None:
+    """Initialize a Yeelight device."""
     entry_data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {}
     await device.async_setup()
     entry_data[DATA_DEVICE] = device
@@ -215,6 +216,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await _async_initialize(hass, entry, device)
     except (asyncio.TimeoutError, OSError, BulbException) as ex:
         raise ConfigEntryNotReady from ex
+
+    found_unique_id = device.unique_id
+    expected_unique_id = entry.unique_id
+    if expected_unique_id and found_unique_id and found_unique_id != expected_unique_id:
+        # If the id of the device does not match the unique_id
+        # of the config entry, it likely means the DHCP lease has expired
+        # and the device has been assigned a new IP address. We need to
+        # wait for the next discovery to find the device at its new address
+        # and update the config entry so we do not mix up devices.
+        raise ConfigEntryNotReady(
+            f"Unexpected device found at {device.host}; "
+            f"expected {expected_unique_id}, found {found_unique_id}"
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

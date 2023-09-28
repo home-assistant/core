@@ -37,11 +37,11 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Module address."
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "output": {
-          "name": "Output",
-          "description": "Output port."
+          "name": "[%key:component::lcn::services::output_abs::fields::output::name%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::output::description%]"
         },
         "brightness": {
           "name": "Brightness",
@@ -55,15 +55,15 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Module address."
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "output": {
-          "name": "Output",
-          "description": "Output port."
+          "name": "[%key:component::lcn::services::output_abs::fields::output::name%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::output::description%]"
         },
         "transition": {
           "name": "Transition",
-          "description": "Transition time."
+          "description": "[%key:component::lcn::services::output_abs::fields::transition::description%]"
         }
       }
     },
@@ -73,7 +73,7 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Module address."
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "state": {
           "name": "State",
@@ -87,10 +87,10 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Module address."
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "led": {
-          "name": "LED",
+          "name": "[%key:component::lcn::services::led::name%]",
           "description": "Led."
         },
         "state": {
@@ -105,7 +105,7 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Module address."
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "variable": {
           "name": "Variable",
@@ -127,11 +127,11 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Module address."
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "variable": {
-          "name": "Variable",
-          "description": "Variable or setpoint name."
+          "name": "[%key:component::lcn::services::var_abs::fields::variable::name%]",
+          "description": "[%key:component::lcn::services::var_abs::fields::variable::description%]"
         }
       }
     },
@@ -141,11 +141,11 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Module address."
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "variable": {
-          "name": "Variable",
-          "description": "Variable or setpoint name."
+          "name": "[%key:component::lcn::services::var_abs::fields::variable::name%]",
+          "description": "[%key:component::lcn::services::var_abs::fields::variable::description%]"
         },
         "value": {
           "name": "Value",
@@ -153,7 +153,7 @@
         },
         "unit_of_measurement": {
           "name": "Unit of measurement",
-          "description": "Unit of value."
+          "description": "[%key:component::lcn::services::var_abs::fields::unit_of_measurement::description%]"
         },
         "value_reference": {
           "name": "Reference value",
@@ -167,7 +167,7 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Module address."
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "setpoint": {
           "name": "Setpoint",
@@ -185,7 +185,7 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Module address."
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "keys": {
           "name": "Keys",
@@ -211,7 +211,7 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Module address."
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "table": {
           "name": "Table",
@@ -226,7 +226,7 @@
           "description": "Lock interval."
         },
         "time_unit": {
-          "name": "Time unit",
+          "name": "[%key:component::lcn::services::send_keys::fields::time_unit::name%]",
           "description": "Time unit of lock interval."
         }
       }
@@ -237,7 +237,7 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Module address."
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "row": {
           "name": "Row",
@@ -255,10 +255,10 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Module address."
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "pck": {
-          "name": "PCK",
+          "name": "[%key:component::lcn::services::pck::name%]",
           "description": "PCK command (without address header)."
         }
       }

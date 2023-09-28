@@ -5,7 +5,7 @@
       "description": "Searches for a movie and requests the first result.",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "Search parameter."
         }
       }
@@ -15,8 +15,8 @@
       "description": "Searches for a TV show and requests the first result.",
       "fields": {
         "name": {
-          "name": "Name",
-          "description": "Search parameter."
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "[%key:component::ombi::services::submit_movie_request::fields::name::description%]"
         },
         "season": {
           "name": "Season",
@@ -29,8 +29,8 @@
       "description": "Searches for a music album and requests the first result.",
       "fields": {
         "name": {
-          "name": "Name",
-          "description": "Search parameter."
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "[%key:component::ombi::services::submit_movie_request::fields::name::description%]"
         }
       }
     }

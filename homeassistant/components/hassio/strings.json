@@ -282,11 +282,11 @@
       "description": "Creates a full backup.",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "Optional (default = current date and time)."
         },
         "password": {
-          "name": "Password",
+          "name": "[%key:common::config_flow::data::password%]",
           "description": "Password to protect the backup with."
         },
         "compressed": {
@@ -294,7 +294,7 @@
           "description": "Compresses the backup files."
         },
         "location": {
-          "name": "Location",
+          "name": "[%key:common::config_flow::data::location%]",
           "description": "Name of a backup network storage to host backups."
         }
       }

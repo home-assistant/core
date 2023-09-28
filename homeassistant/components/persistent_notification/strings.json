@@ -23,7 +23,7 @@
       "description": "Removes a notification from the **Notifications** panel.",
       "fields": {
         "notification_id": {
-          "name": "Notification ID",
+          "name": "[%key:component::persistent_notification::services::create::fields::notification_id::name%]",
           "description": "ID of the notification to be removed."
         }
       }

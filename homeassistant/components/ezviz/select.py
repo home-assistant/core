@@ -53,17 +53,15 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        EzvizSensor(coordinator, camera)
+        EzvizSelect(coordinator, camera)
         for camera in coordinator.data
         for switch in coordinator.data[camera]["switches"]
         if switch == SELECT_TYPE.supported_switch
     )
 
 
-class EzvizSensor(EzvizEntity, SelectEntity):
+class EzvizSelect(EzvizEntity, SelectEntity):
     """Representation of a EZVIZ select entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

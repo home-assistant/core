@@ -45,6 +45,23 @@
     }
   },
   "entity": {
+    "event": {
+      "push": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "switch_latched": "Switch latched",
+              "initial_press": "Initial press",
+              "long_press": "Long press",
+              "short_release": "Short release",
+              "long_release": "Long release",
+              "multi_press_ongoing": "Multi press ongoing",
+              "multi_press_complete": "Multi press complete"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "flow": {
         "name": "Flow"
@@ -57,7 +74,7 @@
       "description": "Allows adding one of your devices to another Matter network by opening the commissioning window for this Matter device for 60 seconds.",
       "fields": {
         "device_id": {
-          "name": "Device",
+          "name": "[%key:common::config_flow::data::device%]",
           "description": "The Matter device to add to the other Matter network."
         }
       }

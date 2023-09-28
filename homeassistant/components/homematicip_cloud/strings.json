@@ -43,15 +43,15 @@
     },
     "activate_eco_mode_with_period": {
       "name": "Activate eco more with period",
-      "description": "Activates eco mode with period.",
+      "description": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::description%]",
       "fields": {
         "endtime": {
           "name": "Endtime",
           "description": "The time when the eco mode should automatically be disabled."
         },
         "accesspoint_id": {
-          "name": "Accesspoint ID",
-          "description": "The ID of the Homematic IP Access Point."
+          "name": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::name%]",
+          "description": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::description%]"
         }
       }
     },
@@ -60,7 +60,7 @@
       "description": "Activates the vacation mode until the given time.",
       "fields": {
         "endtime": {
-          "name": "Endtime",
+          "name": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_period::fields::endtime::name%]",
           "description": "The time when the vacation mode should automatically be disabled."
         },
         "temperature": {
@@ -68,8 +68,8 @@
           "description": "The set temperature during the vacation mode."
         },
         "accesspoint_id": {
-          "name": "Accesspoint ID",
-          "description": "The ID of the Homematic IP Access Point."
+          "name": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::name%]",
+          "description": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::description%]"
         }
       }
     },
@@ -78,8 +78,8 @@
       "description": "Deactivates the eco mode immediately.",
       "fields": {
         "accesspoint_id": {
-          "name": "Accesspoint ID",
-          "description": "The ID of the Homematic IP Access Point."
+          "name": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::name%]",
+          "description": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::description%]"
         }
       }
     },
@@ -88,8 +88,8 @@
       "description": "Deactivates the vacation mode immediately.",
       "fields": {
         "accesspoint_id": {
-          "name": "Accesspoint ID",
-          "description": "The ID of the Homematic IP Access Point."
+          "name": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::name%]",
+          "description": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::description%]"
         }
       }
     },

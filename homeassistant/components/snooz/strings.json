@@ -44,7 +44,7 @@
       "description": "Transitions volume off over time.",
       "fields": {
         "duration": {
-          "name": "Transition duration",
+          "name": "[%key:component::snooz::services::transition_on::fields::duration::name%]",
           "description": "Time it takes to turn off."
         }
       }

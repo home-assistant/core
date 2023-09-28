@@ -63,7 +63,7 @@
       "description": "Saves last recorded video clip to local file.",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "Name of camera to grab video from."
         },
         "filename": {
@@ -77,7 +77,7 @@
       "description": "Saves all recent video clips to local directory with file pattern \"%Y%m%d_%H%M%S_{name}.mp4\".",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "Name of camera to grab recent clips from."
         },
         "file_path": {

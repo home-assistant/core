@@ -90,11 +90,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._command_lock = Script(hass, config[CONF_LOCK], name, DOMAIN)
         self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
         self._optimistic = config.get(CONF_OPTIMISTIC)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return bool(self._optimistic)
+        self._attr_assumed_state = bool(self._optimistic)
 
     @property
     def is_locked(self) -> bool:
@@ -133,12 +129,13 @@ class TemplateLock(TemplateEntity, LockEntity):
 
         self._state = None
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         self.add_template_attribute(
             "_state", self._state_template, None, self._update_state
         )
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""

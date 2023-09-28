@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "button": {
+      "sync_devices": {
+        "name": "Synchronize devices"
+      }
+    }
+  },
   "services": {
     "request_sync": {
       "name": "Request sync",

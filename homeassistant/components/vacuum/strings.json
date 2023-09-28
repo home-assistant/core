@@ -65,7 +65,7 @@
       "description": "Pauses the cleaning task."
     },
     "return_to_base": {
-      "name": "Return to base",
+      "name": "Return to dock",
       "description": "Tells the vacuum cleaner to return to its dock."
     },
     "clean_spot": {
@@ -74,7 +74,7 @@
     },
     "send_command": {
       "name": "Send command",
-      "description": "Sends a raw command to the vacuum cleaner.",
+      "description": "Sends a command to the vacuum cleaner.",
       "fields": {
         "command": {
           "name": "Command",

@@ -19,7 +19,7 @@
         }
       },
       "user": {
-        "title": "Set up FRITZ!Box Tools",
+        "title": "[%key:component::fritz::config::step::confirm::title%]",
         "description": "Set up FRITZ!Box Tools to control your FRITZ!Box.\nMinimum needed: username, password.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -126,7 +126,7 @@
   },
   "services": {
     "reconnect": {
-      "name": "Reconnect",
+      "name": "[%key:component::fritz::entity::button::reconnect::name%]",
       "description": "Reconnects your FRITZ!Box internet connection.",
       "fields": {
         "device_id": {
@@ -140,7 +140,7 @@
       "description": "Reboots your FRITZ!Box.",
       "fields": {
         "device_id": {
-          "name": "Fritz!Box Device",
+          "name": "[%key:component::fritz::services::reconnect::fields::device_id::name%]",
           "description": "Select the Fritz!Box to reboot."
         }
       }
@@ -150,7 +150,7 @@
       "description": "Remove FRITZ!Box stale device_tracker entities.",
       "fields": {
         "device_id": {
-          "name": "Fritz!Box Device",
+          "name": "[%key:component::fritz::services::reconnect::fields::device_id::name%]",
           "description": "Select the Fritz!Box to check."
         }
       }
@@ -160,11 +160,11 @@
       "description": "Sets a new password for the guest Wi-Fi. The password must be between 8 and 63 characters long. If no additional parameter is set, the password will be auto-generated with a length of 12 characters.",
       "fields": {
         "device_id": {
-          "name": "Fritz!Box Device",
-          "description": "Select the Fritz!Box to check."
+          "name": "[%key:component::fritz::services::reconnect::fields::device_id::name%]",
+          "description": "Select the Fritz!Box to configure."
         },
         "password": {
-          "name": "Password",
+          "name": "[%key:common::config_flow::data::password%]",
           "description": "New password for the guest Wi-Fi."
         },
         "length": {

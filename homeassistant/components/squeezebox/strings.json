@@ -49,11 +49,11 @@
       "fields": {
         "command": {
           "name": "Command",
-          "description": "Command to pass to Logitech Media Server (p0 in the CLI documentation)."
+          "description": "[%key:component::squeezebox::services::call_method::fields::command::description%]"
         },
         "parameters": {
           "name": "Parameters",
-          "description": "Array of additional parameters to pass to Logitech Media Server (p1, ..., pN in the CLI documentation).\n."
+          "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
         }
       }
     },

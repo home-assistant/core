@@ -2,7 +2,7 @@
 from unittest.mock import Mock, patch
 
 from homeassistant import setup
-from homeassistant.components import frontend
+from homeassistant.components import frontend, panel_custom
 from homeassistant.core import HomeAssistant
 
 
@@ -155,3 +155,37 @@ async def test_url_path_conflict(hass: HomeAssistant) -> None:
             ]
         },
     )
+
+
+async def test_register_config_panel(hass: HomeAssistant) -> None:
+    """Test setting up a custom config panel for an integration."""
+    result = await setup.async_setup_component(hass, "panel_custom", {})
+    assert result
+
+    # Register a custom panel
+    await panel_custom.async_register_panel(
+        hass=hass,
+        frontend_url_path="config_panel",
+        webcomponent_name="custom-frontend",
+        module_url="custom-frontend",
+        embed_iframe=True,
+        require_admin=True,
+        config_panel_domain="test",
+    )
+
+    panels = hass.data.get(frontend.DATA_PANELS, [])
+    assert panels
+    assert "config_panel" in panels
+
+    panel = panels["config_panel"]
+
+    assert panel.config == {
+        "_panel_custom": {
+            "module_url": "custom-frontend",
+            "name": "custom-frontend",
+            "embed_iframe": True,
+            "trust_external": False,
+        },
+    }
+    assert panel.frontend_url_path == "config_panel"
+    assert panel.config_panel_domain == "test"

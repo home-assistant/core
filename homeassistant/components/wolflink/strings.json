@@ -18,7 +18,7 @@
       },
       "device": {
         "data": {
-          "device_name": "Device"
+          "device_name": "[%key:common::config_flow::data::device%]"
         },
         "title": "Select WOLF device"
       }
@@ -59,7 +59,7 @@
           "spreizung_hoch": "dT too wide",
           "spreizung_kf": "Spread KF",
           "test": "Test",
-          "start": "Start",
+          "start": "[%key:common::action::start%]",
           "frost_heizkreis": "Heating circuit frost",
           "frost_warmwasser": "DHW frost",
           "schornsteinfeger": "Emissions test",

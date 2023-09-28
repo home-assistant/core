@@ -14,7 +14,7 @@
         }
       },
       "gateway_select": {
-        "title": "ScreenLogic",
+        "title": "[%key:component::screenlogic::config::step::gateway_entry::title%]",
         "description": "The following ScreenLogic gateways were discovered. Please select one to configure, or choose to manually configure a ScreenLogic gateway.",
         "data": {
           "selected_gateway": "Gateway"
@@ -28,7 +28,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "ScreenLogic",
+        "title": "[%key:component::screenlogic::config::step::gateway_entry::title%]",
         "description": "Specify settings for {gateway_name}",
         "data": {
           "scan_interval": "Seconds between scans"

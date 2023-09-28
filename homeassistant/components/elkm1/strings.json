@@ -6,7 +6,7 @@
         "title": "Connect to Elk-M1 Control",
         "description": "Choose a discovered system or 'Manual Entry' if no devices have been discovered.",
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         }
       },
       "manual_connection": {
@@ -83,7 +83,7 @@
       "fields": {
         "code": {
           "name": "Code",
-          "description": "An code to arm the alarm control panel."
+          "description": "[%key:component::elkm1::services::alarm_arm_home_instant::fields::code::description%]"
         }
       }
     },
@@ -93,7 +93,7 @@
       "fields": {
         "code": {
           "name": "Code",
-          "description": "An code to arm the alarm control panel."
+          "description": "[%key:component::elkm1::services::alarm_arm_home_instant::fields::code::description%]"
         }
       }
     },
@@ -119,7 +119,7 @@
         },
         "line2": {
           "name": "Line 2",
-          "description": "Up to 16 characters of text (truncated if too long)."
+          "description": "[%key:component::elkm1::services::alarm_display_message::fields::line1::description%]"
         }
       }
     },
@@ -142,7 +142,7 @@
           "description": "Phrase number to speak."
         },
         "prefix": {
-          "name": "Prefix",
+          "name": "[%key:component::elkm1::services::set_time::fields::prefix::name%]",
           "description": "Prefix to identify panel when multiple panels configured."
         }
       }
@@ -156,8 +156,8 @@
           "description": "Word number to speak."
         },
         "prefix": {
-          "name": "Prefix",
-          "description": "Prefix to identify panel when multiple panels configured."
+          "name": "[%key:component::elkm1::services::set_time::fields::prefix::name%]",
+          "description": "[%key:component::elkm1::services::speak_phrase::fields::prefix::description%]"
         }
       }
     },

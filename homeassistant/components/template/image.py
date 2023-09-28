@@ -6,10 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.image import (
-    DOMAIN as IMAGE_DOMAIN,
-    ImageEntity,
-)
+from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN, ImageEntity
 from homeassistant.const import CONF_UNIQUE_ID, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -20,10 +17,7 @@ from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_PICTURE
-from .template_entity import (
-    TemplateEntity,
-    make_template_entity_common_schema,
-)
+from .template_entity import TemplateEntity, make_template_entity_common_schema
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,10 +108,11 @@ class StateImageEntity(TemplateEntity, ImageEntity):
         self._cached_image = None
         self._attr_image_url = result
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         self.add_template_attribute("_url", self._url_template, None, self._update_url)
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
 
 class TriggerImageEntity(TriggerEntity, ImageEntity):

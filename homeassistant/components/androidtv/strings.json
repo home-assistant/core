@@ -50,7 +50,7 @@
         "title": "Configure Android state detection rules",
         "description": "Configure detection rule for application id {rule_id}",
         "data": {
-          "rule_id": "Application ID",
+          "rule_id": "[%key:component::androidtv::options::step::apps::data::app_id%]",
           "rule_values": "List of state detection rules (see documentation)",
           "rule_delete": "Check to delete this rule"
         }
@@ -90,12 +90,12 @@
       "description": "Uploads a file from your Home Assistant instance to an Android / Fire TV device.",
       "fields": {
         "device_path": {
-          "name": "Device path",
-          "description": "The filepath on the Android / Fire TV device."
+          "name": "[%key:component::androidtv::services::download::fields::device_path::name%]",
+          "description": "[%key:component::androidtv::services::download::fields::device_path::description%]"
         },
         "local_path": {
-          "name": "Local path",
-          "description": "The filepath on your Home Assistant instance."
+          "name": "[%key:component::androidtv::services::download::fields::local_path::name%]",
+          "description": "[%key:component::androidtv::services::download::fields::local_path::description%]"
         }
       }
     },

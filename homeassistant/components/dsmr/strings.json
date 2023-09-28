@@ -18,15 +18,15 @@
       "setup_serial": {
         "data": {
           "port": "Select device",
-          "dsmr_version": "Select DSMR version"
+          "dsmr_version": "[%key:component::dsmr::config::step::setup_network::data::dsmr_version%]"
         },
-        "title": "Device"
+        "title": "[%key:common::config_flow::data::device%]"
       },
       "setup_serial_manual_path": {
         "data": {
           "port": "[%key:common::config_flow::data::usb_path%]"
         },
-        "title": "Path"
+        "title": "[%key:common::config_flow::data::path%]"
       }
     },
     "error": {
@@ -37,7 +37,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "cannot_communicate": "Failed to communicate"
+      "cannot_communicate": "[%key:component::dsmr::config::error::cannot_communicate%]"
     }
   },
   "entity": {

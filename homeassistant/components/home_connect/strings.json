@@ -46,23 +46,23 @@
       "fields": {
         "device_id": {
           "name": "Device ID",
-          "description": "Id of the device."
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
         },
         "program": {
-          "name": "Program",
-          "description": "Program to select."
+          "name": "[%key:component::home_connect::services::start_program::fields::program::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::program::description%]"
         },
         "key": {
-          "name": "Option key",
-          "description": "Key of the option."
+          "name": "[%key:component::home_connect::services::start_program::fields::key::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::key::description%]"
         },
         "value": {
-          "name": "Option value",
-          "description": "Value of the option."
+          "name": "[%key:component::home_connect::services::start_program::fields::value::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::value::description%]"
         },
         "unit": {
-          "name": "Option unit",
-          "description": "Unit for the option."
+          "name": "[%key:component::home_connect::services::start_program::fields::unit::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::unit::description%]"
         }
       }
     },
@@ -72,7 +72,7 @@
       "fields": {
         "device_id": {
           "name": "Device ID",
-          "description": "Id of the device."
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
         }
       }
     },
@@ -82,7 +82,7 @@
       "fields": {
         "device_id": {
           "name": "Device ID",
-          "description": "Id of the device."
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
         }
       }
     },
@@ -92,15 +92,15 @@
       "fields": {
         "device_id": {
           "name": "Device ID",
-          "description": "Id of the device."
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
         },
         "key": {
           "name": "Key",
-          "description": "Key of the option."
+          "description": "[%key:component::home_connect::services::start_program::fields::key::description%]"
         },
         "value": {
           "name": "Value",
-          "description": "Value of the option."
+          "description": "[%key:component::home_connect::services::start_program::fields::value::description%]"
         }
       }
     },
@@ -110,15 +110,15 @@
       "fields": {
         "device_id": {
           "name": "Device ID",
-          "description": "Id of the device."
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
         },
         "key": {
           "name": "Key",
-          "description": "Key of the option."
+          "description": "[%key:component::home_connect::services::start_program::fields::key::description%]"
         },
         "value": {
           "name": "Value",
-          "description": "Value of the option."
+          "description": "[%key:component::home_connect::services::start_program::fields::value::description%]"
         }
       }
     },
@@ -128,7 +128,7 @@
       "fields": {
         "device_id": {
           "name": "Device ID",
-          "description": "Id of the device."
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
         },
         "key": {
           "name": "Key",

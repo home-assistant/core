@@ -127,6 +127,35 @@ def test_url() -> None:
         assert schema(value)
 
 
+def test_configuration_url() -> None:
+    """Test URL."""
+    schema = vol.Schema(cv.configuration_url)
+
+    for value in (
+        "invalid",
+        None,
+        100,
+        "htp://ha.io",
+        "http//ha.io",
+        "http://??,**",
+        "https://??,**",
+        "homeassistant://??,**",
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in (
+        "http://localhost",
+        "https://localhost/test/index.html",
+        "http://home-assistant.io",
+        "http://home-assistant.io/test/",
+        "https://community.home-assistant.io/",
+        "homeassistant://api",
+        "homeassistant://api/hassio_ingress/XXXXXXX",
+    ):
+        assert schema(value)
+
+
 def test_url_no_path() -> None:
     """Test URL."""
     schema = vol.Schema(cv.url_no_path)
@@ -1192,7 +1221,7 @@ def test_enum() -> None:
         schema("value3")
 
 
-def test_socket_timeout():  # pylint: disable=invalid-name
+def test_socket_timeout():
     """Test socket timeout validator."""
     schema = vol.Schema(cv.socket_timeout)
 

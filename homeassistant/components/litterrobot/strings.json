@@ -124,17 +124,12 @@
     },
     "time": {
       "sleep_mode_start_time": {
-        "name": "Sleep mode start time"
+        "name": "[%key:component::litterrobot::entity::sensor::sleep_mode_start_time::name%]"
       }
     },
     "vacuum": {
       "litter_box": {
         "name": "Litter box"
-      }
-    },
-    "update": {
-      "firmware": {
-        "name": "Firmware"
       }
     }
   },

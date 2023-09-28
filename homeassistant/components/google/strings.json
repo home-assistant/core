@@ -88,11 +88,11 @@
       "fields": {
         "summary": {
           "name": "Summary",
-          "description": "Acts as the title of the event."
+          "description": "[%key:component::google::services::add_event::fields::summary::description%]"
         },
         "description": {
           "name": "Description",
-          "description": "The description of the event. Optional."
+          "description": "[%key:component::google::services::add_event::fields::description::description%]"
         },
         "start_date_time": {
           "name": "Start time",
@@ -104,18 +104,18 @@
         },
         "start_date": {
           "name": "Start date",
-          "description": "The date the whole day event should start."
+          "description": "[%key:component::google::services::add_event::fields::start_date::description%]"
         },
         "end_date": {
           "name": "End date",
-          "description": "The date the whole day event should end."
+          "description": "[%key:component::google::services::add_event::fields::end_date::description%]"
         },
         "in": {
           "name": "In",
           "description": "Days or weeks that you want to create the event in."
         },
         "location": {
-          "name": "Location",
+          "name": "[%key:common::config_flow::data::location%]",
           "description": "The location of the event. Optional."
         }
       }

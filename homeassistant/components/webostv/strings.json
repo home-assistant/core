@@ -15,8 +15,8 @@
         "description": "Click submit and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)"
       },
       "reauth_confirm": {
-        "title": "webOS TV Pairing",
-        "description": "Click submit and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)"
+        "title": "[%key:component::webostv::config::step::pairing::title%]",
+        "description": "[%key:component::webostv::config::step::pairing::description%]"
       }
     },
     "error": {
@@ -70,7 +70,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "Name(s) of the webostv entities where to run the API method."
+          "description": "[%key:component::webostv::services::button::fields::entity_id::description%]"
         },
         "command": {
           "name": "Command",

@@ -30,7 +30,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareRequiredKeysMixin
@@ -225,6 +225,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         name="Heating gas consumption current year",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         value_getter=lambda api: api.getGasSummaryConsumptionHeatingCurrentYear(),
+        unit_getter=lambda api: api.getGasSummaryConsumptionHeatingUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="gas_summary_consumption_heating_lastsevendays",
+        name="Heating gas consumption last seven days",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        value_getter=lambda api: api.getGasSummaryConsumptionHeatingLastSevenDays(),
         unit_getter=lambda api: api.getGasSummaryConsumptionHeatingUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -665,7 +673,6 @@ class ViCareSensor(SensorEntity):
         self._attr_name = name
         self._api = api
         self._device_config = device_config
-        self._state = None
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -681,7 +688,7 @@ class ViCareSensor(SensorEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._state is not None
+        return self._attr_native_value is not None
 
     @property
     def unique_id(self) -> str:
@@ -693,16 +700,13 @@ class ViCareSensor(SensorEntity):
             return f"{tmp_id}-{self._api.id}"
         return tmp_id
 
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
     def update(self):
         """Update state of sensor."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
-                self._state = self.entity_description.value_getter(self._api)
+                self._attr_native_value = self.entity_description.value_getter(
+                    self._api
+                )
 
                 if self.entity_description.unit_getter:
                     vicare_unit = self.entity_description.unit_getter(self._api)

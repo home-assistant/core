@@ -1,6 +1,7 @@
 """esphome session fixtures."""
 from __future__ import annotations
 
+import asyncio
 from asyncio import Event
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -18,9 +19,7 @@ from aioesphomeapi import (
 import pytest
 from zeroconf import Zeroconf
 
-from homeassistant.components.esphome import (
-    dashboard,
-)
+from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
@@ -53,11 +52,17 @@ async def load_homeassistant(hass) -> None:
     assert await async_setup_component(hass, "homeassistant", {})
 
 
+@pytest.fixture(autouse=True)
+def mock_tts(mock_tts_cache_dir):
+    """Auto mock the tts cache."""
+
+
 @pytest.fixture
 def mock_config_entry(hass) -> MockConfigEntry:
     """Return the default mocked config entry."""
     config_entry = MockConfigEntry(
         title="ESPHome Device",
+        entry_id="08d821dc059cf4f645cb024d32c8e708",
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.2",
@@ -205,13 +210,13 @@ async def _mock_generic_device_entry(
 
     mock_device = MockESPHomeDevice(entry)
 
-    device_info = DeviceInfo(
-        name="test",
-        friendly_name="Test",
-        mac_address="11:22:33:44:55:aa",
-        esphome_version="1.0.0",
-        **mock_device_info,
-    )
+    default_device_info = {
+        "name": "test",
+        "friendly_name": "Test",
+        "esphome_version": "1.0.0",
+        "mac_address": "11:22:33:44:55:aa",
+    }
+    device_info = DeviceInfo(**(default_device_info | mock_device_info))
 
     async def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
         """Subscribe to state."""
@@ -248,10 +253,10 @@ async def _mock_generic_device_entry(
         "homeassistant.components.esphome.manager.ReconnectLogic", MockReconnectLogic
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await try_connect_done.wait()
+        async with asyncio.timeout(2):
+            await try_connect_done.wait()
 
     await hass.async_block_till_done()
-
     return mock_device
 
 

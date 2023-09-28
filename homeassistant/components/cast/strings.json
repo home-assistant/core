@@ -22,15 +22,15 @@
   "options": {
     "step": {
       "basic_options": {
-        "title": "Google Cast configuration",
-        "description": "Known Hosts - A comma-separated list of hostnames or IP-addresses of cast devices, use if mDNS discovery is not working.",
+        "title": "[%key:component::cast::config::step::config::title%]",
+        "description": "[%key:component::cast::config::step::config::description%]",
         "data": {
-          "known_hosts": "Known hosts"
+          "known_hosts": "[%key:component::cast::config::step::config::data::known_hosts%]"
         }
       },
       "advanced_options": {
         "title": "Advanced Google Cast configuration",
-        "description": "Allowed UUIDs - A comma-separated list of UUIDs of Cast devices to add to Home Assistant. Use only if you don\u2019t want to add all available cast devices.\nIgnore CEC - A comma-separated list of Chromecasts that should ignore CEC data for determining the active input. This will be passed to pychromecast.IGNORE_CEC.",
+        "description": "Allowed UUIDs - A comma-separated list of UUIDs of Cast devices to add to Home Assistant. Use only if you don’t want to add all available cast devices.\nIgnore CEC - A comma-separated list of Chromecasts that should ignore CEC data for determining the active input. This will be passed to pychromecast.IGNORE_CEC.",
         "data": {
           "ignore_cec": "Ignore CEC",
           "uuid": "Allowed UUIDs"
@@ -38,7 +38,7 @@
       }
     },
     "error": {
-      "invalid_known_hosts": "Known hosts must be a comma separated list of hosts."
+      "invalid_known_hosts": "[%key:component::cast::config::error::invalid_known_hosts%]"
     }
   },
   "services": {

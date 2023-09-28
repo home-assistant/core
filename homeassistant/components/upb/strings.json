@@ -48,7 +48,7 @@
       "description": "Blinks a light.",
       "fields": {
         "rate": {
-          "name": "Rate",
+          "name": "[%key:component::upb::services::light_fade_start::fields::rate::name%]",
           "description": "Amount of time that the link flashes on."
         }
       }
@@ -66,11 +66,11 @@
           "description": "Number indicating brightness, where 0 turns the scene off, 1 is the minimum brightness and 255 is the maximum brightness."
         },
         "brightness_pct": {
-          "name": "Brightness percentage",
+          "name": "[%key:component::upb::services::light_fade_start::fields::brightness_pct::name%]",
           "description": "Number indicating percentage of full brightness, where 0 turns the scene off, 1 is the minimum brightness and 100 is the maximum brightness."
         },
         "rate": {
-          "name": "Rate",
+          "name": "[%key:component::upb::services::light_fade_start::fields::rate::name%]",
           "description": "Amount of time for scene to transition to new brightness."
         }
       }
@@ -81,15 +81,15 @@
       "fields": {
         "brightness": {
           "name": "Brightness",
-          "description": "Number indicating brightness, where 0 turns the scene off, 1 is the minimum brightness and 255 is the maximum brightness."
+          "description": "[%key:component::upb::services::link_goto::fields::brightness::description%]"
         },
         "brightness_pct": {
-          "name": "Brightness percentage",
-          "description": "Number indicating percentage of full brightness, where 0 turns the scene off, 1 is the minimum brightness and 100 is the maximum brightness."
+          "name": "[%key:component::upb::services::light_fade_start::fields::brightness_pct::name%]",
+          "description": "[%key:component::upb::services::link_goto::fields::brightness_pct::description%]"
         },
         "rate": {
-          "name": "Rate",
-          "description": "Amount of time for scene to transition to new brightness."
+          "name": "[%key:component::upb::services::light_fade_start::fields::rate::name%]",
+          "description": "[%key:component::upb::services::link_goto::fields::rate::description%]"
         }
       }
     },
@@ -103,7 +103,7 @@
       "fields": {
         "blink_rate": {
           "name": "Blink rate",
-          "description": "Amount of time that the link flashes on."
+          "description": "[%key:component::upb::services::light_blink::fields::rate::description%]"
         }
       }
     }

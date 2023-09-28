@@ -52,7 +52,7 @@ async def test_device_info(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     device_registry = dr.async_get(hass)
     await hass.async_block_till_done()
-    device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
 
     assert device.configuration_url == "http://127.0.0.1:8668"
     assert device.identifiers == {(DOMAIN, entry.entry_id)}

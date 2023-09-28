@@ -85,7 +85,7 @@
           "description": "Ecobee thermostat on which to delete the vacation."
         },
         "vacation_name": {
-          "name": "Vacation name",
+          "name": "[%key:component::ecobee::services::create_vacation::fields::vacation_name::name%]",
           "description": "Name of the vacation to delete."
         }
       }
@@ -110,10 +110,10 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "Name(s) of entities to change."
+          "description": "[%key:component::ecobee::services::resume_program::fields::entity_id::description%]"
         },
         "fan_min_on_time": {
-          "name": "Fan minimum on time",
+          "name": "[%key:component::ecobee::services::create_vacation::fields::fan_min_on_time::name%]",
           "description": "New value of fan min on time."
         }
       }

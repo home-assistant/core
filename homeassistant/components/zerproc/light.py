@@ -16,7 +16,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
@@ -82,10 +82,18 @@ class ZerprocLight(LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_icon = "mdi:string-lights"
     _attr_supported_color_modes = {ColorMode.HS}
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, light) -> None:
         """Initialize a Zerproc light."""
         self._light = light
+        self._attr_unique_id = light.address
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, light.address)},
+            manufacturer="Zerproc",
+            name=light.name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -105,25 +113,6 @@ class ZerprocLight(LightEntity):
             _LOGGER.debug(
                 "Exception disconnecting from %s", self._light.address, exc_info=True
             )
-
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._light.name
-
-    @property
-    def unique_id(self):
-        """Return the ID of this light."""
-        return self._light.address
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info for this light."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="Zerproc",
-            name=self.name,
-        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""

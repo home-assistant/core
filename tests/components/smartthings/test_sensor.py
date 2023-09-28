@@ -110,7 +110,7 @@ async def test_entity_and_device_attributes(
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.battery}"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
@@ -151,7 +151,7 @@ async def test_energy_sensors_for_switch_device(
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.energy}"
     assert entry.entity_category is None
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
@@ -168,7 +168,7 @@ async def test_energy_sensors_for_switch_device(
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.power}"
     assert entry.entity_category is None
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
@@ -213,7 +213,7 @@ async def test_power_consumption_sensor(hass: HomeAssistant, device_factory) -> 
     entry = entity_registry.async_get("sensor.refrigerator_energy")
     assert entry
     assert entry.unique_id == f"{device.device_id}.energy_meter"
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
@@ -231,7 +231,7 @@ async def test_power_consumption_sensor(hass: HomeAssistant, device_factory) -> 
     entry = entity_registry.async_get("sensor.refrigerator_power")
     assert entry
     assert entry.unique_id == f"{device.device_id}.power_meter"
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
@@ -263,7 +263,7 @@ async def test_power_consumption_sensor(hass: HomeAssistant, device_factory) -> 
     entry = entity_registry.async_get("sensor.vacuum_energy")
     assert entry
     assert entry.unique_id == f"{device.device_id}.energy_meter"
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}

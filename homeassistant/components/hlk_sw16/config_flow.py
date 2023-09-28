@@ -1,7 +1,6 @@
 """Config flow for HLK-SW16."""
 import asyncio
 
-import async_timeout
 from hlk_sw16 import create_hlk_sw16_connection
 import voluptuous as vol
 
@@ -36,7 +35,7 @@ async def connect_client(hass, user_input):
         reconnect_interval=DEFAULT_RECONNECT_INTERVAL,
         keep_alive_interval=DEFAULT_KEEP_ALIVE_INTERVAL,
     )
-    async with async_timeout.timeout(CONNECTION_TIMEOUT):
+    async with asyncio.timeout(CONNECTION_TIMEOUT):
         return await client_aw
 
 

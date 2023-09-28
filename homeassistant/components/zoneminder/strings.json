@@ -5,7 +5,7 @@
       "description": "Sets the ZoneMinder run state.",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "The string name of the ZoneMinder run state to set as active."
         }
       }

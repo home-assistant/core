@@ -81,7 +81,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         (38.0, -3.0),
         region="Region 1",
         attribution="Attribution 1",
-        published=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc),
+        published=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
         magnitude=5.7,
         image_url="http://image.url/map.jpg",
     )
@@ -125,7 +125,7 @@ async def test_setup(hass: HomeAssistant) -> None:
                 ATTR_REGION: "Region 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
                 ATTR_PUBLICATION_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
+                    2018, 9, 22, 8, 0, tzinfo=datetime.UTC
                 ),
                 ATTR_IMAGE_URL: "http://image.url/map.jpg",
                 ATTR_MAGNITUDE: 5.7,

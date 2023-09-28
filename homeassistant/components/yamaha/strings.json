@@ -5,7 +5,7 @@
       "description": "Enables or disables an output port.",
       "fields": {
         "port": {
-          "name": "Port",
+          "name": "[%key:common::config_flow::data::port%]",
           "description": "Name of port to enable/disable."
         },
         "enabled": {

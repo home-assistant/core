@@ -85,7 +85,7 @@
       "description": "Displays a chart on a LaMetric device.",
       "fields": {
         "device_id": {
-          "name": "Device",
+          "name": "[%key:common::config_flow::data::device%]",
           "description": "The LaMetric device to display the chart on."
         },
         "data": {
@@ -207,7 +207,7 @@
     },
     "priority": {
       "options": {
-        "info": "Info",
+        "info": "[%key:component::lametric::selector::icon_type::options::info%]",
         "warning": "Warning",
         "critical": "Critical"
       }

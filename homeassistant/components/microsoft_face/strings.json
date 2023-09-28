@@ -5,7 +5,7 @@
       "description": "Creates a new person group.",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "Name of the group."
         }
       }
@@ -19,7 +19,7 @@
           "description": "Name of the group."
         },
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "Name of the person."
         }
       }
@@ -29,7 +29,7 @@
       "description": "Deletes a new person group.",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "Name of the group."
         }
       }
@@ -43,8 +43,8 @@
           "description": "Name of the group."
         },
         "name": {
-          "name": "Name",
-          "description": "Name of the person."
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "[%key:component::microsoft_face::services::create_person::fields::name::description%]"
         }
       }
     },
@@ -62,7 +62,7 @@
         },
         "person": {
           "name": "Person",
-          "description": "Name of the person."
+          "description": "[%key:component::microsoft_face::services::create_person::fields::name::description%]"
         }
       }
     },

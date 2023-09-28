@@ -53,7 +53,7 @@
   },
   "options": {
     "error": {
-      "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country"
+      "cloud_credentials_incomplete": "[%key:component::xiaomi_miio::config::error::cloud_credentials_incomplete%]"
     },
     "step": {
       "init": {
@@ -112,7 +112,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the xiaomi miio entity."
+          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]"
         },
         "features": {
           "name": "Features",
@@ -140,7 +140,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the light entity."
+          "description": "[%key:component::xiaomi_miio::services::light_set_scene::fields::entity_id::description%]"
         },
         "time_period": {
           "name": "Time period",
@@ -164,7 +164,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the entity to act on."
+          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]"
         }
       }
     },
@@ -174,7 +174,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the entity to act on."
+          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]"
         }
       }
     },
@@ -184,27 +184,27 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the entity to act on."
+          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]"
         }
       }
     },
     "light_eyecare_mode_on": {
       "name": "Light eyecare mode on",
-      "description": "Enables the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).",
+      "description": "[%key:component::xiaomi_miio::services::light_reminder_on::description%]",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the entity to act on."
+          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]"
         }
       }
     },
     "light_eyecare_mode_off": {
       "name": "Light eyecare mode off",
-      "description": "Disables the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).",
+      "description": "[%key:component::xiaomi_miio::services::light_reminder_off::description%]",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the entity to act on."
+          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]"
         }
       }
     },
@@ -236,7 +236,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the xiaomi miio entity."
+          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]"
         }
       }
     },
@@ -246,7 +246,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the xiaomi miio entity."
+          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]"
         }
       }
     },
@@ -256,10 +256,10 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the xiaomi miio entity."
+          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]"
         },
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "Power price."
         }
       }
@@ -270,10 +270,10 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the xiaomi miio entity."
+          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]"
         },
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "Power mode."
         }
       }
@@ -309,16 +309,16 @@
       "description": "Remote controls the vacuum cleaner, only makes one move and then stops.",
       "fields": {
         "velocity": {
-          "name": "Velocity",
-          "description": "Speed."
+          "name": "[%key:component::xiaomi_miio::services::vacuum_remote_control_move::fields::velocity::name%]",
+          "description": "[%key:component::xiaomi_miio::services::vacuum_remote_control_move::fields::velocity::description%]"
         },
         "rotation": {
-          "name": "Rotation",
+          "name": "[%key:component::xiaomi_miio::services::vacuum_remote_control_move::fields::rotation::name%]",
           "description": "Rotation."
         },
         "duration": {
           "name": "Duration",
-          "description": "Duration of the movement."
+          "description": "[%key:component::xiaomi_miio::services::vacuum_remote_control_move::fields::duration::description%]"
         }
       }
     },

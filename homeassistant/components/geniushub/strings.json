@@ -9,7 +9,7 @@
           "description": "The zone's entity_id."
         },
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "One of: off, timer or footprint."
         }
       }
@@ -20,7 +20,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "The zone's entity_id."
+          "description": "[%key:component::geniushub::services::set_zone_mode::fields::entity_id::description%]"
         },
         "temperature": {
           "name": "Temperature",
@@ -38,7 +38,7 @@
       "fields": {
         "duration": {
           "name": "Duration",
-          "description": "The duration of the override. Optional, default 1 hour, maximum 24 hours."
+          "description": "[%key:component::geniushub::services::set_zone_override::fields::duration::description%]"
         }
       }
     }

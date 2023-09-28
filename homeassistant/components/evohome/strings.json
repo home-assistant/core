@@ -5,7 +5,7 @@
       "description": "Sets the system mode, either indefinitely, or for a specified period of time, after which it will revert to Auto. Not all systems support all modes.",
       "fields": {
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "Mode to set thermostat."
         },
         "period": {

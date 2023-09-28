@@ -79,11 +79,11 @@
       "description": "Add a new filter subscription to AdGuard Home.",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "The name of the filter subscription."
         },
         "url": {
-          "name": "URL",
+          "name": "[%key:common::config_flow::data::url%]",
           "description": "The filter URL to subscribe to, containing the filter rules."
         }
       }
@@ -93,7 +93,7 @@
       "description": "Removes a filter subscription from AdGuard Home.",
       "fields": {
         "url": {
-          "name": "URL",
+          "name": "[%key:common::config_flow::data::url%]",
           "description": "The filter subscription URL to remove."
         }
       }
@@ -103,7 +103,7 @@
       "description": "Enables a filter subscription in AdGuard Home.",
       "fields": {
         "url": {
-          "name": "URL",
+          "name": "[%key:common::config_flow::data::url%]",
           "description": "The filter subscription URL to enable."
         }
       }
@@ -113,7 +113,7 @@
       "description": "Disables a filter subscription in AdGuard Home.",
       "fields": {
         "url": {
-          "name": "URL",
+          "name": "[%key:common::config_flow::data::url%]",
           "description": "The filter subscription URL to disable."
         }
       }

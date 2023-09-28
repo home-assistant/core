@@ -36,7 +36,7 @@
     "step": {
       "init": {
         "title": "ISY Options",
-        "description": "Set the options for the ISY Integration: \n \u2022 Node Sensor String: Any device or folder that contains 'Node Sensor String' in the name will be treated as a sensor or binary sensor. \n \u2022 Ignore String: Any device with 'Ignore String' in the name will be ignored. \n \u2022 Variable Sensor String: Any variable that contains 'Variable Sensor String' will be added as a sensor. \n \u2022 Restore Light Brightness: If enabled, the previous brightness will be restored when turning on a light instead of the device's built-in On-Level.",
+        "description": "Set the options for the ISY Integration: \n • Node Sensor String: Any device or folder that contains 'Node Sensor String' in the name will be treated as a sensor or binary sensor. \n • Ignore String: Any device with 'Ignore String' in the name will be ignored. \n • Variable Sensor String: Any variable that contains 'Variable Sensor String' will be added as a sensor. \n • Restore Light Brightness: If enabled, the previous brightness will be restored when turning on a light instead of the device's built-in On-Level.",
         "data": {
           "sensor_string": "Node Sensor String",
           "ignore_string": "Ignore String",
@@ -57,7 +57,7 @@
   "services": {
     "send_raw_node_command": {
       "name": "Send raw node command",
-      "description": "Set the options for the ISY Integration: \n \u2022 Node Sensor String: Any device or folder that contains 'Node Sensor String' in the name will be treated as a sensor or binary sensor. \n \u2022 Ignore String: Any device with 'Ignore String' in the name will be ignored. \n \u2022 Variable Sensor String: Any variable that contains 'Variable Sensor String' will be added as a sensor. \n \u2022 Restore Light Brightness: If enabled, the previous brightness will be restored when turning on a light instead of the device's built-in On-Level.",
+      "description": "[%key:component::isy994::options::step::init::description%]",
       "fields": {
         "command": {
           "name": "Command",
@@ -102,7 +102,7 @@
       "description": "Updates a Z-Wave Device parameter via the ISY. The parameter value will also be returned as a entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
       "fields": {
         "parameter": {
-          "name": "Parameter",
+          "name": "[%key:component::isy994::services::get_zwave_parameter::fields::parameter::name%]",
           "description": "The parameter number to set on the end device."
         },
         "value": {
@@ -134,8 +134,8 @@
       "description": "Delete a Z-Wave Lock User Code via the ISY.",
       "fields": {
         "user_num": {
-          "name": "User Number",
-          "description": "The user slot number on the lock."
+          "name": "[%key:component::isy994::services::set_zwave_lock_user_code::fields::user_num::name%]",
+          "description": "[%key:component::isy994::services::set_zwave_lock_user_code::fields::user_num::description%]"
         }
       }
     },
@@ -158,7 +158,7 @@
           "description": "The address of the program to control (use either address or name)."
         },
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "The name of the program to control (use either address or name)."
         },
         "command": {

@@ -5,7 +5,7 @@
       "description": "Creates a custom entry in the logbook.",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "Custom name for an entity, can be referenced using an `entity_id`."
         },
         "message": {

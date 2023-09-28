@@ -40,7 +40,7 @@ def printc(the_color, *args):
 
 def validate_requirements_ok():
     """Validate requirements, returns True of ok."""
-    # pylint: disable-next=import-error,import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from gen_requirements_all import main as req_main
 
     return req_main(True) == 0

@@ -41,13 +41,13 @@
           "weather_areas": "Weather areas"
         },
         "description": "Configure public weather sensors.",
-        "title": "Netatmo public weather sensor"
+        "title": "[%key:component::netatmo::options::step::public_weather::title%]"
       }
     }
   },
   "device_automation": {
     "trigger_subtype": {
-      "away": "Away",
+      "away": "[%key:common::state::not_home%]",
       "schedule": "Schedule",
       "hg": "Frost guard"
     },
@@ -83,7 +83,7 @@
       "description": "Sets the heating schedule for Netatmo climate device. The schedule name must match a schedule configured at Netatmo.",
       "fields": {
         "schedule_name": {
-          "name": "Schedule",
+          "name": "[%key:component::netatmo::device_automation::trigger_subtype::schedule%]",
           "description": "Schedule name."
         }
       }

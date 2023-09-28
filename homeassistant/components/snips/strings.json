@@ -16,7 +16,7 @@
       "fields": {
         "site_id": {
           "name": "Site ID",
-          "description": "Site to turn sounds on, defaults to all sites."
+          "description": "[%key:component::snips::services::feedback_off::fields::site_id::description%]"
         }
       }
     },
@@ -47,8 +47,8 @@
           "description": "If True, session waits for an open session to end, if False session is dropped if one is running."
         },
         "custom_data": {
-          "name": "Custom data",
-          "description": "Custom data that will be included with all messages in this session."
+          "name": "[%key:component::snips::services::say::fields::custom_data::name%]",
+          "description": "[%key:component::snips::services::say::fields::custom_data::description%]"
         },
         "intent_filter": {
           "name": "Intent filter",
@@ -56,11 +56,11 @@
         },
         "site_id": {
           "name": "Site ID",
-          "description": "Site to use to start session, defaults to default."
+          "description": "[%key:component::snips::services::say::fields::site_id::description%]"
         },
         "text": {
           "name": "Text",
-          "description": "Text to say."
+          "description": "[%key:component::snips::services::say::fields::text::description%]"
         }
       }
     }

@@ -19,12 +19,13 @@ from homeassistant.const import (
     CONF_DEVICE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
@@ -132,6 +133,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "Application Credentials have been imported into the UI "
             "automatically and can be safely removed from your "
             "configuration.yaml file"
+        )
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Home Connect",
+            },
         )
 
     async def _async_service_program(call, method):
