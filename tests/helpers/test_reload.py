@@ -3,10 +3,12 @@ import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant import config
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import (
@@ -208,8 +210,46 @@ async def test_async_integration_yaml_config(hass: HomeAssistant) -> None:
     yaml_path = get_fixture_path(f"helpers/{DOMAIN}_configuration.yaml")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         processed_config = await async_integration_yaml_config(hass, DOMAIN)
+        assert processed_config == {DOMAIN: [{"name": "one"}, {"name": "two"}]}
+        # Test fetching yaml config does not raise when the raise_on_failure option is set
+        processed_config = await async_integration_yaml_config(hass, DOMAIN, True)
+        assert processed_config == {DOMAIN: [{"name": "one"}, {"name": "two"}]}
 
-    assert processed_config == {DOMAIN: [{"name": "one"}, {"name": "two"}]}
+
+async def test_async_integration_failing_yaml_config(hass: HomeAssistant) -> None:
+    """Test reloading yaml config for an integration fails.
+
+    In case an integration reloads its yaml configuration it should throw when
+    the new config failed to load.
+    """
+    schema_without_name_attr = vol.Schema({vol.Required("some_option"): str})
+
+    mock_integration(hass, MockModule(DOMAIN, config_schema=schema_without_name_attr))
+
+    yaml_path = get_fixture_path(f"helpers/{DOMAIN}_configuration.yaml")
+    with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
+        # Test fetching yaml config does not raise without raise_on_failure option
+        processed_config = await async_integration_yaml_config(hass, DOMAIN)
+        assert processed_config is None
+        # Test fetching yaml config does not raise when the raise_on_failure option is set
+        with pytest.raises(HomeAssistantError):
+            await async_integration_yaml_config(hass, DOMAIN, True)
+
+
+async def test_async_integration_failing_on_reload(hass: HomeAssistant) -> None:
+    """Test reloading yaml config for an integration fails with other exception.
+
+    In case an integration reloads its yaml configuration it should throw when
+    the new config failed to load.
+    """
+    mock_integration(hass, MockModule(DOMAIN))
+
+    yaml_path = get_fixture_path(f"helpers/{DOMAIN}_configuration.yaml")
+    with patch.object(config, "YAML_CONFIG_FILE", yaml_path), patch(
+        "homeassistant.config.async_process_component_config", return_value=None
+    ), pytest.raises(HomeAssistantError):
+        # Test fetching yaml config does raise when the raise_on_failure option is set
+        await async_integration_yaml_config(hass, DOMAIN, True)
 
 
 async def test_async_integration_missing_yaml_config(hass: HomeAssistant) -> None:

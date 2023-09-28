@@ -139,13 +139,23 @@ async def _async_reconfig_platform(
 
 
 async def async_integration_yaml_config(
-    hass: HomeAssistant, integration_name: str
+    hass: HomeAssistant, integration_name: str, raise_on_failure: bool = False
 ) -> ConfigType | None:
     """Fetch the latest yaml configuration for an integration."""
     integration = await async_get_integration(hass, integration_name)
 
-    return await conf_util.async_process_component_config(
-        hass, await conf_util.async_hass_config_yaml(hass), integration
+    if (
+        config := await conf_util.async_process_component_config(
+            hass,
+            await conf_util.async_hass_config_yaml(hass),
+            integration,
+            raise_on_failure,
+        )
+    ) is not None or not raise_on_failure:
+        return config
+    raise HomeAssistantError(
+        "Unexpected error when loading yaml config "
+        f"{integration_name}, see logs for more details"
     )
 
 

@@ -492,6 +492,7 @@ def async_log_exception(
     config: dict,
     hass: HomeAssistant,
     link: str | None = None,
+    raise_exception: bool = False,
 ) -> None:
     """Log an error for configuration validation.
 
@@ -500,7 +501,12 @@ def async_log_exception(
     if hass is not None:
         async_notify_setup_error(hass, domain, link)
     message, is_friendly = _format_config_error(ex, domain, config, link)
-    _LOGGER.error(message, exc_info=not is_friendly and ex)
+    if raise_exception:
+        raise HomeAssistantError(message) from ex
+    if not is_friendly and ex:
+        _LOGGER.exception(message)
+        return
+    _LOGGER.error(message)
 
 
 @callback
@@ -826,11 +832,16 @@ async def merge_packages_config(
 
 
 async def async_process_component_config(  # noqa: C901
-    hass: HomeAssistant, config: ConfigType, integration: Integration
+    hass: HomeAssistant,
+    config: ConfigType,
+    integration: Integration,
+    raise_on_failure: bool = False,
 ) -> ConfigType | None:
     """Check component configuration and return processed configuration.
 
     Returns None on error.
+    Optional an exception is raised if the configuration is not valid,
+    but returns None on other errors.
 
     This method must be run in the event loop.
     """
@@ -861,7 +872,9 @@ async def async_process_component_config(  # noqa: C901
                 await config_validator.async_validate_config(hass, config)
             )
         except (vol.Invalid, HomeAssistantError) as ex:
-            async_log_exception(ex, domain, config, hass, integration.documentation)
+            async_log_exception(
+                ex, domain, config, hass, integration.documentation, raise_on_failure
+            )
             return None
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error calling %s config validator", domain)
@@ -872,7 +885,9 @@ async def async_process_component_config(  # noqa: C901
         try:
             return component.CONFIG_SCHEMA(config)  # type: ignore[no-any-return]
         except vol.Invalid as ex:
-            async_log_exception(ex, domain, config, hass, integration.documentation)
+            async_log_exception(
+                ex, domain, config, hass, integration.documentation, raise_on_failure
+            )
             return None
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error calling %s CONFIG_SCHEMA", domain)
@@ -891,7 +906,9 @@ async def async_process_component_config(  # noqa: C901
         try:
             p_validated = component_platform_schema(p_config)
         except vol.Invalid as ex:
-            async_log_exception(ex, domain, p_config, hass, integration.documentation)
+            async_log_exception(
+                ex, domain, p_config, hass, integration.documentation, raise_on_failure
+            )
             continue
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -934,6 +951,7 @@ async def async_process_component_config(  # noqa: C901
                     p_config,
                     hass,
                     p_integration.documentation,
+                    raise_on_failure,
                 )
                 continue
             except Exception:  # pylint: disable=broad-except
