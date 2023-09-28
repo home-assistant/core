@@ -3898,3 +3898,44 @@ async def test_reload_config_entry(
     assert state.state == "manual2_update_after_reload"
     assert (state := hass.states.get("sensor.test_manual3")) is not None
     assert state.state is STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            "mqtt": [
+                {
+                    "sensor": {
+                        "name": "test",
+                        "state_topic": "test-topic",
+                    }
+                },
+            ]
+        }
+    ],
+)
+async def test_reload_with_invalid_config(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test reloading yaml config fails."""
+    await mqtt_mock_entry()
+    assert hass.states.get("sensor.test") is not None
+
+    # Reload with an invalid config and assert again
+    invalid_config = {"mqtt": "some_invalid_config"}
+    with patch(
+        "homeassistant.config.load_yaml_config_file", return_value=invalid_config
+    ):
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "mqtt",
+                SERVICE_RELOAD,
+                {},
+                blocking=True,
+            )
+        await hass.async_block_till_done()
+
+    # Test nothing changed as loading the config failed
+    assert hass.states.get("sensor.test") is not None

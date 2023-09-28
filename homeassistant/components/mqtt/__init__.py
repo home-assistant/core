@@ -24,7 +24,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import TemplateError, Unauthorized
+from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event as ev, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -364,8 +364,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def _reload_config(call: ServiceCall) -> None:
             """Reload the platforms."""
-            # Fetch updated manual configured items and validate
-            config_yaml = await async_integration_yaml_config(hass, DOMAIN) or {}
+            # Fetch updated manually configured items and validate
+            if (
+                config_yaml := await async_integration_yaml_config(hass, DOMAIN)
+            ) is None:
+                # Raise in case we have an invalid configuration
+                raise HomeAssistantError(
+                    "Error reloading manually configured MQTT items, "
+                    "check your configuration.yaml"
+                )
             mqtt_data.config = config_yaml.get(DOMAIN, {})
 
             # Reload the modern yaml platforms
