@@ -42,6 +42,11 @@ from .core.device import get_device_automation_triggers
 from .core.discovery import GROUP_PROBE
 from .core.helpers import ZHAData, get_zha_data
 from .radio_manager import ZhaRadioManager
+from .repairs.network_settings_inconsistent import warn_on_inconsistent_network_settings
+from .repairs.wrong_silabs_firmware import (
+    AlreadyRunningEZSP,
+    warn_on_wrong_silabs_firmware,
+)
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
@@ -171,7 +176,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     try:
         await zha_gateway.async_initialize()
     except NetworkSettingsInconsistent as exc:
-        await repairs.warn_on_inconsistent_network_settings(
+        await warn_on_inconsistent_network_settings(
             hass,
             config_entry=config_entry,
             old_state=exc.old_state,
@@ -183,10 +188,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except Exception:
         if RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp:
             try:
-                await repairs.warn_on_wrong_silabs_firmware(
+                await warn_on_wrong_silabs_firmware(
                     hass, config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
                 )
-            except repairs.AlreadyRunningEZSP as exc:
+            except AlreadyRunningEZSP as exc:
                 # If connecting fails but we somehow probe EZSP (e.g. stuck in the
                 # bootloader), reconnect, it should work
                 raise ConfigEntryNotReady from exc

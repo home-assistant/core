@@ -222,8 +222,10 @@ class ZhaRadioManager:
             repairs.async_delete_blocking_issues(self.hass)
             return ProbeResult.RADIO_TYPE_DETECTED
 
-        with suppress(repairs.AlreadyRunningEZSP):
-            if await repairs.warn_on_wrong_silabs_firmware(self.hass, self.device_path):
+        with suppress(repairs.wrong_silabs_firmware.AlreadyRunningEZSP):
+            if await repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware(
+                self.hass, self.device_path
+            ):
                 return ProbeResult.WRONG_FIRMWARE_INSTALLED
 
         return ProbeResult.PROBING_FAILED

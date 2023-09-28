@@ -1,131 +1,23 @@
-"""ZHA repairs for common environmental and device problems."""
+"""ZHA repair for inconsistent network settings."""
 from __future__ import annotations
 
-import enum
 import logging
-from typing import Any, cast
+from typing import Any
 
-from universal_silabs_flasher.const import ApplicationType
-from universal_silabs_flasher.flasher import Flasher
 from zigpy.backups import NetworkBackup
 
-from homeassistant.components.homeassistant_sky_connect import (
-    hardware as skyconnect_hardware,
-)
-from homeassistant.components.homeassistant_yellow import (
-    RADIO_DEVICE as YELLOW_RADIO_DEVICE,
-    hardware as yellow_hardware,
-)
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.components.repairs import RepairsFlow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
-from .core.const import DOMAIN
-from .radio_manager import ZhaRadioManager
+from ..core.const import DOMAIN
+from ..radio_manager import ZhaRadioManager
 
 _LOGGER = logging.getLogger(__name__)
 
-
-class AlreadyRunningEZSP(Exception):
-    """The device is already running EZSP firmware."""
-
-
-class HardwareType(enum.StrEnum):
-    """Detected Zigbee hardware type."""
-
-    SKYCONNECT = "skyconnect"
-    YELLOW = "yellow"
-    OTHER = "other"
-
-
-DISABLE_MULTIPAN_URL = {
-    HardwareType.YELLOW: (
-        "https://yellow.home-assistant.io/guides/disable-multiprotocol/#flash-the-silicon-labs-radio-firmware"
-    ),
-    HardwareType.SKYCONNECT: (
-        "https://skyconnect.home-assistant.io/procedures/disable-multiprotocol/#step-flash-the-silicon-labs-radio-firmware"
-    ),
-    HardwareType.OTHER: None,
-}
-
-ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED = "wrong_silabs_firmware_installed"
 ISSUE_INCONSISTENT_NETWORK_SETTINGS = "inconsistent_network_settings"
-
-
-def _detect_radio_hardware(hass: HomeAssistant, device: str) -> HardwareType:
-    """Identify the radio hardware with the given serial port."""
-    try:
-        yellow_hardware.async_info(hass)
-    except HomeAssistantError:
-        pass
-    else:
-        if device == YELLOW_RADIO_DEVICE:
-            return HardwareType.YELLOW
-
-    try:
-        info = skyconnect_hardware.async_info(hass)
-    except HomeAssistantError:
-        pass
-    else:
-        for hardware_info in info:
-            for entry_id in hardware_info.config_entries or []:
-                entry = hass.config_entries.async_get_entry(entry_id)
-
-                if entry is not None and entry.data["device"] == device:
-                    return HardwareType.SKYCONNECT
-
-    return HardwareType.OTHER
-
-
-async def probe_silabs_firmware_type(device: str) -> ApplicationType | None:
-    """Probe the running firmware on a Silabs device."""
-    flasher = Flasher(device=device)
-
-    try:
-        await flasher.probe_app_type()
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.debug("Failed to probe application type", exc_info=True)
-
-    return flasher.app_type
-
-
-async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> bool:
-    """Create a repair issue if the wrong type of SiLabs firmware is detected."""
-    # Only consider actual serial ports
-    if device.startswith("socket://"):
-        return False
-
-    app_type = await probe_silabs_firmware_type(device)
-
-    if app_type is None:
-        # Failed to probe, we can't tell if the wrong firmware is installed
-        return False
-
-    if app_type == ApplicationType.EZSP:
-        # If connecting fails but we somehow probe EZSP (e.g. stuck in bootloader),
-        # reconnect, it should work
-        raise AlreadyRunningEZSP()
-
-    hardware_type = _detect_radio_hardware(hass, device)
-    ir.async_create_issue(
-        hass,
-        domain=DOMAIN,
-        issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
-        is_fixable=False,
-        is_persistent=True,
-        learn_more_url=DISABLE_MULTIPAN_URL[hardware_type],
-        severity=ir.IssueSeverity.ERROR,
-        translation_key=(
-            ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED
-            + ("_nabucasa" if hardware_type != HardwareType.OTHER else "_other")
-        ),
-        translation_placeholders={"firmware_type": app_type.name},
-    )
-
-    return True
 
 
 def _format_settings_diff(old_state: NetworkBackup, new_state: NetworkBackup) -> str:
@@ -212,12 +104,6 @@ async def warn_on_inconsistent_network_settings(
     )
 
 
-def async_delete_blocking_issues(hass: HomeAssistant) -> None:
-    """Delete repair issues that should disappear on a successful startup."""
-    ir.async_delete_issue(hass, DOMAIN, ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED)
-    ir.async_delete_issue(hass, DOMAIN, ISSUE_INCONSISTENT_NETWORK_SETTINGS)
-
-
 class NetworkSettingsInconsistentFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
@@ -263,15 +149,3 @@ class NetworkSettingsInconsistentFlow(RepairsFlow):
 
         await self.hass.config_entries.async_reload(self._entry_id)
         return self.async_create_entry(title="", data={})
-
-
-async def async_create_fix_flow(
-    hass: HomeAssistant,
-    issue_id: str,
-    data: dict[str, str | int | float | None] | None,
-) -> RepairsFlow:
-    """Create flow."""
-    if issue_id == ISSUE_INCONSISTENT_NETWORK_SETTINGS:
-        return NetworkSettingsInconsistentFlow(hass, cast(dict[str, Any], data))
-
-    return ConfirmRepairFlow()
