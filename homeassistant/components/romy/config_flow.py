@@ -98,15 +98,9 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        if new_discovered_romy.is_unlocked:
-            self.discovery_schema = _schema_with_defaults(
-                host=discovery_info.host,
-                name=discovery_info.name,
-            )
-        else:
-            self.discovery_schema = _schema_with_defaults_and_password(
-                host=discovery_info.host,
-                name=discovery_info.name,
-                password="",
-            )
+        self.discovery_schema = _schema_with_defaults(
+            host=discovery_info.host,
+            name=discovery_info.name,
+            requires_password=not new_discovered_romy.is_unlocked,
+        )
         return await self.async_step_user()
