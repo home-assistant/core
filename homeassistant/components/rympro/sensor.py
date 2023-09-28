@@ -70,10 +70,9 @@ class RymProSensor(CoordinatorEntity[RymProDataUpdateCoordinator], SensorEntity)
             manufacturer="Read Your Meter Pro",
             name=f"Meter {meter_id}",
         )
-        self._coordinator_key = description.key
         self.entity_description = description
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        return self.coordinator.data[self._meter_id][self._coordinator_key]
+        return self.coordinator.data[self._meter_id][self.entity_description.key]
