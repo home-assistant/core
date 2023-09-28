@@ -14,26 +14,19 @@ from .const import DOMAIN, LOGGER
 
 
 def _schema_with_defaults(
-    host: str = "", port: int = 8080, name: str = ""
+    host: str = "", name: str = "", requires_password: bool = False
 ) -> vol.Schema:
-    return vol.Schema(
-        {
-            vol.Required(CONF_HOST, default=host): cv.string,
-            vol.Optional(CONF_NAME, default=name): cv.string,
-        },
-    )
+    schema = {
+        vol.Required(CONF_HOST, default=host): cv.string,
+        vol.Optional(CONF_NAME, default=name): cv.string,
+    }
 
+    if requires_password:
+        schema.update(
+            {vol.Required(CONF_PASSWORD, default=""): vol.All(str, vol.Length(8))}
+        )
 
-def _schema_with_defaults_and_password(
-    host: str = "", port: int = 8080, name: str = "", password: str = ""
-) -> vol.Schema:
-    return vol.Schema(
-        {
-            vol.Required(CONF_HOST, default=host): cv.string,
-            vol.Optional(CONF_NAME, default=name): cv.string,
-            vol.Required(CONF_PASSWORD, default=password): vol.All(str, vol.Length(8)),
-        },
-    )
+    return vol.Schema(schema)
 
 
 class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
