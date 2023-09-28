@@ -2700,7 +2700,7 @@ waterfurnace==1.1.0
 webexteamssdk==1.1.1
 
 # homeassistant.components.assist_pipeline
-webrtc-noise-gain==1.2.2
+webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.4
