@@ -1,5 +1,5 @@
 """Tests for the telegram_bot integration."""
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
@@ -75,6 +75,11 @@ def mock_generate_secret_token():
     ):
         yield mock_secret_token
 
+
+@pytest.fixture
+def incorrect_secret_token():
+    """Mock incorrect secret token"""
+    return "AAAABBBBCCCCDDDDEEEEFFFF00009999"
 
 
 @pytest.fixture
@@ -168,7 +173,9 @@ def update_callback_query():
 
 
 @pytest.fixture
-async def webhook_platform(hass, config_webhooks, mock_register_webhook, mock_generate_secret_token):
+async def webhook_platform(
+    hass, config_webhooks, mock_register_webhook, mock_generate_secret_token
+):
     """Fixture for setting up the webhooks platform using appropriate config and mocks."""
     await async_setup_component(
         hass,

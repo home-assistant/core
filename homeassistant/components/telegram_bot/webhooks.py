@@ -146,11 +146,10 @@ class PushBotView(HomeAssistantView):
             _LOGGER.warning("Access denied from %s", real_ip)
             return self.json_message("Access denied", HTTPStatus.UNAUTHORIZED)
         # If a secret token is expected, verify the header
-        if self.secret_token and bool(self.secret_token):
-            secret_token_header = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
-            if secret_token_header is None or self.secret_token != secret_token_header:
-                _LOGGER.warning("Invalid secret token from %s", real_ip)
-                return self.json_message("Access denied", HTTPStatus.UNAUTHORIZED)
+        secret_token_header = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+        if secret_token_header is None or self.secret_token != secret_token_header:
+            _LOGGER.warning("Invalid secret token from %s", real_ip)
+            return self.json_message("Access denied", HTTPStatus.FORBIDDEN)
 
         try:
             update_data = await request.json()

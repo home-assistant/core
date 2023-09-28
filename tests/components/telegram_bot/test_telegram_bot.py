@@ -152,3 +152,39 @@ async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_tex
     await hass.async_block_till_done()
 
     assert len(events) == 0
+
+
+async def test_webhook_endpoint_without_secret_token_is_denied(
+    hass: HomeAssistant,
+    webhook_platform,
+    hass_client: ClientSessionGenerator,
+    update_message_text,
+) -> None:
+    """Request without a secret token header should be denied"""
+    client = await hass_client()
+    events = async_capture_events(hass, "telegram_text")
+
+    response = await client.post(
+        TELEGRAM_WEBHOOK_URL,
+        json=update_message_text,
+    )
+    assert response.status == 403
+
+
+async def test_webhook_endpoint_invalid_secret_token_is_denied(
+    hass: HomeAssistant,
+    webhook_platform,
+    hass_client: ClientSessionGenerator,
+    update_message_text,
+    incorrect_secret_token,
+) -> None:
+    """Request with an invalid secret token header should be denied"""
+    client = await hass_client()
+    events = async_capture_events(hass, "telegram_text")
+
+    response = await client.post(
+        TELEGRAM_WEBHOOK_URL,
+        json=update_message_text,
+        headers={"X-Telegram-Bot-Api-Secret-Token": incorrect_secret_token},
+    )
+    assert response.status == 403
