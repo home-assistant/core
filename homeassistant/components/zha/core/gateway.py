@@ -200,6 +200,7 @@ class ZHAGateway:
             try:
                 await self.application_controller.startup(auto_form=True)
             except zigpy.exceptions.TransientConnectionError as exc:
+                await self.application_controller.shutdown()
                 raise ConfigEntryNotReady from exc
             except Exception as exc:  # pylint: disable=broad-except
                 _LOGGER.warning(
@@ -211,6 +212,7 @@ class ZHAGateway:
                 )
 
                 if attempt == STARTUP_RETRIES - 1:
+                    await self.application_controller.shutdown()
                     raise exc
 
                 await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
