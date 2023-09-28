@@ -126,12 +126,14 @@ async def test_network_status(
     hass: HomeAssistant,
     multisensor_6,
     controller_state,
+    client,
     integration,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test the network status websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
+    client.server_logging_enabled = False
 
     # Try API call with entry ID
     with patch(
@@ -150,6 +152,7 @@ async def test_network_status(
 
     assert result["client"]["ws_server_url"] == "ws://test:3000/zjs"
     assert result["client"]["server_version"] == "1.0.0"
+    assert not result["client"]["server_logging_enabled"]
     assert result["controller"]["inclusion_state"] == InclusionState.IDLE
 
     # Try API call with device ID

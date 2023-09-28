@@ -63,7 +63,7 @@ def _close_enough(actual_rgb, testing_rgb):
 
 
 @pytest.fixture(autouse=True)
-async def setup_light(hass):
+async def setup_light(hass: HomeAssistant):
     """Configure our light component to work against for testing."""
     assert await async_setup_component(
         hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": "demo"}}
