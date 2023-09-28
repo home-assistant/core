@@ -1,5 +1,5 @@
 """Tests for the telegram_bot integration."""
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -63,6 +63,18 @@ def mock_register_webhook():
         return_value=True,
     ):
         yield
+
+
+@pytest.fixture
+def mock_generate_secret_token():
+    """Mock secret token generated for webhook"""
+    mock_secret_token = "DEADBEEF12345678DEADBEEF87654321"
+    with patch(
+        "homeassistant.components.telegram_bot.webhooks.generate_secret_token",
+        return_value=mock_secret_token,
+    ):
+        yield mock_secret_token
+
 
 
 @pytest.fixture
@@ -156,7 +168,7 @@ def update_callback_query():
 
 
 @pytest.fixture
-async def webhook_platform(hass, config_webhooks, mock_register_webhook):
+async def webhook_platform(hass, config_webhooks, mock_register_webhook, mock_generate_secret_token):
     """Fixture for setting up the webhooks platform using appropriate config and mocks."""
     await async_setup_component(
         hass,
