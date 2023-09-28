@@ -66,14 +66,23 @@ def mock_monitored_resources() -> list[str] | None:
     return None
 
 
+@pytest.fixture(name="configured_unit_system")
+def mock_configured_unit_syststem() -> str | None:
+    """Fixture for the fitbit yaml config monitored_resources field."""
+    return None
+
+
 @pytest.fixture(name="sensor_platform_config")
 def mock_sensor_platform_config(
     monitored_resources: list[str] | None,
+    configured_unit_system: str | None,
 ) -> dict[str, Any]:
     """Fixture for the fitbit sensor platform configuration data in configuration.yaml."""
     config = {}
     if monitored_resources is not None:
         config["monitored_resources"] = monitored_resources
+    if configured_unit_system is not None:
+        config["unit_system"] = configured_unit_system
     return config
 
 
@@ -104,13 +113,19 @@ async def mock_sensor_platform_setup(
 
 
 @pytest.fixture(name="profile_id")
-async def mock_profile_id() -> str:
+def mock_profile_id() -> str:
     """Fixture for the profile id returned from the API response."""
     return PROFILE_USER_ID
 
 
+@pytest.fixture(name="profile_locale")
+def mock_profile_locale() -> str:
+    """Fixture to set the API response for the user profile."""
+    return "en_US"
+
+
 @pytest.fixture(name="profile", autouse=True)
-async def mock_profile(requests_mock: Mocker, profile_id: str) -> None:
+def mock_profile(requests_mock: Mocker, profile_id: str, profile_locale: str) -> None:
     """Fixture to setup fake requests made to Fitbit API during config flow."""
     requests_mock.register_uri(
         "GET",
@@ -120,20 +135,20 @@ async def mock_profile(requests_mock: Mocker, profile_id: str) -> None:
             "user": {
                 "encodedId": profile_id,
                 "fullName": "My name",
-                "locale": "en_US",
+                "locale": profile_locale,
             },
         },
     )
 
 
 @pytest.fixture(name="devices_response")
-async def mock_device_response() -> list[dict[str, Any]]:
+def mock_device_response() -> list[dict[str, Any]]:
     """Return the list of devices."""
     return []
 
 
 @pytest.fixture(autouse=True)
-async def mock_devices(requests_mock: Mocker, devices_response: dict[str, Any]) -> None:
+def mock_devices(requests_mock: Mocker, devices_response: dict[str, Any]) -> None:
     """Fixture to setup fake device responses."""
     requests_mock.register_uri(
         "GET",
@@ -151,7 +166,7 @@ def timeseries_response(resource: str, value: str) -> dict[str, Any]:
 
 
 @pytest.fixture(name="register_timeseries")
-async def mock_register_timeseries(
+def mock_register_timeseries(
     requests_mock: Mocker,
 ) -> Callable[[str, dict[str, Any]], None]:
     """Fixture to setup fake timeseries API responses."""

@@ -31,7 +31,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry for a Rain Bird binary_sensor."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id].coordinator
     async_add_entities([RainBirdSensor(coordinator, RAIN_SENSOR_ENTITY_DESCRIPTION)])
 
 

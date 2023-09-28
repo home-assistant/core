@@ -35,9 +35,9 @@ on:
 env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
-  MYPY_CACHE_VERSION: 4
+  MYPY_CACHE_VERSION: 5
   BLACK_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2023.10"
+  HA_SHORT_VERSION: "2023.11"
   DEFAULT_PYTHON: "3.11"
   ALL_PYTHON_VERSIONS: "['3.11']"
   # 10.3 is the oldest supported version
@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: >-
@@ -222,7 +222,7 @@ jobs:
       - info
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.7.0
@@ -267,7 +267,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v4.7.0
         id: python
@@ -335,7 +335,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v4.7.0
         id: python
@@ -384,7 +384,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v4.7.0
         id: python
@@ -478,7 +478,7 @@ jobs:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.7.0
@@ -546,7 +546,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.7.0
@@ -578,7 +578,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.7.0
@@ -611,7 +611,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.7.0
@@ -655,7 +655,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.7.0
@@ -737,7 +737,7 @@ jobs:
             bluez \
             ffmpeg
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.7.0
@@ -889,7 +889,7 @@ jobs:
             ffmpeg \
             libmariadb-dev-compat
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.7.0
@@ -1013,7 +1013,7 @@ jobs:
             ffmpeg \
             postgresql-server-dev-14
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.7.0
@@ -1108,7 +1108,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v3
       - name: Upload coverage to Codecov (full coverage)
