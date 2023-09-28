@@ -52,9 +52,9 @@ def _base_schema(discovery_info=None):
 
     base_schema.update(
         {
-            vol.Optional(CONF_USERNAME): str, 
+            vol.Optional(CONF_USERNAME): str,
             vol.Optional(CONF_PASSWORD): str,
-            vol.Optional(CONF_HTTPS, default=False): bool
+            vol.Optional(CONF_HTTPS, default=False): bool,
         }
     )
 
