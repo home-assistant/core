@@ -132,7 +132,6 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
     @callback
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
-        self._attr_available = self.coordinator.dev_online
         self._attr_is_on = self.entity_description.value(
             state.get(self.entity_description.state_key)
         )

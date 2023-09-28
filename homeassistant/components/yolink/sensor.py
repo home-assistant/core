@@ -259,7 +259,6 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
             )
         ) is None and self.entity_description.should_update_entity(attr_val) is False:
             return
-        self._attr_available = self.coordinator.dev_online
         self._attr_native_value = attr_val
         self.async_write_ha_state()
 
