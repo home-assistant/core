@@ -1,7 +1,7 @@
 """Support for VELUX KLF 200 devices."""
-import logging
 import asyncio
-from typing import Any, Dict
+import logging
+from typing import Any
 
 from pyvlx import OpeningDevice, PyVLX, PyVLXException
 import voluptuous as vol
@@ -55,6 +55,7 @@ class DelayVelux(PyVLX):
     """PyVLX, but with delays to workaround KLF 200 issues."""
 
     def __init__(self, *args, **kwargs):
+        """Initialize DelayVelux class."""
         super().__init__(*args, **kwargs)
         self.__send_lock = asyncio.Lock()
 
@@ -70,7 +71,7 @@ class DelayVelux(PyVLX):
 class VeluxModule:
     """Abstraction for velux component."""
 
-    def __init__(self, hass: HomeAssistant, domain_config: Dict[str, Any]):
+    def __init__(self, hass: HomeAssistant, domain_config: dict[str, Any]):
         """Initialize for velux component."""
         self.pyvlx = None
         self._hass = hass
