@@ -50,7 +50,6 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data = self.discovery_schema or _schema_with_defaults()
 
         if user_input is not None:
-            if not errors:
                 ## Save the user input and finish the setup
                 self.host = user_input["host"]
                 self.name = user_input["name"]
