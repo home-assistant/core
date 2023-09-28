@@ -42,13 +42,13 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
         self,
         coordinator: ComelitSerialBridge,
         device: ComelitSerialBridgeObject,
-        config_entry_unique_id: str,
+        config_entry_entry_id: str,
     ) -> None:
         """Init light entity."""
         self._api = coordinator.api
         self._device = device
         super().__init__(coordinator)
-        self._attr_unique_id = f"{config_entry_unique_id}-{device.index}"
+        self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
         self._attr_device_info = self.coordinator.platform_device_info(device, LIGHT)
 
     async def _light_set_state(self, state: int) -> None:
