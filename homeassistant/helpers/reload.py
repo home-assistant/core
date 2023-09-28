@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, Literal, overload
 
 from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD
@@ -138,24 +138,31 @@ async def _async_reconfig_platform(
     await asyncio.gather(*tasks)
 
 
+@overload
 async def async_integration_yaml_config(
-    hass: HomeAssistant, integration_name: str, raise_on_failure: bool = False
+    hass: HomeAssistant, integration_name: str, *, raise_on_failure: Literal[True]
+) -> ConfigType:
+    ...
+
+
+@overload
+async def async_integration_yaml_config(
+    hass: HomeAssistant, integration_name: str, *, raise_on_failure: Literal[False]
+) -> ConfigType | None:
+    ...
+
+
+async def async_integration_yaml_config(
+    hass: HomeAssistant, integration_name: str, *, raise_on_failure: bool = False
 ) -> ConfigType | None:
     """Fetch the latest yaml configuration for an integration."""
     integration = await async_get_integration(hass, integration_name)
 
-    if (
-        config := await conf_util.async_process_component_config(
-            hass,
-            await conf_util.async_hass_config_yaml(hass),
-            integration,
-            raise_on_failure,
-        )
-    ) is not None or not raise_on_failure:
-        return config
-    raise HomeAssistantError(
-        "Unexpected error when loading yaml config "
-        f"{integration_name}, see logs for more details"
+    return await conf_util.async_process_component_config(
+        hass,
+        await conf_util.async_hass_config_yaml(hass),
+        integration,
+        raise_on_failure=raise_on_failure,
     )
 
 

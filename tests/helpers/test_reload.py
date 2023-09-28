@@ -212,7 +212,9 @@ async def test_async_integration_yaml_config(hass: HomeAssistant) -> None:
         processed_config = await async_integration_yaml_config(hass, DOMAIN)
         assert processed_config == {DOMAIN: [{"name": "one"}, {"name": "two"}]}
         # Test fetching yaml config does not raise when the raise_on_failure option is set
-        processed_config = await async_integration_yaml_config(hass, DOMAIN, True)
+        processed_config = await async_integration_yaml_config(
+            hass, DOMAIN, raise_on_failure=True
+        )
         assert processed_config == {DOMAIN: [{"name": "one"}, {"name": "two"}]}
 
 
@@ -233,7 +235,7 @@ async def test_async_integration_failing_yaml_config(hass: HomeAssistant) -> Non
         assert processed_config is None
         # Test fetching yaml config does not raise when the raise_on_failure option is set
         with pytest.raises(HomeAssistantError):
-            await async_integration_yaml_config(hass, DOMAIN, True)
+            await async_integration_yaml_config(hass, DOMAIN, raise_on_failure=True)
 
 
 async def test_async_integration_failing_on_reload(hass: HomeAssistant) -> None:
@@ -246,10 +248,11 @@ async def test_async_integration_failing_on_reload(hass: HomeAssistant) -> None:
 
     yaml_path = get_fixture_path(f"helpers/{DOMAIN}_configuration.yaml")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path), patch(
-        "homeassistant.config.async_process_component_config", return_value=None
+        "homeassistant.config.async_process_component_config",
+        side_effect=HomeAssistantError(),
     ), pytest.raises(HomeAssistantError):
         # Test fetching yaml config does raise when the raise_on_failure option is set
-        await async_integration_yaml_config(hass, DOMAIN, True)
+        await async_integration_yaml_config(hass, DOMAIN, raise_on_failure=True)
 
 
 async def test_async_integration_missing_yaml_config(hass: HomeAssistant) -> None:

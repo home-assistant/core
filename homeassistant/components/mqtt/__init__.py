@@ -405,15 +405,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async def _reload_config(call: ServiceCall) -> None:
             """Reload the platforms."""
             # Fetch updated manually configured items and validate
-            config_yaml = await async_integration_yaml_config(hass, DOMAIN, True)
-            if TYPE_CHECKING:
-                assert config_yaml is not None
+            config_yaml = await async_integration_yaml_config(
+                hass, DOMAIN, raise_on_failure=True
+            )
 
             # Check the schema before continuing reload
             await async_check_config_schema(hass, config_yaml)
 
             # Remove repair issues
             _async_remove_mqtt_issues(hass, mqtt_data)
+
             mqtt_data.config = config_yaml.get(DOMAIN, {})
 
             # Reload the modern yaml platforms
