@@ -71,5 +71,12 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, list[dict[str, Any]]]
             if game["discount_type"]:
                 return_data[game["discount_type"]].append(game)
 
+        return_data["discount"] = sorted(
+            return_data["discount"], key=lambda game: game["discount_start_at"]
+        )
+        return_data["free"] = sorted(
+            return_data["free"], key=lambda game: game["discount_start_at"]
+        )
+
         _LOGGER.debug(return_data)
         return return_data
