@@ -23,3 +23,14 @@ async def get_refoss_socket_server(hass: HomeAssistant) -> SocketServerProtocol:
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
     return socket_server
+
+
+def verify_msg(data: dict) -> str | None:
+    """Verify push msg."""
+    header = data.get("header", {})
+    namespace = header.get("namespace", None)
+    uuid = header.get("uuid", None)
+    payload = data.get("payload", None)
+    if namespace is None or uuid is None or payload is None:
+        return None
+    return uuid

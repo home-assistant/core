@@ -25,6 +25,7 @@ class RefossEntity(
         else:
             self._attr_name = str(channel)
         self.device = device
+        self.channel = channel
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.uuid)},
             manufacturer="refoss",
@@ -41,4 +42,25 @@ class RefossEntity(
 
     async def async_device_update(self, warning: bool = True) -> None:
         """Async update device status."""
-        await self.device.async_handle_update()
+        await self.device.async_handle_update(self.channel)
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        self.device.register_push_notification_handler_coroutine(
+            self._async_push_notification_received
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity is remove from hass."""
+        self.device.unregister_push_notification_handler_coroutine(
+            self._async_push_notification_received
+        )
+
+    async def _async_push_notification_received(
+        self, namespace: str, data: dict, uuid: str
+    ) -> None:
+        """Synchronize the status of device push."""
+        await self.device.async_update_push_state(
+            namespace=namespace, data=data, uuid=uuid
+        )
+        self.async_write_ha_state()
