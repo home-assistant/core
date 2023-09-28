@@ -12,7 +12,10 @@ from homeassistant.components.assist_pipeline import (
     PipelineEventType,
     PipelineStage,
 )
-from homeassistant.components.assist_pipeline.error import WakeWordDetectionError
+from homeassistant.components.assist_pipeline.error import (
+    WakeWordDetectionAborted,
+    WakeWordDetectionError,
+)
 from homeassistant.components.esphome import DomainData
 from homeassistant.components.esphome.voice_assistant import VoiceAssistantUDPServer
 from homeassistant.core import HomeAssistant
@@ -411,3 +414,27 @@ async def test_wake_word_exception(
             conversation_id=None,
             flags=2,
         )
+
+
+async def test_wake_word_abort_exception(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+) -> None:
+    """Test that the pipeline is set to start with Wake word."""
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        raise WakeWordDetectionAborted
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ), patch.object(voice_assistant_udp_server_v2, "handle_event") as mock_handle_event:
+        voice_assistant_udp_server_v2.transport = Mock()
+
+        await voice_assistant_udp_server_v2.run_pipeline(
+            device_id="mock-device-id",
+            conversation_id=None,
+            flags=2,
+        )
+
+        mock_handle_event.assert_not_called()
