@@ -10,6 +10,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_REDIRECT_URI, DOMAIN
 
@@ -34,7 +35,7 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_CLIENT_ID): str,
                 vol.Required(CONF_CLIENT_SECRET): str,
-                vol.Required(CONF_REDIRECT_URI): str,
+                vol.Required(CONF_REDIRECT_URI): cv.url,
             }
         )
 

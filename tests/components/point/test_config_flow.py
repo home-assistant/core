@@ -79,7 +79,7 @@ async def test_full_flow_implementation(hass: HomeAssistant, mock_pypoint) -> No
         user_input={
             CONF_CLIENT_ID: "id",
             CONF_CLIENT_SECRET: "secret",
-            "redirect_uri": "uri",
+            "redirect_uri": "http://example.com",
         },
     )
     assert result["type"] == FlowResultType.EXTERNAL_STEP
@@ -147,7 +147,7 @@ async def test_callback_view(
         user_input={
             CONF_CLIENT_ID: "id",
             CONF_CLIENT_SECRET: "secret",
-            "redirect_uri": "uri",
+            "redirect_uri": "http://example.com",
         },
     )
     assert result["type"] == FlowResultType.EXTERNAL_STEP
