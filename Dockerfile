@@ -2,8 +2,11 @@ ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
 # Synchronize with homeassistant/core.py:async_stop
+# Add Home Assistant wheels index for newer versions
+
 ENV \
-    S6_SERVICES_GRACETIME=220000
+    S6_SERVICES_GRACETIME=220000 \
+    EXTRA_INDEX_URL=https://wheels.home-assistant.io/musllinux-index/
 
 ARG QEMU_CPU
 
@@ -17,7 +20,7 @@ RUN \
         --no-cache-dir \
         --no-index \
         --only-binary=:all: \
-        --find-links "${WHEELS_LINKS}" \
+        --extra-index-url "${EXTRA_INDEX_URL}" \
         -r homeassistant/requirements.txt
 
 COPY requirements_all.txt home_assistant_frontend-* home_assistant_intents-* homeassistant/
@@ -41,7 +44,7 @@ RUN \
             --no-cache-dir \
             --no-index \
             --only-binary=:all: \
-            --find-links "${WHEELS_LINKS}" \
+            --extra-index-url "${EXTRA_INDEX_URL}" \
             -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
@@ -51,7 +54,7 @@ RUN \
         --no-cache-dir \
         --no-index \
         --only-binary=:all: \
-        --find-links "${WHEELS_LINKS}" \
+        --extra-index-url "${EXTRA_INDEX_URL}" \
         -e ./homeassistant \
     && python3 -m compileall \
         homeassistant/homeassistant
