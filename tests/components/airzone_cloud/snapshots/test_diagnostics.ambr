@@ -113,6 +113,7 @@
           'active': True,
           'available': True,
           'humidity': 27,
+          'id': 'group1',
           'installation': 'installation1',
           'mode': 2,
           'modes': list([
@@ -144,6 +145,7 @@
             'aidoo1',
           ]),
           'available': True,
+          'id': 'grp2',
           'installation': 'installation1',
           'mode': 3,
           'modes': list([
@@ -165,11 +167,40 @@
       }),
       'installations': dict({
         'installation1': dict({
+          'action': 1,
+          'active': True,
+          'aidoos': list([
+            'aidoo1',
+          ]),
+          'available': True,
+          'humidity': 27,
           'id': 'installation1',
+          'mode': 2,
+          'modes': list([
+            1,
+            2,
+            3,
+            4,
+            5,
+          ]),
           'name': 'House',
+          'num-devices': 3,
+          'power': True,
+          'systems': list([
+            'system1',
+          ]),
+          'temperature': 22.0,
+          'temperature-setpoint': 23.3,
+          'temperature-setpoint-max': 30.0,
+          'temperature-setpoint-min': 15.0,
+          'temperature-step': 0.5,
           'web-servers': list([
             'webserver1',
             '11:22:33:44:55:67',
+          ]),
+          'zones': list([
+            'zone1',
+            'zone2',
           ]),
         }),
       }),
