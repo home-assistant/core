@@ -1144,71 +1144,109 @@ async def test_component_config_exceptions(
 ) -> None:
     """Test unexpected exceptions validating component config."""
     # Config validator
+    test_integration = Mock(
+        domain="test_domain",
+        get_platform=Mock(
+            return_value=Mock(
+                async_validate_config=AsyncMock(side_effect=ValueError("broken"))
+            )
+        ),
+    )
     assert (
         await config_util.async_process_component_config(
-            hass,
-            {},
-            integration=Mock(
-                domain="test_domain",
-                get_platform=Mock(
-                    return_value=Mock(
-                        async_validate_config=AsyncMock(
-                            side_effect=ValueError("broken")
-                        )
-                    )
-                ),
-            ),
+            hass, {}, integration=test_integration
         )
         is None
     )
     assert "ValueError: broken" in caplog.text
     assert "Unknown error calling test_domain config validator" in caplog.text
+    caplog.clear()
+    with pytest.raises(HomeAssistantError):
+        assert (
+            await config_util.async_process_component_config(
+                hass, {}, integration=test_integration, raise_on_failure=True
+            )
+            is None
+        )
+        assert "ValueError: broken" in caplog.text
+        assert "Unknown error calling test_domain config validator" in caplog.text
 
     # component.CONFIG_SCHEMA
     caplog.clear()
+    test_integration = Mock(
+        domain="test_domain",
+        get_platform=Mock(return_value=None),
+        get_component=Mock(
+            return_value=Mock(CONFIG_SCHEMA=Mock(side_effect=ValueError("broken")))
+        ),
+    )
     assert (
         await config_util.async_process_component_config(
             hass,
             {},
-            integration=Mock(
-                domain="test_domain",
-                get_platform=Mock(return_value=None),
-                get_component=Mock(
-                    return_value=Mock(
-                        CONFIG_SCHEMA=Mock(side_effect=ValueError("broken"))
-                    )
-                ),
-            ),
+            integration=test_integration,
         )
         is None
     )
     assert "ValueError: broken" in caplog.text
     assert "Unknown error calling test_domain CONFIG_SCHEMA" in caplog.text
+    caplog.clear()
+    with pytest.raises(HomeAssistantError):
+        assert (
+            await config_util.async_process_component_config(
+                hass,
+                {},
+                integration=test_integration,
+                raise_on_failure=True,
+            )
+            is None
+        )
+        assert "ValueError: broken" in caplog.text
+        assert "Unknown error calling test_domain CONFIG_SCHEMA" in caplog.text
 
     # component.PLATFORM_SCHEMA
     caplog.clear()
+    test_integration = Mock(
+        domain="test_domain",
+        get_platform=Mock(return_value=None),
+        get_component=Mock(
+            return_value=Mock(
+                spec=["PLATFORM_SCHEMA_BASE"],
+                PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
+            )
+        ),
+    )
     assert await config_util.async_process_component_config(
         hass,
         {"test_domain": {"platform": "test_platform"}},
-        integration=Mock(
-            domain="test_domain",
-            get_platform=Mock(return_value=None),
-            get_component=Mock(
-                return_value=Mock(
-                    spec=["PLATFORM_SCHEMA_BASE"],
-                    PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
-                )
-            ),
-        ),
+        integration=test_integration,
     ) == {"test_domain": []}
     assert "ValueError: broken" in caplog.text
     assert (
         "Unknown error validating test_platform platform config "
         "with test_domain component platform schema"
     ) in caplog.text
+    caplog.clear()
+    with pytest.raises(HomeAssistantError):
+        assert await config_util.async_process_component_config(
+            hass,
+            {"test_domain": {"platform": "test_platform"}},
+            integration=test_integration,
+            raise_on_failure=True,
+        ) == {"test_domain": []}
+        assert "ValueError: broken" in caplog.text
+        assert (
+            "Unknown error validating test_platform platform config "
+            "with test_domain component platform schema"
+        ) in caplog.text
 
     # platform.PLATFORM_SCHEMA
     caplog.clear()
+    test_integration = Mock(
+        domain="test_domain",
+        get_platform=Mock(return_value=None),
+        get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+    )
     with patch(
         "homeassistant.config.async_get_integration_with_requirements",
         return_value=Mock(  # integration that owns platform
@@ -1222,37 +1260,44 @@ async def test_component_config_exceptions(
         assert await config_util.async_process_component_config(
             hass,
             {"test_domain": {"platform": "test_platform"}},
-            integration=Mock(
-                domain="test_domain",
-                get_platform=Mock(return_value=None),
-                get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
-            ),
+            integration=test_integration,
         ) == {"test_domain": []}
         assert "ValueError: broken" in caplog.text
         assert (
             "Unknown error validating config for test_platform platform for test_domain"
             " component with PLATFORM_SCHEMA" in caplog.text
         )
+        caplog.clear()
+        with pytest.raises(HomeAssistantError):
+            assert await config_util.async_process_component_config(
+                hass,
+                {"test_domain": {"platform": "test_platform"}},
+                integration=test_integration,
+                raise_on_failure=True,
+            ) == {"test_domain": []}
+            assert "ValueError: broken" in caplog.text
+            assert (
+                "Unknown error validating config for test_platform platform for test_domain"
+                " component with PLATFORM_SCHEMA" in caplog.text
+            )
 
     # get_platform("config") raising
     caplog.clear()
+    test_integration = Mock(
+        pkg_path="homeassistant.components.test_domain",
+        domain="test_domain",
+        get_platform=Mock(
+            side_effect=ImportError(
+                ("ModuleNotFoundError: No module named 'not_installed_something'"),
+                name="not_installed_something",
+            )
+        ),
+    )
     assert (
         await config_util.async_process_component_config(
             hass,
             {"test_domain": {}},
-            integration=Mock(
-                pkg_path="homeassistant.components.test_domain",
-                domain="test_domain",
-                get_platform=Mock(
-                    side_effect=ImportError(
-                        (
-                            "ModuleNotFoundError: No module named"
-                            " 'not_installed_something'"
-                        ),
-                        name="not_installed_something",
-                    )
-                ),
-            ),
+            integration=test_integration,
         )
         is None
     )
@@ -1260,26 +1305,52 @@ async def test_component_config_exceptions(
         "Error importing config platform test_domain: ModuleNotFoundError: No module"
         " named 'not_installed_something'" in caplog.text
     )
+    caplog.clear()
+    with pytest.raises(HomeAssistantError):
+        assert (
+            await config_util.async_process_component_config(
+                hass,
+                {"test_domain": {}},
+                integration=test_integration,
+                raise_on_failure=True,
+            )
+            is None
+        )
+        assert (
+            "Error importing config platform test_domain: ModuleNotFoundError: No module"
+            " named 'not_installed_something'" in caplog.text
+        )
 
     # get_component raising
     caplog.clear()
+    test_integration = Mock(
+        pkg_path="homeassistant.components.test_domain",
+        domain="test_domain",
+        get_component=Mock(
+            side_effect=FileNotFoundError("No such file or directory: b'liblibc.a'")
+        ),
+    )
     assert (
         await config_util.async_process_component_config(
             hass,
             {"test_domain": {}},
-            integration=Mock(
-                pkg_path="homeassistant.components.test_domain",
-                domain="test_domain",
-                get_component=Mock(
-                    side_effect=FileNotFoundError(
-                        "No such file or directory: b'liblibc.a'"
-                    )
-                ),
-            ),
+            integration=test_integration,
         )
         is None
     )
     assert "Unable to import test_domain: No such file or directory" in caplog.text
+    caplog.clear()
+    with pytest.raises(HomeAssistantError):
+        assert (
+            await config_util.async_process_component_config(
+                hass,
+                {"test_domain": {}},
+                integration=test_integration,
+                raise_on_failure=True,
+            )
+            is None
+        )
+        assert "Unable to import test_domain: No such file or directory" in caplog.text
 
 
 @pytest.mark.parametrize(

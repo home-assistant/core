@@ -989,7 +989,12 @@ async def async_process_component_config(  # noqa: C901
                     p_integration.documentation,
                 )
                 continue
-            except Exception:  # pylint: disable=broad-except
+            except Exception as ex:  # pylint: disable=broad-except
+                _raise_on_fail(
+                    ex,
+                    f"Unknown error validating config for {p_name} platform for {domain}"
+                    " component with PLATFORM_SCHEMA",
+                )
                 _LOGGER.exception(
                     (
                         "Unknown error validating config for %s platform for %s"
