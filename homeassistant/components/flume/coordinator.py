@@ -88,8 +88,7 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=NOTIFICATION_SCAN_INTERVAL,
         )
         self.auth = auth
-        self.active_notifications_by_device: dict = {}
-        self.notifications: list[dict[str, Any]]
+        self.notifications: list[dict[str, Any]] = []
 
     def _update_lists(self):
         """Query flume for notification list."""
@@ -100,21 +99,6 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self.auth, read=None
         ).notification_list
         _LOGGER.debug("Notifications %s", self.notifications)
-
-        active_notifications_by_device: dict[str, set[str]] = {}
-
-        for notification in self.notifications:
-            if (
-                not notification.get("device_id")
-                or not notification.get("extra")
-                or "event_rule_name" not in notification["extra"]
-            ):
-                continue
-            device_id = notification["device_id"]
-            rule = notification["extra"]["event_rule_name"]
-            active_notifications_by_device.setdefault(device_id, set()).add(rule)
-
-        self.active_notifications_by_device = active_notifications_by_device
 
     async def _async_update_data(self) -> None:
         """Update data."""

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -138,16 +139,19 @@ class FlumeNotificationBinarySensor(
 
     entity_description: FlumeBinarySensorEntityDescription
 
+    def _filter_notification(self, notification: dict[str, Any]):
+        return (
+            notification.get("device_id") == self.device_id
+            and notification.get("extra", {}).get("event_rule_name")
+            == self.entity_description.event_rule
+        )
+
     @property
     def is_on(self) -> bool:
         """Return on state."""
-        return bool(
-            (
-                notifications := self.coordinator.active_notifications_by_device.get(
-                    self.device_id
-                )
-            )
-            and self.entity_description.event_rule in notifications
+        return any(
+            self._filter_notification(notification)
+            for notification in self.coordinator.notifications
         )
 
 
