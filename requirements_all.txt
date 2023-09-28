@@ -1499,7 +1499,7 @@ pvo==1.0.0
 py-canary==0.5.3
 
 # homeassistant.components.cpuspeed
-py-cpuinfo==8.0.0
+py-cpuinfo==9.0.0
 
 # homeassistant.components.dormakaba_dkey
 py-dormakaba-dkey==1.0.5
@@ -2703,7 +2703,7 @@ waterfurnace==1.1.0
 webexteamssdk==1.1.1
 
 # homeassistant.components.assist_pipeline
-webrtc-noise-gain==1.2.1
+webrtc-noise-gain==1.2.2
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.4
