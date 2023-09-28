@@ -26,7 +26,7 @@ SECRET_TOKEN_LENGTH = 32
 async def async_setup_platform(hass, bot, config):
     """Set up the Telegram webhooks platform."""
 
-    # Generate a ephemeral secret token
+    # Generate an ephemeral secret token
     alphabet = string.ascii_letters + string.digits + "-_"
     secret_token = "".join(secrets.choice(alphabet) for _ in range(SECRET_TOKEN_LENGTH))
 
