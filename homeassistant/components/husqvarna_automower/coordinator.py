@@ -37,19 +37,22 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[aioautomower.MowerLis
             handle_token=False,
             handle_rest=False,
         )
+        self.ws_connected: bool = False
 
     async def _async_update_data(self) -> None:
         """Subscribe for websocket and poll data from the API."""
-        await self.mowersession.connect()
-        self.mowersession.register_data_callback(
-            self.callback, schedule_immediately=True
-        )
+        if not self.ws_connected:
+            await self.mowersession.connect()
+            self.mowersession.register_data_callback(
+                self.callback, schedule_immediately=True
+            )
+            self.ws_connected = True
         return await self.mowersession.get_status()
 
     @callback
     def callback(self, ws_data: aioautomower.MowerData):
         """Process websocket callbacks and write them to the DataUpdateCoordinator."""
-        if self.data:
+        if self.data and ws_data:
             for mower in self.data.data:
                 if mower.id == ws_data.id:
                     for field in fields(ws_data.attributes):
