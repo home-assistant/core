@@ -1,5 +1,7 @@
 """Base entity for the Minecraft Server integration."""
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -17,14 +19,15 @@ class MinecraftServerEntity(CoordinatorEntity[MinecraftServerCoordinator]):
     def __init__(
         self,
         coordinator: MinecraftServerCoordinator,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize base entity."""
         super().__init__(coordinator)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.unique_id)},
+            identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer=MANUFACTURER,
-            model=f"Minecraft Server ({coordinator.server_type})",
+            model=f"Minecraft Server ({config_entry.data[CONF_TYPE]})",
             name=coordinator.name,
             sw_version=f"{coordinator.data.version} ({coordinator.data.protocol_version})",
         )

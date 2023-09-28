@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTime
+from homeassistant.const import CONF_TYPE, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -185,9 +185,9 @@ async def async_setup_entry(
     # Add sensor entities.
     async_add_entities(
         [
-            MinecraftServerSensorEntity(coordinator, description)
+            MinecraftServerSensorEntity(coordinator, description, config_entry)
             for description in SENSOR_DESCRIPTIONS
-            if coordinator.server_type in description.supported_server_types
+            if config_entry.data[CONF_TYPE] in description.supported_server_types
         ]
     )
 
@@ -201,11 +201,12 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
         self,
         coordinator: MinecraftServerCoordinator,
         description: MinecraftServerSensorEntityDescription,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize sensor base entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, config_entry)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
+        self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
         self._update_properties()
 
     @callback

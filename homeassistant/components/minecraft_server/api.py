@@ -3,9 +3,12 @@
 
 from dataclasses import dataclass
 from enum import StrEnum
+import logging
 
 from mcstatus import BedrockServer, JavaServer
 from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -60,6 +63,10 @@ class MinecraftServer:
             raise MinecraftServerAddressError(
                 f"{server_type} server address '{address}' is invalid (error: {error})"
             ) from error
+
+        _LOGGER.debug(
+            "%s server instance created with address '%s'", server_type, address
+        )
 
     async def async_is_online(self) -> bool:
         """Check if the server is online, supporting both Java and Bedrock Edition servers."""
