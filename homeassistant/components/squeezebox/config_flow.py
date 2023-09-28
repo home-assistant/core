@@ -111,7 +111,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data[CONF_PORT],
             data.get(CONF_USERNAME),
             data.get(CONF_PASSWORD),
-            https=data.get(CONF_HTTPS),
+            https=data[CONF_HTTPS],
         )
 
         try:
