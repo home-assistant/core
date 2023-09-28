@@ -2393,13 +2393,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["unpack"] = struct_unpack
         self.filters["ord"] = ord
         self.filters["is_number"] = is_number
-        self.filters["is_list"] = is_list
-        self.filters["is_set"] = is_set
-        self.filters["is_tuple"] = is_tuple
-        self.filters["set"] = _set
-        self.filters["tuple"] = _tuple
-        self.filters["is_datetime"] = is_datetime
-        self.filters["is_non_string_iterable"] = is_non_string_iterable
         self.filters["float"] = forgiving_float_filter
         self.filters["int"] = forgiving_int_filter
         self.filters["slugify"] = slugify
@@ -2431,13 +2424,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
         self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["is_number"] = is_number
-        self.globals["is_list"] = is_list
-        self.globals["is_set"] = is_set
-        self.globals["is_tuple"] = is_tuple
         self.globals["set"] = _set
         self.globals["tuple"] = _tuple
-        self.globals["is_datetime"] = is_datetime
-        self.globals["is_non_string_iterable"] = is_non_string_iterable
         self.globals["int"] = forgiving_int
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack

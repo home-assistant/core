@@ -494,14 +494,6 @@ def test_isnumber(hass: HomeAssistant, value, expected) -> None:
 def test_islist(hass: HomeAssistant, value, expected) -> None:
     """Test is_list."""
     assert (
-        template.Template("{{ is_list(value) }}", hass).async_render({"value": value})
-        == expected
-    )
-    assert (
-        template.Template("{{ value | is_list }}", hass).async_render({"value": value})
-        == expected
-    )
-    assert (
         template.Template("{{ value is list }}", hass).async_render({"value": value})
         == expected
     )
@@ -524,14 +516,6 @@ def test_islist(hass: HomeAssistant, value, expected) -> None:
 def test_isset(hass: HomeAssistant, value, expected) -> None:
     """Test is_set."""
     assert (
-        template.Template("{{ is_set(value) }}", hass).async_render({"value": value})
-        == expected
-    )
-    assert (
-        template.Template("{{ value | is_set }}", hass).async_render({"value": value})
-        == expected
-    )
-    assert (
         template.Template("{{ value is set }}", hass).async_render({"value": value})
         == expected
     )
@@ -552,15 +536,7 @@ def test_isset(hass: HomeAssistant, value, expected) -> None:
     ],
 )
 def test_istuple(hass: HomeAssistant, value, expected) -> None:
-    """Test is_tuple."""
-    assert (
-        template.Template("{{ is_tuple(value) }}", hass).async_render({"value": value})
-        == expected
-    )
-    assert (
-        template.Template("{{ value | is_tuple }}", hass).async_render({"value": value})
-        == expected
-    )
+    """Test tuple."""
     assert (
         template.Template("{{ value is tuple }}", hass).async_render({"value": value})
         == expected
@@ -586,10 +562,6 @@ def test_set(hass: HomeAssistant, value, expected) -> None:
         template.Template("{{ set(value) }}", hass).async_render({"value": value})
         == expected
     )
-    assert (
-        template.Template("{{ value | set }}", hass).async_render({"value": value})
-        == expected
-    )
 
 
 @pytest.mark.parametrize(
@@ -611,10 +583,6 @@ def test_tuple(hass: HomeAssistant, value, expected) -> None:
         template.Template("{{ tuple(value) }}", hass).async_render({"value": value})
         == expected
     )
-    assert (
-        template.Template("{{ value | tuple }}", hass).async_render({"value": value})
-        == expected
-    )
 
 
 def test_converting_datetime_to_iterable(hass: HomeAssistant) -> None:
@@ -623,11 +591,7 @@ def test_converting_datetime_to_iterable(hass: HomeAssistant) -> None:
     with pytest.raises(TemplateError):
         template.Template("{{ tuple(value) }}", hass).async_render({"value": dt_})
     with pytest.raises(TemplateError):
-        template.Template("{{ value | tuple }}", hass).async_render({"value": dt_})
-    with pytest.raises(TemplateError):
         template.Template("{{ set(value) }}", hass).async_render({"value": dt_})
-    with pytest.raises(TemplateError):
-        template.Template("{{ value | set }}", hass).async_render({"value": dt_})
 
 
 @pytest.mark.parametrize(
@@ -645,19 +609,7 @@ def test_converting_datetime_to_iterable(hass: HomeAssistant) -> None:
     ],
 )
 def test_isdatetime(hass: HomeAssistant, value, expected) -> None:
-    """Test is_datetime."""
-    assert (
-        template.Template("{{ is_datetime(value) }}", hass).async_render(
-            {"value": value}
-        )
-        == expected
-    )
-    assert (
-        template.Template("{{ value | is_datetime }}", hass).async_render(
-            {"value": value}
-        )
-        == expected
-    )
+    """Test datetime."""
     assert (
         template.Template("{{ value is datetime }}", hass).async_render(
             {"value": value}
@@ -682,18 +634,6 @@ def test_isdatetime(hass: HomeAssistant, value, expected) -> None:
 )
 def test_isnonstringiterable(hass: HomeAssistant, value, expected) -> None:
     """Test is_non_string_iterable."""
-    assert (
-        template.Template("{{ is_non_string_iterable(value) }}", hass).async_render(
-            {"value": value}
-        )
-        == expected
-    )
-    assert (
-        template.Template("{{ value | is_non_string_iterable }}", hass).async_render(
-            {"value": value}
-        )
-        == expected
-    )
     assert (
         template.Template("{{ value is non_string_iterable }}", hass).async_render(
             {"value": value}
