@@ -1,8 +1,7 @@
 """Husqvarna automower entity."""
 import logging
 
-from aioautomower.const import MowerActivities, MowerStates
-from aioautomower.session import MowerData
+from aioautomower.const import MowerActivities, MowerData, MowerStates
 
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
@@ -59,8 +58,7 @@ async def async_setup_entry(
     """Set up lawn mower platform."""
     coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        AutomowerLawnMowerEntity(mower, coordinator)
-        for mower in coordinator.session.mowers.data
+        AutomowerLawnMowerEntity(mower, coordinator) for mower in coordinator.data.data
     )
 
 
@@ -98,12 +96,12 @@ class AutomowerLawnMowerEntity(LawnMowerEntity, AutomowerBaseEntity):
 
     async def async_start_mowing(self) -> None:
         """Resume schedule."""
-        await self.coordinator.session.resume_schedule(self.mower_id)
+        await self.coordinator.mowersession.resume_schedule(self.mower_id)
 
     async def async_pause(self) -> None:
         """Pauses the mower."""
-        await self.coordinator.session.pause_mowing(self.mower_id)
+        await self.coordinator.mowersession.pause_mowing(self.mower_id)
 
     async def async_dock(self) -> None:
         """Parks the mower until next schedule."""
-        await self.coordinator.session.park_until_next_schedule(self.mower_id)
+        await self.coordinator.mowersession.park_until_next_schedule(self.mower_id)

@@ -2,9 +2,8 @@
 
 import logging
 
-from aioautomower.session import MowerAttributes, MowerData
+from aioautomower.const import MowerAttributes, MowerData
 
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -44,20 +43,3 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
     def mower_attributes(self) -> MowerAttributes:
         """Get the mower attributes of the current mower."""
         return self.mower.attributes
-
-    async def async_added_to_hass(self) -> None:
-        """Call when entity about to be added to Home Assistant."""
-        await super().async_added_to_hass()
-        self.coordinator.session.register_data_callback(
-            self.callback, schedule_immediately=True
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Call when entity is being removed from Home Assistant."""
-        await super().async_will_remove_from_hass()
-        self.coordinator.session.unregister_data_callback(self.callback)
-
-    @callback
-    def callback(self, _):
-        """Is called on an update of the library and writes new state to the entity."""
-        self.async_write_ha_state()
