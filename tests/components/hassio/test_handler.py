@@ -320,8 +320,8 @@ async def test_api_ingress_panels(
     ],
 )
 async def test_api_headers(
+    aiohttp_raw_server,  # 'aiohttp_raw_server' must be before 'hass'!
     hass,
-    aiohttp_raw_server,
     socket_enabled,
     api_call: str,
     method: Literal["GET", "POST"],
