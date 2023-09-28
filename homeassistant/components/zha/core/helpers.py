@@ -437,7 +437,10 @@ class ZHAData:
 
 def get_zha_data(hass: HomeAssistant) -> ZHAData:
     """Get the global ZHA data object."""
-    return hass.data.get(DATA_ZHA, ZHAData())
+    if DATA_ZHA not in hass.data:
+        hass.data[DATA_ZHA] = ZHAData()
+
+    return hass.data[DATA_ZHA]
 
 
 def get_zha_gateway(hass: HomeAssistant) -> ZHAGateway:

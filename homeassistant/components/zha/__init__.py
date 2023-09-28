@@ -11,8 +11,8 @@ from zhaquirks import setup as setup_quirks
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
@@ -155,19 +155,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     zha_gateway = ZHAGateway(hass, zha_data.yaml_config, config_entry)
 
-    async def async_zha_shutdown():
-        """Handle shutdown tasks."""
-        await zha_gateway.shutdown()
-        # clean up any remaining entity metadata
-        # (entities that have been discovered but not yet added to HA)
-        # suppress KeyError because we don't know what state we may
-        # be in when we get here in failure cases
-        with contextlib.suppress(KeyError):
-            for platform in PLATFORMS:
-                del zha_data.platforms[platform]
-
-    config_entry.async_on_unload(async_zha_shutdown)
-
     try:
         await zha_gateway.async_initialize()
     except Exception:
@@ -196,6 +183,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     websocket_api.async_load_api(hass)
 
+    async def async_shutdown(_: Event) -> None:
+        await zha_gateway.shutdown()
+
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
+    )
+
     await zha_gateway.async_initialize_devices_and_entities()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
@@ -205,7 +199,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
     zha_data = get_zha_data(hass)
-    zha_data.gateway = None
+
+    if zha_data.gateway is not None:
+        await zha_data.gateway.shutdown()
+        zha_data.gateway = None
+
+    # clean up any remaining entity metadata
+    # (entities that have been discovered but not yet added to HA)
+    # suppress KeyError because we don't know what state we may
+    # be in when we get here in failure cases
+    with contextlib.suppress(KeyError):
+        for platform in PLATFORMS:
+            del zha_data.platforms[platform]
 
     GROUP_PROBE.cleanup()
     websocket_api.async_unload_api(hass)
