@@ -152,6 +152,13 @@ async def async_integration_yaml_config(
     ...
 
 
+@overload
+async def async_integration_yaml_config(
+    hass: HomeAssistant, integration_name: str
+) -> ConfigType | None:
+    ...
+
+
 async def async_integration_yaml_config(
     hass: HomeAssistant, integration_name: str, *, raise_on_failure: bool = False
 ) -> ConfigType | None:
