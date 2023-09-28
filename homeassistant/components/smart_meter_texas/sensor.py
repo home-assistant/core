@@ -73,7 +73,6 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
             self._attr_native_value = self.meter.reading
         self.async_write_ha_state()
 
-    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self):
         """Subscribe to updates."""
         await super().async_added_to_hass()
