@@ -14,10 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from . import (
-    event as event_platform,
-    sensor as sensor_platform,
-)
+from . import event as event_platform, sensor as sensor_platform
 from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
