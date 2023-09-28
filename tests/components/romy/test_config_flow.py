@@ -140,11 +140,11 @@ async def test_show_user_form_with_config_which_contains_wrong_password(
 ###################
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    host="1.2.3.4",
-    hostname="aicu-aicgsbksisfapcjqmqjq.local",
+    ip_address=ip_address("1.2.3.4"),
+    ip_addresses=[ip_address("1.2.3.4")],
     port=8080,
+    hostname="aicu-aicgsbksisfapcjqmqjq.local",
     type="mock_type",
-    addresses="addresses",
     name="myROMY",
     properties={zeroconf.ATTR_PROPERTIES_ID: "aicu-aicgsbksisfapcjqmqjq"},
 )
