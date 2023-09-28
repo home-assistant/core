@@ -120,14 +120,8 @@ def convert_ppb_to_ugm3(molecular_weight: int | float) -> Callable[[float], floa
 
 SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_TEMPERATURE,
-        name="Temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_FEELS_LIKE,
+        key="feels_like",
+        attribute=TMRW_ATTR_FEELS_LIKE,
         name="Feels Like",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -142,51 +136,6 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_HUMIDITY,
-        name="Humidity",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.HUMIDITY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_WIND_SPEED,
-        name="Wind Speed",
-        unit_imperial=UnitOfSpeed.MILES_PER_HOUR,
-        unit_metric=UnitOfSpeed.METERS_PER_SECOND,
-        device_class=SensorDeviceClass.WIND_SPEED,
-        state_class=SensorStateClass.MEASUREMENT,
-        imperial_conversion=lambda val: SpeedConverter.convert(
-            val, UnitOfSpeed.METERS_PER_SECOND, UnitOfSpeed.MILES_PER_HOUR
-        ),
-    ),
-    TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_WIND_DIRECTION,
-        name="Wind Direction",
-        native_unit_of_measurement="°",
-        icon="mdi:windsock",
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    # Data comes in as m/s, convert to mi/h for imperial
-    TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_WIND_GUST,
-        name="Wind Gust",
-        unit_imperial=UnitOfSpeed.MILES_PER_HOUR,
-        unit_metric=UnitOfSpeed.METERS_PER_SECOND,
-        device_class=SensorDeviceClass.WIND_SPEED,
-        state_class=SensorStateClass.MEASUREMENT,
-        imperial_conversion=lambda val: SpeedConverter.convert(
-            val, UnitOfSpeed.METERS_PER_SECOND, UnitOfSpeed.MILES_PER_HOUR
-        ),
-    ),
-    # Data comes in as hPa
-    TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_PRESSURE,
-        name="Pressure (Sea Level)",
-        native_unit_of_measurement=UnitOfPressure.HPA,
-        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
     # Data comes in as hPa
     TomorrowioSensorEntityDescription(
         key="pressure_surface_level",
@@ -199,38 +148,13 @@ SENSOR_TYPES = (
     # Data comes in as W/m^2, convert to BTUs/(hr * ft^2) for imperial
     # https://www.theunitconverter.com/watt-square-meter-to-btu-hour-square-foot-conversion/
     TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_PRECIPITATION_INTENSITY,
-        name="Precipitation Intensity",
-        native_unit_of_measurement="mm/h",
-        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_PRECIPITATION_PROBABILITY,
-        name="Precipitation Probability",
-        icon="mdi:water-percent",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_PRECIPITATION_TYPE,
-        name="Precipitation Type",
-        value_map=PrecipitationType,
-        translation_key="precipitation_type",
-        icon="mdi:weather-snowy-rainy",
-    ),
-    TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_VISIBILITY,
-        name="Visibility",
-        native_unit_of_measurement="km",
-        device_class=SensorDeviceClass.DISTANCE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_CLOUD_COVER,
-        name="Cloud Cover",
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:cloud-percent",
+        key="global_horizontal_irradiance",
+        attribute=TMRW_ATTR_SOLAR_GHI,
+        name="Global Horizontal Irradiance",
+        unit_imperial=UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT,
+        unit_metric=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+        imperial_conversion=(1 / 3.15459),
+        device_class=SensorDeviceClass.IRRADIANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Data comes in as km, convert to miles for imperial
@@ -266,42 +190,33 @@ SENSOR_TYPES = (
         ),
     ),
     TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_UV_INDEX,
-        name="UV Index",
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:sun-wireless",
-    ),
-    TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_UV_HEALTH_CONCERN,
-        name="UV Radiation Health Concern",
-        value_map=UVDescription,
-        translation_key="uv_index",
-        icon="mdi:sun-wireless",
-    ),
-    TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_EVOPOTRANSPIRATION,
-        name="Evapotranspiration",
-        native_unit_of_measurement="mm",
-        device_class=SensorDeviceClass.DISTANCE,
+        key="cloud_cover",
+        attribute=TMRW_ATTR_CLOUD_COVER,
+        name="Cloud Cover",
+        icon="mdi:cloud-percent",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Data comes in as m/s, convert to mi/h for imperial
     TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_WET_BULB_GLOBE_TEMPERATURE,
-        name="Wet Bulb Globe Temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        key="wind_gust",
+        attribute=TMRW_ATTR_WIND_GUST,
+        name="Wind Gust",
+        unit_imperial=UnitOfSpeed.MILES_PER_HOUR,
+        unit_metric=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
+        imperial_conversion=lambda val: SpeedConverter.convert(
+            val, UnitOfSpeed.METERS_PER_SECOND, UnitOfSpeed.MILES_PER_HOUR
+        ),
     ),
-    # Data comes in as W/m^2, convert to BTUs/(hr * ft^2) for imperial
-    # https://www.theunitconverter.com/watt-square-meter-to-btu-hour-square-foot-conversion/
     TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_SOLAR_GHI,
-        name="Global Horizontal Irradiance",
-        unit_imperial=UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT,
-        unit_metric=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
-        imperial_conversion=(1 / 3.15459),
-        device_class=SensorDeviceClass.IRRADIANCE,
-        state_class=SensorStateClass.MEASUREMENT,
+        key="precipitation_type",
+        attribute=TMRW_ATTR_PRECIPITATION_TYPE,
+        name="Precipitation Type",
+        value_map=PrecipitationType,
+        translation_key="precipitation_type",
+        icon="mdi:weather-snowy-rainy",
     ),
     # Data comes in as ppb, convert to µg/m^3
     # Molecular weight of Ozone is 48
@@ -388,7 +303,6 @@ SENSOR_TYPES = (
         key="china_mep_air_quality_index",
         attribute=TMRW_ATTR_CHINA_AQI,
         name="China MEP Air Quality Index",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
     ),
     TomorrowioSensorEntityDescription(
@@ -434,8 +348,108 @@ SENSOR_TYPES = (
         key="fire_index",
         attribute=TMRW_ATTR_FIRE_INDEX,
         name="Fire Index",
-        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:fire",
+    ),
+    TomorrowioSensorEntityDescription(
+        key="uv_index",
+        attribute=TMRW_ATTR_UV_INDEX,
+        name="UV Index",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:sun-wireless",
+    ),
+    TomorrowioSensorEntityDescription(
+        key="uv_radiation_health_concern",
+        attribute=TMRW_ATTR_UV_HEALTH_CONCERN,
+        name="UV Radiation Health Concern",
+        value_map=UVDescription,
+        translation_key="uv_index",
+        icon="mdi:weather-sunny-alert",
+    ),
+    TomorrowioSensorEntityDescription(
+        key="temperature",
+        attribute=TMRW_ATTR_TEMPERATURE,
+        name="Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TomorrowioSensorEntityDescription(
+        key="evapotranspiration",
+        attribute=TMRW_ATTR_EVOPOTRANSPIRATION,
+        name="Evapotranspiration",
+        native_unit_of_measurement="mm",
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:waves-arrow-up",
+    ),
+    TomorrowioSensorEntityDescription(
+        key="wet_bulb_globe_temperature",
+        attribute=TMRW_ATTR_WET_BULB_GLOBE_TEMPERATURE,
+        name="Wet Bulb Globe Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TomorrowioSensorEntityDescription(
+        key="wind_speed",
+        attribute=TMRW_ATTR_WIND_SPEED,
+        name="Wind Speed",
+        unit_imperial=UnitOfSpeed.MILES_PER_HOUR,
+        unit_metric=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        imperial_conversion=lambda val: SpeedConverter.convert(
+            val, UnitOfSpeed.METERS_PER_SECOND, UnitOfSpeed.MILES_PER_HOUR
+        ),
+    ),
+    TomorrowioSensorEntityDescription(
+        key="wind_direction",
+        attribute=TMRW_ATTR_WIND_DIRECTION,
+        name="Wind Direction",
+        native_unit_of_measurement="°",
+        icon="mdi:windsock",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TomorrowioSensorEntityDescription(
+        key="precipitation_intensity",
+        attribute=TMRW_ATTR_PRECIPITATION_INTENSITY,
+        name="Precipitation Intensity",
+        native_unit_of_measurement="mm/h",
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TomorrowioSensorEntityDescription(
+        key="precipitation_probability",
+        attribute=TMRW_ATTR_PRECIPITATION_PROBABILITY,
+        name="Precipitation Probability",
+        icon="mdi:water-percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TomorrowioSensorEntityDescription(
+        key="visibility",
+        attribute=TMRW_ATTR_VISIBILITY,
+        name="Visibility",
+        native_unit_of_measurement="km",
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TomorrowioSensorEntityDescription(
+        key="humidity",
+        attribute=TMRW_ATTR_HUMIDITY,
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Data comes in as hPa
+    TomorrowioSensorEntityDescription(
+        key="pressure_sea_level",
+        attribute=TMRW_ATTR_PRESSURE,
+        name="Pressure (Sea Level)",
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
