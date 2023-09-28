@@ -249,8 +249,8 @@ class NetworkSettingsInconsistentFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Step to use the new settings found on the radio."""
-        async with self._radio_mgr._connect_zigpy_app() as app:  # pylint: disable=protected-access
-            await app.add_backup(self._new_state)
+        async with self._radio_mgr.connect_zigpy_app() as app:
+            app.backups.add_backup(self._new_state)
 
         await self.hass.config_entries.async_reload(self._entry_id)
         return self.async_create_entry(title="", data={})
