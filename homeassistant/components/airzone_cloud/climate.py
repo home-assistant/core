@@ -16,10 +16,12 @@ from aioairzone_cloud.const import (
     AZD_AIDOOS,
     AZD_GROUPS,
     AZD_HUMIDITY,
+    AZD_INSTALLATIONS,
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
     AZD_NUM_DEVICES,
+    AZD_NUM_GROUPS,
     AZD_POWER,
     AZD_TEMP,
     AZD_TEMP_SET,
@@ -47,6 +49,7 @@ from .entity import (
     AirzoneAidooEntity,
     AirzoneEntity,
     AirzoneGroupEntity,
+    AirzoneInstallationEntity,
     AirzoneZoneEntity,
 )
 
@@ -109,6 +112,17 @@ async def async_setup_entry(
                     coordinator,
                     group_id,
                     group_data,
+                )
+            )
+
+    # Installations
+    for inst_id, inst_data in coordinator.data.get(AZD_INSTALLATIONS, {}).items():
+        if inst_data[AZD_NUM_GROUPS] > 1:
+            entities.append(
+                AirzoneInstallationClimate(
+                    coordinator,
+                    inst_id,
+                    inst_data,
                 )
             )
 
@@ -291,6 +305,29 @@ class AirzoneGroupClimate(AirzoneGroupEntity, AirzoneDeviceGroupClimate):
         super().__init__(coordinator, group_id, group_data)
 
         self._attr_unique_id = group_id
+        self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
+        self._attr_hvac_modes = [
+            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
+        ]
+        if HVACMode.OFF not in self._attr_hvac_modes:
+            self._attr_hvac_modes += [HVACMode.OFF]
+
+        self._async_update_attrs()
+
+
+class AirzoneInstallationClimate(AirzoneInstallationEntity, AirzoneDeviceGroupClimate):
+    """Define an Airzone Cloud Installation climate."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        inst_id: str,
+        inst_data: dict,
+    ) -> None:
+        """Initialize Airzone Cloud Installation climate."""
+        super().__init__(coordinator, inst_id, inst_data)
+
+        self._attr_unique_id = inst_id
         self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
         self._attr_hvac_modes = [
             HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
