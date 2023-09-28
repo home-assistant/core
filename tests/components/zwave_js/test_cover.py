@@ -795,7 +795,10 @@ async def test_fibaro_fgr222_shutter_cover_no_tilt(
 async def test_fibaro_fgr223_shutter_cover_no_tilt(
     hass: HomeAssistant, client, fibaro_fgr223_shutter_state, integration
 ) -> None:
-    """Test absence of tilt function of the Fibaro Shutter devices with operating mode set to roller blind (1)."""
+    """Test absence of tilt function for Fibaro Shutter roller blind.
+
+    Fibaro Shutter devices can have operating mode set to roller blind (1).
+    """
     node_state = replace_value_of_zwave_value(
         fibaro_fgr223_shutter_state,
         [
