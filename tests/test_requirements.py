@@ -21,7 +21,8 @@ from .common import MockModule, mock_integration
 def env_without_wheel_links():
     """Return env without wheel links."""
     env = dict(os.environ)
-    env.pop("WHEEL_LINKS", None)
+    env.pop("WHEELS_LINKS", None)
+    env.pop("EXTRA_INDEX_URL", None)
     return env
 
 
@@ -361,8 +362,8 @@ async def test_get_custom_integration_with_missing_after_dependencies(
     assert integration.domain == "test_custom_component"
 
 
-async def test_install_with_wheels_index(hass: HomeAssistant) -> None:
-    """Test an install attempt with wheels index URL."""
+async def test_install_with_wheels_links(hass: HomeAssistant) -> None:
+    """Test an install attempt with wheels links URL."""
     hass.config.skip_pip = False
     mock_integration(hass, MockModule("comp", requirements=["hello==1.0.0"]))
 
@@ -380,6 +381,31 @@ async def test_install_with_wheels_index(hass: HomeAssistant) -> None:
         assert mock_inst.call_args == call(
             "hello==1.0.0",
             find_links="https://wheels.hass.io/test",
+            constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
+            timeout=60,
+            no_cache_dir=True,
+        )
+
+
+async def test_install_with_extra_index(hass: HomeAssistant) -> None:
+    """Test an install attempt with wheels index URL."""
+    hass.config.skip_pip = False
+    mock_integration(hass, MockModule("comp", requirements=["hello==1.0.0"]))
+
+    with patch("homeassistant.util.package.is_installed", return_value=False), patch(
+        "homeassistant.util.package.is_docker_env", return_value=True
+    ), patch("homeassistant.util.package.install_package") as mock_inst, patch.dict(
+        os.environ, {"EXTRA_INDEX_URL": "https://wheels.hass.io/test"}
+    ), patch(
+        "os.path.dirname"
+    ) as mock_dir:
+        mock_dir.return_value = "ha_package_path"
+        assert await setup.async_setup_component(hass, "comp", {})
+        assert "comp" in hass.config.components
+
+        assert mock_inst.call_args == call(
+            "hello==1.0.0",
+            extra_index_url="https://wheels.hass.io/test",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
             timeout=60,
             no_cache_dir=True,

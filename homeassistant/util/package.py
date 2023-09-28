@@ -70,6 +70,7 @@ def install_package(
     find_links: str | None = None,
     timeout: int | None = None,
     no_cache_dir: bool | None = False,
+    extra_index_url: str | None = None,
 ) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 
@@ -87,6 +88,8 @@ def install_package(
         args.append("--upgrade")
     if constraints is not None:
         args += ["--constraint", constraints]
+    if extra_index_url is not None:
+        args += ["--extra-index-url", extra_index_url, "--prefer-binary"]
     if find_links is not None:
         args += ["--find-links", find_links, "--prefer-binary"]
     if target:

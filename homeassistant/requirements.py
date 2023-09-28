@@ -88,7 +88,9 @@ def pip_kwargs(config_dir: str | None) -> dict[str, Any]:
         "no_cache_dir": is_docker,
         "timeout": PIP_TIMEOUT,
     }
-    if "WHEELS_LINKS" in os.environ:
+    if "EXTRA_INDEX_URL" in os.environ:
+        kwargs["extra_index_url"] = os.environ["EXTRA_INDEX_URL"]
+    elif "WHEELS_LINKS" in os.environ:
         kwargs["find_links"] = os.environ["WHEELS_LINKS"]
     if not (config_dir is None or pkg_util.is_virtual_env()) and not is_docker:
         kwargs["target"] = os.path.join(config_dir, "deps")
