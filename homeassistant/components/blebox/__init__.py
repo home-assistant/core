@@ -57,9 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         port,
         timeout,
         websession,
-        hass.loop,
-        username=username,
-        password=password,
+        hass.loop
     )
 
     try:
