@@ -7,16 +7,19 @@ from aioairzone_cloud.common import OperationAction, OperationMode, TemperatureU
 from aioairzone_cloud.const import (
     API_MODE,
     API_OPTS,
+    API_PARAMS,
     API_POWER,
     API_SETPOINT,
     API_UNITS,
     API_VALUE,
     AZD_ACTION,
     AZD_AIDOOS,
+    AZD_GROUPS,
     AZD_HUMIDITY,
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
+    AZD_NUM_DEVICES,
     AZD_POWER,
     AZD_TEMP,
     AZD_TEMP_SET,
@@ -40,7 +43,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
-from .entity import AirzoneAidooEntity, AirzoneEntity, AirzoneZoneEntity
+from .entity import (
+    AirzoneAidooEntity,
+    AirzoneEntity,
+    AirzoneGroupEntity,
+    AirzoneZoneEntity,
+)
 
 HVAC_ACTION_LIB_TO_HASS: Final[dict[OperationAction, HVACAction]] = {
     OperationAction.COOLING: HVACAction.COOLING,
@@ -92,6 +100,17 @@ async def async_setup_entry(
                 aidoo_data,
             )
         )
+
+    # Groups
+    for group_id, group_data in coordinator.data.get(AZD_GROUPS, {}).items():
+        if group_data[AZD_NUM_DEVICES] > 1:
+            entities.append(
+                AirzoneGroupClimate(
+                    coordinator,
+                    group_id,
+                    group_data,
+                )
+            )
 
     # Zones
     for zone_id, zone_data in coordinator.data.get(AZD_ZONES, {}).items():
@@ -205,6 +224,72 @@ class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneClimate):
             params[API_POWER] = {
                 API_VALUE: True,
             }
+        await self._async_update_params(params)
+
+
+class AirzoneGroupClimate(AirzoneGroupEntity, AirzoneClimate):
+    """Define an Airzone Cloud Group climate."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        group_id: str,
+        group_data: dict,
+    ) -> None:
+        """Initialize Airzone Cloud Group climate."""
+        super().__init__(coordinator, group_id, group_data)
+
+        self._attr_unique_id = group_id
+        self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
+        self._attr_hvac_modes = [
+            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
+        ]
+        if HVACMode.OFF not in self._attr_hvac_modes:
+            self._attr_hvac_modes += [HVACMode.OFF]
+
+        self._async_update_attrs()
+
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        params = {
+            API_PARAMS: {
+                API_POWER: True,
+            },
+        }
+        await self._async_update_params(params)
+
+    async def async_turn_off(self) -> None:
+        """Turn the entity off."""
+        params = {
+            API_PARAMS: {
+                API_POWER: False,
+            },
+        }
+        await self._async_update_params(params)
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        params: dict[str, Any] = {}
+        if ATTR_TEMPERATURE in kwargs:
+            params[API_PARAMS] = {
+                API_SETPOINT: kwargs[ATTR_TEMPERATURE],
+            }
+            params[API_OPTS] = {
+                API_UNITS: TemperatureUnit.CELSIUS.value,
+            }
+        await self._async_update_params(params)
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set hvac mode."""
+        params: dict[str, Any] = {
+            API_PARAMS: {},
+        }
+        if hvac_mode == HVACMode.OFF:
+            params[API_PARAMS][API_POWER] = False
+        else:
+            mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
+            params[API_PARAMS][API_MODE] = mode.value
+            params[API_PARAMS][API_POWER] = True
         await self._async_update_params(params)
 
 
