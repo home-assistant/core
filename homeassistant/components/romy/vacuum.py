@@ -132,13 +132,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         if ret:
             self._is_on = False
 
-    async def async_start_pause(self, **kwargs: Any) -> None:
-        """Pause the cleaning task or resume it."""
-        LOGGER.debug("async_start_pause")
-        if self.is_on:
-            await self.async_pause()
-        else:
-            await self.async_start()
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
