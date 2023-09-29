@@ -496,6 +496,9 @@ buienradar==1.0.5
 # homeassistant.components.caldav
 caldav==1.3.6
 
+# homeassistant.components.http
+charset-normalizer==3.2.0
+
 # homeassistant.components.coinbase
 coinbase==2.1.0
 
