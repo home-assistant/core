@@ -33,6 +33,7 @@ from .const import (
     CONF_CLIMATE_INTERVAL,
     CONF_FORCE_MILES,
     CONF_INTERVAL,
+    CONF_NICKNAME,
     CONF_VALID_REGIONS,
     DATA_BATTERY,
     DATA_CHARGING,
@@ -62,6 +63,7 @@ CONFIG_SCHEMA = vol.Schema(
             [
                 vol.Schema(
                     {
+                        vol.Optional(CONF_NICKNAME, default=None): cv.string,
                         vol.Required(CONF_USERNAME): cv.string,
                         vol.Required(CONF_PASSWORD): cv.string,
                         vol.Required(CONF_REGION): vol.In(CONF_VALID_REGIONS),
@@ -153,6 +155,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # homeassistant to be slow to start
             sess = Session(username, password, region)
             leaf = sess.get_leaf()
+            if CONF_NICKNAME in car_config:
+                leaf.nickname = car_config[CONF_NICKNAME]
+
         except KeyError:
             _LOGGER.error(
                 "Unable to fetch car details..."

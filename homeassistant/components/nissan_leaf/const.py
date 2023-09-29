@@ -15,6 +15,8 @@ DATA_CLIMATE: Final = "climate"
 DATA_RANGE_AC: Final = "range_ac_on"
 DATA_RANGE_AC_OFF: Final = "range_ac_off"
 
+CONF_NICKNAME: Final = "display_name"
+
 CONF_INTERVAL: Final = "update_interval"
 CONF_CHARGING_INTERVAL: Final = "update_interval_charging"
 CONF_CLIMATE_INTERVAL: Final = "update_interval_climate"
