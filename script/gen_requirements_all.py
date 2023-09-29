@@ -179,6 +179,11 @@ get-mac==1000000000.0.0
 # Circular dependency on homeassistant itself
 # https://gitlab.com/keatontaylor/alexapy/-/blob/v1.27.0/pyproject.toml#L29
 alexapy<1.27.0
+
+# We want to skip the binary wheels for the 'charset_normalizer' packages.
+# They are build with mypyc, but causes issues with our wheel builder.
+# In order to do so, we need to constrain the version.
+charset_normalizer==3.2.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
