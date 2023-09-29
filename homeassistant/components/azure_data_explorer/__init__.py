@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Event, HomeAssistant, State
-from homeassistant.exceptions import ConfigEntryNotReady, IntegrationError
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import JSONEncoder
@@ -70,18 +70,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await adx.test_connection()
     except KustoServiceError as exp:
-        _LOGGER.error(exp)
-        raise IntegrationError(
+        raise ConfigEntryError(
             "Could not find Azure Data Explorer database or table"
         ) from exp
-    except KustoAuthenticationError as exp:
-        _LOGGER.error(exp)
-        raise ConfigEntryNotReady(
-            "Could not authenticate to Azure Data Explorer"
-        ) from exp
-    except Exception as exp:  # pylint: disable=broad-except
-        _LOGGER.error(exp)
-        raise ConfigEntryNotReady("Could not connect to Azure Data Explorer") from exp
+    except KustoAuthenticationError:
+        return False
+
     hass.data[DOMAIN][DATA_HUB] = adx
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     await adx.async_start()
@@ -224,12 +218,11 @@ class AzureDataExplorer:
             return None, dropped
         if (utcnow() - time_fired).seconds > DEFAULT_MAX_DELAY + self._send_interval:
             return None, dropped + 1
-        try:
-            json_string = bytes(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
-            json_dictionary = json.loads(json_string)
-            json_event = json.dumps(json_dictionary)
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error("Unknown error: %s, %s", err, state)
+        if "\n" in state.state:
             return None, dropped + 1
+
+        json_string = bytes(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
+        json_dictionary = json.loads(json_string)
+        json_event = json.dumps(json_dictionary)
 
         return (json_event, dropped)

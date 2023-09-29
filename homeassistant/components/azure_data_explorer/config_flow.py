@@ -1,7 +1,6 @@
 """Config flow for Azure Data Explorer integration."""
 from __future__ import annotations
 
-from copy import deepcopy
 import logging
 from typing import Any
 
@@ -9,7 +8,7 @@ from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceEr
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from . import AzureDataExplorerClient
@@ -46,15 +45,7 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
-        """Initialize the config flow."""
-        self._options: dict[str, Any] = deepcopy(DEFAULT_OPTIONS)
-        self._data = None
-
-    @staticmethod
-    async def validate_input(
-        hass: HomeAssistant, data: dict[str, Any]
-    ) -> dict[str, Any] | None:
+    async def validate_input(self, data: dict[str, Any]) -> dict[str, Any] | None:
         """Validate the user input allows us to connect.
 
         Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -70,7 +61,7 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            await hass.async_add_executor_job(client.test_connection)
+            await self.hass.async_add_executor_job(client.test_connection)
 
         except KustoAuthenticationError as exp:
             _LOGGER.error(exp)
@@ -87,7 +78,10 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return None
 
     @staticmethod
-    def async_get_options_flow(config_entry):
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> ADXOptionsFlowHandler:
         """Get the options flow for this handler."""
         return ADXOptionsFlowHandler(config_entry)
 
@@ -97,49 +91,40 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, last_step=True
-            )
+        # self._data = user_input
 
-        self._data = user_input
-        errors = await self.validate_input(self.hass, user_input)
-
-        if errors is not None:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=STEP_USER_DATA_SCHEMA,
-                errors=errors,
-                last_step=True,
-            )
-
-        return self.async_create_entry(
-            # Get the Cluster Name from the full url
-            title=self.create_title(),
-            data=self._data,
-            options=self._options,
+        errors: dict = {}
+        if user_input:
+            errors = await self.validate_input(user_input)  # type: ignore[assignment]
+            if not errors:
+                return self.async_create_entry(
+                    # Get the Cluster Name from the full url
+                    data=user_input,
+                    title=self.create_title(user_input[CONF_ADX_CLUSTER_INGEST_URI]),
+                    options=DEFAULT_OPTIONS,
+                )
+        return self.async_show_form(
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            last_step=True,
         )
 
-    def create_title(self):
+    def create_title(self, ingestURI):
         """Build the Cluster Title from the URL."""
-        url_no_https = str(self._data[CONF_ADX_CLUSTER_INGEST_URI]).split("//")[1]
+        url_no_https = ingestURI.split("//")[1]
         return str(url_no_https.split(".")[0])
 
 
-class ADXOptionsFlowHandler(config_entries.OptionsFlow):
+class ADXOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle azure adx options."""
-
-    def __init__(self, config_entry):
-        """Initialize ADX options flow."""
-        self.config_entry = config_entry
-        self.options = deepcopy(dict(config_entry.options))
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the ADX options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",

@@ -26,13 +26,13 @@ async def test_form(
     mock_setup_entry,
     step_config,
     step_id,
-):
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
     )
     assert result["type"] == "form"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -55,7 +55,7 @@ async def test_connection_error_KustoServiceError(
         data=None,
     )
     assert result["type"] == "form"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     mock_execute_query.side_effect = KustoServiceError("test")
     result2 = await hass.config_entries.flow.async_configure(
@@ -77,7 +77,7 @@ async def test_connection_error_KustoAuthenticationError(
         data=None,
     )
     assert result["type"] == "form"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     mock_execute_query.side_effect = KustoAuthenticationError("test", Exception)
     result2 = await hass.config_entries.flow.async_configure(
@@ -99,7 +99,7 @@ async def test_connection_error_Exception(
         data=None,
     )
     assert result["type"] == "form"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     mock_execute_query.side_effect = Exception
     result2 = await hass.config_entries.flow.async_configure(

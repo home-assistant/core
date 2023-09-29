@@ -212,7 +212,7 @@ async def test_failed_test_connection_KustoAuthenticationError(
     entry.add_to_hass(hass)
     mock_execute_query.side_effect = KustoAuthenticationError("test", Exception)
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
 async def test_failed_test_connection_Exception(hass, mock_execute_query):
@@ -226,7 +226,7 @@ async def test_failed_test_connection_Exception(hass, mock_execute_query):
     entry.add_to_hass(hass)
     mock_execute_query.side_effect = Exception
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
 async def test_late_event(
@@ -343,3 +343,25 @@ async def test_filter(
             == count
         )
         mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.reset_mock()
+
+
+async def test_Mailformed_event(
+    hass,
+    entry_managed,
+    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
+):
+    # pylint: disable=protected-access
+    """Test listening to events from Hass. and getting an event with a newline in the state."""
+
+    hass.states.async_set("sensor.test_sensor", "______\nMicrosof}")
+
+    async_fire_time_changed(
+        hass, utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL])
+    )
+
+    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.side_effect = (
+        Exception("test")
+    )
+
+    await hass.async_block_till_done()
+    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.assert_not_called()
