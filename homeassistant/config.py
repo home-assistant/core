@@ -497,8 +497,7 @@ def async_raise_exception(
 
     This method must be run in the event loop.
     """
-    if hass is not None:
-        async_notify_setup_error(hass, domain, link)
+    async_notify_setup_error(hass, domain, link)
     message, _ = _format_config_error(ex, domain, config, link)
     raise HomeAssistantError(message) from ex
 
@@ -852,9 +851,8 @@ async def async_process_component_config(  # noqa: C901
 ) -> ConfigType | None:
     """Check component configuration and return processed configuration.
 
-    Returns None on error.
-    Optional an exception is raised if the configuration is not valid,
-    but returns None on other errors.
+    Returns None on error,
+    or an exception is raised if the raise_on_failure is set.
 
     This method must be run in the event loop.
     """
