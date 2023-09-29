@@ -1,7 +1,7 @@
 """Support for VELUX KLF 200 devices."""
 import asyncio
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from pyvlx import OpeningDevice, PyVLX, PyVLXException
 import voluptuous as vol
@@ -71,9 +71,9 @@ class DelayVelux(PyVLX):
 class VeluxModule:
     """Abstraction for velux component."""
 
-    def __init__(self, hass: HomeAssistant, domain_config: dict[str, Any]):
+    def __init__(self, hass: HomeAssistant, domain_config: dict[str, Any]) -> None:
         """Initialize for velux component."""
-        self.pyvlx = None
+        self.pyvlx: Optional[DelayVelux] = None
         self._hass = hass
         self._domain_config = domain_config
 
@@ -86,6 +86,7 @@ class VeluxModule:
             await self.pyvlx.disconnect()
 
         async def async_reboot_gateway(service_call: ServiceCall) -> None:
+            assert self.pyvlx is not None
             await self.pyvlx.reboot_gateway()
 
         self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
