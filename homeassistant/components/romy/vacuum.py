@@ -60,9 +60,11 @@ async def async_setup_entry(
 
     device_info = {
         "manufacturer": "ROMY",
+        "name": "romy",
         "model": romy.model,
         "sw_version": romy.firmware,
         "identifiers": {"serial": romy.unique_id},
+        "name_by_user": romy.name,
     }
 
     romy_vacuum_entity = RomyVacuumEntity(coordinator, romy, device_info)
@@ -98,6 +100,7 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self._attr_battery_level = self.romy.battery_level
         self._attr_state = self.romy.status
         self._attr_name = self.romy.name
+        self._device_info["name_by_user"] = self.romy.name
         self.async_write_ha_state()
 
     async def async_start(self, **kwargs: Any) -> None:
