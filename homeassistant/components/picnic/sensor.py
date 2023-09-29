@@ -272,11 +272,6 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
         return self.entity_description.value_fn(data_set)
 
     @property
-    def available(self) -> bool:
-        """Return True if last update was successful."""
-        return self.coordinator.last_update_success
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(

@@ -29,7 +29,7 @@ TRIGGER_TYPES = {"locked", "unlocked", "locking", "unlocking", "jammed"}
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
         vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
@@ -54,7 +54,7 @@ async def async_get_triggers(
                 CONF_PLATFORM: "device",
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
+                CONF_ENTITY_ID: entry.id,
                 CONF_TYPE: trigger,
             }
             for trigger in TRIGGER_TYPES

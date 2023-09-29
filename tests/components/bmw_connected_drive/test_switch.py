@@ -7,6 +7,9 @@ import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bmw_connected_drive.coordinator import (
+    BMWDataUpdateCoordinator,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -22,6 +25,7 @@ async def test_entity_state_attrs(
 
     # Setup component
     assert await setup_mocked_integration(hass)
+    BMWDataUpdateCoordinator.async_update_listeners.reset_mock()
 
     # Get all switch entities
     assert hass.states.async_all("switch") == snapshot
@@ -32,6 +36,8 @@ async def test_entity_state_attrs(
     [
         ("switch.i4_edrive40_climate", "ON"),
         ("switch.i4_edrive40_climate", "OFF"),
+        ("switch.i4_edrive40_charging", "ON"),
+        ("switch.i4_edrive40_charging", "OFF"),
     ],
 )
 async def test_update_triggers_success(
@@ -44,6 +50,7 @@ async def test_update_triggers_success(
 
     # Setup component
     assert await setup_mocked_integration(hass)
+    BMWDataUpdateCoordinator.async_update_listeners.reset_mock()
 
     # Test
     await hass.services.async_call(
@@ -53,6 +60,7 @@ async def test_update_triggers_success(
         target={"entity_id": entity_id},
     )
     assert RemoteServices.trigger_remote_service.call_count == 1
+    assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -74,6 +82,7 @@ async def test_update_triggers_exceptions(
 
     # Setup component
     assert await setup_mocked_integration(hass)
+    BMWDataUpdateCoordinator.async_update_listeners.reset_mock()
 
     # Setup exception
     monkeypatch.setattr(
@@ -98,3 +107,4 @@ async def test_update_triggers_exceptions(
             target={"entity_id": "switch.i4_edrive40_climate"},
         )
     assert RemoteServices.trigger_remote_service.call_count == 2
+    assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 0

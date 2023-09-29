@@ -1,4 +1,4 @@
-"""Helper script to update supported languages for Microsoft Text-to-Speech (TTS)."""
+"""Helper script to update supported languages for Microsoft text-to-speech (TTS)."""
 from pathlib import Path
 
 from lxml import html

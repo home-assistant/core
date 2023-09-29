@@ -41,9 +41,9 @@ async def async_setup(hass):
     hass.http.register_view(OptionManagerFlowIndexView(hass.config_entries.options))
     hass.http.register_view(OptionManagerFlowResourceView(hass.config_entries.options))
 
-    websocket_api.async_register_command(hass, config_entries_get_matching)
+    websocket_api.async_register_command(hass, config_entries_get)
     websocket_api.async_register_command(hass, config_entry_disable)
-    websocket_api.async_register_command(hass, config_entry_get)
+    websocket_api.async_register_command(hass, config_entry_get_single)
     websocket_api.async_register_command(hass, config_entry_update)
     websocket_api.async_register_command(hass, config_entries_subscribe)
     websocket_api.async_register_command(hass, config_entries_progress)
@@ -288,12 +288,12 @@ def get_entry(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        "type": "config_entries/get",
+        "type": "config_entries/get_single",
         "entry_id": str,
     }
 )
 @websocket_api.async_response
-async def config_entry_get(
+async def config_entry_get_single(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -432,13 +432,13 @@ async def ignore_config_flow(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config_entries/get_matching",
+        vol.Required("type"): "config_entries/get",
         vol.Optional("type_filter"): vol.All(cv.ensure_list, [str]),
         vol.Optional("domain"): str,
     }
 )
 @websocket_api.async_response
-async def config_entries_get_matching(
+async def config_entries_get(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],

@@ -70,6 +70,8 @@ def catch_vlc_errors(
 class VlcDevice(MediaPlayerEntity):
     """Representation of a vlc player."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
         MediaPlayerEntityFeature.CLEAR_PLAYLIST
@@ -91,7 +93,6 @@ class VlcDevice(MediaPlayerEntity):
     ) -> None:
         """Initialize the vlc device."""
         self._config_entry = config_entry
-        self._name = name
         self._volume: float | None = None
         self._muted: bool | None = None
         self._media_position_updated_at: datetime | None = None
@@ -182,11 +183,6 @@ class VlcDevice(MediaPlayerEntity):
             # Strip out auth signatures if streaming local media
             if self._media_title and (pos := self._media_title.find("?authSig=")) != -1:
                 self._media_title = self._media_title[:pos]
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
 
     @property
     def available(self) -> bool:

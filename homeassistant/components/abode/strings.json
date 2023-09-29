@@ -15,7 +15,7 @@
         }
       },
       "reauth_confirm": {
-        "title": "Fill in your Abode login information",
+        "title": "[%key:component::abode::config::step::user::title%]",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -30,6 +30,42 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "services": {
+    "capture_image": {
+      "name": "Capture image",
+      "description": "Request a new image capture from a camera device.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Entity id of the camera to request an image."
+        }
+      }
+    },
+    "change_setting": {
+      "name": "Change setting",
+      "description": "Change an Abode system setting.",
+      "fields": {
+        "setting": {
+          "name": "Setting",
+          "description": "Setting to change."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Value of the setting."
+        }
+      }
+    },
+    "trigger_automation": {
+      "name": "Trigger automation",
+      "description": "Trigger an Abode automation.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Entity id of the automation to trigger."
+        }
+      }
     }
   }
 }

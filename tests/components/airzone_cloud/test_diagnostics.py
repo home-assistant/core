@@ -5,8 +5,11 @@ from unittest.mock import patch
 from aioairzone_cloud.const import (
     API_DEVICE_ID,
     API_DEVICES,
+    API_GROUP_ID,
     API_GROUPS,
     API_WS_ID,
+    AZD_AIDOOS,
+    AZD_GROUPS,
     AZD_INSTALLATIONS,
     AZD_SYSTEMS,
     AZD_WEBSERVERS,
@@ -39,9 +42,10 @@ RAW_DATA_MOCK = {
         CONFIG[CONF_ID]: {
             API_GROUPS: [
                 {
+                    API_GROUP_ID: "grp1",
                     API_DEVICES: [
                         {
-                            API_DEVICE_ID: "device1",
+                            API_DEVICE_ID: "dev1",
                             API_WS_ID: WS_ID,
                         },
                     ],
@@ -90,6 +94,12 @@ async def test_config_entry_diagnostics(
     assert list(diag["api_data"]) >= list(RAW_DATA_MOCK)
     assert "dev1" not in diag["api_data"][RAW_DEVICES_CONFIG]
     assert "device1" in diag["api_data"][RAW_DEVICES_CONFIG]
+    assert (
+        diag["api_data"][RAW_INSTALLATIONS]["installation1"][API_GROUPS][0][
+            API_GROUP_ID
+        ]
+        == "group1"
+    )
     assert "inst1" not in diag["api_data"][RAW_INSTALLATIONS]
     assert "installation1" in diag["api_data"][RAW_INSTALLATIONS]
     assert WS_ID not in diag["api_data"][RAW_WEBSERVERS]
@@ -109,6 +119,8 @@ async def test_config_entry_diagnostics(
     )
 
     assert list(diag["coord_data"]) >= [
+        AZD_AIDOOS,
+        AZD_GROUPS,
         AZD_INSTALLATIONS,
         AZD_SYSTEMS,
         AZD_WEBSERVERS,

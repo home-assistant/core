@@ -12,16 +12,14 @@ from aioshelly.rpc_device import RpcDevice, WsServer
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import singleton
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     async_get as dr_async_get,
     format_mac,
 )
-from homeassistant.helpers.entity import DEVICE_CLASS_NAME, DeviceClassName
 from homeassistant.helpers.entity_registry import async_get as er_async_get
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -73,16 +71,12 @@ def get_number_of_channels(device: BlockDevice, block: Block) -> int:
 def get_block_entity_name(
     device: BlockDevice,
     block: Block | None,
-    description: str | DeviceClassName | None = None,
+    description: str | None = None,
 ) -> str:
     """Naming for block based switch and sensors."""
     channel_name = get_block_channel_name(device, block)
 
     if description:
-        # It's not possible to do string manipulations on DEVICE_CLASS_NAME
-        # the assert satisfies the type checker and will catch attempts
-        # to use DEVICE_CLASS_NAME as description.
-        assert description is not DEVICE_CLASS_NAME
         return f"{channel_name} {description.lower()}"
 
     return channel_name
@@ -216,7 +210,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
     await context.initialize(port)
 
     @callback
-    def shutdown_listener(ev: EventType) -> None:
+    def shutdown_listener(ev: Event) -> None:
         context.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
@@ -260,7 +254,11 @@ def get_block_device_sleep_period(settings: dict[str, Any]) -> int:
 
 
 def get_rpc_device_sleep_period(config: dict[str, Any]) -> int:
-    """Return the device sleep period in seconds or 0 for non sleeping devices."""
+    """Return the device sleep period in seconds or 0 for non sleeping devices.
+
+    sys.sleep.wakeup_period value is deprecated and not available in Shelly
+    firmware 1.0.0 or later.
+    """
     return cast(int, config["sys"].get("sleep", {}).get("wakeup_period", 0))
 
 
@@ -306,16 +304,12 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
 
 
 def get_rpc_entity_name(
-    device: RpcDevice, key: str, description: str | DeviceClassName | None = None
+    device: RpcDevice, key: str, description: str | None = None
 ) -> str:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
     if description:
-        # It's not possible to do string manipulations on DEVICE_CLASS_NAME
-        # the assert satisfies the type checker and will catch attempts
-        # to use DEVICE_CLASS_NAME as description.
-        assert description is not DEVICE_CLASS_NAME
         return f"{channel_name} {description.lower()}"
 
     return channel_name
@@ -357,7 +351,7 @@ def is_block_channel_type_light(settings: dict[str, Any], channel: int) -> bool:
 
 def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     """Return true if rpc channel consumption type is set to light."""
-    con_types = config["sys"]["ui_data"].get("consumption_types")
+    con_types = config["sys"].get("ui_data", {}).get("consumption_types")
     return con_types is not None and con_types[channel].lower().startswith("light")
 
 

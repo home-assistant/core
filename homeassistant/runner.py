@@ -196,7 +196,7 @@ def _cancel_all_tasks_with_timeout(
         return
 
     for task in to_cancel:
-        task.cancel()
+        task.cancel("Final process shutdown")
 
     loop.run_until_complete(asyncio.wait(to_cancel, timeout=timeout))
 

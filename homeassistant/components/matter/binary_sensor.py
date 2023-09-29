@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -65,7 +65,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterBinarySensorEntityDescription(
             key="HueMotionSensor",
             device_class=BinarySensorDeviceClass.MOTION,
-            name="Motion",
             measurement_to_ha=lambda x: (x & 1 == 1) if x is not None else None,
         ),
         entity_class=MatterBinarySensor,
@@ -78,7 +77,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterBinarySensorEntityDescription(
             key="ContactSensor",
             device_class=BinarySensorDeviceClass.DOOR,
-            name="Contact",
             # value is inverted on matter to what we expect
             measurement_to_ha=lambda x: not x,
         ),
@@ -90,7 +88,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterBinarySensorEntityDescription(
             key="OccupancySensor",
             device_class=BinarySensorDeviceClass.OCCUPANCY,
-            name="Occupancy",
             # The first bit = if occupied
             measurement_to_ha=lambda x: (x & 1 == 1) if x is not None else None,
         ),
@@ -102,7 +99,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterBinarySensorEntityDescription(
             key="BatteryChargeLevel",
             device_class=BinarySensorDeviceClass.BATTERY,
-            name="Battery Status",
+            entity_category=EntityCategory.DIAGNOSTIC,
             measurement_to_ha=lambda x: x
             != clusters.PowerSource.Enums.BatChargeLevelEnum.kOk,
         ),

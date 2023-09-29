@@ -33,6 +33,7 @@ async def test_entry_diagnostics(
                 "time": "16:00:44",
                 "timestamp": "1665072044",
             },
+            "history": {},
             "measurements": {
                 "co2": "472",
                 "humidity": "57",

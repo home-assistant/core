@@ -243,7 +243,7 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
         In contrast to "total" sensors, these "daily" sensors need to be reset to 0 on midnight.
         """
         if not self.coordinator.last_update_success:
-            self.coordinator.reset_sensor(self._sensor.id)
+            self.coordinator.reset_sensor(self._sensor.id_)
             self.async_write_ha_state()
             _LOGGER.debug("Goodwe reset %s to 0", self.name)
         next_midnight = dt_util.start_of_local_day(

@@ -8,7 +8,7 @@ from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 from homeassistant.core import HomeAssistant, callback
 
-from .common import MockModule, mock_integration
+from .common import MockModule, async_get_persistent_notifications, mock_integration
 
 
 async def test_component_dependencies(hass: HomeAssistant) -> None:
@@ -61,7 +61,8 @@ async def test_component_wrapper(hass: HomeAssistant) -> None:
     components = loader.Components(hass)
     components.persistent_notification.async_create("message")
 
-    assert len(hass.states.async_entity_ids("persistent_notification")) == 1
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications)
 
 
 async def test_helpers_wrapper(hass: HomeAssistant) -> None:

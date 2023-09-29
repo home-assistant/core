@@ -7,8 +7,8 @@ import os
 import sys
 import time
 
-from PIL import Image, ImageDraw, UnidentifiedImageError
 import numpy as np
+from PIL import Image, ImageDraw, UnidentifiedImageError
 import tensorflow as tf  # pylint: disable=import-error
 import voluptuous as vol
 

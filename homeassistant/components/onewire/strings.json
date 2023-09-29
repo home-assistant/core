@@ -251,7 +251,7 @@
       "device_selection": {
         "data": {
           "clear_device_options": "Clear all device configurations",
-          "device_selection": "Select devices to configure"
+          "device_selection": "[%key:component::onewire::options::error::device_not_selected%]"
         },
         "description": "Select what configuration steps to process",
         "title": "OneWire Device Options"

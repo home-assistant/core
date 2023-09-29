@@ -39,6 +39,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -364,8 +365,11 @@ class TraccarScanner:
 class TraccarEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, device, latitude, longitude, battery, accuracy, attributes):
-        """Set up Geofency entity."""
+        """Set up Traccar entity."""
         self._accuracy = accuracy
         self._attributes = attributes
         self._name = device
@@ -401,19 +405,17 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         return self._accuracy
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
     def unique_id(self):
         """Return the unique ID."""
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {"name": self._name, "identifiers": {(DOMAIN, self._unique_id)}}
+        return DeviceInfo(
+            name=self._name,
+            identifiers={(DOMAIN, self._unique_id)},
+        )
 
     @property
     def source_type(self) -> SourceType:
@@ -464,7 +466,7 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         self, device, latitude, longitude, battery, accuracy, attributes
     ):
         """Mark the device as seen."""
-        if device != self.name:
+        if device != self._name:
             return
 
         self._latitude = latitude

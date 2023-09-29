@@ -131,6 +131,7 @@ async def test_heater_input_boolean(hass: HomeAssistant, setup_comp_1) -> None:
     _setup_sensor(hass, 18)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 23)
+    await hass.async_block_till_done()
 
     assert hass.states.get(heater_switch).state == STATE_ON
 

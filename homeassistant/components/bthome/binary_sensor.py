@@ -203,7 +203,4 @@ class BTHomeBluetoothBinarySensorEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        coordinator: BTHomePassiveBluetoothProcessorCoordinator = (
-            self.processor.coordinator
-        )
-        return coordinator.device_data.sleepy_device or super().available
+        return self.processor.coordinator.sleepy_device or super().available

@@ -128,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_uids_to_remove = uids - set(module_data)
         for uid in entity_uids_to_remove:
             uids.remove(uid)
-            device = device_registry.async_get_device({(DOMAIN, uid)})
+            device = device_registry.async_get_device(identifiers={(DOMAIN, uid)})
             device_registry.async_remove_device(device.id)
 
         # Send out signal for new entity addition to Home Assistant

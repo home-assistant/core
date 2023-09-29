@@ -350,14 +350,13 @@ class Doods(ImageProcessingEntity):
                     or boxes[3] > self._area[3]
                 ):
                     continue
-            else:
-                if (
-                    boxes[0] > self._area[2]
-                    or boxes[1] > self._area[3]
-                    or boxes[2] < self._area[0]
-                    or boxes[3] < self._area[1]
-                ):
-                    continue
+            elif (
+                boxes[0] > self._area[2]
+                or boxes[1] > self._area[3]
+                or boxes[2] < self._area[0]
+                or boxes[3] < self._area[1]
+            ):
+                continue
 
             # Exclude matches outside label specific area definition
             if self._label_areas.get(label):
@@ -369,14 +368,13 @@ class Doods(ImageProcessingEntity):
                         or boxes[3] > self._label_areas[label][3]
                     ):
                         continue
-                else:
-                    if (
-                        boxes[0] > self._label_areas[label][2]
-                        or boxes[1] > self._label_areas[label][3]
-                        or boxes[2] < self._label_areas[label][0]
-                        or boxes[3] < self._label_areas[label][1]
-                    ):
-                        continue
+                elif (
+                    boxes[0] > self._label_areas[label][2]
+                    or boxes[1] > self._label_areas[label][3]
+                    or boxes[2] < self._label_areas[label][0]
+                    or boxes[3] < self._label_areas[label][1]
+                ):
+                    continue
 
             if label not in matches:
                 matches[label] = []

@@ -10,7 +10,6 @@ from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
-from homeassistant import core as ha
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -29,7 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    Event,
     HomeAssistant,
     ServiceCall,
     State,
@@ -39,13 +37,16 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv, entity_registry as er, start
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
     async_process_integration_platforms,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import bind_hass
 
 from .const import CONF_HIDE_MEMBERS
@@ -81,6 +82,8 @@ PLATFORMS = [
 ]
 
 REG_KEY = f"{DOMAIN}_registry"
+
+ENTITY_PREFIX = f"{DOMAIN}."
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -180,29 +183,19 @@ def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[st
             continue
 
         entity_id = entity_id.lower()
-
-        try:
-            # If entity_id points at a group, expand it
-            domain, _ = ha.split_entity_id(entity_id)
-
-            if domain == DOMAIN:
-                child_entities = get_entity_ids(hass, entity_id)
-                if entity_id in child_entities:
-                    child_entities = list(child_entities)
-                    child_entities.remove(entity_id)
-                found_ids.extend(
-                    ent_id
-                    for ent_id in expand_entity_ids(hass, child_entities)
-                    if ent_id not in found_ids
-                )
-
-            else:
-                if entity_id not in found_ids:
-                    found_ids.append(entity_id)
-
-        except AttributeError:
-            # Raised by split_entity_id if entity_id is not a string
-            pass
+        # If entity_id points at a group, expand it
+        if entity_id.startswith(ENTITY_PREFIX):
+            child_entities = get_entity_ids(hass, entity_id)
+            if entity_id in child_entities:
+                child_entities = list(child_entities)
+                child_entities.remove(entity_id)
+            found_ids.extend(
+                ent_id
+                for ent_id in expand_entity_ids(hass, child_entities)
+                if ent_id not in found_ids
+            )
+        elif entity_id not in found_ids:
+            found_ids.append(entity_id)
 
     return found_ids
 
@@ -746,7 +739,9 @@ class Group(Entity):
         """Handle removal from Home Assistant."""
         self._async_stop()
 
-    async def _async_state_changed_listener(self, event: Event) -> None:
+    async def _async_state_changed_listener(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Respond to a member state changing.
 
         This method must be run in the event loop.
@@ -757,7 +752,7 @@ class Group(Entity):
 
         self.async_set_context(event.context)
 
-        if (new_state := event.data.get("new_state")) is None:
+        if (new_state := event.data["new_state"]) is None:
             # The state was removed from the state machine
             self._reset_tracked_state()
 

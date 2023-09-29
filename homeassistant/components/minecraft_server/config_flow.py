@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.data_entry_flow import FlowResult
 
 from . import MinecraftServer, helpers
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
@@ -18,7 +19,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -117,7 +118,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         # form filled with user_input and eventually with errors otherwise).
         return self._show_config_form(user_input, errors)
 
-    def _show_config_form(self, user_input=None, errors=None):
+    def _show_config_form(self, user_input=None, errors=None) -> FlowResult:
         """Show the setup form to the user."""
         if user_input is None:
             user_input = {}

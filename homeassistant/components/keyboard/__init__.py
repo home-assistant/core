@@ -11,11 +11,14 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "keyboard"
 
 TAP_KEY_SCHEMA = vol.Schema({})
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:

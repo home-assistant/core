@@ -18,7 +18,7 @@ SERVICE_SEND_COMMAND = "send_command"
 
 
 @pytest.fixture(autouse=True)
-async def setup_component(hass):
+async def setup_component(hass, disable_platforms):
     """Initialize components."""
     assert await async_setup_component(
         hass, remote.DOMAIN, {"remote": {"platform": "demo"}}

@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -141,7 +141,7 @@ async def test_sensors_sensors(
 
     # Test unknown/missing data
     mock_fully_kiosk.getDeviceInfo.return_value = {}
-    async_fire_time_changed(hass, dt.utcnow() + UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.amazon_fire_internal_storage_free_space")
@@ -150,7 +150,7 @@ async def test_sensors_sensors(
 
     # Test failed update
     mock_fully_kiosk.getDeviceInfo.side_effect = FullyKioskError("error", "status")
-    async_fire_time_changed(hass, dt.utcnow() + UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.amazon_fire_internal_storage_free_space")
@@ -176,7 +176,7 @@ async def test_url_sensor_truncating(
     mock_fully_kiosk.getDeviceInfo.return_value = {
         "currentPage": long_url,
     }
-    async_fire_time_changed(hass, dt.utcnow() + UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.amazon_fire_current_page")

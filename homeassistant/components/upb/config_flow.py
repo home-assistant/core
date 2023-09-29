@@ -44,8 +44,9 @@ async def _validate_input(data):
 
     upb.connect(_connected_callback)
 
-    with suppress(asyncio.TimeoutError), async_timeout.timeout(VALIDATE_TIMEOUT):
-        await connected_event.wait()
+    with suppress(asyncio.TimeoutError):
+        async with async_timeout.timeout(VALIDATE_TIMEOUT):
+            await connected_event.wait()
 
     upb.disconnect()
 

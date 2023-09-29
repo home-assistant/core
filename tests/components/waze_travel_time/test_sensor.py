@@ -1,6 +1,6 @@
 """Test Waze Travel Time sensors."""
-from WazeRouteCalculator import WRCError
 import pytest
+from WazeRouteCalculator import WRCError
 
 from homeassistant.components.waze_travel_time.const import (
     CONF_AVOID_FERRIES,

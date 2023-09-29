@@ -11,6 +11,8 @@ from .const import DOMAIN
 class TractiveEntity(Entity):
     """Tractive entity class."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, user_id: str, trackable: dict[str, Any], tracker_details: dict[str, Any]
     ) -> None:

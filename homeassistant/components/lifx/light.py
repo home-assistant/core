@@ -112,6 +112,7 @@ class LIFXLight(LIFXEntity, LightEntity):
     """Representation of a LIFX light."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
+    _attr_name = None
 
     def __init__(
         self,
@@ -131,7 +132,6 @@ class LIFXLight(LIFXEntity, LightEntity):
         self.postponed_update: CALLBACK_TYPE | None = None
         self.entry = entry
         self._attr_unique_id = self.coordinator.serial_number
-        self._attr_name = self.bulb.label
         self._attr_min_color_temp_kelvin = bulb_features["min_kelvin"]
         self._attr_max_color_temp_kelvin = bulb_features["max_kelvin"]
         if bulb_features["min_kelvin"] != bulb_features["max_kelvin"]:

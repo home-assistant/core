@@ -70,11 +70,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     volvo_data = VolvoData(hass, connection, entry)
 
-    coordinator = hass.data[DOMAIN][entry.entry_id] = VolvoUpdateCoordinator(
-        hass, volvo_data
-    )
+    coordinator = VolvoUpdateCoordinator(hass, volvo_data)
 
     await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

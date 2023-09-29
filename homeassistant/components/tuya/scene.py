@@ -30,6 +30,8 @@ class TuyaSceneEntity(Scene):
     """Tuya Scene Remote."""
 
     _should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, home_manager: TuyaHomeManager, scene: TuyaScene) -> None:
         """Init Tuya Scene."""
@@ -37,11 +39,6 @@ class TuyaSceneEntity(Scene):
         self._attr_unique_id = f"tys{scene.scene_id}"
         self.home_manager = home_manager
         self.scene = scene
-
-    @property
-    def name(self) -> str | None:
-        """Return Tuya scene name."""
-        return self.scene.name
 
     @property
     def device_info(self) -> DeviceInfo:

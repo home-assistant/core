@@ -13,11 +13,15 @@ from .const import DOMAIN
 from .update_coordinator import BasePassiveBluetoothCoordinator
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping
+    from collections.abc import Callable
 
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
+    from .models import (
+        BluetoothChange,
+        BluetoothScanningMode,
+        BluetoothServiceInfoBleak,
+    )
 
 
 @dataclasses.dataclass(slots=True, frozen=True)
@@ -41,15 +45,22 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     """Generic bluetooth data."""
 
     devices: dict[str | None, DeviceInfo] = dataclasses.field(default_factory=dict)
-    entity_descriptions: Mapping[
+    entity_descriptions: dict[
         PassiveBluetoothEntityKey, EntityDescription
     ] = dataclasses.field(default_factory=dict)
-    entity_names: Mapping[PassiveBluetoothEntityKey, str | None] = dataclasses.field(
+    entity_names: dict[PassiveBluetoothEntityKey, str | None] = dataclasses.field(
         default_factory=dict
     )
-    entity_data: Mapping[PassiveBluetoothEntityKey, _T] = dataclasses.field(
+    entity_data: dict[PassiveBluetoothEntityKey, _T] = dataclasses.field(
         default_factory=dict
     )
+
+    def update(self, new_data: PassiveBluetoothDataUpdate[_T]) -> None:
+        """Update the data."""
+        self.devices.update(new_data.devices)
+        self.entity_descriptions.update(new_data.entity_descriptions)
+        self.entity_data.update(new_data.entity_data)
+        self.entity_names.update(new_data.entity_names)
 
 
 class PassiveBluetoothProcessorCoordinator(
@@ -87,10 +98,11 @@ class PassiveBluetoothProcessorCoordinator(
 
     @callback
     def async_register_processor(
-        self, processor: PassiveBluetoothDataProcessor
+        self,
+        processor: PassiveBluetoothDataProcessor,
     ) -> Callable[[], None]:
         """Register a processor that subscribes to updates."""
-        processor.coordinator = self
+        processor.async_register_coordinator(self)
 
         @callback
         def remove_processor() -> None:
@@ -155,7 +167,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
 
     The processor will call the update_method every time the bluetooth device
     receives a new advertisement data from the coordinator with the data
-    returned by he update_method of the coordinator.
+    returned by the update_method of the coordinator.
 
     As the size of each advertisement is limited, the update_method should
     return a PassiveBluetoothDataUpdate object that contains only data that
@@ -165,13 +177,17 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     """
 
     coordinator: PassiveBluetoothProcessorCoordinator
+    data: PassiveBluetoothDataUpdate[_T]
+    entity_names: dict[PassiveBluetoothEntityKey, str | None]
+    entity_data: dict[PassiveBluetoothEntityKey, _T]
+    entity_descriptions: dict[PassiveBluetoothEntityKey, EntityDescription]
+    devices: dict[str | None, DeviceInfo]
 
     def __init__(
         self,
         update_method: Callable[[_T], PassiveBluetoothDataUpdate[_T]],
     ) -> None:
         """Initialize the coordinator."""
-        self.coordinator: PassiveBluetoothProcessorCoordinator
         self._listeners: list[
             Callable[[PassiveBluetoothDataUpdate[_T] | None], None]
         ] = []
@@ -180,13 +196,21 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
             list[Callable[[PassiveBluetoothDataUpdate[_T] | None], None]],
         ] = {}
         self.update_method = update_method
-        self.entity_names: dict[PassiveBluetoothEntityKey, str | None] = {}
-        self.entity_data: dict[PassiveBluetoothEntityKey, _T] = {}
-        self.entity_descriptions: dict[
-            PassiveBluetoothEntityKey, EntityDescription
-        ] = {}
-        self.devices: dict[str | None, DeviceInfo] = {}
         self.last_update_success = True
+
+    @callback
+    def async_register_coordinator(
+        self,
+        coordinator: PassiveBluetoothProcessorCoordinator,
+    ) -> None:
+        """Register a coordinator."""
+        self.coordinator = coordinator
+        self.data = PassiveBluetoothDataUpdate()
+        data = self.data
+        self.entity_names = data.entity_names
+        self.entity_data = data.entity_data
+        self.entity_descriptions = data.entity_descriptions
+        self.devices = data.devices
 
     @property
     def available(self) -> bool:
@@ -202,7 +226,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     def async_add_entities_listener(
         self,
         entity_class: type[PassiveBluetoothProcessorEntity],
-        async_add_entites: AddEntitiesCallback,
+        async_add_entities: AddEntitiesCallback,
     ) -> Callable[[], None]:
         """Add a listener for new entities."""
         created: set[PassiveBluetoothEntityKey] = set()
@@ -220,7 +244,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
                     entities.append(entity_class(self, entity_key, description))
                     created.add(entity_key)
             if entities:
-                async_add_entites(entities)
+                async_add_entities(entities)
 
         return self.async_add_listener(_async_add_or_update_entities)
 
@@ -296,10 +320,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
                 "Processing %s data recovered", self.coordinator.name
             )
 
-        self.devices.update(new_data.devices)
-        self.entity_descriptions.update(new_data.entity_descriptions)
-        self.entity_data.update(new_data.entity_data)
-        self.entity_names.update(new_data.entity_names)
+        self.data.update(new_data)
         self.async_update_listeners(new_data)
 
 

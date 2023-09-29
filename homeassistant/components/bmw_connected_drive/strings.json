@@ -26,5 +26,114 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "lids": {
+        "name": "Lids"
+      },
+      "windows": {
+        "name": "Windows"
+      },
+      "door_lock_state": {
+        "name": "Door lock state"
+      },
+      "condition_based_services": {
+        "name": "Condition based services"
+      },
+      "check_control_messages": {
+        "name": "Check control messages"
+      },
+      "charging_status": {
+        "name": "Charging status"
+      },
+      "connection_status": {
+        "name": "Connection status"
+      },
+      "is_pre_entry_climatization_enabled": {
+        "name": "Pre entry climatization"
+      }
+    },
+    "button": {
+      "light_flash": {
+        "name": "Flash lights"
+      },
+      "sound_horn": {
+        "name": "Sound horn"
+      },
+      "activate_air_conditioning": {
+        "name": "Activate air conditioning"
+      },
+      "find_vehicle": {
+        "name": "Find vehicle"
+      },
+      "refresh": {
+        "name": "Refresh from cloud"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
+    "number": {
+      "target_soc": {
+        "name": "Target SoC"
+      }
+    },
+    "select": {
+      "ac_limit": {
+        "name": "AC Charging Limit"
+      },
+      "charging_mode": {
+        "name": "Charging Mode"
+      }
+    },
+    "sensor": {
+      "ac_current_limit": {
+        "name": "AC current limit"
+      },
+      "charging_start_time": {
+        "name": "Charging start time"
+      },
+      "charging_end_time": {
+        "name": "Charging end time"
+      },
+      "charging_status": {
+        "name": "Charging status"
+      },
+      "charging_target": {
+        "name": "Charging target"
+      },
+      "remaining_battery_percent": {
+        "name": "Remaining battery percent"
+      },
+      "mileage": {
+        "name": "Mileage"
+      },
+      "remaining_range_total": {
+        "name": "Remaining range total"
+      },
+      "remaining_range_electric": {
+        "name": "Remaining range electric"
+      },
+      "remaining_range_fuel": {
+        "name": "Remaining range fuel"
+      },
+      "remaining_fuel": {
+        "name": "Remaining fuel"
+      },
+      "remaining_fuel_percent": {
+        "name": "Remaining fuel percent"
+      }
+    },
+    "switch": {
+      "climate": {
+        "name": "Climate"
+      },
+      "charging": {
+        "name": "Charging"
+      }
+    }
   }
 }

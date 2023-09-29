@@ -14,6 +14,8 @@ from .const import DOMAIN
 class JuiceNetDevice(CoordinatorEntity):
     """Represent a base JuiceNet device."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, device: Charger, key: str, coordinator: DataUpdateCoordinator
     ) -> None:

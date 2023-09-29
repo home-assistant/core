@@ -183,7 +183,8 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
         super()._async_update_device_from_protect(device)
 
         if self.entity_description.key == KEY_ADOPT:
-            self._attr_available = self.device.can_adopt and self.device.can_create(
+            device = self.device
+            self._attr_available = device.can_adopt and device.can_create(
                 self.data.api.bootstrap.auth_user
             )
 

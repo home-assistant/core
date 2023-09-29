@@ -1,4 +1,4 @@
-"""Handle legacy speech to text platforms."""
+"""Handle legacy speech-to-text platforms."""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -51,17 +51,17 @@ def async_get_provider(
 def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
 ) -> list[Coroutine[Any, Any, None]]:
-    """Set up legacy speech to text providers."""
+    """Set up legacy speech-to-text providers."""
     providers = hass.data[DATA_PROVIDERS] = {}
 
     async def async_setup_platform(p_type, p_config=None, discovery_info=None):
-        """Set up a TTS platform."""
+        """Set up an STT platform."""
         if p_config is None:
             p_config = {}
 
         platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
         if platform is None:
-            _LOGGER.error("Unknown speech to text platform specified")
+            _LOGGER.error("Unknown speech-to-text platform specified")
             return
 
         try:

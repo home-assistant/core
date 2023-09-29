@@ -9,6 +9,18 @@ from .const import DOMAIN
 from .coordinator import FullyKioskDataUpdateCoordinator
 
 
+def valid_global_mac_address(mac: str | None) -> bool:
+    """Check if a MAC address is valid, non-locally administered address."""
+    if not isinstance(mac, str):
+        return False
+    try:
+        first_octet = int(mac.split(":")[0], 16)
+        # If the second least-significant bit is set, it's a locally administered address, should not be used as an ID
+        return not bool(first_octet & 0x2)
+    except ValueError:
+        return False
+
+
 class FullyKioskEntity(CoordinatorEntity[FullyKioskDataUpdateCoordinator], Entity):
     """Defines a Fully Kiosk Browser entity."""
 
@@ -25,7 +37,9 @@ class FullyKioskEntity(CoordinatorEntity[FullyKioskDataUpdateCoordinator], Entit
             sw_version=coordinator.data["appVersionName"],
             configuration_url=f"http://{coordinator.data['ip4']}:2323",
         )
-        if "Mac" in coordinator.data and coordinator.data["Mac"]:
+        if "Mac" in coordinator.data and valid_global_mac_address(
+            coordinator.data["Mac"]
+        ):
             device_info["connections"] = {
                 (CONNECTION_NETWORK_MAC, coordinator.data["Mac"])
             }

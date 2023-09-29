@@ -101,7 +101,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         await self.coordinator.async_refresh()
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return the current operation mode."""
         if self.data.target_temperature in (
             OFF_REPORT_SET_TEMPERATURE,

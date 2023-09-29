@@ -3,11 +3,9 @@ from __future__ import annotations
 
 import logging
 import ssl
-from xml.parsers.expat import ExpatError
 
 from jsonpath import jsonpath
 import voluptuous as vol
-import xmltodict
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -26,7 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template_entity import TemplateSensor
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -127,26 +124,7 @@ class RestSensor(RestEntity, TemplateSensor):
 
     def _update_from_rest_data(self) -> None:
         """Update state from the rest data."""
-        value = self.rest.data
-        _LOGGER.debug("Data fetched from resource: %s", value)
-        if self.rest.headers is not None:
-            # If the http request failed, headers will be None
-            content_type = self.rest.headers.get("content-type")
-
-            if content_type and (
-                content_type.startswith("text/xml")
-                or content_type.startswith("application/xml")
-                or content_type.startswith("application/xhtml+xml")
-                or content_type.startswith("application/rss+xml")
-            ):
-                try:
-                    value = json_dumps(xmltodict.parse(value))
-                    _LOGGER.debug("JSON converted from XML: %s", value)
-                except ExpatError:
-                    _LOGGER.warning(
-                        "REST xml result could not be parsed and converted to JSON"
-                    )
-                    _LOGGER.debug("Erroneous XML: %s", value)
+        value = self.rest.data_without_xml()
 
         if self._json_attrs:
             self._attr_extra_state_attributes = {}

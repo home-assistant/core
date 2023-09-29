@@ -23,6 +23,7 @@ TYPE_WIFI_STRENGTH = "wifi_strength"
 SERVICE_REFRESH = "blink_update"
 SERVICE_TRIGGER = "trigger_camera"
 SERVICE_SAVE_VIDEO = "save_video"
+SERVICE_SAVE_RECENT_CLIPS = "save_recent_clips"
 SERVICE_SEND_PIN = "send_pin"
 
 PLATFORMS = [

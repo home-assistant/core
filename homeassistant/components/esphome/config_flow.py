@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Mapping
+import json
 import logging
 from typing import Any
 
@@ -20,20 +21,28 @@ import voluptuous as vol
 
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
-from . import CONF_DEVICE_NAME, CONF_NOISE_PSK
-from .const import DOMAIN
-from .dashboard import async_get_dashboard, async_set_dashboard_info
+from .const import (
+    CONF_ALLOW_SERVICE_CALLS,
+    CONF_DEVICE_NAME,
+    CONF_NOISE_PSK,
+    DEFAULT_ALLOW_SERVICE_CALLS,
+    DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+    DOMAIN,
+)
+from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboard_info
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
 ESPHOME_URL = "https://esphome.io/"
 _LOGGER = logging.getLogger(__name__)
+
+ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
 
 
 class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -46,6 +55,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host: str | None = None
         self._port: int | None = None
         self._password: str | None = None
+        self._noise_required: bool | None = None
         self._noise_psk: str | None = None
         self._device_info: DeviceInfo | None = None
         self._reauth_entry: ConfigEntry | None = None
@@ -142,22 +152,45 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self._name}
 
     async def _async_try_fetch_device_info(self) -> FlowResult:
-        error = await self.fetch_device_info()
+        """Try to fetch device info and return any errors."""
+        response: str | None
+        if self._noise_required:
+            # If we already know we need encryption, don't try to fetch device info
+            # without encryption.
+            response = ERROR_REQUIRES_ENCRYPTION_KEY
+        else:
+            # After 2024.08, stop trying to fetch device info without encryption
+            # so we can avoid probe requests to check for password. At this point
+            # most devices should announce encryption support and password is
+            # deprecated and can be discovered by trying to connect only after they
+            # interact with the flow since it is expected to be a rare case.
+            response = await self.fetch_device_info()
 
-        if (
-            error == ERROR_REQUIRES_ENCRYPTION_KEY
-            and await self._retrieve_encryption_key_from_dashboard()
-        ):
-            error = await self.fetch_device_info()
-            # If the fetched key is invalid, unset it again.
-            if error == ERROR_INVALID_ENCRYPTION_KEY:
+        if response == ERROR_REQUIRES_ENCRYPTION_KEY:
+            if not self._device_name and not self._noise_psk:
+                # If device name is not set we can send a zero noise psk
+                # to get the device name which will allow us to populate
+                # the device name and hopefully get the encryption key
+                # from the dashboard.
+                self._noise_psk = ZERO_NOISE_PSK
+                response = await self.fetch_device_info()
                 self._noise_psk = None
-                error = ERROR_REQUIRES_ENCRYPTION_KEY
 
-        if error == ERROR_REQUIRES_ENCRYPTION_KEY:
+            if (
+                self._device_name
+                and await self._retrieve_encryption_key_from_dashboard()
+            ):
+                response = await self.fetch_device_info()
+
+            # If the fetched key is invalid, unset it again.
+            if response == ERROR_INVALID_ENCRYPTION_KEY:
+                self._noise_psk = None
+                response = ERROR_REQUIRES_ENCRYPTION_KEY
+
+        if response == ERROR_REQUIRES_ENCRYPTION_KEY:
             return await self.async_step_encryption_key()
-        if error is not None:
-            return await self._async_step_user_base(error=error)
+        if response is not None:
+            return await self._async_step_user_base(error=response)
         return await self._async_authenticate_or_add()
 
     async def _async_authenticate_or_add(self) -> FlowResult:
@@ -200,6 +233,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._device_name = device_name
         self._host = discovery_info.host
         self._port = discovery_info.port
+        self._noise_required = bool(discovery_info.properties.get("api_encryption"))
 
         # Check if already configured
         await self.async_set_unique_id(mac_address)
@@ -237,6 +271,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_NOISE_PSK: self._noise_psk or "",
             CONF_DEVICE_NAME: self._device_name,
         }
+        config_options = {
+            CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+        }
         if self._reauth_entry:
             entry = self._reauth_entry
             self.hass.config_entries.async_update_entry(
@@ -253,6 +290,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._name,
             data=config_data,
+            options=config_options,
         )
 
     async def async_step_encryption_key(
@@ -314,7 +352,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             self._device_info = await cli.device_info()
         except RequiresEncryptionAPIError:
             return ERROR_REQUIRES_ENCRYPTION_KEY
-        except InvalidEncryptionKeyAPIError:
+        except InvalidEncryptionKeyAPIError as ex:
+            if ex.received_name:
+                self._device_name = ex.received_name
+                self._name = ex.received_name
             return ERROR_INVALID_ENCRYPTION_KEY
         except ResolveAPIError:
             return "resolve_error"
@@ -325,9 +366,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._name = self._device_info.friendly_name or self._device_info.name
         self._device_name = self._device_info.name
-        await self.async_set_unique_id(
-            self._device_info.mac_address, raise_on_progress=False
-        )
+        mac_address = format_mac(self._device_info.mac_address)
+        await self.async_set_unique_id(mac_address, raise_on_progress=False)
         if not self._reauth_entry:
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: self._host, CONF_PORT: self._port}
@@ -364,14 +404,15 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         Return boolean if a key was retrieved.
         """
-        if self._device_name is None:
-            return False
-
-        if (dashboard := async_get_dashboard(self.hass)) is None:
+        if (
+            self._device_name is None
+            or (manager := await async_get_or_create_dashboard_manager(self.hass))
+            is None
+            or (dashboard := manager.async_get()) is None
+        ):
             return False
 
         await dashboard.async_request_refresh()
-
         if not dashboard.last_update_success:
             return False
 
@@ -385,6 +426,46 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         except aiohttp.ClientError as err:
             _LOGGER.error("Error talking to the dashboard: %s", err)
             return False
+        except json.JSONDecodeError as err:
+            _LOGGER.error(
+                "Error parsing response from dashboard: %s", err, exc_info=True
+            )
+            return False
 
         self._noise_psk = noise_psk
         return True
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle a option flow for esphome."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_ALLOW_SERVICE_CALLS,
+                    default=self.config_entry.options.get(
+                        CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
+                    ),
+                ): bool,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)

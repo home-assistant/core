@@ -1,16 +1,55 @@
 """Support for Vilfo Router sensors."""
-from homeassistant.components.sensor import SensorEntity
+from dataclasses import dataclass
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ATTR_API_DATA_FIELD_BOOT_TIME,
+    ATTR_API_DATA_FIELD_LOAD,
+    ATTR_BOOT_TIME,
+    ATTR_LOAD,
     DOMAIN,
     ROUTER_DEFAULT_MODEL,
     ROUTER_DEFAULT_NAME,
     ROUTER_MANUFACTURER,
-    SENSOR_TYPES,
-    VilfoSensorEntityDescription,
+)
+
+
+@dataclass
+class VilfoRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    api_key: str
+
+
+@dataclass
+class VilfoSensorEntityDescription(SensorEntityDescription, VilfoRequiredKeysMixin):
+    """Describes Vilfo sensor entity."""
+
+
+SENSOR_TYPES: tuple[VilfoSensorEntityDescription, ...] = (
+    VilfoSensorEntityDescription(
+        key=ATTR_LOAD,
+        name="Load",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:memory",
+        api_key=ATTR_API_DATA_FIELD_LOAD,
+    ),
+    VilfoSensorEntityDescription(
+        key=ATTR_BOOT_TIME,
+        name="Boot time",
+        icon="mdi:timer-outline",
+        api_key=ATTR_API_DATA_FIELD_BOOT_TIME,
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
 
 

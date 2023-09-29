@@ -18,5 +18,12 @@
     "info": {
       "api_endpoint_reachable": "IPMA API endpoint reachable"
     }
+  },
+  "entity": {
+    "sensor": {
+      "fire_risk": {
+        "name": "Fire risk"
+      }
+    }
   }
 }

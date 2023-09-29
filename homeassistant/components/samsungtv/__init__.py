@@ -49,7 +49,7 @@ from .const import (
     UPNP_SVC_RENDERING_CONTROL,
 )
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 

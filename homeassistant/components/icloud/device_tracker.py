@@ -56,6 +56,9 @@ def add_entities(account: IcloudAccount, async_add_entities, tracked):
 class IcloudTrackerEntity(TrackerEntity):
     """Represent a tracked device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, account: IcloudAccount, device: IcloudDevice) -> None:
         """Set up the iCloud tracker entity."""
         self._account = account
@@ -66,11 +69,6 @@ class IcloudTrackerEntity(TrackerEntity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._device.unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._device.name
 
     @property
     def location_accuracy(self):

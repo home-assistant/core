@@ -41,6 +41,7 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_entity_name,
     help_test_reload_with_config,
     help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
@@ -984,8 +985,8 @@ async def test_discovery_broken(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
-    data1 = '{ "name": "Beer",' '  "off_delay": -1 }'
-    data2 = '{ "name": "Milk",' '  "state_topic": "test_topic" }'
+    data1 = '{ "name": "Beer",  "off_delay": -1 }'
+    data2 = '{ "name": "Milk",  "state_topic": "test_topic" }'
     await help_test_discovery_broken(
         hass,
         mqtt_mock_entry,
@@ -1203,7 +1204,11 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -1222,4 +1227,22 @@ async def test_unload_entry(
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
+    )
+
+
+@pytest.mark.parametrize(
+    ("expected_friendly_name", "device_class"),
+    [("test", None), ("Door", "door"), ("Battery", "battery"), ("Motion", "motion")],
+)
+async def test_entity_name(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    expected_friendly_name: str | None,
+    device_class: str | None,
+) -> None:
+    """Test the entity name setup."""
+    domain = binary_sensor.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_entity_name(
+        hass, mqtt_mock_entry, domain, config, expected_friendly_name, device_class
     )

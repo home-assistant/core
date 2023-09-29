@@ -165,7 +165,6 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="battery_level",
     ),
     RenaultSensorEntityDescription(
         key="charge_state",

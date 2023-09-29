@@ -31,6 +31,8 @@
 # ---
 # name: test_audio_pipeline.3
   dict({
+    'conversation_id': None,
+    'device_id': None,
     'engine': 'homeassistant',
     'intent_input': 'test transcript',
     'language': 'en',
@@ -107,6 +109,8 @@
 # ---
 # name: test_audio_pipeline_debug.3
   dict({
+    'conversation_id': None,
+    'device_id': None,
     'engine': 'homeassistant',
     'intent_input': 'test transcript',
     'language': 'en',
@@ -163,6 +167,8 @@
 # ---
 # name: test_intent_failed.1
   dict({
+    'conversation_id': None,
+    'device_id': None,
     'engine': 'homeassistant',
     'intent_input': 'Are the lights on?',
     'language': 'en',
@@ -180,6 +186,8 @@
 # ---
 # name: test_intent_timeout.1
   dict({
+    'conversation_id': None,
+    'device_id': None,
     'engine': 'homeassistant',
     'intent_input': 'Are the lights on?',
     'language': 'en',
@@ -249,6 +257,8 @@
 # ---
 # name: test_text_only_pipeline.1
   dict({
+    'conversation_id': 'mock-conversation-id',
+    'device_id': 'mock-device-id',
     'engine': 'homeassistant',
     'intent_input': 'Are the lights on?',
     'language': 'en',

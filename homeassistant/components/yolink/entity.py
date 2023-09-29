@@ -19,6 +19,8 @@ from .coordinator import YoLinkCoordinator
 class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
     """YoLink Device Basic Entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         config_entry: ConfigEntry,

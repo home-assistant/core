@@ -100,6 +100,8 @@ def async_nest_devices_by_device_id(hass: HomeAssistant) -> Mapping[str, Device]
     device_registry = dr.async_get(hass)
     devices = {}
     for nest_device_id, device in async_nest_devices(hass).items():
-        if device_entry := device_registry.async_get_device({(DOMAIN, nest_device_id)}):
+        if device_entry := device_registry.async_get_device(
+            identifiers={(DOMAIN, nest_device_id)}
+        ):
             devices[device_entry.id] = device
     return devices

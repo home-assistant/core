@@ -7,7 +7,11 @@ from typing import Any
 
 from reolink_aio.api import GuardEnum, Host, PtzEnum
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -15,12 +19,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
 
 
 @dataclass
 class ReolinkButtonEntityDescriptionMixin:
-    """Mixin values for Reolink button entities."""
+    """Mixin values for Reolink button entities for a camera channel."""
 
     method: Callable[[Host, int], Any]
 
@@ -29,9 +33,25 @@ class ReolinkButtonEntityDescriptionMixin:
 class ReolinkButtonEntityDescription(
     ButtonEntityDescription, ReolinkButtonEntityDescriptionMixin
 ):
-    """A class that describes button entities."""
+    """A class that describes button entities for a camera channel."""
 
     supported: Callable[[Host, int], bool] = lambda api, ch: True
+
+
+@dataclass
+class ReolinkHostButtonEntityDescriptionMixin:
+    """Mixin values for Reolink button entities for the host."""
+
+    method: Callable[[Host], Any]
+
+
+@dataclass
+class ReolinkHostButtonEntityDescription(
+    ButtonEntityDescription, ReolinkHostButtonEntityDescriptionMixin
+):
+    """A class that describes button entities for the host."""
+
+    supported: Callable[[Host], bool] = lambda api: True
 
 
 BUTTON_ENTITIES = (
@@ -95,6 +115,17 @@ BUTTON_ENTITIES = (
     ),
 )
 
+HOST_BUTTON_ENTITIES = (
+    ReolinkHostButtonEntityDescription(
+        key="reboot",
+        device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api: api.supported(None, "reboot"),
+        method=lambda api: api.reboot(),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -104,12 +135,20 @@ async def async_setup_entry(
     """Set up a Reolink button entities."""
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
+    entities: list[ReolinkButtonEntity | ReolinkHostButtonEntity] = [
         ReolinkButtonEntity(reolink_data, channel, entity_description)
         for entity_description in BUTTON_ENTITIES
         for channel in reolink_data.host.api.channels
         if entity_description.supported(reolink_data.host.api, channel)
+    ]
+    entities.extend(
+        [
+            ReolinkHostButtonEntity(reolink_data, entity_description)
+            for entity_description in HOST_BUTTON_ENTITIES
+            if entity_description.supported(reolink_data.host.api)
+        ]
     )
+    async_add_entities(entities)
 
 
 class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
@@ -134,3 +173,24 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Execute the button action."""
         await self.entity_description.method(self._host.api, self._channel)
+
+
+class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
+    """Base button entity class for Reolink IP cameras."""
+
+    entity_description: ReolinkHostButtonEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        entity_description: ReolinkHostButtonEntityDescription,
+    ) -> None:
+        """Initialize Reolink button entity."""
+        super().__init__(reolink_data)
+        self.entity_description = entity_description
+
+        self._attr_unique_id = f"{self._host.unique_id}_{entity_description.key}"
+
+    async def async_press(self) -> None:
+        """Execute the button action."""
+        await self.entity_description.method(self._host.api)

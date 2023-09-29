@@ -9,7 +9,7 @@
         }
       },
       "usb_confirm": {
-        "description": "This is an integration for landline calls using a CX93001 voice modem. This can retrieve caller ID information with an option to reject an incoming call."
+        "description": "[%key:component::modem_callerid::config::step::user::description%]"
       }
     },
     "error": {

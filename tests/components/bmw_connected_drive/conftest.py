@@ -1,10 +1,14 @@
 """Fixtures for BMW tests."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
 from bimmer_connected.vehicle.remote_services import RemoteServices, RemoteServiceStatus
 import pytest
+
+from homeassistant.components.bmw_connected_drive.coordinator import (
+    BMWDataUpdateCoordinator,
+)
 
 from . import mock_login, mock_vehicles
 
@@ -18,6 +22,12 @@ async def bmw_fixture(monkeypatch):
         RemoteServices,
         "trigger_remote_service",
         AsyncMock(return_value=RemoteServiceStatus({"eventStatus": "EXECUTED"})),
+    )
+
+    monkeypatch.setattr(
+        BMWDataUpdateCoordinator,
+        "async_update_listeners",
+        Mock(),
     )
 
     with mock_vehicles():

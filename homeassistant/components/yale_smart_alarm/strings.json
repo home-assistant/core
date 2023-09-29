@@ -22,7 +22,7 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "area_id": "Area ID"
+          "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]"
         }
       }
     }
@@ -38,6 +38,27 @@
     },
     "error": {
       "code_format_mismatch": "The code does not match the required number of digits"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "power_loss": {
+        "name": "Power loss"
+      },
+      "battery": {
+        "name": "Battery"
+      },
+      "tamper": {
+        "name": "Tamper"
+      },
+      "jam": {
+        "name": "Jam"
+      }
+    },
+    "button": {
+      "panic": {
+        "name": "Panic button"
+      }
     }
   }
 }

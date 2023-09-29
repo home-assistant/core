@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from aioesphomeapi import FanDirection, FanInfo, FanSpeed, FanState
+from aioesphomeapi import EntityInfo, FanDirection, FanInfo, FanSpeed, FanState
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -13,7 +13,7 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
@@ -22,7 +22,11 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 ORDERED_NAMED_FAN_SPEEDS = [FanSpeed.LOW, FanSpeed.MEDIUM, FanSpeed.HIGH]
@@ -36,7 +40,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="fan",
         info_type=FanInfo,
         entity_type=EsphomeFan,
         state_type=FanState,
@@ -68,7 +71,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
             await self.async_turn_off()
             return
 
-        data: dict[str, Any] = {"key": self._static_info.key, "state": True}
+        data: dict[str, Any] = {"key": self._key, "state": True}
         if percentage is not None:
             if self._supports_speed_levels:
                 data["speed_level"] = math.ceil(
@@ -94,18 +97,16 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        await self._client.fan_command(key=self._static_info.key, state=False)
+        await self._client.fan_command(key=self._key, state=False)
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
-        await self._client.fan_command(
-            key=self._static_info.key, oscillating=oscillating
-        )
+        await self._client.fan_command(key=self._key, oscillating=oscillating)
 
     async def async_set_direction(self, direction: str) -> None:
         """Set direction of the fan."""
         await self._client.fan_command(
-            key=self._static_info.key, direction=_FAN_DIRECTIONS.from_hass(direction)
+            key=self._key, direction=_FAN_DIRECTIONS.from_hass(direction)
         )
 
     @property
@@ -118,9 +119,6 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
     @esphome_state_property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        if not self._static_info.supports_speed:
-            return None
-
         if not self._supports_speed_levels:
             return ordered_list_item_to_percentage(
                 ORDERED_NAMED_FAN_SPEEDS, self._state.speed  # type: ignore[misc]
@@ -141,26 +139,24 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
     @esphome_state_property
     def oscillating(self) -> bool | None:
         """Return the oscillation state."""
-        if not self._static_info.supports_oscillation:
-            return None
         return self._state.oscillating
 
     @property
     @esphome_state_property
     def current_direction(self) -> str | None:
         """Return the current fan direction."""
-        if not self._static_info.supports_direction:
-            return None
         return _FAN_DIRECTIONS.from_esphome(self._state.direction)
 
-    @property
-    def supported_features(self) -> FanEntityFeature:
-        """Flag supported features."""
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        static_info = self._static_info
         flags = FanEntityFeature(0)
-        if self._static_info.supports_oscillation:
+        if static_info.supports_oscillation:
             flags |= FanEntityFeature.OSCILLATE
-        if self._static_info.supports_speed:
+        if static_info.supports_speed:
             flags |= FanEntityFeature.SET_SPEED
-        if self._static_info.supports_direction:
+        if static_info.supports_direction:
             flags |= FanEntityFeature.DIRECTION
-        return flags
+        self._attr_supported_features = flags

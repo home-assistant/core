@@ -529,17 +529,24 @@ class TelegramNotificationService:
                 (text_b2, data_callback_b2), ...]
               - a string like: `/cmd1, /cmd2, /cmd3`
               - or a string like: `text_b1:/cmd1, text_b2:/cmd2`
+              - also supports urls instead of callback commands
             """
             buttons = []
             if isinstance(row_keyboard, str):
                 for key in row_keyboard.split(","):
                     if ":/" in key:
-                        # commands like: 'Label:/cmd' become ('Label', '/cmd')
-                        label = key.split(":/")[0]
-                        command = key[len(label) + 1 :]
-                        buttons.append(
-                            InlineKeyboardButton(label, callback_data=command)
-                        )
+                        # check if command or URL
+                        if key.startswith("https://"):
+                            label = key.split(",")[0]
+                            url = key[len(label) + 1 :]
+                            buttons.append(InlineKeyboardButton(label, url=url))
+                        else:
+                            # commands like: 'Label:/cmd' become ('Label', '/cmd')
+                            label = key.split(":/")[0]
+                            command = key[len(label) + 1 :]
+                            buttons.append(
+                                InlineKeyboardButton(label, callback_data=command)
+                            )
                     else:
                         # commands like: '/cmd' become ('CMD', '/cmd')
                         label = key.strip()[1:].upper()
@@ -547,9 +554,12 @@ class TelegramNotificationService:
             elif isinstance(row_keyboard, list):
                 for entry in row_keyboard:
                     text_btn, data_btn = entry
-                    buttons.append(
-                        InlineKeyboardButton(text_btn, callback_data=data_btn)
-                    )
+                    if data_btn.startswith("https://"):
+                        buttons.append(InlineKeyboardButton(text_btn, url=data_btn))
+                    else:
+                        buttons.append(
+                            InlineKeyboardButton(text_btn, callback_data=data_btn)
+                        )
             else:
                 raise TypeError(str(row_keyboard))
             return buttons

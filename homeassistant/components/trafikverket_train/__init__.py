@@ -15,6 +15,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_FROM, CONF_TO, DOMAIN, PLATFORMS
+from .coordinator import TVDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -34,11 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f" {entry.data[CONF_TO]}. Error: {error} "
         ) from error
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        CONF_TO: to_station,
-        CONF_FROM: from_station,
-        "train_api": train_api,
-    }
+    coordinator = TVDataUpdateCoordinator(hass, entry, to_station, from_station)
+    await coordinator.async_config_entry_first_refresh()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

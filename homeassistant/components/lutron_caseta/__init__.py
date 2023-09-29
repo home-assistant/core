@@ -142,7 +142,7 @@ async def _async_migrate_unique_ids(
             return None
         sensor_id = unique_id.split("_")[1]
         new_unique_id = f"occupancygroup_{bridge_unique_id}_{sensor_id}"
-        if dev_entry := dev_reg.async_get_device({(DOMAIN, unique_id)}):
+        if dev_entry := dev_reg.async_get_device(identifiers={(DOMAIN, unique_id)}):
             dev_reg.async_update_device(
                 dev_entry.id, new_identifiers={(DOMAIN, new_unique_id)}
             )
@@ -219,14 +219,14 @@ def _async_register_bridge_device(
     """Register the bridge device in the device registry."""
     device_registry = dr.async_get(hass)
 
-    device_args: DeviceInfo = {
-        "name": bridge_device["name"],
-        "manufacturer": MANUFACTURER,
-        "identifiers": {(DOMAIN, bridge_device["serial"])},
-        "model": f"{bridge_device['model']} ({bridge_device['type']})",
-        "via_device": (DOMAIN, bridge_device["serial"]),
-        "configuration_url": "https://device-login.lutron.com",
-    }
+    device_args = DeviceInfo(
+        name=bridge_device["name"],
+        manufacturer=MANUFACTURER,
+        identifiers={(DOMAIN, bridge_device["serial"])},
+        model=f"{bridge_device['model']} ({bridge_device['type']})",
+        via_device=(DOMAIN, bridge_device["serial"]),
+        configuration_url="https://device-login.lutron.com",
+    )
 
     area = _area_name_from_id(bridge.areas, bridge_device["area"])
     if area != UNASSIGNED_AREA:

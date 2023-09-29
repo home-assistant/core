@@ -49,6 +49,8 @@ def async_handle_api_call(
 class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
     """Representation of a Sensibo Base Entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: SensiboDataUpdateCoordinator,
@@ -67,8 +69,6 @@ class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
 
 class SensiboDeviceBaseEntity(SensiboBaseEntity):
     """Representation of a Sensibo Device."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -92,8 +92,6 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
 
 class SensiboMotionBaseEntity(SensiboBaseEntity):
     """Representation of a Sensibo Motion Entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

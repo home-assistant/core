@@ -14,11 +14,13 @@ from pyhap.const import CATEGORY_CAMERA
 from homeassistant.components import camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import STATE_ON
-from homeassistant.core import Event, callback
+from homeassistant.core import State, callback
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_state_change_event,
     async_track_time_interval,
 )
+from homeassistant.helpers.typing import EventType
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -266,13 +268,15 @@ class Camera(HomeAccessory, PyhapCamera):
         await super().run()
 
     @callback
-    def _async_update_motion_state_event(self, event: Event) -> None:
+    def _async_update_motion_state_event(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Handle state change event listener callback."""
         if not state_changed_event_is_same_state(event):
-            self._async_update_motion_state(event.data.get("new_state"))
+            self._async_update_motion_state(event.data["new_state"])
 
     @callback
-    def _async_update_motion_state(self, new_state):
+    def _async_update_motion_state(self, new_state: State | None) -> None:
         """Handle link motion sensor state change to update HomeKit value."""
         if not new_state:
             return
@@ -290,13 +294,15 @@ class Camera(HomeAccessory, PyhapCamera):
         )
 
     @callback
-    def _async_update_doorbell_state_event(self, event: Event) -> None:
+    def _async_update_doorbell_state_event(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Handle state change event listener callback."""
         if not state_changed_event_is_same_state(event):
-            self._async_update_doorbell_state(event.data.get("new_state"))
+            self._async_update_doorbell_state(event.data["new_state"])
 
     @callback
-    def _async_update_doorbell_state(self, new_state):
+    def _async_update_doorbell_state(self, new_state: State | None) -> None:
         """Handle link doorbell sensor state change to update HomeKit value."""
         if not new_state:
             return

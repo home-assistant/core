@@ -22,8 +22,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FreedomproDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,10 +58,16 @@ async def async_setup_entry(
 
 
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
-    """Representation of an Freedompro climate."""
+    """Representation of a Freedompro climate."""
 
+    _attr_has_entity_name = True
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_name = None
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_current_temperature = 0
+    _attr_target_temperature = 0
+    _attr_hvac_mode = HVACMode.OFF
 
     def __init__(
         self,
@@ -74,7 +80,6 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
         super().__init__(coordinator)
         self._session = session
         self._api_key = api_key
-        self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._characteristics = device["characteristics"]
         self._attr_device_info = DeviceInfo(
@@ -83,12 +88,8 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
             },
             manufacturer="Freedompro",
             model=device["type"],
-            name=self.name,
+            name=device["name"],
         )
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        self._attr_current_temperature = 0
-        self._attr_target_temperature = 0
-        self._attr_hvac_mode = HVACMode.OFF
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -121,8 +122,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
         if hvac_mode not in SUPPORTED_HVAC_MODES:
             raise ValueError(f"Got unsupported hvac_mode {hvac_mode}")
 
-        payload = {}
-        payload["heatingCoolingState"] = HVAC_INVERT_MAP[hvac_mode]
+        payload = {"heatingCoolingState": HVAC_INVERT_MAP[hvac_mode]}
         await put_state(
             self._session,
             self._api_key,

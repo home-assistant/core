@@ -20,7 +20,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.entity_registry import async_get
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -80,14 +80,14 @@ def inject_rpc_device_event(
 
 async def mock_rest_update(hass: HomeAssistant, seconds=REST_SENSORS_UPDATE_INTERVAL):
     """Move time to create REST sensors update event."""
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=seconds))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=seconds))
     await hass.async_block_till_done()
 
 
 async def mock_polling_rpc_update(hass: HomeAssistant):
     """Move time to create polling RPC sensors update event."""
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL)
+        hass, dt_util.utcnow() + timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL)
     )
     await hass.async_block_till_done()
 

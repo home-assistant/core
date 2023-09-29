@@ -50,31 +50,28 @@ class TadoBinarySensorEntityDescription(
 
 BATTERY_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="battery state",
-    name="Battery state",
     state_fn=lambda data: data["batteryState"] == "LOW",
     device_class=BinarySensorDeviceClass.BATTERY,
 )
 CONNECTION_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="connection state",
-    name="Connection state",
+    translation_key="connection_state",
     state_fn=lambda data: data.get("connectionState", {}).get("value", False),
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 POWER_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="power",
-    name="Power",
     state_fn=lambda data: data.power == "ON",
     device_class=BinarySensorDeviceClass.POWER,
 )
 LINK_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="link",
-    name="Link",
     state_fn=lambda data: data.link == "ONLINE",
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 OVERLAY_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="overlay",
-    name="Overlay",
+    translation_key="overlay",
     state_fn=lambda data: data.overlay_active,
     attributes_fn=lambda data: {"termination": data.overlay_termination_type}
     if data.overlay_active
@@ -83,14 +80,13 @@ OVERLAY_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
 )
 OPEN_WINDOW_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="open window",
-    name="Open window",
     state_fn=lambda data: bool(data.open_window or data.open_window_detected),
     attributes_fn=lambda data: data.open_window_attr,
     device_class=BinarySensorDeviceClass.WINDOW,
 )
 EARLY_START_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="early start",
-    name="Early start",
+    translation_key="early_start",
     state_fn=lambda data: data.preparation,
     device_class=BinarySensorDeviceClass.POWER,
 )
@@ -173,8 +169,6 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
 
     entity_description: TadoBinarySensorEntityDescription
 
-    _attr_has_entity_name = True
-
     def __init__(
         self, tado, device_info, entity_description: TadoBinarySensorEntityDescription
     ) -> None:
@@ -226,8 +220,6 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
     """Representation of a tado Sensor."""
 
     entity_description: TadoBinarySensorEntityDescription
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

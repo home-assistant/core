@@ -27,5 +27,17 @@
         }
       }
     }
+  },
+  "services": {
+    "set_value": {
+      "name": "Set value",
+      "description": "Sets the value.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "Enter your text."
+        }
+      }
+    }
   }
 }

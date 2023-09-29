@@ -7,18 +7,15 @@ from typing import Any
 
 from sml import SmlGetListResponse
 from sml.asyncio import SmlProtocol
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
     DEGREE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -27,15 +24,12 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -48,13 +42,6 @@ from .const import (
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_SERIAL_PORT): cv.string,
-        vol.Optional(CONF_NAME, default=""): cv.string,
-    },
-)
-
 # OBIS format: A-B:C.D.E*F
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # A=1: Electricity
@@ -63,41 +50,47 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0 Ownership ID
     SensorEntityDescription(
         key="1-0:0.0.0*255",
-        name="Ownership ID",
+        translation_key="ownership_id",
         icon="mdi:flash",
         entity_registry_enabled_default=False,
     ),
     # E=9: Electrity ID
     SensorEntityDescription(
-        key="1-0:0.0.9*255", name="Electricity ID", icon="mdi:flash"
+        key="1-0:0.0.9*255",
+        translation_key="electricity_id",
+        icon="mdi:flash",
     ),
     # D=2: Program entries
     SensorEntityDescription(
-        key="1-0:0.2.0*0", name="Configuration program version number", icon="mdi:flash"
+        key="1-0:0.2.0*0",
+        translation_key="configuration_program_version_number",
+        icon="mdi:flash",
     ),
     SensorEntityDescription(
-        key="1-0:0.2.0*1", name="Firmware version number", icon="mdi:flash"
+        key="1-0:0.2.0*1",
+        translation_key="firmware_version_number",
+        icon="mdi:flash",
     ),
     # C=1: Active power +
     # D=8: Time integral 1
     # E=0: Total
     SensorEntityDescription(
         key="1-0:1.8.0*255",
-        name="Positive active energy total",
+        translation_key="positive_active_energy_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     # E=1: Rate 1
     SensorEntityDescription(
         key="1-0:1.8.1*255",
-        name="Positive active energy in tariff T1",
+        translation_key="positive_active_energy_tariff_t1",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     # E=2: Rate 2
     SensorEntityDescription(
         key="1-0:1.8.2*255",
-        name="Positive active energy in tariff T2",
+        translation_key="positive_active_energy_tariff_t2",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
@@ -105,28 +98,28 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:1.17.0*255",
-        name="Last signed positive active energy total",
+        translation_key="last_signed_positive_active_energy_total",
     ),
     # C=2: Active power -
     # D=8: Time integral 1
     # E=0: Total
     SensorEntityDescription(
         key="1-0:2.8.0*255",
-        name="Negative active energy total",
+        translation_key="negative_active_energy_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     # E=1: Rate 1
     SensorEntityDescription(
         key="1-0:2.8.1*255",
-        name="Negative active energy in tariff T1",
+        translation_key="negative_active_energy_tariff_t1",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     # E=2: Rate 2
     SensorEntityDescription(
         key="1-0:2.8.2*255",
-        name="Negative active energy in tariff T2",
+        translation_key="negative_active_energy_tariff_t2",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
@@ -134,14 +127,16 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # D=7: Instantaneous value
     # E=0: Total
     SensorEntityDescription(
-        key="1-0:14.7.0*255", name="Supply frequency", icon="mdi:sine-wave"
+        key="1-0:14.7.0*255",
+        translation_key="supply_frequency",
+        icon="mdi:sine-wave",
     ),
     # C=15: Active power absolute
     # D=7: Instantaneous value
     # E=0: Total
     SensorEntityDescription(
         key="1-0:15.7.0*255",
-        name="Absolute active instantaneous power",
+        translation_key="absolute_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -150,7 +145,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:16.7.0*255",
-        name="Sum active instantaneous power",
+        translation_key="sum_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -159,7 +154,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:31.7.0*255",
-        name="L1 active instantaneous amperage",
+        translation_key="l1_active_instantaneous_amperage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
     ),
@@ -168,7 +163,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:32.7.0*255",
-        name="L1 active instantaneous voltage",
+        translation_key="l1_active_instantaneous_voltage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
@@ -177,7 +172,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:36.7.0*255",
-        name="L1 active instantaneous power",
+        translation_key="l1_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -186,7 +181,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:51.7.0*255",
-        name="L2 active instantaneous amperage",
+        translation_key="l2_active_instantaneous_amperage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
     ),
@@ -195,7 +190,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:52.7.0*255",
-        name="L2 active instantaneous voltage",
+        translation_key="l2_active_instantaneous_voltage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
@@ -204,7 +199,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:56.7.0*255",
-        name="L2 active instantaneous power",
+        translation_key="l2_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -213,7 +208,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:71.7.0*255",
-        name="L3 active instantaneous amperage",
+        translation_key="l3_active_instantaneous_amperage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
     ),
@@ -222,7 +217,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:72.7.0*255",
-        name="L3 active instantaneous voltage",
+        translation_key="l3_active_instantaneous_voltage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
@@ -231,7 +226,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:76.7.0*255",
-        name="L3 active instantaneous power",
+        translation_key="l3_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -243,26 +238,40 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=15: U(L2) x I(L2)
     # E=26: U(L3) x I(L3)
     SensorEntityDescription(
-        key="1-0:81.7.1*255", name="U(L2)/U(L1) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.1*255",
+        translation_key="u_l2_u_l1_phase_angle",
+        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
-        key="1-0:81.7.2*255", name="U(L3)/U(L1) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.2*255",
+        translation_key="u_l3_u_l1_phase_angle",
+        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
-        key="1-0:81.7.4*255", name="U(L1)/I(L1) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.4*255",
+        translation_key="u_l1_i_l1_phase_angle",
+        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
-        key="1-0:81.7.15*255", name="U(L2)/I(L2) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.15*255",
+        translation_key="u_l2_i_l2_phase_angle",
+        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
-        key="1-0:81.7.26*255", name="U(L3)/I(L3) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.26*255",
+        translation_key="u_l3_i_l3_phase_angle",
+        icon="mdi:sine-wave",
     ),
     # C=96: Electricity-related service entries
     SensorEntityDescription(
-        key="1-0:96.1.0*255", name="Metering point ID 1", icon="mdi:flash"
+        key="1-0:96.1.0*255",
+        translation_key="metering_point_id_1",
+        icon="mdi:flash",
     ),
     SensorEntityDescription(
-        key="1-0:96.5.0*255", name="Internal operating status", icon="mdi:flash"
+        key="1-0:96.5.0*255",
+        translation_key="internal_operating_status",
+        icon="mdi:flash",
     ),
 )
 
@@ -277,31 +286,6 @@ SENSOR_UNIT_MAPPING = {
     "°": DEGREE,
     "Hz": UnitOfFrequency.HERTZ,
 }
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up EDL21 sensors via configuration.yaml and show deprecation warning."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.6.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(
@@ -341,12 +325,11 @@ class EDL21:
         self._registered_obis: set[tuple[str, str]] = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
-        self._name = config.get(CONF_NAME)
+        self._serial_port = config[CONF_SERIAL_PORT]
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
         LOGGER.debug(
-            "Initialized EDL21 for %s on %s",
-            config.get(CONF_NAME),
+            "Initialized EDL21 on %s",
             config[CONF_SERIAL_PORT],
         )
 
@@ -357,16 +340,14 @@ class EDL21:
     def event(self, message_body) -> None:
         """Handle events from pysml."""
         assert isinstance(message_body, SmlGetListResponse)
-        LOGGER.debug("Received sml message for %s: %s", self._name, message_body)
+        LOGGER.debug("Received sml message on %s: %s", self._serial_port, message_body)
 
-        electricity_id = None
-        for telegram in message_body.get("valList", []):
-            if telegram.get("objName") in ("1-0:0.0.9*255", "1-0:96.1.0*255"):
-                electricity_id = telegram.get("value")
-                break
+        electricity_id = message_body["serverId"]
 
         if electricity_id is None:
-            LOGGER.debug("No electricity id found in sml message for %s", self._name)
+            LOGGER.debug(
+                "No electricity id found in sml message on %s", self._serial_port
+            )
             return
         electricity_id = electricity_id.replace(" ", "")
 
@@ -381,15 +362,11 @@ class EDL21:
                 )
             else:
                 entity_description = SENSORS.get(obis)
-                if entity_description and entity_description.name:
-                    # self._name is only used for backwards YAML compatibility
-                    # This needs to be cleaned up when YAML support is removed
-                    device_name = self._name or DEFAULT_DEVICE_NAME
+                if entity_description:
                     new_entities.append(
                         EDL21Entity(
                             electricity_id,
                             obis,
-                            device_name,
                             entity_description,
                             telegram,
                         )
@@ -413,7 +390,7 @@ class EDL21Entity(SensorEntity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, electricity_id, obis, device_name, entity_description, telegram):
+    def __init__(self, electricity_id, obis, entity_description, telegram):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
@@ -425,7 +402,7 @@ class EDL21Entity(SensorEntity):
         self._attr_unique_id = f"{electricity_id}_{obis}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._electricity_id)},
-            name=device_name,
+            name=DEFAULT_DEVICE_NAME,
         )
 
     async def async_added_to_hass(self) -> None:

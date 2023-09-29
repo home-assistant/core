@@ -32,6 +32,7 @@ async def async_setup_entry(
 class EvilGeniusLight(EvilGeniusEntity, LightEntity):
     """Evil Genius Labs light."""
 
+    _attr_name = None
     _attr_supported_features = LightEntityFeature.EFFECT
     _attr_supported_color_modes = {ColorMode.RGB}
     _attr_color_mode = ColorMode.RGB
@@ -46,11 +47,6 @@ class EvilGeniusLight(EvilGeniusEntity, LightEntity):
             if pattern != FIB_NO_EFFECT
         ]
         self._attr_effect_list.insert(0, HA_NO_EFFECT)
-
-    @property
-    def name(self) -> str:
-        """Return name."""
-        return cast(str, self.coordinator.data["name"]["value"])
 
     @property
     def is_on(self) -> bool:

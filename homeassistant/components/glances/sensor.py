@@ -223,17 +223,17 @@ SENSOR_TYPES = {
         icon="mdi:docker",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    ("raid", "used"): GlancesSensorEntityDescription(
-        key="used",
-        type="raid",
-        name_suffix="Raid used",
-        icon="mdi:harddisk",
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
     ("raid", "available"): GlancesSensorEntityDescription(
         key="available",
         type="raid",
         name_suffix="Raid available",
+        icon="mdi:harddisk",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("raid", "used"): GlancesSensorEntityDescription(
+        key="used",
+        type="raid",
+        name_suffix="Raid used",
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -269,36 +269,36 @@ async def async_setup_entry(
         if sensor_type in ["fs", "sensors", "raid"]:
             for sensor_label, params in sensors.items():
                 for param in params:
-                    sensor_description = SENSOR_TYPES[(sensor_type, param)]
+                    if sensor_description := SENSOR_TYPES.get((sensor_type, param)):
+                        _migrate_old_unique_ids(
+                            hass,
+                            f"{coordinator.host}-{name} {sensor_label} {sensor_description.name_suffix}",
+                            f"{sensor_label}-{sensor_description.key}",
+                        )
+                        entities.append(
+                            GlancesSensor(
+                                coordinator,
+                                name,
+                                sensor_label,
+                                sensor_description,
+                            )
+                        )
+        else:
+            for sensor in sensors:
+                if sensor_description := SENSOR_TYPES.get((sensor_type, sensor)):
                     _migrate_old_unique_ids(
                         hass,
-                        f"{coordinator.host}-{name} {sensor_label} {sensor_description.name_suffix}",
-                        f"{sensor_label}-{sensor_description.key}",
+                        f"{coordinator.host}-{name}  {sensor_description.name_suffix}",
+                        f"-{sensor_description.key}",
                     )
                     entities.append(
                         GlancesSensor(
                             coordinator,
                             name,
-                            sensor_label,
+                            "",
                             sensor_description,
                         )
                     )
-        else:
-            for sensor in sensors:
-                sensor_description = SENSOR_TYPES[(sensor_type, sensor)]
-                _migrate_old_unique_ids(
-                    hass,
-                    f"{coordinator.host}-{name}  {sensor_description.name_suffix}",
-                    f"-{sensor_description.key}",
-                )
-                entities.append(
-                    GlancesSensor(
-                        coordinator,
-                        name,
-                        "",
-                        sensor_description,
-                    )
-                )
 
     async_add_entities(entities)
 
@@ -327,6 +327,18 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
             name=name or coordinator.host,
         )
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{sensor_name_prefix}-{description.key}"
+
+    @property
+    def available(self) -> bool:
+        """Set sensor unavailable when native value is invalid."""
+        if super().available:
+            return (
+                not self._numeric_state_expected
+                or isinstance(value := self.native_value, (int, float))
+                or isinstance(value, str)
+                and value.isnumeric()
+            )
+        return False
 
     @property
     def native_value(self) -> StateType:

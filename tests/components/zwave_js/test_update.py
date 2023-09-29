@@ -127,7 +127,7 @@ async def test_update_entity_states(
         },
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert "There is no value to refresh for this entity" in caplog.text
 
     client.async_send_command.return_value = {"updates": []}
@@ -759,6 +759,42 @@ async def test_update_entity_full_restore_data_no_update_available(
                     {
                         ATTR_INSTALLED_VERSION: "10.7",
                         ATTR_LATEST_VERSION: "10.7",
+                        ATTR_SKIPPED_VERSION: None,
+                    },
+                ),
+                {"latest_version_firmware": None},
+            )
+        ],
+    )
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_SKIPPED_VERSION] is None
+    assert state.attributes[ATTR_LATEST_VERSION] == "10.7"
+
+
+async def test_update_entity_no_latest_version(
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test entity with no `latest_version` attr restores state."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    UPDATE_ENTITY,
+                    STATE_OFF,
+                    {
+                        ATTR_INSTALLED_VERSION: "10.7",
+                        ATTR_LATEST_VERSION: None,
                         ATTR_SKIPPED_VERSION: None,
                     },
                 ),

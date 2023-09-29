@@ -25,7 +25,7 @@ class KNXInterfaceDevice:
         _device_id = (DOMAIN, f"_{entry.entry_id}_interface")
         self.device = self.device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            default_name="KNX Interface",
+            name="KNX Interface",
             identifiers={_device_id},
         )
         self.device_info = DeviceInfo(identifiers={_device_id})

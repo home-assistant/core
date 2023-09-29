@@ -27,5 +27,63 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "services": {
+    "open_path": {
+      "name": "Open path",
+      "description": "Opens a file on the server using the default application.",
+      "fields": {
+        "bridge": {
+          "name": "Bridge",
+          "description": "The server to talk to."
+        },
+        "path": {
+          "name": "[%key:common::config_flow::data::path%]",
+          "description": "Path to open."
+        }
+      }
+    },
+    "open_url": {
+      "name": "Open URL",
+      "description": "Opens a URL on the server using the default application.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]"
+        },
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "URL to open."
+        }
+      }
+    },
+    "send_keypress": {
+      "name": "Send keyboard keypress",
+      "description": "Sends a keyboard keypress.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "The server to send the command to."
+        },
+        "key": {
+          "name": "Key",
+          "description": "Key to press. List available here: http://robotjs.io/docs/syntax#keys."
+        }
+      }
+    },
+    "send_text": {
+      "name": "Send keyboard text",
+      "description": "Sends text for the server to type.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]"
+        },
+        "text": {
+          "name": "Text",
+          "description": "Text to type."
+        }
+      }
+    }
   }
 }

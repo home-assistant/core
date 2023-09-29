@@ -13,5 +13,41 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
     }
+  },
+  "services": {
+    "pause": {
+      "name": "[%key:common::action::pause%]",
+      "description": "Pauses downloads.",
+      "fields": {
+        "api_key": {
+          "name": "SABnzbd API key",
+          "description": "The SABnzbd API key to pause downloads."
+        }
+      }
+    },
+    "resume": {
+      "name": "Resume",
+      "description": "Resumes downloads.",
+      "fields": {
+        "api_key": {
+          "name": "[%key:component::sabnzbd::services::pause::fields::api_key::name%]",
+          "description": "The SABnzbd API key to resume downloads."
+        }
+      }
+    },
+    "set_speed": {
+      "name": "Set speed",
+      "description": "Sets the download speed limit.",
+      "fields": {
+        "api_key": {
+          "name": "[%key:component::sabnzbd::services::pause::fields::api_key::name%]",
+          "description": "The SABnzbd API key to set speed limit."
+        },
+        "speed": {
+          "name": "Speed",
+          "description": "Speed limit. If specified as a number with no units, will be interpreted as a percent. If units are provided (e.g., 500K) will be interpreted absolutely."
+        }
+      }
+    }
   }
 }

@@ -1,14 +1,16 @@
-image: homeassistant/{arch}-homeassistant
-shadow_repository: ghcr.io/home-assistant
+image: ghcr.io/home-assistant/{arch}-homeassistant
 build_from:
-  aarch64: ghcr.io/home-assistant/aarch64-homeassistant-base:2023.05.0
-  armhf: ghcr.io/home-assistant/armhf-homeassistant-base:2023.05.0
-  armv7: ghcr.io/home-assistant/armv7-homeassistant-base:2023.05.0
-  amd64: ghcr.io/home-assistant/amd64-homeassistant-base:2023.05.0
-  i386: ghcr.io/home-assistant/i386-homeassistant-base:2023.05.0
+  aarch64: ghcr.io/home-assistant/aarch64-homeassistant-base:2023.07.0
+  armhf: ghcr.io/home-assistant/armhf-homeassistant-base:2023.07.0
+  armv7: ghcr.io/home-assistant/armv7-homeassistant-base:2023.07.0
+  amd64: ghcr.io/home-assistant/amd64-homeassistant-base:2023.07.0
+  i386: ghcr.io/home-assistant/i386-homeassistant-base:2023.07.0
 codenotary:
   signer: notary@home-assistant.io
   base_image: notary@home-assistant.io
+cosign:
+  base_identity: https://github.com/home-assistant/docker/.*
+  identity: https://github.com/home-assistant/core/.*
 labels:
   io.hass.type: core
   org.opencontainers.image.title: Home Assistant

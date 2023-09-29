@@ -149,6 +149,7 @@ from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -160,6 +161,8 @@ DOMAIN = "auth"
 
 StoreResultType = Callable[[str, Credentials], str]
 RetrieveResultType = Callable[[str, str], Credentials | None]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @bind_hass

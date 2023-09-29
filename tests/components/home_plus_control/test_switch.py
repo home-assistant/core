@@ -55,7 +55,7 @@ def one_entity_state(hass, device_uid):
     entity_reg = er.async_get(hass)
     device_reg = dr.async_get(hass)
 
-    device_id = device_reg.async_get_device({(DOMAIN, device_uid)}).id
+    device_id = device_reg.async_get_device(identifiers={(DOMAIN, device_uid)}).id
     entity_entries = er.async_entries_for_device(entity_reg, device_id)
 
     assert len(entity_entries) == 1

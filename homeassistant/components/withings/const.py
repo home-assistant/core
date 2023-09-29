@@ -1,5 +1,5 @@
 """Constants used by the Withings component."""
-from homeassistant.backports.enum import StrEnum
+from enum import StrEnum
 
 CONF_PROFILES = "profiles"
 CONF_USE_WEBHOOK = "use_webhook"

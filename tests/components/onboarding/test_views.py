@@ -453,6 +453,27 @@ async def test_onboarding_core_sets_up_met(
     assert len(hass.config_entries.async_entries("met")) == 1
 
 
+async def test_onboarding_core_sets_up_google_translate(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    mock_default_integrations,
+) -> None:
+    """Test finishing the core step sets up google translate."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post("/api/onboarding/core_config")
+
+    assert resp.status == 200
+
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries("google_translate")) == 1
+
+
 async def test_onboarding_core_sets_up_radio_browser(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],

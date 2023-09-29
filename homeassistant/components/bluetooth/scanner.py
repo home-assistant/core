@@ -53,6 +53,7 @@ NEED_RESET_ERRORS = [
     "org.bluez.Error.Failed",
     "org.bluez.Error.InProgress",
     "org.bluez.Error.NotReady",
+    "not found",
 ]
 
 # When the adapter is still initializing, the scanner will raise an exception

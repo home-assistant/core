@@ -13,8 +13,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FreedomproDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -26,12 +26,15 @@ async def async_setup_entry(
     async_add_entities(
         Device(hass, api_key, device, coordinator)
         for device in coordinator.data
-        if device["type"] == "switch" or device["type"] == "outlet"
+        if device["type"] in ("switch", "outlet")
     )
 
 
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SwitchEntity):
-    """Representation of an Freedompro switch."""
+    """Representation of a Freedompro switch."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -44,7 +47,6 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SwitchEntity):
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
         self._api_key = api_key
-        self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -52,7 +54,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SwitchEntity):
             },
             manufacturer="Freedompro",
             model=device["type"],
-            name=self.name,
+            name=device["name"],
         )
         self._attr_is_on = False
 

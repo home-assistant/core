@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from roborock.containers import RoborockErrorCode, RoborockStateCode
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.components.sensor import (
@@ -12,7 +13,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import (
+    AREA_SQUARE_METERS,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -37,7 +43,7 @@ class RoborockSensorDescription(
     """A class that describes Roborock sensors."""
 
 
-CONSUMABLE_SENSORS = [
+SENSOR_DESCRIPTIONS = [
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="main_brush_time_left",
@@ -74,6 +80,60 @@ CONSUMABLE_SENSORS = [
         value_fn=lambda data: data.consumable.sensor_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    RoborockSensorDescription(
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        key="cleaning_time",
+        translation_key="cleaning_time",
+        device_class=SensorDeviceClass.DURATION,
+        value_fn=lambda data: data.status.clean_time,
+    ),
+    RoborockSensorDescription(
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        key="total_cleaning_time",
+        translation_key="total_cleaning_time",
+        icon="mdi:history",
+        device_class=SensorDeviceClass.DURATION,
+        value_fn=lambda data: data.clean_summary.clean_time,
+    ),
+    RoborockSensorDescription(
+        key="status",
+        icon="mdi:information-outline",
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="status",
+        value_fn=lambda data: data.status.state.name,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=RoborockStateCode.keys(),
+    ),
+    RoborockSensorDescription(
+        key="cleaning_area",
+        icon="mdi:texture-box",
+        translation_key="cleaning_area",
+        value_fn=lambda data: data.status.square_meter_clean_area,
+        native_unit_of_measurement=AREA_SQUARE_METERS,
+    ),
+    RoborockSensorDescription(
+        key="total_cleaning_area",
+        icon="mdi:texture-box",
+        translation_key="total_cleaning_area",
+        value_fn=lambda data: data.clean_summary.square_meter_clean_area,
+        native_unit_of_measurement=AREA_SQUARE_METERS,
+    ),
+    RoborockSensorDescription(
+        key="vacuum_error",
+        icon="mdi:alert-circle",
+        translation_key="vacuum_error",
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda data: data.status.error_code.name,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=RoborockErrorCode.keys(),
+    ),
+    RoborockSensorDescription(
+        key="battery",
+        value_fn=lambda data: data.status.battery,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+    ),
 ]
 
 
@@ -93,7 +153,8 @@ async def async_setup_entry(
             description,
         )
         for device_id, coordinator in coordinators.items()
-        for description in CONSUMABLE_SENSORS
+        for description in SENSOR_DESCRIPTIONS
+        if description.value_fn(coordinator.roborock_device_info.props) is not None
     )
 
 
@@ -115,4 +176,6 @@ class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self.coordinator.device_info.props)
+        return self.entity_description.value_fn(
+            self.coordinator.roborock_device_info.props
+        )

@@ -60,6 +60,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
     """Representation of a Verisure doorlock."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str

@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
@@ -18,6 +18,8 @@ from .services import async_setup_services, async_unload_services
 SAVE_DELAY = 10
 STORAGE_KEY = "unifi_data"
 STORAGE_VERSION = 1
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(UNIFI_DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -1,4 +1,4 @@
-"""Tests for Microsoft Text-to-Speech."""
+"""Tests for Microsoft text-to-speech."""
 from unittest.mock import patch
 
 from pycsspeechtts import pycsspeechtts

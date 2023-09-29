@@ -62,6 +62,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
+    configuration_url = None
+    if host := entry.data[CONF_HOST]:
+        configuration_url = f"http://{host}/"
+
     assert entry.unique_id
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -72,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=router.model,
         sw_version=router.firmware_version,
         hw_version=router.hardware_version,
-        configuration_url=f"http://{entry.data[CONF_HOST]}/",
+        configuration_url=configuration_url,
     )
 
     async def async_update_devices() -> bool:
@@ -208,7 +212,7 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
-    """Remove a config entry from a device."""
+    """Remove a device from a config entry."""
     router = hass.data[DOMAIN][config_entry.entry_id][KEY_ROUTER]
 
     device_mac = None

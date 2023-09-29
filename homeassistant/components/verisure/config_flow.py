@@ -329,7 +329,7 @@ class VerisureOptionsFlowHandler(OptionsFlow):
                     ): int,
                     vol.Optional(
                         CONF_LOCK_DEFAULT_CODE,
-                        default=self.entry.options.get(CONF_LOCK_DEFAULT_CODE),
+                        default=self.entry.options.get(CONF_LOCK_DEFAULT_CODE, ""),
                     ): str,
                 }
             ),

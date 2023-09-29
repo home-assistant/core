@@ -227,7 +227,6 @@ class MySensorsEntity(MySensorsDevice, Entity):
         """Return entity specific state attributes."""
         attr = self._extra_attributes
 
-        assert self.platform
         assert self.platform.config_entry
         attr[ATTR_DEVICE] = self.platform.config_entry.data[CONF_DEVICE]
 

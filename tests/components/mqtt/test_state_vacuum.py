@@ -11,7 +11,10 @@ from homeassistant.components.mqtt.const import CONF_COMMAND_TOPIC, CONF_STATE_T
 from homeassistant.components.mqtt.vacuum import CONF_SCHEMA, schema_state as mqttvacuum
 from homeassistant.components.mqtt.vacuum.const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from homeassistant.components.mqtt.vacuum.schema import services_to_strings
-from homeassistant.components.mqtt.vacuum.schema_state import SERVICE_TO_STRING
+from homeassistant.components.mqtt.vacuum.schema_state import (
+    ALL_SERVICES,
+    SERVICE_TO_STRING,
+)
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
     ATTR_BATTERY_LEVEL,
@@ -29,6 +32,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import CONF_NAME, ENTITY_MATCH_ALL, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .test_common import (
     help_custom_config,
@@ -112,7 +116,7 @@ async def test_default_supported_features(
     entity = hass.states.get("vacuum.mqtttest")
     entity_features = entity.attributes.get(mqttvacuum.CONF_SUPPORTED_FEATURES, 0)
     assert sorted(services_to_strings(entity_features, SERVICE_TO_STRING)) == sorted(
-        ["start", "stop", "return_home", "battery", "status", "clean_spot"]
+        ["start", "stop", "return_home", "battery", "clean_spot"]
     )
 
 
@@ -242,14 +246,51 @@ async def test_commands_without_supported_features(
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_set_fan_speed(hass, "medium", "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_set_fan_speed(hass, "medium", "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_send_command(
-        hass, "44 FE 93", {"key": "value"}, entity_id="vacuum.mqtttest"
-    )
+    with pytest.raises(HomeAssistantError):
+        await common.async_send_command(
+            hass, "44 FE 93", {"key": "value"}, entity_id="vacuum.mqtttest"
+        )
     mqtt_mock.async_publish.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            "mqtt": {
+                "vacuum": {
+                    "name": "test",
+                    "schema": "state",
+                    mqttvacuum.CONF_SUPPORTED_FEATURES: services_to_strings(
+                        ALL_SERVICES, SERVICE_TO_STRING
+                    ),
+                }
+            }
+        }
+    ],
+)
+async def test_command_without_command_topic(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test commands which are not supported by the vacuum."""
+    mqtt_mock = await mqtt_mock_entry()
+
+    await common.async_start(hass, "vacuum.test")
+    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_set_fan_speed(hass, "low", "vacuum.test")
+    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_send_command(hass, "some command", "vacuum.test")
+    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.reset_mock()
 
 
 @pytest.mark.parametrize("hass_config", [CONFIG_ALL_SERVICES])
@@ -768,7 +809,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

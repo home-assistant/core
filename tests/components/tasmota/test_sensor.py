@@ -19,7 +19,7 @@ from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .test_common import (
     DEFAULT_CONFIG,
@@ -727,7 +727,7 @@ async def test_restart_time_status_sensor_state_via_mqtt(
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     # Test polled state update
-    utc_now = datetime.datetime(2020, 11, 11, 8, 0, 0, tzinfo=dt.UTC)
+    utc_now = datetime.datetime(2020, 11, 11, 8, 0, 0, tzinfo=dt_util.UTC)
     hatasmota.status_sensor.datetime.now.return_value = utc_now
     async_fire_mqtt_message(
         hass,
@@ -931,7 +931,8 @@ async def test_enable_status_sensor(
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow()
+        + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 

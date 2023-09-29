@@ -1,25 +1,15 @@
 """The aurora component."""
 
-from datetime import timedelta
 import logging
 
-from aiohttp import ClientError
 from auroranoaa import AuroraForecast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
 
 from .const import (
-    ATTRIBUTION,
     AURORA_API,
     CONF_THRESHOLD,
     COORDINATOR,
@@ -27,6 +17,7 @@ from .const import (
     DEFAULT_THRESHOLD,
     DOMAIN,
 )
+from .coordinator import AuroraDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,71 +70,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching data from the NOAA Aurora API."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        name: str,
-        polling_interval: int,
-        api: str,
-        latitude: float,
-        longitude: float,
-        threshold: float,
-    ) -> None:
-        """Initialize the data updater."""
-
-        super().__init__(
-            hass=hass,
-            logger=_LOGGER,
-            name=name,
-            update_interval=timedelta(minutes=polling_interval),
-        )
-
-        self.api = api
-        self.name = name
-        self.latitude = int(latitude)
-        self.longitude = int(longitude)
-        self.threshold = int(threshold)
-
-    async def _async_update_data(self):
-        """Fetch the data from the NOAA Aurora Forecast."""
-
-        try:
-            return await self.api.get_forecast_data(self.longitude, self.latitude)
-        except ClientError as error:
-            raise UpdateFailed(f"Error updating from NOAA: {error}") from error
-
-
-class AuroraEntity(CoordinatorEntity[AuroraDataUpdateCoordinator]):
-    """Implementation of the base Aurora Entity."""
-
-    _attr_attribution = ATTRIBUTION
-
-    def __init__(
-        self,
-        coordinator: AuroraDataUpdateCoordinator,
-        name: str,
-        icon: str,
-    ) -> None:
-        """Initialize the Aurora Entity."""
-
-        super().__init__(coordinator=coordinator)
-
-        self._attr_name = name
-        self._attr_unique_id = f"{coordinator.latitude}_{coordinator.longitude}"
-        self._attr_icon = icon
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Define the device based on name."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, str(self.unique_id))},
-            manufacturer="NOAA",
-            model="Aurora Visibility Sensor",
-            name=self.coordinator.name,
-        )

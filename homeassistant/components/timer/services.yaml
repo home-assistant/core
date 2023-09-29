@@ -1,48 +1,36 @@
 # Describes the format for available timer services
 
 start:
-  name: Start
-  description: Start a timer
   target:
     entity:
       domain: timer
   fields:
     duration:
-      description: Duration the timer requires to finish. [optional]
       example: "00:01:00 or 60"
       selector:
         text:
 
 pause:
-  name: Pause
-  description: Pause a timer.
   target:
     entity:
       domain: timer
 
 cancel:
-  name: Cancel
-  description: Cancel a timer.
   target:
     entity:
       domain: timer
 
 finish:
-  name: Finish
-  description: Finish a timer.
   target:
     entity:
       domain: timer
 
 change:
-  name: Change
-  description: Change a timer
   target:
     entity:
       domain: timer
   fields:
     duration:
-      description: Duration to add or subtract to the running timer
       default: 0
       required: true
       example: "00:01:00, 60 or -60"

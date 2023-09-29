@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 import logging
+from zoneinfo import ZoneInfo
 
 from aiohttp import ClientConnectorError
 from vulcan import UnauthorizedCertificateException
@@ -16,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
@@ -64,19 +65,19 @@ class VulcanCalendarEntity(CalendarEntity):
         self._unique_id = f"vulcan_calendar_{self.student_info['id']}"
         self._attr_name = f"Vulcan calendar - {self.student_info['full_name']}"
         self._attr_unique_id = f"vulcan_calendar_{self.student_info['id']}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, f"calendar_{self.student_info['id']}")},
-            "entry_type": DeviceEntryType.SERVICE,
-            "name": f"{self.student_info['full_name']}: Calendar",
-            "model": (
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"calendar_{self.student_info['id']}")},
+            entry_type=DeviceEntryType.SERVICE,
+            name=f"{self.student_info['full_name']}: Calendar",
+            model=(
                 f"{self.student_info['full_name']} -"
                 f" {self.student_info['class']} {self.student_info['school']}"
             ),
-            "manufacturer": "Uonet +",
-            "configuration_url": (
+            manufacturer="Uonet +",
+            configuration_url=(
                 f"https://uonetplus.vulcan.net.pl/{self.student_info['symbol']}"
             ),
-        }
+        )
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -107,8 +108,12 @@ class VulcanCalendarEntity(CalendarEntity):
         event_list = []
         for item in events:
             event = CalendarEvent(
-                start=datetime.combine(item["date"], item["time"].from_),
-                end=datetime.combine(item["date"], item["time"].to),
+                start=datetime.combine(item["date"], item["time"].from_).astimezone(
+                    ZoneInfo("Europe/Warsaw")
+                ),
+                end=datetime.combine(item["date"], item["time"].to).astimezone(
+                    ZoneInfo("Europe/Warsaw")
+                ),
                 summary=item["lesson"],
                 location=item["room"],
                 description=item["teacher"],
@@ -156,8 +161,12 @@ class VulcanCalendarEntity(CalendarEntity):
             ),
         )
         self._event = CalendarEvent(
-            start=datetime.combine(new_event["date"], new_event["time"].from_),
-            end=datetime.combine(new_event["date"], new_event["time"].to),
+            start=datetime.combine(
+                new_event["date"], new_event["time"].from_
+            ).astimezone(ZoneInfo("Europe/Warsaw")),
+            end=datetime.combine(new_event["date"], new_event["time"].to).astimezone(
+                ZoneInfo("Europe/Warsaw")
+            ),
             summary=new_event["lesson"],
             location=new_event["room"],
             description=new_event["teacher"],

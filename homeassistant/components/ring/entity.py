@@ -10,6 +10,7 @@ class RingEntityMixin(Entity):
 
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, config_entry_id, device):
         """Initialize a sensor for Ring device."""

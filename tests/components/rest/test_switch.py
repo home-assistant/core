@@ -262,7 +262,7 @@ async def test_turn_on_success(hass: HomeAssistant) -> None:
 
     route = respx.post(RESOURCE) % HTTPStatus.OK
     respx.get(RESOURCE).mock(side_effect=httpx.RequestError)
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.foo"},
@@ -282,7 +282,7 @@ async def test_turn_on_status_not_ok(hass: HomeAssistant) -> None:
     await _async_setup_test_switch(hass)
 
     route = respx.post(RESOURCE) % HTTPStatus.INTERNAL_SERVER_ERROR
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.foo"},
@@ -302,7 +302,7 @@ async def test_turn_on_timeout(hass: HomeAssistant) -> None:
     await _async_setup_test_switch(hass)
 
     respx.post(RESOURCE) % HTTPStatus.INTERNAL_SERVER_ERROR
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.foo"},
@@ -320,7 +320,7 @@ async def test_turn_off_success(hass: HomeAssistant) -> None:
 
     route = respx.post(RESOURCE) % HTTPStatus.OK
     respx.get(RESOURCE).mock(side_effect=httpx.RequestError)
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: "switch.foo"},
@@ -341,7 +341,7 @@ async def test_turn_off_status_not_ok(hass: HomeAssistant) -> None:
     await _async_setup_test_switch(hass)
 
     route = respx.post(RESOURCE) % HTTPStatus.INTERNAL_SERVER_ERROR
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: "switch.foo"},
@@ -362,7 +362,7 @@ async def test_turn_off_timeout(hass: HomeAssistant) -> None:
     await _async_setup_test_switch(hass)
 
     respx.post(RESOURCE).mock(side_effect=asyncio.TimeoutError())
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: "switch.foo"},

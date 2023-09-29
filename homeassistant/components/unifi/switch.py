@@ -3,6 +3,7 @@
 Support for controlling power supply of clients which are powered over Ethernet (POE).
 Support for controlling network access of clients selected in option flow.
 Support for controlling deep packet inspection (DPI) restriction groups.
+Support for controlling WLAN availability.
 """
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.ports import Ports
+from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client, ClientBlockRequest
 from aiounifi.models.device import (
@@ -28,6 +30,7 @@ from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
+from aiounifi.models.wlan import Wlan, WlanEnableRequest
 
 from homeassistant.components.switch import (
     DOMAIN,
@@ -39,7 +42,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
     DeviceEntryType,
 )
 from homeassistant.helpers.entity import DeviceInfo
@@ -52,8 +54,10 @@ from .entity import (
     SubscriptionT,
     UnifiEntity,
     UnifiEntityDescription,
+    async_client_device_info_fn,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_wlan_device_info_fn,
 )
 
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
@@ -70,17 +74,6 @@ def async_dpi_group_is_on_fn(
         api.dpi_apps[app_id].enabled
         for app_id in dpi_group.dpiapp_ids or []
         if app_id in api.dpi_apps
-    )
-
-
-@callback
-def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
-    """Create device registry entry for client."""
-    client = api.clients[obj_id]
-    return DeviceInfo(
-        connections={(CONNECTION_NETWORK_MAC, obj_id)},
-        default_manufacturer=client.oui,
-        default_name=client.name or client.hostname,
     )
 
 
@@ -137,6 +130,13 @@ async def async_poe_port_control_fn(
     await api.request(DeviceSetPoePortModeRequest.create(device, int(index), state))
 
 
+async def async_wlan_control_fn(
+    api: aiounifi.Controller, obj_id: str, target: bool
+) -> None:
+    """Control outlet relay."""
+    await api.request(WlanEnableRequest.create(obj_id, target))
+
+
 @dataclass
 class UnifiSwitchEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
@@ -175,6 +175,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         name_fn=lambda client: None,
         object_fn=lambda api, obj_id: api.clients[obj_id],
         only_event_for_state_change=True,
+        should_poll=False,
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"block-{obj_id}",
     ),
@@ -193,6 +194,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         is_on_fn=async_dpi_group_is_on_fn,
         name_fn=lambda group: group.name,
         object_fn=lambda api, obj_id: api.dpi_groups[obj_id],
+        should_poll=False,
         supported_fn=lambda c, obj_id: bool(c.api.dpi_groups[obj_id].dpiapp_ids),
         unique_id_fn=lambda controller, obj_id: obj_id,
     ),
@@ -210,6 +212,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         is_on_fn=lambda controller, outlet: outlet.relay_state,
         name_fn=lambda outlet: outlet.name,
         object_fn=lambda api, obj_id: api.outlets[obj_id],
+        should_poll=False,
         supported_fn=lambda c, obj_id: c.api.outlets[obj_id].has_relay,
         unique_id_fn=lambda controller, obj_id: f"{obj_id.split('_', 1)[0]}-outlet-{obj_id.split('_', 1)[1]}",
     ),
@@ -230,8 +233,29 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         is_on_fn=lambda controller, port: port.poe_mode != "off",
         name_fn=lambda port: f"{port.name} PoE",
         object_fn=lambda api, obj_id: api.ports[obj_id],
+        should_poll=False,
         supported_fn=lambda controller, obj_id: controller.api.ports[obj_id].port_poe,
         unique_id_fn=lambda controller, obj_id: f"{obj_id.split('_', 1)[0]}-poe-{obj_id.split('_', 1)[1]}",
+    ),
+    UnifiSwitchEntityDescription[Wlans, Wlan](
+        key="WLAN control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+        icon="mdi:wifi-check",
+        allowed_fn=lambda controller, obj_id: True,
+        api_handler_fn=lambda api: api.wlans,
+        available_fn=lambda controller, _: controller.available,
+        control_fn=async_wlan_control_fn,
+        device_info_fn=async_wlan_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
+        is_on_fn=lambda controller, wlan: wlan.enabled,
+        name_fn=lambda wlan: None,
+        object_fn=lambda api, obj_id: api.wlans[obj_id],
+        should_poll=False,
+        supported_fn=lambda controller, obj_id: True,
+        unique_id_fn=lambda controller, obj_id: f"wlan-{obj_id}",
     ),
 )
 

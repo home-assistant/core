@@ -19,7 +19,7 @@
         }
       },
       "user": {
-        "title": "Set up FRITZ!Box Tools",
+        "title": "[%key:component::fritz::config::step::confirm::title%]",
         "description": "Set up FRITZ!Box Tools to control your FRITZ!Box.\nMinimum needed: username, password.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -55,36 +55,123 @@
   },
   "entity": {
     "binary_sensor": {
-      "is_connected": { "name": "Connection" },
-      "is_linked": { "name": "Link" }
+      "is_connected": {
+        "name": "Connection"
+      },
+      "is_linked": {
+        "name": "Link"
+      }
     },
     "button": {
-      "cleanup": { "name": "Cleanup" },
-      "firmware_update": { "name": "Firmware update" },
-      "reboot": {
-        "name": "[%key:component::button::entity_component::restart::name%]"
+      "cleanup": {
+        "name": "Cleanup"
       },
-      "reconnect": { "name": "Reconnect" }
+      "firmware_update": {
+        "name": "Firmware update"
+      },
+      "reconnect": {
+        "name": "Reconnect"
+      }
     },
     "sensor": {
-      "connection_uptime": { "name": "Connection uptime" },
-      "device_uptime": { "name": "Last restart" },
-      "external_ip": { "name": "External IP" },
-      "external_ipv6": { "name": "External IPv6" },
-      "gb_received": { "name": "GB received" },
-      "gb_sent": { "name": "GB sent" },
-      "kb_s_received": { "name": "Download throughput" },
-      "kb_s_sent": { "name": "Upload throughput" },
+      "connection_uptime": {
+        "name": "Connection uptime"
+      },
+      "device_uptime": {
+        "name": "Last restart"
+      },
+      "external_ip": {
+        "name": "External IP"
+      },
+      "external_ipv6": {
+        "name": "External IPv6"
+      },
+      "gb_received": {
+        "name": "GB received"
+      },
+      "gb_sent": {
+        "name": "GB sent"
+      },
+      "kb_s_received": {
+        "name": "Download throughput"
+      },
+      "kb_s_sent": {
+        "name": "Upload throughput"
+      },
       "link_attenuation_received": {
         "name": "Link download power attenuation"
       },
-      "link_attenuation_sent": { "name": "Link upload power attenuation" },
-      "link_kb_s_received": { "name": "Link download throughput" },
-      "link_kb_s_sent": { "name": "Link upload throughput" },
-      "link_noise_margin_received": { "name": "Link download noise margin" },
-      "link_noise_margin_sent": { "name": "Link upload noise margin" },
-      "max_kb_s_received": { "name": "Max connection download throughput" },
-      "max_kb_s_sent": { "name": "Max connection upload throughput" }
+      "link_attenuation_sent": {
+        "name": "Link upload power attenuation"
+      },
+      "link_kb_s_received": {
+        "name": "Link download throughput"
+      },
+      "link_kb_s_sent": {
+        "name": "Link upload throughput"
+      },
+      "link_noise_margin_received": {
+        "name": "Link download noise margin"
+      },
+      "link_noise_margin_sent": {
+        "name": "Link upload noise margin"
+      },
+      "max_kb_s_received": {
+        "name": "Max connection download throughput"
+      },
+      "max_kb_s_sent": {
+        "name": "Max connection upload throughput"
+      }
+    }
+  },
+  "services": {
+    "reconnect": {
+      "name": "[%key:component::fritz::entity::button::reconnect::name%]",
+      "description": "Reconnects your FRITZ!Box internet connection.",
+      "fields": {
+        "device_id": {
+          "name": "Fritz!Box Device",
+          "description": "Select the Fritz!Box to reconnect."
+        }
+      }
+    },
+    "reboot": {
+      "name": "Reboot",
+      "description": "Reboots your FRITZ!Box.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:component::fritz::services::reconnect::fields::device_id::name%]",
+          "description": "Select the Fritz!Box to reboot."
+        }
+      }
+    },
+    "cleanup": {
+      "name": "Remove stale device tracker entities",
+      "description": "Remove FRITZ!Box stale device_tracker entities.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:component::fritz::services::reconnect::fields::device_id::name%]",
+          "description": "Select the Fritz!Box to check."
+        }
+      }
+    },
+    "set_guest_wifi_password": {
+      "name": "Set guest Wi-Fi password",
+      "description": "Sets a new password for the guest Wi-Fi. The password must be between 8 and 63 characters long. If no additional parameter is set, the password will be auto-generated with a length of 12 characters.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:component::fritz::services::reconnect::fields::device_id::name%]",
+          "description": "Select the Fritz!Box to configure."
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "New password for the guest Wi-Fi."
+        },
+        "length": {
+          "name": "Password length",
+          "description": "Length of the new password. The password will be auto-generated, if no password is set."
+        }
+      }
     }
   }
 }

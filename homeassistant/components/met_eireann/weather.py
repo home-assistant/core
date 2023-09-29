@@ -159,7 +159,7 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
     def device_info(self):
         """Device info."""
         return DeviceInfo(
-            default_name="Forecast",
+            name="Forecast",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN,)},
             manufacturer="Met Éireann",

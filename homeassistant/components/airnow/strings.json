@@ -14,11 +14,25 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_location": "No results found for that location",
+      "invalid_location": "No results found for that location, try changing the location or station radius.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "o3": {
+        "name": "[%key:component::sensor::entity_component::ozone::name%]"
+      },
+      "station": {
+        "name": "PM2.5 reporting station",
+        "state_attributes": {
+          "lat": { "name": "[%key:common::config_flow::data::latitude%]" },
+          "long": { "name": "[%key:common::config_flow::data::longitude%]" }
+        }
+      }
     }
   }
 }

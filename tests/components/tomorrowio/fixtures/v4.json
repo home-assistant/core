@@ -31,7 +31,9 @@
     "pressureSurfaceLevel": 29.47,
     "solarGHI": 0,
     "cloudBase": 0.74,
-    "cloudCeiling": 0.74
+    "cloudCeiling": 0.74,
+    "uvIndex": 3,
+    "uvHealthConcern": 1
   },
   "forecasts": {
     "nowcast": [

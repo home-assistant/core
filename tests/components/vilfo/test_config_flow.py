@@ -13,6 +13,7 @@ async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     mock_mac = "FF-00-00-00-00-00"
+    firmware_version = "1.1.0"
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -21,7 +22,11 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch("vilfo.Client.ping", return_value=None), patch(
         "vilfo.Client.get_board_information", return_value=None
-    ), patch("vilfo.Client.resolve_mac_address", return_value=mock_mac), patch(
+    ), patch(
+        "vilfo.Client.resolve_firmware_version", return_value=firmware_version
+    ), patch(
+        "vilfo.Client.resolve_mac_address", return_value=mock_mac
+    ), patch(
         "homeassistant.components.vilfo.async_setup_entry"
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -106,11 +111,15 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     first_flow_result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
+    firmware_version = "1.1.0"
     with patch("vilfo.Client.ping", return_value=None), patch(
         "vilfo.Client.get_board_information",
         return_value=None,
-    ), patch("vilfo.Client.resolve_mac_address", return_value=None):
+    ), patch(
+        "vilfo.Client.resolve_firmware_version", return_value=firmware_version
+    ), patch(
+        "vilfo.Client.resolve_mac_address", return_value=None
+    ):
         first_flow_result2 = await hass.config_entries.flow.async_configure(
             first_flow_result1["flow_id"],
             {CONF_HOST: "testadmin.vilfo.com", CONF_ACCESS_TOKEN: "test-token"},
@@ -123,7 +132,11 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     with patch("vilfo.Client.ping", return_value=None), patch(
         "vilfo.Client.get_board_information",
         return_value=None,
-    ), patch("vilfo.Client.resolve_mac_address", return_value=None):
+    ), patch(
+        "vilfo.Client.resolve_firmware_version", return_value=firmware_version
+    ), patch(
+        "vilfo.Client.resolve_mac_address", return_value=None
+    ):
         second_flow_result2 = await hass.config_entries.flow.async_configure(
             second_flow_result1["flow_id"],
             {CONF_HOST: "testadmin.vilfo.com", CONF_ACCESS_TOKEN: "test-token"},
@@ -158,10 +171,15 @@ async def test_validate_input_returns_data(hass: HomeAssistant) -> None:
     mock_data_with_ip = {"host": "192.168.0.1", "access_token": "test-token"}
     mock_data_with_ipv6 = {"host": "2001:db8::1428:57ab", "access_token": "test-token"}
     mock_mac = "FF-00-00-00-00-00"
+    firmware_version = "1.1.0"
 
     with patch("vilfo.Client.ping", return_value=None), patch(
         "vilfo.Client.get_board_information", return_value=None
-    ), patch("vilfo.Client.resolve_mac_address", return_value=None):
+    ), patch(
+        "vilfo.Client.resolve_firmware_version", return_value=firmware_version
+    ), patch(
+        "vilfo.Client.resolve_mac_address", return_value=None
+    ):
         result = await hass.components.vilfo.config_flow.validate_input(
             hass, data=mock_data
         )
@@ -173,7 +191,11 @@ async def test_validate_input_returns_data(hass: HomeAssistant) -> None:
 
     with patch("vilfo.Client.ping", return_value=None), patch(
         "vilfo.Client.get_board_information", return_value=None
-    ), patch("vilfo.Client.resolve_mac_address", return_value=mock_mac):
+    ), patch(
+        "vilfo.Client.resolve_firmware_version", return_value=firmware_version
+    ), patch(
+        "vilfo.Client.resolve_mac_address", return_value=mock_mac
+    ):
         result2 = await hass.components.vilfo.config_flow.validate_input(
             hass, data=mock_data
         )

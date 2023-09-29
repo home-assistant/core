@@ -1,5 +1,4 @@
 """The tests for the Ring component."""
-from datetime import timedelta
 
 import requests_mock
 
@@ -8,12 +7,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import load_fixture
-
-ATTRIBUTION = "Data provided by Ring.com"
-
-VALID_CONFIG = {
-    "ring": {"username": "foo", "password": "bar", "scan_interval": timedelta(10)}
-}
 
 
 async def test_setup(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
@@ -39,5 +32,3 @@ async def test_setup(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -
         "https://api.ring.com/clients_api/doorbots/987652/health",
         text=load_fixture("doorboot_health_attrs.json", "ring"),
     )
-
-    assert await ring.async_setup(hass, VALID_CONFIG)

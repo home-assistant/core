@@ -1,6 +1,7 @@
 """The tests for Nest device triggers."""
 from google_nest_sdm.event import EventMessage
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -17,7 +18,6 @@ from homeassistant.util.dt import utcnow
 from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
 
 from tests.common import (
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
@@ -103,7 +103,7 @@ async def test_get_triggers(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
 
     expected_triggers = [
         {
@@ -124,7 +124,7 @@ async def test_get_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_multiple_devices(
@@ -198,7 +198,7 @@ async def test_triggers_for_invalid_device_id(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
     assert device_entry is not None
 
     # Create an additional device that does not exist.  Fetching supported
@@ -324,7 +324,7 @@ async def test_subscriber_automation(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
 
     assert await setup_automation(hass, device_entry.id, "camera_motion")
 

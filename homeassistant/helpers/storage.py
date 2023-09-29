@@ -6,15 +6,24 @@ from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
 from copy import deepcopy
 import inspect
-from json import JSONEncoder
+from json import JSONDecodeError, JSONEncoder
 import logging
 import os
 from typing import Any, Generic, TypeVar
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
-from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    CoreState,
+    Event,
+    HomeAssistant,
+    callback,
+)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import MAX_LOAD_CONCURRENTLY, bind_hass
 from homeassistant.util import json as json_util
+import homeassistant.util.dt as dt_util
 from homeassistant.util.file import WriteError
 
 from . import json as json_helper
@@ -34,11 +43,11 @@ _T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
 async def async_migrator(
     hass: HomeAssistant,
     old_path: str,
-    store: Store,
+    store: Store[_T],
     *,
     old_conf_load_func: Callable | None = None,
     old_conf_migrate_func: Callable | None = None,
-) -> Any:
+) -> _T | None:
     """Migrate old data to a store and then load data.
 
     async def old_conf_migrate_func(old_data)
@@ -146,9 +155,63 @@ class Store(Generic[_T]):
             # and we don't want that to mess with what we're trying to store.
             data = deepcopy(data)
         else:
-            data = await self.hass.async_add_executor_job(
-                json_util.load_json, self.path
-            )
+            try:
+                data = await self.hass.async_add_executor_job(
+                    json_util.load_json, self.path
+                )
+            except HomeAssistantError as err:
+                if isinstance(err.__cause__, JSONDecodeError):
+                    # If we have a JSONDecodeError, it means the file is corrupt.
+                    # We can't recover from this, so we'll log an error, rename the file and
+                    # return None so that we can start with a clean slate which will
+                    # allow startup to continue so they can restore from a backup.
+                    isotime = dt_util.utcnow().isoformat()
+                    corrupt_postfix = f".corrupt.{isotime}"
+                    corrupt_path = f"{self.path}{corrupt_postfix}"
+                    await self.hass.async_add_executor_job(
+                        os.rename, self.path, corrupt_path
+                    )
+                    storage_key = self.key
+                    _LOGGER.error(
+                        "Unrecoverable error decoding storage %s at %s; "
+                        "This may indicate an unclean shutdown, invalid syntax "
+                        "from manual edits, or disk corruption; "
+                        "The corrupt file has been saved as %s; "
+                        "It is recommended to restore from backup: %s",
+                        storage_key,
+                        self.path,
+                        corrupt_path,
+                        err,
+                    )
+                    from .issue_registry import (  # pylint: disable=import-outside-toplevel
+                        IssueSeverity,
+                        async_create_issue,
+                    )
+
+                    issue_domain = HOMEASSISTANT_DOMAIN
+                    if (
+                        domain := (storage_key.partition(".")[0])
+                    ) and domain in self.hass.config.components:
+                        issue_domain = domain
+
+                    async_create_issue(
+                        self.hass,
+                        HOMEASSISTANT_DOMAIN,
+                        f"storage_corruption_{storage_key}_{isotime}",
+                        is_fixable=True,
+                        issue_domain=issue_domain,
+                        translation_key="storage_corruption",
+                        is_persistent=True,
+                        severity=IssueSeverity.CRITICAL,
+                        translation_placeholders={
+                            "storage_key": storage_key,
+                            "original_path": self.path,
+                            "corrupt_path": corrupt_path,
+                            "error": str(err),
+                        },
+                    )
+                    return None
+                raise
 
             if data == {}:
                 return None

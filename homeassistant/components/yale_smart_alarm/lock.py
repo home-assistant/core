@@ -40,6 +40,8 @@ async def async_setup_entry(
 class YaleDoorlock(YaleEntity, LockEntity):
     """Representation of a Yale doorlock."""
 
+    _attr_name = None
+
     def __init__(
         self, coordinator: YaleDataUpdateCoordinator, data: dict, code_format: int
     ) -> None:

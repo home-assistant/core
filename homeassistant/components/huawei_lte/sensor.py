@@ -117,6 +117,10 @@ class HuaweiSensorGroup:
 class HuaweiSensorEntityDescription(SensorEntityDescription):
     """Class describing Huawei LTE sensor entities."""
 
+    # HuaweiLteSensor does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     format_fn: Callable[[str], tuple[StateType, str | None]] = format_default
     icon_fn: Callable[[StateType], str] | None = None
     device_class_fn: Callable[[StateType], SensorDeviceClass | None] | None = None

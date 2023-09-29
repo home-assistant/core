@@ -144,6 +144,16 @@ WEBHOOK_PAYLOAD_SCHEMA = vol.Any(
     ),
 )
 
+SENSOR_SCHEMA_FULL = vol.Schema(
+    {
+        vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
+        vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(None, cv.icon),
+        vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, int, float, str),
+        vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
+        vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+    }
+)
+
 
 def validate_schema(schema):
     """Decorate a webhook function with a schema."""
@@ -636,18 +646,6 @@ async def webhook_update_sensor_states(
     hass: HomeAssistant, config_entry: ConfigEntry, data: list[dict[str, Any]]
 ) -> Response:
     """Handle an update sensor states webhook."""
-    sensor_schema_full = vol.Schema(
-        {
-            vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(
-                None, cv.icon
-            ),
-            vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, int, float, str),
-            vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-            vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-        }
-    )
-
     device_name: str = config_entry.data[ATTR_DEVICE_NAME]
     resp: dict[str, Any] = {}
     entity_registry = er.async_get(hass)
@@ -677,7 +675,7 @@ async def webhook_update_sensor_states(
             continue
 
         try:
-            sensor = sensor_schema_full(sensor)
+            sensor = SENSOR_SCHEMA_FULL(sensor)
         except vol.Invalid as err:
             err_msg = vol.humanize.humanize_error(sensor, err)
             _LOGGER.error(

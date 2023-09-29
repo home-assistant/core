@@ -341,7 +341,7 @@ def get_next_departure(
                  {tomorrow_order}
                  origin_stop_time.departure_time
         LIMIT :limit
-        """
+        """  # noqa: S608
     result = schedule.engine.connect().execute(
         text(sql_query),
         {
@@ -643,15 +643,14 @@ class GTFSDepartureSensor(SensorEntity):
             # Define the state as a UTC timestamp with ISO 8601 format
             if not self._departure:
                 self._state = None
+            elif self._agency:
+                self._state = self._departure["departure_time"].replace(
+                    tzinfo=dt_util.get_time_zone(self._agency.agency_timezone)
+                )
             else:
-                if self._agency:
-                    self._state = self._departure["departure_time"].replace(
-                        tzinfo=dt_util.get_time_zone(self._agency.agency_timezone)
-                    )
-                else:
-                    self._state = self._departure["departure_time"].replace(
-                        tzinfo=dt_util.UTC
-                    )
+                self._state = self._departure["departure_time"].replace(
+                    tzinfo=dt_util.UTC
+                )
 
             # Assign attributes, icon and name
             self.update_attributes()

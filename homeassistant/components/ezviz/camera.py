@@ -263,6 +263,17 @@ class EzvizCamera(EzvizEntity, Camera):
 
     def perform_ptz(self, direction: str, speed: int) -> None:
         """Perform a PTZ action on the camera."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_ptz",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_ptz",
+        )
+
         try:
             self.coordinator.ezviz_client.ptz_control(
                 str(direction).upper(), self._serial, "START", speed
@@ -290,6 +301,16 @@ class EzvizCamera(EzvizEntity, Camera):
 
     def perform_alarm_sound(self, level: int) -> None:
         """Enable/Disable movement sound alarm."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_deprecation_alarm_sound_level",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation_alarm_sound_level",
+        )
         try:
             self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
         except HTTPError as err:
@@ -312,8 +333,9 @@ class EzvizCamera(EzvizEntity, Camera):
             self.hass,
             DOMAIN,
             "service_depreciation_detection_sensibility",
-            breaks_in_ha_version="2023.8.0",
-            is_fixable=False,
+            breaks_in_ha_version="2023.12.0",
+            is_fixable=True,
+            is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="service_depreciation_detection_sensibility",
         )

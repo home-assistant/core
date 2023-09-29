@@ -1599,6 +1599,7 @@ def _add_state_with_state_attributes(
     )
 
 
+@pytest.mark.timeout(30)
 async def test_purge_many_old_events(
     async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:

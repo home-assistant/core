@@ -13,7 +13,6 @@ from pymodbus.client import (
     ModbusTcpClient,
     ModbusUdpClient,
 )
-from pymodbus.constants import Defaults
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ModbusResponse
 from pymodbus.transaction import ModbusAsciiFramer, ModbusRtuFramer, ModbusSocketFramer
@@ -301,7 +300,6 @@ class ModbusHub:
             else:
                 self._pb_params["framer"] = ModbusSocketFramer
 
-        Defaults.Timeout = client_config[CONF_TIMEOUT]
         if CONF_MSG_WAIT in client_config:
             self._msg_wait = client_config[CONF_MSG_WAIT] / 1000
         elif self._config_type == SERIAL:

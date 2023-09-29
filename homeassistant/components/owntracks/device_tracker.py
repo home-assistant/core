@@ -59,6 +59,9 @@ async def async_setup_entry(
 class OwnTracksEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, dev_id, data=None):
         """Set up OwnTracks entity."""
         self._dev_id = dev_id
@@ -109,11 +112,6 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return self._data.get("location_name")
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._data.get("host_name")
-
-    @property
     def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return self._data.get("source_type", SourceType.GPS)
@@ -121,7 +119,10 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return DeviceInfo(identifiers={(OT_DOMAIN, self._dev_id)}, name=self.name)
+        device_info = DeviceInfo(identifiers={(OT_DOMAIN, self._dev_id)})
+        if "host_name" in self._data:
+            device_info["name"] = self._data["host_name"]
+        return device_info
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""

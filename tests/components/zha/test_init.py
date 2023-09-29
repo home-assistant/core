@@ -114,19 +114,27 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
 @pytest.mark.parametrize(
     ("path", "cleaned_path"),
     [
+        # No corrections
         ("/dev/path1", "/dev/path1"),
+        ("/dev/path1[asd]", "/dev/path1[asd]"),
         ("/dev/path1 ", "/dev/path1 "),
+        ("socket://1.2.3.4:5678", "socket://1.2.3.4:5678"),
+        # Brackets around URI
+        ("socket://[1.2.3.4]:5678", "socket://1.2.3.4:5678"),
+        # Spaces
         ("socket://dev/path1 ", "socket://dev/path1"),
+        # Both
+        ("socket://[1.2.3.4]:5678 ", "socket://1.2.3.4:5678"),
     ],
 )
 @patch("homeassistant.components.zha.setup_quirks", Mock(return_value=True))
 @patch(
     "homeassistant.components.zha.websocket_api.async_load_api", Mock(return_value=True)
 )
-async def test_setup_with_v3_spaces_in_uri(
+async def test_setup_with_v3_cleaning_uri(
     hass: HomeAssistant, path: str, cleaned_path: str
 ) -> None:
-    """Test migration of config entry from v3 with spaces after `socket://` URI."""
+    """Test migration of config entry from v3, applying corrections to the port path."""
     config_entry_v3 = MockConfigEntry(
         domain=DOMAIN,
         data={

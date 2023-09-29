@@ -413,7 +413,7 @@ async def help_test_discovery_removal(
 
     # Verify device and entity registry entries are created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, config1[CONF_MAC])}
+        connections={(dr.CONNECTION_NETWORK_MAC, config1[CONF_MAC])}
     )
     assert device_entry is not None
     entity_entry = entity_reg.async_get(f"{domain}.{entity_id}")
@@ -436,7 +436,7 @@ async def help_test_discovery_removal(
 
     # Verify entity registry entries are cleared
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, config2[CONF_MAC])}
+        connections={(dr.CONNECTION_NETWORK_MAC, config2[CONF_MAC])}
     )
     assert device_entry is not None
     entity_entry = entity_reg.async_get(f"{domain}.{entity_id}")
@@ -522,7 +522,7 @@ async def help_test_discovery_device_remove(
         await hass.async_block_till_done()
 
     device = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, config[CONF_MAC])}
+        connections={(dr.CONNECTION_NETWORK_MAC, config[CONF_MAC])}
     )
     assert device is not None
     assert entity_reg.async_get_entity_id(domain, "tasmota", unique_id)
@@ -531,7 +531,7 @@ async def help_test_discovery_device_remove(
     await hass.async_block_till_done()
 
     device = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, config[CONF_MAC])}
+        connections={(dr.CONNECTION_NETWORK_MAC, config[CONF_MAC])}
     )
     assert device is None
     assert not entity_reg.async_get_entity_id(domain, "tasmota", unique_id)

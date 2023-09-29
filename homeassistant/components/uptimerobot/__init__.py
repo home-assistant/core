@@ -100,7 +100,7 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
         if stale_monitors := current_monitors - new_monitors:
             for monitor_id in stale_monitors:
                 if device := self._device_registry.async_get_device(
-                    {(DOMAIN, monitor_id)}
+                    identifiers={(DOMAIN, monitor_id)}
                 ):
                     self._device_registry.async_remove_device(device.id)
 

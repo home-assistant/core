@@ -77,7 +77,7 @@ class ZwaveBooleanNodeButton(ZWaveBaseEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.info.node.async_set_value(self.info.primary_value, True)
+        await self._async_set_value(self.info.primary_value, True)
 
 
 class ZWaveNodePingButton(ButtonEntity):
@@ -100,6 +100,9 @@ class ZWaveNodePingButton(ButtonEntity):
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
+        # We log an error instead of raising an exception because this service call occurs
+        # in a separate task since it is called via the dispatcher and we don't want to
+        # raise the exception in that separate task because it is confusing to the user.
         LOGGER.error(
             "There is no value to refresh for this entity so the zwave_js.refresh_value"
             " service won't work for it"

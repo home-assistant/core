@@ -94,7 +94,7 @@ async def test_diagnostics_for_device(
 
     zha_device: ZHADevice = await zha_device_joined(zigpy_device)
     dev_reg = async_get(hass)
-    device = dev_reg.async_get_device({("zha", str(zha_device.ieee))})
+    device = dev_reg.async_get_device(identifiers={("zha", str(zha_device.ieee))})
     assert device
     diagnostics_data = await get_diagnostics_for_device(
         hass, hass_client, config_entry, device

@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt, slugify
+from homeassistant.util import dt as dt_util, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +122,7 @@ class MQTTRoomSensor(SensorEntity):
             """Update the sensor state."""
             self._state = room
             self._distance = distance
-            self._updated = dt.utcnow()
+            self._updated = dt_util.utcnow()
 
             self.async_write_ha_state()
 
@@ -144,7 +144,7 @@ class MQTTRoomSensor(SensorEntity):
                     # device is in the same room OR
                     # device is closer to another room OR
                     # last update from other room was too long ago
-                    timediff = dt.utcnow() - self._updated
+                    timediff = dt_util.utcnow() - self._updated
                     if (
                         device.get(ATTR_ROOM) == self._state
                         or device.get(ATTR_DISTANCE) < self._distance
@@ -174,7 +174,7 @@ class MQTTRoomSensor(SensorEntity):
         if (
             self._updated
             and self._consider_home
-            and dt.utcnow() - self._updated > self._consider_home
+            and dt_util.utcnow() - self._updated > self._consider_home
         ):
             self._state = STATE_NOT_HOME
 

@@ -14,6 +14,8 @@ from .coordinator import LIFXUpdateCoordinator
 class LIFXEntity(CoordinatorEntity[LIFXUpdateCoordinator]):
     """Representation of a LIFX entity with a coordinator."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: LIFXUpdateCoordinator) -> None:
         """Initialise the light."""
         super().__init__(coordinator)

@@ -16,7 +16,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
@@ -60,42 +60,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _name: str
     _webfsapi_url: str
     _reauth_entry: config_entries.ConfigEntry | None = None  # Only used in reauth flows
-
-    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
-        """Handle the import of legacy configuration.yaml entries."""
-
-        device_url = f"http://{import_info[CONF_HOST]}:{import_info[CONF_PORT]}/device"
-        try:
-            webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
-        except FSConnectionError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.exception(exception)
-            return self.async_abort(reason="unknown")
-
-        afsapi = AFSAPI(webfsapi_url, import_info[CONF_PIN])
-        try:
-            unique_id = await afsapi.get_radio_id()
-        except NotImplementedException:
-            unique_id = None  # Not all radios have this call implemented
-        except FSConnectionError:
-            return self.async_abort(reason="cannot_connect")
-        except InvalidPinException:
-            return self.async_abort(reason="invalid_auth")
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.exception(exception)
-            return self.async_abort(reason="unknown")
-
-        await self.async_set_unique_id(unique_id, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=import_info[CONF_NAME] or "Radio",
-            data={
-                CONF_WEBFSAPI_URL: webfsapi_url,
-                CONF_PIN: import_info[CONF_PIN],
-            },
-        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

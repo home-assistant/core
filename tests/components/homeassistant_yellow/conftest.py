@@ -1,7 +1,7 @@
 """Test fixtures for the Home Assistant Yellow integration."""
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -28,6 +28,17 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
     ), patch(
         "homeassistant.components.zha.async_setup_entry",
         return_value=True,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_zha_get_last_network_settings() -> Generator[None, None, None]:
+    """Mock zha.api.async_get_last_network_settings."""
+
+    with patch(
+        "homeassistant.components.zha.api.async_get_last_network_settings",
+        AsyncMock(return_value=None),
     ):
         yield
 

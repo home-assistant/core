@@ -4,8 +4,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AuroraEntity
 from .const import COORDINATOR, DOMAIN
+from .entity import AuroraEntity
 
 
 async def async_setup_entry(

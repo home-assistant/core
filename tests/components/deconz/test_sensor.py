@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
@@ -441,6 +441,43 @@ TEST_DATA = [
             "next_state": "10.0",
         },
     ),
+    (  # Moisture Sensor
+        {
+            "config": {"battery": 100, "offset": 0, "on": True, "reachable": True},
+            "etag": "1ba99c68975111c04367b67cf95ead44",
+            "lastannounced": None,
+            "lastseen": "2023-05-19T09:55Z",
+            "manufacturername": "_TZE200_myd45weu",
+            "modelid": "TS0601",
+            "name": "Soil Sensor",
+            "state": {
+                "lastupdated": "2023-05-19T09:42:00.472",
+                "lowbattery": False,
+                "moisture": 7213,
+            },
+            "swversion": "1.0.8",
+            "type": "ZHAMoisture",
+            "uniqueid": "a4:c1:38:fe:86:8f:07:a3-01-0408",
+        },
+        {
+            "entity_count": 3,
+            "device_count": 3,
+            "entity_id": "sensor.soil_sensor",
+            "unique_id": "a4:c1:38:fe:86:8f:07:a3-01-0408-moisture",
+            "state": "72.13",
+            "entity_category": None,
+            "device_class": SensorDeviceClass.MOISTURE,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "attributes": {
+                "state_class": "measurement",
+                "unit_of_measurement": "%",
+                "device_class": "moisture",
+                "friendly_name": "Soil Sensor",
+            },
+            "websocket_event": {"state": {"moisture": 6923}},
+            "next_state": "69.23",
+        },
+    ),
     (  # Light level sensor
         {
             "config": {
@@ -785,7 +822,7 @@ async def test_sensors(
 
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+            dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
         )
         await hass.async_block_till_done()
 

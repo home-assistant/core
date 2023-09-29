@@ -15,13 +15,14 @@ from homeassistant.components import (
     script,
 )
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
-from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers import storage
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_state_added_domain,
     async_track_state_removed_domain,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 
 SUPPORTED_DOMAINS = {
     climate.DOMAIN,
@@ -222,7 +223,7 @@ class Config:
         return states
 
     @callback
-    def _clear_exposed_cache(self, event: Event) -> None:
+    def _clear_exposed_cache(self, event: EventType[EventStateChangedData]) -> None:
         """Clear the cache of exposed states."""
         self.get_exposed_states.cache_clear()  # pylint: disable=no-member
 

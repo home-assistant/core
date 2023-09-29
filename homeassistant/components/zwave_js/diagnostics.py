@@ -65,7 +65,7 @@ def redact_node_state(node_state: NodeDataType) -> NodeDataType:
 
 
 def get_device_entities(
-    hass: HomeAssistant, node: Node, device: dr.DeviceEntry
+    hass: HomeAssistant, node: Node, config_entry: ConfigEntry, device: dr.DeviceEntry
 ) -> list[dict[str, Any]]:
     """Get entities for a device."""
     entity_entries = er.async_entries_for_device(
@@ -73,6 +73,10 @@ def get_device_entities(
     )
     entities = []
     for entry in entity_entries:
+        # Skip entities that are not part of this integration
+        if entry.config_entry_id != config_entry.entry_id:
+            continue
+
         # If the value ID returns as None, we don't need to include this entity
         if (value_id := get_value_id_from_unique_id(entry.unique_id)) is None:
             continue
@@ -142,7 +146,7 @@ async def async_get_device_diagnostics(
     if node_id is None or node_id not in driver.controller.nodes:
         raise ValueError(f"Node for device {device.id} can't be found")
     node = driver.controller.nodes[node_id]
-    entities = get_device_entities(hass, node, device)
+    entities = get_device_entities(hass, node, config_entry, device)
     assert client.version
     node_state = redact_node_state(async_redact_data(node.data, KEYS_TO_REDACT))
     return {

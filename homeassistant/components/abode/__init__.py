@@ -287,14 +287,14 @@ class AbodeDevice(AbodeEntity):
         """Initialize Abode device."""
         super().__init__(data)
         self._device = device
-        self._attr_unique_id = device.device_uuid
+        self._attr_unique_id = device.uuid
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""
         await super().async_added_to_hass()
         await self.hass.async_add_executor_job(
             self._data.abode.events.add_device_callback,
-            self._device.device_id,
+            self._device.id,
             self._update_callback,
         )
 
@@ -302,7 +302,7 @@ class AbodeDevice(AbodeEntity):
         """Unsubscribe from device events."""
         await super().async_will_remove_from_hass()
         await self.hass.async_add_executor_job(
-            self._data.abode.events.remove_all_device_callbacks, self._device.device_id
+            self._data.abode.events.remove_all_device_callbacks, self._device.id
         )
 
     def update(self) -> None:
@@ -313,7 +313,7 @@ class AbodeDevice(AbodeEntity):
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {
-            "device_id": self._device.device_id,
+            "device_id": self._device.id,
             "battery_low": self._device.battery_low,
             "no_response": self._device.no_response,
             "device_type": self._device.type,
@@ -323,7 +323,7 @@ class AbodeDevice(AbodeEntity):
     def device_info(self) -> entity.DeviceInfo:
         """Return device registry information for this entity."""
         return entity.DeviceInfo(
-            identifiers={(DOMAIN, self._device.device_id)},
+            identifiers={(DOMAIN, self._device.id)},
             manufacturer="Abode",
             model=self._device.type,
             name=self._device.name,

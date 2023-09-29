@@ -678,3 +678,19 @@ async def test_api_call_service_bad_data(
         "/api/services/test_domain/test_service", json={"hello": 5}
     )
     assert resp.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_api_status(hass: HomeAssistant, mock_api_client: TestClient) -> None:
+    """Test getting the api status."""
+    resp = await mock_api_client.get("/api/")
+    assert resp.status == HTTPStatus.OK
+    json = await resp.json()
+    assert json["message"] == "API running."
+
+
+async def test_api_core_state(hass: HomeAssistant, mock_api_client: TestClient) -> None:
+    """Test getting core status."""
+    resp = await mock_api_client.get("/api/core/state")
+    assert resp.status == HTTPStatus.OK
+    json = await resp.json()
+    assert json["state"] == "RUNNING"

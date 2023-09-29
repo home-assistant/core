@@ -80,7 +80,6 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_PM1,
         device_class=SensorDeviceClass.PM1,
-        translation_key="pm1",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -88,7 +87,6 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_PM25,
         device_class=SensorDeviceClass.PM25,
-        translation_key="pm25",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -100,7 +98,6 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_PM10,
         device_class=SensorDeviceClass.PM10,
-        translation_key="pm10",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -112,7 +109,6 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
-        translation_key="humidity",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
@@ -120,7 +116,6 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
-        translation_key="pressure",
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -128,7 +123,6 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
@@ -147,7 +141,6 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_NO2,
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
-        translation_key="no2",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -159,7 +152,6 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_SO2,
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
-        translation_key="so2",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -171,7 +163,6 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_O3,
         device_class=SensorDeviceClass.OZONE,
-        translation_key="o3",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,

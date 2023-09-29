@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zamg",
   "iot_class": "cloud_polling",
-  "requirements": ["zamg==0.2.2"]
+  "requirements": ["zamg==0.2.4"]
 }

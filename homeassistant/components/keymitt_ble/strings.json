@@ -6,7 +6,7 @@
         "title": "Set up MicroBot device",
         "data": {
           "address": "Device address",
-          "name": "Name"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "link": {
@@ -22,6 +22,30 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "services": {
+    "calibrate": {
+      "name": "Calibrate",
+      "description": "Calibration - Set depth, press & hold duration, and operation mode. Warning - this will send a push command to the device.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity to calibrate."
+        },
+        "depth": {
+          "name": "Depth",
+          "description": "Depth in percent."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Duration in seconds."
+        },
+        "mode": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "Normal | invert | toggle."
+        }
+      }
     }
   }
 }

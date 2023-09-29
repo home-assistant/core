@@ -409,9 +409,6 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Fetch new state data for the entity."""
-        self._attr_is_on = (
-            self._ambient.stations[self._mac_address][ATTR_LAST_DATA][
-                self.entity_description.key
-            ]
-            == self.entity_description.on_state
-        )
+        description = self.entity_description
+        last_data = self._ambient.stations[self._mac_address][ATTR_LAST_DATA]
+        self._attr_is_on = last_data[description.key] == description.on_state

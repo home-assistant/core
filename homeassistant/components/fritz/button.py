@@ -46,7 +46,6 @@ BUTTONS: Final = [
     ),
     FritzButtonDescription(
         key="reboot",
-        translation_key="reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda avm_wrapper: avm_wrapper.async_trigger_reboot(),

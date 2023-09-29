@@ -86,9 +86,10 @@ def _setup_entities(devices, async_add_entities):
 class VeSyncFanHA(VeSyncDevice, FanEntity):
     """Representation of a VeSync fan."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_name = None
 
-    def __init__(self, fan):
+    def __init__(self, fan) -> None:
         """Initialize the VeSync fan device."""
         super().__init__(fan)
         self.smartfan = fan

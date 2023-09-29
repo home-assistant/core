@@ -62,6 +62,8 @@ class AxisNetworkDevice:
         self.fw_version = api.vapix.firmware_version
         self.product_type = api.vapix.product_type
 
+        self.additional_diagnostics: dict[str, Any] = {}
+
     @property
     def host(self):
         """Return the host address of this device."""

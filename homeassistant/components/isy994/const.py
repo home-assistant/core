@@ -15,15 +15,18 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CURRENCY_CENT,
     CURRENCY_DOLLAR,
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
+    POWER_VOLT_AMPERE_REACTIVE,
     REVOLUTIONS_PER_MINUTE,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_LOCKED,
@@ -36,6 +39,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
     UV_INDEX,
     Platform,
+    UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -399,7 +403,7 @@ UOM_FRIENDLY_NAME = {
     "92": f"{DEGREE} South",
     UOM_8_BIT_RANGE: "",  # Range 0-255, no unit.
     UOM_DOUBLE_TEMP: UOM_DOUBLE_TEMP,
-    "102": "kWs",
+    "102": "kWs",  # Kilowatt Seconds
     "103": CURRENCY_DOLLAR,
     "104": CURRENCY_CENT,
     "105": UnitOfLength.INCHES,
@@ -417,6 +421,29 @@ UOM_FRIENDLY_NAME = {
     "118": UnitOfPressure.HPA,
     "119": UnitOfEnergy.WATT_HOUR,
     "120": UnitOfVolumetricFlux.INCHES_PER_DAY,
+    "122": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # Microgram per cubic meter
+    "123": f"bq/{UnitOfVolume.CUBIC_METERS}",  # Becquerel per cubic meter
+    "124": f"pCi/{UnitOfVolume.LITERS}",  # Picocuries per liter
+    "125": "pH",
+    "126": "bpm",  # Beats per Minute
+    "127": UnitOfPressure.MMHG,
+    "128": "J",
+    "129": "BMI",  # Body Mass Index
+    "130": f"{UnitOfVolume.LITERS}/{UnitOfTime.HOURS}",
+    "131": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    "132": "bpm",  # Breaths per minute
+    "133": UnitOfFrequency.KILOHERTZ,
+    "134": f"{UnitOfLength.METERS}/{UnitOfTime.SECONDS}²",
+    "135": UnitOfApparentPower.VOLT_AMPERE,  # Volt-Amp
+    "136": POWER_VOLT_AMPERE_REACTIVE,  # VAR = Volt-Amp Reactive
+    "137": "",  # NTP DateTime - Number of seconds since 1900
+    "138": UnitOfPressure.PSI,
+    "139": DEGREE,  # Degree 0-360
+    "140": f"{UnitOfMass.MILLIGRAMS}/{UnitOfVolume.LITERS}",
+    "141": "N",  # Netwon
+    "142": f"{UnitOfVolume.GALLONS}/{UnitOfTime.SECONDS}",
+    "143": "gpm",  # Gallon per Minute
+    "144": "gph",  # Gallon per Hour
 }
 
 UOM_TO_STATES = {

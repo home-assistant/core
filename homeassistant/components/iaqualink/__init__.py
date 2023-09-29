@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 import httpx
 from iaqualink.client import AqualinkClient
@@ -243,6 +243,8 @@ class AqualinkEntity(Entity):
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer=self.dev.manufacturer,
             model=self.dev.model,
-            name=self.name,
+            # Instead of setting the device name to the entity name, iaqualink
+            # should be updated to set has_entity_name = True
+            name=cast(str | None, self.name),
             via_device=(DOMAIN, self.dev.system.serial),
         )

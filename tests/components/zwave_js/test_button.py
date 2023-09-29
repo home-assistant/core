@@ -28,7 +28,7 @@ async def test_ping_entity(
         },
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "node.ping"
@@ -47,7 +47,7 @@ async def test_ping_entity(
         },
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert "There is no value to refresh for this entity" in caplog.text
 
     # Assert a node ping button entity is not created for the controller

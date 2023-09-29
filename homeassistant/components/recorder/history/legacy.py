@@ -434,11 +434,11 @@ def _state_changed_during_period_stmt(
             )
         else:
             stmt += lambda q: q.order_by(States.entity_id, States.last_updated.desc())
+    elif schema_version >= 31:
+        stmt += lambda q: q.order_by(States.entity_id, States.last_updated_ts)
     else:
-        if schema_version >= 31:
-            stmt += lambda q: q.order_by(States.entity_id, States.last_updated_ts)
-        else:
-            stmt += lambda q: q.order_by(States.entity_id, States.last_updated)
+        stmt += lambda q: q.order_by(States.entity_id, States.last_updated)
+
     if limit:
         stmt += lambda q: q.limit(limit)
     return stmt

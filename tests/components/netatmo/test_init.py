@@ -12,7 +12,7 @@ from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
@@ -21,7 +21,11 @@ from .common import (
     simulate_webhook,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_get_persistent_notifications,
+)
 from tests.components.cloud import mock_cloud
 
 # Fake webhook thermostat mode change to "Max"
@@ -335,7 +339,7 @@ async def test_setup_component_with_delay(hass: HomeAssistant, config_entry) -> 
 
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(seconds=60),
+            dt_util.utcnow() + timedelta(seconds=60),
         )
         await hass.async_block_till_done()
 
@@ -391,7 +395,10 @@ async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
 
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
     assert hass.config_entries.async_entries(DOMAIN)
-    assert len(hass.states.async_all()) > 0
+
+    notifications = async_get_persistent_notifications(hass)
+
+    assert len(notifications) > 0
 
     for config_entry in hass.config_entries.async_entries("netatmo"):
         await hass.config_entries.async_remove(config_entry.entry_id)
@@ -408,7 +415,7 @@ async def test_setup_component_invalid_token(hass: HomeAssistant, config_entry) 
                 headers={},
                 real_url="http://example.com",
             ),
-            code=400,
+            status=400,
             history=(),
         )
 
@@ -437,7 +444,8 @@ async def test_setup_component_invalid_token(hass: HomeAssistant, config_entry) 
 
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
     assert hass.config_entries.async_entries(DOMAIN)
-    assert len(hass.states.async_all()) > 0
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) > 0
 
     for config_entry in hass.config_entries.async_entries("netatmo"):
         await hass.config_entries.async_remove(config_entry.entry_id)

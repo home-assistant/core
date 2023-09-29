@@ -14,13 +14,14 @@ from homeassistant.components.pvpc_hourly_pricing import (
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import check_valid_state
 
-from tests.common import async_fire_time_changed, date_util
+from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-_MOCK_TIME_VALID_RESPONSES = datetime(2023, 1, 6, 12, 0, tzinfo=date_util.UTC)
+_MOCK_TIME_VALID_RESPONSES = datetime(2023, 1, 6, 12, 0, tzinfo=dt_util.UTC)
 
 
 async def test_config_flow(

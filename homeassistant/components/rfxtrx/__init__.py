@@ -8,8 +8,8 @@ import copy
 import logging
 from typing import Any, NamedTuple, cast
 
-import RFXtrx as rfxtrxmod
 import async_timeout
+import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -547,6 +547,8 @@ class RfxtrxCommandEntity(RfxtrxEntity):
 
     Contains the common logic for Rfxtrx lights and switches.
     """
+
+    _attr_name = None
 
     def __init__(
         self,

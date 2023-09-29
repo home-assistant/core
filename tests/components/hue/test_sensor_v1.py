@@ -460,7 +460,7 @@ async def test_hue_events(hass: HomeAssistant, mock_bridge_v1, device_reg) -> No
     assert len(events) == 0
 
     hue_tap_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
+        identifiers={(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
     )
 
     mock_bridge_v1.api.sensors["7"].last_event = {"type": "button"}
@@ -492,7 +492,7 @@ async def test_hue_events(hass: HomeAssistant, mock_bridge_v1, device_reg) -> No
     }
 
     hue_dimmer_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
+        identifiers={(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
     )
 
     new_sensor_response = dict(new_sensor_response)
@@ -595,7 +595,7 @@ async def test_hue_events(hass: HomeAssistant, mock_bridge_v1, device_reg) -> No
     await hass.async_block_till_done()
 
     hue_aurora_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7")}
+        identifiers={(hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7")}
     )
 
     assert len(mock_bridge_v1.mock_requests) == 6

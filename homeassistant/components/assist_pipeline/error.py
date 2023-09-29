@@ -19,7 +19,7 @@ class PipelineNotFound(PipelineError):
 
 
 class SpeechToTextError(PipelineError):
-    """Error in speech to text portion of pipeline."""
+    """Error in speech-to-text portion of pipeline."""
 
 
 class IntentRecognitionError(PipelineError):
@@ -27,4 +27,4 @@ class IntentRecognitionError(PipelineError):
 
 
 class TextToSpeechError(PipelineError):
-    """Error in text to speech portion of pipeline."""
+    """Error in text-to-speech portion of pipeline."""

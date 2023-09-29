@@ -25,16 +25,17 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HassJob, HomeAssistant
+from homeassistant.core import HassJob, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_point_in_time,
     async_track_state_change_event,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.util.dt import now
 
 from .const import (
@@ -196,11 +197,13 @@ class Alert(Entity):
             return STATE_ON
         return STATE_IDLE
 
-    async def watched_entity_change(self, event: Event) -> None:
+    async def watched_entity_change(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Determine if the alert should start or stop."""
-        if (to_state := event.data.get("new_state")) is None:
+        if (to_state := event.data["new_state"]) is None:
             return
-        LOGGER.debug("Watched entity (%s) has changed", event.data.get("entity_id"))
+        LOGGER.debug("Watched entity (%s) has changed", event.data["entity_id"])
         if to_state.state == self._alert_state and not self._firing:
             await self.begin_alerting()
         if to_state.state != self._alert_state and self._firing:

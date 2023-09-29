@@ -25,7 +25,7 @@ class EcowittEntity(Entity):
             identifiers={
                 (DOMAIN, sensor.station.key),
             },
-            name=sensor.station.station,
+            name=sensor.station.model,
             model=sensor.station.model,
             sw_version=sensor.station.version,
         )
