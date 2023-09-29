@@ -67,18 +67,18 @@ def mock_register_webhook():
 
 @pytest.fixture
 def mock_generate_secret_token():
-    """Mock secret token generated for webhook"""
+    """Mock secret token generated for webhook."""
     mock_secret_token = "DEADBEEF12345678DEADBEEF87654321"
     with patch(
-        "homeassistant.components.telegram_bot.webhooks.generate_secret_token",
-        return_value=mock_secret_token,
+        "homeassistant.components.telegram_bot.webhooks.secrets.choice",
+        side_effect=mock_secret_token,
     ):
         yield mock_secret_token
 
 
 @pytest.fixture
 def incorrect_secret_token():
-    """Mock incorrect secret token"""
+    """Mock incorrect secret token."""
     return "AAAABBBBCCCCDDDDEEEEFFFF00009999"
 
 

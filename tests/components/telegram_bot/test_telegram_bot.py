@@ -160,9 +160,9 @@ async def test_webhook_endpoint_without_secret_token_is_denied(
     hass_client: ClientSessionGenerator,
     update_message_text,
 ) -> None:
-    """Request without a secret token header should be denied"""
+    """Request without a secret token header should be denied."""
     client = await hass_client()
-    events = async_capture_events(hass, "telegram_text")
+    async_capture_events(hass, "telegram_text")
 
     response = await client.post(
         TELEGRAM_WEBHOOK_URL,
@@ -178,9 +178,9 @@ async def test_webhook_endpoint_invalid_secret_token_is_denied(
     update_message_text,
     incorrect_secret_token,
 ) -> None:
-    """Request with an invalid secret token header should be denied"""
+    """Request with an invalid secret token header should be denied."""
     client = await hass_client()
-    events = async_capture_events(hass, "telegram_text")
+    async_capture_events(hass, "telegram_text")
 
     response = await client.post(
         TELEGRAM_WEBHOOK_URL,

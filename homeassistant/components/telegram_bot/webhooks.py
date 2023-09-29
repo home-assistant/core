@@ -23,16 +23,12 @@ REMOVE_WEBHOOK_URL = ""
 SECRET_TOKEN_LENGTH = 32
 
 
-def generate_secret_token(length):
-    alphabet = string.ascii_letters + string.digits + "-_"
-    return "".join(secrets.choice(alphabet) for _ in range(length))
-
-
 async def async_setup_platform(hass, bot, config):
     """Set up the Telegram webhooks platform."""
 
     # Generate an ephemeral secret token
-    secret_token = generate_secret_token(SECRET_TOKEN_LENGTH)
+    alphabet = string.ascii_letters + string.digits + "-_"
+    secret_token = "".join(secrets.choice(alphabet) for _ in range(SECRET_TOKEN_LENGTH))
 
     pushbot = PushBot(hass, bot, config, secret_token)
 
