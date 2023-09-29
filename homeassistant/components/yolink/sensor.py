@@ -263,6 +263,6 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true is device is available."""
-        return self.coordinator.dev_online
+        return super().available and self.coordinator.dev_online
