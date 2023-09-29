@@ -233,8 +233,8 @@ build.json @home-assistant/supervisor
 /tests/components/counter/ @fabaff
 /homeassistant/components/cover/ @home-assistant/core
 /tests/components/cover/ @home-assistant/core
-/homeassistant/components/cpuspeed/ @fabaff @frenck
-/tests/components/cpuspeed/ @fabaff @frenck
+/homeassistant/components/cpuspeed/ @fabaff
+/tests/components/cpuspeed/ @fabaff
 /homeassistant/components/crownstone/ @Crownstone @RicArch97
 /tests/components/crownstone/ @Crownstone @RicArch97
 /homeassistant/components/cups/ @fabaff
@@ -742,6 +742,8 @@ build.json @home-assistant/supervisor
 /tests/components/mazda/ @bdr99
 /homeassistant/components/meater/ @Sotolotl @emontnemery
 /tests/components/meater/ @Sotolotl @emontnemery
+/homeassistant/components/medcom_ble/ @elafargue
+/tests/components/medcom_ble/ @elafargue
 /homeassistant/components/media_extractor/ @joostlek
 /tests/components/media_extractor/ @joostlek
 /homeassistant/components/media_player/ @home-assistant/core
@@ -807,8 +809,8 @@ build.json @home-assistant/supervisor
 /tests/components/mutesync/ @currentoor
 /homeassistant/components/my/ @home-assistant/core
 /tests/components/my/ @home-assistant/core
-/homeassistant/components/myq/ @ehendrix23
-/tests/components/myq/ @ehendrix23
+/homeassistant/components/myq/ @ehendrix23 @Lash-L
+/tests/components/myq/ @ehendrix23 @Lash-L
 /homeassistant/components/mysensors/ @MartinHjelmare @functionpointer
 /tests/components/mysensors/ @MartinHjelmare @functionpointer
 /homeassistant/components/mystrom/ @fabaff
@@ -1415,6 +1417,8 @@ build.json @home-assistant/supervisor
 /tests/components/waze_travel_time/ @eifinger
 /homeassistant/components/weather/ @home-assistant/core
 /tests/components/weather/ @home-assistant/core
+/homeassistant/components/weatherflow/ @natekspencer @jeeftor
+/tests/components/weatherflow/ @natekspencer @jeeftor
 /homeassistant/components/weatherkit/ @tjhorner
 /tests/components/weatherkit/ @tjhorner
 /homeassistant/components/webhook/ @home-assistant/core

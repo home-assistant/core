@@ -6,7 +6,6 @@ from broadlink.exceptions import BroadlinkException
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ColorMode,
@@ -112,16 +111,6 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
             color_temp = kwargs[ATTR_COLOR_TEMP]
             state["colortemp"] = (color_temp - 153) * 100 + 2700
             state["bulb_colormode"] = BROADLINK_COLOR_MODE_WHITE
-
-        elif ATTR_COLOR_MODE in kwargs:
-            color_mode = kwargs[ATTR_COLOR_MODE]
-            if color_mode == ColorMode.HS:
-                state["bulb_colormode"] = BROADLINK_COLOR_MODE_RGB
-            elif color_mode == ColorMode.COLOR_TEMP:
-                state["bulb_colormode"] = BROADLINK_COLOR_MODE_WHITE
-            else:
-                # Scenes are not yet supported.
-                state["bulb_colormode"] = BROADLINK_COLOR_MODE_SCENES
 
         await self._async_set_state(state)
 

@@ -299,8 +299,14 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         return {"obstruction-detected": obstruction_detected}
 
 
+class HomeKitWindow(HomeKitWindowCover):
+    """Representation of a HomeKit Window."""
+
+    _attr_device_class = CoverDeviceClass.WINDOW
+
+
 ENTITY_TYPES = {
     ServicesTypes.GARAGE_DOOR_OPENER: HomeKitGarageDoorCover,
     ServicesTypes.WINDOW_COVERING: HomeKitWindowCover,
-    ServicesTypes.WINDOW: HomeKitWindowCover,
+    ServicesTypes.WINDOW: HomeKitWindow,
 }

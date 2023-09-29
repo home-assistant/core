@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.10.0.dev0"
+version     = "2023.11.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -25,7 +25,6 @@ requires-python = ">=3.11.0"
 dependencies    = [
     "aiohttp==3.8.5",
     "astral==2.2",
-    "async-timeout==4.0.3",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==23.8.0",
@@ -41,7 +40,7 @@ dependencies    = [
     "lru-dict==1.2.0",
     "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==41.0.3",
+    "cryptography==41.0.4",
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
     "pyOpenSSL==23.2.0",
     "orjson==3.9.7",

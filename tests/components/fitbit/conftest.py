@@ -66,14 +66,23 @@ def mock_monitored_resources() -> list[str] | None:
     return None
 
 
+@pytest.fixture(name="configured_unit_system")
+def mock_configured_unit_syststem() -> str | None:
+    """Fixture for the fitbit yaml config monitored_resources field."""
+    return None
+
+
 @pytest.fixture(name="sensor_platform_config")
 def mock_sensor_platform_config(
     monitored_resources: list[str] | None,
+    configured_unit_system: str | None,
 ) -> dict[str, Any]:
     """Fixture for the fitbit sensor platform configuration data in configuration.yaml."""
     config = {}
     if monitored_resources is not None:
         config["monitored_resources"] = monitored_resources
+    if configured_unit_system is not None:
+        config["unit_system"] = configured_unit_system
     return config
 
 
