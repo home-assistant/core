@@ -341,6 +341,38 @@ async def test_turn_off(hass: HomeAssistant) -> None:
     assert state.state == "off"
 
 
+async def test_client_rgbw_rgb_mismatch(hass: HomeAssistant) -> None:
+    """Test client that reports profile RGBW only returning RGB colors."""
+    client = ClientMock()
+    client.state = False
+    client.device_info["led_profile"] = "RGBW"
+    client.color = {"red": 128, "green": 64, "blue": 32}
+    entity, _, _, _ = await _create_entries(hass, client)
+
+    # Force a client update
+    await hass.services.async_call(
+        "light", "turn_off", service_data={"entity_id": entity.entity_id}, blocking=True
+    )
+
+    assert client.color == {"red": 128, "green": 64, "blue": 32, "white": None}
+
+
+async def test_client_rgb_rgbw_mismatch(hass: HomeAssistant) -> None:
+    """Test client that reports profile RGB returning RGBW colors."""
+    client = ClientMock()
+    client.state = False
+    client.device_info["led_profile"] = "RGB"
+    client.color = {"red": 128, "green": 64, "blue": 32, "white": 16}
+    entity, _, _, _ = await _create_entries(hass, client)
+
+    # Force a client update
+    await hass.services.async_call(
+        "light", "turn_off", service_data={"entity_id": entity.entity_id}, blocking=True
+    )
+
+    assert client.color == {"red": 128, "green": 64, "blue": 32, "white": 16}
+
+
 async def test_update_name(hass: HomeAssistant) -> None:
     """Validate device's name update behavior.
 

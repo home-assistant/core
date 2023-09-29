@@ -93,7 +93,7 @@ class ClientMock:
 
     async def get_current_colour(self) -> dict:
         """Get static color."""
-        if self.color["white"] is None:
+        if "white" in self.color and self.color["white"] is None:
             del self.color["white"]
         return self.color
 
