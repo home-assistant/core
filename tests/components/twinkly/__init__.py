@@ -93,6 +93,8 @@ class ClientMock:
 
     async def get_current_colour(self) -> dict:
         """Get static color."""
+        if self.color["white"] is None:
+            del self.color["white"]
         return self.color
 
     async def set_cycle_colours(self, colour) -> None:

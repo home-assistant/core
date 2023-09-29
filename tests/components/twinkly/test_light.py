@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.util.color import color_rgb_to_rgbw, color_rgbw_to_rgb
 
 from . import TEST_MODEL, TEST_NAME, TEST_NAME_ORIGINAL, ClientMock
 
@@ -240,6 +241,58 @@ async def test_turn_on_with_color_rgb_and_missing_effect(hass: HomeAssistant) ->
     assert client.color == {"red": 128, "green": 64, "blue": 32, "white": None}
     assert client.mode == "movie"
     assert client.default_mode == "movie"
+
+
+async def test_turn_on_with_color_rgb_rgbw_mismatch(hass: HomeAssistant) -> None:
+    """Test support of the light.turn_on service with rgbw color on rgb device."""
+    client = ClientMock()
+    client.state = False
+    client.device_info["led_profile"] = "RGB"
+    client.brightness = {"mode": "enabled", "value": 255}
+    entity, _, _, _ = await _create_entries(hass, client)
+
+    assert hass.states.get(entity.entity_id).state == "off"
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "rgbw_color": (128, 64, 32, 16)},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity.entity_id)
+
+    r, g, b = color_rgbw_to_rgb(128, 64, 32, 16)
+    assert state.state == "on"
+    assert client.color == {"red": r, "green": g, "blue": b, "white": None}
+    assert client.mode == "color"
+    assert client.default_mode == "color"
+
+
+async def test_turn_on_with_color_rgbw_rgb_mismatch(hass: HomeAssistant) -> None:
+    """Test support of the light.turn_on service with rgb color on rgbw device."""
+    client = ClientMock()
+    client.state = False
+    client.device_info["led_profile"] = "RGBW"
+    client.brightness = {"mode": "enabled", "value": 255}
+    entity, _, _, _ = await _create_entries(hass, client)
+
+    assert hass.states.get(entity.entity_id).state == "off"
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "rgb_color": (128, 64, 32)},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity.entity_id)
+
+    r, g, b, w = color_rgb_to_rgbw(128, 64, 32)
+    assert state.state == "on"
+    assert client.color == {"red": r, "green": g, "blue": b, "white": w}
+    assert client.mode == "color"
+    assert client.default_mode == "color"
 
 
 async def test_turn_on_with_effect_missing_effects(hass: HomeAssistant) -> None:

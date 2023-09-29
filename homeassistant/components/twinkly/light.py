@@ -191,7 +191,7 @@ class TwinklyLight(LightEntity):
                 await self._client.set_cycle_colours(color)
                 await self._client.set_mode("movie")
                 self._client.default_mode = "movie"
-            if color.white:
+            if color.white is None:
                 self._attr_rgbw_color = color.as_tuple()
             else:
                 self._attr_rgb_color = color.as_tuple()
