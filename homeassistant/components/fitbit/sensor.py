@@ -517,6 +517,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         issue_key,
+        breaks_in_ha_version="2024.03.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,
