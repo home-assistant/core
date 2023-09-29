@@ -1171,6 +1171,38 @@ async def test_component_config_exceptions(
         assert "ValueError: broken" in caplog.text
         assert "Unknown error calling test_domain config validator" in caplog.text
 
+    caplog.clear()
+
+    test_integration = Mock(
+        domain="test_domain",
+        get_platform=Mock(
+            return_value=Mock(
+                async_validate_config=AsyncMock(
+                    side_effect=HomeAssistantError("broken")
+                )
+            )
+        ),
+        get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+    )
+    assert (
+        await config_util.async_process_component_config(
+            hass, {}, integration=test_integration
+        )
+        is None
+    )
+    assert "HomeAssistantError: broken" in caplog.text
+    assert "Invalid config for [test_domain]: broken (See ?, line ?)" in caplog.text
+    caplog.clear()
+    with pytest.raises(HomeAssistantError):
+        assert (
+            await config_util.async_process_component_config(
+                hass, {}, integration=test_integration, raise_on_failure=True
+            )
+            is None
+        )
+        assert "HomeAssistantError: broken" in caplog.text
+        assert "Invalid config for [test_domain]: broken (See ?, line ?)" in caplog.text
+
     # component.CONFIG_SCHEMA
     caplog.clear()
     test_integration = Mock(
@@ -1305,6 +1337,21 @@ async def test_component_config_exceptions(
         "Error importing config platform test_domain: ModuleNotFoundError: No module"
         " named 'not_installed_something'" in caplog.text
     )
+    caplog.clear()
+    with pytest.raises(HomeAssistantError):
+        assert (
+            await config_util.async_process_component_config(
+                hass,
+                {"test_domain": {}},
+                integration=test_integration,
+                raise_on_failure=True,
+            )
+            is None
+        )
+        assert (
+            "Error importing config platform test_domain: ModuleNotFoundError: No module"
+            " named 'not_installed_something'" in caplog.text
+        )
     caplog.clear()
     with pytest.raises(HomeAssistantError):
         assert (
