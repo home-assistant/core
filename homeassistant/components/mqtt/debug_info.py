@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from collections import deque
 from collections.abc import Callable
+from dataclasses import dataclass
 import datetime as dt
 from functools import wraps
-from typing import Any
-
-import attr
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -49,15 +48,15 @@ def log_messages(
     return _decorator
 
 
-@attr.s(slots=True, frozen=True)
+@dataclass
 class TimestampedPublishMessage:
     """MQTT Message."""
 
-    topic: str = attr.ib()
-    payload: PublishPayloadType = attr.ib()
-    qos: int = attr.ib()
-    retain: bool = attr.ib()
-    timestamp: dt.datetime = attr.ib(default=None)
+    topic: str
+    payload: PublishPayloadType
+    qos: int
+    retain: bool
+    timestamp: dt.datetime
 
 
 def log_message(
@@ -128,11 +127,11 @@ def update_entity_discovery_data(
     hass: HomeAssistant, discovery_payload: DiscoveryInfoType, entity_id: str
 ) -> None:
     """Update discovery data."""
-    assert (
-        discovery_data := get_mqtt_data(hass).debug_info_entities[entity_id][
-            "discovery_data"
-        ]
-    ) is not None
+    discovery_data = get_mqtt_data(hass).debug_info_entities[entity_id][
+        "discovery_data"
+    ]
+    if TYPE_CHECKING:
+        assert discovery_data is not None
     discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
 
 

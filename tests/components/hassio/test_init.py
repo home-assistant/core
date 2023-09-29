@@ -548,7 +548,7 @@ async def test_service_calls(
 
     assert aioclient_mock.call_count == 30
     assert aioclient_mock.mock_calls[-1][2] == {
-        "name": "2021-11-13 11:48:00",
+        "name": "2021-11-13 03:48:00",
         "homeassistant": True,
         "addons": ["test"],
         "folders": ["ssl"],
@@ -606,6 +606,24 @@ async def test_service_calls(
 
     assert aioclient_mock.call_count == 34
     assert aioclient_mock.mock_calls[-1][2] == {
+        "name": "2021-11-13 03:48:00",
+        "location": None,
+    }
+
+    # check backup with different timezone
+    await hass.config.async_update(time_zone="Europe/London")
+
+    await hass.services.async_call(
+        "hassio",
+        "backup_full",
+        {
+            "location": "/backup",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 36
+    assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 11:48:00",
         "location": None,
     }
@@ -631,6 +649,41 @@ async def test_invalid_service_calls(
         await hass.services.async_call(
             "hassio", "addon_stdin", {"addon": "does_not_exist", "input": "test"}
         )
+
+
+async def test_addon_service_call_with_complex_slug(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Addon slugs can have ., - and _, confirm that passes validation."""
+    supervisor_mock_data = {
+        "version_latest": "1.0.0",
+        "version": "1.0.0",
+        "auto_update": True,
+        "addons": [
+            {
+                "name": "test.a_1-2",
+                "slug": "test.a_1-2",
+                "state": "stopped",
+                "update_available": False,
+                "version": "1.0.0",
+                "version_latest": "1.0.0",
+                "repository": "core",
+                "icon": False,
+            },
+        ],
+    }
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.hassio.HassIO.is_connected",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.hassio.HassIO.get_supervisor_info",
+        return_value=supervisor_mock_data,
+    ):
+        assert await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
+    await hass.services.async_call("hassio", "addon_start", {"addon": "test.a_1-2"})
 
 
 async def test_service_calls_core(

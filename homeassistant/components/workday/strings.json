@@ -26,15 +26,17 @@
           "excludes": "List of workdays to exclude",
           "days_offset": "Days offset",
           "workdays": "List of workdays",
-          "add_holidays": "Add custom holidays as YYYY-MM-DD",
-          "remove_holidays": "Remove holidays as YYYY-MM-DD or by using partial of name",
+          "add_holidays": "Add custom holidays as YYYY-MM-DD or as range using `,` as separator",
+          "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name",
           "province": "State, Territory, Province, Region of Country"
         }
       }
     },
     "error": {
       "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
-      "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found"
+      "add_holiday_range_error": "Incorrect format on date range (YYYY-MM-DD,YYYY-MM-DD)",
+      "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found",
+      "remove_holiday_range_error": "Incorrect format on date range (YYYY-MM-DD,YYYY-MM-DD)"
     }
   },
   "options": {
@@ -61,11 +63,18 @@
     },
     "error": {
       "add_holiday_error": "[%key:component::workday::config::error::add_holiday_error%]",
+      "add_holiday_range_error": "[%key:component::workday::config::error::add_holiday_range_error%]",
       "remove_holiday_error": "[%key:component::workday::config::error::remove_holiday_error%]",
+      "remove_holiday_range_error": "[%key:component::workday::config::error::remove_holiday_range_error%]",
       "already_configured": "Service with this configuration already exist"
     }
   },
   "selector": {
+    "country": {
+      "options": {
+        "none": "No country"
+      }
+    },
     "province": {
       "options": {
         "none": "No subdivision"
@@ -81,6 +90,49 @@
         "sat": "[%key:common::time::saturday%]",
         "sun": "[%key:common::time::sunday%]",
         "holiday": "Holidays"
+      }
+    }
+  },
+  "issues": {
+    "bad_country": {
+      "title": "Configured Country for {title} does not exist",
+      "fix_flow": {
+        "step": {
+          "country": {
+            "title": "Select country for {title}",
+            "description": "Select a country to use for your Workday sensor.",
+            "data": {
+              "country": "[%key:component::workday::config::step::user::data::country%]"
+            }
+          },
+          "province": {
+            "title": "Select province for {title}",
+            "description": "Select a province in country {country} to use for your Workday sensor.",
+            "data": {
+              "province": "[%key:component::workday::config::step::options::data::province%]"
+            },
+            "data_description": {
+              "province": "State, Territory, Province, Region of Country"
+            }
+          }
+        }
+      }
+    },
+    "bad_province": {
+      "title": "Configured province in country {country} for {title} does not exist",
+      "fix_flow": {
+        "step": {
+          "province": {
+            "title": "[%key:component::workday::issues::bad_country::fix_flow::step::province::title%]",
+            "description": "[%key:component::workday::issues::bad_country::fix_flow::step::province::description%]",
+            "data": {
+              "province": "[%key:component::workday::config::step::options::data::province%]"
+            },
+            "data_description": {
+              "province": "[%key:component::workday::issues::bad_country::fix_flow::step::province::data_description::province%]"
+            }
+          }
+        }
       }
     }
   }

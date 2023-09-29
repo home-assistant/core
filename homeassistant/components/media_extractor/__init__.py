@@ -135,11 +135,10 @@ class MediaExtractor:
                 raise MEQueryException() from err
 
             if "formats" in requested_stream:
-                best_stream = requested_stream["formats"][
-                    len(requested_stream["formats"]) - 1
-                ]
-                return str(best_stream["url"])
-            return str(requested_stream["url"])
+                if requested_stream["extractor"] == "youtube":
+                    return get_best_stream_youtube(requested_stream["formats"])
+                return get_best_stream(requested_stream["formats"])
+            return cast(str, requested_stream["url"])
 
         return stream_selector
 
@@ -154,7 +153,7 @@ class MediaExtractor:
         except MEQueryException:
             _LOGGER.error("Wrong query format: %s", stream_query)
             return
-
+        _LOGGER.debug("Selected the following stream: %s", stream_url)
         data = {k: v for k, v in self.call_data.items() if k != ATTR_ENTITY_ID}
         data[ATTR_MEDIA_CONTENT_ID] = stream_url
 
@@ -181,3 +180,29 @@ class MediaExtractor:
             )
 
         return default_stream_query
+
+
+def get_best_stream(formats: list[dict[str, Any]]) -> str:
+    """Return the best quality stream.
+
+    As per
+    https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/extractor/common.py#L128.
+    """
+
+    return cast(str, formats[len(formats) - 1]["url"])
+
+
+def get_best_stream_youtube(formats: list[dict[str, Any]]) -> str:
+    """YouTube responses also include files with only video or audio.
+
+    So we filter on files with both audio and video codec.
+    """
+
+    return get_best_stream(
+        [
+            format
+            for format in formats
+            if format.get("acodec", "none") != "none"
+            and format.get("vcodec", "none") != "none"
+        ]
+    )

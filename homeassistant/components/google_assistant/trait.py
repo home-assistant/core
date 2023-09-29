@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from datetime import datetime, timedelta
 import logging
 from typing import Any, TypeVar
 
@@ -12,6 +13,7 @@ from homeassistant.components import (
     camera,
     climate,
     cover,
+    event,
     fan,
     group,
     humidifier,
@@ -74,9 +76,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.helpers.network import get_url
 from homeassistant.util import color as color_util, dt as dt_util
+from homeassistant.util.dt import utcnow
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -115,6 +118,7 @@ TRAIT_LOCKUNLOCK = f"{PREFIX_TRAITS}LockUnlock"
 TRAIT_FANSPEED = f"{PREFIX_TRAITS}FanSpeed"
 TRAIT_MODES = f"{PREFIX_TRAITS}Modes"
 TRAIT_INPUTSELECTOR = f"{PREFIX_TRAITS}InputSelector"
+TRAIT_OBJECTDETECTION = f"{PREFIX_TRAITS}ObjectDetection"
 TRAIT_OPENCLOSE = f"{PREFIX_TRAITS}OpenClose"
 TRAIT_VOLUME = f"{PREFIX_TRAITS}Volume"
 TRAIT_ARMDISARM = f"{PREFIX_TRAITS}ArmDisarm"
@@ -221,7 +225,7 @@ class _Trait(ABC):
     def supported(domain, features, device_class, attributes):
         """Test if state is supported."""
 
-    def __init__(self, hass, state, config):
+    def __init__(self, hass: HomeAssistant, state, config) -> None:
         """Initialize a trait for a state."""
         self.hass = hass
         self.state = state
@@ -231,9 +235,16 @@ class _Trait(ABC):
         """Return attributes for a sync request."""
         raise NotImplementedError
 
+    def sync_options(self) -> dict[str, Any]:
+        """Add options for the sync request."""
+        return {}
+
     def query_attributes(self):
         """Return the attributes of this trait for this entity."""
         raise NotImplementedError
+
+    def query_notifications(self) -> dict[str, Any] | None:
+        """Return notifications payload."""
 
     def can_execute(self, command, params):
         """Test if command can be executed."""
@@ -333,6 +344,60 @@ class CameraStreamTrait(_Trait):
             "cameraStreamAccessUrl": f"{get_url(self.hass)}{url}",
             "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT_MEDIA,
         }
+
+
+@register_trait
+class ObjectDetection(_Trait):
+    """Trait to object detection.
+
+    https://developers.google.com/actions/smarthome/traits/objectdetection
+    """
+
+    name = TRAIT_OBJECTDETECTION
+    commands = []
+
+    @staticmethod
+    def supported(domain, features, device_class, _) -> bool:
+        """Test if state is supported."""
+        return (
+            domain == event.DOMAIN and device_class == event.EventDeviceClass.DOORBELL
+        )
+
+    def sync_attributes(self):
+        """Return ObjectDetection attributes for a sync request."""
+        return {}
+
+    def sync_options(self) -> dict[str, Any]:
+        """Add options for the sync request."""
+        return {"notificationSupportedByAgent": True}
+
+    def query_attributes(self):
+        """Return ObjectDetection query attributes."""
+        return {}
+
+    def query_notifications(self) -> dict[str, Any] | None:
+        """Return notifications payload."""
+
+        if self.state.state in {STATE_UNKNOWN, STATE_UNAVAILABLE}:
+            return None
+
+        # Only notify if last event was less then 30 seconds ago
+        time_stamp = datetime.fromisoformat(self.state.state)
+        if (utcnow() - time_stamp) > timedelta(seconds=30):
+            return None
+
+        return {
+            "ObjectDetection": {
+                "objects": {
+                    "unclassified": 1,
+                },
+                "priority": 0,
+                "detectionTimestamp": int(time_stamp.timestamp() * 1000),
+            },
+        }
+
+    async def execute(self, command, data, params, challenge):
+        """Execute an ObjectDetection command."""
 
 
 @register_trait

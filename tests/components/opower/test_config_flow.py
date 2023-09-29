@@ -300,7 +300,7 @@ async def test_form_valid_reauth(
     assert result["reason"] == "reauth_successful"
 
     await hass.async_block_till_done()
-    assert hass.config_entries.async_entries(DOMAIN)[0].data == {
+    assert mock_config_entry.data == {
         "utility": "Pacific Gas and Electric Company (PG&E)",
         "username": "test-username",
         "password": "test-password2",
@@ -350,7 +350,7 @@ async def test_form_valid_reauth_with_mfa(
     assert result["reason"] == "reauth_successful"
 
     await hass.async_block_till_done()
-    assert hass.config_entries.async_entries(DOMAIN)[0].data == {
+    assert mock_config_entry.data == {
         "utility": "Consolidated Edison (ConEd)",
         "username": "test-username",
         "password": "test-password2",
