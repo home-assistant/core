@@ -47,8 +47,7 @@ def legacy_thermostat_fixture(device_factory):
     device = device_factory(
         "Legacy Thermostat",
         capabilities=[Capability.thermostat],
-        status={
-            Attribute.cooling_setpoint: 74,
+        status={            
             Attribute.heating_setpoint: 68,
             Attribute.thermostat_fan_mode: "auto",
             Attribute.supported_thermostat_fan_modes: ["auto", "on"],
@@ -67,13 +66,11 @@ def basic_thermostat_fixture(device_factory):
     device = device_factory(
         "Basic Thermostat",
         capabilities=[
-            Capability.temperature_measurement,
-            Capability.thermostat_cooling_setpoint,
+            Capability.temperature_measurement,            
             Capability.thermostat_heating_setpoint,
             Capability.thermostat_mode,
         ],
-        status={
-            Attribute.cooling_setpoint: 74,
+        status={            
             Attribute.heating_setpoint: 68,
             Attribute.thermostat_mode: "off",
             Attribute.supported_thermostat_modes: ["off", "auto", "heat", "cool"],
@@ -90,15 +87,13 @@ def thermostat_fixture(device_factory):
         "Thermostat",
         capabilities=[
             Capability.temperature_measurement,
-            Capability.relative_humidity_measurement,
-            Capability.thermostat_cooling_setpoint,
+            Capability.relative_humidity_measurement,            
             Capability.thermostat_heating_setpoint,
             Capability.thermostat_mode,
             Capability.thermostat_operating_state,
             Capability.thermostat_fan_mode,
         ],
-        status={
-            Attribute.cooling_setpoint: 74,
+        status={            
             Attribute.heating_setpoint: 68,
             Attribute.thermostat_fan_mode: "on",
             Attribute.supported_thermostat_fan_modes: ["auto", "on"],
@@ -128,14 +123,12 @@ def buggy_thermostat_fixture(device_factory):
     device = device_factory(
         "Buggy Thermostat",
         capabilities=[
-            Capability.temperature_measurement,
-            Capability.thermostat_cooling_setpoint,
+            Capability.temperature_measurement,            
             Capability.thermostat_heating_setpoint,
             Capability.thermostat_mode,
         ],
         status={
-            Attribute.thermostat_mode: "heating",
-            Attribute.cooling_setpoint: 74,
+            Attribute.thermostat_mode: "heating",            
             Attribute.heating_setpoint: 68,
         },
     )
@@ -153,8 +146,7 @@ def air_conditioner_fixture(device_factory):
             Capability.demand_response_load_control,
             Capability.air_conditioner_fan_mode,
             Capability.switch,
-            Capability.temperature_measurement,
-            Capability.thermostat_cooling_setpoint,
+            Capability.temperature_measurement,            
         ],
         status={
             Attribute.air_conditioner_mode: "auto",
@@ -180,8 +172,7 @@ def air_conditioner_fixture(device_factory):
                 "high",
                 "turbo",
             ],
-            Attribute.switch: "on",
-            Attribute.cooling_setpoint: 23,
+            Attribute.switch: "on",            
         },
     )
     device.status.attributes[Attribute.temperature] = Status(24, "C", None)
