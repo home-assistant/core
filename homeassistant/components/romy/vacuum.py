@@ -109,9 +109,7 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
     async def async_start(self, **kwargs: Any) -> None:
         """Turn the vacuum on."""
         LOGGER.debug("async_start")
-        ret = await self.romy.async_clean_start_or_continue()
-        if ret:
-            self._is_on = True
+        await self.romy.async_clean_start_or_continue()
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner. (-> send it back to docking station)."""
