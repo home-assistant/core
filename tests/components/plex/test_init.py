@@ -242,7 +242,7 @@ async def test_setup_when_certificate_changed(
 
     # Test with no servers found
     requests_mock.get("https://plex.tv/api/v2/user", text=plextv_account)
-    requests_mock.get("https://plex.tv/api/resources", text=empty_payload)
+    requests_mock.get("https://plex.tv/api/v2/resources", text=empty_payload)
 
     assert await hass.config_entries.async_setup(old_entry.entry_id) is False
     await hass.async_block_till_done()
@@ -252,7 +252,7 @@ async def test_setup_when_certificate_changed(
 
     # Test with success
     new_url = PLEX_DIRECT_URL
-    requests_mock.get("https://plex.tv/api/resources", text=plextv_resources)
+    requests_mock.get("https://plex.tv/api/v2/resources", text=plextv_resources)
     for resource_url in [new_url, "http://1.2.3.4:32400"]:
         requests_mock.get(resource_url, text=plex_server_default)
     requests_mock.get(f"{new_url}/accounts", text=plex_server_accounts)
