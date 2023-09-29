@@ -2,7 +2,9 @@
 from collections.abc import Callable, Generator
 import itertools
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
+import warnings
 
 import pytest
 import zigpy
@@ -14,6 +16,7 @@ import zigpy.device
 import zigpy.group
 import zigpy.profiles
 import zigpy.quirks
+import zigpy.state
 import zigpy.types
 import zigpy.util
 from zigpy.zcl.clusters.general import Basic, Groups
@@ -92,7 +95,9 @@ class _FakeApp(ControllerApplication):
     async def start_network(self):
         pass
 
-    async def write_network_info(self):
+    async def write_network_info(
+        self, *, network_info: zigpy.state.NetworkInfo, node_info: zigpy.state.NodeInfo
+    ) -> None:
         pass
 
     async def request(
@@ -111,9 +116,33 @@ class _FakeApp(ControllerApplication):
     ):
         pass
 
+    async def move_network_to_channel(
+        self, new_channel: int, *, num_broadcasts: int = 5
+    ) -> None:
+        pass
+
+
+def _wrap_mock_instance(obj: Any) -> MagicMock:
+    """Auto-mock every attribute and method in an object."""
+    mock = create_autospec(obj, spec_set=True, instance=True)
+
+    for attr_name in dir(obj):
+        if attr_name.startswith("__") and attr_name not in {"__getitem__"}:
+            continue
+
+        real_attr = getattr(obj, attr_name)
+        mock_attr = getattr(mock, attr_name)
+
+        if callable(real_attr):
+            mock_attr.side_effect = real_attr
+        else:
+            setattr(mock, attr_name, real_attr)
+
+    return mock
+
 
 @pytest.fixture
-def zigpy_app_controller():
+async def zigpy_app_controller():
     """Zigpy ApplicationController fixture."""
     app = _FakeApp(
         {
@@ -145,14 +174,14 @@ def zigpy_app_controller():
     ep.add_input_cluster(Basic.cluster_id)
     ep.add_input_cluster(Groups.cluster_id)
 
-    with patch(
-        "zigpy.device.Device.request", return_value=[Status.SUCCESS]
-    ), patch.object(app, "permit", autospec=True), patch.object(
-        app, "startup", wraps=app.startup
-    ), patch.object(
-        app, "permit_with_key", autospec=True
-    ):
-        yield app
+    with patch("zigpy.device.Device.request", return_value=[Status.SUCCESS]):
+        # The mock wrapping accesses deprecated attributes, so we suppress the warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            mock_app = _wrap_mock_instance(app)
+            mock_app.backups = _wrap_mock_instance(app.backups)
+
+        yield mock_app
 
 
 @pytest.fixture(name="config_entry")
@@ -188,6 +217,9 @@ def mock_zigpy_connect(
     """Patch the zigpy radio connection with our mock application."""
     with patch(
         "bellows.zigbee.application.ControllerApplication.new",
+        return_value=zigpy_app_controller,
+    ), patch(
+        "bellows.zigbee.application.ControllerApplication",
         return_value=zigpy_app_controller,
     ):
         yield zigpy_app_controller
