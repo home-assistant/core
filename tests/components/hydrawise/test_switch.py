@@ -3,21 +3,25 @@
 from datetime import timedelta
 from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.hydrawise.const import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_states(
-    hass: HomeAssistant, mock_added_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test switch states."""
     # Make the coordinator refresh data.
-    async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     watering1 = hass.states.get("switch.zone_one_manual_watering")

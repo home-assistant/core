@@ -3,9 +3,10 @@
 from datetime import timedelta
 from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.hydrawise.const import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -35,12 +36,16 @@ async def test_states(
 
 
 async def test_update_data_fails(
-    hass: HomeAssistant, mock_added_config_entry: MockConfigEntry, mock_pydrawise: Mock
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_pydrawise: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that no data from the API sets the correct connectivity."""
     # Make the coordinator refresh data.
     mock_pydrawise.update_controller_info.return_value = None
-    async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     connectivity = hass.states.get("binary_sensor.home_controller_connectivity")
