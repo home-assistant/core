@@ -49,14 +49,14 @@ async def test_media_player_playback(
     setup_plex_server,
     requests_mock: requests_mock.Mocker,
     playqueue_created,
-    player_plexweb_resources,
+    player_plexhtpc_resources,
 ) -> None:
     """Test playing media on a Plex media_player."""
-    requests_mock.get("http://1.2.3.5:32400/resources", text=player_plexweb_resources)
+    requests_mock.get("http://1.2.3.6:32400/resources", text=player_plexhtpc_resources)
 
     await setup_plex_server()
 
-    media_player = "media_player.plex_plex_web_chrome"
+    media_player = "media_player.plex_plex_htpc_for_mac_plex_htpc"
     requests_mock.post("/playqueues", text=playqueue_created)
     playmedia_mock = requests_mock.get(
         "/player/playback/playMedia", status_code=HTTPStatus.OK
