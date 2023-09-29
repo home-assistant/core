@@ -71,7 +71,7 @@ STREAM_SETTINGS_NON_LL_HLS = StreamSettings(
 )
 
 
-@dataclass
+@dataclass(slots=True)
 class Part:
     """Represent a segment part."""
 
