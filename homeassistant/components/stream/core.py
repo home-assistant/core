@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable
+from dataclasses import dataclass
 import datetime
 from enum import IntEnum
 import logging
@@ -70,14 +71,14 @@ STREAM_SETTINGS_NON_LL_HLS = StreamSettings(
 )
 
 
-@attr.s(slots=True)
+@dataclass
 class Part:
     """Represent a segment part."""
 
-    duration: float = attr.ib()
-    has_keyframe: bool = attr.ib()
+    duration: float
+    has_keyframe: bool
     # video data (moof+mdat)
-    data: bytes = attr.ib()
+    data: bytes
 
 
 @attr.s(slots=True)
