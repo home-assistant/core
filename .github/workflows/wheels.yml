@@ -10,8 +10,10 @@ on:
       - dev
       - rc
     paths:
-      - "requirements.txt"
+      - ".github/workflows/wheels.yml"
+      - "homeassistant/package_constraints.txt"
       - "requirements_all.txt"
+      - "requirements.txt"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name}}
