@@ -178,7 +178,7 @@ get-mac==1000000000.0.0
 # https://gitlab.com/keatontaylor/alexapy/-/blob/v1.27.0/pyproject.toml#L29
 alexapy<1.27.0
 
-# We want to skip the binary wheels for the 'charset_normalizer' packages.
+# We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
-charset_normalizer==3.2.0
+charset-normalizer==3.2.0
