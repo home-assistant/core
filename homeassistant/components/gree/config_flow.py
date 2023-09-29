@@ -64,7 +64,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title = user_input["ip"]
                 else:
                     title = "HomeAssistant"
-                await self.async_set_unique_id(title, raise_on_progress=False)
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(

@@ -11,17 +11,10 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .common import FakeDiscovery
 
-from tests.common import MockConfigEntry
-
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 TEST_USER_DATA = {
     "ip": "192.168.0.0",
-}
-
-TEST_DEVICE_INFO = {
-    "mac": "a:b:c:d",
-    "title": "a title",
 }
 
 
@@ -64,29 +57,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_duplicate_error(hass: HomeAssistant) -> None:
-    """Test that errors are shown when duplicates are added."""
-    MockConfigEntry(
-        data=TEST_USER_DATA,
-        domain=GREE_DOMAIN,
-        unique_id=TEST_DEVICE_INFO["mac"],
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        GREE_DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.gree.config_flow.validate_input",
-        return_value=TEST_DEVICE_INFO,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_USER_DATA
-        )
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
 
 
 @patch("homeassistant.components.gree.config_flow.DISCOVERY_TIMEOUT", 0)
