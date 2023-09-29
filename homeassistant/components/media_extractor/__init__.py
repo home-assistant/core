@@ -153,7 +153,7 @@ class MediaExtractor:
         except MEQueryException:
             _LOGGER.error("Wrong query format: %s", stream_query)
             return
-
+        _LOGGER.debug("Selected the following stream: %s", stream_url)
         data = {k: v for k, v in self.call_data.items() if k != ATTR_ENTITY_ID}
         data[ATTR_MEDIA_CONTENT_ID] = stream_url
 
