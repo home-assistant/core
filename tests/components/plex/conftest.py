@@ -450,7 +450,7 @@ def mock_plex_calls(
     """Mock Plex API calls."""
     requests_mock.get("https://plex.tv/api/users/", text=plextv_shared_users)
     requests_mock.get("https://plex.tv/api/invites/requested", text=empty_payload)
-    requests_mock.get("https://plex.tv/users/account", text=plextv_account)
+    requests_mock.get("https://plex.tv/api/v2/user", text=plextv_account)
     requests_mock.get("https://plex.tv/api/resources", text=plextv_resources)
 
     url = plex_server_url(entry)

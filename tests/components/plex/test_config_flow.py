@@ -346,7 +346,7 @@ async def test_all_available_servers_configured(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    requests_mock.get("https://plex.tv/users/account", text=plextv_account)
+    requests_mock.get("https://plex.tv/api/v2/user", text=plextv_account)
     requests_mock.get(
         "https://plex.tv/api/resources",
         text=plextv_resources_two_servers,
