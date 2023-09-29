@@ -168,37 +168,21 @@ class TwinklyLight(LightEntity):
 
             await self._client.set_brightness(brightness)
 
-        color = None
+        color: TwinklyColour | None = None
         if (
             ATTR_RGBW_COLOR in kwargs
+            and self._attr_color_mode == ColorMode.RGBW
             and kwargs[ATTR_RGBW_COLOR] != self._attr_rgbw_color
         ):
-            r, g, b, w = kwargs[ATTR_RGBW_COLOR]
-            color = TwinklyColour(r, g, b, w)
-            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
-        elif (
-            ATTR_RGB_COLOR in kwargs and kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color
+            color = TwinklyColour(*kwargs[ATTR_RGBW_COLOR])
+        if (
+            ATTR_RGB_COLOR in kwargs
+            and self._attr_color_mode == ColorMode.RGB
+            and kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color
         ):
-            r, g, b = kwargs[ATTR_RGB_COLOR]
-            color = TwinklyColour(r, g, b)
-            self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
+            color = TwinklyColour(*kwargs[ATTR_RGB_COLOR])
+
         if color:
-            _LOGGER.warning("Setting color to %s", color)
-            _LOGGER.warning(self._attr_supported_color_modes)
-            if self._attr_color_mode == ColorMode.RGBW:
-                if color.white is None:
-                    rgbw_color = color_rgb_to_rgbw(color.red, color.green, color.blue)
-                    r, g, b, w = rgbw_color
-                    color = TwinklyColour(r, g, b, w)
-                _LOGGER.warning("Really setting rgbw color to %s", color)
-            elif self._attr_color_mode == ColorMode.RGB:
-                if color.white:
-                    rgb_color = color_rgbw_to_rgb(
-                        color.red, color.green, color.blue, color.white
-                    )
-                    r, g, b = rgb_color
-                    color = TwinklyColour(r, g, b)
-                _LOGGER.warning("Really setting rgb color to %s", color)
             if LightEntityFeature.EFFECT & self.supported_features:
                 await self._client.set_static_colour(color)
                 await self._client.set_mode("color")
@@ -207,6 +191,10 @@ class TwinklyLight(LightEntity):
                 await self._client.set_cycle_colours(color)
                 await self._client.set_mode("movie")
                 self._client.default_mode = "movie"
+            if color.white:
+                self._attr_rgbw_color = color.as_tuple()
+            else:
+                self._attr_rgb_color = color.as_tuple()
 
         if (
             ATTR_EFFECT in kwargs
@@ -277,10 +265,6 @@ class TwinklyLight(LightEntity):
             if not self._attr_available:
                 _LOGGER.info("Twinkly '%s' is now available", self._client.host)
 
-            # _LOGGER.debug("Current details: %s", await self._client.summary())
-            # _LOGGER.debug("Current mode: %s", await self._client.get_mode())
-            # _LOGGER.debug("Current default mode: %s", self._client.default_mode)
-
             # We don't use the echo API to track the availability since
             # we already have to pull the device to get its state.
             self._attr_available = True
@@ -310,43 +294,15 @@ class TwinklyLight(LightEntity):
     async def async_update_current_color(self) -> None:
         """Update the current active color."""
         current_color = await self._client.get_current_colour()
-        if "white" in current_color:
-            color = TwinklyColour(
-                current_color["red"],
-                current_color["green"],
-                current_color["blue"],
-                current_color["white"],
-            )
-        else:
-            color = TwinklyColour(
-                current_color["red"], current_color["green"], current_color["blue"]
-            )
+        color = TwinklyColour(**current_color)
         _LOGGER.debug("Current color: %s", color)
         if self._attr_color_mode == ColorMode.RGBW:
-            if color.white:
-                self._attr_rgbw_color = (
-                    color.red,
-                    color.green,
-                    color.blue,
-                    color.white,
-                )
+            if color.white is not None:
+                self._attr_rgbw_color = color.as_tuple()
             else:
-                self._attr_rgbw_color = color_rgb_to_rgbw(
-                    color.red,
-                    color.green,
-                    color.blue,
-                )
+                self._attr_rgbw_color = color_rgb_to_rgbw(*color.as_tuple())
         elif self._attr_color_mode == ColorMode.RGB:
-            if color.white:
-                self._attr_rgb_color = color_rgbw_to_rgb(
-                    color.red,
-                    color.green,
-                    color.blue,
-                    color.white,
-                )
+            if color.white is not None:
+                self._attr_rgb_color = color_rgbw_to_rgb(*color.as_tuple())
             else:
-                self._attr_rgb_color = (
-                    color.red,
-                    color.green,
-                    color.blue,
-                )
+                self._attr_rgb_color = color.as_tuple()
