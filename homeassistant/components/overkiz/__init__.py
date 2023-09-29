@@ -152,7 +152,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_migrate_entries(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> bool:
-    """Migrate old entry."""
+    """Migrate old entries to new unique IDs."""
     entity_registry = er.async_get(hass)
 
     @callback
@@ -174,10 +174,12 @@ async def _async_migrate_entries(
                 entry.domain, entry.platform, new_unique_id
             ):
                 LOGGER.debug(
-                    "Cannot migrate to unique_id '%s', already exists for '%s'",
+                    "Cannot migrate to unique_id '%s', already exists for '%s'. Entity will be removed",
                     new_unique_id,
                     existing_entity_id,
                 )
+                entity_registry.async_remove(existing_entity_id)
+
                 return None
 
             return {
