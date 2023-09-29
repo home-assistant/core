@@ -87,6 +87,23 @@ FIRMWARE_UPDATES = {
                 "rfRegion": 1,
             },
         },
+        {
+            "version": "12.1.1",
+            "changelog": "blah 3",
+            "channel": "beta",
+            "files": [
+                {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
+            ],
+            "downgrade": True,
+            "normalizedVersion": "12.1.1",
+            "device": {
+                "manufacturerId": 1,
+                "productType": 2,
+                "productId": 3,
+                "firmwareVersion": "0.4.4",
+                "rfRegion": 1,
+            },
+        },
     ]
 }
 

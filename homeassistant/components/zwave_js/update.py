@@ -213,7 +213,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         try:
             available_firmware_updates = (
                 await self.driver.controller.async_get_available_firmware_updates(
-                    self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
+                    self.node, API_KEY_FIRMWARE_UPDATE_SERVICE, True
                 )
             )
         except FailedZWaveCommand as err:
@@ -230,7 +230,11 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 available_firmware_updates
                 and (
                     latest_firmware := max(
-                        available_firmware_updates,
+                        [
+                            update
+                            for update in available_firmware_updates
+                            if update.channel == "stable"
+                        ],
                         key=lambda x: AwesomeVersion(x.version),
                     )
                 )
