@@ -192,7 +192,7 @@ class DefaultAgent(AbstractConversationAgent):
         if user_input.device_id and (
             device := dr.async_get(self.hass).async_get(user_input.device_id)
         ):
-            intent_context = {"device_id": device.id}
+            intent_context = {"satellite": device.id}
             if device.area_id:
                 intent_context["area"] = device.area_id
 

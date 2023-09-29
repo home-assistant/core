@@ -301,3 +301,7 @@ async def test_intent_context(
         assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
         assert mock_recognize.call_args.kwargs["intent_context"]
         assert mock_recognize.call_args.kwargs["intent_context"]["area"] == "kitchen"
+        assert (
+            mock_recognize.call_args.kwargs["intent_context"]["satellite"]
+            == mock_device.id
+        )
