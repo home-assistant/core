@@ -261,6 +261,7 @@ class TwinklyLight(LightEntity):
             if LightEntityFeature.EFFECT & self.supported_features:
                 await self.async_update_movies()
                 await self.async_update_current_movie()
+            _LOGGER.debug("Current mode: %s", self._client.default_mode)
 
             if not self._attr_available:
                 _LOGGER.info("Twinkly '%s' is now available", self._client.host)
@@ -294,7 +295,15 @@ class TwinklyLight(LightEntity):
     async def async_update_current_color(self) -> None:
         """Update the current active color."""
         current_color = await self._client.get_current_colour()
-        color = TwinklyColour(**current_color)
+        if "white" not in current_color:
+            current_color["white"] = None
+
+        color = TwinklyColour(
+            current_color["red"],
+            current_color["green"],
+            current_color["blue"],
+            current_color["white"],
+        )
         _LOGGER.debug("Current color: %s", color)
         if self._attr_color_mode == ColorMode.RGBW:
             if color.white is not None:
