@@ -193,9 +193,16 @@ def get_best_stream(formats: list[dict[str, Any]]) -> str:
 
 
 def get_best_stream_youtube(formats: list[dict[str, Any]]) -> str:
-    """YouTube requests also include manifest files.
+    """YouTube responses also include files with only video or audio.
 
-    They don't have a filesize so we skip all formats without filesize.
+    So we filter on files with both audio and video codec.
     """
 
-    return get_best_stream([format for format in formats if "filesize" in format])
+    return get_best_stream(
+        [
+            format
+            for format in formats
+            if format.get("acodec", "none") != "none"
+            and format.get("vcodec", "none") != "none"
+        ]
+    )
