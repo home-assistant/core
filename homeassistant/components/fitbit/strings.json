@@ -39,7 +39,7 @@
     },
     "deprecated_yaml_import_issue_cannot_connect": {
       "title": "The Fitbit YAML configuration import failed",
-      "description": "Configuring Fitbit using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to MELCloud works and restart Home Assistant to try again or remove the Fitbit YAML configuration from your configuration.yaml file and remove the fitbit.conf and continue to [set up the integration](/config/integrations/dashboard/add?domain=fitbit) manually."
+      "description": "Configuring Fitbit using YAML is being removed but there was a connection error importing your YAML configuration.\n\nRestart Home Assistant to try again or remove the Fitbit YAML configuration from your configuration.yaml file and remove the fitbit.conf and continue to [set up the integration](/config/integrations/dashboard/add?domain=fitbit) manually."
     }
   }
 }
