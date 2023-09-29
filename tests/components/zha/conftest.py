@@ -189,12 +189,14 @@ def mock_zigpy_connect(
     with patch(
         "bellows.zigbee.application.ControllerApplication.new",
         return_value=zigpy_app_controller,
-    ) as mock_app:
-        yield mock_app
+    ):
+        yield zigpy_app_controller
 
 
 @pytest.fixture
-def setup_zha(hass, config_entry: MockConfigEntry, mock_zigpy_connect):
+def setup_zha(
+    hass, config_entry: MockConfigEntry, mock_zigpy_connect: ControllerApplication
+):
     """Set up ZHA component."""
     zha_config = {zha_const.CONF_ENABLE_QUIRKS: False}
 
@@ -202,12 +204,11 @@ def setup_zha(hass, config_entry: MockConfigEntry, mock_zigpy_connect):
         config_entry.add_to_hass(hass)
         config = config or {}
 
-        with mock_zigpy_connect:
-            status = await async_setup_component(
-                hass, zha_const.DOMAIN, {zha_const.DOMAIN: {**zha_config, **config}}
-            )
-            assert status is True
-            await hass.async_block_till_done()
+        status = await async_setup_component(
+            hass, zha_const.DOMAIN, {zha_const.DOMAIN: {**zha_config, **config}}
+        )
+        assert status is True
+        await hass.async_block_till_done()
 
     return _setup
 

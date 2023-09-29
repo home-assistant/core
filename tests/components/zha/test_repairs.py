@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 from universal_silabs_flasher.const import ApplicationType
 from universal_silabs_flasher.flasher import Flasher
+from zigpy.application import ControllerApplication
 
 from homeassistant.components.homeassistant_sky_connect import (
     DOMAIN as SKYCONNECT_DOMAIN,
@@ -98,7 +99,7 @@ async def test_multipan_firmware_repair(
     detected_hardware: HardwareType,
     expected_learn_more_url: str,
     config_entry: MockConfigEntry,
-    mock_zigpy_connect,
+    mock_zigpy_connect: ControllerApplication,
 ) -> None:
     """Test creating a repair when multi-PAN firmware is installed and probed."""
 
@@ -136,9 +137,8 @@ async def test_multipan_firmware_repair(
     assert issue.learn_more_url == expected_learn_more_url
 
     # If ZHA manages to start up normally after this, the issue will be deleted
-    with mock_zigpy_connect:
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     issue = issue_registry.async_get_issue(
         domain=DOMAIN,
@@ -182,7 +182,7 @@ async def test_multipan_firmware_no_repair_on_probe_failure(
 async def test_multipan_firmware_retry_on_probe_ezsp(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_zigpy_connect,
+    mock_zigpy_connect: ControllerApplication,
 ) -> None:
     """Test that ZHA is reloaded when EZSP firmware is probed."""
 
