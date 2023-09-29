@@ -90,7 +90,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self._attr_supported_features = SUPPORT_ROMY_ROBOT
         self._attr_fan_speed_list = FAN_SPEEDS
         self._attr_icon = ICON
-        self._is_on = False
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -100,11 +99,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self._attr_state = self.romy.status
         self._attr_name = self.romy.name
         self.async_write_ha_state()
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self._is_on
 
     async def async_start(self, **kwargs: Any) -> None:
         """Turn the vacuum on."""
@@ -125,7 +119,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         """Pause the cleaning cycle (api call stop means stop robot where is is and not sending back to docking station)."""
         LOGGER.debug("async_pause")
         await self.romy.async_stop()
-
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
