@@ -383,8 +383,12 @@ DANFOSS_TRVS = {
 }
 
 
-@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(zigpy.zcl.clusters.hvac.Thermostat.cluster_id)
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(zigpy.zcl.clusters.hvac.Thermostat.cluster_id)
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(
+    zigpy.zcl.clusters.hvac.Thermostat.cluster_id
+)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    zigpy.zcl.clusters.hvac.Thermostat.cluster_id
+)
 class DanfossTRVChannel(ClusterHandler):
     """TRV Channel class for the Danfoss TRV and derivatives."""
 
