@@ -1111,7 +1111,10 @@ class DanfossOpenWindowDetectionEnum(types.enum8):
     External = 0x04
 
 
-@MULTI_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@MULTI_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossOpenWindowDetection(Sensor, id_suffix="open_window_detection"):
     """Danfoss Proprietary attribute.
@@ -1129,7 +1132,10 @@ class DanfossOpenWindowDetection(Sensor, id_suffix="open_window_detection"):
         return DanfossOpenWindowDetectionEnum(value).name
 
 
-@MULTI_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@MULTI_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossLoadEstimate(Sensor, id_suffix="load_estimate"):
     """Danfoss Proprietary attribute for communicating its estimate of the radiator load."""
@@ -1139,7 +1145,10 @@ class DanfossLoadEstimate(Sensor, id_suffix="load_estimate"):
     _attr_icon: str = "mdi:scale-balance"
 
 
-@MULTI_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@MULTI_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossAdaptationRunStatus(Sensor, id_suffix="adaptation_run_status"):
     """Danfoss Proprietary attribute for showing the status of the adaptation run."""
@@ -1167,7 +1176,10 @@ class DanfossAdaptationRunStatus(Sensor, id_suffix="adaptation_run_status"):
         }
 
 
-@MULTI_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@MULTI_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossPreheatTime(Sensor, id_suffix="preheat_time"):
     """Danfoss Proprietary attribute for communicating the time when it starts pre-heating."""
@@ -1178,7 +1190,10 @@ class DanfossPreheatTime(Sensor, id_suffix="preheat_time"):
     _attr_entity_registry_enabled_default = False
 
 
-@MULTI_MATCH(cluster_handler_names="danfoss_trv_diagnostic_cluster")
+@MULTI_MATCH(
+    cluster_handler_names="diagnostic",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossSoftwareErrorCode(Sensor, id_suffix="sw_error_code"):
     """Danfoss Proprietary attribute for communicating the error code."""
@@ -1219,7 +1234,10 @@ class DanfossSoftwareErrorCode(Sensor, id_suffix="sw_error_code"):
         }
 
 
-@MULTI_MATCH(cluster_handler_names="danfoss_trv_diagnostic_cluster")
+@MULTI_MATCH(
+    cluster_handler_names="diagnostic",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossMotorStepCounter(Sensor, id_suffix="motor_step_counter"):
     """Danfoss Proprietary attribute for communicating the motor step counter."""
