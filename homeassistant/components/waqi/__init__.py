@@ -41,6 +41,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Migrate pre-config flow unique ids."""
     entity_registry = er.async_get(hass)
     registry_entries = er.async_entries_for_config_entry(
         entity_registry, entry.entry_id
