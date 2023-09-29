@@ -886,7 +886,7 @@ async def async_process_component_config(  # noqa: C901
         # If the config platform contains bad imports, make sure
         # that still fails.
         if err.name != f"{integration.pkg_path}.config":
-            _raise_on_fail(err, f"Error importing config platform{domain}: {err}")
+            _raise_on_fail(err, f"Error importing config platform {domain}: {err}")
             _LOGGER.error("Error importing config platform %s: %s", domain, err)
             return None
 
