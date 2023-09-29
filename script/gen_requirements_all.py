@@ -176,10 +176,6 @@ pysnmp==1000000000.0.0
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
 get-mac==1000000000.0.0
 
-# Circular dependency on homeassistant itself
-# https://gitlab.com/keatontaylor/alexapy/-/blob/v1.27.0/pyproject.toml#L29
-alexapy<1.27.0
-
 # We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
