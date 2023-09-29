@@ -429,31 +429,31 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
 EXTERNAL_SENSORS = {
     ExternalDevice.DeviceType.GAS_METER: HomeWizardExternalSensorEntityDescription(
         key="Gas meter",
-        name="Total gas",
+        translation_key="total_gas_m3",
         suggested_device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ExternalDevice.DeviceType.HEAT_METER: HomeWizardExternalSensorEntityDescription(
         key="Heat meter",
-        name="Total energy",
+        translation_key="total_energy_gj",
         suggested_device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ExternalDevice.DeviceType.WARM_WATER_METER: HomeWizardExternalSensorEntityDescription(
         key="Warm water meter",
-        name="Total water",
+        translation_key="total_liter_m3",
         suggested_device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ExternalDevice.DeviceType.WATER_METER: HomeWizardExternalSensorEntityDescription(
         key="Water meter",
-        name="Total water",
+        translation_key="total_liter_m3",
         suggested_device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ExternalDevice.DeviceType.INLET_HEAT_METER: HomeWizardExternalSensorEntityDescription(
         key="Inlet heat meter",
-        name="Total energy",
+        translation_key="total_energy_gj",
         suggested_device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
