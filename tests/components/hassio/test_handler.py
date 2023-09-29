@@ -364,6 +364,48 @@ async def test_api_headers(
         assert received_request.headers[hdrs.CONTENT_TYPE] == "application/octet-stream"
 
 
+async def test_api_get_green_settings(
+    hass: HomeAssistant, hassio_stubs, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with API ping."""
+    aioclient_mock.get(
+        "http://127.0.0.1/os/boards/green",
+        json={
+            "result": "ok",
+            "data": {
+                "activity_led": True,
+                "power_led": True,
+                "system_health_led": True,
+            },
+        },
+    )
+
+    assert await handler.async_get_green_settings(hass) == {
+        "activity_led": True,
+        "power_led": True,
+        "system_health_led": True,
+    }
+    assert aioclient_mock.call_count == 1
+
+
+async def test_api_set_green_settings(
+    hass: HomeAssistant, hassio_stubs, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with API ping."""
+    aioclient_mock.post(
+        "http://127.0.0.1/os/boards/green",
+        json={"result": "ok", "data": {}},
+    )
+
+    assert (
+        await handler.async_set_green_settings(
+            hass, {"activity_led": True, "power_led": True, "system_health_led": True}
+        )
+        == {}
+    )
+    assert aioclient_mock.call_count == 1
+
+
 async def test_api_get_yellow_settings(
     hass: HomeAssistant, hassio_stubs, aioclient_mock: AiohttpClientMocker
 ) -> None:

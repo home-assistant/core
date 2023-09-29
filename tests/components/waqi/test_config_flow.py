@@ -57,7 +57,7 @@ async def test_full_map_flow(
         "aiowaqi.WAQIClient.authenticate",
     ), patch(
         "aiowaqi.WAQIClient.get_by_ip",
-        return_value=WAQIAirQuality.parse_obj(
+        return_value=WAQIAirQuality.from_dict(
             json.loads(load_fixture("waqi/air_quality_sensor.json"))
         ),
     ):
@@ -74,12 +74,12 @@ async def test_full_map_flow(
         "aiowaqi.WAQIClient.authenticate",
     ), patch(
         "aiowaqi.WAQIClient.get_by_coordinates",
-        return_value=WAQIAirQuality.parse_obj(
+        return_value=WAQIAirQuality.from_dict(
             json.loads(load_fixture("waqi/air_quality_sensor.json"))
         ),
     ), patch(
         "aiowaqi.WAQIClient.get_by_station_number",
-        return_value=WAQIAirQuality.parse_obj(
+        return_value=WAQIAirQuality.from_dict(
             json.loads(load_fixture("waqi/air_quality_sensor.json"))
         ),
     ):
@@ -133,7 +133,7 @@ async def test_flow_errors(
         "aiowaqi.WAQIClient.authenticate",
     ), patch(
         "aiowaqi.WAQIClient.get_by_ip",
-        return_value=WAQIAirQuality.parse_obj(
+        return_value=WAQIAirQuality.from_dict(
             json.loads(load_fixture("waqi/air_quality_sensor.json"))
         ),
     ):
@@ -150,7 +150,7 @@ async def test_flow_errors(
         "aiowaqi.WAQIClient.authenticate",
     ), patch(
         "aiowaqi.WAQIClient.get_by_coordinates",
-        return_value=WAQIAirQuality.parse_obj(
+        return_value=WAQIAirQuality.from_dict(
             json.loads(load_fixture("waqi/air_quality_sensor.json"))
         ),
     ):
@@ -220,7 +220,7 @@ async def test_error_in_second_step(
         "aiowaqi.WAQIClient.authenticate",
     ), patch(
         "aiowaqi.WAQIClient.get_by_ip",
-        return_value=WAQIAirQuality.parse_obj(
+        return_value=WAQIAirQuality.from_dict(
             json.loads(load_fixture("waqi/air_quality_sensor.json"))
         ),
     ):
@@ -251,12 +251,12 @@ async def test_error_in_second_step(
         "aiowaqi.WAQIClient.authenticate",
     ), patch(
         "aiowaqi.WAQIClient.get_by_coordinates",
-        return_value=WAQIAirQuality.parse_obj(
+        return_value=WAQIAirQuality.from_dict(
             json.loads(load_fixture("waqi/air_quality_sensor.json"))
         ),
     ), patch(
         "aiowaqi.WAQIClient.get_by_station_number",
-        return_value=WAQIAirQuality.parse_obj(
+        return_value=WAQIAirQuality.from_dict(
             json.loads(load_fixture("waqi/air_quality_sensor.json"))
         ),
     ):
