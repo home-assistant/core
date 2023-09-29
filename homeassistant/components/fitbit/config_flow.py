@@ -57,7 +57,7 @@ class OAuth2FlowHandler(
             async_create_issue(
                 self.hass,
                 DOMAIN,
-                "deprecated_yaml_import_issue_cannot_connect",
+                "deprecated_yaml",
                 breaks_in_ha_version="2024.5.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,

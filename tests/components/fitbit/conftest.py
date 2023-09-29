@@ -121,8 +121,6 @@ def mock_fitbit_config_setup(
     ), patch(
         "homeassistant.components.fitbit.sensor.load_json_object",
         return_value=fitbit_config_yaml,
-    ), patch(
-        "homeassistant.components.fitbit.sensor.os.unlink",
     ):
         yield
 

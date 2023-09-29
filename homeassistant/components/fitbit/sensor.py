@@ -502,21 +502,14 @@ async def async_setup_platform(
                 },
             ),
         )
-        issue_key = "deprecated_yaml_import"
         translation_key = "deprecated_yaml_import"
     else:
-        issue_key = "deprecated_yaml_no_import"
         translation_key = "deprecated_yaml_no_import"
-
-    try:
-        await hass.async_add_executor_job(os.unlink, config_path)
-    except FileNotFoundError:
-        _LOGGER.debug("Unable to unlink fitbit configuration file")
 
     async_create_issue(
         hass,
         DOMAIN,
-        issue_key,
+        "deprecated_yaml",
         breaks_in_ha_version="2024.5.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,

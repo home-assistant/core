@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,12 +44,12 @@ class FitbitOAuth2Implementation(AuthImplementation):
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
         session = async_get_clientsession(self.hass)
-
-        data["client_id"] = self.client_id
-        if self.client_secret is not None:
-            data["client_secret"] = self.client_secret
-
-        resp = await session.post(self.token_url, data=data, headers=self._headers)
+        body = {
+            **data,
+            CONF_CLIENT_ID: self.client_id,
+            CONF_CLIENT_SECRET: self.client_secret,
+        }
+        resp = await session.post(self.token_url, data=body, headers=self._headers)
         resp.raise_for_status()
         return cast(dict, await resp.json())
 

@@ -171,7 +171,9 @@ async def test_import_fitbit_config(
     }
 
     # Verify an issue is raised for deprecated configuration.yaml
-    assert (DOMAIN, "deprecated_yaml_import") in issue_registry.issues
+    issue = issue_registry.issues.get((DOMAIN, "deprecated_yaml"))
+    assert issue
+    assert issue.translation_key == "deprecated_yaml_import"
 
 
 async def test_import_fitbit_config_failure_cannot_connect(
@@ -195,10 +197,9 @@ async def test_import_fitbit_config_failure_cannot_connect(
     assert len(mock_setup.mock_calls) == 0
 
     # Verify an issue is raised that we were unable to import configuration
-    assert (
-        DOMAIN,
-        "deprecated_yaml_import_issue_cannot_connect",
-    ) in issue_registry.issues
+    issue = issue_registry.issues.get((DOMAIN, "deprecated_yaml"))
+    assert issue
+    assert issue.translation_key == "deprecated_yaml_import_issue_cannot_connect"
 
 
 async def test_import_fitbit_config_already_exists(
@@ -235,7 +236,9 @@ async def test_import_fitbit_config_already_exists(
     assert len(entries) == 1
 
     # Verify an issue is raised for deprecated configuration.yaml
-    assert (DOMAIN, "deprecated_yaml_import") in issue_registry.issues
+    issue = issue_registry.issues.get((DOMAIN, "deprecated_yaml"))
+    assert issue
+    assert issue.translation_key == "deprecated_yaml_import"
 
 
 async def test_platform_setup_without_import(
@@ -257,4 +260,7 @@ async def test_platform_setup_without_import(
     assert len(entries) == 0
 
     # Verify an issue is raised for deprecated configuration.yaml
-    assert (DOMAIN, "deprecated_yaml_no_import") in issue_registry.issues
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.issues.get((DOMAIN, "deprecated_yaml"))
+    assert issue
+    assert issue.translation_key == "deprecated_yaml_no_import"

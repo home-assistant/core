@@ -5,11 +5,21 @@ from http import HTTPStatus
 
 import pytest
 
-from homeassistant.components.fitbit.const import OAUTH2_TOKEN
+from homeassistant.components.fitbit.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    OAUTH2_TOKEN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import FAKE_ACCESS_TOKEN, SERVER_ACCESS_TOKEN
+from .conftest import (
+    CLIENT_ID,
+    CLIENT_SECRET,
+    FAKE_ACCESS_TOKEN,
+    FAKE_REFRESH_TOKEN,
+    SERVER_ACCESS_TOKEN,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -70,6 +80,16 @@ async def test_token_refresh_success(
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
 
+    # Verify token request
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        CONF_CLIENT_ID: CLIENT_ID,
+        CONF_CLIENT_SECRET: CLIENT_SECRET,
+        "grant_type": "refresh_token",
+        "refresh_token": FAKE_REFRESH_TOKEN,
+    }
+
+    # Verify updated token
     assert (
         config_entry.data["token"]["access_token"]
         == SERVER_ACCESS_TOKEN["access_token"]
