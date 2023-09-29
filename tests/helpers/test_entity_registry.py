@@ -1706,7 +1706,7 @@ async def test_async_migrate_entry_delete_self(hass):
         entries.add(entity_entry.entity_id)
         if entity_entry == entry1:
             registry.async_remove(entry1.entity_id)
-            return
+            return None
         if entity_entry == entry2:
             return {"original_name": "Entry 2 renamed"}
         return None
@@ -1740,7 +1740,7 @@ async def test_async_migrate_entry_delete_other(hass):
         entries.add(entity_entry.entity_id)
         if entity_entry == entry1:
             registry.async_remove(entry2.entity_id)
-            return
+            return None
         if entity_entry == entry2:
             # We should not get here
             pytest.fail()
