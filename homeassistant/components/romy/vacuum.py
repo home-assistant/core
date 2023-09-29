@@ -119,9 +119,7 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return vacuum back to base."""
         LOGGER.debug("async_return_to_base")
-        ret = await self.romy.async_return_to_base()
-        if ret:
-            self._is_on = False
+        await self.romy.async_return_to_base()
 
     async def async_pause(self, **kwargs: Any) -> None:
         """Pause the cleaning cycle (api call stop means stop robot where is is and not sending back to docking station)."""
