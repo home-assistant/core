@@ -589,7 +589,10 @@ class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     _attr_icon: str = "mdi:account-lock"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 class DanfossExternalOpenWindowDetected(
     ZHASwitchConfigurationEntity, id_suffix="external_open_window_detected"
 ):
@@ -600,7 +603,10 @@ class DanfossExternalOpenWindowDetected(
     _attr_icon: str = "mdi:window-open"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 class DanfossWindowOpenFeature(
     ZHASwitchConfigurationEntity, id_suffix="window_open_feature"
 ):
@@ -611,7 +617,10 @@ class DanfossWindowOpenFeature(
     _attr_icon: str = "mdi:window-open"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 class DanfossMountingModeControl(
     ZHASwitchConfigurationEntity, id_suffix="mounting_mode_control"
 ):
@@ -621,7 +630,10 @@ class DanfossMountingModeControl(
     _attr_name: str = "Mounting Mode Control"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 class DanfossRadiatorCovered(
     ZHASwitchConfigurationEntity, id_suffix="radiator_covered"
 ):
@@ -632,7 +644,10 @@ class DanfossRadiatorCovered(
     _attr_icon: str = "mdi:thermometer"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 class DanfossHeatAvailable(ZHASwitchConfigurationEntity, id_suffix="heat_available"):
     """Danfoss Proprietary attribute for communicating available heat."""
 
@@ -641,7 +656,10 @@ class DanfossHeatAvailable(ZHASwitchConfigurationEntity, id_suffix="heat_availab
     _attr_icon: str = "mdi:water-boiler"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 class DanfossLoadBalancingEnable(
     ZHASwitchConfigurationEntity, id_suffix="load_balancing_enable"
 ):
@@ -652,7 +670,10 @@ class DanfossLoadBalancingEnable(
     _attr_icon: str = "mdi:scale-balance"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 class DanfossAdaptationRunSettings(
     ZHASwitchConfigurationEntity, id_suffix="adaptation_run_settings"
 ):

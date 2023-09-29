@@ -1023,7 +1023,10 @@ class MinHeatSetpointLimit(
     max_source = "max_heat_setpoint_limit"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossExerciseTriggerTime(
     ZHANumberConfigurationEntity, id_suffix="exercise_trigger_time"
@@ -1039,7 +1042,10 @@ class DanfossExerciseTriggerTime(
     _attr_icon: str = "mdi:clock"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossExternalMeasuredRoomSensor(
     ZCLTemperatureEntity, id_suffix="external_measured_room_sensor"
@@ -1053,7 +1059,10 @@ class DanfossExternalMeasuredRoomSensor(
     _attr_icon: str = "mdi:thermometer"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossLoadRoomMean(ZHANumberConfigurationEntity, id_suffix="load_room_mean"):
     """Danfoss Proprietary Attribute to set a value for the load."""
@@ -1066,7 +1075,10 @@ class DanfossLoadRoomMean(ZHANumberConfigurationEntity, id_suffix="load_room_mea
     _attr_icon: str = "mdi:scale-balance"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossControlAlgorithmScaleFactor(
     ZHANumberConfigurationEntity, id_suffix="control_algorithm_scale_factor"
@@ -1081,7 +1093,10 @@ class DanfossControlAlgorithmScaleFactor(
     _attr_icon: str = "mdi:knob"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="thermostat",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossRegulationSetpointOffset(
     ZHANumberConfigurationEntity, id_suffix="regulation_setpoint_offset"

@@ -377,10 +377,21 @@ class IkeaRemote(ClusterHandler):
     REPORT_CONFIG = ()
 
 
-@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(registries.DANFOSS_TRV_CLUSTER)
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(registries.DANFOSS_TRV_CLUSTER)
+DANFOSS_TRVS = {
+    "Danfoss",
+    "D5X84YU",
+}
+
+
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(zigpy.zcl.clusters.hvac.Thermostat.cluster_id)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(zigpy.zcl.clusters.hvac.Thermostat.cluster_id)
 class DanfossTRVChannel(ClusterHandler):
     """TRV Channel class for the Danfoss TRV and derivatives."""
+
+    @classmethod
+    def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
+        """Filter the cluster match for specific devices."""
+        return cluster.endpoint.device.manufacturer in DANFOSS_TRVS
 
     REPORT_CONFIG = (
         AttrReportConfig(attr="open_window_detection", config=REPORT_CONFIG_DEFAULT),
@@ -410,25 +421,35 @@ class DanfossTRVChannel(ClusterHandler):
 
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(
-    registries.DANFOSS_TRV_DIAGNOSTIC_CLUSTER
+    zigpy.zcl.clusters.hvac.UserInterface.cluster_id
 )
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    registries.DANFOSS_TRV_INTERFACE_CLUSTER
+    zigpy.zcl.clusters.hvac.UserInterface.cluster_id
 )
 class DanfossTRVInterfaceChannel(ClusterHandler):
     """Interface Channel class for the Danfoss TRV and derivatives."""
+
+    @classmethod
+    def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
+        """Filter the cluster match for specific devices."""
+        return cluster.endpoint.device.manufacturer in DANFOSS_TRVS
 
     ZCL_INIT_ATTRS = {"viewing_direction": True}
 
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(
-    registries.DANFOSS_TRV_DIAGNOSTIC_CLUSTER
+    zigpy.zcl.clusters.homeautomation.Diagnostic.cluster_id
 )
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    registries.DANFOSS_TRV_DIAGNOSTIC_CLUSTER
+    zigpy.zcl.clusters.homeautomation.Diagnostic.cluster_id
 )
 class DanfossTRVDiagnosticChannel(ClusterHandler):
     """Diagnostic Channel class for the Danfoss TRV and derivatives."""
+
+    @classmethod
+    def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
+        """Filter the cluster match for specific devices."""
+        return cluster.endpoint.device.manufacturer in DANFOSS_TRVS
 
     REPORT_CONFIG = (
         AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
