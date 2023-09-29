@@ -175,6 +175,10 @@ pysnmp==1000000000.0.0
 # The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
 get-mac==1000000000.0.0
+
+# Circular dependency on homeassistant itself
+# https://gitlab.com/keatontaylor/alexapy/-/blob/v1.27.0/pyproject.toml#L29
+alexapy<1.27.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
