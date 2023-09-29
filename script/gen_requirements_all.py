@@ -128,8 +128,9 @@ multidict>=6.0.2
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Require to avoid issues with decorators (#93904). v2 has breaking changes.
-pydantic>=1.10.8,<2.0
+# Required to avoid breaking (#101042).
+# v2 has breaking changes (#99218).
+pydantic==1.10.12
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
