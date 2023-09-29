@@ -120,7 +120,7 @@ EVENT_TELEGRAM_SENT = "telegram_sent"
 
 PARSER_HTML = "html"
 PARSER_MD = "markdown"
-PARSER_MD2 = "markdownv2"
+PARSER_MD2 = "markdown2"
 
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
