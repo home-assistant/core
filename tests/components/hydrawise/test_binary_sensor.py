@@ -11,11 +11,14 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_states(
-    hass: HomeAssistant, mock_added_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test binary_sensor states."""
     # Make the coordinator refresh data.
-    async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     connectivity = hass.states.get("binary_sensor.home_controller_connectivity")
