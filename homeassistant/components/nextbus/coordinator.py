@@ -71,11 +71,7 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
                 data = cast(dict[str, Any], data)
                 self._calc_predictions(data)
                 return data
-            except NextBusHTTPError as ex:
-                raise UpdateFailed("failed connecting to nextbus api", ex) from ex
-            except NextBusFormatError as ex:
-                raise UpdateFailed(
-                    "failed reading response from nextbus api", ex
-                ) from ex
+            except (NextBusHTTPError, NextBusFormatError) as ex:
+                raise UpdateFailed("Failed updating nextbus data", ex) from ex
 
         return await self.hass.async_add_executor_job(_update_data)
