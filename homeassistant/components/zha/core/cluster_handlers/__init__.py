@@ -529,6 +529,7 @@ class ClusterHandler(LogMixin):
                 raise HomeAssistantError(
                     f"Failed to write attribute {name}={value}: {record.status}",
                 )
+        return res
 
     def log(self, level, msg, *args, **kwargs):
         """Log a message."""
