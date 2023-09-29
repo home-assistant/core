@@ -65,7 +65,9 @@ async def test_media_player_playback(
     # Test media lookup failure
     payload = '{"library_name": "Movies", "title": "Movie 1" }'
     with patch(
-        "plexapi.library.LibrarySection.search", return_value=None
+        "plexapi.library.LibrarySection.search",
+        return_value=None,
+        __qualname__="search",
     ), pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             MP_DOMAIN,
@@ -86,7 +88,11 @@ async def test_media_player_playback(
 
     # Test movie success
     movies = [movie1]
-    with patch("plexapi.library.LibrarySection.search", return_value=movies):
+    with patch(
+        "plexapi.library.LibrarySection.search",
+        return_value=movies,
+        __qualname__="search",
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -101,7 +107,11 @@ async def test_media_player_playback(
 
     # Test movie success with resume
     playmedia_mock.reset()
-    with patch("plexapi.library.LibrarySection.search", return_value=movies):
+    with patch(
+        "plexapi.library.LibrarySection.search",
+        return_value=movies,
+        __qualname__="search",
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -163,7 +173,11 @@ async def test_media_player_playback(
     # Test multiple choices with exact match
     playmedia_mock.reset()
     movies = [movie1, movie2]
-    with patch("plexapi.library.LibrarySection.search", return_value=movies):
+    with patch(
+        "plexapi.library.LibrarySection.search",
+        return_value=movies,
+        __qualname__="search",
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -181,7 +195,11 @@ async def test_media_player_playback(
     movies = [movie2, movie3]
     with pytest.raises(HomeAssistantError) as excinfo:
         payload = '{"library_name": "Movies", "title": "Movie" }'
-        with patch("plexapi.library.LibrarySection.search", return_value=movies):
+        with patch(
+            "plexapi.library.LibrarySection.search",
+            return_value=movies,
+            __qualname__="search",
+        ):
             await hass.services.async_call(
                 MP_DOMAIN,
                 SERVICE_PLAY_MEDIA,
@@ -197,7 +215,11 @@ async def test_media_player_playback(
 
     # Test multiple choices with allow_multiple
     movies = [movie1, movie2, movie3]
-    with patch("plexapi.library.LibrarySection.search", return_value=movies), patch(
+    with patch(
+        "plexapi.library.LibrarySection.search",
+        return_value=movies,
+        __qualname__="search",
+    ), patch(
         "homeassistant.components.plex.server.PlexServer.create_playqueue"
     ) as mock_create_playqueue:
         await hass.services.async_call(
