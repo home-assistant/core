@@ -1,6 +1,6 @@
 """The tests for the august platform."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from aiohttp import ClientResponseError
 from yalexs.authenticator_common import AuthenticationState
@@ -186,11 +186,11 @@ async def test_lock_has_doorsense(hass: HomeAssistant) -> None:
     await _create_august_with_devices(hass, [doorsenselock, nodoorsenselock])
 
     binary_sensor_online_with_doorsense_name_open = hass.states.get(
-        "binary_sensor.online_with_doorsense_name_open"
+        "binary_sensor.online_with_doorsense_name_door"
     )
     assert binary_sensor_online_with_doorsense_name_open.state == STATE_ON
     binary_sensor_missing_doorsense_id_name_open = hass.states.get(
-        "binary_sensor.missing_doorsense_id_name_open"
+        "binary_sensor.missing_with_doorsense_name_door"
     )
     assert binary_sensor_missing_doorsense_id_name_open is None
 
@@ -361,19 +361,18 @@ async def test_load_unload(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_load_triggers_ble_discovery(hass: HomeAssistant) -> None:
+async def test_load_triggers_ble_discovery(
+    hass: HomeAssistant, mock_discovery: Mock
+) -> None:
     """Test that loading a lock that supports offline ble operation passes the keys to yalexe_ble."""
 
     august_lock_with_key = await _mock_lock_with_offline_key(hass)
     august_lock_without_key = await _mock_operative_august_lock_detail(hass)
 
-    with patch(
-        "homeassistant.components.august.discovery_flow.async_create_flow"
-    ) as mock_discovery:
-        config_entry = await _create_august_with_devices(
-            hass, [august_lock_with_key, august_lock_without_key]
-        )
-        await hass.async_block_till_done()
+    config_entry = await _create_august_with_devices(
+        hass, [august_lock_with_key, august_lock_without_key]
+    )
+    await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert len(mock_discovery.mock_calls) == 1

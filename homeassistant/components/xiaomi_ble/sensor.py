@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from xiaomi_ble import DeviceClass, SensorUpdate, Units
+from xiaomi_ble.parser import ExtendedSensorDeviceClass
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -25,6 +26,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -129,11 +131,21 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # Used for e.g. consumable sensor on WX08ZM
-    (None, Units.PERCENTAGE): SensorEntityDescription(
-        key=str(Units.PERCENTAGE),
-        device_class=None,
+    # Used for e.g. consumable sensor on WX08ZM and M1S-T500
+    (ExtendedSensorDeviceClass.CONSUMABLE, Units.PERCENTAGE): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.CONSUMABLE),
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for score after brushing with a toothbrush
+    (ExtendedSensorDeviceClass.SCORE, None): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.SCORE),
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for counting during brushing
+    (ExtendedSensorDeviceClass.COUNTER, Units.TIME_SECONDS): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.COUNTER),
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -153,7 +165,7 @@ def sensor_update_to_bluetooth_data_update(
                 (description.device_class, description.native_unit_of_measurement)
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
-            if description.native_unit_of_measurement
+            if description.device_class
         },
         entity_data={
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
@@ -183,7 +195,9 @@ async def async_setup_entry(
             XiaomiBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class XiaomiBluetoothSensorEntity(

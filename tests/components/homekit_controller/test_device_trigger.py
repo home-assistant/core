@@ -14,10 +14,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import setup_test_component
 
-from tests.common import (
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import async_get_device_automations, async_mock_service
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -424,6 +421,14 @@ async def test_handle_events_late_setup(hass: HomeAssistant, utcnow, calls) -> N
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "device - button1 - single_press - 0"
+
+    # Make sure automation doesn't trigger for a polled None
+    helper.pairing.testing.update_named_service(
+        "Button 1", {CharacteristicsTypes.INPUT_EVENT: None}
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
     # Make sure automation doesn't trigger for long press
     helper.pairing.testing.update_named_service(

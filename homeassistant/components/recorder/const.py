@@ -3,9 +3,7 @@
 from enum import StrEnum
 
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES
-from homeassistant.helpers.json import (  # noqa: F401 pylint: disable=unused-import
-    JSON_DUMP,
-)
+from homeassistant.helpers.json import JSON_DUMP  # noqa: F401
 
 DATA_INSTANCE = "recorder_instance"
 SQLITE_URL_PREFIX = "sqlite://"
@@ -42,19 +40,12 @@ ATTR_APPLY_FILTER = "apply_filter"
 
 KEEPALIVE_TIME = 30
 
-
-EXCLUDE_ATTRIBUTES = f"{DOMAIN}_exclude_attributes_by_domain"
-
-
 STATISTICS_ROWS_SCHEMA_VERSION = 23
 CONTEXT_ID_AS_BINARY_SCHEMA_VERSION = 36
 EVENT_TYPE_IDS_SCHEMA_VERSION = 37
 STATES_META_SCHEMA_VERSION = 38
 
 LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION = 28
-
-
-INTEGRATION_PLATFORM_EXCLUDE_ATTRIBUTES = "exclude_attributes"
 
 INTEGRATION_PLATFORM_COMPILE_STATISTICS = "compile_statistics"
 INTEGRATION_PLATFORM_VALIDATE_STATISTICS = "validate_statistics"

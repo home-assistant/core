@@ -10,8 +10,9 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from . import APIRatelimitExceeded, InvalidAuth, get_data
 from .const import CONF_COUNTRY_CODE, DOMAIN
+from .coordinator import get_data
+from .exceptions import APIRatelimitExceeded, InvalidAuth
 from .util import get_extra_name
 
 TYPE_USE_HOME = "Use home location"

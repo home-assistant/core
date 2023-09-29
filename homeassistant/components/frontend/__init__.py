@@ -156,9 +156,18 @@ MANIFEST_JSON = Manifest(
                 "src": f"/static/icons/favicon-{size}x{size}.png",
                 "sizes": f"{size}x{size}",
                 "type": "image/png",
-                "purpose": "maskable any",
+                "purpose": "any",
             }
             for size in (192, 384, 512, 1024)
+        ]
+        + [
+            {
+                "src": f"/static/icons/maskable_icon-{size}x{size}.png",
+                "sizes": f"{size}x{size}",
+                "type": "image/png",
+                "purpose": "maskable",
+            }
+            for size in (48, 72, 96, 128, 192, 384, 512)
         ],
         "screenshots": [
             {
@@ -171,6 +180,7 @@ MANIFEST_JSON = Manifest(
         "name": "Home Assistant",
         "short_name": "Assistant",
         "start_url": "/?homescreen=1",
+        "id": "/?homescreen=1",
         "theme_color": DEFAULT_THEME_COLOR,
         "prefer_related_applications": True,
         "related_applications": [

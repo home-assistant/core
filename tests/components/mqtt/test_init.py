@@ -41,6 +41,7 @@ from .test_common import help_all_subscribe_calls
 
 from tests.common import (
     MockConfigEntry,
+    MockEntity,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache,
@@ -415,6 +416,37 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
         val_tpl3.async_render_with_possible_json_value("call1")
         val_tpl3.async_render_with_possible_json_value("call2")
         assert template_state_calls.call_count == 1
+
+
+async def test_value_template_fails(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+
+    # test rendering a value fails
+    entity = MockEntity(entity_id="sensor.test")
+    entity.hass = hass
+    tpl = template.Template("{{ value_json.some_var * 2 }}")
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass, entity=entity)
+    with pytest.raises(TypeError):
+        val_tpl.async_render_with_possible_json_value('{"some_var": null }')
+    await hass.async_block_till_done()
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
+        "rendering template for entity 'sensor.test', "
+        "template: '{{ value_json.some_var * 2 }}'"
+    ) in caplog.text
+    caplog.clear()
+    with pytest.raises(TypeError):
+        val_tpl.async_render_with_possible_json_value(
+            '{"some_var": null }', default=100
+        )
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
+        "rendering template for entity 'sensor.test', "
+        "template: '{{ value_json.some_var * 2 }}', default value: 100 and payload: "
+        '{"some_var": null }'
+    ) in caplog.text
 
 
 async def test_service_call_without_topic_does_not_publish(
@@ -2053,7 +2085,9 @@ async def test_handle_message_callback(
         callbacks.append(args)
 
     mock_mqtt = await mqtt_mock_entry()
-    msg = ReceiveMessage("some-topic", b"test-payload", 1, False)
+    msg = ReceiveMessage(
+        "some-topic", b"test-payload", 1, False, "some-topic", datetime.now()
+    )
     mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 0)
     await mqtt.async_subscribe(hass, "some-topic", _callback)
     mqtt_client_mock.on_message(mock_mqtt, None, msg)
@@ -3866,3 +3900,44 @@ async def test_reload_config_entry(
     assert state.state == "manual2_update_after_reload"
     assert (state := hass.states.get("sensor.test_manual3")) is not None
     assert state.state is STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            "mqtt": [
+                {
+                    "sensor": {
+                        "name": "test",
+                        "state_topic": "test-topic",
+                    }
+                },
+            ]
+        }
+    ],
+)
+async def test_reload_with_invalid_config(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test reloading yaml config fails."""
+    await mqtt_mock_entry()
+    assert hass.states.get("sensor.test") is not None
+
+    # Reload with an invalid config and assert again
+    invalid_config = {"mqtt": "some_invalid_config"}
+    with patch(
+        "homeassistant.config.load_yaml_config_file", return_value=invalid_config
+    ):
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "mqtt",
+                SERVICE_RELOAD,
+                {},
+                blocking=True,
+            )
+        await hass.async_block_till_done()
+
+    # Test nothing changed as loading the config failed
+    assert hass.states.get("sensor.test") is not None

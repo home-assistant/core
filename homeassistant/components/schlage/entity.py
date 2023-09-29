@@ -2,11 +2,11 @@
 
 from pyschlage.lock import Lock
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import SchlageDataUpdateCoordinator
+from .coordinator import LockData, SchlageDataUpdateCoordinator
 
 
 class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
@@ -30,9 +30,14 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
         )
 
     @property
+    def _lock_data(self) -> LockData:
+        """Fetch the LockData from our coordinator."""
+        return self.coordinator.data.locks[self.device_id]
+
+    @property
     def _lock(self) -> Lock:
         """Fetch the Schlage lock from our coordinator."""
-        return self.coordinator.data.locks[self.device_id]
+        return self._lock_data.lock
 
     @property
     def available(self) -> bool:

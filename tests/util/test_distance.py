@@ -2,9 +2,7 @@
 
 import pytest
 
-from homeassistant.const import (
-    UnitOfLength,
-)
+from homeassistant.const import UnitOfLength
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.distance as distance_util
 

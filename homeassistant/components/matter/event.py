@@ -65,7 +65,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
         if feature_map & SwitchFeature.kMomentarySwitchRelease:
             event_types.append("short_release")
         if feature_map & SwitchFeature.kMomentarySwitchLongPress:
-            event_types.append("long_press_ongoing")
+            event_types.append("long_press")
             event_types.append("long_release")
         if feature_map & SwitchFeature.kMomentarySwitchMultiPress:
             event_types.append("multi_press_ongoing")

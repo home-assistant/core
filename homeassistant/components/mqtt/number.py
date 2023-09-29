@@ -42,7 +42,12 @@ from .const import (
     CONF_STATE_TOPIC,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -50,7 +55,6 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,17 +146,6 @@ class MqttNumber(MqttEntity, RestoreNumber):
     _command_template: Callable[[PublishPayloadType], PublishPayloadType]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT Number."""
-        RestoreNumber.__init__(self)
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""
@@ -161,7 +154,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._config = config
-        self._optimistic = config[CONF_OPTIMISTIC]
+        self._attr_assumed_state = config[CONF_OPTIMISTIC]
 
         self._command_template = MqttCommandTemplate(
             config.get(CONF_COMMAND_TEMPLATE), entity=self
@@ -183,6 +176,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_native_value"})
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             num_value: int | float | None
@@ -214,11 +208,10 @@ class MqttNumber(MqttEntity, RestoreNumber):
                 return
 
             self._attr_native_value = num_value
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
-            self._optimistic = True
+            self._attr_assumed_state = True
         else:
             self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
@@ -237,7 +230,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
-        if self._optimistic and (
+        if self._attr_assumed_state and (
             last_number_data := await self.async_get_last_number_data()
         ):
             self._attr_native_value = last_number_data.native_value
@@ -250,7 +243,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
             current_number = int(value)
         payload = self._command_template(current_number)
 
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._attr_native_value = current_number
             self.async_write_ha_state()
 
@@ -261,8 +254,3 @@ class MqttNumber(MqttEntity, RestoreNumber):
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
         )
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic

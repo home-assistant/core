@@ -7,10 +7,14 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    PERCENTAGE,
+    UnitOfEnergy,
+    UnitOfSpeed,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -39,6 +43,22 @@ SENSOR_TYPES = (
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="powerMeasurement",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="wind_speed",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
     ),
 )
 
@@ -75,3 +95,10 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
     def native_value(self):
         """Return the state."""
         return self._feature.native_value
+
+    @property
+    def last_reset(self):
+        """Return the time when the sensor was last reset, if implemented."""
+        native_implementation = getattr(self._feature, "last_reset", None)
+
+        return native_implementation or super().last_reset
