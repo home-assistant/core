@@ -36,7 +36,7 @@ async def test_legacy_migration(hass: HomeAssistant) -> None:
     """Test migration from yaml to config flow."""
     search_result_json = json.loads(load_fixture("waqi/search_result.json"))
     search_results = [
-        WAQISearchResult.parse_obj(search_result)
+        WAQISearchResult.from_dict(search_result)
         for search_result in search_result_json
     ]
     with patch(
@@ -44,7 +44,7 @@ async def test_legacy_migration(hass: HomeAssistant) -> None:
         return_value=search_results,
     ), patch(
         "aiowaqi.WAQIClient.get_by_station_number",
-        return_value=WAQIAirQuality.parse_obj(
+        return_value=WAQIAirQuality.from_dict(
             json.loads(load_fixture("waqi/air_quality_sensor.json"))
         ),
     ):
@@ -64,7 +64,7 @@ async def test_legacy_migration_already_imported(
     mock_config_entry.add_to_hass(hass)
     with patch(
         "aiowaqi.WAQIClient.get_by_station_number",
-        return_value=WAQIAirQuality.parse_obj(
+        return_value=WAQIAirQuality.from_dict(
             json.loads(load_fixture("waqi/air_quality_sensor.json"))
         ),
     ):
@@ -98,7 +98,7 @@ async def test_sensor(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -
     mock_config_entry.add_to_hass(hass)
     with patch(
         "aiowaqi.WAQIClient.get_by_station_number",
-        return_value=WAQIAirQuality.parse_obj(
+        return_value=WAQIAirQuality.from_dict(
             json.loads(load_fixture("waqi/air_quality_sensor.json"))
         ),
     ):
