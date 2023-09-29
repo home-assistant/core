@@ -1,17 +1,24 @@
 """Test ZHA repairs."""
 from collections.abc import Callable
+from http import HTTPStatus
 import logging
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 from universal_silabs_flasher.const import ApplicationType
 from universal_silabs_flasher.flasher import Flasher
 from zigpy.application import ControllerApplication
+import zigpy.backups
+from zigpy.exceptions import NetworkSettingsInconsistent
 
 from homeassistant.components.homeassistant_sky_connect import (
     DOMAIN as SKYCONNECT_DOMAIN,
 )
+from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.components.zha.core.const import DOMAIN
+from homeassistant.components.zha.repairs.network_settings_inconsistent import (
+    ISSUE_INCONSISTENT_NETWORK_SETTINGS,
+)
 from homeassistant.components.zha.repairs.wrong_silabs_firmware import (
     DISABLE_MULTIPAN_URL,
     ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
@@ -24,8 +31,10 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 SKYCONNECT_DEVICE = "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
 
@@ -234,3 +243,157 @@ async def test_probe_failure_exception_handling(caplog) -> None:
         await probe_silabs_firmware_type("/dev/ttyZigbee")
 
     assert "Failed to probe application type" in caplog.text
+
+
+async def test_inconsistent_settings_keep_new(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+    network_backup: zigpy.backups.NetworkBackup,
+) -> None:
+    """Test inconsistent ZHA network settings: keep new settings."""
+
+    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
+
+    config_entry.add_to_hass(hass)
+
+    new_state = network_backup.replace(
+        network_info=network_backup.network_info.replace(pan_id=0xBBBB)
+    )
+    old_state = network_backup
+
+    with patch(
+        "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
+        side_effect=NetworkSettingsInconsistent(
+            message="Network settings are inconsistent",
+            new_state=new_state,
+            old_state=old_state,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.state == ConfigEntryState.SETUP_ERROR
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    issue_registry = ir.async_get(hass)
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=ISSUE_INCONSISTENT_NETWORK_SETTINGS,
+    )
+
+    # The issue is created
+    assert issue is not None
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": DOMAIN, "issue_id": issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data["description_placeholders"]["diff"] == "- PAN ID: `0x2DB4` → `0xBBBB`"
+
+    mock_zigpy_connect.backups.add_backup = Mock()
+
+    resp = await client.post(
+        f"/api/repairs/issues/fix/{flow_id}",
+        json={"next_step_id": "use_new_settings"},
+    )
+    await hass.async_block_till_done()
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data["type"] == "create_entry"
+
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=ISSUE_INCONSISTENT_NETWORK_SETTINGS,
+        )
+        is None
+    )
+
+    assert mock_zigpy_connect.backups.add_backup.mock_calls == [call(new_state)]
+
+
+async def test_inconsistent_settings_restore_old(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+    network_backup: zigpy.backups.NetworkBackup,
+) -> None:
+    """Test inconsistent ZHA network settings: restore last backup."""
+
+    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
+
+    config_entry.add_to_hass(hass)
+
+    new_state = network_backup.replace(
+        network_info=network_backup.network_info.replace(pan_id=0xBBBB)
+    )
+    old_state = network_backup
+
+    with patch(
+        "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
+        side_effect=NetworkSettingsInconsistent(
+            message="Network settings are inconsistent",
+            new_state=new_state,
+            old_state=old_state,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.state == ConfigEntryState.SETUP_ERROR
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    issue_registry = ir.async_get(hass)
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=ISSUE_INCONSISTENT_NETWORK_SETTINGS,
+    )
+
+    # The issue is created
+    assert issue is not None
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": DOMAIN, "issue_id": issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data["description_placeholders"]["diff"] == "- PAN ID: `0x2DB4` → `0xBBBB`"
+
+    resp = await client.post(
+        f"/api/repairs/issues/fix/{flow_id}",
+        json={"next_step_id": "restore_old_settings"},
+    )
+    await hass.async_block_till_done()
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data["type"] == "create_entry"
+
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=ISSUE_INCONSISTENT_NETWORK_SETTINGS,
+        )
+        is None
+    )
+
+    assert mock_zigpy_connect.backups.restore_backup.mock_calls == [call(old_state)]

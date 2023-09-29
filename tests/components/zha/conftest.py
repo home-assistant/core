@@ -427,3 +427,74 @@ def speed_up_radio_mgr():
     """Speed up the radio manager connection time by removing delays."""
     with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.00001):
         yield
+
+
+@pytest.fixture
+def network_backup() -> zigpy.backups.NetworkBackup:
+    """Real ZHA network backup taken from an active instance."""
+    return zigpy.backups.NetworkBackup.from_dict(
+        {
+            "backup_time": "2022-11-16T03:16:49.427675+00:00",
+            "network_info": {
+                "extended_pan_id": "2f:73:58:bd:fe:78:91:11",
+                "pan_id": "2DB4",
+                "nwk_update_id": 0,
+                "nwk_manager_id": "0000",
+                "channel": 15,
+                "channel_mask": [
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    18,
+                    19,
+                    20,
+                    21,
+                    22,
+                    23,
+                    24,
+                    25,
+                    26,
+                ],
+                "security_level": 5,
+                "network_key": {
+                    "key": "4a:c7:9d:50:51:09:16:37:2e:34:66:c6:ed:9b:23:85",
+                    "tx_counter": 14131,
+                    "rx_counter": 0,
+                    "seq": 0,
+                    "partner_ieee": "ff:ff:ff:ff:ff:ff:ff:ff",
+                },
+                "tc_link_key": {
+                    "key": "5a:69:67:42:65:65:41:6c:6c:69:61:6e:63:65:30:39",
+                    "tx_counter": 0,
+                    "rx_counter": 0,
+                    "seq": 0,
+                    "partner_ieee": "84:ba:20:ff:fe:59:f5:ff",
+                },
+                "key_table": [],
+                "children": [],
+                "nwk_addresses": {"cc:cc:cc:ff:fe:e6:8e:ca": "1431"},
+                "stack_specific": {
+                    "ezsp": {"hashed_tclk": "e9bd3ac165233d95923613c608beb147"}
+                },
+                "metadata": {
+                    "ezsp": {
+                        "manufacturer": "",
+                        "board": "",
+                        "version": "7.1.3.0 build 0",
+                        "stack_version": 9,
+                        "can_write_custom_eui64": False,
+                    }
+                },
+                "source": "bellows@0.34.2",
+            },
+            "node_info": {
+                "nwk": "0000",
+                "ieee": "84:ba:20:ff:fe:59:f5:ff",
+                "logical_type": "coordinator",
+            },
+        }
+    )
