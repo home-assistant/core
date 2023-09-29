@@ -8,6 +8,7 @@ from homeassistant import config as hass_config, setup
 from homeassistant.components.trend.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
+import homeassistant.helpers.issue_registry as ir
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -68,6 +69,7 @@ class TestTrendBinarySensor:
                             "sample_duration": 10000,
                             "min_gradient": 1,
                             "max_samples": 25,
+                            "min_samples": 5,
                         }
                     },
                 }
@@ -76,24 +78,35 @@ class TestTrendBinarySensor:
         self.hass.block_till_done()
 
         now = dt_util.utcnow()
+
+        # add not enough states to trigger calculation
         for val in [10, 0, 20, 30]:
             with patch("homeassistant.util.dt.utcnow", return_value=now):
                 self.hass.states.set("sensor.test_state", val)
             self.hass.block_till_done()
             now += timedelta(seconds=2)
 
-        state = self.hass.states.get("binary_sensor.test_trend_sensor")
-        assert state.state == "on"
+        assert (
+            self.hass.states.get("binary_sensor.test_trend_sensor").state == "unknown"
+        )
 
-        # have to change state value, otherwise sample will lost
+        # add one more state to trigger gradient calculation
+        for val in [100]:
+            with patch("homeassistant.util.dt.utcnow", return_value=now):
+                self.hass.states.set("sensor.test_state", val)
+            self.hass.block_till_done()
+            now += timedelta(seconds=2)
+
+        assert self.hass.states.get("binary_sensor.test_trend_sensor").state == "on"
+
+        # add more states to trigger a downtrend
         for val in [0, 30, 1, 0]:
             with patch("homeassistant.util.dt.utcnow", return_value=now):
                 self.hass.states.set("sensor.test_state", val)
             self.hass.block_till_done()
             now += timedelta(seconds=2)
 
-        state = self.hass.states.get("binary_sensor.test_trend_sensor")
-        assert state.state == "off"
+        assert self.hass.states.get("binary_sensor.test_trend_sensor").state == "off"
 
     def test_down_using_trendline(self):
         """Test down trend using multiple samples and trendline calculation."""
@@ -434,10 +447,69 @@ async def test_restore_state(
         {
             "binary_sensor": {
                 "platform": "trend",
-                "sensors": {"test_trend_sensor": {"entity_id": "sensor.test_state"}},
+                "sensors": {
+                    "test_trend_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "sample_duration": 10000,
+                        "min_gradient": 1,
+                        "max_samples": 25,
+                        "min_samples": 5,
+                    }
+                },
             }
         },
     )
     await hass.async_block_till_done()
 
+    # restored sensor should match saved one
     assert hass.states.get("binary_sensor.test_trend_sensor").state == restored_state
+
+    now = dt_util.utcnow()
+
+    # add not enough samples to trigger calculation
+    for val in [10, 20, 30, 40]:
+        with patch("homeassistant.util.dt.utcnow", return_value=now):
+            hass.states.async_set("sensor.test_state", val)
+        await hass.async_block_till_done()
+        now += timedelta(seconds=2)
+
+    # state should match restored state as no calculation happened
+    assert hass.states.get("binary_sensor.test_trend_sensor").state == restored_state
+
+    # add more samples to trigger calculation
+    for val in [50, 60, 70, 80]:
+        with patch("homeassistant.util.dt.utcnow", return_value=now):
+            hass.states.async_set("sensor.test_state", val)
+        await hass.async_block_till_done()
+        now += timedelta(seconds=2)
+
+    # sensor should detect an upwards trend and turn on
+    assert hass.states.get("binary_sensor.test_trend_sensor").state == "on"
+
+
+async def test_issue_creation(hass: HomeAssistant) -> None:
+    """Test if issue gets created for miss-configuration."""
+
+    assert await setup.async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "trend",
+                "sensors": {
+                    "issue_test_trend_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "max_samples": 25,
+                        "min_samples": 30,
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="min_samples_larger_max_samples_issue_test_trend_sensor"
+    )
