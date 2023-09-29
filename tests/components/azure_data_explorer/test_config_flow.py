@@ -47,7 +47,7 @@ async def test_form(
 async def test_connection_error_KustoServiceError(
     hass,
     mock_execute_query,
-):
+) -> None:
     """Test we handle connection KustoServiceError."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -69,7 +69,7 @@ async def test_connection_error_KustoServiceError(
 async def test_connection_error_KustoAuthenticationError(
     hass,
     mock_execute_query,
-):
+) -> None:
     """Test we handle connection KustoAuthenticationError."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -91,7 +91,7 @@ async def test_connection_error_KustoAuthenticationError(
 async def test_connection_error_Exception(
     hass,
     mock_execute_query,
-):
+) -> None:
     """Test we handle connection KustoAuthenticationError."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -110,7 +110,7 @@ async def test_connection_error_Exception(
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_single_instance(hass):
+async def test_single_instance(hass) -> None:
     """Test uniqueness of username."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -128,7 +128,7 @@ async def test_single_instance(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_options_flow(hass, entry_managed):
+async def test_options_flow(hass, entry_managed) -> None:
     """Test options flow."""
     result = await hass.config_entries.options.async_init(entry_managed.entry_id)
 

@@ -91,14 +91,12 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
-        # self._data = user_input
 
         errors: dict = {}
         if user_input:
             errors = await self.validate_input(user_input)  # type: ignore[assignment]
             if not errors:
                 return self.async_create_entry(
-                    # Get the Cluster Name from the full url
                     data=user_input,
                     title=self.create_title(user_input[CONF_ADX_CLUSTER_INGEST_URI]),
                     options=DEFAULT_OPTIONS,

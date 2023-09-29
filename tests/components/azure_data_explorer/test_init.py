@@ -33,7 +33,7 @@ async def test_put_event_on_queue_with_managed_client(
     hass,
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
-):
+) -> None:
     # pylint: disable=protected-access
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
@@ -51,7 +51,7 @@ async def test_put_event_on_queue_with_managed_client_with_error_KustoServiceErr
     hass,
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
-):
+) -> None:
     # pylint: disable=protected-access
     """Test listening to events from Hass. and writing to ADX with managed client with error KustoServiceError."""
 
@@ -73,7 +73,7 @@ async def test_put_event_on_queue_with_managed_client_with_error_KustoAuthentica
     hass,
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
-):
+) -> None:
     # pylint: disable=protected-access
     """Test listening to events from Hass. and writing to ADX with managed client with error KustoAuthenticationError."""
 
@@ -95,7 +95,7 @@ async def test_put_event_on_queue_with_managed_client_with_error_Exception(
     hass,
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
-):
+) -> None:
     # pylint: disable=protected-access
     """Test listening to events from Hass. and writing to ADX with managed client with error Exception."""
 
@@ -117,7 +117,7 @@ async def test_put_event_on_queue_with_queueing_client(
     hass,
     entry_queued,
     mock_azure_data_explorer_QueuedIngestClient_ingest_data,
-):
+) -> None:
     # pylint: disable=protected-access
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
@@ -131,7 +131,7 @@ async def test_put_event_on_queue_with_queueing_client(
     mock_azure_data_explorer_QueuedIngestClient_ingest_data.assert_called_once()
 
 
-async def test_import(hass):
+async def test_import(hass) -> None:
     """Test the popping of the filter and further import of the config."""
     config = {
         DOMAIN: {
@@ -149,7 +149,7 @@ async def test_import(hass):
     assert await async_setup_component(hass, DOMAIN, config)
 
 
-async def test_filter_only_config(hass):
+async def test_filter_only_config(hass) -> None:
     """Test the popping of the filter and further import of the config."""
     config = {
         DOMAIN: {
@@ -170,7 +170,7 @@ async def test_unload_entry(
     hass,
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
-):
+) -> None:
     """Test being able to unload an entry.
 
     Queue should be empty, so adding events to the batch should not be called,
@@ -182,7 +182,9 @@ async def test_unload_entry(
     assert entry_managed.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_failed_test_connection_KustoServiceError(hass, mock_execute_query):
+async def test_failed_test_connection_KustoServiceError(
+    hass, mock_execute_query
+) -> None:
     """Test Error when no getting proper connection with KustoServiceError."""
 
     mock_execute_query.side_effect = KustoServiceError("test")
@@ -201,7 +203,7 @@ async def test_failed_test_connection_KustoServiceError(hass, mock_execute_query
 
 async def test_failed_test_connection_KustoAuthenticationError(
     hass, mock_execute_query
-):
+) -> None:
     """Test Error when no getting proper connection with KustoAuthenticationError."""
     entry = MockConfigEntry(
         domain=azure_data_explorer.DOMAIN,
@@ -215,7 +217,7 @@ async def test_failed_test_connection_KustoAuthenticationError(
     assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
-async def test_failed_test_connection_Exception(hass, mock_execute_query):
+async def test_failed_test_connection_Exception(hass, mock_execute_query) -> None:
     """Test Error when no getting proper connection with Exception."""
     entry = MockConfigEntry(
         domain=azure_data_explorer.DOMAIN,
@@ -233,7 +235,7 @@ async def test_late_event(
     hass,
     entry_with_one_event,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
-):
+) -> None:
     """Test the check on late events."""
     with patch(
         f"{AZURE_DATA_EXPLORER_PATH}.utcnow",
@@ -321,7 +323,7 @@ async def test_filter(
     entry_managed,
     tests,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
-):
+) -> None:
     """Test different filters.
 
     Filter_schema is also a fixture which is replaced by the filter_schema
@@ -349,7 +351,7 @@ async def test_Mailformed_event(
     hass,
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
-):
+) -> None:
     # pylint: disable=protected-access
     """Test listening to events from Hass. and getting an event with a newline in the state."""
 
@@ -357,10 +359,6 @@ async def test_Mailformed_event(
 
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL])
-    )
-
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.side_effect = (
-        Exception("test")
     )
 
     await hass.async_block_till_done()
