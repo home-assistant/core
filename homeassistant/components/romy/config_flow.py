@@ -50,24 +50,32 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data = self.discovery_schema or _schema_with_defaults()
 
         if user_input is not None:
-                ## Save the user input and finish the setup
-                self.host = user_input["host"]
-                self.name = user_input["name"]
-                if "password" in user_input:
-                    self.password = user_input["password"]
+            # Save the user input and finish the setup
+            self.host = user_input["host"]
+            self.name = user_input["name"]
+            if "password" in user_input:
+                self.password = user_input["password"]
 
-                new_romy = await romy.create_romy(self.host, self.password)
+            new_romy = await romy.create_romy(self.host, self.password)
 
-                if not new_romy.is_initialized:
-                    errors[CONF_HOST] = "cannot_connect"
+            # get robots name in case none was provided
+            if self.name == "":
+                self.name = new_romy.name
+                user_input["name"] = new_romy.name
 
-                if not new_romy.is_unlocked:
-                    errors[CONF_PASSWORD] = "invalid_auth"
+            if not new_romy.is_initialized:
+                errors[CONF_HOST] = "cannot_connect"
 
-                if not errors:
-                    return self.async_create_entry(
-                        title=user_input["name"], data=user_input
-                    )
+            if not new_romy.is_unlocked:
+                data = _schema_with_defaults(
+                    host=self.host, name=self.name, requires_password=True
+                )
+                errors[CONF_PASSWORD] = "invalid_auth"
+
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input["name"], data=user_input
+                )
 
         return self.async_show_form(step_id="user", data_schema=data, errors=errors)
 
@@ -91,7 +99,7 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    "name": f"{unique_id.split('-')[1]} ({discovery_info.host})"
+                    "name": f"{discovery_info.name} ({discovery_info.host} / {unique_id})"
                 },
                 "configuration_url": f"http://{discovery_info.host}:{new_discovered_romy.port}",
             }
