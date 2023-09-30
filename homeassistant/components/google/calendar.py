@@ -36,7 +36,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity import generate_entity_id
@@ -383,7 +383,6 @@ class GoogleCalendarEntity(
         self._event: CalendarEvent | None = None
         self._attr_name = data[CONF_NAME].capitalize()
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
-        self._offset_value: timedelta | None = None
         self.entity_id = entity_id
         self._attr_unique_id = unique_id
         self._attr_entity_registry_enabled_default = entity_enabled
@@ -393,17 +392,6 @@ class GoogleCalendarEntity(
             )
 
     @property
-    def should_poll(self) -> bool:
-        """Enable polling for the entity.
-
-        The coordinator is not used by multiple entities, but instead
-        is used to poll the calendar API at a separate interval from the
-        entity state updates itself which happen more frequently (e.g. to
-        fire an alarm when the next event starts).
-        """
-        return True
-
-    @property
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the device state attributes."""
         return {"offset_reached": self.offset_reached}
@@ -411,16 +399,16 @@ class GoogleCalendarEntity(
     @property
     def offset_reached(self) -> bool:
         """Return whether or not the event offset was reached."""
-        if self._event and self._offset_value:
-            return is_offset_reached(
-                self._event.start_datetime_local, self._offset_value
-            )
+        (event, offset_value) = self._event_with_offset()
+        if event is not None and offset_value is not None:
+            return is_offset_reached(event.start_datetime_local, offset_value)
         return False
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        return self._event
+        (event, _) = self._event_with_offset()
+        return event
 
     def _event_filter(self, event: Event) -> bool:
         """Return True if the event is visible."""
@@ -435,12 +423,10 @@ class GoogleCalendarEntity(
         # We do not ask for an update with async_add_entities()
         # because it will update disabled entities. This is started as a
         # task to let if sync in the background without blocking startup
-        async def refresh() -> None:
-            await self.coordinator.async_request_refresh()
-            self._apply_coordinator_update()
-
         self.coordinator.config_entry.async_create_background_task(
-            self.hass, refresh(), "google.calendar-refresh"
+            self.hass,
+            self.coordinator.async_request_refresh(),
+            "google.calendar-refresh",
         )
 
     async def async_get_events(
@@ -453,8 +439,10 @@ class GoogleCalendarEntity(
             for event in filter(self._event_filter, result_items)
         ]
 
-    def _apply_coordinator_update(self) -> None:
-        """Copy state from the coordinator to this entity."""
+    def _event_with_offset(
+        self,
+    ) -> tuple[CalendarEvent | None, timedelta | None]:
+        """Get the calendar event and offset if any."""
         if api_event := next(
             filter(
                 self._event_filter,
@@ -462,27 +450,13 @@ class GoogleCalendarEntity(
             ),
             None,
         ):
-            self._event = _get_calendar_event(api_event)
-            (self._event.summary, self._offset_value) = extract_offset(
-                self._event.summary, self._offset
-            )
-        else:
-            self._event = None
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._apply_coordinator_update()
-        super()._handle_coordinator_update()
-
-    async def async_update(self) -> None:
-        """Disable update behavior.
-
-        This relies on the coordinator callback update to write home assistant
-        state with the next calendar event. This update is a no-op as no new data
-        fetch is needed to evaluate the state to determine if the next event has
-        started, handled by CalendarEntity parent class.
-        """
+            event = _get_calendar_event(api_event)
+            if self._offset:
+                (event.summary, offset_value) = extract_offset(
+                    event.summary, self._offset
+                )
+            return event, offset_value
+        return None, None
 
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""

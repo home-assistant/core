@@ -44,6 +44,10 @@ from .const import (
     LOGGER,
     MAX_PUSH_UPDATE_FAILURES,
     MODELS_SUPPORTING_LIGHT_EFFECTS,
+    OTA_BEGIN,
+    OTA_ERROR,
+    OTA_PROGRESS,
+    OTA_SUCCESS,
     PUSH_UPDATE_ISSUE_ID,
     REST_SENSORS_UPDATE_INTERVAL,
     RPC_INPUTS_EVENTS_TYPES,
@@ -166,6 +170,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         self._last_input_events_count: dict = {}
         self._last_target_temp: float | None = None
         self._push_update_failures: int = 0
+        self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
 
         entry.async_on_unload(
             self.async_add_listener(self._async_device_updates_handler)
@@ -173,6 +178,19 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
+
+    @callback
+    def async_subscribe_input_events(
+        self, input_event_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to input events."""
+
+        def _unsubscribe() -> None:
+            self._input_event_listeners.remove(input_event_callback)
+
+        self._input_event_listeners.append(input_event_callback)
+
+        return _unsubscribe
 
     @callback
     def _async_device_updates_handler(self) -> None:
@@ -238,6 +256,10 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 continue
 
             if event_type in INPUTS_EVENTS_DICT:
+                for event_callback in self._input_event_listeners:
+                    event_callback(
+                        {"channel": channel, "event": INPUTS_EVENTS_DICT[event_type]}
+                    )
                 self.hass.bus.async_fire(
                     EVENT_SHELLY_CLICK,
                     {
@@ -384,6 +406,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._disconnected_callbacks: list[CALLBACK_TYPE] = []
         self._connection_lock = asyncio.Lock()
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
+        self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
+        self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
 
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
@@ -407,6 +431,32 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self.update_interval = timedelta(seconds=update_interval)
 
         return True
+
+    @callback
+    def async_subscribe_ota_events(
+        self, ota_event_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to OTA events."""
+
+        def _unsubscribe() -> None:
+            self._ota_event_listeners.remove(ota_event_callback)
+
+        self._ota_event_listeners.append(ota_event_callback)
+
+        return _unsubscribe
+
+    @callback
+    def async_subscribe_input_events(
+        self, input_event_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to input events."""
+
+        def _unsubscribe() -> None:
+            self._input_event_listeners.remove(input_event_callback)
+
+        self._input_event_listeners.append(input_event_callback)
+
+        return _unsubscribe
 
     @callback
     def async_subscribe_events(
@@ -451,6 +501,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 )
                 self.hass.async_create_task(self._debounced_reload.async_call())
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
+                for event_callback in self._input_event_listeners:
+                    event_callback(event)
                 self.hass.bus.async_fire(
                     EVENT_SHELLY_CLICK,
                     {
@@ -461,6 +513,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                         ATTR_GENERATION: 2,
                     },
                 )
+            elif event_type in (OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS):
+                for event_callback in self._ota_event_listeners:
+                    event_callback(event)
 
     async def _async_update_data(self) -> None:
         """Fetch data."""

@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import (
 
 from .const import DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
+from .models import IsyData
 from .services import (
     SERVICE_DELETE_USER_CODE_SCHEMA,
     SERVICE_DELETE_ZWAVE_LOCK_USER_CODE,
@@ -49,7 +50,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY lock platform."""
-    isy_data = hass.data[DOMAIN][entry.entry_id]
+    isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
     devices: dict[str, DeviceInfo] = isy_data.devices
     entities: list[ISYLockEntity | ISYLockProgramEntity] = []
     for node in isy_data.nodes[Platform.LOCK]:

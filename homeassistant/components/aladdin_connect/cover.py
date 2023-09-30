@@ -10,7 +10,7 @@ from homeassistant.components.cover import CoverDeviceClass, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -75,11 +75,13 @@ class AladdinDevice(CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Issue close command to cover."""
-        await self._acc.close_door(self._device_id, self._number)
+        if not await self._acc.close_door(self._device_id, self._number):
+            raise HomeAssistantError("Aladdin Connect API failed to close the cover")
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Issue open command to cover."""
-        await self._acc.open_door(self._device_id, self._number)
+        if not await self._acc.open_door(self._device_id, self._number):
+            raise HomeAssistantError("Aladdin Connect API failed to open the cover")
 
     async def async_update(self) -> None:
         """Update status of cover."""

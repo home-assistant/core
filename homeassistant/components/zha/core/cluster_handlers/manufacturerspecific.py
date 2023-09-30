@@ -5,7 +5,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
-from zigpy.exceptions import ZigbeeException
 import zigpy.zcl
 
 from homeassistant.core import callback
@@ -351,12 +350,7 @@ class IkeaAirPurifierClusterHandler(ClusterHandler):
 
     async def async_set_speed(self, value) -> None:
         """Set the speed of the fan."""
-
-        try:
-            await self.cluster.write_attributes({"fan_mode": value})
-        except ZigbeeException as ex:
-            self.error("Could not set speed: %s", ex)
-            return
+        await self.write_attributes_safe({"fan_mode": value})
 
     async def async_update(self) -> None:
         """Retrieve latest state."""

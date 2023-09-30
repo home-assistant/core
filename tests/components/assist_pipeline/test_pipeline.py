@@ -8,15 +8,16 @@ from homeassistant.components.assist_pipeline.const import DOMAIN
 from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
     STORAGE_VERSION,
+    STORAGE_VERSION_MINOR,
     Pipeline,
     PipelineData,
     PipelineStorageCollection,
+    PipelineStore,
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.storage import Store
 from homeassistant.setup import async_setup_component
 
 from . import MANY_LANGUAGES
@@ -45,6 +46,8 @@ async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
             "tts_engine": "tts_engine_1",
             "tts_language": "language_1",
             "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": "wakeword_entity_1",
+            "wake_word_id": "wakeword_id_1",
         },
         {
             "conversation_engine": "conversation_engine_2",
@@ -56,6 +59,8 @@ async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
             "tts_engine": "tts_engine_2",
             "tts_language": "language_2",
             "tts_voice": "The Voice",
+            "wake_word_entity": "wakeword_entity_2",
+            "wake_word_id": "wakeword_id_2",
         },
         {
             "conversation_engine": "conversation_engine_3",
@@ -67,6 +72,8 @@ async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
             "tts_engine": None,
             "tts_language": None,
             "tts_voice": None,
+            "wake_word_entity": "wakeword_entity_3",
+            "wake_word_id": "wakeword_id_3",
         },
     ]
     pipeline_ids = []
@@ -81,7 +88,11 @@ async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
     await store1.async_delete_item(pipeline_ids[1])
     assert len(store1.data) == 3
 
-    store2 = PipelineStorageCollection(Store(hass, STORAGE_VERSION, STORAGE_KEY))
+    store2 = PipelineStorageCollection(
+        PipelineStore(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+        )
+    )
     await flush_store(store1.store)
     await store2.async_load()
 
@@ -96,6 +107,71 @@ async def test_loading_pipelines_from_storage(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test loading stored pipelines on start."""
+    hass_storage[STORAGE_KEY] = {
+        "version": STORAGE_VERSION,
+        "minor_version": STORAGE_VERSION_MINOR,
+        "key": "assist_pipeline.pipelines",
+        "data": {
+            "items": [
+                {
+                    "conversation_engine": "conversation_engine_1",
+                    "conversation_language": "language_1",
+                    "id": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
+                    "language": "language_1",
+                    "name": "name_1",
+                    "stt_engine": "stt_engine_1",
+                    "stt_language": "language_1",
+                    "tts_engine": "tts_engine_1",
+                    "tts_language": "language_1",
+                    "tts_voice": "Arnold Schwarzenegger",
+                    "wake_word_entity": "wakeword_entity_1",
+                    "wake_word_id": "wakeword_id_1",
+                },
+                {
+                    "conversation_engine": "conversation_engine_2",
+                    "conversation_language": "language_2",
+                    "id": "01GX8ZWBAQTKFQNK4W7Q4CTRCX",
+                    "language": "language_2",
+                    "name": "name_2",
+                    "stt_engine": "stt_engine_2",
+                    "stt_language": "language_2",
+                    "tts_engine": "tts_engine_2",
+                    "tts_language": "language_2",
+                    "tts_voice": "The Voice",
+                    "wake_word_entity": "wakeword_entity_2",
+                    "wake_word_id": "wakeword_id_2",
+                },
+                {
+                    "conversation_engine": "conversation_engine_3",
+                    "conversation_language": "language_3",
+                    "id": "01GX8ZWBAQSV1HP3WGJPFWEJ8J",
+                    "language": "language_3",
+                    "name": "name_3",
+                    "stt_engine": None,
+                    "stt_language": None,
+                    "tts_engine": None,
+                    "tts_language": None,
+                    "tts_voice": None,
+                    "wake_word_entity": "wakeword_entity_3",
+                    "wake_word_id": "wakeword_id_3",
+                },
+            ],
+            "preferred_item": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
+        },
+    }
+
+    assert await async_setup_component(hass, "assist_pipeline", {})
+
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    store = pipeline_data.pipeline_store
+    assert len(store.data) == 3
+    assert store.async_get_preferred_item() == "01GX8ZWBAQYWNB1XV3EXEZ75DY"
+
+
+async def test_migrate_pipeline_store(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test loading stored pipelines from an older version."""
     hass_storage[STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
@@ -173,6 +249,8 @@ async def test_create_default_pipeline(
         tts_engine="test",
         tts_language="en-US",
         tts_voice="james_earl_jones",
+        wake_word_entity=None,
+        wake_word_id=None,
     )
 
 
@@ -213,6 +291,8 @@ async def test_get_pipelines(hass: HomeAssistant) -> None:
             tts_engine=None,
             tts_language=None,
             tts_voice=None,
+            wake_word_entity=None,
+            wake_word_id=None,
         )
     ]
 
@@ -258,6 +338,8 @@ async def test_default_pipeline_no_stt_tts(
         tts_engine=None,
         tts_language=None,
         tts_voice=None,
+        wake_word_entity=None,
+        wake_word_id=None,
     )
 
 
@@ -318,6 +400,8 @@ async def test_default_pipeline(
         tts_engine="test",
         tts_language=tts_language,
         tts_voice=None,
+        wake_word_entity=None,
+        wake_word_id=None,
     )
 
 
@@ -347,6 +431,8 @@ async def test_default_pipeline_unsupported_stt_language(
         tts_engine="test",
         tts_language="en-US",
         tts_voice="james_earl_jones",
+        wake_word_entity=None,
+        wake_word_id=None,
     )
 
 
@@ -376,6 +462,8 @@ async def test_default_pipeline_unsupported_tts_language(
         tts_engine=None,
         tts_language=None,
         tts_voice=None,
+        wake_word_entity=None,
+        wake_word_id=None,
     )
 
 
@@ -424,4 +512,6 @@ async def test_default_pipeline_cloud(
         tts_engine="cloud",
         tts_language="en-US",
         tts_voice="james_earl_jones",
+        wake_word_entity=None,
+        wake_word_id=None,
     )

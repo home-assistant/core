@@ -29,8 +29,11 @@ from homeassistant.components.assist_pipeline import (
     select as pipeline_select,
 )
 from homeassistant.components.assist_pipeline.vad import (
+    AudioBuffer,
     VadSensitivity,
+    VoiceActivityDetector,
     VoiceCommandSegmenter,
+    WebRtcVad,
 )
 from homeassistant.const import __version__
 from homeassistant.core import Context, HomeAssistant
@@ -225,11 +228,13 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         try:
             # Wait for speech before starting pipeline
             segmenter = VoiceCommandSegmenter(silence_seconds=self.silence_seconds)
+            vad = WebRtcVad()
             chunk_buffer: deque[bytes] = deque(
                 maxlen=self.buffered_chunks_before_speech,
             )
             speech_detected = await self._wait_for_speech(
                 segmenter,
+                vad,
                 chunk_buffer,
             )
             if not speech_detected:
@@ -243,6 +248,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 try:
                     async for chunk in self._segment_audio(
                         segmenter,
+                        vad,
                         chunk_buffer,
                     ):
                         yield chunk
@@ -306,6 +312,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
     async def _wait_for_speech(
         self,
         segmenter: VoiceCommandSegmenter,
+        vad: VoiceActivityDetector,
         chunk_buffer: MutableSequence[bytes],
     ):
         """Buffer audio chunks until speech is detected.
@@ -317,12 +324,18 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         async with asyncio.timeout(self.audio_timeout):
             chunk = await self._audio_queue.get()
 
+        assert vad.samples_per_chunk is not None
+        vad_buffer = AudioBuffer(vad.samples_per_chunk * WIDTH)
+
         while chunk:
             chunk_buffer.append(chunk)
 
-            segmenter.process(chunk)
+            segmenter.process_with_vad(chunk, vad, vad_buffer)
             if segmenter.in_command:
                 # Buffer until command starts
+                if len(vad_buffer) > 0:
+                    chunk_buffer.append(vad_buffer.bytes())
+
                 return True
 
             async with asyncio.timeout(self.audio_timeout):
@@ -333,6 +346,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
     async def _segment_audio(
         self,
         segmenter: VoiceCommandSegmenter,
+        vad: VoiceActivityDetector,
         chunk_buffer: Sequence[bytes],
     ) -> AsyncIterable[bytes]:
         """Yield audio chunks until voice command has finished."""
@@ -345,8 +359,11 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         async with asyncio.timeout(self.audio_timeout):
             chunk = await self._audio_queue.get()
 
+        assert vad.samples_per_chunk is not None
+        vad_buffer = AudioBuffer(vad.samples_per_chunk * WIDTH)
+
         while chunk:
-            if not segmenter.process(chunk):
+            if not segmenter.process_with_vad(chunk, vad, vad_buffer):
                 # Voice command is finished
                 break
 

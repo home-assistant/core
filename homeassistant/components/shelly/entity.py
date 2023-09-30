@@ -321,8 +321,6 @@ class RestEntityDescription(EntityDescription):
 class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     """Helper class to represent a block entity."""
 
-    _attr_has_entity_name = True
-
     def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
@@ -334,6 +332,7 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         )
         self._attr_unique_id = f"{coordinator.mac}-{block.description}"
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
         self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
@@ -361,8 +360,6 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
 class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
     """Helper class to represent a rpc entity."""
 
-    _attr_has_entity_name = True
-
     def __init__(self, coordinator: ShellyRpcCoordinator, key: str) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
@@ -379,6 +376,7 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Device status by entity key."""
         return cast(dict, self.coordinator.device.status[self.key])
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
         self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
@@ -466,7 +464,6 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     """Class to load info from REST."""
 
     entity_description: RestEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -556,7 +553,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
     """Represent a shelly sleeping block attribute entity."""
 
-    # pylint: disable=super-init-not-called
+    # pylint: disable-next=super-init-not-called
     def __init__(
         self,
         coordinator: ShellyBlockCoordinator,
@@ -630,7 +627,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
 
     entity_description: RpcEntityDescription
 
-    # pylint: disable=super-init-not-called
+    # pylint: disable-next=super-init-not-called
     def __init__(
         self,
         coordinator: ShellyRpcCoordinator,

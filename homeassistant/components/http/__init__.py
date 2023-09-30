@@ -318,7 +318,7 @@ class HomeAssistantHTTP:
         # By default aiohttp does a linear search for routing rules,
         # we have a lot of routes, so use a dict lookup with a fallback
         # to the linear search.
-        self.app._router = FastUrlDispatcher()  # pylint: disable=protected-access
+        self.app._router = FastUrlDispatcher()
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate

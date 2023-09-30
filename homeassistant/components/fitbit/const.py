@@ -1,16 +1,12 @@
 """Constants for the Fitbit platform."""
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Final
 
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    UnitOfLength,
-    UnitOfMass,
-    UnitOfTime,
-    UnitOfVolume,
-)
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+
+DOMAIN: Final = "fitbit"
 
 ATTR_ACCESS_TOKEN: Final = "access_token"
 ATTR_REFRESH_TOKEN: Final = "refresh_token"
@@ -41,46 +37,31 @@ DEFAULT_CONFIG: Final[dict[str, str]] = {
 }
 DEFAULT_CLOCK_FORMAT: Final = "24H"
 
-
-FITBIT_MEASUREMENTS: Final[dict[str, dict[str, str]]] = {
-    "en_US": {
-        ATTR_DURATION: UnitOfTime.MILLISECONDS,
-        ATTR_DISTANCE: UnitOfLength.MILES,
-        ATTR_ELEVATION: UnitOfLength.FEET,
-        ATTR_HEIGHT: UnitOfLength.INCHES,
-        ATTR_WEIGHT: UnitOfMass.POUNDS,
-        ATTR_BODY: UnitOfLength.INCHES,
-        ATTR_LIQUIDS: UnitOfVolume.FLUID_OUNCES,
-        ATTR_BLOOD_GLUCOSE: f"{UnitOfMass.MILLIGRAMS}/dL",
-        ATTR_BATTERY: "",
-    },
-    "en_GB": {
-        ATTR_DURATION: UnitOfTime.MILLISECONDS,
-        ATTR_DISTANCE: UnitOfLength.KILOMETERS,
-        ATTR_ELEVATION: UnitOfLength.METERS,
-        ATTR_HEIGHT: UnitOfLength.CENTIMETERS,
-        ATTR_WEIGHT: UnitOfMass.STONES,
-        ATTR_BODY: UnitOfLength.CENTIMETERS,
-        ATTR_LIQUIDS: UnitOfVolume.MILLILITERS,
-        ATTR_BLOOD_GLUCOSE: "mmol/L",
-        ATTR_BATTERY: "",
-    },
-    "metric": {
-        ATTR_DURATION: UnitOfTime.MILLISECONDS,
-        ATTR_DISTANCE: UnitOfLength.KILOMETERS,
-        ATTR_ELEVATION: UnitOfLength.METERS,
-        ATTR_HEIGHT: UnitOfLength.CENTIMETERS,
-        ATTR_WEIGHT: UnitOfMass.KILOGRAMS,
-        ATTR_BODY: UnitOfLength.CENTIMETERS,
-        ATTR_LIQUIDS: UnitOfVolume.MILLILITERS,
-        ATTR_BLOOD_GLUCOSE: "mmol/L",
-        ATTR_BATTERY: "",
-    },
-}
-
 BATTERY_LEVELS: Final[dict[str, int]] = {
     "High": 100,
     "Medium": 50,
     "Low": 20,
     "Empty": 0,
 }
+
+
+class FitbitUnitSystem(StrEnum):
+    """Fitbit unit system set when sending requests to the Fitbit API.
+
+    This is used as a header to tell the Fitbit API which type of units to return.
+    https://dev.fitbit.com/build/reference/web-api/developer-guide/application-design/#Units
+
+    Prefer to leave unset for newer configurations to use the Home Assistant default units.
+    """
+
+    LEGACY_DEFAULT = "default"
+    """When set, will use an appropriate default using a legacy algorithm."""
+
+    METRIC = "metric"
+    """Use metric units."""
+
+    EN_US = "en_US"
+    """Use United States units."""
+
+    EN_GB = "en_GB"
+    """Use United Kingdom units."""

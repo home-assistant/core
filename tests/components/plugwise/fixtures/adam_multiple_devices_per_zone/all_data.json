@@ -95,6 +95,12 @@
         "temperature_difference": -0.4,
         "valve_position": 0.0
       },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
+      },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A17"
     },
@@ -122,6 +128,12 @@
         "battery": 37,
         "setpoint": 15.0,
         "temperature": 17.2
+      },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
       },
       "thermostat": {
         "lower_bound": 0.0,
@@ -200,6 +212,12 @@
         "temperature_difference": -0.2,
         "valve_position": 0.0
       },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
+      },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A09"
     },
@@ -216,6 +234,12 @@
         "temperature": 26.0,
         "temperature_difference": 3.5,
         "valve_position": 100
+      },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
       },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A02"
@@ -244,6 +268,12 @@
         "battery": 34,
         "setpoint": 21.5,
         "temperature": 20.9
+      },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
       },
       "thermostat": {
         "lower_bound": 0.0,
@@ -289,6 +319,12 @@
         "temperature_difference": 0.1,
         "valve_position": 0.0
       },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
+      },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A10"
     },
@@ -316,6 +352,12 @@
         "battery": 67,
         "setpoint": 13.0,
         "temperature": 16.5
+      },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
       },
       "thermostat": {
         "lower_bound": 0.0,
@@ -353,6 +395,12 @@
         "temperature_difference": 0.0,
         "valve_position": 0.0
       },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
+      },
       "thermostat": {
         "lower_bound": 0.0,
         "resolution": 0.01,
@@ -386,6 +434,12 @@
         "battery": 92,
         "setpoint": 14.0,
         "temperature": 18.9
+      },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
       },
       "thermostat": {
         "lower_bound": 0.0,
