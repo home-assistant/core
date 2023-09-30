@@ -140,7 +140,7 @@ class WeatherKitWeather(
     ) -> None:
         """Initialize the platform with a coordinator."""
         super().__init__(coordinator)
-        WeatherKitEntity.__init__(self, coordinator)
+        WeatherKitEntity.__init__(self, coordinator, unique_id_suffix=None)
 
     @property
     def supported_features(self) -> WeatherEntityFeature:
