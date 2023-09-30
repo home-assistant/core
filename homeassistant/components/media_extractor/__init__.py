@@ -69,9 +69,16 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         youtube_dl = YoutubeDL(
             {"quiet": True, "logger": _LOGGER, "format": call.data[ATTR_FORMAT_QUERY]}
         )
-        result = youtube_dl.extract_info(
-            call.data[ATTR_URL], download=False, process=False
-        )
+
+        def extract_info() -> dict[str, Any]:
+            return cast(
+                dict[str, Any],
+                youtube_dl.extract_info(
+                    call.data[ATTR_URL], download=False, process=False
+                ),
+            )
+
+        result = await hass.async_add_executor_job(extract_info)
         if "entries" in result:
             _LOGGER.warning("Playlists are not supported, looking for the first video")
             entries = list(result["entries"])
