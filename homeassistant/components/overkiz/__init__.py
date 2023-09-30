@@ -178,7 +178,7 @@ async def _async_migrate_entries(
                     new_unique_id,
                     existing_entity_id,
                 )
-                entity_registry.async_remove(existing_entity_id)
+                entity_registry.async_remove(entry.unique_id)
 
                 return None
 
