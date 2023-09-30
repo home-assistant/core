@@ -79,9 +79,9 @@ def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> N
 
     async def set_breeze(call: ServiceCall) -> None:
         """Configure breeze feature."""
-        level = call.data.get("breeze_level")
-        temperature = call.data.get("temperature")
-        activated = call.data.get("activate")
+        level = call.data["breeze_level"]
+        temperature = call.data["temperature"]
+        activated = call.data["activate"]
 
         await hass.async_add_executor_job(
             renson_api.set_breeze, level, temperature, activated
