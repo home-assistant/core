@@ -96,8 +96,8 @@ def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> N
 
     async def set_pollution_settings(call: ServiceCall) -> None:
         """Configure pollutions settings."""
-        day = call.data.get("day_pollution_level")
-        night = call.data.get("night_pollution_level")
+        day = call.data["day_pollution_level"]
+        night = call.data["night_pollution_level"]
         humidity_control = call.data.get("humidity_control")
         airquality_control = call.data.get("airquality_control")
         co2_control = call.data.get("co2_control")
