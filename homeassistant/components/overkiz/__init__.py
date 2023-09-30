@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from aiohttp import ClientError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.const import SUPPORTED_SERVERS
-from pyoverkiz.enums import OverkizState
+from pyoverkiz.enums import OverkizState, UIClass, UIWidget
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
@@ -159,10 +159,24 @@ async def _async_migrate_entries(
     def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
         # Python 3.11 treats (str, Enum) and StrEnum in a different way
         # Since pyOverkiz switched to StrEnum, we need to rewrite the unique ids once to the new style
+        #
         # io://xxxx-xxxx-xxxx/3541212-OverkizState.CORE_DISCRETE_RSSI_LEVEL -> io://xxxx-xxxx-xxxx/3541212-core:DiscreteRSSILevelState
-        if (key := entry.unique_id.split("-")[-1]).startswith("OverkizState"):
+        # internal://xxxx-xxxx-xxxx/alarm/0-UIWidget.TSKALARM_CONTROLLER -> internal://xxxx-xxxx-xxxx/alarm/0-TSKAlarmController
+        # io://xxxx-xxxx-xxxx/xxxxxxx-UIClass.ON_OFF -> io://xxxx-xxxx-xxxx/xxxxxxx-OnOff
+        if (key := entry.unique_id.split("-")[-1]).startswith(
+            ("OverkizState", "UIWidget", "UIClass")
+        ):
             state = key.split(".")[1]
-            new_unique_id = entry.unique_id.replace(key, OverkizState[state])
+            new_key = ""
+
+            if key.startswith("UIClass"):
+                new_key = UIClass[state]
+            elif key.startswith("UIWidget"):
+                new_key = UIWidget[state]
+            else:
+                new_key = OverkizState[state]
+
+            new_unique_id = entry.unique_id.replace(key, new_key)
 
             LOGGER.debug(
                 "Migrating entity '%s' unique_id from '%s' to '%s'",
