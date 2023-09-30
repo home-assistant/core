@@ -119,9 +119,3 @@ class Tami4EdgeSensorEntity(
         )
         self.async_write_ha_state()
 
-    @property
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        return super().available and hasattr(
-            self.coordinator.data, self.entity_description.key
-        )
