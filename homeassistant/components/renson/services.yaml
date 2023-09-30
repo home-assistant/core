@@ -6,7 +6,7 @@ set_timer_level:
       default: "level1"
       selector:
         select:
-          translation_key: "fan_setting"
+          translation_key: "level_setting"
           options:
             - "level1"
             - "level2"
@@ -34,7 +34,7 @@ set_breeze:
       default: "level3"
       selector:
         select:
-          translation_key: "fan_setting"
+          translation_key: "level_setting"
           options:
             - "level1"
             - "level2"
@@ -83,7 +83,7 @@ set_pollution_settings:
       default: "level3"
       selector:
         select:
-          translation_key: "fan_setting"
+          translation_key: "level_setting"
           options:
             - "level1"
             - "level2"
@@ -95,7 +95,7 @@ set_pollution_settings:
       default: "level2"
       selector:
         select:
-          translation_key: "fan_setting"
+          translation_key: "level_setting"
           options:
             - "level1"
             - "level2"
