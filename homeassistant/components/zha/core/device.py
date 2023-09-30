@@ -59,6 +59,7 @@ from .const import (
     ATTR_POWER_SOURCE,
     ATTR_QUIRK_APPLIED,
     ATTR_QUIRK_CLASS,
+    ATTR_QUIRK_ID,
     ATTR_ROUTES,
     ATTR_RSSI,
     ATTR_SIGNATURE,
@@ -135,6 +136,8 @@ class ZHADevice(LogMixin):
             f"{self._zigpy_device.__class__.__module__}."
             f"{self._zigpy_device.__class__.__name__}"
         )
+        # TODO: currently defaulting to quirk_class (so zhaquirks.xx.xx) for quirk id if no quirk_id is set, should we do that though?
+        self.quirk_id = getattr(self._zigpy_device, ATTR_QUIRK_ID, self.quirk_class)
 
         if self.is_mains_powered:
             self.consider_unavailable_time = async_get_zha_config_value(
@@ -537,6 +540,7 @@ class ZHADevice(LogMixin):
             ATTR_NAME: self.name or ieee,
             ATTR_QUIRK_APPLIED: self.quirk_applied,
             ATTR_QUIRK_CLASS: self.quirk_class,
+            ATTR_QUIRK_ID: self.quirk_id,
             ATTR_MANUFACTURER_CODE: self.manufacturer_code,
             ATTR_POWER_SOURCE: self.power_source,
             ATTR_LQI: self.lqi,
