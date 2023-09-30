@@ -18,6 +18,7 @@ DEV_TYPE_TO_HA = {
     "ESWL01": "switch",
     "ESWL03": "switch",
     "ESO15-TB": "outlet",
+    "Vital200S": "fan",
 }
 
 SKU_TO_BASE_DEVICE = {

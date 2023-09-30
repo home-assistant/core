@@ -2,8 +2,10 @@
 import logging
 from typing import Any
 
+from pyvesync import VeSync
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, ToggleEntity
 
@@ -12,9 +14,9 @@ from .const import DOMAIN, VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_process_devices(hass, manager):
+async def async_process_devices(hass: HomeAssistant, manager: VeSync):
     """Assign devices to proper component."""
-    devices = {}
+    devices: dict[str, list[VeSyncBaseDevice]] = {}
     devices[VS_SWITCHES] = []
     devices[VS_FANS] = []
     devices[VS_LIGHTS] = []
@@ -26,6 +28,7 @@ async def async_process_devices(hass, manager):
         devices[VS_FANS].extend(manager.fans)
         # Expose fan sensors separately
         devices[VS_SENSORS].extend(manager.fans)
+        devices[VS_SWITCHES].extend(manager.fans)
         _LOGGER.info("%d VeSync fans found", len(manager.fans))
 
     if manager.bulbs:
