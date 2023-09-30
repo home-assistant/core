@@ -1595,6 +1595,15 @@ def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
     return None
 
 
+def has_area(hass: HomeAssistant, entity_id: str) -> bool:
+    """Test if an entity is assigned to an area."""
+    ent_reg = entity_registry.async_get(hass)
+    if entity := ent_reg.async_get(entity_id):
+        if entity.area_id:
+            return True
+    return False
+
+
 def has_value(hass: HomeAssistant, entity_id: str) -> bool:
     """Test if an entity has a valid value."""
     state_obj = _get_state(hass, entity_id)
@@ -2477,6 +2486,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "is_state_attr",
                 "state_attr",
                 "states",
+                "has_area",
                 "has_value",
                 "utcnow",
                 "now",
@@ -2494,9 +2504,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "device_id",
                 "area_id",
                 "area_name",
+                "has_area",
                 "has_value",
             ]
             hass_tests = [
+                "has_area",
                 "has_value",
                 "is_hidden_entity",
                 "is_state",
@@ -2527,6 +2539,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
         self.filters["states"] = self.globals["states"]
+        self.globals["has_area"] = hassfunction(has_area)
+        self.filters["has_area"] = self.globals["has_area"]
+        self.tests["has_area"] = hassfunction(has_area, pass_eval_context)
         self.globals["has_value"] = hassfunction(has_value)
         self.filters["has_value"] = self.globals["has_value"]
         self.tests["has_value"] = hassfunction(has_value, pass_eval_context)
