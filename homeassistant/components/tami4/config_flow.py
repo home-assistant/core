@@ -5,7 +5,7 @@ import logging
 import re
 from typing import Any
 
-from Tami4EdgeAPI import Tami4EdgeAPI
+from Tami4EdgeAPI import Tami4EdgeAPI, exceptions as APIExceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -48,6 +48,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except InvalidPhoneNumber:
                 errors["base"] = "invalid_phone"
+            except APIExceptions.OTPFailedException:
+                errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -72,6 +74,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 api = await self.hass.async_add_executor_job(
                     Tami4EdgeAPI, refresh_token
                 )
+            except APIExceptions.OTPFailedException:
+                errors["base"] = "invalid_auth"
+            except APIExceptions.Tami4EdgeAPIException:
+                errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
