@@ -44,15 +44,31 @@ async def test_sensors(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_data"),
+    ("config_entry_unique_id", "config_entry_data"),
     [
-        ({**CONFIG_ENTRY_DATA, "serial_number": 0}),
+        # Config entry setup without a unique id since it had no serial number
+        (
+            None,
+            {
+                **CONFIG_ENTRY_DATA,
+                "serial_number": 0,
+            },
+        ),
+        # Legacy case where we used to set unique ids for serial number 0 will preserve existing behavior
+        (
+            "0",
+            {
+                **CONFIG_ENTRY_DATA,
+                "serial_number": 0,
+            },
+        ),
     ],
 )
 async def test_sensor_no_unique_id(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     entity_registry: er.EntityRegistry,
+    config_entry_unique_id: str | None,
 ) -> None:
     """Test sensor platform with no unique id."""
 
@@ -63,4 +79,4 @@ async def test_sensor_no_unique_id(
     assert raindelay.attributes.get("friendly_name") == "Rain Bird Controller Raindelay"
 
     entity = entity_registry.async_get("sensor.rain_bird_controller_raindelay")
-    assert entity is None
+    assert (entity is None) == (config_entry_unique_id is None)

@@ -34,8 +34,9 @@ async def async_setup_entry(
         [
             RainBirdCalendarEntity(
                 data.schedule_coordinator,
-                data.coordinator.serial_number,
+                data.coordinator.unique_id,
                 data.coordinator.device_info,
+                data.coordinator.device_name,
             )
         ]
     )
@@ -53,17 +54,18 @@ class RainBirdCalendarEntity(
     def __init__(
         self,
         coordinator: RainbirdScheduleUpdateCoordinator,
-        serial_number: str,
-        device_info: DeviceInfo,
+        unique_id: str | None,
+        device_info: DeviceInfo | None,
+        device_name: str,
     ) -> None:
         """Create the Calendar event device."""
         super().__init__(coordinator)
         self._event: CalendarEvent | None = None
-        if serial_number:
-            self._attr_unique_id = serial_number
+        if unique_id:
+            self._attr_unique_id = unique_id
             self._attr_device_info = device_info
         else:
-            self._attr_name = device_info["name"]
+            self._attr_name = device_name
 
     @property
     def event(self) -> CalendarEvent | None:

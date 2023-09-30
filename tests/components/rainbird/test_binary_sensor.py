@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import CONFIG_ENTRY_DATA, RAIN_SENSOR_OFF, RAIN_SENSOR_ON, ComponentSetup
+from .conftest import RAIN_SENSOR_OFF, RAIN_SENSOR_ON, ComponentSetup
 
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
@@ -47,9 +47,9 @@ async def test_rainsensor(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_data"),
+    ("config_entry_unique_id"),
     [
-        ({**CONFIG_ENTRY_DATA, "serial_number": 0}),
+        (None),
     ],
 )
 async def test_no_unique_id(

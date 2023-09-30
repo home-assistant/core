@@ -12,7 +12,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
     ACK_ECHO,
-    CONFIG_ENTRY_DATA,
     EMPTY_STATIONS_RESPONSE,
     HOST,
     PASSWORD,
@@ -285,9 +284,9 @@ async def test_switch_error(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_data"),
+    ("config_entry_unique_id"),
     [
-        ({**CONFIG_ENTRY_DATA, "serial_number": 0}),
+        None,
     ],
 )
 async def test_no_unique_id(
