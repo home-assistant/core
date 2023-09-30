@@ -15,7 +15,7 @@ from .conftest import TEST_EVENT, ComponentSetup
 
 from tests.common import CLIENT_ID, MockConfigEntry, MockUser
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -66,7 +66,6 @@ async def test_diagnostics(
     hass_admin_user: MockUser,
     hass_admin_credential: Credentials,
     config_entry: MockConfigEntry,
-    hass_ws_client: WebSocketGenerator,
     aiohttp_client: ClientSessionGenerator,
     socket_enabled: None,
     snapshot: SnapshotAssertion,
