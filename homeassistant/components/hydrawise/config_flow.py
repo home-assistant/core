@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from aiohttp import ClientError
 from pydrawise import legacy
-from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -27,20 +27,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, api_key: str, *, on_failure: Callable[[str], FlowResult]
     ) -> FlowResult:
         """Create the config entry."""
+        api = legacy.LegacyHydrawiseAsync(api_key)
         try:
-            api = await self.hass.async_add_executor_job(
-                legacy.LegacyHydrawise, api_key
-            )
-        except ConnectTimeout:
+            # Skip fetching zones to save on metered API calls.
+            user = await api.get_user(fetch_zones=False)
+        except TimeoutError:
             return on_failure("timeout_connect")
-        except HTTPError as ex:
+        except ClientError as ex:
             LOGGER.error("Unable to connect to Hydrawise cloud service: %s", ex)
             return on_failure("cannot_connect")
 
-        if not api.status:
-            return on_failure("unknown")
-
-        await self.async_set_unique_id(f"hydrawise-{api.customer_id}")
+        await self.async_set_unique_id(f"hydrawise-{user.customer_id}")
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title="Hydrawise", data={CONF_API_KEY: api_key})
