@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -485,24 +486,27 @@ async def async_setup_platform(
                 config_file[CONF_CLIENT_ID], config_file[CONF_CLIENT_SECRET]
             ),
         )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    "auth_implementation": DOMAIN,
-                    CONF_TOKEN: {
-                        ATTR_ACCESS_TOKEN: config_file[ATTR_ACCESS_TOKEN],
-                        ATTR_REFRESH_TOKEN: config_file[ATTR_REFRESH_TOKEN],
-                        "expires_at": config_file[ATTR_LAST_SAVED_AT],
-                    },
-                    CONF_CLOCK_FORMAT: config[CONF_CLOCK_FORMAT],
-                    CONF_UNIT_SYSTEM: config[CONF_UNIT_SYSTEM],
-                    CONF_MONITORED_RESOURCES: config[CONF_MONITORED_RESOURCES],
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                "auth_implementation": DOMAIN,
+                CONF_TOKEN: {
+                    ATTR_ACCESS_TOKEN: config_file[ATTR_ACCESS_TOKEN],
+                    ATTR_REFRESH_TOKEN: config_file[ATTR_REFRESH_TOKEN],
+                    "expires_at": config_file[ATTR_LAST_SAVED_AT],
                 },
-            ),
+                CONF_CLOCK_FORMAT: config[CONF_CLOCK_FORMAT],
+                CONF_UNIT_SYSTEM: config[CONF_UNIT_SYSTEM],
+                CONF_MONITORED_RESOURCES: config[CONF_MONITORED_RESOURCES],
+            },
         )
         translation_key = "deprecated_yaml_import"
+        if (
+            result.get("type") == FlowResultType.ABORT
+            and result.get("reason") == "cannot_connect"
+        ):
+            translation_key = "deprecated_yaml_import_issue_cannot_connect"
     else:
         translation_key = "deprecated_yaml_no_import"
 
