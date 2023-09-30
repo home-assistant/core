@@ -71,8 +71,8 @@ def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> N
 
     async def set_timer_level(call: ServiceCall) -> None:
         """Set timer level."""
-        level_string = call.data.get("timer_level")
-        time = call.data.get("time")
+        level_string = call.data["timer_level"]
+        time = call.data["time"]
         level = Level[str(level_string).upper()]
 
         await hass.async_add_executor_job(renson_api.set_timer_level, level, time)
