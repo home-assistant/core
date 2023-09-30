@@ -159,7 +159,7 @@ class WaqiSensor(CoordinatorEntity[WAQIDataUpdateCoordinator], SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_name = f"WAQI {self.coordinator.data.city.name}"
-        self._attr_unique_id = str(coordinator.data.station_id)
+        self._attr_unique_id = f"{coordinator.data.station_id}_air_quality"
 
     @property
     def native_value(self) -> int | None:
