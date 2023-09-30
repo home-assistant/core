@@ -372,7 +372,7 @@ aiovlc==0.1.0
 aiovodafone==0.3.1
 
 # homeassistant.components.waqi
-aiowaqi==1.1.0
+aiowaqi==1.1.1
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -2234,7 +2234,7 @@ pyvera==0.3.13
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==2.1.1
+pyvesync==2.1.10
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -2736,7 +2736,7 @@ xiaomi-ble==0.21.1
 xknx==2.11.2
 
 # homeassistant.components.knx
-xknxproject==3.2.0
+xknxproject==3.3.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
