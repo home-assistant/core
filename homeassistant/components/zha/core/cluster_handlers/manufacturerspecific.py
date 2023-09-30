@@ -377,12 +377,12 @@ class IkeaRemote(ClusterHandler):
     REPORT_CONFIG = ()
 
 
-def compare_quirk_class(cluster: zigpy.zcl.Cluster, name: str):
+def compare_quirk_class(endpoint: Endpoint, name: str):
     """Return True if the last two words separated by dots equal the words between the dots in name.
 
     This function should probably be moved to the base class
     """
-    return cluster.endpoint.quirk_class.rsplit(".", 2)[1:] == name.split(".")
+    return endpoint.device.quirk_class.rsplit(".", 2)[1:] == name.split(".")
 
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(
@@ -397,7 +397,7 @@ class DanfossTRVChannel(ClusterHandler):
     @classmethod
     def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
         """Filter the cluster match for specific devices."""
-        return compare_quirk_class(cluster, "thermostat.DanfossThermostat")
+        return compare_quirk_class(endpoint, "thermostat.DanfossThermostat")
 
     REPORT_CONFIG = (
         AttrReportConfig(attr="open_window_detection", config=REPORT_CONFIG_DEFAULT),
@@ -438,7 +438,7 @@ class DanfossTRVInterfaceChannel(ClusterHandler):
     @classmethod
     def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
         """Filter the cluster match for specific devices."""
-        return compare_quirk_class(cluster, "thermostat.DanfossThermostat")
+        return compare_quirk_class(endpoint, "thermostat.DanfossThermostat")
 
     ZCL_INIT_ATTRS = {"viewing_direction": True}
 
@@ -455,7 +455,7 @@ class DanfossTRVDiagnosticChannel(ClusterHandler):
     @classmethod
     def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
         """Filter the cluster match for specific devices."""
-        return compare_quirk_class(cluster, "thermostat.DanfossThermostat")
+        return compare_quirk_class(endpoint, "thermostat.DanfossThermostat")
 
     REPORT_CONFIG = (
         AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
