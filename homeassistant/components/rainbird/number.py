@@ -51,8 +51,11 @@ class RainDelayNumber(CoordinatorEntity[RainbirdUpdateCoordinator], NumberEntity
     ) -> None:
         """Initialize the Rain Bird sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.serial_number}-rain-delay"
-        self._attr_device_info = coordinator.device_info
+        if coordinator.serial_number:
+            self._attr_unique_id = f"{coordinator.serial_number}-rain-delay"
+            self._attr_device_info = coordinator.device_info
+        else:
+            self._attr_name = f"{coordinator.device_info['name']} Rain delay"
 
     @property
     def native_value(self) -> float | None:

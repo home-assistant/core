@@ -47,7 +47,7 @@ class RainBirdCalendarEntity(
     """A calendar event entity."""
 
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_name: str | None = None
     _attr_icon = "mdi:sprinkler"
 
     def __init__(
@@ -59,8 +59,11 @@ class RainBirdCalendarEntity(
         """Create the Calendar event device."""
         super().__init__(coordinator)
         self._event: CalendarEvent | None = None
-        self._attr_unique_id = serial_number
-        self._attr_device_info = device_info
+        if serial_number:
+            self._attr_unique_id = serial_number
+            self._attr_device_info = device_info
+        else:
+            self._attr_name = device_info["name"]
 
     @property
     def event(self) -> CalendarEvent | None:
