@@ -378,8 +378,7 @@ class IkeaRemote(ClusterHandler):
 
 
 def compare_quirk_class(cluster: zigpy.zcl.Cluster, name: str):
-    """
-    This returns True if the last two words separated by dots equal the words between the dots in name
+    """Return True if the last two words separated by dots equal the words between the dots in name.
 
     This function should probably be moved to the base class
     """
