@@ -31,7 +31,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTRIBUTION, DOMAIN
+from .const import (
+    API_KEY_CURRENT_WEATHER,
+    API_KEY_FORECAST_DAILY,
+    API_KEY_FORECAST_HOURLY,
+    ATTRIBUTION,
+    DOMAIN,
+)
 from .coordinator import WeatherKitDataUpdateCoordinator
 from .entity import WeatherKitEntity
 
@@ -164,7 +170,7 @@ class WeatherKitWeather(
     @property
     def current_weather(self) -> dict[str, Any]:
         """Return current weather data."""
-        return self.data["currentWeather"]
+        return self.data[API_KEY_CURRENT_WEATHER]
 
     @property
     def condition(self) -> str | None:
@@ -235,7 +241,7 @@ class WeatherKitWeather(
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast."""
-        daily_forecast = self.data.get("forecastDaily")
+        daily_forecast = self.data.get(API_KEY_FORECAST_DAILY)
         if not daily_forecast:
             return None
 
@@ -245,7 +251,7 @@ class WeatherKitWeather(
     @callback
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast."""
-        hourly_forecast = self.data.get("forecastHourly")
+        hourly_forecast = self.data.get(API_KEY_FORECAST_HOURLY)
         if not hourly_forecast:
             return None
 

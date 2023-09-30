@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import API_KEY_CURRENT_WEATHER, DOMAIN
 from .coordinator import WeatherKitDataUpdateCoordinator
 from .entity import WeatherKitEntity
 
@@ -74,4 +74,6 @@ class WeatherKitSensor(
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return native value from coordinator current weather."""
-        return self.coordinator.data["currentWeather"][self.entity_description.key]
+        return self.coordinator.data[API_KEY_CURRENT_WEATHER][
+            self.entity_description.key
+        ]
