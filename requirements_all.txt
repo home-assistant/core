@@ -132,7 +132,7 @@ RtmAPI==0.7.2
 SQLAlchemy==2.0.21
 
 # homeassistant.components.tami4
-Tami4EdgeAPI==2.0
+Tami4EdgeAPI==2.1
 
 # homeassistant.components.travisci
 TravisPy==0.3.5
