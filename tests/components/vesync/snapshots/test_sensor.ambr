@@ -52,7 +52,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': None,
+      'original_icon': 'mdi:air-filter',
       'original_name': 'Filter lifetime',
       'platform': 'vesync',
       'supported_features': 0,
@@ -106,6 +106,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Air Purifier 131s Filter lifetime',
+      'icon': 'mdi:air-filter',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -169,7 +170,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': None,
+      'original_icon': 'mdi:air-filter',
       'original_name': 'Filter lifetime',
       'platform': 'vesync',
       'supported_features': 0,
@@ -183,6 +184,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Air Purifier 200s Filter lifetime',
+      'icon': 'mdi:air-filter',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -246,7 +248,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': None,
+      'original_icon': 'mdi:air-filter',
       'original_name': 'Filter lifetime',
       'platform': 'vesync',
       'supported_features': 0,
@@ -330,6 +332,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Air Purifier 400s Filter lifetime',
+      'icon': 'mdi:air-filter',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -408,7 +411,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': None,
+      'original_icon': 'mdi:air-filter',
       'original_name': 'Filter lifetime',
       'platform': 'vesync',
       'supported_features': 0,
@@ -492,6 +495,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Air Purifier 600s Filter lifetime',
+      'icon': 'mdi:air-filter',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),

@@ -245,11 +245,12 @@
           'icon': None,
           'name': None,
           'original_device_class': None,
-          'original_icon': None,
+          'original_icon': 'mdi:air-filter',
           'original_name': 'Filter lifetime',
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Fan Filter lifetime',
+              'icon': 'mdi:air-filter',
               'state_class': 'measurement',
               'unit_of_measurement': '%',
             }),
