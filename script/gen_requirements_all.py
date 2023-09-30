@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import difflib
 import importlib
+from operator import itemgetter
 import os
 from pathlib import Path
 import pkgutil
@@ -71,9 +72,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.51.1
-grpcio-status==1.51.1
-grpcio-reflection==1.51.1
+grpcio==1.58.0
+grpcio-status==1.58.0
+grpcio-reflection==1.58.0
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -112,7 +113,7 @@ httpcore==0.17.3
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.23.2
+numpy==1.26.0
 
 # Prevent dependency conflicts between sisyphus-control and aioambient
 # until upper bounds for sisyphus-control have been updated
@@ -127,8 +128,9 @@ multidict>=6.0.2
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Require to avoid issues with decorators (#93904). v2 has breaking changes.
-pydantic>=1.10.8,<2.0
+# Required to avoid breaking (#101042).
+# v2 has breaking changes (#99218).
+pydantic==1.10.12
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -148,7 +150,7 @@ pyOpenSSL>=23.1.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.24.0
+protobuf==4.24.3
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -173,6 +175,11 @@ pysnmp==1000000000.0.0
 # The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
 get-mac==1000000000.0.0
+
+# We want to skip the binary wheels for the 'charset-normalizer' packages.
+# They are build with mypyc, but causes issues with our wheel builder.
+# In order to do so, we need to constrain the version.
+charset-normalizer==3.2.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
@@ -333,7 +340,7 @@ def process_requirements(
 def generate_requirements_list(reqs: dict[str, list[str]]) -> str:
     """Generate a pip file based on requirements."""
     output = []
-    for pkg, requirements in sorted(reqs.items(), key=lambda item: item[0]):
+    for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
         for req in sorted(requirements):
             output.append(f"\n# {req}")
 
@@ -425,7 +432,7 @@ def gather_constraints() -> str:
                     *gather_recursive_requirements("default_config"),
                     *gather_recursive_requirements("mqtt"),
                 },
-                key=lambda name: name.lower(),
+                key=str.lower,
             )
             + [""]
         )

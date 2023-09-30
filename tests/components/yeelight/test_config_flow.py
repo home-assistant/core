@@ -1,4 +1,5 @@
 """Test the Yeelight config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
@@ -465,8 +466,8 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
             data=zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -535,8 +536,8 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -603,8 +604,8 @@ async def test_discovered_by_dhcp_or_homekit(hass: HomeAssistant, source, data) 
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -827,8 +828,8 @@ async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant) -> None:
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,

@@ -33,7 +33,6 @@
     "step": {
       "binary_sensor": {
         "data": {
-          "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
           "state": "[%key:component::template::config::step::sensor::data::state%]"
         },
         "title": "[%key:component::template::config::step::binary_sensor::title%]"

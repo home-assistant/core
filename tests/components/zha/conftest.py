@@ -22,9 +22,10 @@ import zigpy.zdo.types as zdo_t
 
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.setup import async_setup_component
 
-from . import common
+from .common import patch_cluster as common_patch_cluster
 
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
@@ -277,7 +278,7 @@ def zigpy_device_mock(zigpy_app_controller):
                 for cluster in itertools.chain(
                     endpoint.in_clusters.values(), endpoint.out_clusters.values()
                 ):
-                    common.patch_cluster(cluster)
+                    common_patch_cluster(cluster)
 
         if attributes is not None:
             for ep_id, clusters in attributes.items():
@@ -293,14 +294,20 @@ def zigpy_device_mock(zigpy_app_controller):
     return _mock_dev
 
 
+@patch("homeassistant.components.zha.setup_quirks", MagicMock(return_value=True))
 @pytest.fixture
 def zha_device_joined(hass, setup_zha):
     """Return a newly joined ZHA device."""
+    setup_zha_fixture = setup_zha
 
-    async def _zha_device(zigpy_dev):
+    async def _zha_device(zigpy_dev, *, setup_zha: bool = True):
         zigpy_dev.last_seen = time.time()
-        await setup_zha()
-        zha_gateway = common.get_zha_gateway(hass)
+
+        if setup_zha:
+            await setup_zha_fixture()
+
+        zha_gateway = get_zha_gateway(hass)
+        zha_gateway.application_controller.devices[zigpy_dev.ieee] = zigpy_dev
         await zha_gateway.async_device_initialized(zigpy_dev)
         await hass.async_block_till_done()
         return zha_gateway.get_device(zigpy_dev.ieee)
@@ -308,18 +315,22 @@ def zha_device_joined(hass, setup_zha):
     return _zha_device
 
 
+@patch("homeassistant.components.zha.setup_quirks", MagicMock(return_value=True))
 @pytest.fixture
 def zha_device_restored(hass, zigpy_app_controller, setup_zha):
     """Return a restored ZHA device."""
+    setup_zha_fixture = setup_zha
 
-    async def _zha_device(zigpy_dev, last_seen=None):
+    async def _zha_device(zigpy_dev, *, last_seen=None, setup_zha: bool = True):
         zigpy_app_controller.devices[zigpy_dev.ieee] = zigpy_dev
 
         if last_seen is not None:
             zigpy_dev.last_seen = last_seen
 
-        await setup_zha()
-        zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
+        if setup_zha:
+            await setup_zha_fixture()
+
+        zha_gateway = get_zha_gateway(hass)
         return zha_gateway.get_device(zigpy_dev.ieee)
 
     return _zha_device
@@ -376,3 +387,10 @@ def hass_disable_services(hass):
         hass, "services", MagicMock(has_service=MagicMock(return_value=True))
     ):
         yield hass
+
+
+@pytest.fixture(autouse=True)
+def speed_up_radio_mgr():
+    """Speed up the radio manager connection time by removing delays."""
+    with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.00001):
+        yield

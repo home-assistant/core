@@ -27,8 +27,10 @@ from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
+    MockModule,
     MockPlatform,
     get_test_home_assistant,
+    mock_integration,
     mock_registry,
 )
 
@@ -776,7 +778,7 @@ async def test_warn_slow_write_state_custom_component(
     assert (
         "Updating state for comp_test.test_entity "
         "(<class 'custom_components.bla.sensor.test_warn_slow_write_state_custom_component.<locals>.CustomComponentEntity'>) "
-        "took 10.000 seconds. Please report it to the custom integration author."
+        "took 10.000 seconds. Please report it to the custom integration author"
     ) in caplog.text
 
 
@@ -795,13 +797,11 @@ async def test_setup_source(hass: HomeAssistant) -> None:
         "test_domain.platform_config_source": {
             "custom_component": False,
             "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
         "test_domain.config_entry_source": {
             "config_entry": platform.config_entry.entry_id,
             "custom_component": False,
             "domain": "test_platform",
-            "source": entity.SOURCE_CONFIG_ENTRY,
         },
     }
 
@@ -1505,3 +1505,57 @@ async def test_invalid_state(
     ent._attr_state = "x" * 255
     ent.async_write_ha_state()
     assert hass.states.get("test.test").state == "x" * 255
+
+
+async def test_suggest_report_issue_built_in(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test _suggest_report_issue for an entity from a built-in integration."""
+    mock_entity = entity.Entity()
+    mock_entity.entity_id = "comp_test.test_entity"
+
+    suggestion = mock_entity._suggest_report_issue()
+    assert suggestion == (
+        "create a bug report at https://github.com/home-assistant/core/issues"
+        "?q=is%3Aopen+is%3Aissue"
+    )
+
+    mock_integration(hass, MockModule(domain="test"), built_in=True)
+    platform = MockEntityPlatform(hass, domain="comp_test", platform_name="test")
+    await platform.async_add_entities([mock_entity])
+
+    suggestion = mock_entity._suggest_report_issue()
+    assert suggestion == (
+        "create a bug report at https://github.com/home-assistant/core/issues"
+        "?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test%22"
+    )
+
+
+async def test_suggest_report_issue_custom_component(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test _suggest_report_issue for an entity from a custom component."""
+
+    class CustomComponentEntity(entity.Entity):
+        """Custom component entity."""
+
+        __module__ = "custom_components.bla.sensor"
+
+    mock_entity = CustomComponentEntity()
+    mock_entity.entity_id = "comp_test.test_entity"
+
+    suggestion = mock_entity._suggest_report_issue()
+    assert suggestion == "report it to the custom integration author"
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="test", partial_manifest={"issue_tracker": "httpts://some_url"}
+        ),
+        built_in=False,
+    )
+    platform = MockEntityPlatform(hass, domain="comp_test", platform_name="test")
+    await platform.async_add_entities([mock_entity])
+
+    suggestion = mock_entity._suggest_report_issue()
+    assert suggestion == "create a bug report at httpts://some_url"

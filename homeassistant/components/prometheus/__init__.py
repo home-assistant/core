@@ -671,6 +671,15 @@ class PrometheusMetrics:
 
         metric.labels(**self._labels(state)).set(self.state_as_number(state))
 
+    def _handle_update(self, state):
+        metric = self._metric(
+            "update_state",
+            self.prometheus_cli.Gauge,
+            "Update state, indicating if an update is available (0/1)",
+        )
+        value = self.state_as_number(state)
+        metric.labels(**self._labels(state)).set(value)
+
 
 class PrometheusView(HomeAssistantView):
     """Handle Prometheus requests."""

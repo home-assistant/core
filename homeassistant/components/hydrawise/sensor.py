@@ -1,7 +1,6 @@
 """Support for Hydrawise sprinkler sensors."""
 from __future__ import annotations
 
-from pydrawise.legacy import LegacyHydrawise
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -10,6 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -24,12 +24,12 @@ from .entity import HydrawiseEntity
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="next_cycle",
-        name="Next Cycle",
+        translation_key="next_cycle",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key="watering_time",
-        name="Watering Time",
+        translation_key="watering_time",
         icon="mdi:water-pump",
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
@@ -37,6 +37,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
+# Deprecated since Home Assistant 2023.10.0
+# Can be removed completely in 2024.4.0
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
@@ -56,18 +58,25 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
-    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN]
-    hydrawise: LegacyHydrawise = coordinator.api
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    # We don't need to trigger import flow from here as it's triggered from `__init__.py`
+    return
 
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Hydrawise sensor platform."""
+    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
     entities = [
         HydrawiseSensor(data=zone, coordinator=coordinator, description=description)
-        for zone in hydrawise.relays
+        for zone in coordinator.api.relays
         for description in SENSOR_TYPES
-        if description.key in monitored_conditions
     ]
-
-    add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class HydrawiseSensor(HydrawiseEntity, SensorEntity):

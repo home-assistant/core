@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import socket
+from typing import Any
 
 from gps3.agps3threaded import AGPS3mechanism
 import voluptuous as vol
@@ -48,9 +49,9 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the GPSD component."""
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
 
     # Will hopefully be possible with the next gps3 update
     # https://github.com/wadda/gps3/issues/11
@@ -77,7 +78,13 @@ def setup_platform(
 class GpsdSensor(SensorEntity):
     """Representation of a GPS receiver available via GPSD."""
 
-    def __init__(self, hass, name, host, port):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        name: str,
+        host: str,
+        port: int,
+    ) -> None:
         """Initialize the GPSD sensor."""
         self.hass = hass
         self._name = name
@@ -89,12 +96,12 @@ class GpsdSensor(SensorEntity):
         self.agps_thread.run_thread()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state of GPSD."""
         if self.agps_thread.data_stream.mode == 3:
             return "3D Fix"
@@ -103,7 +110,7 @@ class GpsdSensor(SensorEntity):
         return None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the GPS."""
         return {
             ATTR_LATITUDE: self.agps_thread.data_stream.lat,
@@ -114,3 +121,12 @@ class GpsdSensor(SensorEntity):
             ATTR_CLIMB: self.agps_thread.data_stream.climb,
             ATTR_MODE: self.agps_thread.data_stream.mode,
         }
+
+    @property
+    def icon(self) -> str:
+        """Return the icon of the sensor."""
+        mode = self.agps_thread.data_stream.mode
+
+        if isinstance(mode, int) and mode >= 2:
+            return "mdi:crosshairs-gps"
+        return "mdi:crosshairs"

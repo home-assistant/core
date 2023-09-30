@@ -177,7 +177,6 @@ class Recorder(threading.Thread):
         db_retry_wait: int,
         entity_filter: Callable[[str], bool],
         exclude_event_types: set[str],
-        exclude_attributes_by_domain: dict[str, set[str]],
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
@@ -187,7 +186,7 @@ class Recorder(threading.Thread):
         self.auto_purge = auto_purge
         self.auto_repack = auto_repack
         self.keep_days = keep_days
-        self._hass_started: asyncio.Future[object] = asyncio.Future()
+        self._hass_started: asyncio.Future[object] = hass.loop.create_future()
         self.commit_interval = commit_interval
         self._queue: queue.SimpleQueue[RecorderTask] = queue.SimpleQueue()
         self.db_url = uri
@@ -198,7 +197,7 @@ class Recorder(threading.Thread):
         db_connected: asyncio.Future[bool] = hass.data[DOMAIN].db_connected
         self.async_db_connected: asyncio.Future[bool] = db_connected
         # Database is ready to use but live migration may be in progress
-        self.async_db_ready: asyncio.Future[bool] = asyncio.Future()
+        self.async_db_ready: asyncio.Future[bool] = hass.loop.create_future()
         # Database is ready to use and all migration steps completed (used by tests)
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
@@ -221,9 +220,7 @@ class Recorder(threading.Thread):
         self.event_data_manager = EventDataManager(self)
         self.event_type_manager = EventTypeManager(self)
         self.states_meta_manager = StatesMetaManager(self)
-        self.state_attributes_manager = StateAttributesManager(
-            self, exclude_attributes_by_domain
-        )
+        self.state_attributes_manager = StateAttributesManager(self)
         self.statistics_meta_manager = StatisticsMetaManager(self)
 
         self.event_session: Session | None = None

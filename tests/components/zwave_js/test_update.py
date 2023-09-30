@@ -38,24 +38,72 @@ UPDATE_ENTITY = "update.z_wave_thermostat_firmware"
 LATEST_VERSION_FIRMWARE = {
     "version": "11.2.4",
     "changelog": "blah 2",
+    "channel": "stable",
     "files": [{"target": 0, "url": "https://example2.com", "integrity": "sha2"}],
+    "downgrade": True,
+    "normalizedVersion": "11.2.4",
+    "device": {
+        "manufacturerId": 1,
+        "productType": 2,
+        "productId": 3,
+        "firmwareVersion": "0.4.4",
+        "rfRegion": 1,
+    },
 }
 FIRMWARE_UPDATES = {
     "updates": [
         {
             "version": "10.11.1",
             "changelog": "blah 1",
+            "channel": "stable",
             "files": [
                 {"target": 0, "url": "https://example1.com", "integrity": "sha1"}
             ],
+            "downgrade": True,
+            "normalizedVersion": "10.11.1",
+            "device": {
+                "manufacturerId": 1,
+                "productType": 2,
+                "productId": 3,
+                "firmwareVersion": "0.4.4",
+                "rfRegion": 1,
+            },
         },
         LATEST_VERSION_FIRMWARE,
         {
             "version": "11.1.5",
             "changelog": "blah 3",
+            "channel": "stable",
             "files": [
                 {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
             ],
+            "downgrade": True,
+            "normalizedVersion": "11.1.5",
+            "device": {
+                "manufacturerId": 1,
+                "productType": 2,
+                "productId": 3,
+                "firmwareVersion": "0.4.4",
+                "rfRegion": 1,
+            },
+        },
+        # This firmware update should never show because it's in the beta channel
+        {
+            "version": "999.999.999",
+            "changelog": "blah 3",
+            "channel": "beta",
+            "files": [
+                {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
+            ],
+            "downgrade": True,
+            "normalizedVersion": "999.999.999",
+            "device": {
+                "manufacturerId": 1,
+                "productType": 2,
+                "productId": 3,
+                "firmwareVersion": "0.4.4",
+                "rfRegion": 1,
+            },
         },
     ]
 }
@@ -745,7 +793,23 @@ async def test_update_entity_full_restore_data_update_available(
     assert client.async_send_command.call_args_list[1][0][0] == {
         "command": "controller.firmware_update_ota",
         "nodeId": climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
-        "updates": [{"target": 0, "url": "https://example2.com", "integrity": "sha2"}],
+        "updateInfo": {
+            "version": "11.2.4",
+            "changelog": "blah 2",
+            "channel": "stable",
+            "files": [
+                {"target": 0, "url": "https://example2.com", "integrity": "sha2"}
+            ],
+            "downgrade": True,
+            "normalizedVersion": "11.2.4",
+            "device": {
+                "manufacturerId": 1,
+                "productType": 2,
+                "productId": 3,
+                "firmwareVersion": "0.4.4",
+                "rfRegion": 1,
+            },
+        },
     }
 
     install_task.cancel()

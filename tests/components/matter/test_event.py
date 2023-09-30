@@ -48,7 +48,7 @@ async def test_generic_switch_node(
     assert state.attributes[ATTR_EVENT_TYPES] == [
         "initial_press",
         "short_release",
-        "long_press_ongoing",
+        "long_press",
         "long_release",
         "multi_press_ongoing",
         "multi_press_complete",
@@ -111,7 +111,7 @@ async def test_generic_switch_multi_node(
     assert state_button_1.attributes[ATTR_EVENT_TYPES] == [
         "initial_press",
         "short_release",
-        "long_press_ongoing",
+        "long_press",
         "long_release",
     ]
     # check button 2

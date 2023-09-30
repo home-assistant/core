@@ -52,6 +52,8 @@ async def test_user(hass: HomeAssistant) -> None:
     [
         (aiovodafone_exceptions.CannotConnect, "cannot_connect"),
         (aiovodafone_exceptions.CannotAuthenticate, "invalid_auth"),
+        (aiovodafone_exceptions.AlreadyLogged, "already_logged"),
+        (aiovodafone_exceptions.ModelNotSupported, "model_not_supported"),
         (ConnectionResetError, "unknown"),
     ],
 )
@@ -78,7 +80,7 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
 
         # Should be recoverable after hits error
         with patch(
-            "homeassistant.components.vodafone_station.config_flow.VodafoneStationApi.get_all_devices",
+            "homeassistant.components.vodafone_station.config_flow.VodafoneStationApi.get_devices_data",
             return_value={
                 "wifi_user": "on|laptop|device-1|xx:xx:xx:xx:xx:xx|192.168.100.1||2.4G",
                 "ethernet": "laptop|device-2|yy:yy:yy:yy:yy:yy|192.168.100.2|;",
@@ -152,6 +154,7 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
     [
         (aiovodafone_exceptions.CannotConnect, "cannot_connect"),
         (aiovodafone_exceptions.CannotAuthenticate, "invalid_auth"),
+        (aiovodafone_exceptions.AlreadyLogged, "already_logged"),
         (ConnectionResetError, "unknown"),
     ],
 )
@@ -191,7 +194,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
 
         # Should be recoverable after hits error
         with patch(
-            "homeassistant.components.vodafone_station.config_flow.VodafoneStationApi.get_all_devices",
+            "homeassistant.components.vodafone_station.config_flow.VodafoneStationApi.get_devices_data",
             return_value={
                 "wifi_user": "on|laptop|device-1|xx:xx:xx:xx:xx:xx|192.168.100.1||2.4G",
                 "ethernet": "laptop|device-2|yy:yy:yy:yy:yy:yy|192.168.100.2|;",

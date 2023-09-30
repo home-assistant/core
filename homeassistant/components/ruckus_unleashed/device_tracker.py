@@ -103,20 +103,16 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
     @property
     def name(self) -> str:
         """Return the name."""
-        return (
-            self._name
-            if not self.is_connected
-            else self.coordinator.data[KEY_SYS_CLIENTS][self._mac][API_CLIENT_HOSTNAME]
-        )
+        if not self.is_connected:
+            return self._name
+        return self.coordinator.data[KEY_SYS_CLIENTS][self._mac][API_CLIENT_HOSTNAME]
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the ip address."""
-        return (
-            self.coordinator.data[KEY_SYS_CLIENTS][self._mac][API_CLIENT_IP]
-            if self.is_connected
-            else None
-        )
+        if not self.is_connected:
+            return None
+        return self.coordinator.data[KEY_SYS_CLIENTS][self._mac][API_CLIENT_IP]
 
     @property
     def is_connected(self) -> bool:

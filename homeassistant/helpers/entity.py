@@ -4,15 +4,25 @@ from __future__ import annotations
 from abc import ABC
 import asyncio
 from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
+from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from enum import Enum, auto
 import functools as ft
 import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import TYPE_CHECKING, Any, Final, Literal, TypeVar, final
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Literal,
+    NotRequired,
+    TypedDict,
+    TypeVar,
+    final,
+)
 
 import voluptuous as vol
 
@@ -40,8 +50,12 @@ from homeassistant.exceptions import (
     InvalidStateError,
     NoEntitySpecifiedError,
 )
-from homeassistant.loader import bind_hass
-from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
+from homeassistant.loader import (
+    IntegrationNotLoaded,
+    async_get_loaded_integration,
+    bind_hass,
+)
+from homeassistant.util import ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
@@ -60,8 +74,6 @@ _T = TypeVar("_T")
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
 DATA_ENTITY_SOURCE = "entity_info"
-SOURCE_CONFIG_ENTRY = "config_entry"
-SOURCE_PLATFORM_CONFIG = "platform_config"
 
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
@@ -76,9 +88,9 @@ def async_setup(hass: HomeAssistant) -> None:
 
 @callback
 @bind_hass
-def entity_sources(hass: HomeAssistant) -> dict[str, dict[str, str]]:
+def entity_sources(hass: HomeAssistant) -> dict[str, EntityInfo]:
     """Get the entity sources."""
-    _entity_sources: dict[str, dict[str, str]] = hass.data[DATA_ENTITY_SOURCE]
+    _entity_sources: dict[str, EntityInfo] = hass.data[DATA_ENTITY_SOURCE]
     return _entity_sources
 
 
@@ -181,6 +193,20 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
 ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
 
 
+class EntityInfo(TypedDict):
+    """Entity info."""
+
+    domain: str
+    custom_component: bool
+    config_entry: NotRequired[str]
+
+
+class StateInfo(TypedDict):
+    """State info."""
+
+    unrecorded_attributes: frozenset[str]
+
+
 class EntityPlatformState(Enum):
     """The platform state of an entity."""
 
@@ -272,10 +298,26 @@ class Entity(ABC):
 
     # Context
     _context: Context | None = None
-    _context_set: datetime | None = None
+    _context_set: float | None = None
 
     # If entity is added to an entity platform
     _platform_state = EntityPlatformState.NOT_ADDED
+
+    # Attributes to exclude from recording, only set by base components, e.g. light
+    _entity_component_unrecorded_attributes: frozenset[str] = frozenset()
+    # Additional integration specific attributes to exclude from recording, set by
+    # platforms, e.g. a derived class in hue.light
+    _unrecorded_attributes: frozenset[str] = frozenset()
+    # Union of _entity_component_unrecorded_attributes and _unrecorded_attributes,
+    # set automatically by __init_subclass__
+    __combined_unrecorded_attributes: frozenset[str] = (
+        _entity_component_unrecorded_attributes | _unrecorded_attributes
+    )
+
+    # StateInfo. Set by EntityPlatform by calling async_internal_added_to_hass
+    # While not purely typed, it makes typehinting more useful for us
+    # and removes the need for constant None checks or asserts.
+    _state_info: StateInfo = None  # type: ignore[assignment]
 
     # Entity Properties
     _attr_assumed_state: bool = False
@@ -300,6 +342,13 @@ class Entity(ABC):
     _attr_translation_key: str | None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Initialize an Entity subclass."""
+        super().__init_subclass__(**kwargs)
+        cls.__combined_unrecorded_attributes = (
+            cls._entity_component_unrecorded_attributes | cls._unrecorded_attributes
+        )
 
     @property
     def should_poll(self) -> bool:
@@ -660,7 +709,7 @@ class Entity(ABC):
     def async_set_context(self, context: Context) -> None:
         """Set the context the entity currently operates under."""
         self._context = context
-        self._context_set = dt_util.utcnow()
+        self._context_set = self.hass.loop.time()
 
     async def async_update_ha_state(self, force_refresh: bool = False) -> None:
         """Update Home Assistant with current state of entity.
@@ -847,14 +896,20 @@ class Entity(ABC):
 
         if (
             self._context_set is not None
-            and dt_util.utcnow() - self._context_set > self.context_recent_time
+            and hass.loop.time() - self._context_set
+            > self.context_recent_time.total_seconds()
         ):
             self._context = None
             self._context_set = None
 
         try:
             hass.states.async_set(
-                entity_id, state, attr, self.force_update, self._context
+                entity_id,
+                state,
+                attr,
+                self.force_update,
+                self._context,
+                self._state_info,
             )
         except InvalidStateError:
             _LOGGER.exception("Failed to set state, fall back to %s", STATE_UNKNOWN)
@@ -1060,18 +1115,19 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        info = {
+        entity_info: EntityInfo = {
             "domain": self.platform.platform_name,
             "custom_component": "custom_components" in type(self).__module__,
         }
 
         if self.platform.config_entry:
-            info["source"] = SOURCE_CONFIG_ENTRY
-            info["config_entry"] = self.platform.config_entry.entry_id
-        else:
-            info["source"] = SOURCE_PLATFORM_CONFIG
+            entity_info["config_entry"] = self.platform.config_entry.entry_id
 
-        self.hass.data[DATA_ENTITY_SOURCE][self.entity_id] = info
+        entity_sources(self.hass)[self.entity_id] = entity_info
+
+        self._state_info = {
+            "unrecorded_attributes": self.__combined_unrecorded_attributes
+        }
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
@@ -1202,8 +1258,21 @@ class Entity(ABC):
     def _suggest_report_issue(self) -> str:
         """Suggest to report an issue."""
         report_issue = ""
+
+        integration = None
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2024.1
+        if self.platform:
+            with suppress(IntegrationNotLoaded):
+                integration = async_get_loaded_integration(
+                    self.hass, self.platform.platform_name
+                )
+
         if "custom_components" in type(self).__module__:
-            report_issue = "report it to the custom integration author."
+            if integration and integration.issue_tracker:
+                report_issue = f"create a bug report at {integration.issue_tracker}"
+            else:
+                report_issue = "report it to the custom integration author"
         else:
             report_issue = (
                 "create a bug report at "

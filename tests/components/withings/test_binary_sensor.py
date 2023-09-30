@@ -1,76 +1,75 @@
 """Tests for the Withings component."""
+from unittest.mock import AsyncMock
+
+from aiohttp.client_exceptions import ClientResponseError
+import pytest
 from withings_api.common import NotifyAppli
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.withings.binary_sensor import BINARY_SENSORS
-from homeassistant.components.withings.common import WithingsEntityDescription
-from homeassistant.components.withings.const import Measurement
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .common import ComponentFactory, async_get_entity_id, new_profile_config
+from . import call_webhook, setup_integration
+from .conftest import USER_ID, WEBHOOK_ID
 
-WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsEntityDescription] = {
-    attr.measurement: attr for attr in BINARY_SENSORS
-}
+from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_binary_sensor(
     hass: HomeAssistant,
-    component_factory: ComponentFactory,
-    current_request_with_host: None,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test binary sensor."""
-    in_bed_attribute = WITHINGS_MEASUREMENTS_MAP[Measurement.IN_BED]
-    person0 = new_profile_config("person0", 0)
-    person1 = new_profile_config("person1", 1)
+    await setup_integration(hass, webhook_config_entry)
 
-    entity_registry: EntityRegistry = er.async_get(hass)
+    client = await hass_client_no_auth()
 
-    await component_factory.configure_component(profile_configs=(person0, person1))
-    assert not await async_get_entity_id(
-        hass, in_bed_attribute, person0.user_id, BINARY_SENSOR_DOMAIN
+    entity_id = "binary_sensor.henk_in_bed"
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    resp = await call_webhook(
+        hass,
+        WEBHOOK_ID,
+        {"userid": USER_ID, "appli": NotifyAppli.BED_IN},
+        client,
     )
-    assert not await async_get_entity_id(
-        hass, in_bed_attribute, person1.user_id, BINARY_SENSOR_DOMAIN
-    )
-
-    # person 0
-    await component_factory.setup_profile(person0.user_id)
-    await component_factory.setup_profile(person1.user_id)
-
-    entity_id0 = await async_get_entity_id(
-        hass, in_bed_attribute, person0.user_id, BINARY_SENSOR_DOMAIN
-    )
-    entity_id1 = await async_get_entity_id(
-        hass, in_bed_attribute, person1.user_id, BINARY_SENSOR_DOMAIN
-    )
-    assert entity_id0
-    assert entity_id1
-
-    assert entity_registry.async_is_registered(entity_id0)
-    assert hass.states.get(entity_id0).state == STATE_UNAVAILABLE
-
-    resp = await component_factory.call_webhook(person0.user_id, NotifyAppli.BED_IN)
     assert resp.message_code == 0
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id0).state == STATE_ON
+    assert hass.states.get(entity_id).state == STATE_ON
 
-    resp = await component_factory.call_webhook(person0.user_id, NotifyAppli.BED_OUT)
+    resp = await call_webhook(
+        hass,
+        WEBHOOK_ID,
+        {"userid": USER_ID, "appli": NotifyAppli.BED_OUT},
+        client,
+    )
     assert resp.message_code == 0
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id0).state == STATE_OFF
+    assert hass.states.get(entity_id).state == STATE_OFF
 
-    # person 1
-    assert hass.states.get(entity_id1).state == STATE_UNAVAILABLE
 
-    resp = await component_factory.call_webhook(person1.user_id, NotifyAppli.BED_IN)
-    assert resp.message_code == 0
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id1).state == STATE_ON
+async def test_polling_binary_sensor(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test binary sensor."""
+    await setup_integration(hass, polling_config_entry, False)
 
-    # Unload
-    await component_factory.unload(person0)
-    await component_factory.unload(person1)
+    client = await hass_client_no_auth()
+
+    entity_id = "binary_sensor.henk_in_bed"
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    with pytest.raises(ClientResponseError):
+        await call_webhook(
+            hass,
+            WEBHOOK_ID,
+            {"userid": USER_ID, "appli": NotifyAppli.BED_IN},
+            client,
+        )

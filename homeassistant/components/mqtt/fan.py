@@ -50,7 +50,12 @@ from .const import (
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import (
     MessageCallbackType,
     MqttCommandTemplate,
@@ -59,7 +64,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from .util import valid_publish_topic, valid_subscribe_topic
 
 CONF_DIRECTION_STATE_TOPIC = "direction_state_topic"
 CONF_DIRECTION_COMMAND_TOPIC = "direction_command_topic"
@@ -215,6 +220,9 @@ async def _async_setup_entity(
 class MqttFan(MqttEntity, FanEntity):
     """A MQTT fan component."""
 
+    _attr_percentage: int | None = None
+    _attr_preset_mode: str | None = None
+
     _default_name = DEFAULT_NAME
     _entity_id_format = fan.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_FAN_ATTRIBUTES_BLOCKED
@@ -231,19 +239,6 @@ class MqttFan(MqttEntity, FanEntity):
     _optimistic_preset_mode: bool
     _payload: dict[str, Any]
     _speed_range: tuple[int, int]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT fan."""
-        self._attr_percentage = None
-        self._attr_preset_mode = None
-
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -295,6 +290,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         optimistic = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
+        self._attr_assumed_state = bool(self._optimistic)
         self._optimistic_direction = (
             optimistic or self._topic[CONF_DIRECTION_STATE_TOPIC] is None
         )
@@ -366,6 +362,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_is_on"})
         def state_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message."""
             payload = self._value_templates[CONF_STATE](msg.payload)
@@ -378,12 +375,12 @@ class MqttFan(MqttEntity, FanEntity):
                 self._attr_is_on = False
             elif payload == PAYLOAD_NONE:
                 self._attr_is_on = None
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscribe_topic(CONF_STATE_TOPIC, state_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_percentage"})
         def percentage_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for the percentage."""
             rendered_percentage_payload = self._value_templates[ATTR_PERCENTAGE](
@@ -394,7 +391,6 @@ class MqttFan(MqttEntity, FanEntity):
                 return
             if rendered_percentage_payload == self._payload["PERCENTAGE_RESET"]:
                 self._attr_percentage = None
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
             try:
                 percentage = ranged_value_to_percentage(
@@ -423,18 +419,17 @@ class MqttFan(MqttEntity, FanEntity):
                 )
                 return
             self._attr_percentage = percentage
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscribe_topic(CONF_PERCENTAGE_STATE_TOPIC, percentage_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_preset_mode"})
         def preset_mode_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for preset mode."""
             preset_mode = str(self._value_templates[ATTR_PRESET_MODE](msg.payload))
             if preset_mode == self._payload["PRESET_MODE_RESET"]:
                 self._attr_preset_mode = None
-                self.async_write_ha_state()
                 return
             if not preset_mode:
                 _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
@@ -449,12 +444,12 @@ class MqttFan(MqttEntity, FanEntity):
                 return
 
             self._attr_preset_mode = preset_mode
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscribe_topic(CONF_PRESET_MODE_STATE_TOPIC, preset_mode_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_oscillating"})
         def oscillation_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for the oscillation."""
             payload = self._value_templates[ATTR_OSCILLATING](msg.payload)
@@ -465,13 +460,13 @@ class MqttFan(MqttEntity, FanEntity):
                 self._attr_oscillating = True
             elif payload == self._payload["OSCILLATE_OFF_PAYLOAD"]:
                 self._attr_oscillating = False
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if add_subscribe_topic(CONF_OSCILLATION_STATE_TOPIC, oscillation_received):
             self._attr_oscillating = False
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_current_direction"})
         def direction_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for the direction."""
             direction = self._value_templates[ATTR_DIRECTION](msg.payload)
@@ -479,7 +474,6 @@ class MqttFan(MqttEntity, FanEntity):
                 _LOGGER.debug("Ignoring empty direction from '%s'", msg.topic)
                 return
             self._attr_current_direction = str(direction)
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscribe_topic(CONF_DIRECTION_STATE_TOPIC, direction_received)
 
@@ -490,11 +484,6 @@ class MqttFan(MqttEntity, FanEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     @property
     def is_on(self) -> bool | None:

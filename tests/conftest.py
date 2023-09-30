@@ -319,6 +319,12 @@ def long_repr_strings() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True)
+def enable_event_loop_debug(event_loop: asyncio.AbstractEventLoop) -> None:
+    """Enable event loop debug mode."""
+    event_loop.set_debug(True)
+
+
+@pytest.fixture(autouse=True)
 def verify_cleanup(
     event_loop: asyncio.AbstractEventLoop,
     expected_lingering_tasks: bool,
