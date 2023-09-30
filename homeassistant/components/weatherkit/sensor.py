@@ -66,8 +66,9 @@ class WeatherKitSensor(
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        WeatherKitEntity.__init__(self, coordinator)
-        self._attr_unique_id = f"{self._attr_unique_id}_{entity_description.key}"
+        WeatherKitEntity.__init__(
+            self, coordinator, unique_id_suffix=entity_description.key
+        )
         self.entity_description = entity_description
 
     @property
