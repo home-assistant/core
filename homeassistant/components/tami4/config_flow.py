@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_PHONE, DOMAIN
+from .const import CONF_PHONE, CONF_REFRESH_TOKEN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,8 +48,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except InvalidPhoneNumber:
                 errors["base"] = "invalid_phone"
-            except APIExceptions.OTPFailedException:
-                errors["base"] = "invalid_auth"
+            except APIExceptions.Tami4EdgeAPIException:
+                errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -83,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=api.device.name, data={"refresh_token": refresh_token}
+                    title=api.device.name, data={CONF_REFRESH_TOKEN: refresh_token}
                 )
 
         return self.async_show_form(
