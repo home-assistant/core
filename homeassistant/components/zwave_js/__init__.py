@@ -915,6 +915,7 @@ async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     info = hass.data[DOMAIN][entry.entry_id]
+    client: ZwaveClient = info[DATA_CLIENT]
     driver_events: DriverEvents = info[DATA_DRIVER_EVENTS]
 
     tasks: list[Coroutine] = [
@@ -925,8 +926,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     unload_ok = all(await asyncio.gather(*tasks)) if tasks else True
 
-    if hasattr(driver_events, "driver"):
-        await async_disable_server_logging_if_needed(hass, entry, driver_events.driver)
+    if client.connected and client.driver:
+        await async_disable_server_logging_if_needed(hass, entry, client.driver)
     if DATA_CLIENT_LISTEN_TASK in info:
         await disconnect_client(hass, entry)
 

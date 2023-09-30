@@ -465,7 +465,9 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
     def async_update_state_callback(self, new_state: State | None) -> None:
         """Handle state change listener callback."""
         _LOGGER.debug("New_state: %s", new_state)
-        if new_state is None:
+        # HomeKit handles unavailable state via the available property
+        # so we should not propagate it here
+        if new_state is None or new_state.state == STATE_UNAVAILABLE:
             return
         battery_state = None
         battery_charging_state = None

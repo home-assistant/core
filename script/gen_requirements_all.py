@@ -128,8 +128,9 @@ multidict>=6.0.2
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Require to avoid issues with decorators (#93904). v2 has breaking changes.
-pydantic>=1.10.8,<2.0
+# Required to avoid breaking (#101042).
+# v2 has breaking changes (#99218).
+pydantic==1.10.12
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -174,6 +175,11 @@ pysnmp==1000000000.0.0
 # The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
 get-mac==1000000000.0.0
+
+# We want to skip the binary wheels for the 'charset-normalizer' packages.
+# They are build with mypyc, but causes issues with our wheel builder.
+# In order to do so, we need to constrain the version.
+charset-normalizer==3.2.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
