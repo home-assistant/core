@@ -21,23 +21,23 @@ class AzureDataExplorerClient:
 
     def __init__(
         self,
-        clusteringesturi: str,
-        database: str,
-        table: str,
-        client_id: str,
-        client_secret: str,
-        authority_id: str,
-        use_free_cluster: bool,
+        CONF_ADX_CLUSTER_INGEST_URI: str,
+        CONF_ADX_DATABASE_NAME: str,
+        CONF_ADX_TABLE_NAME: str,
+        CONF_APP_REG_ID: str,
+        CONF_APP_REG_SECRET: str,
+        CONF_AUTHORITY_ID: str,
+        CONF_USE_FREE: bool,
     ) -> None:
         """Create the right class."""
 
-        self.cluster_ingest_uri = clusteringesturi
-        self.database = database
-        self.table = table
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.authority_id = authority_id
-        self.use_queued_ingestion = use_free_cluster
+        self.cluster_ingest_uri = CONF_ADX_CLUSTER_INGEST_URI
+        self.database = CONF_ADX_DATABASE_NAME
+        self.table = CONF_ADX_TABLE_NAME
+        self.client_id = CONF_APP_REG_ID
+        self.client_secret = CONF_APP_REG_SECRET
+        self.authority_id = CONF_AUTHORITY_ID
+        self.use_queued_ingestion = CONF_USE_FREE
 
         self.cluster_query_uri = self.cluster_ingest_uri.replace(
             "https://ingest-", "https://"
@@ -52,7 +52,10 @@ class AzureDataExplorerClient:
 
         # Create cLients for ingesting and querying data
         kcsb = KustoConnectionStringBuilder.with_aad_application_key_authentication(
-            self.cluster_ingest_uri, client_id, client_secret, authority_id
+            self.cluster_ingest_uri,
+            CONF_APP_REG_ID,
+            CONF_APP_REG_SECRET,
+            CONF_AUTHORITY_ID,
         )
 
         if (
@@ -71,7 +74,7 @@ class AzureDataExplorerClient:
     def test_connection(self) -> None:
         """Test connection, will throw Exception when it cannot connect."""
 
-        query = "%s | take 1" % self.table
+        query = f"{self.table} | take 1"
 
         self.query_client.execute_query(self.database, query)
 

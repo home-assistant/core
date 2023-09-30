@@ -109,13 +109,13 @@ class AzureDataExplorer:
         self._entities_filter = hass.data[DOMAIN][DATA_FILTER]
 
         self._client = AzureDataExplorerClient(
-            clusteringesturi=self._entry.data["clusteringesturi"],
-            database=self._entry.data["database"],
-            table=self._entry.data["table"],
-            client_id=self._entry.data["client_id"],
-            client_secret=self._entry.data["client_secret"],
-            authority_id=self._entry.data["authority_id"],
-            use_free_cluster=self._entry.data["use_free_cluster"],
+            CONF_ADX_CLUSTER_INGEST_URI=self._entry.data["clusteringesturi"],
+            CONF_ADX_DATABASE_NAME=self._entry.data["database"],
+            CONF_ADX_TABLE_NAME=self._entry.data["table"],
+            CONF_APP_REG_ID=self._entry.data["client_id"],
+            CONF_APP_REG_SECRET=self._entry.data["client_secret"],
+            CONF_AUTHORITY_ID=self._entry.data["authority_id"],
+            CONF_USE_FREE=self._entry.data["use_free_cluster"],
         )
 
         self._send_interval = self._entry.options[CONF_SEND_INTERVAL]
@@ -199,8 +199,7 @@ class AzureDataExplorer:
                 _LOGGER.error("Could not find database or table: %s", err)
             except KustoAuthenticationError as err:
                 _LOGGER.error("Could not authenticate to Azure Data Explorer: %s", err)
-            except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.error("Unknown error: %s", err)
+
         self._schedule_next_send()
 
     def _parse_event(
@@ -221,8 +220,6 @@ class AzureDataExplorer:
         if "\n" in state.state:
             return None, dropped + 1
 
-        json_string = bytes(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
-        json_dictionary = json.loads(json_string)
-        json_event = json.dumps(json_dictionary)
+        json_event = str(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
 
         return (json_event, dropped)

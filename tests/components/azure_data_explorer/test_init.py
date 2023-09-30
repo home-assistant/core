@@ -91,26 +91,26 @@ async def test_put_event_on_queue_with_managed_client_with_error_KustoAuthentica
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.assert_called_once()
 
 
-async def test_put_event_on_queue_with_managed_client_with_error_Exception(
-    hass,
-    entry_managed,
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
-) -> None:
-    # pylint: disable=protected-access
-    """Test listening to events from Hass. and writing to ADX with managed client with error Exception."""
+# async def test_put_event_on_queue_with_managed_client_with_error_Exception(
+#     hass,
+#     entry_managed,
+#     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
+# ) -> None:
+#     # pylint: disable=protected-access
+#     """Test listening to events from Hass. and writing to ADX with managed client with error Exception."""
 
-    hass.states.async_set("sensor.test_sensor", STATE_ON)
+#     hass.states.async_set("sensor.test_sensor", STATE_ON)
 
-    async_fire_time_changed(
-        hass, utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL])
-    )
+#     async_fire_time_changed(
+#         hass, utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL])
+#     )
 
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.side_effect = (
-        Exception("test")
-    )
+#     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.side_effect = (
+#         Exception("test")
+#     )
 
-    await hass.async_block_till_done()
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.assert_called_once()
+#     await hass.async_block_till_done()
+#     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.assert_called_once()
 
 
 async def test_put_event_on_queue_with_queueing_client(

@@ -7,9 +7,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.azure_data_explorer.const import DOMAIN, STEP_USER
 
-from .const import BASE_CONFIG, BASE_CONFIG_FULL, UPDATE_OPTIONS
-
-from tests.common import MockConfigEntry
+from .const import BASE_CONFIG, UPDATE_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,24 +106,6 @@ async def test_connection_error_Exception(
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_single_instance(hass) -> None:
-    """Test uniqueness of username."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=BASE_CONFIG_FULL,
-        title="test-instance",
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=BASE_CONFIG_FULL,
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_options_flow(hass, entry_managed) -> None:

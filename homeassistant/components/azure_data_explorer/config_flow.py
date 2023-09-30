@@ -51,13 +51,13 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
         """
         client = AzureDataExplorerClient(
-            clusteringesturi=data["clusteringesturi"],
-            database=data["database"],
-            table=data["table"],
-            client_id=data["client_id"],
-            client_secret=data["client_secret"],
-            authority_id=data["authority_id"],
-            use_free_cluster=data["use_free_cluster"],
+            CONF_ADX_CLUSTER_INGEST_URI=data["clusteringesturi"],
+            CONF_ADX_DATABASE_NAME=data["database"],
+            CONF_ADX_TABLE_NAME=data["table"],
+            CONF_APP_REG_ID=data["client_id"],
+            CONF_APP_REG_SECRET=data["client_secret"],
+            CONF_AUTHORITY_ID=data["authority_id"],
+            CONF_USE_FREE=data["use_free_cluster"],
         )
 
         try:
@@ -89,8 +89,6 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         errors: dict = {}
         if user_input:
