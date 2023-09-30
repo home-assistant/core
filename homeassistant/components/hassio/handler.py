@@ -264,6 +264,27 @@ async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> b
 
 
 @api_data
+async def async_get_green_settings(hass: HomeAssistant) -> dict[str, bool]:
+    """Return settings specific to Home Assistant Green."""
+    hassio: HassIO = hass.data[DOMAIN]
+    return await hassio.send_command("/os/boards/green", method="get")
+
+
+@api_data
+async def async_set_green_settings(
+    hass: HomeAssistant, settings: dict[str, bool]
+) -> dict:
+    """Set settings specific to Home Assistant Green.
+
+    Returns an empty dict.
+    """
+    hassio: HassIO = hass.data[DOMAIN]
+    return await hassio.send_command(
+        "/os/boards/green", method="post", payload=settings
+    )
+
+
+@api_data
 async def async_get_yellow_settings(hass: HomeAssistant) -> dict[str, bool]:
     """Return settings specific to Home Assistant Yellow."""
     hassio: HassIO = hass.data[DOMAIN]
