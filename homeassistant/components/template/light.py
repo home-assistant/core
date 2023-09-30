@@ -308,8 +308,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @property
     def color_mode(self):
         """Return current color mode."""
-        if self._color_mode:
-            return self._color_mode
+        return self._color_mode
 
     @property
     def supported_color_modes(self):
