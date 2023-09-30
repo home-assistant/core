@@ -42,7 +42,7 @@ HATasmota==0.7.3
 Pillow==10.0.0
 
 # homeassistant.components.plex
-PlexAPI==4.13.2
+PlexAPI==4.15.3
 
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
