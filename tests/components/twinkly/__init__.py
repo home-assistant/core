@@ -81,6 +81,12 @@ class ClientMock:
         """Change the name of this virtual device."""
         self.device_info[DEV_NAME] = new_name
 
+    async def get_current_colour(self) -> dict:
+        """Get static color."""
+        if "white" in self.color and self.color["white"] is None:
+            del self.color["white"]
+        return self.color
+
     async def set_static_colour(self, colour) -> None:
         """Set static color."""
         self.color = {
@@ -90,12 +96,6 @@ class ClientMock:
             "white": colour.white,
         }
         self.default_mode = "color"
-
-    async def get_current_colour(self) -> dict:
-        """Get static color."""
-        if "white" in self.color and self.color["white"] is None:
-            del self.color["white"]
-        return self.color
 
     async def set_cycle_colours(self, colour) -> None:
         """Set color cycle."""
