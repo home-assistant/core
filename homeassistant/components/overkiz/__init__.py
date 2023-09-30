@@ -159,6 +159,7 @@ async def _async_migrate_entries(
     def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
         # Python 3.11 treats (str, Enum) and StrEnum in a different way
         # Since pyOverkiz switched to StrEnum, we need to rewrite the unique ids once to the new style
+        # io://xxxx-xxxx-xxxx/3541212-OverkizState.CORE_DISCRETE_RSSI_LEVEL -> io://xxxx-xxxx-xxxx/3541212-core:DiscreteRSSILevelState
         if (key := entry.unique_id.split("-")[-1]).startswith("OverkizState"):
             state = key.split(".")[1]
             new_unique_id = entry.unique_id.replace(key, OverkizState[state])
