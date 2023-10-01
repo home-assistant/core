@@ -298,5 +298,5 @@ async def test_no_unique_id(
     assert state is not None
     assert state.attributes.get("friendly_name") == "Rain Bird Controller"
 
-    entity = entity_registry.async_get(TEST_ENTITY)
-    assert not entity
+    entity_entry = entity_registry.async_get(TEST_ENTITY)
+    assert not entity_entry

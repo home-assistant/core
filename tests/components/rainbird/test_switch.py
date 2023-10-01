@@ -103,8 +103,8 @@ async def test_zones(
     assert not hass.states.get("switch.rain_bird_sprinkler_8")
 
     # Verify unique id for one of the switches
-    entity = entity_registry.async_get("switch.rain_bird_sprinkler_3")
-    assert entity.unique_id == "1263613994342-3"
+    entity_entry = entity_registry.async_get("switch.rain_bird_sprinkler_3")
+    assert entity_entry.unique_id == "1263613994342-3"
 
 
 async def test_switch_on(
@@ -305,5 +305,5 @@ async def test_no_unique_id(
     assert zone.attributes.get("friendly_name") == "Rain Bird Sprinkler 3"
     assert zone.state == "off"
 
-    entity = entity_registry.async_get("switch.rain_bird_sprinkler_3")
-    assert entity is None
+    entity_entry = entity_registry.async_get("switch.rain_bird_sprinkler_3")
+    assert entity_entry is None

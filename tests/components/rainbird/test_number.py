@@ -58,9 +58,9 @@ async def test_number_values(
         "unit_of_measurement": "d",
     }
 
-    entity = entity_registry.async_get("number.rain_bird_controller_rain_delay")
-    assert entity
-    assert entity.unique_id == "1263613994342-rain-delay"
+    entity_entry = entity_registry.async_get("number.rain_bird_controller_rain_delay")
+    assert entity_entry
+    assert entity_entry.unique_id == "1263613994342-rain-delay"
 
 
 async def test_set_value(
@@ -155,5 +155,5 @@ async def test_no_unique_id(
         raindelay.attributes.get("friendly_name") == "Rain Bird Controller Rain delay"
     )
 
-    entity = entity_registry.async_get("number.rain_bird_controller_rain_delay")
-    assert not entity
+    entity_entry = entity_registry.async_get("number.rain_bird_controller_rain_delay")
+    assert not entity_entry

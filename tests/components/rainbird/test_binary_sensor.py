@@ -41,9 +41,11 @@ async def test_rainsensor(
         "icon": "mdi:water",
     }
 
-    entity = entity_registry.async_get("binary_sensor.rain_bird_controller_rainsensor")
-    assert entity
-    assert entity.unique_id == "1263613994342-rainsensor"
+    entity_entry = entity_registry.async_get(
+        "binary_sensor.rain_bird_controller_rainsensor"
+    )
+    assert entity_entry
+    assert entity_entry.unique_id == "1263613994342-rainsensor"
 
 
 @pytest.mark.parametrize(
@@ -68,5 +70,7 @@ async def test_no_unique_id(
         rainsensor.attributes.get("friendly_name") == "Rain Bird Controller Rainsensor"
     )
 
-    entity_entry = entity_registry.async_get("binary_sensor.rain_bird_controller_rainsensor")
-    assert not entity
+    entity_entry = entity_registry.async_get(
+        "binary_sensor.rain_bird_controller_rainsensor"
+    )
+    assert not entity_entry
