@@ -325,7 +325,7 @@ async def test_reauth_flow(
     profile: None,
     setup_credentials: None,
 ) -> None:
-    """Test OAuth reauthentication flow will upedate existing config entry."""
+    """Test OAuth reauthentication flow will update existing config entry."""
     config_entry.add_to_hass(hass)
 
     entries = hass.config_entries.async_entries(DOMAIN)
