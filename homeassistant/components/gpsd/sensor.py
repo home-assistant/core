@@ -1,15 +1,12 @@
 """Support for GPSD."""
-from __future__ import annotations
-
 import logging
-import socket
 from typing import Any
 
-from gps3.agps3threaded import AGPS3mechanism
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
+    ATTR_ELEVATION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_MODE,
@@ -18,16 +15,16 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import ATTR_CLIMB, ATTR_GPS_TIME, ATTR_SPEED
+from .coordinator import GpsdCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_CLIMB = "climb"
-ATTR_ELEVATION = "elevation"
-ATTR_GPS_TIME = "gps_time"
-ATTR_SPEED = "speed"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "GPS"
@@ -42,58 +39,49 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the GPSD component."""
-    name = config[CONF_NAME]
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
+    coordinator = GpsdCoordinator(hass, config)
+    await coordinator.async_refresh()
+    if not coordinator.last_update_success:
+        raise PlatformNotReady
 
-    # Will hopefully be possible with the next gps3 update
-    # https://github.com/wadda/gps3/issues/11
-    # from gps3 import gps3
-    # try:
-    #     gpsd_socket = gps3.GPSDSocket()
-    #     gpsd_socket.connect(host=host, port=port)
-    # except GPSError:
-    #     _LOGGER.warning('Not able to connect to GPSD')
-    #     return False
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.connect((host, port))
-        sock.shutdown(2)
-        _LOGGER.debug("Connection to GPSD possible")
-    except OSError:
-        _LOGGER.error("Not able to connect to GPSD")
-        return
-
-    add_entities([GpsdSensor(hass, name, host, port)])
+    add_entities(
+        [
+            GpsdSensor(
+                hass,
+                coordinator,
+                config[CONF_NAME],
+                config[CONF_HOST],
+                config[CONF_PORT],
+            )
+        ]
+    )
 
 
-class GpsdSensor(SensorEntity):
+class GpsdSensor(CoordinatorEntity[GpsdCoordinator], SensorEntity):
     """Representation of a GPS receiver available via GPSD."""
 
     def __init__(
         self,
         hass: HomeAssistant,
+        coordinator: GpsdCoordinator,
         name: str,
         host: str,
         port: int,
     ) -> None:
         """Initialize the GPSD sensor."""
+        super().__init__(coordinator)
+
         self.hass = hass
         self._name = name
         self._host = host
         self._port = port
-
-        self.agps_thread = AGPS3mechanism()
-        self.agps_thread.stream_data(host=self._host, port=self._port)
-        self.agps_thread.run_thread()
 
     @property
     def name(self) -> str:
@@ -103,9 +91,9 @@ class GpsdSensor(SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state of GPSD."""
-        if self.agps_thread.data_stream.mode == 3:
+        if self.coordinator.data["mode"] == 3:
             return "3D Fix"
-        if self.agps_thread.data_stream.mode == 2:
+        if self.coordinator.data["mode"] == 2:
             return "2D Fix"
         return None
 
@@ -113,19 +101,19 @@ class GpsdSensor(SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the GPS."""
         return {
-            ATTR_LATITUDE: self.agps_thread.data_stream.lat,
-            ATTR_LONGITUDE: self.agps_thread.data_stream.lon,
-            ATTR_ELEVATION: self.agps_thread.data_stream.alt,
-            ATTR_GPS_TIME: self.agps_thread.data_stream.time,
-            ATTR_SPEED: self.agps_thread.data_stream.speed,
-            ATTR_CLIMB: self.agps_thread.data_stream.climb,
-            ATTR_MODE: self.agps_thread.data_stream.mode,
+            ATTR_LATITUDE: self.coordinator.data["latitude"],
+            ATTR_LONGITUDE: self.coordinator.data["longitude"],
+            ATTR_ELEVATION: self.coordinator.data["elevation"],
+            ATTR_GPS_TIME: self.coordinator.data["gps_time"],
+            ATTR_SPEED: self.coordinator.data["speed"],
+            ATTR_CLIMB: self.coordinator.data["climb"],
+            ATTR_MODE: self.coordinator.data["mode"],
         }
 
     @property
     def icon(self) -> str:
         """Return the icon of the sensor."""
-        mode = self.agps_thread.data_stream.mode
+        mode = self.coordinator.data["mode"]
 
         if isinstance(mode, int) and mode >= 2:
             return "mdi:crosshairs-gps"
