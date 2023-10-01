@@ -58,7 +58,7 @@ async def test_step_user_invalid_number(
 
 
 @pytest.mark.parametrize(
-    "mock_request_otp", [APIExceptions.OTPFailedException], indirect=True
+    "mock_request_otp", [exceptions.OTPFailedException], indirect=True
 )
 async def test_step_user_library_exception_OTPFailedException(
     hass: HomeAssistant,
@@ -143,7 +143,7 @@ async def test_step_otp_valid(
 
 
 @pytest.mark.parametrize(
-    "mock_submit_otp", [APIExceptions.OTPFailedException], indirect=True
+    "mock_submit_otp", [exceptions.OTPFailedException], indirect=True
 )
 async def test_step_otp_library_exception_OTPFailedException(
     hass: HomeAssistant,
@@ -179,7 +179,7 @@ async def test_step_otp_library_exception_OTPFailedException(
 
 
 @pytest.mark.parametrize(
-    "mock_submit_otp", [APIExceptions.Tami4EdgeAPIException], indirect=True
+    "mock_submit_otp", [exceptions.Tami4EdgeAPIException], indirect=True
 )
 async def test_step_otp_library_exception_Tami4EdgeAPIException(
     hass: HomeAssistant,

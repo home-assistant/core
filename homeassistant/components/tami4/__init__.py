@@ -1,12 +1,12 @@
 """The Tami4Edge integration."""
 from __future__ import annotations
 
-from Tami4EdgeAPI import Tami4EdgeAPI, exceptions as APIExceptions
+from Tami4EdgeAPI import Tami4EdgeAPI, exceptions
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import API, CONF_REFRESH_TOKEN, COORDINATOR, DOMAIN
 from .coordinator import Tami4EdgeWaterQualityCoordinator
@@ -20,9 +20,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         api = await hass.async_add_executor_job(Tami4EdgeAPI, refresh_token)
-    except APIExceptions.RefreshTokenExpiredException as ex:
+    except exceptions.RefreshTokenExpiredException as ex:
         raise ConfigEntryAuthFailed("API Refresh token expired") from ex
-    except APIExceptions.TokenRefreshFailedException as ex:
+    except exceptions.TokenRefreshFailedException as ex:
         raise ConfigEntryNotReady("Error connecting to API") from ex
 
     coordinator = Tami4EdgeWaterQualityCoordinator(hass, api)

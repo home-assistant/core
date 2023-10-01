@@ -16,7 +16,7 @@ async def test_init_success(mock_api, hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "mock_get_water_quality", [APIExceptions.APIRequestFailedException], indirect=True
+    "mock_get_water_quality", [exceptions.APIRequestFailedException], indirect=True
 )
 async def test_init_with_api_error(mock_api, hass: HomeAssistant) -> None:
     """Test init with api error."""
@@ -26,7 +26,7 @@ async def test_init_with_api_error(mock_api, hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "mock__get_devices", [APIExceptions.TokenRefreshFailedException], indirect=True
+    "mock__get_devices", [exceptions.TokenRefreshFailedException], indirect=True
 )
 async def test_init_with_token_refresh_error(mock_api, hass: HomeAssistant) -> None:
     """Test init with token refresh error."""
@@ -36,7 +36,7 @@ async def test_init_with_token_refresh_error(mock_api, hass: HomeAssistant) -> N
 
 
 @pytest.mark.parametrize(
-    "mock__get_devices", [APIExceptions.RefreshTokenExpiredException], indirect=True
+    "mock__get_devices", [exceptions.RefreshTokenExpiredException], indirect=True
 )
 async def test_init_with_token_refresh_expired_error(
     mock_api, hass: HomeAssistant
