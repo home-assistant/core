@@ -54,7 +54,7 @@ async def test_sensors(
                 "serial_number": 0,
             },
         ),
-        # Legacy case where we used to set unique ids for serial number 0 will preserve existing behavior
+        # Legacy case for old config entries with serial number 0 preserves old behavior
         (
             "0",
             {
