@@ -397,21 +397,22 @@ def compare_quirk_class(endpoint: Endpoint, names: str | Collection[str]):
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     clusters.hvac.Thermostat.cluster_id
 )
-class DanfossTRVChannel(ThermostatClusterHandler):
+class ManufacturerSpecificThermostat(ThermostatClusterHandler):
     """TRV Channel class for the Danfoss TRV and derivatives."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint):
         """Extend ThermostatClusterHandler."""
-        super().__init__(*args, **kwargs)
 
-        if compare_quirk_class(self._endpoint, "thermostat.DanfossThermostat"):
+        if compare_quirk_class(endpoint, "thermostat.DanfossThermostat"):
             self.REPORT_CONFIG = (
                 *self.REPORT_CONFIG,
                 AttrReportConfig(
                     attr="open_window_detection", config=REPORT_CONFIG_DEFAULT
                 ),
                 AttrReportConfig(attr="heat_required", config=REPORT_CONFIG_ASAP),
-                AttrReportConfig(attr="mounting_mode_active", config=REPORT_CONFIG_DEFAULT),
+                AttrReportConfig(
+                    attr="mounting_mode_active", config=REPORT_CONFIG_DEFAULT
+                ),
                 AttrReportConfig(attr="load_estimate", config=REPORT_CONFIG_DEFAULT),
                 AttrReportConfig(
                     attr="adaptation_run_status", config=REPORT_CONFIG_DEFAULT
@@ -437,19 +438,22 @@ class DanfossTRVChannel(ThermostatClusterHandler):
                 "adaptation_run_settings": True,
             }
 
+        super().__init__(cluster, endpoint)
+
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     clusters.hvac.UserInterface.cluster_id
 )
-class DanfossTRVInterfaceChannel(UserInterface):
+class ManufacturerSpecificUserInterface(UserInterface):
     """Interface Channel class for the Danfoss TRV and derivatives."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint):
         """Extend UserInterface."""
-        super().__init__(*args, **kwargs)
 
-        if compare_quirk_class(self._endpoint, "thermostat.DanfossThermostat"):
+        if compare_quirk_class(endpoint, "thermostat.DanfossThermostat"):
             self.ZCL_INIT_ATTRS = {**self.ZCL_INIT_ATTRS, "viewing_direction": True}
+
+        super().__init__(cluster, endpoint)
 
     @classmethod
     def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
@@ -460,16 +464,19 @@ class DanfossTRVInterfaceChannel(UserInterface):
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     clusters.homeautomation.Diagnostic.cluster_id
 )
-class DanfossTRVDiagnosticChannel(Diagnostic):
+class ManufacturerSpecificDiagnostic(Diagnostic):
     """Diagnostic Channel class for the Danfoss TRV and derivatives."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint):
         """Extend Diagnostic."""
-        super().__init__(*args, **kwargs)
 
-        if compare_quirk_class(self._endpoint, "thermostat.DanfossThermostat"):
+        if compare_quirk_class(endpoint, "thermostat.DanfossThermostat"):
             self.REPORT_CONFIG = (
-                *self.ZCL_INIT_ATTRS,
+                *self.REPORT_CONFIG,
                 AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
-                AttrReportConfig(attr="motor_step_counter", config=REPORT_CONFIG_DEFAULT),
+                AttrReportConfig(
+                    attr="motor_step_counter", config=REPORT_CONFIG_DEFAULT
+                ),
             )
+
+        super().__init__(cluster, endpoint)
