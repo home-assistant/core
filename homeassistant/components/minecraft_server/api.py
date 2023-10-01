@@ -35,8 +35,8 @@ class MinecraftServerData:
 class MinecraftServerType(StrEnum):
     """Enumeration of Minecraft Server types."""
 
-    JAVA_EDITION = "Java Edition"
     BEDROCK_EDITION = "Bedrock Edition"
+    JAVA_EDITION = "Java Edition"
 
 
 class MinecraftServerAddressError(Exception):

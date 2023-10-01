@@ -34,33 +34,19 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             }
 
             # Some Bedrock Edition servers mimic a Java Edition server, therefore check for a Bedrock Edition server first.
-            try:
-                bedrock_server = MinecraftServer(
-                    MinecraftServerType.BEDROCK_EDITION, address
+            for server_type in MinecraftServerType:
+                try:
+                    server = MinecraftServer(server_type, address)
+                except MinecraftServerAddressError:
+                    pass
+                else:
+                    if await server.async_is_online():
+                        config_data[CONF_TYPE] = server_type
+                        return self.async_create_entry(title=address, data=config_data)
+
+                _LOGGER.debug(
+                    "Connection check to %s server '%s' failed", server_type, address
                 )
-            except MinecraftServerAddressError:
-                pass
-            else:
-                if await bedrock_server.async_is_online():
-                    config_data[CONF_TYPE] = MinecraftServerType.BEDROCK_EDITION
-                    return self.async_create_entry(title=address, data=config_data)
-
-            _LOGGER.debug(
-                "Connection check to Bedrock Edition server '%s' failed", address
-            )
-
-            try:
-                java_server = MinecraftServer(MinecraftServerType.JAVA_EDITION, address)
-            except MinecraftServerAddressError:
-                pass
-            else:
-                if await java_server.async_is_online():
-                    config_data[CONF_TYPE] = MinecraftServerType.JAVA_EDITION
-                    return self.async_create_entry(title=address, data=config_data)
-
-            _LOGGER.debug(
-                "Connection check to Java Edition server '%s' failed", address
-            )
 
             # Host or port invalid or server not reachable.
             errors["base"] = "cannot_connect"
