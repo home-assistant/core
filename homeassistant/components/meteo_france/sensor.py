@@ -196,9 +196,9 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator_forecast: DataUpdateCoordinator[Forecast] = data[COORDINATOR_FORECAST]
     coordinator_rain: DataUpdateCoordinator[Rain] | None = data[COORDINATOR_RAIN]
-    coordinator_alert: DataUpdateCoordinator[CurrentPhenomenons] | None = data[
+    coordinator_alert: DataUpdateCoordinator[CurrentPhenomenons] | None = data.get(
         COORDINATOR_ALERT
-    ]
+    )
 
     entities: list[MeteoFranceSensor[Any]] = [
         MeteoFranceSensor(coordinator_forecast, description)

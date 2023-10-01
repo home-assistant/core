@@ -143,7 +143,7 @@ async def test_no_servers_found(
     current_request_with_host: None,
 ) -> None:
     """Test when no servers are on an account."""
-    requests_mock.get("https://plex.tv/api/resources", text=empty_payload)
+    requests_mock.get("https://plex.tv/api/v2/resources", text=empty_payload)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -225,7 +225,7 @@ async def test_multiple_servers_with_selection(
     assert result["step_id"] == "user"
 
     requests_mock.get(
-        "https://plex.tv/api/resources",
+        "https://plex.tv/api/v2/resources",
         text=plextv_resources_two_servers,
     )
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
@@ -289,7 +289,7 @@ async def test_adding_last_unconfigured_server(
     assert result["step_id"] == "user"
 
     requests_mock.get(
-        "https://plex.tv/api/resources",
+        "https://plex.tv/api/v2/resources",
         text=plextv_resources_two_servers,
     )
 
@@ -346,9 +346,9 @@ async def test_all_available_servers_configured(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    requests_mock.get("https://plex.tv/users/account", text=plextv_account)
+    requests_mock.get("https://plex.tv/api/v2/user", text=plextv_account)
     requests_mock.get(
-        "https://plex.tv/api/resources",
+        "https://plex.tv/api/v2/resources",
         text=plextv_resources_two_servers,
     )
 
@@ -776,7 +776,7 @@ async def test_reauth_multiple_servers_available(
 ) -> None:
     """Test setup and reauthorization of a Plex token when multiple servers are available."""
     requests_mock.get(
-        "https://plex.tv/api/resources",
+        "https://plex.tv/api/v2/resources",
         text=plextv_resources_two_servers,
     )
 

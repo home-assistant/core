@@ -52,7 +52,7 @@ def add_province_to_schema(
 ) -> vol.Schema:
     """Update schema with province from country."""
     all_countries = list_supported_countries()
-    if not all_countries[country]:
+    if not all_countries.get(country):
         return schema
 
     province_list = [NONE_SENTINEL, *all_countries[country]]
@@ -69,35 +69,55 @@ def add_province_to_schema(
     return vol.Schema({**DATA_SCHEMA_OPT.schema, **add_schema})
 
 
+def _is_valid_date_range(check_date: str, error: type[HomeAssistantError]) -> bool:
+    """Validate date range."""
+    if check_date.find(",") > 0:
+        dates = check_date.split(",", maxsplit=1)
+        for date in dates:
+            if dt_util.parse_date(date) is None:
+                raise error("Incorrect date in range")
+        return True
+    return False
+
+
 def validate_custom_dates(user_input: dict[str, Any]) -> None:
     """Validate custom dates for add/remove holidays."""
-
     for add_date in user_input[CONF_ADD_HOLIDAYS]:
-        if dt_util.parse_date(add_date) is None:
+        if (
+            not _is_valid_date_range(add_date, AddDateRangeError)
+            and dt_util.parse_date(add_date) is None
+        ):
             raise AddDatesError("Incorrect date")
 
-    cls: HolidayBase = country_holidays(user_input[CONF_COUNTRY])
     year: int = dt_util.now().year
-    obj_holidays: HolidayBase = country_holidays(
-        user_input[CONF_COUNTRY],
-        subdiv=user_input.get(CONF_PROVINCE),
-        years=year,
-        language=cls.default_language,
-    )
+    if country := user_input[CONF_COUNTRY]:
+        cls = country_holidays(country)
+        obj_holidays = country_holidays(
+            country=country,
+            subdiv=user_input.get(CONF_PROVINCE),
+            years=year,
+            language=cls.default_language,
+        )
+    else:
+        obj_holidays = HolidayBase(years=year)
 
     for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
-        if dt_util.parse_date(remove_date) is None:
-            if obj_holidays.get_named(remove_date) == []:
-                raise RemoveDatesError("Incorrect date or name")
+        if (
+            not _is_valid_date_range(remove_date, RemoveDateRangeError)
+            and dt_util.parse_date(remove_date) is None
+            and obj_holidays.get_named(remove_date) == []
+        ):
+            raise RemoveDatesError("Incorrect date or name")
 
 
 DATA_SCHEMA_SETUP = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Required(CONF_COUNTRY): SelectSelector(
+        vol.Optional(CONF_COUNTRY, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
-                options=list(list_supported_countries()),
+                options=[NONE_SENTINEL, *list(list_supported_countries())],
                 mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_COUNTRY,
             )
         ),
     }
@@ -208,6 +228,9 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
+
+            if combined_input.get(CONF_COUNTRY, NONE_SENTINEL) == NONE_SENTINEL:
+                combined_input[CONF_COUNTRY] = None
             if combined_input.get(CONF_PROVINCE, NONE_SENTINEL) == NONE_SENTINEL:
                 combined_input[CONF_PROVINCE] = None
 
@@ -217,8 +240,12 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except AddDatesError:
                 errors["add_holidays"] = "add_holiday_error"
+            except AddDateRangeError:
+                errors["add_holidays"] = "add_holiday_range_error"
             except RemoveDatesError:
                 errors["remove_holidays"] = "remove_holiday_error"
+            except RemoveDateRangeError:
+                errors["remove_holidays"] = "remove_holiday_range_error"
             except NotImplementedError:
                 self.async_abort(reason="incorrect_province")
 
@@ -278,8 +305,12 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 )
             except AddDatesError:
                 errors["add_holidays"] = "add_holiday_error"
+            except AddDateRangeError:
+                errors["add_holidays"] = "add_holiday_range_error"
             except RemoveDatesError:
                 errors["remove_holidays"] = "remove_holiday_error"
+            except RemoveDateRangeError:
+                errors["remove_holidays"] = "remove_holiday_range_error"
             else:
                 LOGGER.debug("abort_check in options with %s", combined_input)
                 try:
@@ -322,7 +353,15 @@ class AddDatesError(HomeAssistantError):
     """Exception for error adding dates."""
 
 
+class AddDateRangeError(HomeAssistantError):
+    """Exception for error adding dates."""
+
+
 class RemoveDatesError(HomeAssistantError):
+    """Exception for error removing dates."""
+
+
+class RemoveDateRangeError(HomeAssistantError):
     """Exception for error removing dates."""
 
 

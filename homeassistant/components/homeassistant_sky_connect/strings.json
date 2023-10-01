@@ -60,7 +60,7 @@
       }
     },
     "error": {
-      "unknown": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "addon_info_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_info_failed%]",
