@@ -416,6 +416,11 @@ class SensorDeviceClass(StrEnum):
     """
 
 
+IMPLICTIT_NUMERIC_DEVICE_CLASSES = {
+    SensorDeviceClass.AQI,
+    SensorDeviceClass.PH,
+    SensorDeviceClass.POWER_FACTOR,
+}
 NON_NUMERIC_DEVICE_CLASSES = {
     SensorDeviceClass.DATE,
     SensorDeviceClass.ENUM,

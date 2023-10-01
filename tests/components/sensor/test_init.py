@@ -266,6 +266,48 @@ async def test_a_sensor_with_a_non_numeric_device_class(
 
 
 @pytest.mark.parametrize(
+    ("device_class", "native_value", "fail"),
+    [
+        (SensorDeviceClass.AQI, 12, False),
+        (SensorDeviceClass.PH, 7, False),
+        (SensorDeviceClass.POWER_FACTOR, 2, False),
+        (SensorDeviceClass.AQI, "bla", True),
+        (SensorDeviceClass.PH, "milk", True),
+        (SensorDeviceClass.POWER_FACTOR, "beer", True),
+    ],
+)
+async def test_a_sensor_with_am_impicit_numeric_device_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    device_class: str,
+    native_value: str | float,
+    fail: bool,
+) -> None:
+    """Test that a sensor with an implicit numeric device class will be numeric.
+
+    A numeric sensor with a valid device class should never be
+    handled as non numeric when `None` is a valid unit_of_measurement.
+    """
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=native_value,
+        native_unit_of_measurement=None,
+        device_class=device_class,
+    )
+
+    await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(platform.ENTITIES["0"].entity_id)
+    assert (
+        fail and state is None or state is not None and state.state == str(native_value)
+    )
+
+
+@pytest.mark.parametrize(
     ("device_class", "state_value", "provides"),
     [
         (SensorDeviceClass.DATE, "2021-01-09", "date"),

@@ -71,6 +71,7 @@ from .const import (  # noqa: F401
     DEVICE_CLASSES,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
+    IMPLICTIT_NUMERIC_DEVICE_CLASSES,
     NON_NUMERIC_DEVICE_CLASSES,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
@@ -283,6 +284,7 @@ class SensorEntity(Entity):
             self.state_class is not None
             or self.native_unit_of_measurement is not None
             or self.suggested_display_precision is not None
+            or device_class in IMPLICTIT_NUMERIC_DEVICE_CLASSES
         ):
             return True
         # Sensors with custom device classes will have the device class
