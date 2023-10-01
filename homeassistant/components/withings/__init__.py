@@ -41,7 +41,14 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from .api import ConfigEntryWithingsApi
-from .const import CONF_CLOUDHOOK_URL, CONF_PROFILES, CONF_USE_WEBHOOK, DOMAIN, LOGGER
+from .const import (
+    CONF_CLOUDHOOK_URL,
+    CONF_PROFILES,
+    CONF_USE_WEBHOOK,
+    DEFAULT_TITLE,
+    DOMAIN,
+    LOGGER,
+)
 from .coordinator import WithingsDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -151,10 +158,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             return
 
+        webhook_name = "Withings"
+        if entry.title != DEFAULT_TITLE:
+            webhook_name += " ".join([webhook_name, entry.title])
+
         webhook_register(
             hass,
             DOMAIN,
-            "Withings",
+            webhook_name,
             entry.data[CONF_WEBHOOK_ID],
             get_webhook_handler(coordinator),
         )
