@@ -10,6 +10,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import PlugwiseDataUpdateCoordinator
+from .util import _async_cleanup_registry_entries
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -33,6 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Clean-up any old entities that we no longer provide.
+    _async_cleanup_registry_entries(hass, entry, entry.entry_id)
 
     return True
 
