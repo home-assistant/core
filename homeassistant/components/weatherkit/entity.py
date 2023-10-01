@@ -11,7 +11,7 @@ from .coordinator import WeatherKitDataUpdateCoordinator
 class WeatherKitEntity(Entity):
     """Base entity for all WeatherKit platforms."""
 
-    _base_unique_id: str
+    _attr_has_entity_name = True
 
     def __init__(
         self, coordinator: WeatherKitDataUpdateCoordinator, unique_id_suffix: str | None

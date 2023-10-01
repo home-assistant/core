@@ -1,7 +1,5 @@
 """WeatherKit sensors."""
 
-from datetime import date, datetime
-from decimal import Decimal
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import API_KEY_CURRENT_WEATHER, DOMAIN
+from .const import ATTR_CURRENT_WEATHER, DOMAIN
 from .coordinator import WeatherKitDataUpdateCoordinator
 from .entity import WeatherKitEntity
 
@@ -47,17 +45,15 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
 
-    sensors = [WeatherKitSensor(coordinator, description) for description in SENSORS]
-
-    async_add_entities(sensors)
+    async_add_entities(
+        WeatherKitSensor(coordinator, description) for description in SENSORS
+    )
 
 
 class WeatherKitSensor(
     CoordinatorEntity[WeatherKitDataUpdateCoordinator], WeatherKitEntity, SensorEntity
 ):
     """WeatherKit sensor entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -72,8 +68,6 @@ class WeatherKitSensor(
         self.entity_description = entity_description
 
     @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
+    def native_value(self) -> StateType:
         """Return native value from coordinator current weather."""
-        return self.coordinator.data[API_KEY_CURRENT_WEATHER][
-            self.entity_description.key
-        ]
+        return self.coordinator.data[ATTR_CURRENT_WEATHER][self.entity_description.key]
