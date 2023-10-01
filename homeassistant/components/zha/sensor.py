@@ -1194,7 +1194,7 @@ class DanfossSoftwareErrorCode(Sensor, id_suffix="sw_error_code"):
             key for (key, elem) in self.extra_state_attributes.items() if elem
         ]
 
-        return ", ".join(error_code_list) if error_code_list else "Nothing"
+        return ", ".join(error_code_list) if error_code_list else "Good"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
