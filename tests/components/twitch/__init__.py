@@ -154,6 +154,7 @@ class TwitchMock:
         token: str,
         scope: list[AuthScope],
         validate: bool = True,
+        refresh_token: str | None = None,
     ) -> None:
         """Set user authentication."""
         pass

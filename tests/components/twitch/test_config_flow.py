@@ -65,6 +65,7 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == CONF_CHANNELS
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_CHANNELS: ["internetofthings", "homeassistant"]}
@@ -155,7 +156,7 @@ async def test_reauth_from_import(
         unique_id="123",
         data={
             "auth_implementation": DOMAIN,
-            "token": {
+            CONF_TOKEN: {
                 "access_token": "mock-access-token",
                 "refresh_token": "mock-refresh-token",
                 "expires_at": expires_at,
@@ -163,7 +164,7 @@ async def test_reauth_from_import(
             },
             "imported": True,
         },
-        options={"channels": ["internetofthings"]},
+        options={CONF_CHANNELS: ["internetofthings"]},
     )
     await test_reauth(
         hass,
@@ -231,7 +232,7 @@ async def test_import(
             CONF_CLIENT_ID: "1234",
             CONF_CLIENT_SECRET: "abcd",
             CONF_TOKEN: "efgh",
-            "channels": ["channel123"],
+            CONF_CHANNELS: ["channel123"],
         },
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -263,7 +264,7 @@ async def test_import_invalid_token(
             CONF_CLIENT_ID: "1234",
             CONF_CLIENT_SECRET: "abcd",
             CONF_TOKEN: "efgh",
-            "channels": ["channel123"],
+            CONF_CHANNELS: ["channel123"],
         },
     )
     assert result["type"] == FlowResultType.ABORT
@@ -292,10 +293,63 @@ async def test_import_already_imported(
             CONF_CLIENT_ID: "1234",
             CONF_CLIENT_SECRET: "abcd",
             CONF_TOKEN: "efgh",
-            "channels": ["channel123"],
+            CONF_CHANNELS: ["channel123"],
         },
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == 1
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    current_request_with_host: None,
+    mock_setup_entry,
+    twitch: TwitchMock,
+    expires_at,
+    scopes: list[str],
+) -> None:
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "platform": "twitch",
+            "auth_implementation": DOMAIN,
+            CONF_CLIENT_ID: "1234",
+            CONF_CLIENT_SECRET: "abcd",
+            CONF_TOKEN: {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": " ".join(scopes),
+            },
+        },
+        options={
+            CONF_CHANNELS: ["internetofthings", "deletedchannel123"],
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == CONF_CHANNELS
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CHANNELS: ["internetofthings", "homeassistant"],
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_CHANNELS: ["internetofthings", "homeassistant"],
+    }
+    assert config_entry.options == {
+        CONF_CHANNELS: ["internetofthings", "homeassistant"],
+    }

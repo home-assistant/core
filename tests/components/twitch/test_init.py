@@ -1,12 +1,12 @@
 """Tests for YouTube."""
 import http
 import time
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aiohttp.client_exceptions import ClientError
 import pytest
 
-from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN
+from homeassistant.components.twitch.const import CONF_CHANNELS, DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -114,3 +114,16 @@ async def test_expired_token_refresh_client_error(
     # Verify a transient failure has occurred
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_reload_config_entry(
+    hass: HomeAssistant,
+    mock_reload_entry: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the configuration entry is reloaded on change."""
+    assert len(mock_reload_entry.mock_calls) == 0
+    hass.config_entries.async_update_entry(
+        init_integration, options={CONF_CHANNELS: ["homeassistant"]}
+    )
+    assert len(mock_reload_entry.mock_calls) == 1
