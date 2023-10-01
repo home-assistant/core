@@ -135,7 +135,7 @@ async def async_setup_entry(
                 translation_placeholders={
                     CONF_COUNTRY: country if country else "-",
                     "title": entry.title,
-                    "named_holiday": remove_holiday,
+                    CONF_REMOVE_HOLIDAYS: remove_holiday,
                 },
                 data={
                     "entry_id": entry.entry_id,
