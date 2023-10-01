@@ -134,7 +134,7 @@
       }
     },
     "bad_named_holiday": {
-      "title": "Configured named holiday {holiday} in country {country} for {title} does not exist",
+      "title": "Configured named holiday {remove_holidays} in country {country} for {title} does not exist",
       "fix_flow": {
         "step": {
           "named_holiday": {
