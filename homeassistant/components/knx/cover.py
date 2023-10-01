@@ -148,12 +148,7 @@ class KNXCover(KnxEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        if self._device.supports_stop:
-            await self._device.stop()
-        elif self._device.is_opening():
-            await self._device.set_short_up()
-        elif self._device.is_closing():
-            await self._device.set_short_down()
+        await self._device.stop()
 
     @property
     def current_cover_tilt_position(self) -> int | None:

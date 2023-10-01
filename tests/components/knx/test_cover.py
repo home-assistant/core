@@ -91,7 +91,7 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await hass.services.async_call(
         "cover", "stop_cover", target={"entity_id": "cover.test"}, blocking=True
     )
-    await knx.assert_write("1/0/1", False)
+    await knx.assert_write("1/0/1", True)
 
     assert len(events) == 1
     events.pop()
