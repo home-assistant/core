@@ -68,5 +68,5 @@ async def test_no_unique_id(
         rainsensor.attributes.get("friendly_name") == "Rain Bird Controller Rainsensor"
     )
 
-    entity = entity_registry.async_get("binary_sensor.rain_bird_controller_rainsensor")
+    entity_entry = entity_registry.async_get("binary_sensor.rain_bird_controller_rainsensor")
     assert not entity
