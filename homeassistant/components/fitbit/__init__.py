@@ -1,5 +1,7 @@
 """The fitbit component."""
 
+from http import HTTPStatus
+
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
@@ -30,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await fitbit_api.async_get_access_token()
     except aiohttp.ClientResponseError as err:
-        if 400 <= err.status < 500:
+        if err.status == HTTPStatus.UNAUTHORIZED:
             raise ConfigEntryAuthFailed from err
         raise ConfigEntryNotReady from err
     except aiohttp.ClientError as err:
