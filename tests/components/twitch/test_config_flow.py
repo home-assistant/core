@@ -64,6 +64,12 @@ async def test_full_flow(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CHANNELS: ["internetofthings", "homeassistant"]}
+    )
+
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
