@@ -18,7 +18,7 @@ from bluetooth_adapters import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.logger import EVENT_LOGGING_CHANGED
+from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -108,6 +108,7 @@ class BluetoothManager:
         "_cancel_unavailable_tracking",
         "_cancel_logging_listener",
         "_advertisement_tracker",
+        "_fallback_intervals",
         "_unavailable_callbacks",
         "_connectable_unavailable_callbacks",
         "_callback_index",
@@ -139,6 +140,7 @@ class BluetoothManager:
         self._cancel_logging_listener: CALLBACK_TYPE | None = None
 
         self._advertisement_tracker = AdvertisementTracker()
+        self._fallback_intervals: dict[str, float] = {}
 
         self._unavailable_callbacks: dict[
             str, list[Callable[[BluetoothServiceInfoBleak], None]]
@@ -342,7 +344,9 @@ class BluetoothManager:
                     # since it may have gone to sleep and since we do not need an active
                     # connection to it we can only determine its availability
                     # by the lack of advertisements
-                    if advertising_interval := intervals.get(address):
+                    if advertising_interval := (
+                        intervals.get(address) or self._fallback_intervals.get(address)
+                    ):
                         advertising_interval += TRACKER_BUFFERING_WOBBLE_SECONDS
                     else:
                         advertising_interval = (
@@ -355,6 +359,7 @@ class BluetoothManager:
                     # The second loop (connectable=False) is responsible for removing
                     # the device from all the interval tracking since it is no longer
                     # available for both connectable and non-connectable
+                    self._fallback_intervals.pop(address, None)
                     tracker.async_remove_address(address)
                     self._integration_matcher.async_clear_address(address)
                     self._async_dismiss_discoveries(address)
@@ -386,7 +391,10 @@ class BluetoothManager:
         """Prefer previous advertisement from a different source if it is better."""
         if new.time - old.time > (
             stale_seconds := self._advertisement_tracker.intervals.get(
-                new.address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+                new.address,
+                self._fallback_intervals.get(
+                    new.address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+                ),
             )
         ):
             # If the old advertisement is stale, any new advertisement is preferred
@@ -779,3 +787,20 @@ class BluetoothManager:
     def async_allocate_connection_slot(self, device: BLEDevice) -> bool:
         """Allocate a connection slot."""
         return self.slot_manager.allocate_slot(device)
+
+    @hass_callback
+    def async_get_learned_advertising_interval(self, address: str) -> float | None:
+        """Get the learned advertising interval for a MAC address."""
+        return self._advertisement_tracker.intervals.get(address)
+
+    @hass_callback
+    def async_get_fallback_availability_interval(self, address: str) -> float | None:
+        """Get the fallback availability timeout for a MAC address."""
+        return self._fallback_intervals.get(address)
+
+    @hass_callback
+    def async_set_fallback_availability_interval(
+        self, address: str, interval: float
+    ) -> None:
+        """Override the fallback availability timeout for a MAC address."""
+        self._fallback_intervals[address] = interval

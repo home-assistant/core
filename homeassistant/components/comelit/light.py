@@ -9,7 +9,6 @@ from aiocomelit.const import LIGHT, LIGHT_OFF, LIGHT_ON
 from homeassistant.components.light import LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -43,21 +42,14 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
         self,
         coordinator: ComelitSerialBridge,
         device: ComelitSerialBridgeObject,
-        config_entry_unique_id: str | None,
+        config_entry_entry_id: str,
     ) -> None:
         """Init light entity."""
         self._api = coordinator.api
         self._device = device
         super().__init__(coordinator)
-        self._attr_unique_id = f"{config_entry_unique_id}-{device.index}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, self._attr_unique_id),
-            },
-            manufacturer="Comelit",
-            model="Serial Bridge",
-            name=device.name,
-        )
+        self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
+        self._attr_device_info = self.coordinator.platform_device_info(device, LIGHT)
 
     async def _light_set_state(self, state: int) -> None:
         """Set desired light state."""
