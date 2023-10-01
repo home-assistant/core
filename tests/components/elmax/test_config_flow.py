@@ -42,8 +42,8 @@ from . import (
 from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    host=MOCK_DIRECT_HOST,
-    addresses=[MOCK_DIRECT_HOST],
+    ip_address=MOCK_DIRECT_HOST,
+    ip_addresses=[MOCK_DIRECT_HOST],
     hostname="VideoBox.local",
     name="VideoBox",
     port=443,
@@ -56,8 +56,8 @@ MOCK_ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     type="_elmax-ssl._tcp",
 )
 MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO = zeroconf.ZeroconfServiceInfo(
-    host=MOCK_DIRECT_HOST_CHANGED,
-    addresses=[MOCK_DIRECT_HOST_CHANGED],
+    ip_address=MOCK_DIRECT_HOST_CHANGED,
+    ip_addresses=[MOCK_DIRECT_HOST_CHANGED],
     hostname="VideoBox.local",
     name="VideoBox",
     port=443,
@@ -70,8 +70,8 @@ MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO = zeroconf.ZeroconfServiceInfo(
     type="_elmax-ssl._tcp",
 )
 MOCK_ZEROCONF_DISCOVERY_INFO_NOT_SUPPORTED = zeroconf.ZeroconfServiceInfo(
-    host=MOCK_DIRECT_HOST,
-    addresses=[MOCK_DIRECT_HOST],
+    ip_address=MOCK_DIRECT_HOST,
+    ip_addresses=[MOCK_DIRECT_HOST],
     hostname="VideoBox.local",
     name="VideoBox",
     port=443,
