@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN
 from .coordinator import ComelitSerialBridge
 
 
@@ -119,7 +119,6 @@ class ComelitCoverEntity(
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
-        _LOGGER.info("Restoring entity %s", self._device.name)
 
         await super().async_added_to_hass()
 
