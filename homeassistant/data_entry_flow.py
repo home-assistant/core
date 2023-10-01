@@ -320,7 +320,10 @@ class FlowManager(abc.ABC):
                 )
 
             # If the result has changed from last result, fire event to update
-            # the frontend.
+            # the frontend. The result is considered to have changed if:
+            # - The step has changed
+            # - The step is same but result type is SHOW_PROGRESS and progress_action
+            #   or description_placeholders has changed
             if cur_step["step_id"] != result.get("step_id") or (
                 result["type"] == FlowResultType.SHOW_PROGRESS
                 and (
