@@ -81,15 +81,16 @@ class KNXCover(KnxEntity, CoverEntity):
             | CoverEntityFeature.SET_POSITION
         )
         if self._device.step.writable:
-            _supports_tilt = True
-            self._attr_supported_features |= (
-                CoverEntityFeature.CLOSE_TILT
-                | CoverEntityFeature.OPEN_TILT
-                | CoverEntityFeature.STOP_TILT
-            )
+            self._attr_supported_features |= CoverEntityFeature.STOP
+
         if self._device.supports_angle:
             _supports_tilt = True
-            self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
+            self._attr_supported_features |= (
+                CoverEntityFeature.SET_TILT_POSITION
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.OPEN_TILT
+            )
+
         if self._device.supports_stop:
             self._attr_supported_features |= CoverEntityFeature.STOP
             if _supports_tilt:
@@ -147,7 +148,12 @@ class KNXCover(KnxEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self._device.stop()
+        if self._device.supports_stop:
+            await self._device.stop()
+        elif self._device.is_opening():
+            await self._device.set_short_up()
+        elif self._device.is_closing():
+            await self._device.set_short_down()
 
     @property
     def current_cover_tilt_position(self) -> int | None:
