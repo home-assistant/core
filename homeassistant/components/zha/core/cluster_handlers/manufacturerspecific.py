@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Collection
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 import zigpy.zcl
 
 from homeassistant.core import callback
+from .homeautomation import Diagnostic
+from .hvac import ThermostatClusterHandler, UserInterface
 
 from .. import registries
 from ..const import (
@@ -74,22 +76,22 @@ class TuyaClusterHandler(ClusterHandler):
         super().__init__(cluster, endpoint)
 
         if self.cluster.endpoint.manufacturer in (
-            "_TZE200_7tdtqgwv",
-            "_TZE200_amp6tsvy",
-            "_TZE200_oisqyl4o",
-            "_TZE200_vhy3iakz",
-            "_TZ3000_uim07oem",
-            "_TZE200_wfxuhoea",
-            "_TZE200_tviaymwx",
-            "_TZE200_g1ib5ldv",
-            "_TZE200_wunufsil",
-            "_TZE200_7deq70b8",
-            "_TZE200_tz32mtza",
-            "_TZE200_2hf7x9n3",
-            "_TZE200_aqnazj70",
-            "_TZE200_1ozguk6x",
-            "_TZE200_k6jhsr0q",
-            "_TZE200_9mahtqtg",
+                "_TZE200_7tdtqgwv",
+                "_TZE200_amp6tsvy",
+                "_TZE200_oisqyl4o",
+                "_TZE200_vhy3iakz",
+                "_TZ3000_uim07oem",
+                "_TZE200_wfxuhoea",
+                "_TZE200_tviaymwx",
+                "_TZE200_g1ib5ldv",
+                "_TZE200_wunufsil",
+                "_TZE200_7deq70b8",
+                "_TZE200_tz32mtza",
+                "_TZE200_2hf7x9n3",
+                "_TZE200_aqnazj70",
+                "_TZE200_1ozguk6x",
+                "_TZE200_k6jhsr0q",
+                "_TZE200_9mahtqtg",
         ):
             self.ZCL_INIT_ATTRS = {
                 "backlight_mode": True,
@@ -286,12 +288,12 @@ class InovelliConfigEntityClusterHandler(ClusterHandler):
     }
 
     async def issue_all_led_effect(
-        self,
-        effect_type: AllLEDEffectType | int = AllLEDEffectType.Fast_Blink,
-        color: int = 200,
-        level: int = 100,
-        duration: int = 3,
-        **kwargs: Any,
+            self,
+            effect_type: AllLEDEffectType | int = AllLEDEffectType.Fast_Blink,
+            color: int = 200,
+            level: int = 100,
+            duration: int = 3,
+            **kwargs: Any,
     ) -> None:
         """Issue all LED effect command.
 
@@ -301,13 +303,13 @@ class InovelliConfigEntityClusterHandler(ClusterHandler):
         await self.led_effect(effect_type, color, level, duration, expect_reply=False)
 
     async def issue_individual_led_effect(
-        self,
-        led_number: int = 1,
-        effect_type: SingleLEDEffectType | int = SingleLEDEffectType.Fast_Blink,
-        color: int = 200,
-        level: int = 100,
-        duration: int = 3,
-        **kwargs: Any,
+            self,
+            led_number: int = 1,
+            effect_type: SingleLEDEffectType | int = SingleLEDEffectType.Fast_Blink,
+            color: int = 200,
+            level: int = 100,
+            duration: int = 3,
+            **kwargs: Any,
     ) -> None:
         """Issue individual LED effect command.
 
@@ -377,87 +379,91 @@ class IkeaRemote(ClusterHandler):
     REPORT_CONFIG = ()
 
 
-def compare_quirk_class(endpoint: Endpoint, name: str):
+def compare_quirk_class(endpoint: Endpoint, names: str | Collection[str]):
     """Return True if the last two words separated by dots equal the words between the dots in name.
 
     This function should probably be moved to the base class
     """
-    return endpoint.device.quirk_class.rsplit(".", 2)[1:] == name.split(".")
+    if isinstance(names, str):
+        names = {names}
+
+    return tuple(endpoint.device.quirk_class.rsplit(".", 2)[1:]) in {tuple(name.split(".")) for name in names}
 
 
-@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(
-    zigpy.zcl.clusters.hvac.Thermostat.cluster_id
-)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     zigpy.zcl.clusters.hvac.Thermostat.cluster_id
 )
-class DanfossTRVChannel(ClusterHandler):
+class DanfossTRVChannel(ThermostatClusterHandler):
     """TRV Channel class for the Danfoss TRV and derivatives."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.REPORT_CONFIG = (*self.REPORT_CONFIG,
+                              AttrReportConfig(attr="open_window_detection", config=REPORT_CONFIG_DEFAULT),
+                              AttrReportConfig(attr="heat_required", config=REPORT_CONFIG_ASAP),
+                              AttrReportConfig(attr="mounting_mode_active", config=REPORT_CONFIG_DEFAULT),
+                              AttrReportConfig(attr="load_estimate", config=REPORT_CONFIG_DEFAULT),
+                              AttrReportConfig(attr="adaptation_run_status", config=REPORT_CONFIG_DEFAULT),
+                              )
+
+        self.ZCL_INIT_ATTRS = {**self.ZCL_INIT_ATTRS,
+                               "external_open_window_detected": True,
+                               "window_open_feature": True,
+                               "exercise_day_of_week": True,
+                               "exercise_trigger_time": True,
+                               "mounting_mode_control": True,
+                               "orientation": True,
+                               "external_measured_room_sensor": True,
+                               "radiator_covered": True,
+                               "heat_available": True,
+                               "load_balancing_enable": True,
+                               "load_room_mean": True,
+                               "control_algorithm_scale_factor": True,
+                               "regulation_setpoint_offset": True,
+                               "adaptation_run_control": True,
+                               "adaptation_run_settings": True,
+                               }
+
     @classmethod
     def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
         """Filter the cluster match for specific devices."""
         return compare_quirk_class(endpoint, "thermostat.DanfossThermostat")
 
-    REPORT_CONFIG = (
-        AttrReportConfig(attr="open_window_detection", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="heat_required", config=REPORT_CONFIG_ASAP),
-        AttrReportConfig(attr="mounting_mode_active", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="load_estimate", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="adaptation_run_status", config=REPORT_CONFIG_DEFAULT),
-    )
 
-    ZCL_INIT_ATTRS = {
-        "external_open_window_detected": True,
-        "window_open_feature": True,
-        "exercise_day_of_week": True,
-        "exercise_trigger_time": True,
-        "mounting_mode_control": True,
-        "orientation": True,
-        "external_measured_room_sensor": True,
-        "radiator_covered": True,
-        "heat_available": True,
-        "load_balancing_enable": True,
-        "load_room_mean": True,
-        "control_algorithm_scale_factor": True,
-        "regulation_setpoint_offset": True,
-        "adaptation_run_control": True,
-        "adaptation_run_settings": True,
-    }
-
-
-@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(
-    zigpy.zcl.clusters.hvac.UserInterface.cluster_id
-)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     zigpy.zcl.clusters.hvac.UserInterface.cluster_id
 )
-class DanfossTRVInterfaceChannel(ClusterHandler):
+class DanfossTRVInterfaceChannel(UserInterface):
     """Interface Channel class for the Danfoss TRV and derivatives."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.ZCL_INIT_ATTRS = {**self.ZCL_INIT_ATTRS,
+                               "viewing_direction": True}
+
     @classmethod
     def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
         """Filter the cluster match for specific devices."""
         return compare_quirk_class(endpoint, "thermostat.DanfossThermostat")
 
-    ZCL_INIT_ATTRS = {"viewing_direction": True}
 
-
-@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(
-    zigpy.zcl.clusters.homeautomation.Diagnostic.cluster_id
-)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     zigpy.zcl.clusters.homeautomation.Diagnostic.cluster_id
 )
-class DanfossTRVDiagnosticChannel(ClusterHandler):
+class DanfossTRVDiagnosticChannel(Diagnostic):
     """Diagnostic Channel class for the Danfoss TRV and derivatives."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.REPORT_CONFIG = (*self.ZCL_INIT_ATTRS,
+                              AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
+                              AttrReportConfig(attr="motor_step_counter", config=REPORT_CONFIG_DEFAULT),
+                              )
 
     @classmethod
     def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
         """Filter the cluster match for specific devices."""
         return compare_quirk_class(endpoint, "thermostat.DanfossThermostat")
-
-    REPORT_CONFIG = (
-        AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="motor_step_counter", config=REPORT_CONFIG_DEFAULT),
-    )

@@ -235,7 +235,7 @@ class ThermostatClusterHandler(ClusterHandler):
         )
         self.async_send_signal(
             f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-            AttributeUpdateRecord(attrid, attr_name, value),
+            attrid, attr_name, value,
         )
 
     async def async_set_operation_mode(self, mode) -> bool:

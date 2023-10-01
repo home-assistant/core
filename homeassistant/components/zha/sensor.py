@@ -767,26 +767,12 @@ class FormaldehydeConcentration(Sensor):
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class ThermostatChannelSensor(Sensor):
-    """All Sensors matched on Thermostatchannel need to have the same async_set_state."""
-
-    @callback
-    def async_set_state(self, *args, **kwargs) -> None:
-        """Override from sensor.
-
-        Sensor doesn't care about the arguments,
-        However async_attribute_updated from Thermostat from climate.py expects a single argument.
-        """
-        self.async_write_ha_state()
-
-
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class ThermostatHVACAction(ThermostatChannelSensor, id_suffix="hvac_action"):
+class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     """Thermostat HVAC action sensor."""
 
     _attr_name: str = "HVAC action"
@@ -1062,7 +1048,7 @@ class AqaraSmokeDensityDbm(Sensor, id_suffix="smoke_density_dbm"):
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class PiHeatingDemand(ThermostatChannelSensor, id_suffix="pi_heating_demand"):
+class PiHeatingDemand(Sensor, id_suffix="pi_heating_demand"):
     """Sensor that displays the percentage of heating power used.
 
     Optional Thermostat attribute
@@ -1085,7 +1071,7 @@ class SetpointChangeSourceEnum(types.enum8):
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class SetpointChangeSource(ThermostatChannelSensor, id_suffix="setpoint_change_source"):
+class SetpointChangeSource(Sensor, id_suffix="setpoint_change_source"):
     """Sensor that displays the source of the setpoint change.
 
     Optional Thermostat attribute
@@ -1112,7 +1098,7 @@ class DanfossOpenWindowDetectionEnum(types.enum8):
 
 
 @MULTI_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -1133,7 +1119,7 @@ class DanfossOpenWindowDetection(Sensor, id_suffix="open_window_detection"):
 
 
 @MULTI_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -1146,7 +1132,7 @@ class DanfossLoadEstimate(Sensor, id_suffix="load_estimate"):
 
 
 @MULTI_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -1177,7 +1163,7 @@ class DanfossAdaptationRunStatus(Sensor, id_suffix="adaptation_run_status"):
 
 
 @MULTI_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing

@@ -21,7 +21,7 @@ from .core.const import (
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_ON_OFF,
     SIGNAL_ADD_ENTITIES,
-    SIGNAL_ATTR_UPDATED,
+    SIGNAL_ATTR_UPDATED, CLUSTER_HANDLER_THERMOSTAT,
 )
 from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
@@ -590,7 +590,7 @@ class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 class DanfossExternalOpenWindowDetected(
@@ -604,7 +604,7 @@ class DanfossExternalOpenWindowDetected(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 class DanfossWindowOpenFeature(
@@ -618,7 +618,7 @@ class DanfossWindowOpenFeature(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 class DanfossMountingModeControl(
@@ -631,7 +631,7 @@ class DanfossMountingModeControl(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 class DanfossRadiatorCovered(
@@ -645,7 +645,7 @@ class DanfossRadiatorCovered(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 class DanfossHeatAvailable(ZHASwitchConfigurationEntity, id_suffix="heat_available"):
@@ -657,7 +657,7 @@ class DanfossHeatAvailable(ZHASwitchConfigurationEntity, id_suffix="heat_availab
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 class DanfossLoadBalancingEnable(
@@ -671,7 +671,7 @@ class DanfossLoadBalancingEnable(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 class DanfossAdaptationRunSettings(

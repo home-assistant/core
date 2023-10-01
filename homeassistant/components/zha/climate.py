@@ -367,10 +367,10 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self._thrm, SIGNAL_ATTR_UPDATED, self.async_attribute_updated
         )
 
-    async def async_attribute_updated(self, record):
+    async def async_attribute_updated(self, attr_id, attr_name, value):
         """Handle attribute update from device."""
         if (
-            record.attr_name in (ATTR_OCCP_COOL_SETPT, ATTR_OCCP_HEAT_SETPT)
+            attr_name in (ATTR_OCCP_COOL_SETPT, ATTR_OCCP_HEAT_SETPT)
             and self.preset_mode == PRESET_AWAY
         ):
             # occupancy attribute is an unreportable attribute, but if we get
@@ -379,7 +379,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
             if await self._thrm.get_occupancy() is True:
                 self._preset = PRESET_NONE
 
-        self.debug("Attribute '%s' = %s update", record.attr_name, record.value)
+        self.debug("Attribute '%s' = %s update", attr_name, value)
         self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:

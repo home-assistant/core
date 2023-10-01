@@ -27,7 +27,7 @@ from .core.const import (
     CLUSTER_HANDLER_ON_OFF,
     CLUSTER_HANDLER_ZONE,
     SIGNAL_ADD_ENTITIES,
-    SIGNAL_ATTR_UPDATED,
+    SIGNAL_ATTR_UPDATED, CLUSTER_HANDLER_THERMOSTAT,
 )
 from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
@@ -341,7 +341,7 @@ class AqaraLinkageAlarmState(BinarySensor, id_suffix="linkage_alarm_state"):
 
 
 @MULTI_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 class DanfossMountingModeActive(BinarySensor, id_suffix="mounting_mode_active"):
@@ -353,7 +353,7 @@ class DanfossMountingModeActive(BinarySensor, id_suffix="mounting_mode_active"):
 
 
 @MULTI_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 class DanfossHeatRequired(BinarySensor, id_suffix="heat_required"):
@@ -364,7 +364,7 @@ class DanfossHeatRequired(BinarySensor, id_suffix="heat_required"):
 
 
 @MULTI_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 class DanfossPreheatStatus(BinarySensor, id_suffix="preheat_status"):

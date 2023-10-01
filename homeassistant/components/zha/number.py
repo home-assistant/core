@@ -1024,7 +1024,7 @@ class MinHeatSetpointLimit(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -1043,7 +1043,7 @@ class DanfossExerciseTriggerTime(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -1060,7 +1060,7 @@ class DanfossExternalMeasuredRoomSensor(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -1076,7 +1076,7 @@ class DanfossLoadRoomMean(ZHANumberConfigurationEntity, id_suffix="load_room_mea
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -1094,7 +1094,7 @@ class DanfossControlAlgorithmScaleFactor(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing

@@ -25,7 +25,7 @@ from .core.const import (
     CLUSTER_HANDLER_ON_OFF,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
-    Strobe,
+    Strobe, CLUSTER_HANDLER_THERMOSTAT,
 )
 from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
@@ -608,7 +608,7 @@ class DanfossExerciseDayOfTheWeekEnum(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 class DanfossExerciseDayOfTheWeek(
@@ -630,7 +630,7 @@ class DanfossOrientationEnum(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 class DanfossOrientation(ZCLEnumSelectEntity, id_suffix="orientation"):
@@ -653,7 +653,7 @@ class DanfossAdaptationRunControlEnum(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat",
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 class DanfossAdaptationRunControl(
