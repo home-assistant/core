@@ -4,6 +4,10 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Twitch integration needs to re-authenticate your account"
+      },
+      "channels": {
+        "title": "Pick Channels",
+        "description": "Pick the channels you want to subscribe to."
       }
     },
     "abort": {
@@ -11,6 +15,14 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "wrong_account": "Wrong account: Please authenticate with {username}."
+    }
+  },
+  "options": {
+    "step": {
+      "channels": {
+        "title": "Pick Channels",
+        "description": "Pick the channels you want to subscribe to."
+      }
     }
   },
   "issues": {
