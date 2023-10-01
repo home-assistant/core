@@ -304,7 +304,7 @@ async def test_updating_manually(
         await hass.async_block_till_done()
 
     assert called
-    called.clear
+    called.clear()
 
     await hass.services.async_call(
         HA_DOMAIN,
