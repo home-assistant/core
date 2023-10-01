@@ -2,7 +2,7 @@
 import pytest
 from Tami4EdgeAPI import exceptions
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import create_config_entry
@@ -12,7 +12,7 @@ async def test_init_success(mock_api, hass: HomeAssistant) -> None:
     """Test setup and that we can create the entry."""
 
     entry = await create_config_entry(hass)
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state == ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -22,29 +22,30 @@ async def test_init_with_api_error(mock_api, hass: HomeAssistant) -> None:
     """Test init with api error."""
 
     entry = await create_config_entry(hass)
-    assert entry.state == config_entries.ConfigEntryState.SETUP_RETRY
+    assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
-    "mock__get_devices", [exceptions.TokenRefreshFailedException], indirect=True
+    ("mock__get_devices", "expected_state"),
+    [
+        (
+            exceptions.RefreshTokenExpiredException,
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            exceptions.TokenRefreshFailedException,
+            ConfigEntryState.SETUP_RETRY,
+        ),
+    ],
+    indirect=["mock__get_devices"],
 )
-async def test_init_with_token_refresh_error(mock_api, hass: HomeAssistant) -> None:
-    """Test init with token refresh error."""
-
-    entry = await create_config_entry(hass)
-    assert entry.state == config_entries.ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.parametrize(
-    "mock__get_devices", [exceptions.RefreshTokenExpiredException], indirect=True
-)
-async def test_init_with_token_refresh_expired_error(
-    mock_api, hass: HomeAssistant
+async def test_init_error_raised(
+    mock_api, hass: HomeAssistant, expected_state: ConfigEntryState
 ) -> None:
-    """Test init with token refresh expired error."""
+    """Test init when an error is raised."""
 
     entry = await create_config_entry(hass)
-    assert entry.state == config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.state == expected_state
 
 
 async def test_load_unload(mock_api, hass: HomeAssistant) -> None:
@@ -55,4 +56,4 @@ async def test_load_unload(mock_api, hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED

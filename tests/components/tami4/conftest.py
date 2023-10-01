@@ -44,7 +44,7 @@ def mock__get_devices(request):
 
     device = Device(
         id=1,
-        name="Drink Water!",
+        name="Drink Water",
         connected=True,
         psn="psn",
         type="type",
