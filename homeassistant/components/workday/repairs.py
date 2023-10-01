@@ -18,7 +18,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_PROVINCE
+from .const import CONF_PROVINCE, CONF_REMOVE_HOLIDAYS
 
 
 class CountryFixFlow(RepairsFlow):
@@ -108,6 +108,61 @@ class CountryFixFlow(RepairsFlow):
         )
 
 
+class HolidayFixFlow(RepairsFlow):
+    """Handler for an issue fixing flow."""
+
+    def __init__(
+        self, entry: ConfigEntry, country: str | None, named_holiday: str
+    ) -> None:
+        """Create flow."""
+        self.entry = entry
+        self.country: str | None = country
+        self.named_holiday: str = named_holiday
+        super().__init__()
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the first step of a fix flow."""
+        return await self.async_step_named_holiday()
+
+    async def async_step_named_holiday(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the options step of a fix flow."""
+        if user_input:
+            options = dict(self.entry.options)
+            new_options = {**options, **user_input}
+            self.hass.config_entries.async_update_entry(self.entry, options=new_options)
+            await self.hass.config_entries.async_reload(self.entry.entry_id)
+            return self.async_create_entry(data={})
+
+        new_schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[],
+                            multiple=True,
+                            custom_value=True,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                }
+            ),
+            user_input or self.entry.options,
+        )
+        return self.async_show_form(
+            step_id="named_holiday",
+            data_schema=new_schema,
+            description_placeholders={
+                CONF_COUNTRY: self.country if self.country else "-",
+                CONF_REMOVE_HOLIDAYS: self.named_holiday,
+                "title": self.entry.title,
+            },
+        )
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant,
     issue_id: str,
@@ -118,6 +173,10 @@ async def async_create_fix_flow(
     if data and (entry_id := data.get("entry_id")):
         entry_id = cast(str, entry_id)
         entry = hass.config_entries.async_get_entry(entry_id)
+
+    if data and (holiday := data.get("named_holiday")) and entry:
+        # Bad named holiday in configuration
+        return HolidayFixFlow(entry, data.get("country"), holiday)
 
     if data and entry:
         # Country or province does not exist

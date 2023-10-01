@@ -132,6 +132,23 @@
           }
         }
       }
+    },
+    "bad_named_holiday": {
+      "title": "Configured named holiday {holiday} in country {country} for {title} does not exist",
+      "fix_flow": {
+        "step": {
+          "named_holiday": {
+            "title": "[%key:component::workday::issues::bad_named_holiday::fix_flow::step::named_holiday::title%]",
+            "description": "[%key:component::workday::issues::bad_named_holiday::fix_flow::step::named_holiday::description%]",
+            "data": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]"
+            },
+            "data_description": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]"
+            }
+          }
+        }
+      }
     }
   },
   "entity": {
