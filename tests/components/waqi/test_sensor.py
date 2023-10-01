@@ -117,7 +117,7 @@ async def test_sensor_id_migration(
     )
     assert len(entities) == 11
     assert hass.states.get("sensor.waqi_4584")
-    assert hass.states.get("sensor.de_jongweg_utrecht") is None
+    assert hass.states.get("sensor.de_jongweg_utrecht_air_quality_index") is None
     assert entities[0].unique_id == "4584_air_quality"
 
 
