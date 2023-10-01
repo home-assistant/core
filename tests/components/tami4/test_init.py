@@ -1,6 +1,6 @@
 """Test the Tami4 component."""
 import pytest
-from Tami4EdgeAPI import exceptions as APIExceptions
+from Tami4EdgeAPI import exceptions
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant

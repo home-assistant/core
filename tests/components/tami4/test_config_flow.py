@@ -1,7 +1,7 @@
 """Tests for the Tami4 config flow."""
 
 import pytest
-from Tami4EdgeAPI import exceptions as APIExceptions
+from Tami4EdgeAPI import exceptions
 
 from homeassistant import config_entries
 from homeassistant.components.tami4.const import CONF_PHONE, DOMAIN

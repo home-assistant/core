@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 import logging
 
-from Tami4EdgeAPI import Tami4EdgeAPI, exceptions as APIExceptions
+from Tami4EdgeAPI import Tami4EdgeAPI, exceptions
 from Tami4EdgeAPI.water_quality import WaterQuality
 
 from homeassistant.core import HomeAssistant
@@ -57,5 +57,5 @@ class Tami4EdgeWaterQualityCoordinator(DataUpdateCoordinator[FlattenedWaterQuali
             )
 
             return FlattenedWaterQuality(water_quality)
-        except APIExceptions.APIRequestFailedException as ex:
+        except exceptions.APIRequestFailedException as ex:
             raise UpdateFailed("Error communicating with API") from ex
