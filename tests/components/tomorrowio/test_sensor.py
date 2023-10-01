@@ -62,6 +62,16 @@ WIND_GUST = "wind_gust"
 PRECIPITATION_TYPE = "precipitation_type"
 UV_INDEX = "uv_index"
 UV_HEALTH_CONCERN = "uv_radiation_health_concern"
+EVAPOTRANSPIRATION = "evapotranspiration"
+HUMIDITY = "humidity"
+PRECIPITATION_INTENSITY = "precipitation_intensity"
+PRECIPITATION_PROBABILITY = "precipitation_probability"
+PRESSURE_SEA_LEVEL = "pressure_sea_level"
+TEMPERATURE = "temperature"
+VISIBILITY = "visibility"
+WET_BULB_GLOBE_TEMPERATURE = "wet_bulb_globe_temperature"
+WIND_DIRECTION = "wind_direction"
+WIND_SPEED = "wind_speed"
 
 
 V3_FIELDS = [
@@ -178,6 +188,16 @@ async def test_v4_sensor(hass: HomeAssistant) -> None:
     check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
     check_sensor_state(hass, UV_INDEX, "3")
     check_sensor_state(hass, UV_HEALTH_CONCERN, "moderate")
+    check_sensor_state(hass, EVAPOTRANSPIRATION, "0.0")
+    check_sensor_state(hass, HUMIDITY, "0.68")
+    check_sensor_state(hass, PRECIPITATION_INTENSITY, "0.0")
+    check_sensor_state(hass, PRECIPITATION_PROBABILITY, "0.0")
+    check_sensor_state(hass, PRESSURE_SEA_LEVEL, "29.47")
+    check_sensor_state(hass, TEMPERATURE, "17.0")
+    check_sensor_state(hass, VISIBILITY, "10.0")
+    check_sensor_state(hass, WET_BULB_GLOBE_TEMPERATURE, "17.0")
+    check_sensor_state(hass, WIND_DIRECTION, "243.38")
+    check_sensor_state(hass, WIND_SPEED, "3.58")
 
 
 async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
@@ -211,6 +231,16 @@ async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
     check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
     check_sensor_state(hass, UV_INDEX, "3")
     check_sensor_state(hass, UV_HEALTH_CONCERN, "moderate")
+    check_sensor_state(hass, EVAPOTRANSPIRATION, "0.0")
+    check_sensor_state(hass, HUMIDITY, "0.68")
+    check_sensor_state(hass, PRECIPITATION_INTENSITY, "0.0")
+    check_sensor_state(hass, PRECIPITATION_PROBABILITY, "0.0")
+    check_sensor_state(hass, PRESSURE_SEA_LEVEL, "29.47")
+    check_sensor_state(hass, TEMPERATURE, "17.0")
+    check_sensor_state(hass, VISIBILITY, "10.0")
+    check_sensor_state(hass, WET_BULB_GLOBE_TEMPERATURE, "17.0")
+    check_sensor_state(hass, WIND_DIRECTION, "243.38")
+    check_sensor_state(hass, WIND_SPEED, "3.58")
 
 
 async def test_entity_description() -> None:
