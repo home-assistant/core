@@ -151,10 +151,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             return
 
+        webhook_name = "Withings"
+        if entry.title != webhook_name:
+            webhook_name += " ".join([webhook_name, entry.title])
+
         webhook_register(
             hass,
             DOMAIN,
-            "Withings",
+            webhook_name,
             entry.data[CONF_WEBHOOK_ID],
             get_webhook_handler(coordinator),
         )
