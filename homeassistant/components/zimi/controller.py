@@ -63,8 +63,6 @@ class ZimiController:
             )
             if self.host == "":
                 description = await ControlPointDiscoveryService().discover()
-                # self.config.data[CONF_HOST] = description.host
-                # self.config.data[CONF_PORT] = description.port
             else:
                 description = ControlPointDescription(host=self.host, port=self.port)
 
