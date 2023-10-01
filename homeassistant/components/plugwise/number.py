@@ -8,6 +8,7 @@ from plugwise import Smile
 from plugwise.constants import NumberType
 
 from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
@@ -111,6 +112,7 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         self.device_id = device_id
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
+        coordinator.current_unique_ids.add((NUMBER_DOMAIN, self._attr_unique_id))
         self._attr_mode = NumberMode.BOX
         self._attr_native_max_value = self.device[description.key]["upper_bound"]
         self._attr_native_min_value = self.device[description.key]["lower_bound"]

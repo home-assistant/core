@@ -51,6 +51,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             timeout=30,
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
+        self.current_unique_ids: set[tuple[str, str]] = {("dummy", "dummy_id")}
 
     async def _connect(self) -> None:
         """Connect to the Plugwise Smile."""

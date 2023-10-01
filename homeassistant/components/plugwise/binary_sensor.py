@@ -8,6 +8,7 @@ from typing import Any
 from plugwise.constants import BinarySensorType
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -134,6 +135,7 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
+        coordinator.current_unique_ids.add((BINARY_SENSOR_DOMAIN, self._attr_unique_id))
 
     @property
     def is_on(self) -> bool:
