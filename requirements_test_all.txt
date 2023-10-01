@@ -212,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==17.0.0
+aioesphomeapi==17.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -2078,7 +2078,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.115.0
+zeroconf==0.115.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
