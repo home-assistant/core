@@ -219,8 +219,6 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["remove_holidays"] = "remove_holiday_error"
             except RemoveDateRangeError:
                 errors["remove_holidays"] = "remove_holiday_range_error"
-            except NotImplementedError:
-                self.async_abort(reason="incorrect_province")
 
             abort_match = {
                 CONF_COUNTRY: combined_input[CONF_COUNTRY],
