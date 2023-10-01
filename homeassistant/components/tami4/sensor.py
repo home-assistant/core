@@ -1,5 +1,4 @@
 """Sensor entities for Tami4Edge."""
-from datetime import date
 import logging
 
 from Tami4EdgeAPI import Tami4EdgeAPI
@@ -105,16 +104,15 @@ class Tami4EdgeSensorEntity(
         """Initialize the Tami4Edge sensor entity."""
         Tami4EdgeBaseEntity.__init__(self, api, entity_description)
         CoordinatorEntity.__init__(self, coordinator)
+        self._update_attr()
 
-    @property
-    def native_value(self) -> date | str | float:
-        """Return the state of the device."""
-        return getattr(self.coordinator.data, self.entity_description.key)  # type: ignore[no-any-return]
+    def _update_attr(self) -> None:
+        self._attr_native_value = getattr(
+            self.coordinator.data, self.entity_description.key
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = getattr(
-            self.coordinator.data, self.entity_description.key
-        )
+        self._update_attr()
         self.async_write_ha_state()
