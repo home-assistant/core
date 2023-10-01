@@ -229,8 +229,8 @@ SENSORS: list[WAQISensorEntityDescription] = [
         available_fn=lambda aq: aq.extended_air_quality.ozone is not None,
     ),
     WAQISensorEntityDescription(
-        key="sulfur_dioxide",
-        translation_key="sulfur_dioxide",
+        key="sulphur_dioxide",
+        translation_key="sulphur_dioxide",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda aq: aq.extended_air_quality.sulfur_dioxide,
         available_fn=lambda aq: aq.extended_air_quality.sulfur_dioxide is not None,
