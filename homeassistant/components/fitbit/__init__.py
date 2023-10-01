@@ -5,7 +5,7 @@ import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
@@ -29,6 +29,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         await fitbit_api.async_get_access_token()
+    except aiohttp.ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 

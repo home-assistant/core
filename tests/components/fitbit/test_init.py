@@ -94,3 +94,26 @@ async def test_token_refresh_success(
         config_entry.data["token"]["access_token"]
         == SERVER_ACCESS_TOKEN["access_token"]
     )
+
+
+@pytest.mark.parametrize("token_expiration_time", [12345])
+async def test_token_requires_reauth(
+    hass: HomeAssistant,
+    integration_setup: Callable[[], Awaitable[bool]],
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials: None,
+) -> None:
+    """Test where token is expired and the refresh attempt requires reauth."""
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        status=HTTPStatus.UNAUTHORIZED,
+    )
+
+    assert not await integration_setup()
+    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
