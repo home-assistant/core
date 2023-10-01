@@ -1,15 +1,14 @@
 """Manufacturer specific cluster handlers module for Zigbee Home Automation."""
 from __future__ import annotations
 
+from collections.abc import Collection
 import logging
-from typing import TYPE_CHECKING, Any, Collection
+from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 import zigpy.zcl
 
 from homeassistant.core import callback
-from .homeautomation import Diagnostic
-from .hvac import ThermostatClusterHandler, UserInterface
 
 from .. import registries
 from ..const import (
@@ -25,6 +24,8 @@ from ..const import (
     UNKNOWN,
 )
 from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
+from .homeautomation import Diagnostic
+from .hvac import ThermostatClusterHandler, UserInterface
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -76,22 +77,22 @@ class TuyaClusterHandler(ClusterHandler):
         super().__init__(cluster, endpoint)
 
         if self.cluster.endpoint.manufacturer in (
-                "_TZE200_7tdtqgwv",
-                "_TZE200_amp6tsvy",
-                "_TZE200_oisqyl4o",
-                "_TZE200_vhy3iakz",
-                "_TZ3000_uim07oem",
-                "_TZE200_wfxuhoea",
-                "_TZE200_tviaymwx",
-                "_TZE200_g1ib5ldv",
-                "_TZE200_wunufsil",
-                "_TZE200_7deq70b8",
-                "_TZE200_tz32mtza",
-                "_TZE200_2hf7x9n3",
-                "_TZE200_aqnazj70",
-                "_TZE200_1ozguk6x",
-                "_TZE200_k6jhsr0q",
-                "_TZE200_9mahtqtg",
+            "_TZE200_7tdtqgwv",
+            "_TZE200_amp6tsvy",
+            "_TZE200_oisqyl4o",
+            "_TZE200_vhy3iakz",
+            "_TZ3000_uim07oem",
+            "_TZE200_wfxuhoea",
+            "_TZE200_tviaymwx",
+            "_TZE200_g1ib5ldv",
+            "_TZE200_wunufsil",
+            "_TZE200_7deq70b8",
+            "_TZE200_tz32mtza",
+            "_TZE200_2hf7x9n3",
+            "_TZE200_aqnazj70",
+            "_TZE200_1ozguk6x",
+            "_TZE200_k6jhsr0q",
+            "_TZE200_9mahtqtg",
         ):
             self.ZCL_INIT_ATTRS = {
                 "backlight_mode": True,
@@ -288,12 +289,12 @@ class InovelliConfigEntityClusterHandler(ClusterHandler):
     }
 
     async def issue_all_led_effect(
-            self,
-            effect_type: AllLEDEffectType | int = AllLEDEffectType.Fast_Blink,
-            color: int = 200,
-            level: int = 100,
-            duration: int = 3,
-            **kwargs: Any,
+        self,
+        effect_type: AllLEDEffectType | int = AllLEDEffectType.Fast_Blink,
+        color: int = 200,
+        level: int = 100,
+        duration: int = 3,
+        **kwargs: Any,
     ) -> None:
         """Issue all LED effect command.
 
@@ -303,13 +304,13 @@ class InovelliConfigEntityClusterHandler(ClusterHandler):
         await self.led_effect(effect_type, color, level, duration, expect_reply=False)
 
     async def issue_individual_led_effect(
-            self,
-            led_number: int = 1,
-            effect_type: SingleLEDEffectType | int = SingleLEDEffectType.Fast_Blink,
-            color: int = 200,
-            level: int = 100,
-            duration: int = 3,
-            **kwargs: Any,
+        self,
+        led_number: int = 1,
+        effect_type: SingleLEDEffectType | int = SingleLEDEffectType.Fast_Blink,
+        color: int = 200,
+        level: int = 100,
+        duration: int = 3,
+        **kwargs: Any,
     ) -> None:
         """Issue individual LED effect command.
 
@@ -387,7 +388,9 @@ def compare_quirk_class(endpoint: Endpoint, names: str | Collection[str]):
     if isinstance(names, str):
         names = {names}
 
-    return tuple(endpoint.device.quirk_class.rsplit(".", 2)[1:]) in {tuple(name.split(".")) for name in names}
+    return tuple(endpoint.device.quirk_class.rsplit(".", 2)[1:]) in {
+        tuple(name.split(".")) for name in names
+    }
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
@@ -397,33 +400,40 @@ class DanfossTRVChannel(ThermostatClusterHandler):
     """TRV Channel class for the Danfoss TRV and derivatives."""
 
     def __init__(self, *args, **kwargs):
+        """Extend ThermostatClusterHandler."""
         super().__init__(*args, **kwargs)
 
-        self.REPORT_CONFIG = (*self.REPORT_CONFIG,
-                              AttrReportConfig(attr="open_window_detection", config=REPORT_CONFIG_DEFAULT),
-                              AttrReportConfig(attr="heat_required", config=REPORT_CONFIG_ASAP),
-                              AttrReportConfig(attr="mounting_mode_active", config=REPORT_CONFIG_DEFAULT),
-                              AttrReportConfig(attr="load_estimate", config=REPORT_CONFIG_DEFAULT),
-                              AttrReportConfig(attr="adaptation_run_status", config=REPORT_CONFIG_DEFAULT),
-                              )
+        self.REPORT_CONFIG = (
+            *self.REPORT_CONFIG,
+            AttrReportConfig(
+                attr="open_window_detection", config=REPORT_CONFIG_DEFAULT
+            ),
+            AttrReportConfig(attr="heat_required", config=REPORT_CONFIG_ASAP),
+            AttrReportConfig(attr="mounting_mode_active", config=REPORT_CONFIG_DEFAULT),
+            AttrReportConfig(attr="load_estimate", config=REPORT_CONFIG_DEFAULT),
+            AttrReportConfig(
+                attr="adaptation_run_status", config=REPORT_CONFIG_DEFAULT
+            ),
+        )
 
-        self.ZCL_INIT_ATTRS = {**self.ZCL_INIT_ATTRS,
-                               "external_open_window_detected": True,
-                               "window_open_feature": True,
-                               "exercise_day_of_week": True,
-                               "exercise_trigger_time": True,
-                               "mounting_mode_control": True,
-                               "orientation": True,
-                               "external_measured_room_sensor": True,
-                               "radiator_covered": True,
-                               "heat_available": True,
-                               "load_balancing_enable": True,
-                               "load_room_mean": True,
-                               "control_algorithm_scale_factor": True,
-                               "regulation_setpoint_offset": True,
-                               "adaptation_run_control": True,
-                               "adaptation_run_settings": True,
-                               }
+        self.ZCL_INIT_ATTRS = {
+            **self.ZCL_INIT_ATTRS,
+            "external_open_window_detected": True,
+            "window_open_feature": True,
+            "exercise_day_of_week": True,
+            "exercise_trigger_time": True,
+            "mounting_mode_control": True,
+            "orientation": True,
+            "external_measured_room_sensor": True,
+            "radiator_covered": True,
+            "heat_available": True,
+            "load_balancing_enable": True,
+            "load_room_mean": True,
+            "control_algorithm_scale_factor": True,
+            "regulation_setpoint_offset": True,
+            "adaptation_run_control": True,
+            "adaptation_run_settings": True,
+        }
 
     @classmethod
     def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
@@ -438,10 +448,10 @@ class DanfossTRVInterfaceChannel(UserInterface):
     """Interface Channel class for the Danfoss TRV and derivatives."""
 
     def __init__(self, *args, **kwargs):
+        """Extend UserInterface."""
         super().__init__(*args, **kwargs)
 
-        self.ZCL_INIT_ATTRS = {**self.ZCL_INIT_ATTRS,
-                               "viewing_direction": True}
+        self.ZCL_INIT_ATTRS = {**self.ZCL_INIT_ATTRS, "viewing_direction": True}
 
     @classmethod
     def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
@@ -456,12 +466,14 @@ class DanfossTRVDiagnosticChannel(Diagnostic):
     """Diagnostic Channel class for the Danfoss TRV and derivatives."""
 
     def __init__(self, *args, **kwargs):
+        """Extend Diagnostic."""
         super().__init__(*args, **kwargs)
 
-        self.REPORT_CONFIG = (*self.ZCL_INIT_ATTRS,
-                              AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
-                              AttrReportConfig(attr="motor_step_counter", config=REPORT_CONFIG_DEFAULT),
-                              )
+        self.REPORT_CONFIG = (
+            *self.ZCL_INIT_ATTRS,
+            AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
+            AttrReportConfig(attr="motor_step_counter", config=REPORT_CONFIG_DEFAULT),
+        )
 
     @classmethod
     def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:

@@ -20,8 +20,9 @@ from .core.const import (
     CLUSTER_HANDLER_BASIC,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_ON_OFF,
+    CLUSTER_HANDLER_THERMOSTAT,
     SIGNAL_ADD_ENTITIES,
-    SIGNAL_ATTR_UPDATED, CLUSTER_HANDLER_THERMOSTAT,
+    SIGNAL_ATTR_UPDATED,
 )
 from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
