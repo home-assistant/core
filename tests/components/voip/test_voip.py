@@ -21,7 +21,7 @@ async def test_pipeline(
     """Test that pipeline function is called from RTP protocol."""
     assert await async_setup_component(hass, "voip", {})
 
-    def is_speech(self, chunk, sample_rate):
+    def is_speech(self, chunk):
         """Anything non-zero is speech."""
         return sum(chunk) > 0
 
@@ -76,7 +76,7 @@ async def test_pipeline(
         return ("mp3", b"")
 
     with patch(
-        "webrtcvad.Vad.is_speech",
+        "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
         new=is_speech,
     ), patch(
         "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
@@ -210,7 +210,7 @@ async def test_tts_timeout(
     """Test that TTS will time out based on its length."""
     assert await async_setup_component(hass, "voip", {})
 
-    def is_speech(self, chunk, sample_rate):
+    def is_speech(self, chunk):
         """Anything non-zero is speech."""
         return sum(chunk) > 0
 
@@ -269,7 +269,7 @@ async def test_tts_timeout(
         return ("raw", bytes(0))
 
     with patch(
-        "webrtcvad.Vad.is_speech",
+        "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
         new=is_speech,
     ), patch(
         "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",

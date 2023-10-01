@@ -929,8 +929,6 @@ class DomainStates:
 class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_collect", "_entity_id", "__dict__")
-
     _state: State
 
     __setitem__ = _readonly

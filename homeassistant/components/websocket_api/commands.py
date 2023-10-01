@@ -270,7 +270,7 @@ def handle_get_states(
     states = _async_get_allowed_states(hass, connection)
 
     try:
-        serialized_states = [state.as_dict_json() for state in states]
+        serialized_states = [state.as_dict_json for state in states]
     except (ValueError, TypeError):
         pass
     else:
@@ -281,7 +281,7 @@ def handle_get_states(
     serialized_states = []
     for state in states:
         try:
-            serialized_states.append(state.as_dict_json())
+            serialized_states.append(state.as_dict_json)
         except (ValueError, TypeError):
             connection.logger.error(
                 "Unable to serialize to JSON. Bad data found at %s",
@@ -358,7 +358,7 @@ def handle_subscribe_entities(
     # to succeed for the UI to show.
     try:
         serialized_states = [
-            state.as_compressed_state_json()
+            state.as_compressed_state_json
             for state in states
             if not entity_ids or state.entity_id in entity_ids
         ]
@@ -371,7 +371,7 @@ def handle_subscribe_entities(
     serialized_states = []
     for state in states:
         try:
-            serialized_states.append(state.as_compressed_state_json())
+            serialized_states.append(state.as_compressed_state_json)
         except (ValueError, TypeError):
             connection.logger.error(
                 "Unable to serialize to JSON. Bad data found at %s",

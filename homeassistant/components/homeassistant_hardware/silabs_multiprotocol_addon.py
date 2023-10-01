@@ -8,7 +8,6 @@ import dataclasses
 import logging
 from typing import Any, Protocol
 
-import async_timeout
 import voluptuous as vol
 import yarl
 
@@ -74,7 +73,7 @@ class WaitingAddonManager(AddonManager):
 
     async def async_wait_until_addon_state(self, *states: AddonState) -> None:
         """Poll an addon's info until it is in a specific state."""
-        async with async_timeout.timeout(ADDON_INFO_POLL_TIMEOUT):
+        async with asyncio.timeout(ADDON_INFO_POLL_TIMEOUT):
             while True:
                 try:
                     info = await self.async_get_addon_info()
@@ -886,7 +885,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
 
 
 async def check_multi_pan_addon(hass: HomeAssistant) -> None:
-    """Check the multi-PAN addon state, and start it if installed but not started.
+    """Check the multiprotocol addon state, and start it if installed but not started.
 
     Does nothing if Hass.io is not loaded.
     Raises on error or if the add-on is installed but not started.

@@ -223,6 +223,7 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "auto": "Auto",
+          "onatnight": "On at night",
           "schedule": "Schedule",
           "adaptive": "Adaptive",
           "autoadaptive": "Auto adaptive"
