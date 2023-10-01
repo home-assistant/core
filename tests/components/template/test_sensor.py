@@ -1,6 +1,6 @@
 """The test for the Template sensor platform."""
 from asyncio import Event
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import ANY, patch
 
 import pytest
@@ -1454,6 +1454,106 @@ async def test_trigger_entity_device_class_errors_works(hass: HomeAssistant) -> 
     ts_state = hass.states.get("sensor.timestamp_entity")
     assert ts_state is not None
     assert ts_state.state == STATE_UNKNOWN
+
+
+async def test_entity_last_reset_total_increasing(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test last_reset is disallowed for total_increasing state_class."""
+    # State of timestamp sensors are always in UTC
+    now = dt_util.utcnow()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        assert await async_setup_component(
+            hass,
+            "template",
+            {
+                "template": [
+                    {
+                        "sensor": [
+                            {
+                                "name": "TotalIncreasing entity",
+                                "state": "{{ 0 }}",
+                                "state_class": "total_increasing",
+                                "last_reset": "{{ today_at('00:00:00')}}",
+                            },
+                        ],
+                    },
+                ],
+            },
+        )
+        await hass.async_block_till_done()
+
+    totalincreasing_state = hass.states.get("sensor.totalincreasing_entity")
+    assert totalincreasing_state is None
+
+    assert (
+        "last_reset is only valid for template sensors with state_class 'total'"
+        in caplog.text
+    )
+
+
+async def test_entity_last_reset(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test last_reset works for template sensors."""
+    # State of timestamp sensors are always in UTC
+    now = dt_util.utcnow()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        assert await async_setup_component(
+            hass,
+            "template",
+            {
+                "template": [
+                    {
+                        "sensor": [
+                            {
+                                "name": "Total entity",
+                                "state": "{{ states('sensor.test_state') | int(0) + 1 }}",
+                                "state_class": "total",
+                                "last_reset": "{{ now() }}",
+                            },
+                        ],
+                    },
+                    {
+                        "trigger": {
+                            "platform": "state",
+                            "entity_id": [
+                                "sensor.test_state",
+                            ],
+                        },
+                        "sensor": {
+                            "name": "Total trigger entity",
+                            "state": "{{ states('sensor.test_state') | int(0) + 2 }}",
+                            "state_class": "total",
+                            "last_reset": "{{ as_datetime('2023-01-01') }}",
+                        },
+                    },
+                ],
+            },
+        )
+        await hass.async_block_till_done()
+
+    # Trigger update
+    hass.states.async_set("sensor.test_state", "0")
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    total_state = hass.states.get("sensor.total_entity")
+    assert total_state is not None
+    assert total_state.state == "1"
+    assert total_state.attributes.get("state_class") == "total"
+    assert total_state.attributes.get("last_reset") == now.isoformat()
+
+    total_trigger_state = hass.states.get("sensor.total_trigger_entity")
+    assert total_trigger_state is not None
+    assert total_trigger_state.state == "2"
+    assert total_trigger_state.attributes.get("state_class") == "total"
+    assert (
+        total_trigger_state.attributes.get("last_reset")
+        == datetime(2023, 1, 1).isoformat()
+    )
 
 
 async def test_entity_device_class_parsing_works(hass: HomeAssistant) -> None:
