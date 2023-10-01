@@ -13,7 +13,7 @@ from .const import DOMAIN, LOGGER
 
 
 class FoscamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """My custom coordinator."""
+    """Foscam coordinator."""
 
     def __init__(
         self,
@@ -39,9 +39,9 @@ class FoscamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             if ret == 0:
                 data["dev_info"] = dev_info
-            data["product_info"] = (
-                await self.hass.async_add_executor_job(
-                    self.session.get_product_all_info
-                )
-            )[1]
+
+            all_info = await self.hass.async_add_executor_job(
+                self.session.get_product_all_info
+            )
+            data["product_info"] = all_info[1]
             return data
