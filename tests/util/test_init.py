@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import util
+from homeassistant.util import chunk_list
 import homeassistant.util.dt as dt_util
 
 
@@ -90,6 +91,18 @@ def test_ensure_unique_string() -> None:
     """Test ensure_unique_string."""
     assert util.ensure_unique_string("Beer", ["Beer", "Beer_2"]) == "Beer_3"
     assert util.ensure_unique_string("Beer", ["Wine", "Soda"]) == "Beer"
+
+
+def test_chunk_list() -> None:
+    """Test splitting a list in chunks."""
+    input_list = list(range(0, 3))
+    chunks = chunk_list(input_list, 2)
+    first_chunk = next(chunks)
+    assert first_chunk == [0, 1]
+    second_chunk = next(chunks)
+    assert second_chunk == [2]
+    with pytest.raises(StopIteration):
+        next(chunks)
 
 
 def test_throttle() -> None:

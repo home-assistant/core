@@ -1,7 +1,7 @@
 """Config flow for Steam integration."""
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from typing import Any
 
 import steam
@@ -12,6 +12,7 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.util import chunk_list
 
 from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DOMAIN, LOGGER, PLACEHOLDERS
 
@@ -111,11 +112,6 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-def _batch_ids(ids: list[str]) -> Iterator[list[str]]:
-    for i in range(0, len(ids), MAX_IDS_TO_REQUEST):
-        yield ids[i : i + MAX_IDS_TO_REQUEST]
-
-
 class SteamOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Steam client options."""
 
@@ -179,7 +175,7 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
         except steam.api.HTTPError:
             return []
         names = []
-        for id_batch in _batch_ids(_users_str):
+        for id_batch in chunk_list(_users_str, MAX_IDS_TO_REQUEST):
             names.extend(
                 interface.GetPlayerSummaries(steamids=id_batch)["response"]["players"][
                     "player"

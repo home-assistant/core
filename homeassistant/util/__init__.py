@@ -99,6 +99,12 @@ def get_random_string(length: int = 10) -> str:
     return "".join(generator.choice(source_chars) for _ in range(length))
 
 
+def chunk_list(input_list: list[_T], chunk_size: int) -> Iterable[list[_T]]:
+    """Split a list into chunks of `chunk_size`."""
+    for i in range(0, len(input_list), chunk_size):
+        yield input_list[i : i + chunk_size]
+
+
 class Throttle:
     """A class for throttling the execution of tasks.
 
