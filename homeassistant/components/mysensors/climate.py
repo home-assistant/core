@@ -66,7 +66,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
+class MySensorsHVAC(mysensors.device.MySensorsChildEntity, ClimateEntity):
     """Representation of a MySensors HVAC."""
 
     _attr_hvac_modes = OPERATION_LIST

@@ -134,6 +134,7 @@ class WeatherKitWeather(
     _attr_native_pressure_unit = UnitOfPressure.MBAR
     _attr_native_visibility_unit = UnitOfLength.KILOMETERS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
+    _attr_native_precipitation_unit = UnitOfLength.MILLIMETERS
 
     def __init__(
         self,

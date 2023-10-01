@@ -8,8 +8,14 @@ from typing import Any, cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.const import (
+    LOG_LEVEL_MAP,
+    CommandClass,
+    ConfigurationValueType,
+    LogLevel,
+)
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
@@ -39,9 +45,10 @@ from .const import (
     ATTR_ENDPOINT,
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
-    CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
+    DATA_OLD_SERVER_LOG_LEVEL,
     DOMAIN,
+    LIB_LOGGER,
     LOGGER,
 )
 
@@ -125,17 +132,70 @@ def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
 async def async_enable_statistics(driver: Driver) -> None:
     """Enable statistics on the driver."""
     await driver.async_enable_statistics("Home Assistant", HA_VERSION)
-    await driver.async_enable_error_reporting()
 
 
-@callback
-def async_update_data_collection_preference(
-    hass: HomeAssistant, entry: ConfigEntry, preference: bool
+async def async_enable_server_logging_if_needed(
+    hass: HomeAssistant, entry: ConfigEntry, driver: Driver
 ) -> None:
-    """Update data collection preference on config entry."""
-    new_data = entry.data.copy()
-    new_data[CONF_DATA_COLLECTION_OPTED_IN] = preference
-    hass.config_entries.async_update_entry(entry, data=new_data)
+    """Enable logging of zwave-js-server in the lib."""
+    # If lib log level is set to debug, we want to enable server logging. First we
+    # check if server log level is less verbose than library logging, and if so, set it
+    # to debug to match library logging. We will store the old server log level in
+    # hass.data so we can reset it later
+    if (
+        not driver
+        or not driver.client.connected
+        or driver.client.server_logging_enabled
+    ):
+        return
+
+    LOGGER.info("Enabling zwave-js-server logging")
+    if (curr_server_log_level := driver.log_config.level) and (
+        LOG_LEVEL_MAP[curr_server_log_level]
+    ) > (lib_log_level := LIB_LOGGER.getEffectiveLevel()):
+        entry_data = hass.data[DOMAIN][entry.entry_id]
+        LOGGER.warning(
+            (
+                "Server logging is set to %s and is currently less verbose "
+                "than library logging, setting server log level to %s to match"
+            ),
+            curr_server_log_level,
+            logging.getLevelName(lib_log_level),
+        )
+        entry_data[DATA_OLD_SERVER_LOG_LEVEL] = curr_server_log_level
+        await driver.async_update_log_config(LogConfig(level=LogLevel.DEBUG))
+    await driver.client.enable_server_logging()
+    LOGGER.info("Zwave-js-server logging is enabled")
+
+
+async def async_disable_server_logging_if_needed(
+    hass: HomeAssistant, entry: ConfigEntry, driver: Driver
+) -> None:
+    """Disable logging of zwave-js-server in the lib if still connected to server."""
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    if (
+        not driver
+        or not driver.client.connected
+        or not driver.client.server_logging_enabled
+    ):
+        return
+    LOGGER.info("Disabling zwave_js server logging")
+    if (
+        DATA_OLD_SERVER_LOG_LEVEL in entry_data
+        and (old_server_log_level := entry_data.pop(DATA_OLD_SERVER_LOG_LEVEL))
+        != driver.log_config.level
+    ):
+        LOGGER.info(
+            (
+                "Server logging is currently set to %s as a result of server logging "
+                "being enabled. It is now being reset to %s"
+            ),
+            driver.log_config.level,
+            old_server_log_level,
+        )
+        await driver.async_update_log_config(LogConfig(level=old_server_log_level))
+    await driver.client.disable_server_logging()
+    LOGGER.info("Zwave-js-server logging is enabled")
 
 
 def get_valueless_base_unique_id(driver: Driver, node: ZwaveNode) -> str:
