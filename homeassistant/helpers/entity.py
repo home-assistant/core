@@ -201,6 +201,12 @@ class EntityInfo(TypedDict):
     config_entry: NotRequired[str]
 
 
+class StateInfo(TypedDict):
+    """State info."""
+
+    unrecorded_attributes: frozenset[str]
+
+
 class EntityPlatformState(Enum):
     """The platform state of an entity."""
 
@@ -297,6 +303,22 @@ class Entity(ABC):
     # If entity is added to an entity platform
     _platform_state = EntityPlatformState.NOT_ADDED
 
+    # Attributes to exclude from recording, only set by base components, e.g. light
+    _entity_component_unrecorded_attributes: frozenset[str] = frozenset()
+    # Additional integration specific attributes to exclude from recording, set by
+    # platforms, e.g. a derived class in hue.light
+    _unrecorded_attributes: frozenset[str] = frozenset()
+    # Union of _entity_component_unrecorded_attributes and _unrecorded_attributes,
+    # set automatically by __init_subclass__
+    __combined_unrecorded_attributes: frozenset[str] = (
+        _entity_component_unrecorded_attributes | _unrecorded_attributes
+    )
+
+    # StateInfo. Set by EntityPlatform by calling async_internal_added_to_hass
+    # While not purely typed, it makes typehinting more useful for us
+    # and removes the need for constant None checks or asserts.
+    _state_info: StateInfo = None  # type: ignore[assignment]
+
     # Entity Properties
     _attr_assumed_state: bool = False
     _attr_attribution: str | None = None
@@ -320,6 +342,13 @@ class Entity(ABC):
     _attr_translation_key: str | None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Initialize an Entity subclass."""
+        super().__init_subclass__(**kwargs)
+        cls.__combined_unrecorded_attributes = (
+            cls._entity_component_unrecorded_attributes | cls._unrecorded_attributes
+        )
 
     @property
     def should_poll(self) -> bool:
@@ -875,7 +904,12 @@ class Entity(ABC):
 
         try:
             hass.states.async_set(
-                entity_id, state, attr, self.force_update, self._context
+                entity_id,
+                state,
+                attr,
+                self.force_update,
+                self._context,
+                self._state_info,
             )
         except InvalidStateError:
             _LOGGER.exception("Failed to set state, fall back to %s", STATE_UNKNOWN)
@@ -1081,15 +1115,19 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        info: EntityInfo = {
+        entity_info: EntityInfo = {
             "domain": self.platform.platform_name,
             "custom_component": "custom_components" in type(self).__module__,
         }
 
         if self.platform.config_entry:
-            info["config_entry"] = self.platform.config_entry.entry_id
+            entity_info["config_entry"] = self.platform.config_entry.entry_id
 
-        entity_sources(self.hass)[self.entity_id] = info
+        entity_sources(self.hass)[self.entity_id] = entity_info
+
+        self._state_info = {
+            "unrecorded_attributes": self.__combined_unrecorded_attributes
+        }
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests

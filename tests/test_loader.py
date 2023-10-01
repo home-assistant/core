@@ -11,35 +11,46 @@ from homeassistant.core import HomeAssistant, callback
 from .common import MockModule, async_get_persistent_notifications, mock_integration
 
 
-async def test_component_dependencies(hass: HomeAssistant) -> None:
-    """Test if we can get the proper load order of components."""
+async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
+    """Test if we can detect circular dependencies of components."""
     mock_integration(hass, MockModule("mod1"))
     mock_integration(hass, MockModule("mod2", ["mod1"]))
-    mod_3 = mock_integration(hass, MockModule("mod3", ["mod2"]))
+    mock_integration(hass, MockModule("mod3", ["mod1"]))
+    mod_4 = mock_integration(hass, MockModule("mod4", ["mod2", "mod3"]))
 
-    assert {"mod1", "mod2", "mod3"} == await loader._async_component_dependencies(
-        hass, "mod_3", mod_3, set(), set()
-    )
+    deps = await loader._async_component_dependencies(hass, mod_4)
+    assert deps == {"mod1", "mod2", "mod3", "mod4"}
 
-    # Create circular dependency
+    # Create a circular dependency
+    mock_integration(hass, MockModule("mod1", ["mod4"]))
+    with pytest.raises(loader.CircularDependency):
+        await loader._async_component_dependencies(hass, mod_4)
+
+    # Create a different circular dependency
     mock_integration(hass, MockModule("mod1", ["mod3"]))
-
     with pytest.raises(loader.CircularDependency):
-        await loader._async_component_dependencies(hass, "mod_3", mod_3, set(), set())
+        await loader._async_component_dependencies(hass, mod_4)
 
-    # Depend on non-existing component
-    mod_1 = mock_integration(hass, MockModule("mod1", ["nonexisting"]))
-
-    with pytest.raises(loader.IntegrationNotFound):
-        await loader._async_component_dependencies(hass, "mod_1", mod_1, set(), set())
-
-    # Having an after dependency 2 deps down that is circular
-    mod_1 = mock_integration(
-        hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod_3"]})
+    # Create a circular after_dependency
+    mock_integration(
+        hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod4"]})
     )
-
     with pytest.raises(loader.CircularDependency):
-        await loader._async_component_dependencies(hass, "mod_3", mod_3, set(), set())
+        await loader._async_component_dependencies(hass, mod_4)
+
+    # Create a different circular after_dependency
+    mock_integration(
+        hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod3"]})
+    )
+    with pytest.raises(loader.CircularDependency):
+        await loader._async_component_dependencies(hass, mod_4)
+
+
+async def test_nonexistent_component_dependencies(hass: HomeAssistant) -> None:
+    """Test if we can detect nonexistent dependencies of components."""
+    mod_1 = mock_integration(hass, MockModule("mod1", ["nonexistent"]))
+    with pytest.raises(loader.IntegrationNotFound):
+        await loader._async_component_dependencies(hass, mod_1)
 
 
 def test_component_loader(hass: HomeAssistant) -> None:

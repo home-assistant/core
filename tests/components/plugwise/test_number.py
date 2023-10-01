@@ -71,10 +71,22 @@ async def test_adam_dhw_setpoint_change(
     )
 
 
+async def test_adam_temperature_offset(
+    hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test creation of the temperature_offset number."""
+    state = hass.states.get("number.zone_thermostat_jessie_temperature_offset")
+    assert state
+    assert float(state.state) == 0.0
+    assert state.attributes.get("min") == -2.0
+    assert state.attributes.get("max") == 2.0
+    assert state.attributes.get("step") == 0.1
+
+
 async def test_adam_temperature_offset_change(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
-    """Test changing of number entities."""
+    """Test changing of the temperature_offset number."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,

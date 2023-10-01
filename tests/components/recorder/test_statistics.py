@@ -24,6 +24,7 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     get_latest_short_term_statistics,
     get_metadata,
+    get_short_term_statistics_run_cache,
     list_statistic_ids,
 )
 from homeassistant.components.recorder.table_managers.statistics_meta import (
@@ -176,6 +177,15 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     )
     assert stats == {"sensor.test1": [expected_2]}
 
+    # Now wipe the latest_short_term_statistics_ids table and test again
+    # to make sure we can rebuild the missing data
+    run_cache = get_short_term_statistics_run_cache(instance.hass)
+    run_cache._latest_id_by_metadata_id = {}
+    stats = get_latest_short_term_statistics(
+        hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
+    )
+    assert stats == {"sensor.test1": [expected_2]}
+
     metadata = get_metadata(hass, statistic_ids={"sensor.test1"})
 
     stats = get_latest_short_term_statistics(
@@ -215,6 +225,17 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
 
     instance.get_session().query(StatisticsShortTerm).delete()
     # Should not fail there is nothing in the table
+    stats = get_latest_short_term_statistics(
+        hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
+    )
+    assert stats == {}
+
+    # Delete again, and manually wipe the cache since we deleted all the data
+    instance.get_session().query(StatisticsShortTerm).delete()
+    run_cache = get_short_term_statistics_run_cache(instance.hass)
+    run_cache._latest_id_by_metadata_id = {}
+
+    # And test again to make sure there is no data
     stats = get_latest_short_term_statistics(
         hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
     )
