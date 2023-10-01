@@ -351,19 +351,20 @@ def load_yaml(fname, string, secrets=None):
         return load_yaml_config_file(fname, secrets)
 
 
-class TestSecrets(unittest.TestCase):
+class TestSecrets:
     """Test the secrets parameter in the yaml utility."""
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         """Create & load secrets file."""
         config_dir = get_test_config_dir()
-        self._yaml_path = os.path.join(config_dir, YAML_CONFIG_FILE)
-        self._secret_path = os.path.join(config_dir, yaml.SECRET_YAML)
-        self._sub_folder_path = os.path.join(config_dir, "subFolder")
-        self._unrelated_path = os.path.join(config_dir, "unrelated")
+        cls._yaml_path = os.path.join(config_dir, YAML_CONFIG_FILE)
+        cls._secret_path = os.path.join(config_dir, yaml.SECRET_YAML)
+        cls._sub_folder_path = os.path.join(config_dir, "subFolder")
+        cls._unrelated_path = os.path.join(config_dir, "unrelated")
 
         load_yaml(
-            self._secret_path,
+            cls._secret_path,
             (
                 "http_pw: pwhttp\n"
                 "comp1_un: un1\n"
@@ -372,8 +373,8 @@ class TestSecrets(unittest.TestCase):
                 "logger: debug\n"
             ),
         )
-        self._yaml = load_yaml(
-            self._yaml_path,
+        cls._yaml = load_yaml(
+            cls._yaml_path,
             (
                 "http:\n"
                 "  api_password: !secret http_pw\n"
@@ -385,7 +386,8 @@ class TestSecrets(unittest.TestCase):
             yaml_loader.Secrets(config_dir),
         )
 
-    def tearDown(self):
+    @classmethod
+    def teardown_class(cls):
         """Clean up secrets."""
         FILES.clear()
 
@@ -450,7 +452,7 @@ class TestSecrets(unittest.TestCase):
         with pytest.raises(HomeAssistantError):
             load_yaml(self._yaml_path, "api_password: !secret logger")
 
-    @patch("homeassistant.util.yaml.loader._LOGGER.error")
+    @pytest.mark.patch("homeassistant.util.yaml.loader._LOGGER.error")
     def test_bad_logger_value(self, mock_error):
         """Ensure logger: debug was removed."""
         load_yaml(self._secret_path, "logger: info\npw: abc")
