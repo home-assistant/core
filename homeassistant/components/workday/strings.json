@@ -138,8 +138,8 @@
       "fix_flow": {
         "step": {
           "named_holiday": {
-            "title": "[%key:component::workday::issues::bad_named_holiday::fix_flow::step::named_holiday::title%]",
-            "description": "[%key:component::workday::issues::bad_named_holiday::fix_flow::step::named_holiday::description%]",
+            "title": "[%key:component::workday::issues::bad_named_holiday::title%]",
+            "description": "Remove {remove_holidays} named holiday as it can't be found in the country named holidays.",
             "data": {
               "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]"
             },
