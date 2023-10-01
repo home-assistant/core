@@ -24,12 +24,12 @@ class MinecraftServerData:
     version: str
 
     # Data available only in 'Java Edition'
-    players_list: list[str] | None
+    players_list: list[str] | None = None
 
     # Data available only in 'Bedrock Edition'
-    edition: str | None
-    game_mode: str | None
-    map_name: str | None
+    edition: str | None = None
+    game_mode: str | None = None
+    map_name: str | None = None
 
 
 class MinecraftServerType(StrEnum):
@@ -114,9 +114,6 @@ class MinecraftServer:
             protocol_version=status_response.version.protocol,
             version=status_response.version.name,
             players_list=players_list,
-            edition=None,
-            game_mode=None,
-            map_name=None,
         )
 
     def _extract_bedrock_data(
@@ -130,7 +127,6 @@ class MinecraftServer:
             players_online=status_response.players.online,
             protocol_version=status_response.version.protocol,
             version=status_response.version.name,
-            players_list=None,
             edition=status_response.version.brand,
             game_mode=status_response.gamemode,
             map_name=status_response.map_name,
