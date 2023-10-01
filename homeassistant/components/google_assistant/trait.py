@@ -358,10 +358,7 @@ class ObjectDetection(_Trait):
 
     @staticmethod
     def supported(domain, features, device_class, _) -> bool:
-        """Test if state is supported.
-
-        Only event entities with device_class `doorbell` are supported.
-        """
+        """Test if state is supported."""
         return (
             domain == event.DOMAIN and device_class == event.EventDeviceClass.DOORBELL
         )
