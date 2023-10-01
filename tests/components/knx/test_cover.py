@@ -1,7 +1,10 @@
 """Test KNX cover."""
 
+import pytest
+
+from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.knx.schema import CoverSchema
-from homeassistant.const import CONF_NAME, STATE_CLOSING
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, STATE_CLOSING
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
@@ -97,6 +100,74 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
     events.pop()
 
 
+@pytest.mark.parametrize(
+    ("config", "supports"),
+    [
+        (
+            {
+                CONF_DEVICE_CLASS: CoverDeviceClass.SHADE,
+                CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                CoverSchema.CONF_MOVE_SHORT_ADDRESS: "1/0/1",
+                CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
+                CoverSchema.CONF_POSITION_ADDRESS: "1/0/3",
+            },
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.SET_POSITION,
+        ),
+        (
+            {
+                CONF_DEVICE_CLASS: CoverDeviceClass.BLIND,
+                CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                CoverSchema.CONF_MOVE_SHORT_ADDRESS: "1/0/1",
+                CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
+                CoverSchema.CONF_POSITION_ADDRESS: "1/0/3",
+            },
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT,
+        ),
+        (
+            {
+                CONF_DEVICE_CLASS: CoverDeviceClass.BLIND,
+                CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
+                CoverSchema.CONF_POSITION_ADDRESS: "1/0/3",
+            },
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION,
+        ),
+    ],
+)
+async def test_cover_supports(
+    hass: HomeAssistant, knx: KNXTestKit, config: dict, supports: CoverEntityFeature
+) -> None:
+    """Test KNX cover basic."""
+    await knx.setup_integration(
+        {
+            CoverSchema.PLATFORM: {
+                CONF_NAME: "test",
+                **config,
+            }
+        }
+    )
+    if "1/0/2" in config.values():
+        await knx.assert_read("1/0/2")
+        await knx.receive_response("1/0/2", (0xFF,))
+
+    if "1/0/4" in config.values():
+        await knx.assert_read("1/0/4")
+        await knx.receive_response("1/0/4", (0xFF,))
+
+    knx.assert_state("cover.test", "closed", supported_features=supports)
+
+
 async def test_cover_stop(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX cover basic."""
     await knx.setup_integration(
@@ -161,6 +232,31 @@ async def test_cover_tilt_absolute(hass: HomeAssistant, knx: KNXTestKit) -> None
 
     assert len(events) == 1
     events.pop()
+
+
+async def test_cover_tilt_short(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX cover tilt."""
+    await knx.setup_integration(
+        {
+            CoverSchema.PLATFORM: {
+                CONF_NAME: "test",
+                CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                CoverSchema.CONF_MOVE_SHORT_ADDRESS: "1/0/1",
+            }
+        }
+    )
+
+    # close cover tilt
+    await hass.services.async_call(
+        "cover", "close_cover_tilt", target={"entity_id": "cover.test"}, blocking=True
+    )
+    await knx.assert_write("1/0/1", True)
+
+    # open cover tilt
+    await hass.services.async_call(
+        "cover", "open_cover_tilt", target={"entity_id": "cover.test"}, blocking=True
+    )
+    await knx.assert_write("1/0/1", False)
 
 
 async def test_cover_tilt(hass: HomeAssistant, knx: KNXTestKit) -> None:
