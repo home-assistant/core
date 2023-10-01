@@ -68,6 +68,7 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
             self.logger.debug("Updating data from API (executor)")
             try:
                 data = self.client.get_predictions_for_multi_stops(self._stop_routes)
+                # Casting here because we expect dict and not a str due to the input format selected being JSON
                 data = cast(dict[str, Any], data)
                 self._calc_predictions(data)
                 return data
