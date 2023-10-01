@@ -1,10 +1,9 @@
 """Support for the World Air Quality Index service."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
-from aiowaqi import WAQIAirQuality, WAQIClient, WAQIConnectionError, WAQISearchResult
+from aiowaqi import WAQIAuthenticationError, WAQIClient, WAQIConnectionError
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -12,10 +11,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_TEMPERATURE,
     ATTR_TIME,
+    CONF_API_KEY,
+    CONF_NAME,
     CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant
@@ -23,7 +25,12 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import CONF_STATION_NUMBER, DOMAIN, ISSUE_PLACEHOLDER
+from .coordinator import WAQIDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,8 +49,6 @@ ATTR_ICON = "mdi:cloud"
 
 CONF_LOCATIONS = "locations"
 CONF_STATIONS = "stations"
-
-SCAN_INTERVAL = timedelta(minutes=5)
 
 TIMEOUT = 10
 
@@ -70,102 +75,126 @@ async def async_setup_platform(
 
     client = WAQIClient(session=async_get_clientsession(hass), request_timeout=TIMEOUT)
     client.authenticate(token)
-    dev = []
+    station_count = 0
     try:
         for location_name in locations:
             stations = await client.search(location_name)
             _LOGGER.debug("The following stations were returned: %s", stations)
             for station in stations:
-                waqi_sensor = WaqiSensor(client, station)
+                station_count = station_count + 1
                 if not station_filter or {
-                    waqi_sensor.uid,
-                    waqi_sensor.url,
-                    waqi_sensor.station_name,
+                    station.station_id,
+                    station.station.external_url,
+                    station.station.name,
                 } & set(station_filter):
-                    dev.append(waqi_sensor)
+                    hass.async_create_task(
+                        hass.config_entries.flow.async_init(
+                            DOMAIN,
+                            context={"source": SOURCE_IMPORT},
+                            data={
+                                CONF_STATION_NUMBER: station.station_id,
+                                CONF_NAME: station.station.name,
+                                CONF_API_KEY: config[CONF_TOKEN],
+                            },
+                        )
+                    )
+    except WAQIAuthenticationError as err:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_import_issue_invalid_auth",
+            breaks_in_ha_version="2024.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue_invalid_auth",
+            translation_placeholders=ISSUE_PLACEHOLDER,
+        )
+        _LOGGER.exception("Could not authenticate with WAQI")
+        raise PlatformNotReady from err
     except WAQIConnectionError as err:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_import_issue_cannot_connect",
+            breaks_in_ha_version="2024.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue_cannot_connect",
+            translation_placeholders=ISSUE_PLACEHOLDER,
+        )
         _LOGGER.exception("Failed to connect to WAQI servers")
         raise PlatformNotReady from err
-    async_add_entities(dev, True)
+    if station_count == 0:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_import_issue_none_found",
+            breaks_in_ha_version="2024.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue_none_found",
+            translation_placeholders=ISSUE_PLACEHOLDER,
+        )
 
 
-class WaqiSensor(SensorEntity):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the WAQI sensor."""
+    coordinator: WAQIDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([WaqiSensor(coordinator)])
+
+
+class WaqiSensor(CoordinatorEntity[WAQIDataUpdateCoordinator], SensorEntity):
     """Implementation of a WAQI sensor."""
 
     _attr_icon = ATTR_ICON
     _attr_device_class = SensorDeviceClass.AQI
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    _data: WAQIAirQuality | None = None
-
-    def __init__(self, client: WAQIClient, search_result: WAQISearchResult) -> None:
+    def __init__(self, coordinator: WAQIDataUpdateCoordinator) -> None:
         """Initialize the sensor."""
-        self._client = client
-        self.uid = search_result.station_id
-        self.url = search_result.station.external_url
-        self.station_name = search_result.station.name
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        if self.station_name:
-            return f"WAQI {self.station_name}"
-        return f"WAQI {self.url if self.url else self.uid}"
+        super().__init__(coordinator)
+        self._attr_name = f"WAQI {self.coordinator.data.city.name}"
+        self._attr_unique_id = f"{coordinator.data.station_id}_air_quality"
 
     @property
     def native_value(self) -> int | None:
         """Return the state of the device."""
-        assert self._data
-        return self._data.air_quality_index
-
-    @property
-    def available(self):
-        """Return sensor availability."""
-        return self._data is not None
-
-    @property
-    def unique_id(self):
-        """Return unique ID."""
-        return self.uid
+        return self.coordinator.data.air_quality_index
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the last update."""
         attrs = {}
+        try:
+            attrs[ATTR_ATTRIBUTION] = " and ".join(
+                [ATTRIBUTION]
+                + [
+                    attribution.name
+                    for attribution in self.coordinator.data.attributions
+                ]
+            )
 
-        if self._data is not None:
-            try:
-                attrs[ATTR_ATTRIBUTION] = " and ".join(
-                    [ATTRIBUTION]
-                    + [attribution.name for attribution in self._data.attributions]
-                )
+            attrs[ATTR_TIME] = self.coordinator.data.measured_at
+            attrs[ATTR_DOMINENTPOL] = self.coordinator.data.dominant_pollutant
 
-                attrs[ATTR_TIME] = self._data.measured_at
-                attrs[ATTR_DOMINENTPOL] = self._data.dominant_pollutant
+            iaqi = self.coordinator.data.extended_air_quality
 
-                iaqi = self._data.extended_air_quality
-
-                attribute = {
-                    ATTR_PM2_5: iaqi.pm25,
-                    ATTR_PM10: iaqi.pm10,
-                    ATTR_HUMIDITY: iaqi.humidity,
-                    ATTR_PRESSURE: iaqi.pressure,
-                    ATTR_TEMPERATURE: iaqi.temperature,
-                    ATTR_OZONE: iaqi.ozone,
-                    ATTR_NITROGEN_DIOXIDE: iaqi.nitrogen_dioxide,
-                    ATTR_SULFUR_DIOXIDE: iaqi.sulfur_dioxide,
-                }
-                res_attributes = {k: v for k, v in attribute.items() if v is not None}
-                return {**attrs, **res_attributes}
-            except (IndexError, KeyError):
-                return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    async def async_update(self) -> None:
-        """Get the latest data and updates the states."""
-        if self.uid:
-            result = await self._client.get_by_station_number(self.uid)
-        elif self.url:
-            result = await self._client.get_by_name(self.url)
-        else:
-            result = None
-        self._data = result
+            attribute = {
+                ATTR_PM2_5: iaqi.pm25,
+                ATTR_PM10: iaqi.pm10,
+                ATTR_HUMIDITY: iaqi.humidity,
+                ATTR_PRESSURE: iaqi.pressure,
+                ATTR_TEMPERATURE: iaqi.temperature,
+                ATTR_OZONE: iaqi.ozone,
+                ATTR_NITROGEN_DIOXIDE: iaqi.nitrogen_dioxide,
+                ATTR_SULFUR_DIOXIDE: iaqi.sulfur_dioxide,
+            }
+            res_attributes = {k: v for k, v in attribute.items() if v is not None}
+            return {**attrs, **res_attributes}
+        except (IndexError, KeyError):
+            return {ATTR_ATTRIBUTION: ATTRIBUTION}

@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import format_mac
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkException, ReolinkWebhookException, UserNotAdmin
 from .host import ReolinkHost
-from .util import has_connection_problem
+from .util import is_connected
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,7 +103,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             and CONF_PASSWORD in existing_entry.data
             and existing_entry.data[CONF_HOST] != discovery_info.ip
         ):
-            if has_connection_problem(self.hass, existing_entry):
+            if is_connected(self.hass, existing_entry):
                 _LOGGER.debug(
                     "Reolink DHCP reported new IP '%s', "
                     "but connection to camera seems to be okay, so sticking to IP '%s'",
@@ -122,7 +122,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "Reolink DHCP reported new IP '%s', "
                     "but got error '%s' trying to connect, so sticking to IP '%s'",
                     discovery_info.ip,
-                    str(err),
+                    err,
                     existing_entry.data[CONF_HOST],
                 )
                 raise AbortFlow("already_configured") from err

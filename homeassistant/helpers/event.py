@@ -917,7 +917,6 @@ class TrackTemplateResultInfo:
 
     def async_setup(
         self,
-        raise_on_template_error: bool,
         strict: bool = False,
         log_fn: Callable[[int, str], None] | None = None,
     ) -> None:
@@ -955,8 +954,6 @@ class TrackTemplateResultInfo:
             )
 
             if info.exception:
-                if raise_on_template_error:
-                    raise info.exception
                 if not log_fn:
                     _LOGGER.error(
                         "Error while processing template: %s",
@@ -1239,7 +1236,6 @@ def async_track_template_result(
     hass: HomeAssistant,
     track_templates: Sequence[TrackTemplate],
     action: TrackTemplateResultListener,
-    raise_on_template_error: bool = False,
     strict: bool = False,
     log_fn: Callable[[int, str], None] | None = None,
     has_super_template: bool = False,
@@ -1266,11 +1262,6 @@ def async_track_template_result(
         An iterable of TrackTemplate.
     action
         Callable to call with results.
-    raise_on_template_error
-        When set to True, if there is an exception
-        processing the template during setup, the system
-        will raise the exception instead of setting up
-        tracking.
     strict
         When set to True, raise on undefined variables.
     log_fn
@@ -1286,7 +1277,7 @@ def async_track_template_result(
 
     """
     tracker = TrackTemplateResultInfo(hass, track_templates, action, has_super_template)
-    tracker.async_setup(raise_on_template_error, strict=strict, log_fn=log_fn)
+    tracker.async_setup(strict=strict, log_fn=log_fn)
     return tracker
 
 
