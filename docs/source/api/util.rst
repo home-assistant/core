@@ -118,14 +118,6 @@ homeassistant.util.ssl
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.temperature
-------------------------------
-
-.. automodule:: homeassistant.util.temperature
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 homeassistant.util.unit\_system
 -------------------------------
 
