@@ -948,7 +948,7 @@ micloud==0.5
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.11.5
+millheater==0.11.6
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -2102,7 +2102,7 @@ zigpy-znp==0.11.5
 zigpy==0.57.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.52.0
+zwave-js-server-python==0.52.1
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
