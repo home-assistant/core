@@ -73,6 +73,16 @@ def _default_value_fn(result: dict[str, Any]) -> str:
     return cast(str, result["value"])
 
 
+def _distance_value_fn(result: dict[str, Any]) -> int | str:
+    """Format function for distance values."""
+    return format(float(_default_value_fn(result)), ".2f")
+
+
+def _body_value_fn(result: dict[str, Any]) -> int | str:
+    """Format function for body values."""
+    return format(float(_default_value_fn(result)), ".1f")
+
+
 def _clock_format_12h(result: dict[str, Any]) -> str:
     raw_state = result["value"]
     if raw_state == "":
@@ -154,7 +164,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Distance",
         icon="mdi:map-marker",
         device_class=SensorDeviceClass.DISTANCE,
-        suggested_display_precision=2,
+        value_fn=_distance_value_fn,
         unit_fn=_distance_unit,
         scope="activity",
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -260,7 +270,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Tracker Distance",
         icon="mdi:map-marker",
         device_class=SensorDeviceClass.DISTANCE,
-        suggested_display_precision=2,
+        value_fn=_distance_value_fn,
         unit_fn=_distance_unit,
         scope="activity",
         entity_registry_enabled_default=False,
@@ -348,7 +358,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement="BMI",
         icon="mdi:human",
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
+        value_fn=_body_value_fn,
         scope="weight",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -359,7 +369,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:human",
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
+        value_fn=_body_value_fn,
         scope="weight",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -370,7 +380,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         icon="mdi:human",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.WEIGHT,
-        suggested_display_precision=1,
+        value_fn=_body_value_fn,
         unit_fn=_weight_unit,
         scope="weight",
     ),

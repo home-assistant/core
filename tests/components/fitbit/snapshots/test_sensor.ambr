@@ -40,7 +40,7 @@
 # ---
 # name: test_sensors[monitored_resources11-sensor.weight-body/weight-175]
   tuple(
-    '175',
+    '175.0',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'weight',
@@ -54,7 +54,7 @@
 # ---
 # name: test_sensors[monitored_resources12-sensor.body_fat-body/fat-18]
   tuple(
-    '18',
+    '18.0',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'friendly_name': 'Body Fat',
@@ -162,7 +162,7 @@
 # ---
 # name: test_sensors[monitored_resources2-sensor.distance-activities/distance-12.7]
   tuple(
-    '12.7',
+    '12.70',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'distance',
