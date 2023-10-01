@@ -1612,6 +1612,14 @@ omit =
     homeassistant/components/zha/light.py
     homeassistant/components/zhong_hong/climate.py
     homeassistant/components/ziggo_mediabox_xl/media_player.py
+    homeassistant/components/zimi/__init__.py
+    homeassistant/components/zimi/const.py
+    homeassistant/components/zimi/controller.py
+    homeassistant/components/zimi/cover.py
+    homeassistant/components/zimi/fan.py
+    homeassistant/components/zimi/light.py
+    homeassistant/components/zimi/sensor.py
+    homeassistant/components/zimi/switch.py
     homeassistant/components/zoneminder/*
     homeassistant/components/zwave_me/__init__.py
     homeassistant/components/zwave_me/binary_sensor.py
