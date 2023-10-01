@@ -1493,7 +1493,7 @@ async def test_entity_last_reset_total_increasing(
     )
 
 
-async def test_entity_last_reset(
+async def test_entity_last_reset_setup(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test last_reset works for template sensors."""
@@ -1513,6 +1513,12 @@ async def test_entity_last_reset(
                                 "state": "{{ states('sensor.test_state') | int(0) + 1 }}",
                                 "state_class": "total",
                                 "last_reset": "{{ now() }}",
+                            },
+                            {
+                                "name": "Static last_reset entity",
+                                "state": "{{ states('sensor.test_state') | int(0) }}",
+                                "state_class": "total",
+                                "last_reset": "2023-01-01T00:00:00",
                             },
                         ],
                     },
@@ -1540,6 +1546,15 @@ async def test_entity_last_reset(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
+    static_state = hass.states.get("sensor.static_last_reset_entity")
+    assert static_state is not None
+    assert static_state.state == "0"
+    assert static_state.attributes.get("state_class") == "total"
+    assert (
+        static_state.attributes.get("last_reset")
+        == datetime(2023, 1, 1, 0, 0, 0).isoformat()
+    )
+
     total_state = hass.states.get("sensor.total_entity")
     assert total_state is not None
     assert total_state.state == "1"
@@ -1554,6 +1569,82 @@ async def test_entity_last_reset(
         total_trigger_state.attributes.get("last_reset")
         == datetime(2023, 1, 1).isoformat()
     )
+
+
+async def test_entity_last_reset_parsing(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test last_reset works for template sensors."""
+    # State of timestamp sensors are always in UTC
+    now = dt_util.utcnow()
+
+    with patch(
+        "homeassistant.components.template.sensor._LOGGER.warning"
+    ) as mocked_warning, patch(
+        "homeassistant.components.template.template_entity._LOGGER.error"
+    ) as mocked_error, patch(
+        "homeassistant.util.dt.now", return_value=now
+    ):
+        assert await async_setup_component(
+            hass,
+            "template",
+            {
+                "template": [
+                    {
+                        "sensor": [
+                            {
+                                "name": "Total entity",
+                                "state": "{{ states('sensor.test_state') | int(0) + 1 }}",
+                                "state_class": "total",
+                                "last_reset": "{{ 'not a datetime' }}",
+                            },
+                        ],
+                    },
+                    {
+                        "trigger": {
+                            "platform": "state",
+                            "entity_id": [
+                                "sensor.test_state",
+                            ],
+                        },
+                        "sensor": {
+                            "name": "Total trigger entity",
+                            "state": "{{ states('sensor.test_state') | int(0) + 2 }}",
+                            "state_class": "total",
+                            "last_reset": "{{ 'not a datetime' }}",
+                        },
+                    },
+                ],
+            },
+        )
+        await hass.async_block_till_done()
+
+        # Trigger update
+        hass.states.async_set("sensor.test_state", "0")
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+        # Trigger based datetime parsing warning:
+        mocked_warning.assert_called_once_with(
+            "%s rendered invalid timestamp for last_reset attribute: %s",
+            "sensor.total_trigger_entity",
+            "not a datetime",
+        )
+
+        # State based datetime parsing error
+        mocked_error.assert_called_once()
+        args, _ = mocked_error.call_args
+        assert len(args) == 6
+        assert args[0] == (
+            "Error validating template result '%s' "
+            "from template '%s' "
+            "for attribute '%s' in entity %s "
+            "validation message '%s'"
+        )
+        assert args[1] == "not a datetime"
+        assert args[3] == "_attr_last_reset"
+        assert args[4] == "sensor.total_entity"
+        assert args[5] == "Invalid datetime specified: not a datetime"
 
 
 async def test_entity_device_class_parsing_works(hass: HomeAssistant) -> None:

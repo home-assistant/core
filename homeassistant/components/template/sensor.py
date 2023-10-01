@@ -283,10 +283,6 @@ class SensorTemplate(TemplateEntity, SensorEntity):
 
     @callback
     def _update_last_reset(self, result):
-        if isinstance(result, TemplateError):
-            self._attr_available = True
-            return
-
         self._attr_last_reset = result
 
     @callback
