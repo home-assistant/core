@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         api = await hass.async_add_executor_job(Tami4EdgeAPI, refresh_token)
     except APIExceptions.RefreshTokenExpiredException as ex:
-        raise ConfigEntryError("API Refresh token expired") from ex
+        raise ConfigEntryAuthFailed("API Refresh token expired") from ex
     except APIExceptions.TokenRefreshFailedException as ex:
         raise ConfigEntryNotReady("Error connecting to API") from ex
 
