@@ -189,15 +189,15 @@ async def test_v4_sensor(hass: HomeAssistant) -> None:
     check_sensor_state(hass, UV_INDEX, "3")
     check_sensor_state(hass, UV_HEALTH_CONCERN, "moderate")
     check_sensor_state(hass, EVAPOTRANSPIRATION, "0.0")
-    check_sensor_state(hass, HUMIDITY, "0.68")
+    check_sensor_state(hass, HUMIDITY, "22.71")
     check_sensor_state(hass, PRECIPITATION_INTENSITY, "0.0")
     check_sensor_state(hass, PRECIPITATION_PROBABILITY, "0.0")
-    check_sensor_state(hass, PRESSURE_SEA_LEVEL, "29.47")
-    check_sensor_state(hass, TEMPERATURE, "17.0")
-    check_sensor_state(hass, VISIBILITY, "10.0")
+    check_sensor_state(hass, PRESSURE_SEA_LEVEL, "30.35")
+    check_sensor_state(hass, TEMPERATURE, "44.13")
+    check_sensor_state(hass, VISIBILITY, "8.15")
     check_sensor_state(hass, WET_BULB_GLOBE_TEMPERATURE, "17.0")
-    check_sensor_state(hass, WIND_DIRECTION, "243.38")
-    check_sensor_state(hass, WIND_SPEED, "3.58")
+    check_sensor_state(hass, WIND_DIRECTION, "315.14")
+    check_sensor_state(hass, WIND_SPEED, "9.33")
 
 
 async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
@@ -232,15 +232,15 @@ async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
     check_sensor_state(hass, UV_INDEX, "3")
     check_sensor_state(hass, UV_HEALTH_CONCERN, "moderate")
     check_sensor_state(hass, EVAPOTRANSPIRATION, "0.0")
-    check_sensor_state(hass, HUMIDITY, "0.68")
+    check_sensor_state(hass, HUMIDITY, "22.71")
     check_sensor_state(hass, PRECIPITATION_INTENSITY, "0.0")
     check_sensor_state(hass, PRECIPITATION_PROBABILITY, "0.0")
-    check_sensor_state(hass, PRESSURE_SEA_LEVEL, "29.47")
-    check_sensor_state(hass, TEMPERATURE, "17.0")
-    check_sensor_state(hass, VISIBILITY, "10.0")
+    check_sensor_state(hass, PRESSURE_SEA_LEVEL, "30.35")
+    check_sensor_state(hass, TEMPERATURE, "44.13")
+    check_sensor_state(hass, VISIBILITY, "8.15")
     check_sensor_state(hass, WET_BULB_GLOBE_TEMPERATURE, "17.0")
-    check_sensor_state(hass, WIND_DIRECTION, "243.38")
-    check_sensor_state(hass, WIND_SPEED, "3.58")
+    check_sensor_state(hass, WIND_DIRECTION, "315.14")
+    check_sensor_state(hass, WIND_SPEED, "9.33")
 
 
 async def test_entity_description() -> None:

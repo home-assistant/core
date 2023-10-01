@@ -33,7 +33,11 @@
     "cloudBase": 0.74,
     "cloudCeiling": 0.74,
     "uvIndex": 3,
-    "uvHealthConcern": 1
+    "uvHealthConcern": 1,
+    "evapotranspiration": 0.0,
+    "precipitationIntensity": 0.0,
+    "precipitationProbability": 0.0,
+    "wetBulbGlobeTemperature": 17.0
   },
   "forecasts": {
     "nowcast": [
