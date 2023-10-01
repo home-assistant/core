@@ -6,13 +6,7 @@ import logging
 from typing import Any
 
 from twitchAPI.helper import first
-from twitchAPI.twitch import (
-    FollowedChannel,
-    Twitch,
-    TwitchAPIException,
-    TwitchBackendException,
-    TwitchUser,
-)
+from twitchAPI.twitch import FollowedChannel, Twitch, TwitchUser
 from twitchAPI.type import AuthScope, InvalidTokenException
 import voluptuous as vol
 
@@ -227,14 +221,10 @@ class OAuth2FlowHandler(
         assert self._user
 
         if not user_input:
-            try:
-                channels = await get_followed_channels(
-                    self._client,
-                    self._user,
-                )
-            except (TwitchAPIException, TwitchBackendException) as err:
-                self.logger.error("Twitch API error: %s", err)
-                return self.async_abort(reason="cannot_connect")
+            channels = await get_followed_channels(
+                self._client,
+                self._user,
+            )
 
             self.logger.debug("Channels: %s", channels)
 
