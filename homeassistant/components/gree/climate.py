@@ -159,8 +159,7 @@ class GreeClimateEntity(CoordinatorEntity[DeviceDataUpdateCoordinator], ClimateE
         if ATTR_TEMPERATURE not in kwargs:
             raise ValueError(f"Missing parameter {ATTR_TEMPERATURE}")
 
-        if ATTR_HVAC_MODE in kwargs:
-            hvac_mode = kwargs[ATTR_HVAC_MODE]
+        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
             await self.async_set_hvac_mode(hvac_mode)
 
         temperature = kwargs[ATTR_TEMPERATURE]
