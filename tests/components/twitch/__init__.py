@@ -55,6 +55,7 @@ class FollowedChannelMock:
     """Followed channel mock."""
 
     broadcaster_login: str
+    broadcaster_name: str
     followed_at: str
 
 
@@ -167,10 +168,12 @@ class TwitchMock:
                     FollowedChannelMock(
                         followed_at=datetime(year=2023, month=8, day=1),
                         broadcaster_login="internetofthings",
+                        broadcaster_name="Internet of Things",
                     ),
                     FollowedChannelMock(
                         followed_at=datetime(year=2023, month=8, day=1),
                         broadcaster_login="homeassistant",
+                        broadcaster_name="Home Assistant",
                     ),
                 ]
             )
