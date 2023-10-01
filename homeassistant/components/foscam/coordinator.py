@@ -1,9 +1,9 @@
 """The foscam coordinator object."""
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 
-import async_timeout
 from libpyfoscam import FoscamCamera
 
 from homeassistant.core import HomeAssistant
@@ -32,7 +32,7 @@ class FoscamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
 
-        async with async_timeout.timeout(30):
+        async with asyncio.timeout(30):
             data = {}
             ret, dev_info = await self.hass.async_add_executor_job(
                 self.session.get_dev_info

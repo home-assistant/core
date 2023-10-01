@@ -125,6 +125,9 @@ class HassFoscamCamera(CoordinatorEntity[FoscamCoordinator], Camera):
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to hass."""
         # Get motion detection status
+
+        await super().async_added_to_hass()
+
         ret, response = await self.hass.async_add_executor_job(
             self._foscam_session.get_motion_detect_config
         )
