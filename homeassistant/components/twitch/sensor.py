@@ -94,13 +94,20 @@ async def async_setup_entry(
     """Initialize entries."""
     client = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        [
-            TwitchSensor(channel, client)
-            async for channel in client.get_users(logins=entry.options[CONF_CHANNELS])
-        ],
-        True,
-    )
+    channels = entry.options[CONF_CHANNELS]
+
+    entities: list[TwitchSensor] = []
+
+    # Split channels into chunks of 100 to avoid hitting the rate limit
+    for chunk in (channels[i : i + 100] for i in range(0, len(channels), 100)):
+        entities.extend(
+            [
+                TwitchSensor(channel, client)
+                async for channel in client.get_users(logins=chunk)
+            ]
+        )
+
+    async_add_entities(entities, True)
 
 
 class TwitchSensor(SensorEntity):
