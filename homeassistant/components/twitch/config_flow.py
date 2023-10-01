@@ -244,7 +244,7 @@ class OAuth2FlowHandler(
                     {
                         vol.Required(CONF_CHANNELS): cv.multi_select(
                             {
-                                channel.broadcaster_id: channel.broadcaster_name
+                                channel.broadcaster_login: channel.broadcaster_name
                                 for channel in channels
                             }
                         ),
@@ -326,9 +326,10 @@ class OptionsFlowHandler(OptionsFlow):
                 user,
             )
 
-            channel_ids = [channel.broadcaster_id for channel in channels]
+            channel_ids = [channel.broadcaster_login for channel in channels]
             channels_dict = {
-                channel.broadcaster_id: channel.broadcaster_name for channel in channels
+                channel.broadcaster_login: channel.broadcaster_name
+                for channel in channels
             }
 
             self.logger.debug("Channels: %s", channels_dict)
