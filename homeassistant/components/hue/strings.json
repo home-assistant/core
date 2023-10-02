@@ -104,6 +104,15 @@
           "unidirectional_incoming": "Unidirectional incoming"
         }
       }
+    },
+    "switch": {
+      "automation": {
+        "name": "Automation",
+        "state": {
+          "on": "Enabled",
+          "off": "Disabled"
+        }
+      }
     }
   },
   "options": {
