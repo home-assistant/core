@@ -41,7 +41,14 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from .api import ConfigEntryWithingsApi
-from .const import CONF_CLOUDHOOK_URL, CONF_PROFILES, CONF_USE_WEBHOOK, DOMAIN, LOGGER
+from .const import (
+    CONF_CLOUDHOOK_URL,
+    CONF_PROFILES,
+    CONF_USE_WEBHOOK,
+    DEFAULT_TITLE,
+    DOMAIN,
+    LOGGER,
+)
 from .coordinator import WithingsDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -76,29 +83,30 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Withings component."""
 
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.4.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Withings",
-        },
-    )
-    if CONF_CLIENT_ID in config:
-        await async_import_client_credential(
+    if conf := config.get(DOMAIN):
+        async_create_issue(
             hass,
-            DOMAIN,
-            ClientCredential(
-                config[CONF_CLIENT_ID],
-                config[CONF_CLIENT_SECRET],
-            ),
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Withings",
+            },
         )
+        if CONF_CLIENT_ID in conf:
+            await async_import_client_credential(
+                hass,
+                DOMAIN,
+                ClientCredential(
+                    conf[CONF_CLIENT_ID],
+                    conf[CONF_CLIENT_SECRET],
+                ),
+            )
 
     return True
 
@@ -150,10 +158,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             return
 
+        webhook_name = "Withings"
+        if entry.title != DEFAULT_TITLE:
+            webhook_name = " ".join([DEFAULT_TITLE, entry.title])
+
         webhook_register(
             hass,
             DOMAIN,
-            "Withings",
+            webhook_name,
             entry.data[CONF_WEBHOOK_ID],
             get_webhook_handler(coordinator),
         )
