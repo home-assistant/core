@@ -222,7 +222,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         audio_settings: VoiceAssistantAudioSettings | None = None,
     ) -> None:
         """Run the Voice Assistant pipeline."""
-        if audio_settings is None:
+        if audio_settings is None or audio_settings.volume_multiplier == 0:
             audio_settings = VoiceAssistantAudioSettings()
 
         tts_audio_output = (
