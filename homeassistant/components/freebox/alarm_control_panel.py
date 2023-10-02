@@ -76,6 +76,7 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         )
 
         self.set_state(STATE_IDLE)
+        self.add_features(self._router.home_devices[self._id])
         self.update_node(self._router.home_devices[self._id])
 
     @property
@@ -115,8 +116,8 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
             self.update_node(self._router.home_devices[self._id])
             self.async_write_ha_state()
 
-    def update_node(self, node: dict[str, Any]) -> None:
-        """Update the alarm."""
+    def add_features(self, node: dict[str, Any]) -> None:
+        """Add alarm features."""
         # Search if Alarm2
         has_alarm2 = False
         for nodeid, local_node in self._router.home_devices.items():
@@ -141,6 +142,8 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         else:
             self._attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
 
+    def update_node(self, node: dict[str, Any]) -> None:
+        """Update the alarm."""
         # Parse all endpoints values
         for endpoint in filter(
             lambda x: (x["ep_type"] == "signal"), node["show_endpoints"]
