@@ -237,7 +237,11 @@ async def handle_call_service(
     except vol.Invalid as err:
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
     except HomeAssistantError as err:
-        connection.logger.exception(err)
+        if err.omit_stack_trace:
+            connection.logger.error(err)
+            connection.logger.debug("", exc_info=err)
+        else:
+            connection.logger.exception(err)
         connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
     except Exception as err:  # pylint: disable=broad-except
         connection.logger.exception(err)
