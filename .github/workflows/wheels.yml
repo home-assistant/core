@@ -10,8 +10,10 @@ on:
       - dev
       - rc
     paths:
-      - "requirements.txt"
+      - ".github/workflows/wheels.yml"
+      - "homeassistant/package_constraints.txt"
       - "requirements_all.txt"
+      - "requirements.txt"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name}}
@@ -26,7 +28,7 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
 
       - name: Get information
         id: info
@@ -84,7 +86,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
 
       - name: Download env_file
         uses: actions/download-artifact@v3
@@ -97,7 +99,7 @@ jobs:
           name: requirements_diff
 
       - name: Build wheels
-        uses: home-assistant/wheels@2023.09.1
+        uses: home-assistant/wheels@2023.10.1
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -122,7 +124,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.0
 
       - name: Download env_file
         uses: actions/download-artifact@v3
@@ -178,7 +180,7 @@ jobs:
           sed -i "/numpy/d" homeassistant/package_constraints.txt
 
       - name: Build wheels (part 1)
-        uses: home-assistant/wheels@2023.09.1
+        uses: home-assistant/wheels@2023.10.1
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -186,13 +188,13 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
-          skip-binary: aiohttp;grpcio;SQLAlchemy;protobuf
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtaa"
 
       - name: Build wheels (part 2)
-        uses: home-assistant/wheels@2023.09.1
+        uses: home-assistant/wheels@2023.10.1
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -200,13 +202,13 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
-          skip-binary: aiohttp;grpcio;SQLAlchemy;protobuf
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtab"
 
       - name: Build wheels (part 3)
-        uses: home-assistant/wheels@2023.09.1
+        uses: home-assistant/wheels@2023.10.1
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -214,7 +216,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
-          skip-binary: aiohttp;grpcio;SQLAlchemy;protobuf
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtac"

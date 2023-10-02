@@ -1,7 +1,7 @@
 """Support for Hue binary sensors."""
 from __future__ import annotations
 
-from typing import Any, TypeAlias
+from typing import TypeAlias
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.config import (
@@ -9,9 +9,17 @@ from aiohue.v2.controllers.config import (
     EntertainmentConfigurationController,
 )
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.controllers.sensors import MotionController
+from aiohue.v2.controllers.sensors import (
+    CameraMotionController,
+    ContactController,
+    MotionController,
+    TamperController,
+)
+from aiohue.v2.models.camera_motion import CameraMotion
+from aiohue.v2.models.contact import Contact, ContactState
 from aiohue.v2.models.entertainment_configuration import EntertainmentStatus
 from aiohue.v2.models.motion import Motion
+from aiohue.v2.models.tamper import Tamper, TamperState
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -25,8 +33,16 @@ from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 
-SensorType: TypeAlias = Motion | EntertainmentConfiguration
-ControllerType: TypeAlias = MotionController | EntertainmentConfigurationController
+SensorType: TypeAlias = (
+    CameraMotion | Contact | Motion | EntertainmentConfiguration | Tamper
+)
+ControllerType: TypeAlias = (
+    CameraMotionController
+    | ContactController
+    | MotionController
+    | EntertainmentConfigurationController
+    | TamperController
+)
 
 
 async def async_setup_entry(
@@ -57,8 +73,11 @@ async def async_setup_entry(
         )
 
     # setup for each binary-sensor-type hue resource
+    register_items(api.sensors.camera_motion, HueMotionSensor)
     register_items(api.sensors.motion, HueMotionSensor)
     register_items(api.config.entertainment_configuration, HueEntertainmentActiveSensor)
+    register_items(api.sensors.contact, HueContactSensor)
+    register_items(api.sensors.tamper, HueTamperSensor)
 
 
 class HueBinarySensorBase(HueBaseEntity, BinarySensorEntity):
@@ -87,12 +106,7 @@ class HueMotionSensor(HueBinarySensorBase):
         if not self.resource.enabled:
             # Force None (unknown) if the sensor is set to disabled in Hue
             return None
-        return self.resource.motion.motion
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the optional state attributes."""
-        return {"motion_valid": self.resource.motion.motion_valid}
+        return self.resource.motion.value
 
 
 class HueEntertainmentActiveSensor(HueBinarySensorBase):
@@ -110,3 +124,30 @@ class HueEntertainmentActiveSensor(HueBinarySensorBase):
         """Return sensor name."""
         type_title = self.resource.type.value.replace("_", " ").title()
         return f"{self.resource.metadata.name}: {type_title}"
+
+
+class HueContactSensor(HueBinarySensorBase):
+    """Representation of a Hue Contact sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.OPENING
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        if not self.resource.enabled:
+            # Force None (unknown) if the sensor is set to disabled in Hue
+            return None
+        return self.resource.contact_report.state != ContactState.CONTACT
+
+
+class HueTamperSensor(HueBinarySensorBase):
+    """Representation of a Hue Tamper sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.TAMPER
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        if not self.resource.tamper_reports:
+            return False
+        return self.resource.tamper_reports[0].state == TamperState.TAMPERED

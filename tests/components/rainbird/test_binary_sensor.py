@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import RAIN_SENSOR_OFF, RAIN_SENSOR_ON, ComponentSetup
 
@@ -25,6 +26,7 @@ async def test_rainsensor(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     responses: list[AiohttpClientMockResponse],
+    entity_registry: er.EntityRegistry,
     expected_state: bool,
 ) -> None:
     """Test rainsensor binary sensor."""
@@ -38,3 +40,37 @@ async def test_rainsensor(
         "friendly_name": "Rain Bird Controller Rainsensor",
         "icon": "mdi:water",
     }
+
+    entity_entry = entity_registry.async_get(
+        "binary_sensor.rain_bird_controller_rainsensor"
+    )
+    assert entity_entry
+    assert entity_entry.unique_id == "1263613994342-rainsensor"
+
+
+@pytest.mark.parametrize(
+    ("config_entry_unique_id"),
+    [
+        (None),
+    ],
+)
+async def test_no_unique_id(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    responses: list[AiohttpClientMockResponse],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test rainsensor binary sensor with no unique id."""
+
+    assert await setup_integration()
+
+    rainsensor = hass.states.get("binary_sensor.rain_bird_controller_rainsensor")
+    assert rainsensor is not None
+    assert (
+        rainsensor.attributes.get("friendly_name") == "Rain Bird Controller Rainsensor"
+    )
+
+    entity_entry = entity_registry.async_get(
+        "binary_sensor.rain_bird_controller_rainsensor"
+    )
+    assert not entity_entry
