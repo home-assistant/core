@@ -123,6 +123,7 @@ class HueBehaviorInstanceEnabledEntity(HueResourceEnabledEntity):
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         has_entity_name=False,
+        translation_key="automation",
     )
 
     @property
