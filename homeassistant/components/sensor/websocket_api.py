@@ -53,7 +53,7 @@ def ws_device_class_units(
 def ws_numeric_device_classes(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Return supported units for a device class."""
+    """Return numeric sensor device classes."""
     numeric_device_classes = set(SensorDeviceClass) - NON_NUMERIC_DEVICE_CLASSES
     connection.send_result(
         msg["id"], {"numeric_device_classes": list(numeric_device_classes)}
