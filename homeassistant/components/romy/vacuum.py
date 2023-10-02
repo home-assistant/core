@@ -15,8 +15,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, ICON, LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import RomyVacuumCoordinator
+
+ICON = "mdi:robot-vacuum"
 
 FAN_SPEED_NONE = "default"
 FAN_SPEED_NORMAL = "normal"
@@ -75,7 +77,6 @@ async def async_setup_entry(
 class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEntity):
     """Representation of a ROMY vacuum cleaner robot."""
 
-    _attr_name = None
     _attr_has_entity_name = True
     _attr_supported_features = SUPPORT_ROMY_ROBOT
     _attr_fan_speed_list = FAN_SPEEDS
