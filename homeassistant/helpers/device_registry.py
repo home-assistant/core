@@ -262,7 +262,6 @@ class DeviceEntry:
             "model": self.model,
             "name_by_user": self.name_by_user,
             "name": self.name,
-            "normalized_name": self.normalized_name,
             "sw_version": self.sw_version,
             "via_device_id": self.via_device_id,
         }
@@ -1156,6 +1155,6 @@ def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, 
 
 def normalize_device_name(device_name: str | None) -> str | None:
     """Normalize a device name by removing whitespace and case folding."""
-    if device_name is None:
-        return device_name
+    if device_name is None or not isinstance(device_name, str):
+        return None
     return device_name.casefold().replace(" ", "")
