@@ -3,8 +3,10 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN
 from .coordinator import MinecraftServerCoordinator
+
+MANUFACTURER = "Mojang Studios"
 
 
 class MinecraftServerEntity(CoordinatorEntity[MinecraftServerCoordinator]):

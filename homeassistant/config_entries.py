@@ -1047,7 +1047,7 @@ class ConfigEntries:
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
         self._entries: dict[str, ConfigEntry] = {}
-        self._domain_index: dict[str, list[str]] = {}
+        self._domain_index: dict[str, list[ConfigEntry]] = {}
         self._store = storage.Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
@@ -1077,9 +1077,7 @@ class ConfigEntries:
         """Return all entries or entries for a specific domain."""
         if domain is None:
             return list(self._entries.values())
-        return [
-            self._entries[entry_id] for entry_id in self._domain_index.get(domain, [])
-        ]
+        return list(self._domain_index.get(domain, []))
 
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
@@ -1088,7 +1086,7 @@ class ConfigEntries:
                 f"An entry with the id {entry.entry_id} already exists."
             )
         self._entries[entry.entry_id] = entry
-        self._domain_index.setdefault(entry.domain, []).append(entry.entry_id)
+        self._domain_index.setdefault(entry.domain, []).append(entry)
         self._async_dispatch(ConfigEntryChange.ADDED, entry)
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
@@ -1106,7 +1104,7 @@ class ConfigEntries:
         await entry.async_remove(self.hass)
 
         del self._entries[entry.entry_id]
-        self._domain_index[entry.domain].remove(entry.entry_id)
+        self._domain_index[entry.domain].remove(entry)
         if not self._domain_index[entry.domain]:
             del self._domain_index[entry.domain]
         self._async_schedule_save()
@@ -1173,7 +1171,7 @@ class ConfigEntries:
             return
 
         entries = {}
-        domain_index: dict[str, list[str]] = {}
+        domain_index: dict[str, list[ConfigEntry]] = {}
 
         for entry in config["entries"]:
             pref_disable_new_entities = entry.get("pref_disable_new_entities")
@@ -1188,7 +1186,7 @@ class ConfigEntries:
             domain = entry["domain"]
             entry_id = entry["entry_id"]
 
-            entries[entry_id] = ConfigEntry(
+            config_entry = ConfigEntry(
                 version=entry["version"],
                 domain=domain,
                 entry_id=entry_id,
@@ -1207,7 +1205,8 @@ class ConfigEntries:
                 pref_disable_new_entities=pref_disable_new_entities,
                 pref_disable_polling=entry.get("pref_disable_polling"),
             )
-            domain_index.setdefault(domain, []).append(entry_id)
+            entries[entry_id] = config_entry
+            domain_index.setdefault(domain, []).append(config_entry)
 
         self._domain_index = domain_index
         self._entries = entries

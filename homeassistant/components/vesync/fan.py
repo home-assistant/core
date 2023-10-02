@@ -27,10 +27,12 @@ DEV_TYPE_TO_HA = {
     "Core300S": "fan",
     "Core400S": "fan",
     "Core600S": "fan",
+    "Vital200S": "fan",
 }
 
 FAN_MODE_AUTO = "auto"
 FAN_MODE_SLEEP = "sleep"
+FAN_MODE_PET = "pet"
 
 PRESET_MODES = {
     "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
@@ -38,6 +40,7 @@ PRESET_MODES = {
     "Core300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core600S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
+    "Vital200S": [FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_PET],
 }
 SPEED_RANGE = {  # off is not included
     "LV-PUR131S": (1, 3),
@@ -45,6 +48,7 @@ SPEED_RANGE = {  # off is not included
     "Core300S": (1, 3),
     "Core400S": (1, 4),
     "Core600S": (1, 4),
+    "Vital200S": (1, 4),
 }
 
 

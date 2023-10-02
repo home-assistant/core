@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     ACK_ECHO,
@@ -39,8 +39,9 @@ async def test_number_values(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     expected_state: str,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test sensor platform."""
+    """Test number platform."""
 
     assert await setup_integration()
 
@@ -56,6 +57,10 @@ async def test_number_values(
         "step": 1,
         "unit_of_measurement": "d",
     }
+
+    entity_entry = entity_registry.async_get("number.rain_bird_controller_rain_delay")
+    assert entity_entry
+    assert entity_entry.unique_id == "1263613994342-rain-delay"
 
 
 async def test_set_value(
@@ -73,7 +78,7 @@ async def test_set_value(
     device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL_NUMBER)})
     assert device
     assert device.name == "Rain Bird Controller"
-    assert device.model == "ST8x-WiFi"
+    assert device.model == "ESP-TM2"
     assert device.sw_version == "9.12"
 
     aioclient_mock.mock_calls.clear()
@@ -127,3 +132,28 @@ async def test_set_value_error(
         )
 
     assert len(aioclient_mock.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("config_entry_unique_id"),
+    [
+        (None),
+    ],
+)
+async def test_no_unique_id(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test number platform with no unique id."""
+
+    assert await setup_integration()
+
+    raindelay = hass.states.get("number.rain_bird_controller_rain_delay")
+    assert raindelay is not None
+    assert (
+        raindelay.attributes.get("friendly_name") == "Rain Bird Controller Rain delay"
+    )
+
+    entity_entry = entity_registry.async_get("number.rain_bird_controller_rain_delay")
+    assert not entity_entry
