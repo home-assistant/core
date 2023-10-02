@@ -162,7 +162,7 @@ class BlockSleepingClimate(
         elif entry is not None:
             self._unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self.coordinator.mac)},
+            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)},
         )
 
         self._channel = cast(int, self._unique_id.split("_")[1])
