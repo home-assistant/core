@@ -16,8 +16,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_NAME,
     ATTR_VIA_DEVICE,
     PERCENTAGE,
     EntityCategory,
@@ -31,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -426,6 +425,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
 )
 
+
 EXTERNAL_SENSORS = {
     ExternalDevice.DeviceType.GAS_METER: HomeWizardExternalSensorEntityDescription(
         key="Gas meter",
@@ -490,8 +490,28 @@ async def async_setup_entry(
     if coordinator.data.data.external_devices is not None:
         for unique_id, device in coordinator.data.data.external_devices.items():
             if description := EXTERNAL_SENSORS.get(device.meter_type):
+                device_info = DeviceInfo(
+                    identifiers={(DOMAIN, unique_id)},
+                    name=description.key,
+                    manufacturer="HomeWizard",
+                    model=coordinator.data.device.product_type,
+                )
+                if coordinator.data.device.serial is not None:
+                    device_info[ATTR_VIA_DEVICE] = (
+                        DOMAIN,
+                        coordinator.data.device.serial,
+                    )
+
                 entities.append(
-                    HomeWizardExternalSensorEntity(coordinator, description, unique_id)
+                    HomeWizardExternalSensorEntity(
+                        coordinator, description, device_info, unique_id
+                    )
+                )
+
+                entities.append(
+                    HomeWizardExternalSensorEntityIdentifier(
+                        coordinator, device_info, unique_id
+                    )
                 )
 
     async_add_entities(entities)
@@ -533,6 +553,7 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
         description: HomeWizardExternalSensorEntityDescription,
+        device_info: DeviceInfo,
         device_unique_id: str,
     ) -> None:
         """Initialize Externally connected HomeWizard Sensors."""
@@ -540,19 +561,8 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"
         self._device_id = device_unique_id
         self._suggested_device_class = description.suggested_device_class
+        self._attr_device_info = device_info
         self.entity_description = description
-
-        if self._attr_device_info is not None:
-            self._attr_device_info[ATTR_IDENTIFIERS] = {(DOMAIN, self._attr_unique_id)}
-            self._attr_device_info[
-                ATTR_NAME
-            ] = f"{self.entity_description.key} ({self._device_id})"
-
-            if self.coordinator.data.device.serial is not None:
-                self._attr_device_info[ATTR_VIA_DEVICE] = (
-                    DOMAIN,
-                    self.coordinator.data.device.serial,
-                )
 
     @property
     def native_value(self) -> float | int | str | None:
@@ -598,3 +608,25 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
             return None
 
         return self._suggested_device_class
+
+
+class HomeWizardExternalSensorEntityIdentifier(HomeWizardEntity, SensorEntity):
+    """Representation of externally connected HomeWizard Sensor."""
+
+    _attr_icon = "mdi:alphabetical-variant"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "meter_identifier"
+
+    _attr_name = None
+
+    def __init__(
+        self,
+        coordinator: HWEnergyDeviceUpdateCoordinator,
+        device_info: DeviceInfo,
+        device_unique_id: str,
+    ) -> None:
+        """Initialize Externally connected HomeWizard Sensors."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_{device_unique_id}_meter_identifier"
+        self._attr_native_value = device_unique_id
+        self._attr_device_info = device_info

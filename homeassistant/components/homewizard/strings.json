@@ -149,8 +149,8 @@
       "total_gas_m3": {
         "name": "Total gas"
       },
-      "gas_unique_id": {
-        "name": "Gas meter identifier"
+      "meter_identifier": {
+        "name": "Meter identifier"
       },
       "active_liter_lpm": {
         "name": "Active water usage"
