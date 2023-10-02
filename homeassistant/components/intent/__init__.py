@@ -20,6 +20,7 @@ from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
+    device_registry as dr,
     integration_platform,
     intent,
 )
@@ -100,6 +101,7 @@ class GetStateIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_GET_STATE
     slot_schema = {
         vol.Any("name", "area"): cv.string,
+        vol.Optional("device"): cv.string,
         vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("state"): vol.All(cv.ensure_list, [cv.string]),
@@ -123,6 +125,17 @@ class GetStateIntentHandler(intent.IntentHandler):
             )
             if area is None:
                 raise intent.IntentHandleError(f"No area named {area_name}")
+
+        # Same with device
+        device_name = slots.get("device", {}).get("value")
+        devices_with_name: list[dr.DeviceEntry] | None = None
+        if device_name is not None:
+            devices = dr.async_get(hass)
+            devices_with_name = devices.async_get_devices_by_name(device_name)
+            if devices_with_name is None or None in devices_with_name:
+                raise intent.IntentHandleError(
+                    f"No or invalid device named {device_name}"
+                )
 
         # Optional domain/device class filters.
         # Convert to sets for speed.
@@ -151,10 +164,11 @@ class GetStateIntentHandler(intent.IntentHandler):
         )
 
         _LOGGER.debug(
-            "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s, assistant=%s",
+            "Found %s state(s) that matched: name=%s, area=%s, devices=%s, domains=%s, device_classes=%s, assistant=%s",
             len(states),
             name,
             area,
+            devices_with_name,
             domains,
             device_classes,
             intent_obj.assistant,
@@ -173,6 +187,16 @@ class GetStateIntentHandler(intent.IntentHandler):
                     id=area.id,
                 )
             )
+        if devices_with_name is not None:
+            for device in devices_with_name:
+                if device is not None:
+                    success_results.append(
+                        intent.IntentResponseTarget(
+                            type=intent.IntentResponseTargetType.DEVICE,
+                            name=device.name_by_user or device.name or device.id,
+                            id=device.id,
+                        )
+                    )
 
         # If we are matching a state name (e.g., "which lights are on?"), then
         # we split the filtered states into two groups:

@@ -88,6 +88,7 @@ async def test_get_or_create_returns_same_entry(
     assert entry3.manufacturer == "manufacturer"
     assert entry3.model == "model"
     assert entry3.name == "name"
+    assert entry3.normalized_name == "name"
     assert entry3.sw_version == "sw-version"
     assert entry3.suggested_area == "Game Room"
     assert entry3.area_id == game_room_area.id
@@ -1021,6 +1022,7 @@ async def test_update(
         sw_version="version",
         via_device_id="98765B",
     )
+    assert updated_entry.normalized_name == "testfriendlyname"
 
     assert device_registry.async_get_device(identifiers={("hue", "456")}) is None
     assert device_registry.async_get_device(identifiers={("bla", "123")}) is None
@@ -1648,6 +1650,40 @@ async def test_get_or_create_sets_default_values(
     assert entry.name == "default name 1"
     assert entry.model == "default model 1"
     assert entry.manufacturer == "default manufacturer 1"
+
+
+async def test_get_devices_by_name(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test getting a list of devices by name."""
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        default_name="default name 1",
+        default_model="default model 1",
+        default_manufacturer="default manufacturer 1",
+    )
+    assert entry.name == "default name 1"
+    assert entry.normalized_name == "defaultname1"
+
+    assert device_registry.async_get_devices_by_name("default name 1") == [entry]
+    assert device_registry.async_get_devices_by_name("something_else") is None
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        default_name="default name 2",
+        default_model="default model 2",
+        default_manufacturer="default manufacturer 2",
+    )
+
+    assert device_registry.async_get_devices_by_name("default name 1") == [entry]
+    assert device_registry.async_get_devices_by_name("default name 2") is None
+
+    device_registry.async_remove_device(entry.id)
+
+    assert device_registry.async_get_devices_by_name("default name 1") is None
 
 
 async def test_verify_suggested_area_does_not_overwrite_area_id(

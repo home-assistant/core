@@ -92,6 +92,7 @@ async def test_exposed_areas(
         config_entry_id=entry.entry_id,
         connections=set(),
         identifiers={("demo", "id-1234")},
+        name="demo device",
     )
     device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
@@ -127,6 +128,80 @@ async def test_exposed_areas(
     )
 
     # This should be an intent match failure because the area isn't in the slot list
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
+
+
+async def test_exposed_devices(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that only expose devices with an exposed entity/device."""
+    # Needed for light.turn_on service
+    assert await async_setup_component(hass, "light", {})
+
+    router_entry = MockConfigEntry()
+    router_entry.add_to_hass(hass)
+    device_router = device_registry.async_get_or_create(
+        config_entry_id=router_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("router", "id-1234")},
+        name="gearnet wifitron",
+        model="wifitron 3000",
+        manufacturer="gearnet",
+    )
+
+    speaker_entry = MockConfigEntry()
+    speaker_entry.add_to_hass(hass)
+    device_speaker = device_registry.async_get_or_create(
+        config_entry_id=speaker_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "21:43:65:BA:DC:FE")},
+        identifiers={("speaker", "id-4321")},
+        name="lbj boomster",
+        model="boomster 3310",
+        manufacturer="lbj co",
+    )
+
+    router_status_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    entity_registry.async_update_entity(
+        router_status_light.entity_id, device_id=device_router.id
+    )
+    hass.states.async_set(
+        router_status_light.entity_id,
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: "gearnet router status light"},
+    )
+
+    speaker_status_light = entity_registry.async_get_or_create("light", "demo", "5678")
+    entity_registry.async_update_entity(
+        speaker_status_light.entity_id, device_id=device_speaker.id
+    )
+    hass.states.async_set(
+        speaker_status_light.entity_id,
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: "lbj boomster status light"},
+    )
+
+    # Hide the speaker status light
+    expose_entity(hass, speaker_status_light.entity_id, False)
+
+    # Expects tests/testing_config/custom_sentences/en/device.yaml
+    result = await conversation.async_converse(
+        hass, "turn on lights on the gearnet wifitron", None, Context(), None
+    )
+
+    # All is well for the exposed router status light
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    # Speaker is not exposed because it has no exposed entities
+    result = await conversation.async_converse(
+        hass, "turn on lights on the lbj boomster", None, Context(), None
+    )
+
+    # This should be an intent match failure because the device isn't in the slot list
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
 

@@ -1,0 +1,8 @@
+language: "en"
+intents:
+  HassTurnOn:
+    data:
+      - sentences:
+          - "turn on [the] light[s] on [the] {device}"
+        slots:
+          domain: "light"

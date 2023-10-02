@@ -356,6 +356,7 @@ def _get_debug_targets(
 
     name: str | None = None
     area_name: str | None = None
+    device_name: str | None = None
     domains: set[str] | None = None
     device_classes: set[str] | None = None
     state_names: set[str] | None = None
@@ -365,6 +366,9 @@ def _get_debug_targets(
 
     if "area" in entities:
         area_name = str(entities["area"].value)
+
+    if "device" in entities:
+        device_name = str(entities["device"].value)
 
     if "domain" in entities:
         domains = set(cv.ensure_list(entities["domain"].value))
@@ -380,6 +384,7 @@ def _get_debug_targets(
         hass,
         name=name,
         area_name=area_name,
+        device_name=device_name,
         domains=domains,
         device_classes=device_classes,
     )

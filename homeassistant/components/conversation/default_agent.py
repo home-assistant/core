@@ -566,6 +566,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         # Gather exposed entity names
         entity_names = []
+        device_names = []
         for state in states:
             # Checked against "requires_context" and "excludes_context" in hassil
             context = {"domain": state.domain}
@@ -593,11 +594,15 @@ class DefaultAgent(AbstractConversationAgent):
             if entity.area_id:
                 # Expose area too
                 area_ids_with_entities.add(entity.area_id)
-            elif entity.device_id:
+
+            if entity.device_id:
                 # Check device for area as well
                 device = devices.async_get(entity.device_id)
-                if (device is not None) and device.area_id:
-                    area_ids_with_entities.add(device.area_id)
+                if device is not None:
+                    if device.area_id:
+                        area_ids_with_entities.add(device.area_id)
+                    if (device_name := device.name_by_user or device.name) is not None:
+                        device_names.append((device_name, device_name, context))
 
         # Gather areas from exposed entities
         areas = ar.async_get(self.hass)
@@ -614,10 +619,12 @@ class DefaultAgent(AbstractConversationAgent):
 
         _LOGGER.debug("Exposed areas: %s", area_names)
         _LOGGER.debug("Exposed entities: %s", entity_names)
+        _LOGGER.debug("Exposed devices: %s", device_names)
 
         self._slot_lists = {
             "area": TextSlotList.from_tuples(area_names, allow_template=False),
             "name": TextSlotList.from_tuples(entity_names, allow_template=False),
+            "device": TextSlotList.from_tuples(device_names, allow_template=False),
         }
 
         return self._slot_lists

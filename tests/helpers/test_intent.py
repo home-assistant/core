@@ -32,12 +32,24 @@ class MockIntentHandler(intent.IntentHandler):
 async def test_async_match_states(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test async_match_state helper."""
     area_kitchen = area_registry.async_get_or_create("kitchen")
     area_registry.async_update(area_kitchen.id, aliases={"food room"})
     area_bedroom = area_registry.async_get_or_create("bedroom")
+
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device_bedroom_plug = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "21:43:65:BA:DC:FE")},
+        identifiers={("demo", "id-1234")},
+        name="bedroom smart plug",
+        model="plugg",
+        manufacturer="plug co",
+    )
 
     state1 = State(
         "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
@@ -58,6 +70,7 @@ async def test_async_match_states(
     entity_registry.async_update_entity(
         state2.entity_id,
         area_id=area_bedroom.id,
+        device_id=device_bedroom_plug.id,
         device_class=SwitchDeviceClass.OUTLET,
         aliases={"kill switch"},
     )
@@ -93,10 +106,30 @@ async def test_async_match_states(
         )
     )
 
+    # Name + device
+    assert list(
+        intent.async_match_states(
+            hass,
+            name="bedroom switch",
+            device_name="bedroom smart plug",
+            states=[state1, state2],
+        )
+    ) == [state2]
+
     # Domain + area
     assert list(
         intent.async_match_states(
             hass, domains={"switch"}, area_name="bedroom", states=[state1, state2]
+        )
+    ) == [state2]
+
+    # Domain + device
+    assert list(
+        intent.async_match_states(
+            hass,
+            domains={"switch"},
+            device_name="bedroom smart plug",
+            states=[state1, state2],
         )
     ) == [state2]
 
@@ -106,6 +139,16 @@ async def test_async_match_states(
             hass,
             device_classes={SwitchDeviceClass.OUTLET},
             area_name="bedroom",
+            states=[state1, state2],
+        )
+    ) == [state2]
+
+    # Device class + device
+    assert list(
+        intent.async_match_states(
+            hass,
+            device_classes={SwitchDeviceClass.OUTLET},
+            device_name="bedroom smart plug",
             states=[state1, state2],
         )
     ) == [state2]

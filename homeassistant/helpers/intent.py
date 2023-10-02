@@ -189,6 +189,17 @@ def _find_area(
     return None
 
 
+def _find_device(
+    name: str, devices: device_registry.DeviceRegistry
+) -> list[device_registry.DeviceEntry] | None:
+    """Find a device by id or name."""
+    device = devices.async_get_devices_by_name(name)
+    if device is not None:
+        return device
+
+    return None
+
+
 def _filter_by_area(
     states_and_entities: list[tuple[State, entity_registry.RegistryEntry | None]],
     area: area_registry.AreaEntry,
@@ -214,6 +225,28 @@ def _filter_by_area(
             yield (state, entity)
 
 
+def _filter_by_device(
+    states_and_entities: list[tuple[State, entity_registry.RegistryEntry | None]],
+    devices_with_name: list[device_registry.DeviceEntry],
+    devices: device_registry.DeviceRegistry,
+) -> Iterable[tuple[State, entity_registry.RegistryEntry | None]]:
+    """Filter state/entity pairs by a list of devices."""
+    entity_device_ids: dict[str, str | None] = {}
+    for _state, entity in states_and_entities:
+        if entity is None:
+            continue
+
+        if entity.device_id:
+            device = devices.async_get(entity.device_id)
+            if device is not None:
+                entity_device_ids[entity.id] = device.id
+
+    device_ids = [device.id for device in devices_with_name]
+    for state, entity in states_and_entities:
+        if (entity is not None) and (entity_device_ids.get(entity.id) in device_ids):
+            yield (state, entity)
+
+
 @callback
 @bind_hass
 def async_match_states(
@@ -221,6 +254,8 @@ def async_match_states(
     name: str | None = None,
     area_name: str | None = None,
     area: area_registry.AreaEntry | None = None,
+    device_name: str | None = None,
+    devices_with_name: list[device_registry.DeviceEntry] | None = None,
     domains: Collection[str] | None = None,
     device_classes: Collection[str] | None = None,
     states: Iterable[State] | None = None,
@@ -277,6 +312,23 @@ def async_match_states(
             devices = device_registry.async_get(hass)
 
         states_and_entities = list(_filter_by_area(states_and_entities, area, devices))
+
+    if (devices_with_name is None) and (device_name is not None):
+        # Look up device by name
+        if devices is None:
+            devices = device_registry.async_get(hass)
+
+        devices_with_name = _find_device(device_name, devices)
+        assert devices_with_name is not None, f"No device named {device_name}"
+
+    if devices_with_name is not None:
+        # Filter by states/entities by device
+        if devices is None:
+            devices = device_registry.async_get(hass)
+
+        states_and_entities = list(
+            _filter_by_device(states_and_entities, devices_with_name, devices)
+        )
 
     if assistant is not None:
         # Filter by exposure
@@ -359,6 +411,7 @@ class ServiceIntentHandler(IntentHandler):
 
     slot_schema = {
         vol.Any("name", "area"): cv.string,
+        vol.Optional("device"): cv.string,
         vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
     }
@@ -397,6 +450,15 @@ class ServiceIntentHandler(IntentHandler):
             if area is None:
                 raise IntentHandleError(f"No area named {area_name}")
 
+        # Same with device
+        device_name = slots.get("device", {}).get("value")
+        devices_with_name: list[device_registry.DeviceEntry] | None = None
+        if device_name is not None:
+            devices = device_registry.async_get(hass)
+            devices_with_name = devices.async_get_devices_by_name(device_name)
+            if devices_with_name is None or None in devices_with_name:
+                raise IntentHandleError(f"No or invalid device named {device_name}")
+
         # Optional domain/device class filters.
         # Convert to sets for speed.
         domains: set[str] | None = None
@@ -413,6 +475,7 @@ class ServiceIntentHandler(IntentHandler):
                 hass,
                 name=name,
                 area=area,
+                devices_with_name=devices_with_name,
                 domains=domains,
                 device_classes=device_classes,
                 assistant=intent_obj.assistant,

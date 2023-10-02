@@ -10,10 +10,15 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import area_registry as ar, entity_registry as er, intent
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    intent,
+)
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockUser, async_mock_service
+from tests.common import MockConfigEntry, MockUser, async_mock_service
 from tests.typing import ClientSessionGenerator
 
 
@@ -189,6 +194,7 @@ async def test_turn_on_multiple_intent(hass: HomeAssistant) -> None:
 async def test_get_state_intent(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test HassGetState intent.
@@ -201,6 +207,16 @@ async def test_get_state_intent(
     bedroom = area_registry.async_get_or_create("bedroom")
     kitchen = area_registry.async_get_or_create("kitchen")
     office = area_registry.async_get_or_create("office")
+
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+    washing_machine = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        default_name="washing machine",
+        default_model="laundrytron 3000",
+        default_manufacturer="cleanpants co",
+    )
 
     # 1 light in bedroom (off)
     # 1 light in kitchen (on)
@@ -224,6 +240,11 @@ async def test_get_state_intent(
     moisture_sensor = entity_registry.async_get_or_create("binary_sensor", "demo", "6")
     entity_registry.async_update_entity(moisture_sensor.entity_id, area_id=office.id)
 
+    washing_machine_power = entity_registry.async_get_or_create("sensor", "demo", "7")
+    entity_registry.async_update_entity(
+        washing_machine_power.entity_id, device_id=washing_machine.id
+    )
+
     hass.states.async_set(
         bedroom_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "bedroom light"}
     )
@@ -246,6 +267,14 @@ async def test_get_state_intent(
         attributes={
             ATTR_FRIENDLY_NAME: "moisture sensor",
             ATTR_DEVICE_CLASS: "moisture",
+        },
+    )
+    hass.states.async_set(
+        washing_machine_power.entity_id,
+        "50.0",
+        attributes={
+            ATTR_FRIENDLY_NAME: "washing machine power",
+            ATTR_DEVICE_CLASS: "power",
         },
     )
 
@@ -356,6 +385,24 @@ async def test_get_state_intent(
     # no
     assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
     assert not result.matched_states and not result.unmatched_states
+
+    # ---
+    # what is the power of the washing machine?
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "HassGetState",
+        {
+            "device_class": {"value": "power"},
+            "device": {"value": "washing machine"},
+        },
+    )
+
+    assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert result.matched_states and (
+        result.matched_states[0].entity_id == washing_machine_power.entity_id
+    )
+    assert not result.unmatched_states
 
     # Test unknown area failure
     with pytest.raises(intent.IntentHandleError):
