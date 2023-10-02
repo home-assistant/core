@@ -6,10 +6,11 @@ from typing import Any
 from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import COVER, COVER_CLOSE, COVER_OPEN, COVER_STATUS
 
-from homeassistant.components.cover import CoverDeviceClass, CoverEntity
+from homeassistant.components.cover import STATE_CLOSED, CoverDeviceClass, CoverEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -32,7 +33,9 @@ async def async_setup_entry(
     )
 
 
-class ComelitCoverEntity(CoordinatorEntity[ComelitSerialBridge], CoverEntity):
+class ComelitCoverEntity(
+    CoordinatorEntity[ComelitSerialBridge], RestoreEntity, CoverEntity
+):
     """Cover device."""
 
     _attr_device_class = CoverDeviceClass.SHUTTER
@@ -51,8 +54,9 @@ class ComelitCoverEntity(CoordinatorEntity[ComelitSerialBridge], CoverEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
         self._attr_device_info = coordinator.platform_device_info(device, COVER)
-        # Device doesn't provide a status so we assume CLOSE at startup
-        self._last_action = COVER_STATUS.index("closing")
+        # Device doesn't provide a status so we assume UNKNOWN at first startup
+        self._last_action: int | None = None
+        self._last_state: str | None = None
 
     def _current_action(self, action: str) -> bool:
         """Return the current cover action."""
@@ -67,12 +71,19 @@ class ComelitCoverEntity(CoordinatorEntity[ComelitSerialBridge], CoverEntity):
         return self.coordinator.data[COVER][self._device.index].status
 
     @property
-    def is_closed(self) -> bool:
-        """Return True if cover is closed."""
+    def is_closed(self) -> bool | None:
+        """Return if the cover is closed."""
+
+        if self._last_state in [None, "unknown"]:
+            return None
+
         if self.device_status != COVER_STATUS.index("stopped"):
             return False
 
-        return bool(self._last_action == COVER_STATUS.index("closing"))
+        if self._last_action:
+            return self._last_action == COVER_STATUS.index("closing")
+
+        return self._last_state == STATE_CLOSED
 
     @property
     def is_closing(self) -> bool:
@@ -99,3 +110,17 @@ class ComelitCoverEntity(CoordinatorEntity[ComelitSerialBridge], CoverEntity):
 
         action = COVER_OPEN if self.is_closing else COVER_CLOSE
         await self._api.cover_move(self._device.index, action)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle device update."""
+        self._last_state = self.state
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+
+        await super().async_added_to_hass()
+
+        if last_state := await self.async_get_last_state():
+            self._last_state = last_state.state

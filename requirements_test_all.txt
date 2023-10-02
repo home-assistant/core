@@ -212,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==17.0.0
+aioesphomeapi==17.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -347,7 +347,7 @@ aiovlc==0.1.0
 aiovodafone==0.3.1
 
 # homeassistant.components.waqi
-aiowaqi==1.1.1
+aiowaqi==2.0.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -1153,7 +1153,7 @@ py-dormakaba-dkey==1.0.5
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==0.1.5
+py-nextbusnext==1.0.0
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -1376,7 +1376,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.5.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.8
+pylitterbot==2023.4.5
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.18.2
@@ -1648,7 +1648,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.3.6
+pytrafikverket==0.3.7
 
 # homeassistant.components.usb
 pyudev==0.23.2
@@ -2078,7 +2078,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.115.0
+zeroconf==0.115.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
