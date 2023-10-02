@@ -107,7 +107,6 @@
     },
     "switch": {
       "automation": {
-        "name": "Automation",
         "state": {
           "on": "[%key:common::state::enabled%",
           "off": "[%key:common::state::disabled%"
