@@ -206,8 +206,8 @@ class HueLight(HueBaseEntity, LightEntity):
         color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         if self._restore_brightness and brightness is None:
-                brightness = self._restore_brightness
-                self._restore_brightness = None
+            brightness = self._restore_brightness
+            self._restore_brightness = None
         self._color_temp_active = color_temp is not None
         flash = kwargs.get(ATTR_FLASH)
         effect = effect_str = kwargs.get(ATTR_EFFECT)
