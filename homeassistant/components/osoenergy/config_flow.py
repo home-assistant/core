@@ -12,15 +12,16 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONFIG_ENTRY_VERSION, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _SCHEMA_STEP_USER = vol.Schema({vol.Required(CONF_API_KEY): str})
 
+
 class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a OSO Energy config flow."""
 
-    VERSION = CONFIG_ENTRY_VERSION
+    VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self) -> None:
@@ -49,7 +50,7 @@ class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=user_email, data=user_input)
 
-            self._errors["base"] = "invalid_auth"
+            errors["base"] = "invalid_auth"
 
         return self.async_show_form(
             step_id="user",
@@ -69,8 +70,6 @@ class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Re Authenticate a user."""
-        self.entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         data = {CONF_API_KEY: user_input[CONF_API_KEY]}
         return await self.async_step_user(data)

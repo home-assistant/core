@@ -65,6 +65,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             context={
                 "source": config_entries.SOURCE_REAUTH,
                 "unique_id": mock_config.unique_id,
+                "entry_id": mock_config.entry_id,
             },
             data=mock_config.data,
         )

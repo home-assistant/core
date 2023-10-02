@@ -1,5 +1,4 @@
 """Support for the OSO Energy devices and services."""
-import logging
 from typing import Any
 
 from aiohttp.web_exceptions import HTTPException
@@ -7,15 +6,20 @@ from apyosoenergyapi import OSOEnergy
 from apyosoenergyapi.helper.osoenergy_exceptions import OSOEnergyReauthRequired
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
+from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = [
+    Platform.WATER_HEATER,
+]
+PLATFORM_LOOKUP = {
+    Platform.WATER_HEATER: "water_heater",
+}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

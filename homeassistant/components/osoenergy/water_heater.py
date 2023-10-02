@@ -9,7 +9,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import STATE_OFF, STATE_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -17,20 +17,54 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from . import OSOEnergyEntity
-from .const import (
-    ATTR_UNTIL_TEMP_LIMIT,
-    ATTR_V40MIN,
-    DOMAIN,
-    EXTRA_HEATER_ATTR,
-    HEATER_MAX_TEMP,
-    HEATER_MIN_TEMP,
-    MANUFACTURER,
-    OSO_ENERGY_TO_HASS_STATE,
-    SERVICE_SET_PROFILE,
-    SERVICE_SET_V40MIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from .const import DOMAIN
+
+ATTR_UNTIL_TEMP_LIMIT = "until_temp_limit"
+ATTR_V40MIN = "v40_min"
+EXTRA_HEATER_ATTR: dict[str, dict[str, Any]] = {
+    "heater_state": {
+        "ha_name": "heater_state",
+        "value_mapping": {
+            "on": STATE_ON,
+            "off": STATE_OFF,
+        },
+    },
+    "heater_mode": {
+        "ha_name": "heater_mode",
+        "value_mapping": {
+            "auto": "auto",
+            "manual": "manual",
+            "off": STATE_OFF,
+            "legionella": "legionella",
+            "powersave": "power_save",
+            "extraenergy": "extra_energy",
+            "voltage": "voltage",
+            "ffr": "ffr",
+        },
+    },
+    "optimization_mode": {
+        "ha_name": "optimization_mode",
+        "value_mapping": {
+            "off": STATE_OFF,
+            "oso": "oso",
+            "gridcompany": "grid_company",
+            "smartcompany": "smart_company",
+            "advanced": "advanced",
+        },
+    },
+    "profile": {"ha_name": "profile", "is_profile": True},
+    "volume": {"ha_name": "volume"},
+    "v40_min": {"ha_name": "v40_min"},
+    "v40_level_min": {"ha_name": "v40_level_min"},
+    "v40_level_max": {"ha_name": "v40_level_max"},
+}
+HEATER_MIN_TEMP = 10
+HEATER_MAX_TEMP = 80
+MANUFACTURER = "OSO Energy"
+SERVICE_TURN_ON = "turn_on"
+SERVICE_TURN_OFF = "turn_off"
+SERVICE_SET_V40MIN = "set_v40_min"
+SERVICE_SET_PROFILE = "set_profile"
 
 
 async def async_setup_entry(
@@ -139,7 +173,7 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
     @property
     def current_operation(self) -> str:
         """Return current operation."""
-        return OSO_ENERGY_TO_HASS_STATE[self.device["status"]["current_operation"]]
+        return self.device["status"]["current_operation"]
 
     @property
     def current_temperature(self) -> float:
