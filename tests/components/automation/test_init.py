@@ -704,9 +704,12 @@ async def test_reload_config_handles_load_fails(
     assert len(calls) == 1
     assert calls[0].data.get("event") == "test_event"
 
-    with patch(
-        "homeassistant.config.load_yaml_config_file",
-        side_effect=HomeAssistantError("bla"),
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+            side_effect=HomeAssistantError("bla"),
+        ),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 

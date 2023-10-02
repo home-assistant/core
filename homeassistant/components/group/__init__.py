@@ -194,8 +194,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         - Remove group.group entities not created by service calls and set them up again
         - Reload xxx.group platforms
         """
-        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
-            return
+        conf = await component.async_prepare_reload(skip_reset=True)
 
         # Simplified + modified version of EntityPlatform.async_reset:
         # - group.group never retries setup
