@@ -158,16 +158,6 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     _entity_id_format = alarm.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_ALARM_ATTRIBUTES_BLOCKED
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Init the MQTT Alarm Control Panel."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""

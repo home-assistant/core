@@ -84,6 +84,7 @@ class MqttCamera(MqttEntity, Camera):
     _default_name = DEFAULT_NAME
     _entity_id_format: str = camera.ENTITY_ID_FORMAT
     _attributes_extra_blocked: frozenset[str] = MQTT_CAMERA_ATTRIBUTES_BLOCKED
+    _last_image: bytes | None = None
 
     def __init__(
         self,
@@ -93,8 +94,6 @@ class MqttCamera(MqttEntity, Camera):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT Camera."""
-        self._last_image: bytes | None = None
-
         Camera.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 

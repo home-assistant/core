@@ -22,15 +22,6 @@
       "default": "Successfully authenticated with Withings."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "use_webhook": "Use webhooks"
-        }
-      }
-    }
-  },
   "entity": {
     "binary_sensor": {
       "in_bed": {
