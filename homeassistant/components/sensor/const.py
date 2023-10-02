@@ -416,7 +416,7 @@ class SensorDeviceClass(StrEnum):
     """
 
 
-IMPLICTIT_NUMERIC_DEVICE_CLASSES = {
+IMPLICIT_NUMERIC_DEVICE_CLASSES = {
     SensorDeviceClass.AQI,
     SensorDeviceClass.PH,
     SensorDeviceClass.POWER_FACTOR,
