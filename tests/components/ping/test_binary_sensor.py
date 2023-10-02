@@ -7,6 +7,7 @@ from homeassistant import config as hass_config, setup
 from homeassistant.components.ping import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import get_fixture_path
 
@@ -53,3 +54,7 @@ async def test_reload(hass: HomeAssistant, mock_ping: None) -> None:
 
     assert hass.states.get("binary_sensor.test") is None
     assert hass.states.get("binary_sensor.test2")
+
+    entity = er.async_get(hass).async_get("binary_sensor.test2")
+    assert entity
+    assert entity.unique_id == "test2_ping_sensor"

@@ -1,5 +1,6 @@
 binary_sensor:
   - platform: ping
     name: test2
+    unique_id: test2_ping_sensor
     host: 127.0.0.1
     count: 1
