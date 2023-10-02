@@ -104,6 +104,14 @@
           "unidirectional_incoming": "Unidirectional incoming"
         }
       }
+    },
+    "switch": {
+      "automation": {
+        "state": {
+          "on": "[%key:common::state::enabled%",
+          "off": "[%key:common::state::disabled%"
+        }
+      }
     }
   },
   "options": {
