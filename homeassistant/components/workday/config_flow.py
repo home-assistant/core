@@ -43,23 +43,23 @@ from .const import (
     LOGGER,
 )
 
-NONE_SENTINEL = "none"
-
 
 def add_province_to_schema(
     schema: vol.Schema,
-    country: str,
+    country: str | None,
 ) -> vol.Schema:
     """Update schema with province from country."""
+    if not country:
+        return schema
+
     all_countries = list_supported_countries()
     if not all_countries.get(country):
         return schema
 
-    province_list = [NONE_SENTINEL, *all_countries[country]]
     add_schema = {
-        vol.Optional(CONF_PROVINCE, default=NONE_SENTINEL): SelectSelector(
+        vol.Optional(CONF_PROVINCE): SelectSelector(
             SelectSelectorConfig(
-                options=province_list,
+                options=all_countries[country],
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_PROVINCE,
             )
@@ -113,9 +113,9 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
 DATA_SCHEMA_SETUP = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Optional(CONF_COUNTRY, default=NONE_SENTINEL): SelectSelector(
+        vol.Optional(CONF_COUNTRY): SelectSelector(
             SelectSelectorConfig(
-                options=[NONE_SENTINEL, *list(list_supported_countries())],
+                options=list(list_supported_countries()),
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_COUNTRY,
             )
@@ -202,10 +202,8 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
 
-            if combined_input.get(CONF_COUNTRY, NONE_SENTINEL) == NONE_SENTINEL:
-                combined_input[CONF_COUNTRY] = None
-            if combined_input.get(CONF_PROVINCE, NONE_SENTINEL) == NONE_SENTINEL:
-                combined_input[CONF_PROVINCE] = None
+            combined_input.setdefault(CONF_COUNTRY, None)
+            combined_input.setdefault(CONF_PROVINCE, None)
 
             try:
                 await self.hass.async_add_executor_job(
@@ -242,7 +240,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.data[CONF_COUNTRY]
+            add_province_to_schema, DATA_SCHEMA_OPT, self.data.get(CONF_COUNTRY)
         )
         new_schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(
@@ -251,7 +249,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "name": self.data[CONF_NAME],
-                "country": self.data[CONF_COUNTRY],
+                "country": self.data.get(CONF_COUNTRY),
             },
         )
 
@@ -267,8 +265,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.options, **user_input}
-            if combined_input.get(CONF_PROVINCE, NONE_SENTINEL) == NONE_SENTINEL:
-                combined_input[CONF_PROVINCE] = None
+            combined_input.setdefault(CONF_PROVINCE, None)
 
             try:
                 await self.hass.async_add_executor_job(
@@ -302,7 +299,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                     return self.async_create_entry(data=combined_input)
 
         schema: vol.Schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.options[CONF_COUNTRY]
+            add_province_to_schema, DATA_SCHEMA_OPT, self.options.get(CONF_COUNTRY)
         )
 
         new_schema = self.add_suggested_values_to_schema(
@@ -315,7 +312,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
             errors=errors,
             description_placeholders={
                 "name": self.options[CONF_NAME],
-                "country": self.options[CONF_COUNTRY],
+                "country": self.options.get(CONF_COUNTRY),
             },
         )
 
