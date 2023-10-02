@@ -400,7 +400,7 @@ def compare_quirk_class(endpoint: Endpoint, names: str | Collection[str]):
 class ManufacturerSpecificThermostat(ThermostatClusterHandler):
     """TRV Channel class for the Danfoss TRV and derivatives."""
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint):
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Extend ThermostatClusterHandler."""
 
         if compare_quirk_class(endpoint, "thermostat.DanfossThermostat"):
@@ -447,7 +447,7 @@ class ManufacturerSpecificThermostat(ThermostatClusterHandler):
 class ManufacturerSpecificUserInterface(UserInterface):
     """Interface Channel class for the Danfoss TRV and derivatives."""
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint):
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Extend UserInterface."""
 
         if compare_quirk_class(endpoint, "thermostat.DanfossThermostat"):
@@ -467,7 +467,7 @@ class ManufacturerSpecificUserInterface(UserInterface):
 class ManufacturerSpecificDiagnostic(Diagnostic):
     """Diagnostic Channel class for the Danfoss TRV and derivatives."""
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint):
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Extend Diagnostic."""
 
         if compare_quirk_class(endpoint, "thermostat.DanfossThermostat"):
