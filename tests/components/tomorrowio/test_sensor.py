@@ -106,6 +106,16 @@ V4_FIELDS = [
     PRECIPITATION_TYPE,
     UV_INDEX,
     UV_HEALTH_CONCERN,
+    EVAPOTRANSPIRATION,
+    HUMIDITY,
+    PRECIPITATION_INTENSITY,
+    PRECIPITATION_PROBABILITY,
+    PRESSURE_SEA_LEVEL,
+    TEMPERATURE,
+    VISIBILITY,
+    WET_BULB_GLOBE_TEMPERATURE,
+    WIND_DIRECTION,
+    WIND_SPEED,
 ]
 
 
@@ -177,27 +187,29 @@ async def test_v4_sensor(hass: HomeAssistant) -> None:
     check_sensor_state(hass, GRASS_POLLEN, "none")
     check_sensor_state(hass, WEED_POLLEN, "none")
     check_sensor_state(hass, TREE_POLLEN, "none")
-    check_sensor_state(hass, FEELS_LIKE, "101.3")
+    check_sensor_state(hass, FEELS_LIKE, "19.88")
     check_sensor_state(hass, DEW_POINT, "72.82")
-    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "29.47")
+    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "1021.77")
     check_sensor_state(hass, GHI, "0")
     check_sensor_state(hass, CLOUD_BASE, "0.74")
-    check_sensor_state(hass, CLOUD_COVER, "100")
+    check_sensor_state(hass, CLOUD_COVER, "1")
     check_sensor_state(hass, CLOUD_CEILING, "0.74")
-    check_sensor_state(hass, WIND_GUST, "12.64")
-    check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
-    check_sensor_state(hass, UV_INDEX, "3")
-    check_sensor_state(hass, UV_HEALTH_CONCERN, "moderate")
-    check_sensor_state(hass, EVAPOTRANSPIRATION, "0.0")
-    check_sensor_state(hass, HUMIDITY, "22.71")
-    check_sensor_state(hass, PRECIPITATION_INTENSITY, "0.0")
-    check_sensor_state(hass, PRECIPITATION_PROBABILITY, "0.0")
-    check_sensor_state(hass, PRESSURE_SEA_LEVEL, "30.35")
-    check_sensor_state(hass, TEMPERATURE, "44.13")
-    check_sensor_state(hass, VISIBILITY, "8.15")
-    check_sensor_state(hass, WET_BULB_GLOBE_TEMPERATURE, "17.0")
-    check_sensor_state(hass, WIND_DIRECTION, "315.14")
-    check_sensor_state(hass, WIND_SPEED, "9.33")
+    check_sensor_state(hass, WIND_GUST, "22.28")
+    check_sensor_state(hass, PRECIPITATION_TYPE, "none")
+    check_sensor_state(hass, UV_INDEX, "5")
+    check_sensor_state(hass, UV_HEALTH_CONCERN, "high")
+    check_sensor_state(hass, EVAPOTRANSPIRATION, "0.383")
+    check_sensor_state(hass, HUMIDITY, "45")
+    check_sensor_state(hass, PRECIPITATION_INTENSITY, "0")
+    check_sensor_state(hass, PRECIPITATION_PROBABILITY, "0")
+    check_sensor_state(hass, PRESSURE_SEA_LEVEL, "1023.38")
+    check_sensor_state(hass, TEMPERATURE, "19.88")
+    check_sensor_state(hass, FEELS_LIKE, "19.88")
+    check_sensor_state(hass, DEW_POINT, "72.82")
+    check_sensor_state(hass, VISIBILITY, "16")
+    check_sensor_state(hass, WET_BULB_GLOBE_TEMPERATURE, "18.49")
+    check_sensor_state(hass, WIND_DIRECTION, "60.19")
+    check_sensor_state(hass, WIND_SPEED, "8.57")
 
 
 async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
@@ -220,27 +232,29 @@ async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
     check_sensor_state(hass, GRASS_POLLEN, "none")
     check_sensor_state(hass, WEED_POLLEN, "none")
     check_sensor_state(hass, TREE_POLLEN, "none")
-    check_sensor_state(hass, FEELS_LIKE, "214.3")
+    check_sensor_state(hass, FEELS_LIKE, "67.78")
     check_sensor_state(hass, DEW_POINT, "163.08")
-    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "0.427")
+    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "30.173")
     check_sensor_state(hass, GHI, "0.0")
     check_sensor_state(hass, CLOUD_BASE, "0.46")
-    check_sensor_state(hass, CLOUD_COVER, "100")
+    check_sensor_state(hass, CLOUD_COVER, "1")
     check_sensor_state(hass, CLOUD_CEILING, "0.46")
-    check_sensor_state(hass, WIND_GUST, "28.27")
-    check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
-    check_sensor_state(hass, UV_INDEX, "3")
-    check_sensor_state(hass, UV_HEALTH_CONCERN, "moderate")
-    check_sensor_state(hass, EVAPOTRANSPIRATION, "0.0")
-    check_sensor_state(hass, HUMIDITY, "22.71")
+    check_sensor_state(hass, WIND_GUST, "13.85")
+    check_sensor_state(hass, PRECIPITATION_TYPE, "none")
+    check_sensor_state(hass, UV_INDEX, "5")
+    check_sensor_state(hass, UV_HEALTH_CONCERN, "high")
+    check_sensor_state(hass, EVAPOTRANSPIRATION, "0.0151")
+    check_sensor_state(hass, HUMIDITY, "45")
     check_sensor_state(hass, PRECIPITATION_INTENSITY, "0.0")
-    check_sensor_state(hass, PRECIPITATION_PROBABILITY, "0.0")
-    check_sensor_state(hass, PRESSURE_SEA_LEVEL, "30.35")
-    check_sensor_state(hass, TEMPERATURE, "44.13")
-    check_sensor_state(hass, VISIBILITY, "8.15")
-    check_sensor_state(hass, WET_BULB_GLOBE_TEMPERATURE, "17.0")
-    check_sensor_state(hass, WIND_DIRECTION, "315.14")
-    check_sensor_state(hass, WIND_SPEED, "9.33")
+    check_sensor_state(hass, PRECIPITATION_PROBABILITY, "0")
+    check_sensor_state(hass, PRESSURE_SEA_LEVEL, "30.220")
+    check_sensor_state(hass, TEMPERATURE, "67.78")
+    check_sensor_state(hass, FEELS_LIKE, "67.78")
+    check_sensor_state(hass, DEW_POINT, "163.08")
+    check_sensor_state(hass, VISIBILITY, "10")
+    check_sensor_state(hass, WET_BULB_GLOBE_TEMPERATURE, "65.28")
+    check_sensor_state(hass, WIND_DIRECTION, "60.19")
+    check_sensor_state(hass, WIND_SPEED, "5.32")
 
 
 async def test_entity_description() -> None:

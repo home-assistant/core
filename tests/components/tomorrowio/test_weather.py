@@ -133,7 +133,7 @@ async def test_new_config_entry(hass: HomeAssistant) -> None:
     assert len(hass.states.async_entity_ids("weather")) == 1
 
     entry = hass.config_entries.async_entries()[0]
-    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 28
+    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 38
 
 
 async def test_legacy_config_entry(hass: HomeAssistant) -> None:
@@ -150,7 +150,7 @@ async def test_legacy_config_entry(hass: HomeAssistant) -> None:
     assert len(hass.states.async_entity_ids("weather")) == 3
 
     entry = hass.config_entries.async_entries()[0]
-    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 30
+    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 40
 
 
 async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -> None:
@@ -167,8 +167,6 @@ async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -
             "weatherCode",
             "visibility",
             "pollutantO3",
-            "windGust",
-            "cloudCover",
             "precipitationType",
             "pollutantCO",
             "mepIndex",
@@ -181,21 +179,24 @@ async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -
             "epaIndex",
             "epaHealthConcern",
             "epaPrimaryPollutant",
+            "evapotranspiration",
             "temperatureApparent",
             "fireIndex",
             "pollutantNO2",
-            "pollutantO3",
             "particulateMatter10",
             "particulateMatter25",
             "grassIndex",
             "treeIndex",
             "weedIndex",
-            "precipitationType",
+            "precipitationIntensity",
+            "precipitationProbability",
             "pressureSurfaceLevel",
             "solarGHI",
             "pollutantSO2",
             "uvIndex",
             "uvHealthConcern",
+            "visibility",
+            "wetBulbGlobeTemperature",
             "windGust",
         ],
         [
@@ -229,17 +230,17 @@ async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -
         ATTR_FORECAST_WIND_SPEED: 34.16,  # 9.49 m/s -> km/h
     }
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io - Daily"
-    assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
+    assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 45
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
     assert weather_state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == "mm"
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 30.35
+    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 1023.38
     assert weather_state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == "hPa"
-    assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE] == 44.1
+    assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE] == 19.9
     assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == "°C"
-    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 8.15
+    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 16.0
     assert weather_state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == "km"
-    assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
-    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 33.59  # 9.33 m/s ->km/h
+    assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 60.19
+    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 8.57  # 9.33 m/s ->km/h
     assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == "km/h"
 
 
@@ -262,17 +263,17 @@ async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
         ATTR_FORECAST_WIND_SPEED: 34.16,  # 9.49 m/s -> km/h
     }
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io - Daily"
-    assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
+    assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 45
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
     assert weather_state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == "mm"
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 30.35
+    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 1023.38
     assert weather_state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == "hPa"
-    assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE] == 44.1
+    assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE] == 19.9
     assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == "°C"
-    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 8.15
+    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 16.0
     assert weather_state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == "km"
-    assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
-    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 33.59  # 9.33 m/s ->km/h
+    assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 60.19
+    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 8.57  # 9.33 m/s ->km/h
     assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == "km/h"
 
 
