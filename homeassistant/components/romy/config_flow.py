@@ -38,9 +38,6 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Handle a config flow for ROMY."""
         self.discovery_schema = None
-        self.host: str = ""
-        self.name: str = ""
-        self.password: str = ""
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -51,16 +48,17 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Save the user input and finish the setup
-            self.host = user_input["host"]
-            self.name = user_input["name"]
+            host = user_input["host"]
+            name = user_input["name"]
+            password = ""
             if "password" in user_input:
-                self.password = user_input["password"]
+                password = user_input["password"]
 
-            new_romy = await romy.create_romy(self.host, self.password)
+            new_romy = await romy.create_romy(host, password)
 
             # get robots name in case none was provided
-            if self.name == "":
-                self.name = new_romy.name
+            if name == "":
+                name = new_romy.name
                 user_input["name"] = new_romy.name
 
             if not new_romy.is_initialized:
@@ -68,7 +66,7 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not new_romy.is_unlocked:
                 data = _schema_with_defaults(
-                    host=self.host, name=self.name, requires_password=True
+                    host=host, name=name, requires_password=True
                 )
                 errors[CONF_PASSWORD] = "invalid_auth"
 
