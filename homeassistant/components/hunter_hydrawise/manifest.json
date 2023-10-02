@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/hunter_hydrawise",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["apischema==0.18.0"],
+  "requirements": ["apischema==0.18.0", "gql==3.4.1"],
   "ssdp": [],
   "zeroconf": []
 }

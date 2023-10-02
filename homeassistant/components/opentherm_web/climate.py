@@ -6,13 +6,13 @@ from typing import Any
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
-    HVACMode,
     HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -98,7 +98,10 @@ class OpenThermClimate(CoordinatorEntity[OpenThermWebCoordinator], ClimateEntity
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
+
         self.web_api.set_room_temperature(temperature)
+        self.refresh()
+        self.schedule_update_ha_state(force_refresh=False)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
@@ -106,3 +109,5 @@ class OpenThermClimate(CoordinatorEntity[OpenThermWebCoordinator], ClimateEntity
             return
 
         self.web_api.set_hvac_mode(hvac_mode == HVACMode.AUTO)
+        self.refresh()
+        self.schedule_update_ha_state(force_refresh=False)

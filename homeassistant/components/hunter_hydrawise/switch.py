@@ -13,11 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DEFAULT_SUSPEND_DAYS,
-    DOMAIN,
-    LOGGER,
-)
+from .const import DEFAULT_SUSPEND_DAYS, DOMAIN, LOGGER
 from .coordinator import HydrawiseDataUpdateCoordinator, HydrawiseEntity
 from .hydrawiser import Hydrawiser
 
@@ -55,7 +51,7 @@ async def async_setup_entry(
             entities.append(
                 HydrawiseSwitch(
                     coordinator=coordinator,
-                    controller_id=zone.controller_id,
+                    controller_id=zone.controller_id,  # type: ignore[attr-defined]
                     zone_id=zone.id,
                     description=description,
                 )
@@ -96,6 +92,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
             )
 
         self._attr_is_on = True
+        self.async_schedule_update_ha_state(force_refresh=False)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
@@ -105,6 +102,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
             await self.coordinator.api.async_resume_zone(self.zone_id)
 
         self._attr_is_on = False
+        self.async_schedule_update_ha_state(force_refresh=False)
 
     @callback
     def _handle_coordinator_update(self) -> None:
