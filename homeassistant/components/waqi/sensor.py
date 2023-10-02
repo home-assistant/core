@@ -150,18 +150,6 @@ async def async_setup_platform(
         )
 
 
-def get_dominant_pollutant(pollutant: Pollutant) -> str | None:
-    """Get dominant pollutant."""
-    if pollutant == Pollutant.UNKNOWN:
-        return None
-    return pollutant.value
-
-
-DOMINANT_POLLUTANTS = [
-    pollutant.value for pollutant in Pollutant if pollutant != Pollutant.UNKNOWN
-]
-
-
 @dataclass
 class WAQIMixin:
     """Mixin for required keys."""
@@ -253,8 +241,8 @@ SENSORS: list[WAQISensorEntityDescription] = [
         key="dominant_pollutant",
         translation_key="dominant_pollutant",
         device_class=SensorDeviceClass.ENUM,
-        options=DOMINANT_POLLUTANTS,
-        value_fn=lambda aq: get_dominant_pollutant(aq.dominant_pollutant),
+        options=[pollutant.value for pollutant in Pollutant],
+        value_fn=lambda aq: aq.dominant_pollutant,
         available_fn=lambda _: True,
     ),
 ]
