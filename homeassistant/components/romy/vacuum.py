@@ -77,6 +77,9 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
 
     _attr_name = None
     _attr_has_entity_name = True
+    _attr_supported_features = SUPPORT_ROMY_ROBOT
+    _attr_fan_speed_list = FAN_SPEEDS
+    _attr_icon = ICON
 
     def __init__(
         self,
