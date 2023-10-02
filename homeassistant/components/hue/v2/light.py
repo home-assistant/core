@@ -89,6 +89,7 @@ class HueLight(HueBaseEntity, LightEntity):
                 self._supported_color_modes.add(ColorMode.BRIGHTNESS)
             # support transition if brightness control
             self._attr_supported_features |= LightEntityFeature.TRANSITION
+        self._restore_brightness: float | None = None
         self._color_temp_active: bool = False
         # get list of supported effects (combine effects and timed_effects)
         self._attr_effect_list = []
@@ -204,6 +205,9 @@ class HueLight(HueBaseEntity, LightEntity):
         xy_color = kwargs.get(ATTR_XY_COLOR)
         color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
+        if self._restore_brightness and brightness is None:
+                brightness = self._restore_brightness
+                self._restore_brightness = None
         self._color_temp_active = color_temp is not None
         flash = kwargs.get(ATTR_FLASH)
         effect = effect_str = kwargs.get(ATTR_EFFECT)
@@ -240,6 +244,8 @@ class HueLight(HueBaseEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
+        if transition is not None and dimming := self.resource.dimming:
+            self._restore_brightness = dimming.brightness
         flash = kwargs.get(ATTR_FLASH)
 
         if flash is not None:
