@@ -48,9 +48,11 @@ class DuotecnoLight(DuotecnoEntity, LightEntity):
         else:
             # restore state
             val = None
-        await self._unit.set_dimmer_state(val)
+        if not self.is_on:
+            await self._unit.set_dimmer_state(val)
 
     @api_call
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        await self._unit.set_dimmer_state(0)
+        if self.is_on:
+            await self._unit.set_dimmer_state(0)
