@@ -50,16 +50,16 @@
           "description": "Type of prices to get, energy or gas."
         },
         "incl_btw": {
-          "name": "Including BTW",
-          "description": "Include BTW in the prices. Defaults to true if omitted."
+          "name": "Including VAT",
+          "description": "Include VAT in the prices. Defaults to true if omitted."
         },
         "start": {
-          "name": "Start datetime",
-          "description": "From which datetime to get the prices. Defaults to today if omitted."
+          "name": "Start",
+          "description": "From which moment to get the prices. Defaults to today if omitted."
         },
         "end": {
-          "name": "End datetime",
-          "description": "Until which datetime to get the prices. Defaults to today if omitted."
+          "name": "End",
+          "description": "Until which moment to get the prices. Defaults to today if omitted."
         }
       }
     }

@@ -18,30 +18,25 @@ async def test_has_service(
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("price_type", ["gas", "energy"])
-@pytest.mark.parametrize("incl_btw", [True, False, None])
-@pytest.mark.parametrize("start", ["2023-01-01 00:00:00", "incorrect date", None])
-@pytest.mark.parametrize("end", ["2023-01-01 00:00:00", "incorrect date", None])
+@pytest.mark.parametrize("price_type", [{"type": "gas"}, {"type": "energy"}])
+@pytest.mark.parametrize("incl_btw", [{"incl_btw": False}, {"incl_btw": True}, {}])
+@pytest.mark.parametrize(
+    "start", [{"start": "2023-01-01 00:00:00"}, {"start": "incorrect date"}, {}]
+)
+@pytest.mark.parametrize(
+    "end", [{"end": "2023-01-01 00:00:00"}, {"end": "incorrect date"}, {}]
+)
 async def test_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    price_type: str,
-    incl_btw: bool,
-    start: str,
-    end: str,
+    price_type: dict[str, str],
+    incl_btw: dict[str, bool],
+    start: dict[str, str],
+    end: dict[str, str],
 ) -> None:
     """Test the EnergyZero Service."""
 
-    data = {
-        "type": price_type,
-    }
-
-    if incl_btw is not None:
-        data["incl_btw"] = incl_btw
-    if start is not None:
-        data["start"] = start
-    if end is not None:
-        data["end"] = end
+    data = price_type | incl_btw | start | end
 
     try:
         response = await hass.services.async_call(

@@ -12,6 +12,11 @@ LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(minutes=10)
 THRESHOLD_HOUR: Final = 14
 
+ATTR_TYPE: Final = "type"
+ATTR_START: Final = "start"
+ATTR_END: Final = "end"
+ATTR_INCL_BTW: Final = "incl_btw"
+
 SERVICE_TYPE_DEVICE_NAMES = {
     "today_energy": "Energy market price",
     "today_gas": "Gas market price",
@@ -20,9 +25,9 @@ SERVICE_NAME: Final = "get_prices"
 SERVICE_PRICE_TYPES: Final = ["energy", "gas"]
 SERVICE_SCHEMA: Final = vol.Schema(
     {
-        vol.Required("type"): vol.In(SERVICE_PRICE_TYPES),
-        vol.Optional("start"): str,
-        vol.Optional("end"): str,
-        vol.Optional("incl_btw", default=True): bool,
+        vol.Required(ATTR_TYPE): vol.In(SERVICE_PRICE_TYPES),
+        vol.Optional(ATTR_START): str,
+        vol.Optional(ATTR_END): str,
+        vol.Optional(ATTR_INCL_BTW, default=True): bool,
     }
 )

@@ -17,13 +17,21 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, SERVICE_NAME, SERVICE_SCHEMA
+from .const import (
+    ATTR_END,
+    ATTR_INCL_BTW,
+    ATTR_START,
+    ATTR_TYPE,
+    DOMAIN,
+    SERVICE_NAME,
+    SERVICE_SCHEMA,
+)
 from .coordinator import EnergyZeroDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
 
-def _get_date(date_input: str) -> date | datetime:
+def _get_date(date_input: str | None) -> date | datetime:
     """Get date."""
     if not date_input:
         return dt_util.now().date()
@@ -41,15 +49,15 @@ def __serialize_prices(prices: Electricity | Gas) -> ServiceResponse:
 
 async def _get_prices(hass: HomeAssistant, call: ServiceCall) -> ServiceResponse:
     """Search prices."""
-    price_type = call.data["type"]
+    price_type = call.data[ATTR_TYPE]
 
     energyzero = EnergyZero(
         session=async_get_clientsession(hass),
-        incl_btw=str(call.data["incl_btw"]).lower(),
+        incl_btw=str(call.data[ATTR_INCL_BTW]).lower(),
     )
 
-    start = _get_date(call.data.get("start", ""))
-    end = _get_date(call.data.get("end", ""))
+    start = _get_date(call.data.get(ATTR_START))
+    end = _get_date(call.data.get(ATTR_END))
 
     if price_type == "energy":
         return __serialize_prices(
