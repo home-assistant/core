@@ -159,7 +159,6 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
 class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
     """Represent RPC event entity."""
 
-    _attr_should_poll = False
     entity_description: ShellyRpcEventDescription
 
     def __init__(

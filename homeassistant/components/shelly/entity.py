@@ -321,8 +321,6 @@ class RestEntityDescription(EntityDescription):
 class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     """Helper class to represent a block entity."""
 
-    _attr_should_poll = False
-
     def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
@@ -360,8 +358,6 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
 
 class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
     """Helper class to represent a rpc entity."""
-
-    _attr_should_poll = False
 
     def __init__(self, coordinator: ShellyRpcCoordinator, key: str) -> None:
         """Initialize Shelly entity."""
@@ -555,8 +551,6 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
     """Represent a shelly sleeping block attribute entity."""
 
-    _attr_should_poll = False
-
     # pylint: disable-next=super-init-not-called
     def __init__(
         self,
@@ -629,7 +623,6 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
     """Helper class to represent a sleeping rpc attribute."""
 
     entity_description: RpcEntityDescription
-    _attr_should_poll = False
 
     # pylint: disable-next=super-init-not-called
     def __init__(
