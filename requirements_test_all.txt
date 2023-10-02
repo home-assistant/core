@@ -1153,7 +1153,7 @@ py-dormakaba-dkey==1.0.5
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==0.1.5
+py-nextbusnext==1.0.0
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
