@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
+import os
 from typing import Any, Generic
 
 from aiopyarr import LidarrQueue, LidarrQueueItem, LidarrRootFolder
@@ -41,9 +42,8 @@ def get_modified_description(
 ) -> tuple[LidarrSensorEntityDescription[T], str]:
     """Return modified description and folder name."""
     desc = deepcopy(description)
-    name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
+    name = os.path.basename(os.path.normpath(mount.path)).lower()
     desc.key = f"{description.key}_{name}"
-    desc.name = f"{description.name} {name}".capitalize()
     return desc, name
 
 
