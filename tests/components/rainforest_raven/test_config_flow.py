@@ -62,8 +62,8 @@ def mock_comports():
     port.manufacturer = DISCOVERY_INFO.manufacturer
     port.device = DISCOVERY_INFO.device
     port.description = DISCOVERY_INFO.description
-    port.pid = DISCOVERY_INFO.pid
-    port.vid = DISCOVERY_INFO.vid
+    port.pid = int(DISCOVERY_INFO.pid, 0)
+    port.vid = int(DISCOVERY_INFO.vid, 0)
     comports = [port]
     with patch("serial.tools.list_ports.comports", return_value=comports):
         yield comports

@@ -20,9 +20,15 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import DEFAULT_NAME, DOMAIN
 
 
-def _generate_unique_id(port: ListPortInfo) -> str:
+def _format_id(value: str | int) -> str:
+    if isinstance(value, str):
+        return value
+    return f"{value or 0:04X}"
+
+
+def _generate_unique_id(info: ListPortInfo | usb.UsbServiceInfo) -> str:
     """Generate unique id from usb attributes."""
-    return f"{port.vid:04X}:{port.pid:04X}_{port.serial_number}_{port.manufacturer}_{port.description}"
+    return f"{_format_id(info.vid)}:{_format_id(info.pid)}_{info.serial_number}_{info.manufacturer}_{info.description}"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -103,7 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle USB Discovery."""
         device = discovery_info.device
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
-        unique_id = f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"
+        unique_id = _generate_unique_id(discovery_info)
         await self.async_set_unique_id(unique_id)
         try:
             await self._validate_device(dev_path)

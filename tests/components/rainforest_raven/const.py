@@ -16,8 +16,8 @@ from homeassistant.components import usb
 
 DISCOVERY_INFO = usb.UsbServiceInfo(
     device="/dev/ttyACM0",
-    pid=0x0003,
-    vid=0x04B4,
+    pid="0x0003",
+    vid="0x04B4",
     serial_number="1234",
     description="RFA-Z105-2 HW2.7.3 EMU-2",
     manufacturer="Rainforest Automation, Inc.",
@@ -29,8 +29,8 @@ DEVICE_NAME = usb.human_readable_device_name(
     DISCOVERY_INFO.serial_number,
     DISCOVERY_INFO.manufacturer,
     DISCOVERY_INFO.description,
-    DISCOVERY_INFO.vid,
-    DISCOVERY_INFO.pid,
+    int(DISCOVERY_INFO.vid, 0),
+    int(DISCOVERY_INFO.pid, 0),
 )
 
 
