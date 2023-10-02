@@ -147,8 +147,6 @@ def get_cluster_attr_data(cluster: Cluster) -> dict:
                 ATTR_ATTRIBUTE_NAME: u_attr_def.name
             }
         except KeyError:
-            pass
-        else:
             if isinstance(u_attr, int):
                 unsupported_attributes[f"0x{u_attr:04x}"] = {}
             else:
