@@ -27,7 +27,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     osoenergy_config = dict(entry.data)
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = osoenergy
 
     try:
         devices: Any = await osoenergy.session.start_session(osoenergy_config)
@@ -35,6 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady() from error
     except OSOEnergyReauthRequired as err:
         raise ConfigEntryAuthFailed from err
+
+    hass.data[DOMAIN][entry.entry_id] = osoenergy
 
     platforms = set()
     for ha_type, oso_type in PLATFORM_LOOKUP.items():
