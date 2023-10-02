@@ -80,6 +80,7 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COMMAND): cv.string,
         vol.Optional(CONF_NAME, default=BINARY_SENSOR_DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -119,6 +120,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
         vol.Optional(CONF_NAME, default=SENSOR_DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,

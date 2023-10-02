@@ -599,7 +599,7 @@ def string(value: Any) -> str:
 def string_with_no_html(value: Any) -> str:
     """Validate that the value is a string without HTML."""
     value = string(value)
-    regex = re.compile(r"<[a-z][\s\S]*>")
+    regex = re.compile(r"<[a-z].*?>", re.IGNORECASE)
     if regex.search(value):
         raise vol.Invalid("the string should not contain HTML")
     return str(value)
