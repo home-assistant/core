@@ -12,6 +12,7 @@ from romy import RomyRobot
 from homeassistant.components.vacuum import StateVacuumEntity, VacuumEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -60,16 +61,8 @@ async def async_setup_entry(
     coordinator: RomyVacuumCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     romy: RomyRobot = coordinator.romy
 
-    device_info = {
-        "manufacturer": "ROMY",
-        "name": "romy",
-        "model": romy.model,
-        "sw_version": romy.firmware,
-        "identifiers": {"serial": romy.unique_id},
-        "name_by_user": romy.name,
-    }
+    romy_vacuum_entity = RomyVacuumEntity(coordinator, romy)
 
-    romy_vacuum_entity = RomyVacuumEntity(coordinator, romy, device_info)
     entities = [romy_vacuum_entity]
     async_add_entities(entities, True)
 
@@ -86,13 +79,18 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self,
         coordinator: RomyVacuumCoordinator,
         romy: RomyRobot,
-        device_info: dict[str, Any],
     ) -> None:
         """Initialize the ROMY Robot."""
         super().__init__(coordinator)
         self.romy = romy
-        self._device_info = device_info
         self._attr_unique_id = self.romy.unique_id
+        self._device_info = DeviceInfo(
+            identifiers={(DOMAIN, romy.unique_id)},
+            manufacturer="ROMY",
+            name=romy.name,
+            model=romy.model,
+            sw_version=romy.firmware,
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -101,7 +99,10 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self._attr_battery_level = self.romy.battery_level
         self._attr_state = self.romy.status
         self._attr_name = self.romy.name
-        self._device_info["name_by_user"] = self.romy.name
+
+        self._device_info["name"] = self.romy.name
+        self._device_info["sw_version"] = self.romy.firmware
+
         self.async_write_ha_state()
 
     async def async_start(self, **kwargs: Any) -> None:
