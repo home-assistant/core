@@ -244,8 +244,8 @@ class HueLight(HueBaseEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
-        if transition is not None and dimming := self.resource.dimming:
-            self._restore_brightness = dimming.brightness
+        if transition is not None and self.resource.dimming:
+            self._restore_brightness = self.resource.dimming.brightness
         flash = kwargs.get(ATTR_FLASH)
 
         if flash is not None:
