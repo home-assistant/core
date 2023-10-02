@@ -45,17 +45,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             async_timeout.timeout(5),
             RAVEnSerialDevice(dev_path) as raven_device,
         ):
-            await asyncio.sleep(0.05)
-            for _try in range(3, -1, -1):
-                try:
-                    # Try a few times to communicate with the device,
-                    # allowing any data already in the buffer to flush.
-                    meters = await raven_device.get_meter_list()
-                except ParseError:
-                    if not _try:
-                        raise
-                else:
-                    break
+            await raven_device.synchronize()
+            meters = await raven_device.get_meter_list()
             for meter in meters.meter_mac_ids:
                 meter_info = await raven_device.get_meter_info(meter=meter)
                 self._meter_macs[meter] = (

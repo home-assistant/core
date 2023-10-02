@@ -1,7 +1,6 @@
 """Data update coordination for Rainforest RAVEn devices."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import asdict
 from datetime import timedelta
 import logging
@@ -138,21 +137,9 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
 
         await device.open()
 
-        # Yield for a bit to let any data already in the buffer flush
-        await asyncio.sleep(0.05)
-
         try:
-            for _try in range(3, -1, -1):
-                try:
-                    self._device_info = await device.get_device_info()
-                except ParseError:
-                    # Parsing errors are common when performing the initial
-                    # connection to the device because there is often data sitting
-                    # in the serial buffer that is incomplete.
-                    if not _try:
-                        raise
-                else:
-                    break
+            await device.synchronize()
+            self._device_info = await device.get_device_info()
         except Exception:
             await device.close()
             raise

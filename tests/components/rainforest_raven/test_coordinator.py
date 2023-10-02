@@ -9,7 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import create_mock_device, create_mock_entry
-from .const import DEVICE_INFO
 
 from tests.common import patch
 
@@ -89,27 +88,6 @@ async def test_coordinator_parse_error(hass: HomeAssistant, mock_device):
     entry = create_mock_entry()
     coordinator = RAVEnDataCoordinator(hass, entry)
 
-    mock_device.get_device_info.side_effect = ParseError
+    mock_device.synchronize.side_effect = ParseError
     with pytest.raises(ConfigEntryNotReady):
         await coordinator.async_config_entry_first_refresh()
-    assert mock_device.get_device_info.call_count == 4
-
-
-async def test_coordinator_parse_error_recovery(hass: HomeAssistant, mock_device):
-    """Test retry logic for handling raw device data parsing errors."""
-    entry = create_mock_entry()
-    coordinator = RAVEnDataCoordinator(hass, entry)
-
-    raise_error = True
-
-    def get_device_info(meter=None):
-        nonlocal raise_error
-        if raise_error:
-            raise_error = False
-            raise ParseError()
-        return DEVICE_INFO
-
-    mock_device.get_device_info.side_effect = get_device_info
-    await coordinator.async_config_entry_first_refresh()
-    assert coordinator.last_update_success is True
-    assert mock_device.get_device_info.call_count == 2
