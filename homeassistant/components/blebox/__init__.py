@@ -45,8 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
 
-    username = get_non_empty_key(entry.data, CONF_USERNAME)
-    password = get_non_empty_key(entry.data, CONF_PASSWORD)
+    username = entry.data.get(CONF_USERNAME)
+    password = entry.data.get(CONF_PASSWORD)
 
     timeout = DEFAULT_SETUP_TIMEOUT
 
