@@ -65,3 +65,16 @@ class FitbitUnitSystem(StrEnum):
 
     EN_GB = "en_GB"
     """Use United Kingdom units."""
+
+
+OAUTH2_AUTHORIZE = "https://www.fitbit.com/oauth2/authorize"
+OAUTH2_TOKEN = "https://api.fitbit.com/oauth2/token"
+OAUTH_SCOPES = [
+    "activity",
+    "heartrate",
+    "nutrition",
+    "profile",
+    "settings",
+    "sleep",
+    "weight",
+]
