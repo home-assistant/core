@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up binary sensors."""
+    """Set up alarm panel."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
 
     alarm_entities: list[AlarmControlPanelEntity] = []
