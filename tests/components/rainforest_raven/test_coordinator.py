@@ -4,7 +4,7 @@ from xml.etree.ElementTree import ParseError
 import pytest
 from serial.serialutil import SerialException
 
-from homeassistant.components.rainforest_raven.data import RAVEnDataCoordinator
+from homeassistant.components.rainforest_raven.coordinator import RAVEnDataCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -19,7 +19,7 @@ def mock_device():
     """Mock a functioning RAVEn device."""
     mock_device = create_mock_device()
     with patch(
-        "homeassistant.components.rainforest_raven.data.RAVEnSerialDevice",
+        "homeassistant.components.rainforest_raven.coordinator.RAVEnSerialDevice",
         return_value=mock_device,
     ):
         yield mock_device

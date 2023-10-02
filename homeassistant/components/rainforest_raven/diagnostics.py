@@ -10,7 +10,7 @@ from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
-from .data import RAVEnDataCoordinator
+from .coordinator import RAVEnDataCoordinator
 
 TO_REDACT_CONFIG = {CONF_MAC}
 TO_REDACT_DATA = {"device_mac_id", "meter_mac_id"}
