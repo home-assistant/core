@@ -53,8 +53,8 @@ def create_schema(previous_input=None):
         {
             vol.Required(CONF_HOST, default=host): str,
             vol.Required(CONF_PORT, default=port): int,
-            vol.Optional(CONF_USERNAME, default=""): str,
-            vol.Optional(CONF_PASSWORD, default=""): str,
+            vol.Optional(CONF_USERNAME): str,
+            vol.Optional(CONF_PASSWORD): str,
         }
     )
 
