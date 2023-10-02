@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
     DOMAIN as SENSOR_DOMAIN,
+    NON_NUMERIC_DEVICE_CLASSES,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -2483,3 +2484,15 @@ def test_async_rounded_state_registered_entity_with_display_precision(
     hass.states.async_set(entity_id, "-0.0")
     state = hass.states.get(entity_id)
     assert async_rounded_state(hass, entity_id, state) == "0.0000"
+
+
+def test_device_class_units_state_classes(hass: HomeAssistant) -> None:
+    """Test all numeric device classes have unit and state class."""
+    # DEVICE_CLASS_UNITS should include all device classes except:
+    # - SensorDeviceClass.MONETARY
+    # - Device classes enumerated in NON_NUMERIC_DEVICE_CLASSES
+    assert set(DEVICE_CLASS_UNITS) == set(
+        SensorDeviceClass
+    ) - NON_NUMERIC_DEVICE_CLASSES - {SensorDeviceClass.MONETARY}
+    # DEVICE_CLASS_STATE_CLASSES should include all device classes
+    assert set(DEVICE_CLASS_STATE_CLASSES) == set(SensorDeviceClass)
