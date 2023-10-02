@@ -93,6 +93,12 @@ async def test_diagnostics_for_device(
 ) -> None:
     """Test diagnostics for device."""
     zha_device: ZHADevice = await zha_device_joined(zigpy_device)
+
+    # add an unsupported attribute to the device to verify diagnostics handles it
+    zha_device.device.endpoints[1].in_clusters[
+        security.IasAce.cluster_id
+    ].unsupported_attributes.add(0x1000)
+
     dev_reg = async_get(hass)
     device = dev_reg.async_get_device(identifiers={("zha", str(zha_device.ieee))})
     assert device
