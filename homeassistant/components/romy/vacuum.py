@@ -75,7 +75,7 @@ async def async_setup_entry(
 class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEntity):
     """Representation of a ROMY vacuum cleaner robot."""
 
-    _attr_translation_key = DOMAIN
+    _attr_name = None
     _attr_has_entity_name = True
 
     def __init__(
