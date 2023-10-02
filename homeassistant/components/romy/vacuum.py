@@ -89,9 +89,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self.romy = romy
         self._device_info = device_info
         self._attr_unique_id = self.romy.unique_id
-        self._attr_supported_features = SUPPORT_ROMY_ROBOT
-        self._attr_fan_speed_list = FAN_SPEEDS
-        self._attr_icon = ICON
 
     @callback
     def _handle_coordinator_update(self) -> None:
