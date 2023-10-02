@@ -600,7 +600,7 @@ class DanfossExternalOpenWindowDetected(
     """Danfoss Proprietary attribute for communicating an open window."""
 
     _zcl_attribute: str = "external_open_window_detected"
-    _attr_name: str = "External Open Window Detected"
+    _attr_name: str = "External Window Open"
     _attr_icon: str = "mdi:window-open"
 
 
@@ -614,7 +614,7 @@ class DanfossWindowOpenFeature(
     """Danfoss Proprietary attribute enabling open window detection."""
 
     _zcl_attribute: str = "window_open_feature"
-    _attr_name: str = "Window Open Feature"
+    _attr_name: str = "Use Window Open Detection"
     _attr_icon: str = "mdi:window-open"
 
 
@@ -628,7 +628,7 @@ class DanfossMountingModeControl(
     """Danfoss Proprietary attribute for switching to mounting mode."""
 
     _zcl_attribute: str = "mounting_mode_control"
-    _attr_name: str = "Mounting Mode Control"
+    _attr_name: str = "Mounting Mode"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -641,7 +641,7 @@ class DanfossRadiatorCovered(
     """Danfoss Proprietary attribute for communicating full usage of the external temperature sensor."""
 
     _zcl_attribute: str = "radiator_covered"
-    _attr_name: str = "Radiator Covered"
+    _attr_name: str = "Use External Temperature Sensor"
     _attr_icon: str = "mdi:thermometer"
 
 
@@ -667,7 +667,7 @@ class DanfossLoadBalancingEnable(
     """Danfoss Proprietary attribute for enabling load balancing."""
 
     _zcl_attribute: str = "load_balancing_enable"
-    _attr_name: str = "Load Balancing Enable"
+    _attr_name: str = "Use Load Balancing"
     _attr_icon: str = "mdi:scale-balance"
 
 
@@ -684,4 +684,4 @@ class DanfossAdaptationRunSettings(
     """
 
     _zcl_attribute: str = "adaptation_run_settings"
-    _attr_name: str = "Adaptation Run Settings"
+    _attr_name: str = "Adaptation Run Enabled"

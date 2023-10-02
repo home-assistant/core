@@ -1109,7 +1109,7 @@ class DanfossOpenWindowDetection(Sensor, id_suffix="open_window_detection"):
     """
 
     SENSOR_ATTR = "open_window_detection"
-    _attr_name: str = "Open Window Detection"
+    _attr_name: str = "Open Window Detected"
     _attr_icon: str = "mdi:window-open"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
 
@@ -1185,7 +1185,7 @@ class DanfossSoftwareErrorCode(Sensor, id_suffix="sw_error_code"):
     """Danfoss Proprietary attribute for communicating the error code."""
 
     SENSOR_ATTR = "sw_error_code"
-    _attr_name: str = "Software Error Code"
+    _attr_name: str = "Software Error"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def formatter(self, _value: int) -> str:
@@ -1229,5 +1229,5 @@ class DanfossMotorStepCounter(Sensor, id_suffix="motor_step_counter"):
     """Danfoss Proprietary attribute for communicating the motor step counter."""
 
     SENSOR_ATTR = "motor_step_counter"
-    _attr_name: str = "Motor step counter"
+    _attr_name: str = "Motor Stepcount"
     _attr_entity_category = EntityCategory.DIAGNOSTIC

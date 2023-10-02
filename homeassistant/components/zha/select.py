@@ -663,7 +663,7 @@ class DanfossAdaptationRunControl(
     """Danfoss Proprietary attribute for controlling the current adaptation run."""
 
     _select_attr = "adaptation_run_control"
-    _attr_name: str = "Adaptation Run Control"
+    _attr_name: str = "Adaptation Run Command"
     _enum = DanfossAdaptationRunControlEnum
 
 

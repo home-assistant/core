@@ -1034,7 +1034,7 @@ class DanfossExerciseTriggerTime(
     """Danfoss Proprietary Attribute to set the time to exercise the valve."""
 
     _zcl_attribute: str = "exercise_trigger_time"
-    _attr_name: str = "Exercise Trigger Time"
+    _attr_name: str = "Exercise Start Time"
     _attr_native_min_value: int = 0
     _attr_native_max_value: int = 1439
     _attr_mode: NumberMode = NumberMode.BOX
@@ -1053,7 +1053,7 @@ class DanfossExternalMeasuredRoomSensor(
     """Danfoss Proprietary Attribute to communicate the value of the external temperature sensor."""
 
     _zcl_attribute: str = "external_measured_room_sensor"
-    _attr_name: str = "External Measured Room Sensor"
+    _attr_name: str = "External Temperature Sensor"
     _attr_native_min_value: float = -80
     _attr_native_max_value: float = 35
     _attr_icon: str = "mdi:thermometer"
