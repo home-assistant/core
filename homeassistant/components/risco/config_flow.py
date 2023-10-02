@@ -101,7 +101,7 @@ async def validate_local_input(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Risco."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Init the config flow."""

@@ -29,6 +29,13 @@ TEST_LOCAL_DATA = {
     "pin": "1234",
 }
 
+TEST_LOCAL_DATA_V2 = {
+    "host": "test-host",
+    "port": 5004,
+    "pin": "1234",
+    "communication_delay": 0,
+}
+
 TEST_RISCO_TO_HA = {
     "arm": "armed_away",
     "partial_arm": "armed_home",
@@ -246,7 +253,7 @@ async def test_local_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    expected_data = {**TEST_LOCAL_DATA, **{"type": "local"}}
+    expected_data = {**TEST_LOCAL_DATA_V2, **{"type": "local"}}
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME
     assert result3["data"] == expected_data
@@ -392,3 +399,32 @@ async def test_ha_to_risco_schema(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={**TEST_HA_TO_RISCO, "armed_night": "A"},
         )
+
+
+async def test_migration_1_2(hass: HomeAssistant) -> None:
+    """Test migrating from version 1 to 2."""
+    test_data = {**TEST_LOCAL_DATA, **{"type": "local"}}
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=TEST_SITE_NAME, data=test_data, version=1
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.risco.RiscoLocal.connect",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.risco.RiscoLocal.id",
+        new_callable=PropertyMock(return_value=TEST_SITE_NAME),
+    ), patch(
+        "homeassistant.components.risco.RiscoLocal.disconnect"
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(config_entries) == 1
+
+    expected_data = {**TEST_LOCAL_DATA_V2, **{"type": "local"}}
+    assert config_entries[0].unique_id == TEST_SITE_NAME
+    assert config_entries[0].data == expected_data
+    assert config_entries[0].version == 2
