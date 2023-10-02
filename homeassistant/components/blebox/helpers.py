@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import (
 )
 
 
-def get_maybe_authenticated_session(hass, password, username):
+def get_maybe_authenticated_session(hass: HomeAssistant, password: str, username: str)-> ClientSession:
     """Return proper session object."""
     if username and password:
         auth = aiohttp.BasicAuth(login=username, password=password)
