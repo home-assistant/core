@@ -520,7 +520,7 @@ async def async_setup_entry(
                 )
 
                 entities.append(
-                    HomeWizardExternalSensorEntityIdentifier(
+                    HomeWizardExternalIdentifierSensorEntity(
                         coordinator, device_info, unique_id
                     )
                 )
@@ -621,7 +621,7 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         return self._suggested_device_class
 
 
-class HomeWizardExternalSensorEntityIdentifier(HomeWizardEntity, SensorEntity):
+class HomeWizardExternalIdentifierSensorEntity(HomeWizardEntity, SensorEntity):
     """Representation of externally connected HomeWizard Sensor."""
 
     _attr_icon = "mdi:alphabetical-variant"
