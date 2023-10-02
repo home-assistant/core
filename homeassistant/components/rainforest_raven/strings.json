@@ -23,5 +23,31 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "meter_price": {
+        "name": "Meter price",
+        "state_attributes": {
+          "rate_label": { "name": "Rate" },
+          "tier": { "name": "Tier" }
+        }
+      },
+      "power_demand": {
+        "name": "Meter power demand"
+      },
+      "signal_strength": {
+        "name": "Meter signal strength",
+        "state_attributes": {
+          "channel": { "name": "Channel" }
+        }
+      },
+      "total_energy_delivered": {
+        "name": "Total meter energy delivered"
+      },
+      "total_energy_received": {
+        "name": "Total meter energy received"
+      }
+    }
   }
 }

@@ -33,30 +33,30 @@ class RAVEnSensorEntityDescription(SensorEntityDescription):
     """A class that describes RAVEn sensor entities."""
 
     message_key: str | None = None
-    attribute_keys: dict[str, str] | None = None
+    attribute_keys: list[str] | None = None
 
 
 SENSORS = (
     RAVEnSensorEntityDescription(
         message_key="CurrentSummationDelivered",
+        translation_key="total_energy_delivered",
         key="summation_delivered",
-        name="Total Meter Energy Delivered",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     RAVEnSensorEntityDescription(
         message_key="CurrentSummationDelivered",
+        translation_key="total_energy_received",
         key="summation_received",
-        name="Total Meter Energy Received",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     RAVEnSensorEntityDescription(
         message_key="InstantaneousDemand",
+        translation_key="power_demand",
         key="demand",
-        name="Meter Power Demand",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -67,15 +67,15 @@ SENSORS = (
 DIAGNOSTICS = (
     RAVEnSensorEntityDescription(
         message_key="NetworkInfo",
+        translation_key="signal_strength",
         key="link_strength",
-        name="Link Strength",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
-        attribute_keys={
-            "Channel": "channel",
-        },
+        attribute_keys=[
+            "channel",
+        ],
     ),
 )
 
@@ -102,15 +102,15 @@ async def async_setup_entry(
                     coordinator,
                     RAVEnSensorEntityDescription(
                         message_key="PriceCluster",
+                        translation_key="meter_price",
                         key="price",
-                        name="Meter Price",
                         native_unit_of_measurement=f"{meter_data['PriceCluster']['currency'].value}/{UnitOfEnergy.KILO_WATT_HOUR}",
                         device_class=SensorDeviceClass.MONETARY,
                         state_class=SensorStateClass.MEASUREMENT,
-                        attribute_keys={
-                            "Tier": "tier",
-                            "Rate": "rate_label",
-                        },
+                        attribute_keys=[
+                            "tier",
+                            "rate_label",
+                        ],
                     ),
                     meter_mac_addr,
                 )
@@ -122,6 +122,7 @@ async def async_setup_entry(
 class RAVEnSensor(CoordinatorEntity, SensorEntity):
     """Rainforest RAVEn Sensor."""
 
+    _attr_has_entity_name = True
     entity_description: RAVEnSensorEntityDescription
 
     def __init__(
@@ -148,8 +149,8 @@ class RAVEnSensor(CoordinatorEntity, SensorEntity):
         """Return entity specific state attributes."""
         if self.entity_description.attribute_keys:
             return {
-                name: self._data.get(key)
-                for name, key in self.entity_description.attribute_keys.items()
+                key: self._data.get(key)
+                for key in self.entity_description.attribute_keys
             }
         return None
 
