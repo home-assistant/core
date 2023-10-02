@@ -44,6 +44,7 @@ def get_modified_description(
     desc = deepcopy(description)
     name = os.path.basename(os.path.normpath(mount.path)).lower()
     desc.key = f"{description.key}_{name}"
+    desc.name = f"{description.name} {name}".capitalize()
     return desc, name
 
 
