@@ -404,7 +404,7 @@ class ManufacturerSpecificThermostat(ThermostatClusterHandler):
         """Extend ThermostatClusterHandler."""
 
         if compare_quirk_class(endpoint, "thermostat.DanfossThermostat"):
-            self.REPORT_CONFIG = (
+            self.REPORT_CONFIG: tuple[AttrReportConfig, ...] = (
                 *self.REPORT_CONFIG,
                 AttrReportConfig(
                     attr="open_window_detection", config=REPORT_CONFIG_DEFAULT
@@ -471,7 +471,7 @@ class ManufacturerSpecificDiagnostic(Diagnostic):
         """Extend Diagnostic."""
 
         if compare_quirk_class(endpoint, "thermostat.DanfossThermostat"):
-            self.REPORT_CONFIG = (
+            self.REPORT_CONFIG: tuple[AttrReportConfig, ...] = (
                 *self.REPORT_CONFIG,
                 AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
                 AttrReportConfig(
