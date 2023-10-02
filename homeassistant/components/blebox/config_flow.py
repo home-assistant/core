@@ -162,8 +162,8 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         addr = host_port(user_input)
 
-        username = get_non_empty_key(user_input, "username")
-        password = get_non_empty_key(user_input, "password")
+        username = user_input.get(CONF_USERNAME)
+        password = user_input.get(CONF_PASSWORD)
 
         for entry in self._async_current_entries():
             if addr == host_port(entry.data):
