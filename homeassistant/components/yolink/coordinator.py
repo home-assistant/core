@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 
 from yolink.device import YoLinkDevice
@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_DEVICE_STATE, DOMAIN
+from .const import ATTR_DEVICE_STATE, DOMAIN, YOLINK_OFFLINE_TIME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +37,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         )
         self.device = device
         self.paired_device = paired_device
+        self.dev_online = True
 
     async def _async_update_data(self) -> dict:
         """Fetch device state."""
@@ -44,6 +45,13 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
             async with asyncio.timeout(10):
                 device_state_resp = await self.device.fetch_state()
                 device_state = device_state_resp.data.get(ATTR_DEVICE_STATE)
+                device_reporttime = device_state_resp.data.get("reportAt")
+                if device_reporttime is not None:
+                    rpt_time_delta = (
+                        datetime.now(tz=UTC).replace(tzinfo=None)
+                        - datetime.strptime(device_reporttime, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    ).total_seconds()
+                    self.dev_online = rpt_time_delta < YOLINK_OFFLINE_TIME
                 if self.paired_device is not None and device_state is not None:
                     paried_device_state_resp = await self.paired_device.fetch_state()
                     paried_device_state = paried_device_state_resp.data.get(

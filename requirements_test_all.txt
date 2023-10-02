@@ -212,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==17.0.0
+aioesphomeapi==17.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -545,7 +545,7 @@ deluge-client==1.7.1
 demetriek==0.4.0
 
 # homeassistant.components.denonavr
-denonavr==0.11.3
+denonavr==0.11.4
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.2
@@ -1648,7 +1648,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.3.6
+pytrafikverket==0.3.7
 
 # homeassistant.components.usb
 pyudev==0.23.2
@@ -2078,7 +2078,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.115.0
+zeroconf==0.115.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
