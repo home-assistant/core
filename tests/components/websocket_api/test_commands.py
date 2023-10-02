@@ -443,14 +443,15 @@ async def test_call_service_schema_validation_error(
     assert len(calls) == 0
 
 
+@pytest.mark.parametrize("omit_stack_trace", (False, True))
 async def test_call_service_error(
-    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket, omit_stack_trace: bool
 ) -> None:
     """Test call service command with error."""
 
     @callback
     def ha_error_call(_):
-        raise HomeAssistantError("error_message")
+        raise HomeAssistantError("error_message", omit_stack_trace=omit_stack_trace)
 
     hass.services.async_register("domain_test", "ha_error", ha_error_call)
 
