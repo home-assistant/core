@@ -58,7 +58,7 @@ from .const import (
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
-from .utils import device_update_info, get_rpc_device_wakeup_period
+from .utils import get_rpc_device_wakeup_period, update_device_fw_info
 
 _DeviceT = TypeVar("_DeviceT", bound="BlockDevice|RpcDevice")
 
@@ -383,7 +383,7 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
         else:
-            device_update_info(self.hass, self.device, self.entry)
+            update_device_fw_info(self.hass, self.device, self.entry)
 
 
 class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
@@ -531,7 +531,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         LOGGER.debug("Reconnecting to Shelly RPC Device - %s", self.name)
         try:
             await self.device.initialize()
-            device_update_info(self.hass, self.device, self.entry)
+            update_device_fw_info(self.hass, self.device, self.entry)
         except DeviceConnectionError as err:
             raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
         except InvalidAuthError:
@@ -618,7 +618,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
             if self.sleep_period:
-                device_update_info(self.hass, self.device, self.entry)
+                update_device_fw_info(self.hass, self.device, self.entry)
         elif update_type is RpcUpdateType.EVENT and (event := self.device.event):
             self._async_device_event_handler(event)
 
