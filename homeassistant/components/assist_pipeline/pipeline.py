@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import array
 import asyncio
-from collections import deque
+from collections import defaultdict, deque
 from collections.abc import AsyncGenerator, AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
@@ -1572,21 +1572,19 @@ class PipelineRuns:
 
     def __init__(self, pipeline_store: PipelineStorageCollection) -> None:
         """Initialize."""
-        self._pipeline_runs: dict[str, list[PipelineRun]] = {}
+        self._pipeline_runs: dict[str, dict[str, PipelineRun]] = defaultdict(dict)
         self._pipeline_store = pipeline_store
         pipeline_store.async_add_listener(self._change_listener)
 
     def add_run(self, pipeline_run: PipelineRun) -> None:
         """Add pipeline run."""
         pipeline_id = pipeline_run.pipeline.id
-        if pipeline_id not in self._pipeline_runs:
-            self._pipeline_runs[pipeline_id] = []
-        self._pipeline_runs[pipeline_id].append(pipeline_run)
+        self._pipeline_runs[pipeline_id][pipeline_run.id] = pipeline_run
 
     def remove_run(self, pipeline_run: PipelineRun) -> None:
         """Remove pipeline run."""
         pipeline_id = pipeline_run.pipeline.id
-        self._pipeline_runs[pipeline_id].remove(pipeline_run)
+        self._pipeline_runs[pipeline_id].pop(pipeline_run.id, None)
 
     async def _change_listener(
         self, change_type: str, item_id: str, change: dict
@@ -1596,7 +1594,7 @@ class PipelineRuns:
             return
         if pipeline_runs := self._pipeline_runs.get(item_id):
             # Create a temporary list in case the list is modified while we iterate
-            for pipeline_run in list(pipeline_runs):
+            for pipeline_run in list(pipeline_runs.values()):
                 pipeline_run.abort_wake_word_detection = True
 
 
