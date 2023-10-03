@@ -45,8 +45,6 @@ from .const import (
 )
 from .helpers import InvalidApiKeyException, UnknownException, validate_config_entry
 
-NONE_SENTINEL = "none"
-
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_MODE): SelectSelector(
@@ -57,16 +55,16 @@ OPTIONS_SCHEMA = vol.Schema(
                 translation_key=CONF_MODE,
             )
         ),
-        vol.Optional(CONF_LANGUAGE, default=NONE_SENTINEL): SelectSelector(
+        vol.Optional(CONF_LANGUAGE): SelectSelector(
             SelectSelectorConfig(
-                options=[NONE_SENTINEL] + sorted(ALL_LANGUAGES),
+                options=sorted(ALL_LANGUAGES),
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_LANGUAGE,
             )
         ),
-        vol.Optional(CONF_AVOID, default=NONE_SENTINEL): SelectSelector(
+        vol.Optional(CONF_AVOID): SelectSelector(
             SelectSelectorConfig(
-                options=[NONE_SENTINEL] + AVOID_OPTIONS,
+                options=AVOID_OPTIONS,
                 sort=True,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_AVOID,
@@ -89,27 +87,25 @@ OPTIONS_SCHEMA = vol.Schema(
             )
         ),
         vol.Optional(CONF_TIME, default=""): cv.string,
-        vol.Optional(CONF_TRAFFIC_MODEL, default=NONE_SENTINEL): SelectSelector(
+        vol.Optional(CONF_TRAFFIC_MODEL): SelectSelector(
             SelectSelectorConfig(
-                options=[NONE_SENTINEL] + TRAFFIC_MODELS,
+                options=TRAFFIC_MODELS,
                 sort=True,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_TRAFFIC_MODEL,
             )
         ),
-        vol.Optional(CONF_TRANSIT_MODE, default=NONE_SENTINEL): SelectSelector(
+        vol.Optional(CONF_TRANSIT_MODE): SelectSelector(
             SelectSelectorConfig(
-                options=[NONE_SENTINEL] + TRANSPORT_TYPES,
+                options=TRANSPORT_TYPES,
                 sort=True,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_TRANSIT_MODE,
             )
         ),
-        vol.Optional(
-            CONF_TRANSIT_ROUTING_PREFERENCE, default=NONE_SENTINEL
-        ): SelectSelector(
+        vol.Optional(CONF_TRANSIT_ROUTING_PREFERENCE): SelectSelector(
             SelectSelectorConfig(
-                options=[NONE_SENTINEL] + TRANSIT_PREFS,
+                options=TRANSIT_PREFS,
                 sort=True,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_TRANSIT_ROUTING_PREFERENCE,
@@ -119,7 +115,7 @@ OPTIONS_SCHEMA = vol.Schema(
 )
 
 
-def default_options(hass: HomeAssistant) -> dict[str, str | None]:
+def default_options(hass: HomeAssistant) -> dict[str, str]:
     """Get the default options."""
     return {
         CONF_MODE: "driving",
@@ -127,15 +123,6 @@ def default_options(hass: HomeAssistant) -> dict[str, str | None]:
             UNITS_IMPERIAL if hass.config.units is US_CUSTOMARY_SYSTEM else UNITS_METRIC
         ),
     }
-
-
-def _strip_sentinel(options: dict[str, str]) -> dict[str, str]:
-    """Remove entries with sentinel values."""
-    result = {}
-    for key, value in options.items():
-        if value != NONE_SENTINEL:
-            result[key] = value
-    return result
 
 
 class GoogleOptionsFlow(config_entries.OptionsFlow):
@@ -148,7 +135,6 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         if user_input is not None:
-            user_input = _strip_sentinel(user_input)
             time_type = user_input.pop(CONF_TIME_TYPE)
             if time := user_input.pop(CONF_TIME, None):
                 if time_type == ARRIVAL_TIME:

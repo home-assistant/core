@@ -2,7 +2,6 @@
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.google_travel_time.config_flow import NONE_SENTINEL
 from homeassistant.components.google_travel_time.const import (
     ARRIVAL_TIME,
     CONF_ARRIVAL_TIME,
@@ -383,14 +382,9 @@ async def test_reset_options_flow_fields(hass: HomeAssistant, mock_config) -> No
         result["flow_id"],
         user_input={
             CONF_MODE: "driving",
-            CONF_LANGUAGE: NONE_SENTINEL,
-            CONF_AVOID: NONE_SENTINEL,
             CONF_UNITS: UNITS_IMPERIAL,
             CONF_TIME_TYPE: ARRIVAL_TIME,
             CONF_TIME: "test",
-            CONF_TRAFFIC_MODEL: NONE_SENTINEL,
-            CONF_TRANSIT_MODE: NONE_SENTINEL,
-            CONF_TRANSIT_ROUTING_PREFERENCE: NONE_SENTINEL,
         },
     )
 
