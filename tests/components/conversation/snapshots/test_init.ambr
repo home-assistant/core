@@ -470,6 +470,32 @@
           }),
         }),
       }),
+      dict({
+        'details': dict({
+          'device': dict({
+            'name': 'device',
+            'text': 'fridge',
+            'value': 'fridge',
+          }),
+          'domain': dict({
+            'name': 'domain',
+            'text': '',
+            'value': 'light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassTurnOn',
+        }),
+        'slots': dict({
+          'device': 'fridge',
+          'domain': 'light',
+        }),
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': True,
+          }),
+        }),
+      }),
       None,
     ]),
   })
