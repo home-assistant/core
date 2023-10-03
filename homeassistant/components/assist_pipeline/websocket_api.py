@@ -30,8 +30,8 @@ from .pipeline import (
     async_get_pipeline,
 )
 
-DEFAULT_TIMEOUT = 30
-DEFAULT_WAKE_WORD_TIMEOUT = 3
+DEFAULT_TIMEOUT = 60 * 5  # seconds
+DEFAULT_WAKE_WORD_TIMEOUT = 3  # seconds
 
 _LOGGER = logging.getLogger(__name__)
 
