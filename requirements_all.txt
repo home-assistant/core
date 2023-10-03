@@ -409,6 +409,9 @@ airthings-cloud==0.1.0
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
 
+# homeassistant.components.allpowers_ble
+allpowers-ble==0.1.1
+
 # homeassistant.components.alpha_vantage
 alpha-vantage==2.3.1
 
@@ -558,6 +561,9 @@ bluetooth-adapters==0.16.1
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.2.3
+
+# homeassistant.components.allpowers_ble
+bluetooth-data-tools==0.3.0
 
 # homeassistant.components.bluetooth
 # homeassistant.components.esphome

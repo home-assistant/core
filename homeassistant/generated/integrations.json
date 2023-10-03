@@ -169,6 +169,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "allpowers_ble": {
+      "name": "Allpowers BLE",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "alpha_vantage": {
       "name": "Alpha Vantage",
       "integration_type": "hub",
