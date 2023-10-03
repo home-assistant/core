@@ -154,18 +154,19 @@ async def async_migrate_unique_id(
 
     # Remove duplicated device
     if duplicate is not None:
-        _LOGGER.debug(
-            "Removing duplicated device %s",
-            duplicate.name,
-        )
-
-        duplicate_entities = er.async_entries_for_device(ent_reg, duplicate.id, True)
-        for entity in duplicate_entities:
-            ent_reg.async_update_entity(
-                entity.entity_id, new_unique_id=f"old-{entity.unique_id}"
+        if config_entry.entry_id in duplicate.config_entries:
+            _LOGGER.debug(
+                "Removing duplicated device %s",
+                duplicate.name,
             )
 
-        dev_reg.async_remove_device(duplicate.id)
+            duplicate_entities = er.async_entries_for_device(
+                ent_reg, duplicate.id, True
+            )
+            for entity in duplicate_entities:
+                ent_reg.async_remove(entity.entity_id)
+
+            dev_reg.async_remove_device(duplicate.id)
 
     # Migrate devices
     for device_entry in dr.async_entries_for_config_entry(
