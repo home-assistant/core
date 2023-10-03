@@ -57,7 +57,7 @@ def get_integration_frame(exclude_integrations: set | None = None) -> Integratio
 
     return IntegrationFrame(
         path == "custom_components/",
-        found_frame.filename[start:],
+        found_frame.filename[index:],
         found_frame,
         integration,
     )
