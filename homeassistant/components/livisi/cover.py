@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from typing import Any
+import uuid
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -59,20 +61,51 @@ class LivisiShutter(LivisiEntity, CoverEntity):
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
         )
-
         self._capability_id = self.capabilities["RollerShutterActuator"]
 
-    def open_cover(self, **kwargs: Any) -> None:
+    async def send_livisi_shutter_command(self, commandtype, params) -> dict:
+        """Send a generic command to the Livisi API."""
+        set_state_payload: dict[str, Any] = {
+            "id": uuid.uuid4().hex,
+            "type": commandtype,
+            "namespace": "CosipDevices.RWE",
+            "target": self._capability_id,
+            "params": params,
+        }
+        return await self.aio_livisi.async_send_authorized_request(
+            "post", "action", payload=set_state_payload
+        )
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the shutter."""
-        LOGGER.info("Should Close Cover %s", self._attr_name)
+        open_cover_params: dict[str, Any] = {
+            "rampDirection": {"type": "Constant", "value": "RampUp"}
+        }
+        response = await self.send_livisi_shutter_command(
+            "StartRamp", open_cover_params
+        )
+        if response is None:
+            self._attr_available = False
+            raise HomeAssistantError(f"Failed to open shutter {self._attr_name}")
 
-    def close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the shutter."""
-        LOGGER.info("Should Open Cover %s", self._attr_name)
+        close_cover_params: dict[str, Any] = {
+            "rampDirection": {"type": "Constant", "value": "RampDown"}
+        }
+        response = await self.send_livisi_shutter_command(
+            "StartRamp", close_cover_params
+        )
+        if response is None:
+            self._attr_available = False
+            raise HomeAssistantError(f"Failed to close shutter {self._attr_name}")
 
-    def stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the shutter."""
-        LOGGER.info("Should Stop Cover %s", self._attr_name)
+        response = await self.send_livisi_shutter_command("StopRamp", {})
+        if response is None:
+            self._attr_available = False
+            raise HomeAssistantError(f"Failed to close shutter {self._attr_name}")
 
     @property
     def is_closed(self) -> bool | None:
@@ -82,24 +115,6 @@ class LivisiShutter(LivisiEntity, CoverEntity):
         # if self._ads_var_position is not None:
         #     return self._state_dict[STATE_KEY_POSITION] == 0
         return None
-
-    # async def async_turn_on(self, **kwargs: Any) -> None:
-    #     """Turn the entity on."""
-    #     response = await self.aio_livisi.async_pss_set_state(
-    #         self._capability_id, is_on=True
-    #     )
-    #     if response is None:
-    #         self._attr_available = False
-    #         raise HomeAssistantError(f"Failed to turn on {self._attr_name}")
-
-    # async def async_turn_off(self, **kwargs: Any) -> None:
-    #     """Turn the entity off."""
-    #     response = await self.aio_livisi.async_pss_set_state(
-    #         self._capability_id, is_on=False
-    #     )
-    #     if response is None:
-    #         self._attr_available = False
-    #         raise HomeAssistantError(f"Failed to turn off {self._attr_name}")
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
