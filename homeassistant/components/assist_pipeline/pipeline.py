@@ -1584,7 +1584,7 @@ class PipelineRuns:
     def remove_run(self, pipeline_run: PipelineRun) -> None:
         """Remove pipeline run."""
         pipeline_id = pipeline_run.pipeline.id
-        self._pipeline_runs[pipeline_id].pop(pipeline_run.id, None)
+        self._pipeline_runs[pipeline_id].pop(pipeline_run.id)
 
     async def _change_listener(
         self, change_type: str, item_id: str, change: dict
