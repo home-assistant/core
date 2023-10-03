@@ -475,7 +475,7 @@ class PipelineRun:
     stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False, repr=False)
     tts_engine: str = field(init=False, repr=False)
     tts_options: dict | None = field(init=False, default=None)
-    wake_word_entity_id: str = field(init=False, repr=False)
+    wake_word_entity_id: str | None = field(init=False, default=None, repr=False)
     wake_word_entity: wake_word.WakeWordDetectionEntity = field(init=False, repr=False)
 
     abort_wake_word_detection: bool = field(init=False, default=False)
@@ -517,6 +517,13 @@ class PipelineRun:
                 self.audio_settings.auto_gain_dbfs,
                 self.audio_settings.noise_suppression_level,
             )
+
+    def __eq__(self, other: Any) -> bool:
+        """Compare pipeline runs by id."""
+        if isinstance(other, PipelineRun):
+            return self.id == other.id
+
+        return False
 
     @callback
     def process_event(self, event: PipelineEvent) -> None:
