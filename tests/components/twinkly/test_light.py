@@ -346,7 +346,7 @@ async def test_client_rgbw_rgb_mismatch(hass: HomeAssistant) -> None:
     client = ClientMock()
     client.state = False
     client.device_info["led_profile"] = "RGBW"
-    client.color = {"red": 128, "green": 64, "blue": 32}
+    client.color = {"red": 128, "green": 64, "blue": 32, "white": None}
     entity, _, _, _ = await _create_entries(hass, client)
 
     # Force a client update
@@ -354,7 +354,7 @@ async def test_client_rgbw_rgb_mismatch(hass: HomeAssistant) -> None:
         "light", "turn_off", service_data={"entity_id": entity.entity_id}, blocking=True
     )
 
-    assert client.color == {"red": 128, "green": 64, "blue": 32, "white": None}
+    assert await client.get_current_colour() == {"red": 128, "green": 64, "blue": 32}
 
 
 async def test_client_rgb_rgbw_mismatch(hass: HomeAssistant) -> None:
@@ -370,7 +370,12 @@ async def test_client_rgb_rgbw_mismatch(hass: HomeAssistant) -> None:
         "light", "turn_off", service_data={"entity_id": entity.entity_id}, blocking=True
     )
 
-    assert client.color == {"red": 128, "green": 64, "blue": 32, "white": 16}
+    assert await client.get_current_colour() == {
+        "red": 128,
+        "green": 64,
+        "blue": 32,
+        "white": 16,
+    }
 
 
 async def test_update_name(hass: HomeAssistant) -> None:
