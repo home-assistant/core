@@ -363,3 +363,21 @@ async def test_Mailformed_event(
 
     await hass.async_block_till_done()
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.assert_not_called()
+
+
+async def test_None_event(
+    hass,
+    entry_managed,
+    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
+) -> None:
+    # pylint: disable=protected-access
+    """Test listening to events from Hass. and getting an event with a newline in the state."""
+
+    hass.states.async_set("sensor.test_sensor", None)
+
+    async_fire_time_changed(
+        hass, utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL])
+    )
+
+    await hass.async_block_till_done()
+    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.assert_not_called()

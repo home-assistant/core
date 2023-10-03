@@ -15,6 +15,10 @@ from azure.kusto.ingest import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Suppress very verbose logging from client
+logger = logging.getLogger("azure")
+logger.setLevel(logging.WARNING)
+
 
 class AzureDataExplorerClient:
     """Class for Azure Data Explorer Client."""
@@ -58,18 +62,17 @@ class AzureDataExplorerClient:
             CONF_AUTHORITY_ID,
         )
 
-        if (
-            self.use_queued_ingestion is True
-        ):  # Queded is the only option supported on free tear of ADX
+        if self.use_queued_ingestion is True:
+            # Queded is the only option supported on free tear of ADX
             self.write_client = QueuedIngestClient(kcsb)
         else:
             self.write_client = ManagedStreamingIngestClient.from_dm_kcsb(kcsb)
 
         self.query_client = KustoClient(kcsb)
 
-        # Suppress very verbose logging from client
-        logger = logging.getLogger("azure")
-        logger.setLevel(logging.WARNING)
+        # # Suppress very verbose logging from client
+        # logger = logging.getLogger("azure")
+        # logger.setLevel(logging.WARNING)
 
     def test_connection(self) -> None:
         """Test connection, will throw Exception when it cannot connect."""

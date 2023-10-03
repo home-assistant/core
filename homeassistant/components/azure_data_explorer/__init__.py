@@ -117,8 +117,9 @@ class AzureDataExplorer:
             CONF_AUTHORITY_ID=self._entry.data["authority_id"],
             CONF_USE_FREE=self._entry.data["use_free_cluster"],
         )
+        # self._client = AzureDataExplorerClient(**entry.data)
 
-        self._send_interval = self._entry.options[CONF_SEND_INTERVAL]
+        self._send_interval = entry.options[CONF_SEND_INTERVAL]
         self._max_delay = DEFAULT_MAX_DELAY
 
         self._shutdown = False
@@ -146,9 +147,10 @@ class AzureDataExplorer:
             self._next_send_remover()
         if self._listener_remover:
             self._listener_remover()
-        await self._queue.put((3, (utcnow(), None)))
+        # await self._queue.put((3, (utcnow(), None)))
+        self._shutdown = True
         await self.async_send(None)
-        await self._queue.join()
+        # await self._queue.join()
 
     def update_options(self, new_options: dict[str, Any]) -> None:
         """Update options."""
@@ -161,6 +163,8 @@ class AzureDataExplorer:
     def _schedule_next_send(self) -> None:
         """Schedule the next send."""
         if not self._shutdown:
+            if self._next_send_remover:
+                self._next_send_remover()
             self._next_send_remover = async_call_later(
                 self.hass, self._send_interval, self.async_send
             )
@@ -210,14 +214,14 @@ class AzureDataExplorer:
     ) -> tuple[str | None, int]:
         """Parse event by checking if it needs to be sent, and format it."""
 
-        if state is None:
-            self._shutdown = True
-            return None, dropped
-        if state.state in FILTER_STATES or not self._entities_filter(state.entity_id):
+        # if state is None:
+        #     self._shutdown = True
+        #     return None, dropped
+        if state.state in FILTER_STATES or not self._entities_filter(state.entity_id):  # type: ignore[union-attr]
             return None, dropped
         if (utcnow() - time_fired).seconds > DEFAULT_MAX_DELAY + self._send_interval:
             return None, dropped + 1
-        if "\n" in state.state:
+        if "\n" in state.state:  # type: ignore[union-attr]
             return None, dropped + 1
 
         json_event = str(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))

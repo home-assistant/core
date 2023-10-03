@@ -59,6 +59,7 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_AUTHORITY_ID=data["authority_id"],
             CONF_USE_FREE=data["use_free_cluster"],
         )
+        # client = AzureDataExplorerClient(**data)
 
         try:
             await self.hass.async_add_executor_job(client.test_connection)
