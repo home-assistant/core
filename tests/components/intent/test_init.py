@@ -404,6 +404,16 @@ async def test_get_state_intent(
     )
     assert not result.unmatched_states
 
+    with pytest.raises(intent.IntentHandleError):
+        result = await intent.async_handle(
+            hass,
+            "test",
+            "HassGetState",
+            {
+                "device": {"value": "bogus device"},
+            },
+        )
+
     # Test unknown area failure
     with pytest.raises(intent.IntentHandleError):
         await intent.async_handle(

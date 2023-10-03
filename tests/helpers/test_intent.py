@@ -153,6 +153,16 @@ async def test_async_match_states(
         )
     ) == [state2]
 
+    # Inexistent device
+    with pytest.raises(AssertionError):
+        assert not list(
+            intent.async_match_states(
+                hass,
+                device_name="bogus device",
+                states=[state1, state2],
+            )
+        )
+
 
 async def test_match_device_area(
     hass: HomeAssistant,

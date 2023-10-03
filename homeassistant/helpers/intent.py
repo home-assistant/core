@@ -233,8 +233,7 @@ def _filter_by_device(
     """Filter state/entity pairs by a list of devices."""
     entity_device_ids: dict[str, str | None] = {}
     for _state, entity in states_and_entities:
-        if entity is None:
-            continue
+        assert entity is not None  # can't be, but mypy needs it
 
         if entity.device_id:
             device = devices.async_get(entity.device_id)

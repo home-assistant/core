@@ -1618,11 +1618,23 @@ async def test_ws_hass_agent_debug(
     init_components,
     hass_ws_client: WebSocketGenerator,
     area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test homeassistant agent debug websocket command."""
     client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    fridge_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("demo", "id-1234")},
+        name="fridge",
+        model="refrigerator T1000",
+        manufacturer="frigidaire",
+    )
 
     kitchen_area = area_registry.async_create("kitchen")
     entity_registry.async_get_or_create(
@@ -1632,6 +1644,7 @@ async def test_ws_hass_agent_debug(
         "light.kitchen",
         aliases={"my cool light"},
         area_id=kitchen_area.id,
+        device_id=fridge_device.id,
     )
     hass.states.async_set("light.kitchen", "off")
 
@@ -1646,6 +1659,8 @@ async def test_ws_hass_agent_debug(
                 "turn my cool light off",
                 "turn on all lights in the kitchen",
                 "how many lights are on in the kitchen?",
+                "turn on the light on the fridge",
+                # ^^^ Expects tests/testing_config/custom_sentences/en/device.yaml
                 "this will not match anything",  # null in results
             ],
         }
