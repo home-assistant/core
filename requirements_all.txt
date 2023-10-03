@@ -1359,7 +1359,7 @@ open-meteo==0.2.1
 openai==0.27.2
 
 # homeassistant.components.opencv
-opencv-python-headless==4.8.0.76
+opencv-python-headless==4.8.1.78
 
 # homeassistant.components.openerz
 openerz-api==0.2.0
