@@ -2,13 +2,10 @@
 from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.minecraft_server.api import (
-    MinecraftServerAddressError,
-    MinecraftServerType,
-)
+from homeassistant.components.minecraft_server.api import MinecraftServerAddressError
 from homeassistant.components.minecraft_server.const import DEFAULT_NAME, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -141,11 +138,10 @@ async def test_entry_migration(hass: HomeAssistant) -> None:
     # Test migrated config entry.
     config_entry = hass.config_entries.async_get_entry(config_entry_id)
     assert config_entry.unique_id is None
-    assert config_entry.data[CONF_NAME] == DEFAULT_NAME
-    assert config_entry.data[CONF_ADDRESS] == TEST_ADDRESS
-
-    if CONF_TYPE in config_entry.data:
-        assert config_entry.data[CONF_TYPE] == MinecraftServerType.JAVA_EDITION
+    assert config_entry.data == {
+        CONF_NAME: DEFAULT_NAME,
+        CONF_ADDRESS: TEST_ADDRESS,
+    }
 
     assert config_entry.version == 3
 
@@ -195,12 +191,10 @@ async def test_entry_migration_host_only(hass: HomeAssistant) -> None:
     # Test migrated config entry.
     config_entry = hass.config_entries.async_get_entry(config_entry_id)
     assert config_entry.unique_id is None
-    assert config_entry.data[CONF_NAME] == DEFAULT_NAME
-    assert config_entry.data[CONF_ADDRESS] == TEST_HOST
-
-    if CONF_TYPE in config_entry.data:
-        assert config_entry.data[CONF_TYPE] == MinecraftServerType.JAVA_EDITION
-
+    assert config_entry.data == {
+        CONF_NAME: DEFAULT_NAME,
+        CONF_ADDRESS: TEST_HOST,
+    }
     assert config_entry.version == 3
 
 
