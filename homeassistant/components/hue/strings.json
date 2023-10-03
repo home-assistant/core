@@ -97,6 +97,7 @@
     },
     "sensor": {
       "zigbee_connectivity": {
+        "name": "Zigbee Connectivity",
         "state": {
           "connected": "[%key:common::state::connected%]",
           "disconnected": "[%key:common::state::disconnected%]",
@@ -106,7 +107,15 @@
       }
     },
     "switch": {
-      "automation": {
+      "motion_sensor_enabled": {
+        "name": "Motion sensor enabled",
+        "state": {
+          "on": "[%key:common::state::enabled%]",
+          "off": "[%key:common::state::disabled%]"
+        }
+      },
+      "light_sensor_enabled": {
+        "name": "Light sensor enabled",
         "state": {
           "on": "[%key:common::state::enabled%]",
           "off": "[%key:common::state::disabled%]"

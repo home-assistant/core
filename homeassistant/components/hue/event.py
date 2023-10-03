@@ -71,6 +71,7 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
         key="button",
         device_class=EventDeviceClass.BUTTON,
         translation_key="button",
+        has_entity_name=True,
     )
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

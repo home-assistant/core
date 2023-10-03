@@ -86,6 +86,8 @@ async def async_setup_entry(
 class HueSceneEntityBase(HueBaseEntity, SceneEntity):
     """Base Representation of a Scene entity from Hue Scenes."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         bridge: HueBridge,
@@ -112,8 +114,8 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
 
     @property
     def name(self) -> str:
-        """Return default entity name."""
-        return f"{self.group.metadata.name} {self.resource.metadata.name}"
+        """Return name of the scene."""
+        return self.resource.metadata.name
 
     @property
     def device_info(self) -> DeviceInfo:

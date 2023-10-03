@@ -72,24 +72,6 @@ class HueBaseEntity(Entity):
         self._ignore_availability = None
         self._last_state = None
 
-    @property
-    def name(self) -> str:
-        """Return name for the entity."""
-        if self.device is None:
-            # this is just a guard
-            # creating a pretty name for device-less entities (e.g. groups/scenes)
-            # should be handled in the platform instead
-            return self.resource.type.value
-        dev_name = self.device.metadata.name
-        # if resource is a light, use the device name itself
-        if self.resource.type == ResourceTypes.LIGHT:
-            return dev_name
-        # for sensors etc, use devicename + pretty name of type
-        type_title = RESOURCE_TYPE_NAMES.get(
-            self.resource.type, self.resource.type.value.replace("_", " ").title()
-        )
-        return f"{dev_name} {type_title}"
-
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         self._check_availability()

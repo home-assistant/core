@@ -17,6 +17,7 @@ from homeassistant.components.light import (
     FLASH_SHORT,
     ColorMode,
     LightEntity,
+    LightEntityDescription,
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -67,7 +68,12 @@ async def async_setup_entry(
 class GroupedHueLight(HueBaseEntity, LightEntity):
     """Representation of a Grouped Hue light."""
 
-    _attr_icon = "mdi:lightbulb-group"
+    entity_description = LightEntityDescription(
+        key="hue_grouped_light",
+        icon="mdi:lightbulb-group",
+        has_entity_name=True,
+        name=None,
+    )
 
     def __init__(
         self, bridge: HueBridge, resource: GroupedLight, group: Room | Zone
@@ -102,11 +108,6 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             self.async_on_remove(
                 self.api.lights.subscribe(self._handle_event, light_ids)
             )
-
-    @property
-    def name(self) -> str:
-        """Return name of room/zone for this grouped light."""
-        return self.group.metadata.name
 
     @property
     def is_on(self) -> bool:
