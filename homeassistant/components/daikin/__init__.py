@@ -161,6 +161,9 @@ async def async_migrate_unique_id(
                 duplicate.name,
             )
 
+            # The automatic cleanup in entity registry is scheduled as a task, remove
+            # the entities manually to avoid unique_id collision when the entities
+            # are migrated.
             duplicate_entities = er.async_entries_for_device(
                 ent_reg, duplicate.id, True
             )
