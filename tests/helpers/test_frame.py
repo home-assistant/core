@@ -41,7 +41,7 @@ async def test_extract_frame_integration(
     """Test extracting the current frame from integration context."""
     integration_frame = frame.get_integration_frame()
     assert integration_frame == frame.IntegrationFrame(
-        False, "hue/light.py", mock_integration_frame, "hue"
+        False, "homeassistant/components/hue/light.py", mock_integration_frame, "hue"
     )
 
 
@@ -80,7 +80,7 @@ async def test_extract_frame_integration_with_excluded_integration(
         )
 
     assert integration_frame == frame.IntegrationFrame(
-        False, "mdns/light.py", correct_frame, "mdns"
+        False, "homeassistant/components/mdns/light.py", correct_frame, "mdns"
     )
 
 
@@ -113,7 +113,7 @@ async def test_prevent_flooding(
     what = "accessed hi instead of hello"
     key = "/home/paulus/homeassistant/components/hue/light.py:23"
     integration = "hue"
-    filename = "hue/light.py"
+    filename = "homeassistant/components/hue/light.py"
 
     expected_message = (
         f"Detected integration that {what}. Please report issue for {integration} using"
