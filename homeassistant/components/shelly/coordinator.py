@@ -617,6 +617,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self.hass.async_create_task(self._async_disconnected())
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
+            if self.sleep_period:
+                device_update_info(self.hass, self.device, self.entry)
         elif update_type is RpcUpdateType.EVENT and (event := self.device.event):
             self._async_device_event_handler(event)
 
