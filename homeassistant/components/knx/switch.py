@@ -63,11 +63,12 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
-        if not self._device.switch.readable and (
-            last_state := await self.async_get_last_state()
+        if (
+            not self._device.switch.readable
+            and (last_state := await self.async_get_last_state())
+            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
-            if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-                self._device.switch.value = last_state.state == STATE_ON
+            self._device.switch.value = last_state.state == STATE_ON
 
     @property
     def is_on(self) -> bool:
