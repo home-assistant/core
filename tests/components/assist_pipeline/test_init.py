@@ -655,4 +655,4 @@ def test_pipeline_run_equality(hass: HomeAssistant, init_components) -> None:
 
     assert run_1 == run_1
     assert run_1 != run_2
-    assert run_1 is not None
+    assert run_1 != 1234
