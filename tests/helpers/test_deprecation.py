@@ -1,5 +1,5 @@
 """Test deprecation helpers."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -87,7 +87,10 @@ def test_config_get_deprecated_new(mock_get_logger) -> None:
 
 
 def test_deprecated_function(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated_function decorator."""
+    """Test deprecated_function decorator.
+
+    This tests the behavior when the calling integration is not known.
+    """
 
     @deprecated_function("new_function")
     def mock_deprecated_function():
@@ -96,5 +99,84 @@ def test_deprecated_function(caplog: pytest.LogCaptureFixture) -> None:
     mock_deprecated_function()
     assert (
         "mock_deprecated_function is a deprecated function. Use new_function instead"
+        in caplog.text
+    )
+
+
+def test_deprecated_function_called_from_built_in_integration(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test deprecated_function decorator.
+
+    This tests the behavior when the calling integration is built-in.
+    """
+
+    @deprecated_function("new_function")
+    def mock_deprecated_function():
+        pass
+
+    with patch(
+        "homeassistant.helpers.frame.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/homeassistant/components/hue/light.py",
+                lineno="23",
+                line="await session.close()",
+            ),
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        mock_deprecated_function()
+    assert (
+        "mock_deprecated_function was called from hue, this is a deprecated function. "
+        "Use new_function instead" in caplog.text
+    )
+
+
+def test_deprecated_function_called_from_custom_integration(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test deprecated_function decorator.
+
+    This tests the behavior when the calling integration is custom.
+    """
+
+    @deprecated_function("new_function")
+    def mock_deprecated_function():
+        pass
+
+    with patch(
+        "homeassistant.helpers.frame.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/config/custom_components/hue/light.py",
+                lineno="23",
+                line="await session.close()",
+            ),
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        mock_deprecated_function()
+    assert (
+        "mock_deprecated_function was called from hue, this is a deprecated function. "
+        "Use new_function instead, please report this to the maintainer of hue"
         in caplog.text
     )
