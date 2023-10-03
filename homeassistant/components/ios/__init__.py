@@ -286,14 +286,14 @@ async def async_setup_entry(
     """Set up an iOS entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
-    hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_USER][CONF_PUSH]))
-    hass.http.register_view(iOSConfigView(hass.data[DOMAIN][CONF_USER]))
+    hass.http.register_view(IOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
+    hass.http.register_view(IOSPushConfigView(hass.data[DOMAIN][CONF_USER][CONF_PUSH]))
+    hass.http.register_view(IOSConfigView(hass.data[DOMAIN][CONF_USER]))
 
     return True
 
 
-class iOSPushConfigView(HomeAssistantView):
+class IOSPushConfigView(HomeAssistantView):
     """A view that provides the push categories configuration."""
 
     url = "/api/ios/push"
@@ -309,7 +309,7 @@ class iOSPushConfigView(HomeAssistantView):
         return self.json(self.push_config)
 
 
-class iOSConfigView(HomeAssistantView):
+class IOSConfigView(HomeAssistantView):
     """A view that provides the whole user-defined configuration."""
 
     url = "/api/ios/config"
@@ -325,7 +325,7 @@ class iOSConfigView(HomeAssistantView):
         return self.json(self.config)
 
 
-class iOSIdentifyDeviceView(HomeAssistantView):
+class IOSIdentifyDeviceView(HomeAssistantView):
     """A view that accepts device identification requests."""
 
     url = "/api/ios/identify"
