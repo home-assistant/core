@@ -21,21 +21,17 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Validate user input
-            username = user_input.get(CONF_USERNAME)
-            password = user_input.get(CONF_PASSWORD)
+            user_input.get(CONF_USERNAME)
+            user_input.get(CONF_PASSWORD)
             ip_address = user_input.get(CONF_HOST)
 
-            # Perform any validation here
-            if not username or not password or not ip_address:
-                errors["base"] = "missing_fields"
-            else:
-                # Check if a configuration entry with the same unique ID already exists
-                existing_entries = self.hass.config_entries.async_entries(DOMAIN)
-                for entry in existing_entries:
-                    if entry.data[CONF_HOST] == ip_address:
-                        errors["base"] = "already_configured"
-                    else:
-                        errors["base"] = "single_instance"
+            # Check if a configuration entry with the same unique ID already exists
+            existing_entries = self.hass.config_entries.async_entries(DOMAIN)
+            for entry in existing_entries:
+                if entry.data[CONF_HOST] == ip_address:
+                    errors["base"] = "already_configured"
+                else:
+                    errors["base"] = "single_instance"
 
             if not errors:
                 await self.async_set_unique_id(ip_address.replace(".", "_"))
