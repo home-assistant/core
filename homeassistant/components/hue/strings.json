@@ -68,6 +68,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "tamper_sensor": {
+        "name": "Tampering"
+      }
+    },
     "event": {
       "button": {
         "state_attributes": {

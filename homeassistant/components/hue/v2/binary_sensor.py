@@ -81,29 +81,16 @@ async def async_setup_entry(
     register_items(api.sensors.tamper, HueTamperSensor)
 
 
-class HueBinarySensorBase(HueBaseEntity, BinarySensorEntity):
-    """Representation of a Hue binary_sensor."""
-
-    def __init__(
-        self,
-        bridge: HueBridge,
-        controller: ControllerType,
-        resource: SensorType,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(bridge, controller, resource)
-        self.resource = resource
-        self.controller = controller
-
-
-class HueMotionSensor(HueBinarySensorBase):
+class HueMotionSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Motion sensor."""
+
+    controller: CameraMotionController | MotionController
+    resource: CameraMotion | Motion
 
     entity_description = BinarySensorEntityDescription(
         key="motion_sensor",
         device_class=BinarySensorDeviceClass.MOTION,
         has_entity_name=True,
-        name=None,
     )
 
     @property
@@ -115,8 +102,11 @@ class HueMotionSensor(HueBinarySensorBase):
         return self.resource.motion.value
 
 
-class HueEntertainmentActiveSensor(HueBinarySensorBase):
+class HueEntertainmentActiveSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Entertainment Configuration as binary sensor."""
+
+    controller: EntertainmentConfigurationController
+    resource: EntertainmentConfiguration
 
     entity_description = BinarySensorEntityDescription(
         key="entertainment_active_sensor",
@@ -135,14 +125,16 @@ class HueEntertainmentActiveSensor(HueBinarySensorBase):
         return self.resource.metadata.name
 
 
-class HueContactSensor(HueBinarySensorBase):
+class HueContactSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Contact sensor."""
+
+    controller: ContactController
+    resource: Contact
 
     entity_description = BinarySensorEntityDescription(
         key="contact_sensor",
         device_class=BinarySensorDeviceClass.OPENING,
         has_entity_name=True,
-        name=None,
     )
 
     @property
@@ -154,13 +146,17 @@ class HueContactSensor(HueBinarySensorBase):
         return self.resource.contact_report.state != ContactState.CONTACT
 
 
-class HueTamperSensor(HueBinarySensorBase):
+class HueTamperSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Tamper sensor."""
+
+    controller: TamperController
+    resource: Tamper
 
     entity_description = BinarySensorEntityDescription(
         key="tamper_sensor",
         device_class=BinarySensorDeviceClass.TAMPER,
         has_entity_name=True,
+        translation_key="tamper_sensor",
     )
 
     @property
