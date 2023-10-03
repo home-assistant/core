@@ -133,7 +133,7 @@ def _print_deprecation_warning(obj: Any, replacement: str, description: str) -> 
     logger = logging.getLogger(obj.__module__)
     try:
         integration_frame = get_integration_frame()
-        if integration_frame.custom_component:
+        if integration_frame.custom_integration:
             logger.warning(
                 (
                     "%s was called from %s, this is a deprecated %s. Use %s instead,"
