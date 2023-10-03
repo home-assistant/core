@@ -389,6 +389,8 @@ def device_update_info(
         identifiers={(DOMAIN, entry.entry_id)},
         connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
     ):
+        if device.sw_version == shellydevice.firmware_version:
+            return
         dev_reg.async_update_device(device.id, sw_version=shellydevice.firmware_version)
 
 
