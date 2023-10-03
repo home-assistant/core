@@ -16,7 +16,12 @@ from homeassistant.helpers import aiohttp_client, device_registry as dr
 from .const import DOMAIN
 from .coordinator import LivisiDataUpdateCoordinator
 
-PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SWITCH]
+PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SWITCH,
+    Platform.COVER,
+]
 
 
 async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:

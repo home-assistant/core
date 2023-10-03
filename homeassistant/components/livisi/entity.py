@@ -45,6 +45,7 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
         self._attr_unique_id = unique_id
 
         device_name = name
+        self._attr_name = name
 
         # For livisi climate entities, the device should have the room name from
         # the livisi setup, as each livisi room gets exactly one VRCC device. The entity

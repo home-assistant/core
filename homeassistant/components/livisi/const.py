@@ -17,6 +17,7 @@ LIVISI_REACHABILITY_CHANGE: Final = "livisi_reachability_change"
 SWITCH_DEVICE_TYPES: Final = ["ISS", "ISS2", "PSS", "PSSO"]
 VRCC_DEVICE_TYPE: Final = "VRCC"
 WDS_DEVICE_TYPE: Final = "WDS"
+SHUTTER_DEVICE_TYPE: Final = "ISR2"
 
 
 MAX_TEMPERATURE: Final = 30.0
