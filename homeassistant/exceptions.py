@@ -15,8 +15,8 @@ class HomeAssistantError(Exception):
     def __init__(self, *args: object, omit_stack_trace: bool = False) -> None:
         """Initialize Home Assistant Error.
 
-        When omit_stack_trace is set, a stack trace is logged to
-        the debug logging when available.
+        The optional omit_stack_trace can be set to indicate the error is expected,
+        and a stack trace can be omitted if the exception is logged.
         """
         super().__init__(*args)
         self._omit_stack_trace = omit_stack_trace
