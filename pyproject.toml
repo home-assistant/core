@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.10.0.dev0"
+version     = "2023.11.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -25,7 +25,6 @@ requires-python = ">=3.11.0"
 dependencies    = [
     "aiohttp==3.8.5",
     "astral==2.2",
-    "async-timeout==4.0.3",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==23.8.0",
@@ -41,7 +40,7 @@ dependencies    = [
     "lru-dict==1.2.0",
     "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==41.0.3",
+    "cryptography==41.0.4",
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
     "pyOpenSSL==23.2.0",
     "orjson==3.9.7",
@@ -595,7 +594,12 @@ ignore = [
     "D407",  # Section name underlining
     "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
-    "PLC1901", # Lots of false positives
+
+    # Ignore ignored, as the rule is now back in preview/nursery, which cannot
+    # be ignored anymore without warnings.
+    # https://github.com/astral-sh/ruff/issues/7491
+    # "PLC1901", # Lots of false positives
+
     # False positives https://github.com/astral-sh/ruff/issues/5386
     "PLC0208", # Use a sequence type instead of a `set` when iterating over values
     "PLR0911", # Too many return statements ({returns} > {max_returns})

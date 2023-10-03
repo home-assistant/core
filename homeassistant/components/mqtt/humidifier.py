@@ -212,6 +212,7 @@ async def _async_setup_entity(
 class MqttHumidifier(MqttEntity, HumidifierEntity):
     """A MQTT humidifier component."""
 
+    _attr_mode: str | None = None
     _default_name = DEFAULT_NAME
     _entity_id_format = humidifier.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED
@@ -223,18 +224,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
     _optimistic_mode: bool
     _payload: dict[str, str]
     _topic: dict[str, Any]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT humidifier."""
-        self._attr_mode = None
-
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:

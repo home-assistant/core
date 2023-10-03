@@ -706,10 +706,12 @@ async def test_skipped_async_ha_write_state(
     await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
 
 
+@pytest.mark.freeze_time("2023-09-01 00:00:00+00:00")
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_skipped_async_ha_write_state2(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a write state command is only called when there is a valid event."""
     await mqtt_mock_entry()
@@ -724,14 +726,17 @@ async def test_skipped_async_ha_write_state2(
         await hass.async_block_till_done()
         assert len(mock_async_ha_write_state.mock_calls) == 1
 
+        freezer.move_to("2023-09-01 00:00:10+00:00")
         async_fire_mqtt_message(hass, topic, payload1)
         await hass.async_block_till_done()
         assert len(mock_async_ha_write_state.mock_calls) == 2
 
+        freezer.move_to("2023-09-01 00:00:20+00:00")
         async_fire_mqtt_message(hass, topic, payload2)
         await hass.async_block_till_done()
         assert len(mock_async_ha_write_state.mock_calls) == 2
 
+        freezer.move_to("2023-09-01 00:00:30+00:00")
         async_fire_mqtt_message(hass, topic, payload2)
         await hass.async_block_till_done()
         assert len(mock_async_ha_write_state.mock_calls) == 2
