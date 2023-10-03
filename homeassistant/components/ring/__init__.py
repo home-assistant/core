@@ -28,6 +28,7 @@ NOTIFICATION_TITLE = "Ring Setup"
 
 DOMAIN = "ring"
 DEFAULT_ENTITY_NAMESPACE = "ring"
+MOTION_DETECTION_CAPABILITY = "motion_detection"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,

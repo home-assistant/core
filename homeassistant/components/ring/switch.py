@@ -1,5 +1,6 @@
 """Component providing HA switch support for Ring Door Bell/Chimes."""
 from datetime import timedelta
+from itertools import chain
 import logging
 from typing import Any
 
@@ -11,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN
+from . import DOMAIN, MOTION_DETECTION_CAPABILITY
 from .entity import RingEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,10 +39,12 @@ async def async_setup_entry(
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
     switches: list[BaseRingSwitch] = []
 
-    for device in devices["stickup_cams"]:
+    for device in chain(
+        devices["doorbots"], devices["authorized_doorbots"], devices["stickup_cams"]
+    ):
         if device.has_capability("siren"):
             switches.append(SirenSwitch(config_entry.entry_id, device))
-        if device.has_capability("motion_detection"):
+        if device.has_capability(MOTION_DETECTION_CAPABILITY):
             switches.append(MotionDetectionSwitch(config_entry.entry_id, device))
 
     async_add_entities(switches)
@@ -100,7 +103,7 @@ class SirenSwitch(BaseRingSwitch):
 
 
 class MotionDetectionSwitch(BaseRingSwitch):
-    """Creates a switch to turn the ring cameras siren on and off."""
+    """Creates a switch to turn the ring motion detection on and off."""
 
     _attr_translation_key = "motion_detection"
 

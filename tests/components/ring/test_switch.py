@@ -1,10 +1,16 @@
 """The tests for the Ring switch platform."""
+from datetime import timedelta
+import logging
+from unittest.mock import PropertyMock, patch
+
 import pytest
+from requests import Timeout
 import requests_mock
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+import homeassistant.util.dt as dt_util
 
 from .common import setup_platform
 
@@ -76,12 +82,6 @@ async def test_switch_can_be_turned_on(
     """Tests the siren turns on correctly."""
     await setup_platform(hass, Platform.SWITCH)
 
-    # Mocks the response for turning a siren on
-    requests_mock.put(
-        "https://api.ring.com/clients_api/doorbots/765432/siren_on",
-        text=load_fixture("doorbot_siren_on_response.json", "ring"),
-    )
-
     state = hass.states.get("switch.front_" + switch_type)
     assert state.state == "off"
 
@@ -114,3 +114,50 @@ async def test_updates_work(
 
     state = hass.states.get("switch.front_" + switch_type)
     assert state.state == "on"
+
+
+@pytest.mark.parametrize("switch_type", ["siren", "motion_detection"])
+async def test_timeouts(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker, caplog, switch_type
+) -> None:
+    """Test timouts."""
+    caplog.set_level(logging.ERROR)
+    await setup_platform(hass, Platform.SWITCH)
+    hass.states.get("switch.front_" + switch_type)
+
+    with patch(
+        "ring_doorbell.stickup_cam.RingStickUpCam." + switch_type,
+        new_callable=PropertyMock,
+        side_effect=Timeout(),
+    ):
+        await hass.services.async_call(
+            "switch",
+            "turn_off",
+            {"entity_id": "switch.front_" + switch_type},
+            blocking=True,
+        )
+
+    assert len(caplog.records) > 0
+    assert caplog.records[0].module == "switch"
+    assert "Time out setting switch" in caplog.records[0].message
+
+
+@pytest.mark.parametrize("switch_type", ["siren", "motion_detection"])
+async def test_no_updates_until(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker, switch_type
+) -> None:
+    """Tests the update service works correctly."""
+    await setup_platform(hass, Platform.SWITCH)
+    state = hass.states.get("switch.front_" + switch_type)
+    assert state.state == "off"
+
+    await hass.services.async_call("ring", "update", {}, blocking=True)
+    await hass.async_block_till_done()
+
+    dtpast = dt_util.utcnow() - timedelta(seconds=10)
+    with patch("homeassistant.util.dt.utcnow", return_value=dtpast), patch(
+        "ring_doorbell.stickup_cam.RingStickUpCam." + switch_type,
+        new_callable=PropertyMock,
+    ) as mock:
+        await hass.services.async_call("ring", "update", {}, blocking=True)
+        assert mock.call_count == 0
