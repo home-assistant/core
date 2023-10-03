@@ -428,6 +428,38 @@ async def test_heartrate_scope_config_entry(
 
 @pytest.mark.parametrize(
     ("scopes"),
+    [(["nutrition"])],
+)
+async def test_nutrition_scope_config_entry(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    register_timeseries: Callable[[str, dict[str, Any]], None],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test nutrition sensors are enabled."""
+
+    register_timeseries(
+        "foods/log/water",
+        timeseries_response("foods-log-water", "99"),
+    )
+    register_timeseries(
+        "foods/log/caloriesIn",
+        timeseries_response("foods-log-caloriesIn", "1600"),
+    )
+    assert await integration_setup()
+
+    state = hass.states.get("sensor.water")
+    assert state
+    assert (state.state, state.attributes) == snapshot
+
+    state = hass.states.get("sensor.calories_in")
+    assert state
+    assert (state.state, state.attributes) == snapshot
+
+
+@pytest.mark.parametrize(
+    ("scopes"),
     [(["sleep"])],
 )
 async def test_sleep_scope_config_entry(
