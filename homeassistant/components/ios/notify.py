@@ -50,7 +50,7 @@ def get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> iOSNotificationService | None:
+) -> IOSNotificationService | None:
     """Get the iOS notification service."""
     if "notify.ios" not in hass.config.components:
         # Need this to enable requirements checking in the app.
@@ -59,10 +59,10 @@ def get_service(
     if not ios.devices_with_push(hass):
         return None
 
-    return iOSNotificationService()
+    return IOSNotificationService()
 
 
-class iOSNotificationService(BaseNotificationService):
+class IOSNotificationService(BaseNotificationService):
     """Implement the notification service for iOS."""
 
     def __init__(self) -> None:
