@@ -174,7 +174,8 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:garage-open",
         translation_key="dock_error",
         value_fn=lambda data: data.status.dock_error_status.name
-        if data.status.dock_type != RoborockDockTypeCode.no_dock
+        if data.status.dock_error_status is not None
+        and data.status.dock_type != RoborockDockTypeCode.no_dock
         else None,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
