@@ -508,6 +508,7 @@ class CoverSchema(KNXPlatformSchema):
     CONF_POSITION_STATE_ADDRESS = "position_state_address"
     CONF_ANGLE_ADDRESS = "angle_address"
     CONF_ANGLE_STATE_ADDRESS = "angle_state_address"
+    CONF_ANGLE_ON_MOVE_SHORT = "angle_on_move_short"
     CONF_TRAVELLING_TIME_DOWN = "travelling_time_down"
     CONF_TRAVELLING_TIME_UP = "travelling_time_up"
     CONF_INVERT_UPDOWN = "invert_updown"
@@ -540,6 +541,7 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(CONF_POSITION_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_ANGLE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_ANGLE_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_ANGLE_ON_MOVE_SHORT, default=True): cv.boolean,
                 vol.Optional(
                     CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
                 ): cv.positive_float,

@@ -2,9 +2,9 @@
 
 import pytest
 
-from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
+from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.knx.schema import CoverSchema
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, STATE_CLOSING
+from homeassistant.const import CONF_NAME, STATE_CLOSING
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
@@ -105,11 +105,11 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
     [
         (
             {
-                CONF_DEVICE_CLASS: CoverDeviceClass.SHADE,
                 CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
                 CoverSchema.CONF_MOVE_SHORT_ADDRESS: "1/0/1",
                 CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
                 CoverSchema.CONF_POSITION_ADDRESS: "1/0/3",
+                CoverSchema.CONF_ANGLE_ON_MOVE_SHORT: False,
             },
             CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
@@ -118,11 +118,11 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
         ),
         (
             {
-                CONF_DEVICE_CLASS: CoverDeviceClass.BLIND,
                 CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
                 CoverSchema.CONF_MOVE_SHORT_ADDRESS: "1/0/1",
                 CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
                 CoverSchema.CONF_POSITION_ADDRESS: "1/0/3",
+                CoverSchema.CONF_ANGLE_ON_MOVE_SHORT: True,
             },
             CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
@@ -134,10 +134,10 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
         ),
         (
             {
-                CONF_DEVICE_CLASS: CoverDeviceClass.BLIND,
                 CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
                 CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
                 CoverSchema.CONF_POSITION_ADDRESS: "1/0/3",
+                CoverSchema.CONF_ANGLE_ON_MOVE_SHORT: True,
             },
             CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
@@ -204,6 +204,7 @@ async def test_cover_tilt_absolute(hass: HomeAssistant, knx: KNXTestKit) -> None
                 CoverSchema.CONF_POSITION_ADDRESS: "1/0/3",
                 CoverSchema.CONF_ANGLE_STATE_ADDRESS: "1/0/4",
                 CoverSchema.CONF_ANGLE_ADDRESS: "1/0/5",
+                CoverSchema.CONF_ANGLE_ON_MOVE_SHORT: False,
             }
         }
     )
@@ -242,6 +243,7 @@ async def test_cover_tilt_short(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 CONF_NAME: "test",
                 CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
                 CoverSchema.CONF_MOVE_SHORT_ADDRESS: "1/0/1",
+                CoverSchema.CONF_ANGLE_ON_MOVE_SHORT: True,
             }
         }
     )

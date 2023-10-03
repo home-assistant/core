@@ -29,8 +29,6 @@ from .const import DATA_KNX_CONFIG, DOMAIN
 from .knx_entity import KnxEntity
 from .schema import CoverSchema
 
-_TILTABLE_DEVICE_CLASSES = {CoverDeviceClass.BLIND, CoverDeviceClass.SHUTTER, None}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -82,15 +80,13 @@ class KNXCover(KnxEntity, CoverEntity):
             | CoverEntityFeature.OPEN
             | CoverEntityFeature.SET_POSITION
         )
-        _device_class = config.get(CONF_DEVICE_CLASS)
-        if self._device.step.writable and _device_class in _TILTABLE_DEVICE_CLASSES:
+        if self._device.step.writable and config[CoverSchema.CONF_ANGLE_ON_MOVE_SHORT]:
             _supports_tilt = True
             self._attr_supported_features |= (
                 CoverEntityFeature.CLOSE_TILT
                 | CoverEntityFeature.OPEN_TILT
                 | CoverEntityFeature.STOP_TILT
             )
-
         if self._device.supports_angle:
             _supports_tilt = True
             self._attr_supported_features |= (
@@ -104,7 +100,7 @@ class KNXCover(KnxEntity, CoverEntity):
             if _supports_tilt:
                 self._attr_supported_features |= CoverEntityFeature.STOP_TILT
 
-        self._attr_device_class = _device_class or (
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS) or (
             CoverDeviceClass.BLIND if _supports_tilt else None
         )
         self._attr_unique_id = (
