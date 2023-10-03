@@ -627,3 +627,32 @@ async def test_wake_word_detection_aborted(
     await pipeline_input.execute()
 
     assert process_events(events) == snapshot
+
+
+def test_pipeline_run_equality(hass: HomeAssistant, init_components) -> None:
+    """Test that pipeline run equality uses unique id."""
+
+    def event_callback(event):
+        pass
+
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass)
+    run_1 = assist_pipeline.pipeline.PipelineRun(
+        hass,
+        context=Context(),
+        pipeline=pipeline,
+        start_stage=assist_pipeline.PipelineStage.STT,
+        end_stage=assist_pipeline.PipelineStage.TTS,
+        event_callback=event_callback,
+    )
+    run_2 = assist_pipeline.pipeline.PipelineRun(
+        hass,
+        context=Context(),
+        pipeline=pipeline,
+        start_stage=assist_pipeline.PipelineStage.STT,
+        end_stage=assist_pipeline.PipelineStage.TTS,
+        event_callback=event_callback,
+    )
+
+    assert run_1 == run_1
+    assert run_1 != run_2
+    assert run_1 != 1234
