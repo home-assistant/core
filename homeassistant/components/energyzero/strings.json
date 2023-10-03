@@ -39,29 +39,5 @@
         "name": "Hours priced equal or lower than current - today"
       }
     }
-  },
-  "services": {
-    "get_prices": {
-      "name": "Get prices",
-      "description": "Request energy or gas prices from EnergyZero.",
-      "fields": {
-        "type": {
-          "name": "Type",
-          "description": "Type of prices to get, energy or gas."
-        },
-        "incl_vat": {
-          "name": "Including VAT",
-          "description": "Include VAT in the prices. Defaults to true if omitted."
-        },
-        "start": {
-          "name": "Start",
-          "description": "From which moment to get the prices. Defaults to today if omitted."
-        },
-        "end": {
-          "name": "End",
-          "description": "Until which moment to get the prices. Defaults to today if omitted."
-        }
-      }
-    }
   }
 }
