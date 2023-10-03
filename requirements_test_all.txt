@@ -212,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==17.0.0
+aioesphomeapi==17.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -347,7 +347,7 @@ aiovlc==0.1.0
 aiovodafone==0.3.1
 
 # homeassistant.components.waqi
-aiowaqi==1.1.1
+aiowaqi==2.0.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -786,10 +786,10 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230928.0
+home-assistant-frontend==20231002.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.9.22
+home-assistant-intents==2023.10.2
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1153,7 +1153,7 @@ py-dormakaba-dkey==1.0.5
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==0.1.5
+py-nextbusnext==1.0.0
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -1376,7 +1376,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.5.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.8
+pylitterbot==2023.4.9
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.18.2
@@ -1599,7 +1599,7 @@ python-matter-server==3.7.0
 python-miio==0.5.12
 
 # homeassistant.components.myq
-python-myq==3.1.9
+python-myq==3.1.11
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
@@ -1618,7 +1618,7 @@ python-picnic-api==1.1.0
 python-qbittorrent==0.4.3
 
 # homeassistant.components.roborock
-python-roborock==0.34.1
+python-roborock==0.34.6
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -1648,7 +1648,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.3.6
+pytrafikverket==0.3.7
 
 # homeassistant.components.usb
 pyudev==0.23.2
@@ -2078,7 +2078,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.115.0
+zeroconf==0.115.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

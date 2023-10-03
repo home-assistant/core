@@ -385,7 +385,7 @@ def _write_default_config(config_dir: str) -> bool:
 async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     """Load YAML from a Home Assistant configuration file.
 
-    This function allow a component inside the asyncio loop to reload its
+    This function allows a component inside the asyncio loop to reload its
     configuration by itself. Include package merge.
     """
     secrets = Secrets(Path(hass.config.config_dir))
