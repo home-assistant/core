@@ -294,12 +294,11 @@ async def ws_get_fossil_energy_consumption(
         return {key: result[key] for key in sorted(result)}
 
     def _calculate_deltas(sums: dict[float, float]) -> dict[float, float]:
-        prev: float | None = None
+        prev: float = 0.0
         result: dict[float, float] = {}
         for period, sum_ in sums.items():
-            if prev is not None:
-                result[period] = sum_ - prev
-            prev = sum_
+            result[period] = sum_ - prev
+            prev = sum_ if sum_ is not None else 0.0
         return result
 
     def _reduce_deltas(
