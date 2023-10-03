@@ -230,7 +230,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # at the same time.
     await hass.async_add_executor_job(get_loader)
 
-    _async_register_events_and_services(hass)
+    register_obj = RegisterEventsServices(hass)
+    register_obj._async_register_events_and_services()
 
     if DOMAIN not in config:
         return True
@@ -408,93 +409,96 @@ def _async_import_options_from_data_if_missing(
     if modified:
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
+class RegisterEventsServices:
+    def __init__(self, hass: HomeAssistant):
+        self.hass = hass
+    
+    @callback
+    def _async_register_events_and_services(self) -> None:
+        """Register events and services for HomeKit."""
+        self.hass.http.register_view(HomeKitPairingQRView)
 
-@callback
-def _async_register_events_and_services(hass: HomeAssistant) -> None:
-    """Register events and services for HomeKit."""
-    hass.http.register_view(HomeKitPairingQRView)
-
-    async def async_handle_homekit_reset_accessory(service: ServiceCall) -> None:
-        """Handle reset accessory HomeKit service call."""
-        for homekit in _async_all_homekit_instances(hass):
-            if homekit.status != STATUS_RUNNING:
-                _LOGGER.warning(
-                    "HomeKit is not running. Either it is waiting to be "
-                    "started or has been stopped"
-                )
-                continue
-
-            entity_ids = cast(list[str], service.data.get("entity_id"))
-            await homekit.async_reset_accessories(entity_ids)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_HOMEKIT_RESET_ACCESSORY,
-        async_handle_homekit_reset_accessory,
-        schema=RESET_ACCESSORY_SERVICE_SCHEMA,
-    )
-
-    async def async_handle_homekit_unpair(service: ServiceCall) -> None:
-        """Handle unpair HomeKit service call."""
-        referenced = async_extract_referenced_entity_ids(hass, service)
-        dev_reg = dr.async_get(hass)
-        for device_id in referenced.referenced_devices:
-            if not (dev_reg_ent := dev_reg.async_get(device_id)):
-                raise HomeAssistantError(f"No device found for device id: {device_id}")
-            macs = [
-                cval
-                for ctype, cval in dev_reg_ent.connections
-                if ctype == dr.CONNECTION_NETWORK_MAC
-            ]
-            matching_instances = [
-                homekit
-                for homekit in _async_all_homekit_instances(hass)
-                if homekit.driver and dr.format_mac(homekit.driver.state.mac) in macs
-            ]
-            if not matching_instances:
-                raise HomeAssistantError(
-                    f"No homekit accessory found for device id: {device_id}"
-                )
-            for homekit in matching_instances:
-                homekit.async_unpair()
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_HOMEKIT_UNPAIR,
-        async_handle_homekit_unpair,
-        schema=UNPAIR_SERVICE_SCHEMA,
-    )
-
-    async def _handle_homekit_reload(service: ServiceCall) -> None:
-        """Handle start HomeKit service call."""
-        config = await async_integration_yaml_config(hass, DOMAIN)
-
-        if not config or DOMAIN not in config:
-            return
-
-        current_entries = hass.config_entries.async_entries(DOMAIN)
-        entries_by_name, entries_by_port = _async_get_imported_entries_indices(
-            current_entries
+        self.hass.services.async_register(
+            DOMAIN,
+            SERVICE_HOMEKIT_RESET_ACCESSORY,
+            self.async_handle_homekit_reset_accessory,
+            schema=RESET_ACCESSORY_SERVICE_SCHEMA,
         )
 
-        for conf in config[DOMAIN]:
-            _async_update_config_entry_from_yaml(
-                hass, entries_by_name, entries_by_port, conf
+        self.hass.services.async_register(
+            DOMAIN,
+            SERVICE_HOMEKIT_UNPAIR,
+            self.async_handle_homekit_unpair,
+            schema=UNPAIR_SERVICE_SCHEMA,
+        )
+
+        async_register_admin_service(
+            self.hass,
+            DOMAIN,
+            SERVICE_RELOAD,
+            self._handle_homekit_reload,
+        )
+
+    async def async_handle_homekit_reset_accessory(self, service: ServiceCall) -> None:
+            """Handle reset accessory HomeKit service call."""
+            for homekit in _async_all_homekit_instances(self.hass):
+                if homekit.status != STATUS_RUNNING:
+                    _LOGGER.warning(
+                        "HomeKit is not running. Either it is waiting to be "
+                        "started or has been stopped"
+                    )
+                    continue
+
+                entity_ids = cast(list[str], service.data.get("entity_id"))
+                await homekit.async_reset_accessories(entity_ids)
+
+    async def async_handle_homekit_unpair(self, service: ServiceCall) -> None:
+            """Handle unpair HomeKit service call."""
+            referenced = async_extract_referenced_entity_ids(self.hass, service)
+            dev_reg = dr.async_get(self.hass)
+            for device_id in referenced.referenced_devices:
+                if not (dev_reg_ent := dev_reg.async_get(device_id)):
+                    raise HomeAssistantError(f"No device found for device id: {device_id}")
+                macs = [
+                    cval
+                    for ctype, cval in dev_reg_ent.connections
+                    if ctype == dr.CONNECTION_NETWORK_MAC
+                ]
+                matching_instances = [
+                    homekit
+                    for homekit in _async_all_homekit_instances(self.hass)
+                    if homekit.driver and dr.format_mac(homekit.driver.state.mac) in macs
+                ]
+                if not matching_instances:
+                    raise HomeAssistantError(
+                        f"No homekit accessory found for device id: {device_id}"
+                    )
+                for homekit in matching_instances:
+                    homekit.async_unpair()
+    
+    async def _handle_homekit_reload(self, service: ServiceCall) -> None:
+            """Handle start HomeKit service call."""
+            config = await async_integration_yaml_config(self.hass, DOMAIN)
+
+            if not config or DOMAIN not in config:
+                return
+
+            current_entries = self.hass.config_entries.async_entries(DOMAIN)
+            entries_by_name, entries_by_port = _async_get_imported_entries_indices(
+                current_entries
             )
 
-        reload_tasks = [
-            hass.config_entries.async_reload(entry.entry_id)
-            for entry in current_entries
-        ]
+            for conf in config[DOMAIN]:
+                _async_update_config_entry_from_yaml(
+                    self.hass, entries_by_name, entries_by_port, conf
+                )
 
-        await asyncio.gather(*reload_tasks)
+            reload_tasks = [
+                self.hass.config_entries.async_reload(entry.entry_id)
+                for entry in current_entries
+            ]
 
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        _handle_homekit_reload,
-    )
+            await asyncio.gather(*reload_tasks)
 
 
 class HomeKit:
