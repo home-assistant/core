@@ -30,13 +30,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
 
-    # Migrate server type if required.
-    if CONF_TYPE not in entry.data:
-        await _async_migrate_config_entry_data_key_type(hass, entry)
-
     # Check and create API instance.
     try:
-        api = MinecraftServer(entry.data[CONF_TYPE], entry.data[CONF_ADDRESS])
+        api = MinecraftServer(
+            entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION),
+            entry.data[CONF_ADDRESS],
+        )
     except MinecraftServerAddressError as error:
         raise ConfigEntryError(
             f"Address in configuration entry is invalid (error: {error}), please remove this device and add it again"
@@ -210,19 +209,3 @@ def _migrate_entity_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
     )
 
     return {"new_unique_id": new_unique_id}
-
-
-async def _async_migrate_config_entry_data_key_type(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> None:
-    """Add key 'TYPE' to config entry data."""
-
-    # Existing server(s) without the key 'TYPE' can only be of type Java Edition.
-    _LOGGER.debug(
-        "Migrating config entry, adding server type '%s'",
-        MinecraftServerType.JAVA_EDITION,
-    )
-
-    new_data = entry.data.copy()
-    new_data[CONF_TYPE] = MinecraftServerType.JAVA_EDITION
-    hass.config_entries.async_update_entry(entry, data=new_data)

@@ -5,6 +5,7 @@ from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .api import MinecraftServerType
 from .const import DOMAIN
 from .coordinator import MinecraftServerCoordinator
 
@@ -27,7 +28,7 @@ class MinecraftServerEntity(CoordinatorEntity[MinecraftServerCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer=MANUFACTURER,
-            model=f"Minecraft Server ({config_entry.data[CONF_TYPE]})",
+            model=f"Minecraft Server ({config_entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION)})",
             name=coordinator.name,
             sw_version=f"{coordinator.data.version} ({coordinator.data.protocol_version})",
         )

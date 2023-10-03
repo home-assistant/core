@@ -141,11 +141,12 @@ async def test_entry_migration(hass: HomeAssistant) -> None:
     # Test migrated config entry.
     config_entry = hass.config_entries.async_get_entry(config_entry_id)
     assert config_entry.unique_id is None
-    assert config_entry.data == {
-        CONF_NAME: DEFAULT_NAME,
-        CONF_ADDRESS: TEST_ADDRESS,
-        CONF_TYPE: MinecraftServerType.JAVA_EDITION,
-    }
+    assert config_entry.data[CONF_NAME] == DEFAULT_NAME
+    assert config_entry.data[CONF_ADDRESS] == TEST_ADDRESS
+
+    if CONF_TYPE in config_entry.data:
+        assert config_entry.data[CONF_TYPE] == MinecraftServerType.JAVA_EDITION
+
     assert config_entry.version == 3
 
     # Test migrated device entry.
@@ -194,11 +195,12 @@ async def test_entry_migration_host_only(hass: HomeAssistant) -> None:
     # Test migrated config entry.
     config_entry = hass.config_entries.async_get_entry(config_entry_id)
     assert config_entry.unique_id is None
-    assert config_entry.data == {
-        CONF_NAME: DEFAULT_NAME,
-        CONF_ADDRESS: TEST_HOST,
-        CONF_TYPE: MinecraftServerType.JAVA_EDITION,
-    }
+    assert config_entry.data[CONF_NAME] == DEFAULT_NAME
+    assert config_entry.data[CONF_ADDRESS] == TEST_HOST
+
+    if CONF_TYPE in config_entry.data:
+        assert config_entry.data[CONF_TYPE] == MinecraftServerType.JAVA_EDITION
+
     assert config_entry.version == 3
 
 
