@@ -91,8 +91,7 @@ def unknown(aioclient_mock: AiohttpClientMocker) -> None:
     )
 
 
-@pytest.fixture(name="connection")
-def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
+def mock_responses(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock Lidarr connection."""
     aioclient_mock.get(
         f"{URL}/initialize.js",
@@ -114,9 +113,48 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
         text=load_fixture("lidarr/wanted-missing.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
+
+
+@pytest.fixture(name="connection")
+def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
+    """Mock Lidarr connection."""
+    mock_responses(aioclient_mock)
+    aioclient_mock.get(
+        f"{API_URL}/rootfolder",
+        text=load_fixture("lidarr/single-rootfolder-linux.json"),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+
+@pytest.fixture
+def linux_connection(aioclient_mock: AiohttpClientMocker) -> None:
+    """Mock Lidarr connection with multiple Linux root folders."""
+    mock_responses(aioclient_mock)
     aioclient_mock.get(
         f"{API_URL}/rootfolder",
         text=load_fixture("lidarr/rootfolder-linux.json"),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+
+@pytest.fixture
+def windows_connection(aioclient_mock: AiohttpClientMocker) -> None:
+    """Mock Lidarr connection with multiple Windows root folders."""
+    mock_responses(aioclient_mock)
+    aioclient_mock.get(
+        f"{API_URL}/rootfolder",
+        text=load_fixture("lidarr/rootfolder-windows.json"),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+
+@pytest.fixture
+def single_windows_connection(aioclient_mock: AiohttpClientMocker) -> None:
+    """Mock Lidarr connection with one Windows root folder."""
+    mock_responses(aioclient_mock)
+    aioclient_mock.get(
+        f"{API_URL}/rootfolder",
+        text=load_fixture("lidarr/single-rootfolder-windows.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 

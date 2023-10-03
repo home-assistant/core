@@ -10,6 +10,7 @@ from typing import Any, Generic
 from aiopyarr import LidarrQueue, LidarrQueueItem, LidarrRootFolder
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -18,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LidarrEntity
@@ -29,7 +31,10 @@ def get_space(data: list[LidarrRootFolder], name: str) -> str:
     """Get space."""
     space: list[float] = []
     for mount in data:
-        if name in mount.path:
+        path = os.path.basename(
+            os.path.normpath(mount.path.replace("\\", os.sep))
+        ).lower()
+        if name in path:
             mount.freeSpace = mount.freeSpace if mount.accessible else 0
             space.append(
                 mount.freeSpace / 1024 ** BYTE_SIZES.index(UnitOfInformation.GIGABYTES)
@@ -42,8 +47,8 @@ def get_modified_description(
 ) -> tuple[LidarrSensorEntityDescription[T], str]:
     """Return modified description and folder name."""
     desc = deepcopy(description)
-    name = os.path.basename(os.path.normpath(mount.path)).lower()
-    desc.key = f"{description.key}_{name}"
+    name = os.path.basename(os.path.normpath(mount.path.replace("\\", os.sep))).lower()
+    desc.key = f"{description.key}_{name}".replace(" ", "_")
     desc.name = f"{description.name} {name}".capitalize()
     return desc, name
 
@@ -109,20 +114,26 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lidarr sensors based on a config entry."""
+    reg = er.async_get(hass)
+    e_entries = er.async_entries_for_config_entry(reg, entry.entry_id)
     coordinators: dict[str, LidarrDataUpdateCoordinator[Any]] = hass.data[DOMAIN][
         entry.entry_id
     ]
     entities: list[LidarrSensor[Any]] = []
-    for coordinator_type, description in SENSOR_TYPES.items():
-        coordinator = coordinators[coordinator_type]
-        if coordinator_type != "disk_space":
+    for coord_type, description in SENSOR_TYPES.items():
+        coordinator = coordinators[coord_type]
+        if coord_type != "disk_space":
             entities.append(LidarrSensor(coordinator, description))
-        else:
-            entities.extend(
-                LidarrSensor(coordinator, *get_modified_description(description, mount))
-                for mount in coordinator.data
-                if description.description_fn
-            )
+            continue
+        for mount in coordinator.data:
+            desc, name = get_modified_description(description, mount)
+            if description.description_fn:
+                entities.append(LidarrSensor(coordinator, desc, name))
+            for entity in (e for e in e_entries if "disk_space" in e.entity_id):
+                match_id = f"{SENSOR_DOMAIN}.{entry.title.lower()}_{coord_type}"
+                if match_id.replace(" ", "_") in entity.entity_id:
+                    new_uid = f"{entry.entry_id}_{desc.key}"
+                    reg.async_update_entity(entity.entity_id, new_unique_id=new_uid)
     async_add_entities(entities)
 
 

@@ -1,7 +1,7 @@
 [
   {
     "name": "/music/",
-    "path": "/music/",
+    "path": "C:\\music\\",
     "defaultMetadataProfileId": 1,
     "defaultQualityProfileId": 1,
     "defaultMonitorOption": "all",
@@ -14,7 +14,7 @@
   },
   {
     "name": "/music2/",
-    "path": "/new music",
+    "path": "D:\\new music",
     "defaultMetadataProfileId": 1,
     "defaultQualityProfileId": 1,
     "defaultMonitorOption": "all",
