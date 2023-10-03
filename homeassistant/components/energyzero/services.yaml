@@ -8,7 +8,7 @@ get_prices:
           options:
             - "gas"
             - "energy"
-    incl_btw:
+    incl_vat:
       required: false
       example: false
       selector:

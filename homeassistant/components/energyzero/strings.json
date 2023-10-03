@@ -49,7 +49,7 @@
           "name": "Type",
           "description": "Type of prices to get, energy or gas."
         },
-        "incl_btw": {
+        "incl_vat": {
           "name": "Including VAT",
           "description": "Include VAT in the prices. Defaults to true if omitted."
         },

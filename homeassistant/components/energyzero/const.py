@@ -15,7 +15,7 @@ THRESHOLD_HOUR: Final = 14
 ATTR_TYPE: Final = "type"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
-ATTR_INCL_BTW: Final = "incl_btw"
+ATTR_INCL_VAT: Final = "incl_vat"
 
 SERVICE_TYPE_DEVICE_NAMES = {
     "today_energy": "Energy market price",
@@ -28,6 +28,6 @@ SERVICE_SCHEMA: Final = vol.Schema(
         vol.Required(ATTR_TYPE): vol.In(SERVICE_PRICE_TYPES),
         vol.Optional(ATTR_START): str,
         vol.Optional(ATTR_END): str,
-        vol.Optional(ATTR_INCL_BTW, default=True): bool,
+        vol.Optional(ATTR_INCL_VAT, default=True): bool,
     }
 )

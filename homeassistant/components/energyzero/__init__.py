@@ -19,7 +19,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_END,
-    ATTR_INCL_BTW,
+    ATTR_INCL_VAT,
     ATTR_START,
     ATTR_TYPE,
     DOMAIN,
@@ -53,7 +53,7 @@ async def _get_prices(hass: HomeAssistant, call: ServiceCall) -> ServiceResponse
 
     energyzero = EnergyZero(
         session=async_get_clientsession(hass),
-        incl_btw=str(call.data[ATTR_INCL_BTW]).lower(),
+        incl_btw=str(call.data[ATTR_INCL_VAT]).lower(),
     )
 
     start = _get_date(call.data.get(ATTR_START))
