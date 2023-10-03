@@ -139,6 +139,7 @@ async def async_migrate_unique_id(
     old_unique_id = config_entry.unique_id
     new_unique_id = api.device.mac
     new_mac = dr.format_mac(new_unique_id)
+    new_name = api.name
 
     @callback
     def _update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
@@ -185,6 +186,16 @@ async def async_migrate_unique_id(
                     device_entry.id,
                     merge_connections=new_connections,
                 )
+
+        if device_entry.name is None:
+            _LOGGER.debug(
+                "Migrating device name to %s",
+                new_name,
+            )
+            dev_reg.async_update_device(
+                device_entry.id,
+                name=new_name,
+            )
 
         # Migrate entities
         await er.async_migrate_entries(hass, config_entry.entry_id, _update_unique_id)
