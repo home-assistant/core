@@ -7,8 +7,8 @@
         "description": "Please enter the Main Repeater login information",
         "data": {
           "host": "Main Repeater IP Address",
-          "username": "Username",
-          "password": "Password"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
