@@ -386,7 +386,7 @@ class KNXLight(KnxEntity, LightEntity):
                 if not _rgb or not any(_rgb):
                     _rgb = (255, 255, 255)
                 await set_color(_rgb, None, brightness)
-                return
+
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
