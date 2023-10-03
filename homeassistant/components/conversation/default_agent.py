@@ -194,7 +194,7 @@ class DefaultAgent(AbstractConversationAgent):
         ):
             intent_context = {"satellite": device.id}
             if device.area_id:
-                intent_context["area"] = device.area_id
+                intent_context["satellite_area"] = device.area_id
 
         slot_lists = self._make_slot_lists()
         result = await self.hass.async_add_executor_job(

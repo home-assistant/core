@@ -1030,7 +1030,6 @@ async def test_webhook_handle_conversation_process(
     create_registrations,
     webhook_client,
     mock_agent,
-    mock_device,
 ) -> None:
     """Test that we can converse."""
     webhook_client.server.app.router._frozen = False
@@ -1038,24 +1037,21 @@ async def test_webhook_handle_conversation_process(
     with patch(
         "homeassistant.components.conversation.AgentManager.async_get_agent",
         return_value=mock_agent,
-    ), patch.object(
-        mock_agent, "async_process", wraps=mock_agent.async_process
-    ) as mock_process:
+    ):
         resp = await webhook_client.post(
             "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
             json={
                 "type": "conversation_process",
                 "data": {
                     "text": "Turn the kitchen light off",
-                    "device_id": mock_device.id,
                 },
             },
         )
 
         conversation_input: conversation.agent.ConversationInput = None
-        (conversation_input,) = mock_process.call_args.args
-        assert mock_process.called
-        assert conversation_input.device_id == mock_device.id
+        assert mock_agent.calls
+        conversation_input = mock_agent.calls[0]
+        assert conversation_input.device_id == REGISTER_CLEARTEXT["device_id"]
 
     assert resp.status == HTTPStatus.OK
     json = await resp.json()
