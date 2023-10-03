@@ -27,7 +27,7 @@ UPDATE_INTERVAL = timedelta(minutes=1)
 _LOGGER = logging.getLogger(__name__)
 
 
-class GpsdCoordinator(DataUpdateCoordinator):
+class GpsdCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Custom coordinator for the GPSD integration."""
 
     def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
@@ -43,11 +43,11 @@ class GpsdCoordinator(DataUpdateCoordinator):
         self._agps_thread.stream_data(host=host, port=port)
         self._agps_thread.run_thread()
 
-    def _get_value(self, value: str) -> Any:
+    def _get_value(self, value: str | None = None) -> Any:
         """Replace the GPSD response 'n/a' value with None."""
         return None if (value is None or value == "n/a") else value
 
-    def _sync_update(self) -> dict[Any, dict[str, Any]]:
+    def _sync_update(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from GPSD."""
         return {
             ATTR_LATITUDE: self._get_value(self._agps_thread.data_stream.lat),
