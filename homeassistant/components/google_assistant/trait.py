@@ -40,6 +40,7 @@ from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.lock import STATE_JAMMED, STATE_UNLOCKING
 from homeassistant.components.media_player import MediaPlayerEntityFeature, MediaType
 from homeassistant.components.vacuum import VacuumEntityFeature
+
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_BATTERY_LEVEL,
@@ -125,6 +126,7 @@ TRAIT_ARMDISARM = f"{PREFIX_TRAITS}ArmDisarm"
 TRAIT_HUMIDITY_SETTING = f"{PREFIX_TRAITS}HumiditySetting"
 TRAIT_TRANSPORT_CONTROL = f"{PREFIX_TRAITS}TransportControl"
 TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
+
 TRAIT_CHANNEL = f"{PREFIX_TRAITS}Channel"
 TRAIT_LOCATOR = f"{PREFIX_TRAITS}Locator"
 TRAIT_ENERGYSTORAGE = f"{PREFIX_TRAITS}EnergyStorage"
@@ -156,6 +158,7 @@ COMMAND_PREVIOUS_INPUT = f"{PREFIX_COMMANDS}PreviousInput"
 COMMAND_OPENCLOSE = f"{PREFIX_COMMANDS}OpenClose"
 COMMAND_OPENCLOSE_RELATIVE = f"{PREFIX_COMMANDS}OpenCloseRelative"
 COMMAND_SET_VOLUME = f"{PREFIX_COMMANDS}setVolume"
+
 COMMAND_VOLUME_RELATIVE = f"{PREFIX_COMMANDS}volumeRelative"
 COMMAND_MUTE = f"{PREFIX_COMMANDS}mute"
 COMMAND_ARMDISARM = f"{PREFIX_COMMANDS}ArmDisarm"
@@ -474,7 +477,18 @@ class ColorSettingTrait(_Trait):
         )
 
     def sync_attributes(self):
-        """Return color temperature attributes for a sync request."""
+        """Return color temperature attributes for a sync request.
+
+        This function retrieves the color temperature attributes from the state of the
+        light and checks the supported color modes. It builds a response object
+        based on the supported features. If color is supported, it adds the
+        'colorModel' key to the response object. If color temperature is
+        supported, it adds the 'colorTemperatureRange' key to the response object
+        with the maximum and minimum temperature values in Kelvin.
+
+        Returns:
+            dict: A dictionary containing the color temperature attributes for the sync request.
+        """
         attrs = self.state.attributes
         color_modes = attrs.get(light.ATTR_SUPPORTED_COLOR_MODES)
         response = {}
@@ -497,7 +511,11 @@ class ColorSettingTrait(_Trait):
         return response
 
     def query_attributes(self):
-        """Return color temperature query attributes."""
+        """Return color temperature query attributes.
+
+        Returns:
+            dict: A dictionary containing color temperature query attributes.
+        """
         color_mode = self.state.attributes.get(light.ATTR_COLOR_MODE)
 
         color = {}
@@ -1274,7 +1292,19 @@ class HumiditySettingTrait(_Trait):
         return response
 
     def query_attributes(self):
-        """Return humidity query attributes."""
+        """Return humidity query attributes.
+
+        This method returns a dictionary containing the humidity query attributes. It
+        first initializes an empty dictionary called response. It then retrieves
+        the attributes and domain from the state object. If the domain is 'sensor'
+        and the device class is 'humidity', it adds the current humidity value to
+        the response dictionary. If the domain is 'humidifier', it adds the target
+        humidity and current humidity values to the response dictionary. Finally,
+        the method returns the response dictionary.
+
+        Returns:
+            dict: A dictionary containing the humidity query attributes.
+        """
         response = {}
         attrs = self.state.attributes
         domain = self.state.domain
@@ -1775,7 +1805,18 @@ class ModesTrait(_Trait):
         return response
 
     async def execute(self, command, data, params, challenge):
-        """Execute a SetModes command."""
+        """
+        Execute a SetModes command.
+
+        This function is responsible for executing a SetModes command. It checks the
+        state's domain and performs the appropriate action based on the domain value.
+
+        Args:
+            command: The SetModes command.
+            data: The data associated with the command.
+            params: Parameters for the command.
+            challenge: A challenge value.
+        """
         settings = params.get("updateModeSettings")
 
         if self.state.domain == fan.DOMAIN:
@@ -1909,7 +1950,26 @@ class InputSelectorTrait(_Trait):
         return {"currentInput": attrs.get(media_player.ATTR_INPUT_SOURCE, "")}
 
     async def execute(self, command, data, params, challenge):
-        """Execute an SetInputSource command."""
+        """
+        Execute an SetInputSource command.
+
+        This asynchronous function is used to execute a 'SetInputSource' command for a
+        media player. It takes in four parameters:
+        - command: The type of command to be executed.
+        - data: Additional data associated with the command.
+        - params: Parameters for the command.
+        - challenge: A challenge for the command.
+
+        The function retrieves the list of input sources and the currently selected
+        input source from the state attributes of the media player.
+        Depending on the value of 'command', it determines the requested input source,
+        either from the 'newInput' parameter, the next available input source, or
+        the previous available input source.
+        If the requested input source is not in the list of sources, a 'SmartHomeError'
+        is raised.
+        Finally, the function calls the 'async_call' method to select the requested
+        input source on the media player.
+        """
         sources = self.state.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
         source = self.state.attributes.get(media_player.ATTR_INPUT_SOURCE)
 
@@ -1974,7 +2034,17 @@ class OpenCloseTrait(_Trait):
         return domain == cover.DOMAIN and device_class in OpenCloseTrait.COVER_2FA
 
     def sync_attributes(self):
-        """Return opening direction."""
+        """Return opening direction.
+
+        This method returns a dictionary containing information about the opening
+        direction of a device.
+
+        Returns:
+            response (dict): A dictionary containing the following keys:
+                - 'queryOnlyOpenClose' (bool): True if only querying open/close is supported.
+                - 'discreteOnlyOpenClose' (bool): True if only discrete open/close is supported.
+                - 'commandOnlyOpenClose' (bool): True if only commanding open/close is supported.
+        """
         response = {}
         features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
@@ -2161,6 +2231,20 @@ class VolumeTrait(_Trait):
         await self._set_volume_absolute(data, level / 100)
 
     async def _execute_volume_relative(self, data, params):
+        """
+        Execute volume adjustment relative to the current volume level.
+
+        This method performs volume-related operations based on the 'params'
+        provided. If the 'features' of the media player entity support volume
+        setting, it retrieves the current volume level, calculates the target
+        volume based on the relative step value provided in 'params', and calls
+        the '_set_volume_absolute' method to set the volume. If the features
+        support volume stepping, it determines the appropriate volume service to
+        use based on the sign of the relative step value and the performs volume
+        steps by calling the volume service in a loop. If neither volume setting
+        nor volume stepping is supported, it raises a 'SmartHomeError' with a
+        message indicating that the command is not supported.
+        """
         relative = params["relativeSteps"]
         features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
@@ -2188,6 +2272,7 @@ class VolumeTrait(_Trait):
             raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
 
     async def _execute_mute(self, data, params):
+        """Mute or unmute the volume of a media player."""
         mute = params["mute"]
 
         if not (
@@ -2305,7 +2390,20 @@ class TransportControlTrait(_Trait):
         return {}
 
     async def execute(self, command, data, params, challenge):
-        """Execute a media command."""
+        """
+        Execute a media command.
+
+        This function is used to execute media commands based on the provided 'command'
+        value. It interacts with the Home Assistant service using the
+        'media_player' module to perform actions such as seeking, playing,
+        pausing, changing tracks, shuffling, and stopping.
+
+        Parameters:
+            command (str): The media command to be executed.
+            data: Additional data associated with the command.
+            params: Additional parameters associated with the command.
+            challenge: The challenge for executing the command.
+        """
         service_attrs = {ATTR_ENTITY_ID: self.state.entity_id}
 
         if command == COMMAND_MEDIA_SEEK_RELATIVE:
@@ -2490,6 +2588,14 @@ class SensorStateTrait(_Trait):
     commands: list[str] = []
 
     def _air_quality_description_for_aqi(self, aqi):
+        """Generate an air quality description based on AQI value.
+
+        Parameters:
+            aqi (str): The AQI value.
+
+        Returns:
+            str: The air quality description.
+        """
         if aqi is None or aqi.isnumeric() is False:
             return "unknown"
         aqi = int(aqi)
@@ -2508,7 +2614,16 @@ class SensorStateTrait(_Trait):
 
     @classmethod
     def supported(cls, domain, features, device_class, _):
-        """Test if state is supported."""
+        """Test if state is supported.
+
+        Parameters:
+            domain (str): The sensor domain.
+            features: The sensor features.
+            device_class: The sensor device class.
+
+        Returns:
+            bool: True if state is supported, False otherwise.
+        """
         return domain == sensor.DOMAIN and device_class in cls.sensor_types
 
     def sync_attributes(self):

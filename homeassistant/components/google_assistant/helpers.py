@@ -53,6 +53,7 @@ from .error import SmartHomeError
 SYNC_DELAY = 15
 _LOGGER = logging.getLogger(__name__)
 LOCAL_SDK_VERSION_HEADER = "HA-Cloud-Version"
+
 LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 
 
@@ -60,7 +61,21 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
 ) -> tuple[er.RegistryEntry | None, dr.DeviceEntry | None, ar.AreaEntry | None,]:
-    """Get registry entries."""
+    """Get registry entries.
+
+    This function retrieves registry entries for a given entity ID. It takes in a
+    HomeAssistant instance and an entity ID as parameters.
+
+    Parameters:
+        hass (HomeAssistant): The HomeAssistant instance.
+        entity_id (str): The entity ID.
+
+    Returns:
+        tuple[er.RegistryEntry | None, dr.DeviceEntry | None, ar.AreaEntry |
+        None]: A tuple containing three registry entries: `er.RegistryEntry`
+        (or `None`),
+        `dr.DeviceEntry` (or `None`), and `ar.AreaEntry` (or `None`).
+    """
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
     area_reg = ar.async_get(hass)
@@ -470,12 +485,19 @@ class GoogleConfigStore:
 
     @property
     def agent_user_ids(self):
-        """Return a list of connected agent user_ids."""
+        """
+        Return a list of connected agent user_ids.
+        """
         return self._data[STORE_AGENT_USER_IDS]
 
     @callback
     def add_agent_user_id(self, agent_user_id):
-        """Add an agent user id to store."""
+        """
+        Add an agent user id to store.
+
+        Parameters:
+            agent_user_id: The agent user id to be added.
+        """
         if agent_user_id not in self._data[STORE_AGENT_USER_IDS]:
             self._data[STORE_AGENT_USER_IDS][agent_user_id] = {
                 STORE_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
@@ -484,7 +506,12 @@ class GoogleConfigStore:
 
     @callback
     def pop_agent_user_id(self, agent_user_id):
-        """Remove agent user id from store."""
+        """
+        Remove agent user id from store.
+
+        Parameters:
+            agent_user_id: The agent user id to be removed.
+        """
         if agent_user_id in self._data[STORE_AGENT_USER_IDS]:
             self._data[STORE_AGENT_USER_IDS].pop(agent_user_id, None)
             self._store.async_delay_save(lambda: self._data, 1.0)
@@ -811,7 +838,15 @@ def async_get_google_entity_if_supported(
 def async_get_entities(
     hass: HomeAssistant, config: AbstractConfig
 ) -> list[GoogleEntity]:
-    """Return all entities that are supported by Google."""
+    """Return all entities that are supported by Google.
+
+    Parameters:
+        hass (HomeAssistant): The Home Assistant instance.
+        config (AbstractConfig): The configuration.
+
+    Returns:
+        list[GoogleEntity]: The list of entities supported by Google.
+    """
     entities: list[GoogleEntity] = []
     is_supported_cache = config.is_supported_cache
     for state in hass.states.async_all():

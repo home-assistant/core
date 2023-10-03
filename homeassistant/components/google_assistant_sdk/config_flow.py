@@ -22,7 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
-    """Config flow to handle Google Assistant SDK OAuth2 authentication."""
+    """
+    Config flow to handle Google Assistant SDK OAuth2 authentication.
+    """
 
     DOMAIN = DOMAIN
 
@@ -30,12 +32,16 @@ class OAuth2FlowHandler(
 
     @property
     def logger(self) -> logging.Logger:
-        """Return logger."""
+        """
+        Return logger.
+        """
         return logging.getLogger(__name__)
 
     @property
     def extra_authorize_data(self) -> dict[str, Any]:
-        """Extra data that needs to be appended to the authorize url."""
+        """
+        Extra data that needs to be appended to the authorize url.
+        """
         return {
             "scope": "https://www.googleapis.com/auth/assistant-sdk-prototype",
             # Add params to ensure we get back a refresh token
@@ -44,7 +50,9 @@ class OAuth2FlowHandler(
         }
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
-        """Perform reauth upon an API authentication error."""
+        """
+        Perform reauth upon an API authentication error.
+        """
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
@@ -53,7 +61,9 @@ class OAuth2FlowHandler(
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Confirm reauth dialog."""
+        """
+        Confirm reauth dialog.
+        """
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()

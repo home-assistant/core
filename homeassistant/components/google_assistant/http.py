@@ -60,6 +60,21 @@ def _get_homegraph_jwt(time, iss, key):
 async def _get_homegraph_token(
     hass: HomeAssistant, jwt_signed: str
 ) -> dict[str, Any] | list[Any] | Any:
+    """
+    Get the HomeGraph token.
+
+    This function sends a POST request to the HOMEGRAPH_TOKEN_URL with the given
+    headers and data. It raises an exception if the response status is not
+    successful and returns the JSON response as a dictionary, list, or any
+    other type.
+
+    Parameters:
+        hass (HomeAssistant): An instance of HomeAssistant.
+        jwt_signed (str): A JWT signed string.
+
+    Returns:
+        dict[str, Any] | list[Any] | Any: The JSON response.
+    """
     headers = {
         "Authorization": f"Bearer {jwt_signed}",
         "Content-Type": "application/x-www-form-urlencoded",
@@ -159,6 +174,19 @@ class GoogleConfig(AbstractConfig):
         return True
 
     async def _async_request_sync_devices(self, agent_user_id: str) -> HTTPStatus:
+        """
+        Asynchronously request to sync devices by making a call to the homegraph API.
+
+        This function is used to request device synchronization by calling the
+        homegraph API. It takes the agent user ID as a parameter and returns the
+        HTTPStatus of the request.
+
+        Parameters:
+            agent_user_id (str): The agent user ID making the request.
+
+        Returns:
+            HTTPStatus: The HTTPStatus of the request.
+        """
         if CONF_SERVICE_ACCOUNT in self._config:
             return await self.async_call_homegraph_api(
                 REQUEST_SYNC_BASE_URL, {"agentUserId": agent_user_id}
@@ -168,6 +196,16 @@ class GoogleConfig(AbstractConfig):
         return HTTPStatus.INTERNAL_SERVER_ERROR
 
     async def _async_update_token(self, force=False):
+        """
+        Asynchronously update the access token for the homegraph API.
+
+        This function is used to update the access token for the homegraph API. If
+        force is True or the current access token is expired, a new token is obtained.
+
+        Parameters:
+            force (bool, optional): Whether to force token update even if the
+                current token is not expired. Defaults to False.
+        """
         if CONF_SERVICE_ACCOUNT not in self._config:
             _LOGGER.error("Trying to get homegraph api token without service account")
             return
@@ -223,7 +261,25 @@ class GoogleConfig(AbstractConfig):
     async def async_report_state(
         self, message: dict[str, Any], agent_user_id: str, event_id: str | None = None
     ) -> HTTPStatus:
-        """Send a state report to Google."""
+        """
+        Send a state report to Google.
+
+        This asynchronous function sends a state report to Google using the provided
+        message, agent user ID, and optional event ID. It constructs a data
+        dictionary containing the 'requestId', 'agentUserId', and 'payload'
+        fields. If the 'event_id' parameter is not None, it adds the 'eventId'
+        field to the data dictionary. The function then calls the
+        'async_call_homegraph_api' method with the 'REPORT_STATE_BASE_URL' and the
+        constructed data dictionary, and returns the result.
+
+        Parameters:
+            message (dict[str, Any]): A dictionary representing the state report message.
+            agent_user_id (str): A string representing the agent user ID.
+            event_id (str | None, optional): An optional string representing the event ID.
+
+        Returns:
+            HTTPStatus: The result of calling the 'async_call_homegraph_api' method.
+        """
         data = {
             "requestId": uuid4().hex,
             "agentUserId": agent_user_id,
