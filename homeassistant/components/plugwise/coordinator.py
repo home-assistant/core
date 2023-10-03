@@ -14,11 +14,42 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_USERNAME, DOMAIN, LOGGER
+
+
+def _async_cleanup_registry_entries(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    entry_id: str,
+    current_unique_ids: set[tuple[str, str]],
+) -> None:
+    """Remove extra entities that are no longer part of the integration."""
+    entity_registry = er.async_get(hass)
+
+    existing_entries = er.async_entries_for_config_entry(entity_registry, entry_id)
+    entities = {
+        (entity.domain, entity.unique_id): entity.entity_id
+        for entity in existing_entries
+    }
+
+    extra_entities = set(entities.keys()).difference(current_unique_ids)
+    if not extra_entities:
+        return
+
+    for entity in extra_entities:
+        if entity_registry.async_is_registered(entities[entity]):
+            entity_registry.async_remove(entities[entity])
+
+    LOGGER.debug(
+        ("Clean-up of Plugwise entities: %s entities removed for config entry %s"),
+        len(extra_entities),
+        entry_id,
+    )
 
 
 class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
