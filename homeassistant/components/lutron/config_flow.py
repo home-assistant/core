@@ -49,7 +49,8 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "config_errors"
                 guid = "failed"
             except HTTPError as ex:
-                _LOGGER.info("Exception Type: %s", type(ex).__name__)
+                # In a future version we can get more specific with the HTTP code
+                _LOGGER.debug("Exception Type: %s", type(ex).__name__)
                 errors["base"] = "connect_error"
                 guid = "failed"
 
@@ -62,9 +63,9 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Check if a configuration entry with the same unique ID already exists
             if not errors:
                 existing_entries = self.hass.config_entries.async_entries(DOMAIN)
-                _LOGGER.info("Entry IP: %s", ip_address)
+                _LOGGER.debug("Entry IP: %s", ip_address)
                 for entry in existing_entries:
-                    _LOGGER.info("Entry Data: %s", entry.data[CONF_HOST])
+                    _LOGGER.debug("Entry Data: %s", entry.data[CONF_HOST])
                     if entry.data[CONF_HOST] == ip_address:
                         errors["base"] = "already_configured"
                     else:
