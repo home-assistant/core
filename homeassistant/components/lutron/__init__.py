@@ -85,8 +85,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     uid = config_entry.data[CONF_USERNAME]
     pwd = config_entry.data[CONF_PASSWORD]
 
+    def _load_db() -> bool:
+        hass.data[LUTRON_CONTROLLER].load_xml_db()
+        return True
+
     hass.data[LUTRON_CONTROLLER] = Lutron(host, uid, pwd)
-    await hass.async_add_executor_job(hass.data[LUTRON_CONTROLLER].load_xml_db())
+    await hass.async_add_executor_job(_load_db)
     hass.data[LUTRON_CONTROLLER].connect()
     _LOGGER.info("Connected to main repeater at %s", host)
 

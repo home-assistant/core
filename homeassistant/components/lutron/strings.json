@@ -1,21 +1,25 @@
 {
   "config": {
-    "flow_title": "Lutron Setup",
+    "flow_title": "{name} ({host})",
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "connect_error": "Unable to connect to Main Repeater",
+      "missing_guid": "Unable to obtain configuration from Main Repeater",
+      "single_instance": "Only a single instance may be configured"
+    },
     "step": {
       "user": {
-        "title": "Lutron Setup",
-        "description": "Please enter the Main Repeater login information",
         "data": {
           "host": "Main Repeater IP Address",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
-        }
+        },
+        "description": "Please enter the Main Repeater login information",
+        "title": "Main Repeater Setup"
       }
     },
     "abort": {
-      "already_configured": "Device is already configured",
-      "config_errors": "Errors Found in Configuration",
-      "single_instance": "Only a single instance may be configured"
+      "config_errors": "Errors Found in Configuration"
     }
   }
 }
