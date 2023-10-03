@@ -23,7 +23,7 @@ _CallableT = TypeVar("_CallableT", bound=Callable)
 class IntegrationFrame:
     """Integration frame container."""
 
-    custom_component: bool
+    custom_integration: bool
     filename: str
     frame: FrameSummary
     integration: str
@@ -107,7 +107,7 @@ def _report_integration(
         return
     _REPORTED_INTEGRATIONS.add(key)
 
-    if integration_frame.custom_component:
+    if integration_frame.custom_integration:
         extra = " to the custom integration author"
     else:
         extra = ""
