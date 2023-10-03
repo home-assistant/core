@@ -89,9 +89,8 @@ class KNXNumber(KnxEntity, RestoreNumber):
             not self._device.sensor_value.readable
             and (last_state := await self.async_get_last_state())
             and (last_number_data := await self.async_get_last_number_data())
-        ):
-            if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-                self._device.sensor_value.value = last_number_data.native_value
+        ) and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            self._device.sensor_value.value = last_number_data.native_value
 
     @property
     def native_value(self) -> float:
