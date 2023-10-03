@@ -125,20 +125,41 @@ def get_accessory(  # noqa: C901
         )
         return None
 
-    a_type = None
     name = config.get(CONF_NAME, state.name)
     features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    a_type = None
 
-    if state.domain == "alarm_control_panel":
-        a_type = "SecuritySystem"
+    domain_type = {
+        "alarm_control_panel": "SecuritySystem",
+        "binary_sensor": "BinarySensor",
+        "device_tracker": "BinarySensor",
+        "person": "BinarySensor",
+        "climate": "Thermostat",
+        "fan": "Fan",
+        "humidifier": "HumidifierDehumidifier",
+        "light": "Light",
+        "lock": "Lock",
+        "vacuum": "Vacuum",
+        "automation": "Switch",
+        "button": "Switch",
+        "input_boolean": "Switch",
+        "input_button": "Switch",
+        "remote": "Switch",
+        "scene": "Switch",
+        "script": "Switch",
+        "input_select": "SelectSwitch",
+        "select": "SelectSwitch",
+        "water_heater": "WaterHeater",
+        "camera": "Camera",
+    }
 
-    elif state.domain in ("binary_sensor", "device_tracker", "person"):
-        a_type = "BinarySensor"
+    a_type = domain_type.get(state.domain)
 
-    elif state.domain == "climate":
-        a_type = "Thermostat"
+    if a_type:
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
+        return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
 
-    elif state.domain == "cover":
+    if state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
         if device_class in (
@@ -166,18 +187,6 @@ def get_accessory(  # noqa: C901
             # CoverEntityFeature.SET_POSITION, CoverEntityFeature.OPEN,
             # and CoverEntityFeature.CLOSE
             a_type = "WindowCovering"
-
-    elif state.domain == "fan":
-        a_type = "Fan"
-
-    elif state.domain == "humidifier":
-        a_type = "HumidifierDehumidifier"
-
-    elif state.domain == "light":
-        a_type = "Light"
-
-    elif state.domain == "lock":
-        a_type = "Lock"
 
     elif state.domain == "media_player":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
@@ -229,37 +238,14 @@ def get_accessory(  # noqa: C901
         switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
         a_type = SWITCH_TYPES[switch_type]
 
-    elif state.domain == "vacuum":
-        a_type = "Vacuum"
-
     elif state.domain == "remote" and features & RemoteEntityFeature.ACTIVITY:
         a_type = "ActivityRemote"
 
-    elif state.domain in (
-        "automation",
-        "button",
-        "input_boolean",
-        "input_button",
-        "remote",
-        "scene",
-        "script",
-    ):
-        a_type = "Switch"
+    if a_type:
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
+        return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
 
-    elif state.domain in ("input_select", "select"):
-        a_type = "SelectSwitch"
-
-    elif state.domain == "water_heater":
-        a_type = "WaterHeater"
-
-    elif state.domain == "camera":
-        a_type = "Camera"
-
-    if a_type is None:
-        return None
-
-    _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
-    return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
+    return None
 
 
 class HomeAccessory(Accessory):  # type: ignore[misc]
