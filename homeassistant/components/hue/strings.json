@@ -113,18 +113,10 @@
     },
     "switch": {
       "motion_sensor_enabled": {
-        "name": "Motion sensor enabled",
-        "state": {
-          "on": "[%key:common::state::enabled%]",
-          "off": "[%key:common::state::disabled%]"
-        }
+        "name": "Motion sensor enabled"
       },
       "light_sensor_enabled": {
-        "name": "Light sensor enabled",
-        "state": {
-          "on": "[%key:common::state::enabled%]",
-          "off": "[%key:common::state::disabled%]"
-        }
+        "name": "Light sensor enabled"
       }
     }
   },
