@@ -103,8 +103,6 @@ set_pollution_settings:
       selector:
         boolean:
     co2_control:
-      required: false
-      advanced: false
       default: true
       selector:
         boolean:
