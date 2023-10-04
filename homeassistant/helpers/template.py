@@ -1986,11 +1986,9 @@ def is_datetime(value):
     return isinstance(value, datetime)
 
 
-def is_non_string_iterable(value):
-    """Return whether a value is an iterable that's not a string."""
-    return isinstance(value, Iterable) and not isinstance(
-        value, (str, bytes, bytearray)
-    )
+def is_string_like(value):
+    """Return whether a value is a string or string like object."""
+    return isinstance(value, (str, bytes, bytearray))
 
 
 def regex_match(value, find="", ignorecase=False):
@@ -2438,7 +2436,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.tests["set"] = is_set
         self.tests["tuple"] = is_tuple
         self.tests["datetime"] = is_datetime
-        self.tests["non_string_iterable"] = is_non_string_iterable
+        self.tests["string_like"] = is_string_like
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
         self.tests["contains"] = contains

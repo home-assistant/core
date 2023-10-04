@@ -621,21 +621,21 @@ def test_isdatetime(hass: HomeAssistant, value, expected) -> None:
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
-        ([1, 2], True),
-        ({1, 2}, True),
-        ({"a": 1, "b": 2}, True),
-        (ReadOnlyDict({"a": 1, "b": 2}), True),
-        (MappingProxyType({"a": 1, "b": 2}), True),
-        ("abc", False),
-        (b"abc", False),
-        ((1, 2), True),
+        ([1, 2], False),
+        ({1, 2}, False),
+        ({"a": 1, "b": 2}, False),
+        (ReadOnlyDict({"a": 1, "b": 2}), False),
+        (MappingProxyType({"a": 1, "b": 2}), False),
+        ("abc", True),
+        (b"abc", True),
+        ((1, 2), False),
         (datetime(2024, 1, 1, 0, 0, 0), False),
     ],
 )
-def test_isnonstringiterable(hass: HomeAssistant, value, expected) -> None:
-    """Test is_non_string_iterable."""
+def test_stringlike(hass: HomeAssistant, value, expected) -> None:
+    """Test string_like."""
     assert (
-        template.Template("{{ value is non_string_iterable }}", hass).async_render(
+        template.Template("{{ value is string_like }}", hass).async_render(
             {"value": value}
         )
         == expected
