@@ -52,7 +52,6 @@ LOCAL_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=1000): int,
         vol.Required(CONF_PIN): str,
-        vol.Optional(CONF_COMMUNICATION_DELAY, default=0): int,
     }
 )
 HA_STATES = [
@@ -85,17 +84,26 @@ async def validate_local_input(
 
     Data has the keys from LOCAL_SCHEMA with values provided by the user.
     """
+    attempts = 0
 
-    risco = RiscoLocal(
-        data[CONF_HOST],
-        data[CONF_PORT],
-        data[CONF_PIN],
-        **{CONF_COMMUNICATION_DELAY: data[CONF_COMMUNICATION_DELAY]},
-    )
-    await risco.connect()
+    while True:
+        try:
+            risco = RiscoLocal(
+                data[CONF_HOST],
+                data[CONF_PORT],
+                data[CONF_PIN],
+                **{CONF_COMMUNICATION_DELAY: attempts},
+            )
+            await risco.connect()
+            break
+        except CannotConnectError as e:
+            if attempts >= 3:
+                raise e
+            attempts += 1
+
     site_id = risco.id
     await risco.disconnect()
-    return {"title": site_id}
+    return {"title": site_id, "attempts": str(attempts)}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -178,7 +186,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=info["title"], data={**user_input, **{CONF_TYPE: TYPE_LOCAL}}
+                    title=info["title"],
+                    data={**user_input, **{CONF_TYPE: TYPE_LOCAL}},
+                    options={**{CONF_COMMUNICATION_DELAY: int(info["attempts"])}},
                 )
 
         return self.async_show_form(
@@ -207,6 +217,10 @@ class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_CODE_DISARM_REQUIRED,
                     default=self._data[CONF_CODE_DISARM_REQUIRED],
                 ): bool,
+                vol.Required(
+                    CONF_COMMUNICATION_DELAY,
+                    default=self._data[CONF_COMMUNICATION_DELAY],
+                ): int,
             }
         )
 
