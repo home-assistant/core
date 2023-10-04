@@ -613,6 +613,43 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             self.hass, media_content_id, content_filter=content_filter
         )
 
+    async def _async_play_known_cast_app(
+        self,
+        media_type: MediaType | str,
+        media_id: str,
+        extra: Any,
+        chromecast: pychromecast.Chromecast,
+    ) -> bool:
+        try:
+            app_data = json.loads(media_id)
+            if metadata := extra.get("metadata"):
+                app_data["metadata"] = metadata
+        except json.JSONDecodeError:
+            _LOGGER.error("Invalid JSON in media_content_id")
+            raise
+
+        # Special handling for passed `app_id` parameter. This will only launch
+        # an arbitrary cast app, generally for UX.
+        if "app_id" in app_data:
+            app_id = app_data.pop("app_id")
+            _LOGGER.info("Starting Cast app by ID %s", app_id)
+            await self.hass.async_add_executor_job(chromecast.start_app, app_id)
+            if app_data:
+                _LOGGER.warning(
+                    "Extra keys %s were ignored. Please use app_name to cast media",
+                    app_data.keys(),
+                )
+            return True
+
+        app_name = app_data.pop("app_name")
+        try:
+            await self.hass.async_add_executor_job(
+                quick_play, chromecast, app_name, app_data
+            )
+        except NotImplementedError:
+            _LOGGER.error("App %s not supported", app_name)
+        return True
+
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -630,35 +667,10 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         # Handle media supported by a known cast app
         if media_type == CAST_DOMAIN:
-            try:
-                app_data = json.loads(media_id)
-                if metadata := extra.get("metadata"):
-                    app_data["metadata"] = metadata
-            except json.JSONDecodeError:
-                _LOGGER.error("Invalid JSON in media_content_id")
-                raise
-
-            # Special handling for passed `app_id` parameter. This will only launch
-            # an arbitrary cast app, generally for UX.
-            if "app_id" in app_data:
-                app_id = app_data.pop("app_id")
-                _LOGGER.info("Starting Cast app by ID %s", app_id)
-                await self.hass.async_add_executor_job(chromecast.start_app, app_id)
-                if app_data:
-                    _LOGGER.warning(
-                        "Extra keys %s were ignored. Please use app_name to cast media",
-                        app_data.keys(),
-                    )
+            if await self._async_play_known_cast_app(
+                media_type, media_id, extra, chromecast
+            ):
                 return
-
-            app_name = app_data.pop("app_name")
-            try:
-                await self.hass.async_add_executor_job(
-                    quick_play, chromecast, app_name, app_data
-                )
-            except NotImplementedError:
-                _LOGGER.error("App %s not supported", app_name)
-            return
 
         # Try the cast platforms
         for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
