@@ -357,6 +357,7 @@ class WeatherEntity(Entity, PostInit):
         )
 
         translation_placeholders = {"platform": self.platform.platform_name}
+        translation_key = "deprecated_weather_forecast_no_url"
         issue_tracker = async_get_issue_tracker(
             hass,
             integration_domain=self.platform.platform_name,
@@ -364,6 +365,7 @@ class WeatherEntity(Entity, PostInit):
         )
         if issue_tracker:
             translation_placeholders["issue_tracker"] = issue_tracker
+            translation_key="deprecated_weather_forecast_url"
         ir.async_create_issue(
             self.hass,
             DOMAIN,
@@ -373,9 +375,7 @@ class WeatherEntity(Entity, PostInit):
             is_persistent=False,
             issue_domain=self.platform.platform_name,
             severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_weather_forecast_url"
-            if issue_tracker
-            else "deprecated_weather_forecast_no_url",
+            translation_key=translation_key,
             translation_placeholders=translation_placeholders,
         )
         self.__weather_reported_legacy_forecast = True
@@ -578,7 +578,6 @@ class WeatherEntity(Entity, PostInit):
             and not self.__weather_reported_legacy_forecast
         ):
             self._report_legacy_forecast(self.hass)
-            self.__weather_reported_legacy_forecast = True
         return self._attr_forecast
 
     async def async_forecast_daily(self) -> list[Forecast] | None:
