@@ -130,19 +130,13 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         """Return the icon of the add-on if any."""
         if not self.available:
             return None
-        # The icon may not be available right away after
-        # manually enabling an entity. So we need use .get()
-        # here to avoid a KeyError.
-        if self._addon_data.get(ATTR_ICON):
+        if self._addon_data[ATTR_ICON]:
             return f"/api/hassio/addons/{self._addon_slug}/icon"
         return None
 
     def _strip_release_notes(self) -> str | None:
         """Strip the release notes to contain the needed sections."""
-        # The changelog may not be available right away after
-        # manually enabling an entity. So we need use .get()
-        # here to avoid a KeyError.
-        if (notes := self._addon_data.get(ATTR_CHANGELOG)) is None:
+        if (notes := self._addon_data[ATTR_CHANGELOG]) is None:
             return None
 
         if (

@@ -963,13 +963,16 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             ),
             (DATA_ADDONS_INFO, self._update_addon_info, ADDON_UPDATE_INFO, all_addons),
         ):
-            data[data_key] = dict(
-                await asyncio.gather(
-                    *[
-                        update_func(slug)
-                        for slug in wanted_addons
-                        if first_update or enabled_key in enabled_updates_by_addon[slug]
-                    ]
+            data.setdefault(data_key, {}).update(
+                dict(
+                    await asyncio.gather(
+                        *[
+                            update_func(slug)
+                            for slug in wanted_addons
+                            if first_update
+                            or enabled_key in enabled_updates_by_addon[slug]
+                        ]
+                    )
                 )
             )
 
