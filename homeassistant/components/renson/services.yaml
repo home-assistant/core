@@ -69,8 +69,6 @@ set_day_night_time:
 set_pollution_settings:
   fields:
     day_pollution_level:
-      required: false
-      advanced: false
       default: "level3"
       selector:
         select:
