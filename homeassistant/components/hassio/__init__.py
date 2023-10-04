@@ -926,38 +926,40 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             self.hassio.get_os_info(),
         )
 
-        all_addons = self.hass.data[DATA_SUPERVISOR_INFO].get("addons", [])
+        _addon_data = self.hass.data[DATA_SUPERVISOR_INFO].get("addons", [])
+        all_addons: list[str] = []
+        started_addons: list[str] = []
+        for addon in _addon_data:
+            slug = addon[ATTR_SLUG]
+            all_addons.append(slug)
+            if addon[ATTR_STATE] == ATTR_STARTED:
+                started_addons.append(slug)
         enabled_updates_by_addon = self._enabled_updates_by_addon
-        started_addons = [
-            addon for addon in all_addons if addon[ATTR_STATE] == ATTR_STARTED
-        ]
         stats_data = await asyncio.gather(
             *[
-                self._update_addon_stats(addon[ATTR_SLUG])
-                for addon in started_addons
-                if first_update
-                or ADDON_UPDATE_STATS in enabled_updates_by_addon[addon[ATTR_SLUG]]
+                self._update_addon_stats(slug)
+                for slug in started_addons
+                if first_update or ADDON_UPDATE_STATS in enabled_updates_by_addon[slug]
             ]
         )
         self.hass.data[DATA_ADDONS_STATS] = dict(stats_data)
         self.hass.data[DATA_ADDONS_CHANGELOGS] = dict(
             await asyncio.gather(
                 *[
-                    self._update_addon_changelog(addon[ATTR_SLUG])
-                    for addon in all_addons
+                    self._update_addon_changelog(slug)
+                    for slug in all_addons
                     if first_update
-                    or ADDON_UPDATE_CHANGELOG
-                    in enabled_updates_by_addon[addon[ATTR_SLUG]]
+                    or ADDON_UPDATE_CHANGELOG in enabled_updates_by_addon[slug]
                 ]
             )
         )
         self.hass.data[DATA_ADDONS_INFO] = dict(
             await asyncio.gather(
                 *[
-                    self._update_addon_info(addon[ATTR_SLUG])
-                    for addon in all_addons
+                    self._update_addon_info(slug)
+                    for slug in all_addons
                     if first_update
-                    or ADDON_UPDATE_INFO in enabled_updates_by_addon[addon[ATTR_SLUG]]
+                    or ADDON_UPDATE_INFO in enabled_updates_by_addon[slug]
                 ]
             )
         )
