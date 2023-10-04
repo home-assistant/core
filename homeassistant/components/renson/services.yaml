@@ -109,8 +109,6 @@ set_pollution_settings:
       selector:
         boolean:
     co2_threshold:
-      required: false
-      advanced: false
       default: 600
       selector:
         number:
