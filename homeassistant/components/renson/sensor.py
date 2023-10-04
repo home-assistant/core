@@ -59,6 +59,9 @@ OPTIONS_MAPPING = {
     "Level4": "level4",
     "Breeze": "breeze",
     "Holiday": "holiday",
+    "bad": "bad",
+    "good": "good",
+    "poor": "poor",
 }
 
 
