@@ -45,11 +45,6 @@ STATE_OFFLINE = "offline"
 STATE_STREAMING = "streaming"
 
 
-def chunk_list(lst: list, chunk_size: int) -> list[list]:
-    """Split a list into chunks of chunk_size."""
-    return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -92,13 +87,17 @@ async def async_setup_entry(
     """Initialize entries."""
     coordinator: TwitchUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        [
-            TwitchSensor(coordinator, channel)
-            for channel in entry.options[CONF_CHANNELS]
-        ],
-        True,
-    )
+    entities: list[TwitchSensor] = []
+    for channel_data in coordinator.data.values():
+        entities.append(
+            TwitchSensor(
+                coordinator,
+                channel_data.user.id,
+                channel_data.user.display_name,
+            )
+        )
+
+    async_add_entities(entities, True)
 
 
 class TwitchSensor(SensorEntity):
@@ -110,25 +109,28 @@ class TwitchSensor(SensorEntity):
         self,
         coordinator: TwitchUpdateCoordinator,
         key: str,
+        name: str,
     ) -> None:
         """Initialize the sensor."""
         self.coordinator = coordinator
         self._key = key
+        self._attr_name = name
+        self._attr_unique_id = key
 
     async def async_update(self) -> None:
         """Update device state."""
-        if not (data := self.coordinator.data.get(self._key)):
+        if not (channel_data := self.coordinator.data.get(self._key)):
             return
 
         self._attr_extra_state_attributes = {
-            ATTR_FOLLOWING: data.followers,
-            ATTR_VIEWS: data.user.view_count,
+            ATTR_FOLLOWING: channel_data.followers,
+            ATTR_VIEWS: channel_data.user.view_count,
         }
-        if data.stream:
+        if channel_data.stream:
             self._attr_native_value = STATE_STREAMING
-            self._attr_extra_state_attributes[ATTR_GAME] = data.stream.game_name
-            self._attr_extra_state_attributes[ATTR_TITLE] = data.stream.title
-            self._attr_entity_picture = data.stream.thumbnail_url
+            self._attr_extra_state_attributes[ATTR_GAME] = channel_data.stream.game_name
+            self._attr_extra_state_attributes[ATTR_TITLE] = channel_data.stream.title
+            self._attr_entity_picture = channel_data.stream.thumbnail_url
             if self._attr_entity_picture is not None:
                 self._attr_entity_picture = self._attr_entity_picture.format(
                     height=24,
@@ -138,18 +140,22 @@ class TwitchSensor(SensorEntity):
             self._attr_native_value = STATE_OFFLINE
             self._attr_extra_state_attributes[ATTR_GAME] = None
             self._attr_extra_state_attributes[ATTR_TITLE] = None
-            self._attr_entity_picture = data.user.profile_image_url
+            self._attr_entity_picture = channel_data.user.profile_image_url
 
         self._attr_extra_state_attributes[ATTR_SUBSCRIPTION] = (
-            data.subscription is not None
+            channel_data.subscription is not None
         )
         self._attr_extra_state_attributes[ATTR_SUBSCRIPTION_GIFTED] = (
-            data.subscription.is_gift if data.subscription else None
+            channel_data.subscription.is_gift if channel_data.subscription else None
         )
 
         self._attr_extra_state_attributes[ATTR_FOLLOW] = (
-            data.following.total > 0 if data.following is not None else None
+            channel_data.following.total > 0
+            if channel_data.following is not None
+            else None
         )
         self._attr_extra_state_attributes[ATTR_FOLLOW_SINCE] = (
-            data.following.data[0].followed_at if data.following is not None else None
+            channel_data.following.data[0].followed_at
+            if channel_data.following is not None
+            else None
         )

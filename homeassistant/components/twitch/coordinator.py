@@ -41,6 +41,11 @@ class TwitchChannelData:
     subscription: UserSubscription | None = None
 
 
+def chunk_list(lst: list, chunk_size: int) -> list[list]:
+    """Split a list into chunks of chunk_size."""
+    return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
+
+
 class TwitchUpdateCoordinator(DataUpdateCoordinator[dict[str, TwitchChannelData]]):
     """Twitch data update coordinator."""
 
@@ -115,9 +120,7 @@ class TwitchUpdateCoordinator(DataUpdateCoordinator[dict[str, TwitchChannelData]
 
         channel_options = self._options[CONF_CHANNELS]
         # Split channels into chunks of 100 to avoid hitting the rate limit
-        for chunk in [
-            channel_options[i : i + 100] for i in range(0, len(channel_options), 100)
-        ]:
+        for chunk in chunk_list(channel_options, 100):
             channels.extend(
                 [channel async for channel in self._client.get_users(logins=chunk)]
             )
