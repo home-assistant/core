@@ -1,5 +1,33 @@
 # serializer version: 1
-# name: test_service[end0-start0-incl_vat0-price_type0]
+# name: test_service[end0-start0-incl_vat0-get_energy_prices]
+  dict({
+    '2022-12-06 23:00:00+00:00': 0.35,
+    '2022-12-07 00:00:00+00:00': 0.32,
+    '2022-12-07 01:00:00+00:00': 0.28,
+    '2022-12-07 02:00:00+00:00': 0.26,
+    '2022-12-07 03:00:00+00:00': 0.27,
+    '2022-12-07 04:00:00+00:00': 0.28,
+    '2022-12-07 05:00:00+00:00': 0.28,
+    '2022-12-07 06:00:00+00:00': 0.38,
+    '2022-12-07 07:00:00+00:00': 0.41,
+    '2022-12-07 08:00:00+00:00': 0.46,
+    '2022-12-07 09:00:00+00:00': 0.44,
+    '2022-12-07 10:00:00+00:00': 0.39,
+    '2022-12-07 11:00:00+00:00': 0.33,
+    '2022-12-07 12:00:00+00:00': 0.37,
+    '2022-12-07 13:00:00+00:00': 0.44,
+    '2022-12-07 14:00:00+00:00': 0.48,
+    '2022-12-07 15:00:00+00:00': 0.49,
+    '2022-12-07 16:00:00+00:00': 0.55,
+    '2022-12-07 17:00:00+00:00': 0.37,
+    '2022-12-07 18:00:00+00:00': 0.4,
+    '2022-12-07 19:00:00+00:00': 0.4,
+    '2022-12-07 20:00:00+00:00': 0.32,
+    '2022-12-07 21:00:00+00:00': 0.33,
+    '2022-12-07 22:00:00+00:00': 0.31,
+  })
+# ---
+# name: test_service[end0-start0-incl_vat0-get_gas_prices]
   dict({
     '2022-12-05 23:00:00+00:00': 1.43,
     '2022-12-06 00:00:00+00:00': 1.43,
@@ -51,7 +79,7 @@
     '2022-12-07 22:00:00+00:00': 1.47,
   })
 # ---
-# name: test_service[end0-start0-incl_vat0-price_type1]
+# name: test_service[end0-start0-incl_vat1-get_energy_prices]
   dict({
     '2022-12-06 23:00:00+00:00': 0.35,
     '2022-12-07 00:00:00+00:00': 0.32,
@@ -79,7 +107,7 @@
     '2022-12-07 22:00:00+00:00': 0.31,
   })
 # ---
-# name: test_service[end0-start0-incl_vat1-price_type0]
+# name: test_service[end0-start0-incl_vat1-get_gas_prices]
   dict({
     '2022-12-05 23:00:00+00:00': 1.43,
     '2022-12-06 00:00:00+00:00': 1.43,
@@ -131,7 +159,7 @@
     '2022-12-07 22:00:00+00:00': 1.47,
   })
 # ---
-# name: test_service[end0-start0-incl_vat1-price_type1]
+# name: test_service[end0-start0-incl_vat2-get_energy_prices]
   dict({
     '2022-12-06 23:00:00+00:00': 0.35,
     '2022-12-07 00:00:00+00:00': 0.32,
@@ -159,7 +187,7 @@
     '2022-12-07 22:00:00+00:00': 0.31,
   })
 # ---
-# name: test_service[end0-start0-incl_vat2-price_type0]
+# name: test_service[end0-start0-incl_vat2-get_gas_prices]
   dict({
     '2022-12-05 23:00:00+00:00': 1.43,
     '2022-12-06 00:00:00+00:00': 1.43,
@@ -211,7 +239,25 @@
     '2022-12-07 22:00:00+00:00': 1.47,
   })
 # ---
-# name: test_service[end0-start0-incl_vat2-price_type1]
+# name: test_service[end0-start1-incl_vat0-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end0-start1-incl_vat0-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end0-start1-incl_vat1-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end0-start1-incl_vat1-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end0-start1-incl_vat2-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end0-start1-incl_vat2-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end0-start2-incl_vat0-get_energy_prices]
   dict({
     '2022-12-06 23:00:00+00:00': 0.35,
     '2022-12-07 00:00:00+00:00': 0.32,
@@ -239,25 +285,7 @@
     '2022-12-07 22:00:00+00:00': 0.31,
   })
 # ---
-# name: test_service[end0-start1-incl_vat0-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end0-start1-incl_vat0-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end0-start1-incl_vat1-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end0-start1-incl_vat1-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end0-start1-incl_vat2-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end0-start1-incl_vat2-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end0-start2-incl_vat0-price_type0]
+# name: test_service[end0-start2-incl_vat0-get_gas_prices]
   dict({
     '2022-12-05 23:00:00+00:00': 1.43,
     '2022-12-06 00:00:00+00:00': 1.43,
@@ -309,7 +337,7 @@
     '2022-12-07 22:00:00+00:00': 1.47,
   })
 # ---
-# name: test_service[end0-start2-incl_vat0-price_type1]
+# name: test_service[end0-start2-incl_vat1-get_energy_prices]
   dict({
     '2022-12-06 23:00:00+00:00': 0.35,
     '2022-12-07 00:00:00+00:00': 0.32,
@@ -337,7 +365,7 @@
     '2022-12-07 22:00:00+00:00': 0.31,
   })
 # ---
-# name: test_service[end0-start2-incl_vat1-price_type0]
+# name: test_service[end0-start2-incl_vat1-get_gas_prices]
   dict({
     '2022-12-05 23:00:00+00:00': 1.43,
     '2022-12-06 00:00:00+00:00': 1.43,
@@ -389,7 +417,7 @@
     '2022-12-07 22:00:00+00:00': 1.47,
   })
 # ---
-# name: test_service[end0-start2-incl_vat1-price_type1]
+# name: test_service[end0-start2-incl_vat2-get_energy_prices]
   dict({
     '2022-12-06 23:00:00+00:00': 0.35,
     '2022-12-07 00:00:00+00:00': 0.32,
@@ -417,7 +445,7 @@
     '2022-12-07 22:00:00+00:00': 0.31,
   })
 # ---
-# name: test_service[end0-start2-incl_vat2-price_type0]
+# name: test_service[end0-start2-incl_vat2-get_gas_prices]
   dict({
     '2022-12-05 23:00:00+00:00': 1.43,
     '2022-12-06 00:00:00+00:00': 1.43,
@@ -469,7 +497,61 @@
     '2022-12-07 22:00:00+00:00': 1.47,
   })
 # ---
-# name: test_service[end0-start2-incl_vat2-price_type1]
+# name: test_service[end1-start0-incl_vat0-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start0-incl_vat0-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start0-incl_vat1-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start0-incl_vat1-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start0-incl_vat2-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start0-incl_vat2-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start1-incl_vat0-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start1-incl_vat0-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start1-incl_vat1-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start1-incl_vat1-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start1-incl_vat2-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start1-incl_vat2-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start2-incl_vat0-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start2-incl_vat0-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start2-incl_vat1-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start2-incl_vat1-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start2-incl_vat2-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end1-start2-incl_vat2-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end2-start0-incl_vat0-get_energy_prices]
   dict({
     '2022-12-06 23:00:00+00:00': 0.35,
     '2022-12-07 00:00:00+00:00': 0.32,
@@ -497,61 +579,7 @@
     '2022-12-07 22:00:00+00:00': 0.31,
   })
 # ---
-# name: test_service[end1-start0-incl_vat0-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start0-incl_vat0-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start0-incl_vat1-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start0-incl_vat1-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start0-incl_vat2-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start0-incl_vat2-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start1-incl_vat0-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start1-incl_vat0-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start1-incl_vat1-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start1-incl_vat1-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start1-incl_vat2-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start1-incl_vat2-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start2-incl_vat0-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start2-incl_vat0-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start2-incl_vat1-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start2-incl_vat1-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start2-incl_vat2-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end1-start2-incl_vat2-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end2-start0-incl_vat0-price_type0]
+# name: test_service[end2-start0-incl_vat0-get_gas_prices]
   dict({
     '2022-12-05 23:00:00+00:00': 1.43,
     '2022-12-06 00:00:00+00:00': 1.43,
@@ -603,7 +631,7 @@
     '2022-12-07 22:00:00+00:00': 1.47,
   })
 # ---
-# name: test_service[end2-start0-incl_vat0-price_type1]
+# name: test_service[end2-start0-incl_vat1-get_energy_prices]
   dict({
     '2022-12-06 23:00:00+00:00': 0.35,
     '2022-12-07 00:00:00+00:00': 0.32,
@@ -631,7 +659,7 @@
     '2022-12-07 22:00:00+00:00': 0.31,
   })
 # ---
-# name: test_service[end2-start0-incl_vat1-price_type0]
+# name: test_service[end2-start0-incl_vat1-get_gas_prices]
   dict({
     '2022-12-05 23:00:00+00:00': 1.43,
     '2022-12-06 00:00:00+00:00': 1.43,
@@ -683,7 +711,7 @@
     '2022-12-07 22:00:00+00:00': 1.47,
   })
 # ---
-# name: test_service[end2-start0-incl_vat1-price_type1]
+# name: test_service[end2-start0-incl_vat2-get_energy_prices]
   dict({
     '2022-12-06 23:00:00+00:00': 0.35,
     '2022-12-07 00:00:00+00:00': 0.32,
@@ -711,7 +739,7 @@
     '2022-12-07 22:00:00+00:00': 0.31,
   })
 # ---
-# name: test_service[end2-start0-incl_vat2-price_type0]
+# name: test_service[end2-start0-incl_vat2-get_gas_prices]
   dict({
     '2022-12-05 23:00:00+00:00': 1.43,
     '2022-12-06 00:00:00+00:00': 1.43,
@@ -763,7 +791,25 @@
     '2022-12-07 22:00:00+00:00': 1.47,
   })
 # ---
-# name: test_service[end2-start0-incl_vat2-price_type1]
+# name: test_service[end2-start1-incl_vat0-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end2-start1-incl_vat0-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end2-start1-incl_vat1-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end2-start1-incl_vat1-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end2-start1-incl_vat2-get_energy_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end2-start1-incl_vat2-get_gas_prices]
+  ValueError('Invalid date: incorrect date')
+# ---
+# name: test_service[end2-start2-incl_vat0-get_energy_prices]
   dict({
     '2022-12-06 23:00:00+00:00': 0.35,
     '2022-12-07 00:00:00+00:00': 0.32,
@@ -791,25 +837,7 @@
     '2022-12-07 22:00:00+00:00': 0.31,
   })
 # ---
-# name: test_service[end2-start1-incl_vat0-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end2-start1-incl_vat0-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end2-start1-incl_vat1-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end2-start1-incl_vat1-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end2-start1-incl_vat2-price_type0]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end2-start1-incl_vat2-price_type1]
-  ValueError('Invalid date: incorrect date')
-# ---
-# name: test_service[end2-start2-incl_vat0-price_type0]
+# name: test_service[end2-start2-incl_vat0-get_gas_prices]
   dict({
     '2022-12-05 23:00:00+00:00': 1.43,
     '2022-12-06 00:00:00+00:00': 1.43,
@@ -861,7 +889,7 @@
     '2022-12-07 22:00:00+00:00': 1.47,
   })
 # ---
-# name: test_service[end2-start2-incl_vat0-price_type1]
+# name: test_service[end2-start2-incl_vat1-get_energy_prices]
   dict({
     '2022-12-06 23:00:00+00:00': 0.35,
     '2022-12-07 00:00:00+00:00': 0.32,
@@ -889,7 +917,7 @@
     '2022-12-07 22:00:00+00:00': 0.31,
   })
 # ---
-# name: test_service[end2-start2-incl_vat1-price_type0]
+# name: test_service[end2-start2-incl_vat1-get_gas_prices]
   dict({
     '2022-12-05 23:00:00+00:00': 1.43,
     '2022-12-06 00:00:00+00:00': 1.43,
@@ -941,7 +969,7 @@
     '2022-12-07 22:00:00+00:00': 1.47,
   })
 # ---
-# name: test_service[end2-start2-incl_vat1-price_type1]
+# name: test_service[end2-start2-incl_vat2-get_energy_prices]
   dict({
     '2022-12-06 23:00:00+00:00': 0.35,
     '2022-12-07 00:00:00+00:00': 0.32,
@@ -969,7 +997,7 @@
     '2022-12-07 22:00:00+00:00': 0.31,
   })
 # ---
-# name: test_service[end2-start2-incl_vat2-price_type0]
+# name: test_service[end2-start2-incl_vat2-get_gas_prices]
   dict({
     '2022-12-05 23:00:00+00:00': 1.43,
     '2022-12-06 00:00:00+00:00': 1.43,
@@ -1019,33 +1047,5 @@
     '2022-12-07 20:00:00+00:00': 1.47,
     '2022-12-07 21:00:00+00:00': 1.47,
     '2022-12-07 22:00:00+00:00': 1.47,
-  })
-# ---
-# name: test_service[end2-start2-incl_vat2-price_type1]
-  dict({
-    '2022-12-06 23:00:00+00:00': 0.35,
-    '2022-12-07 00:00:00+00:00': 0.32,
-    '2022-12-07 01:00:00+00:00': 0.28,
-    '2022-12-07 02:00:00+00:00': 0.26,
-    '2022-12-07 03:00:00+00:00': 0.27,
-    '2022-12-07 04:00:00+00:00': 0.28,
-    '2022-12-07 05:00:00+00:00': 0.28,
-    '2022-12-07 06:00:00+00:00': 0.38,
-    '2022-12-07 07:00:00+00:00': 0.41,
-    '2022-12-07 08:00:00+00:00': 0.46,
-    '2022-12-07 09:00:00+00:00': 0.44,
-    '2022-12-07 10:00:00+00:00': 0.39,
-    '2022-12-07 11:00:00+00:00': 0.33,
-    '2022-12-07 12:00:00+00:00': 0.37,
-    '2022-12-07 13:00:00+00:00': 0.44,
-    '2022-12-07 14:00:00+00:00': 0.48,
-    '2022-12-07 15:00:00+00:00': 0.49,
-    '2022-12-07 16:00:00+00:00': 0.55,
-    '2022-12-07 17:00:00+00:00': 0.37,
-    '2022-12-07 18:00:00+00:00': 0.4,
-    '2022-12-07 19:00:00+00:00': 0.4,
-    '2022-12-07 20:00:00+00:00': 0.32,
-    '2022-12-07 21:00:00+00:00': 0.33,
-    '2022-12-07 22:00:00+00:00': 0.31,
   })
 # ---

@@ -31,7 +31,7 @@ async def test_has_services(
 @pytest.mark.parametrize(
     "end", [{"end": "2023-01-01 00:00:00"}, {"end": "incorrect date"}, {}]
 )
-async def test_gas_service(
+async def test_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     service: str,

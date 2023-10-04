@@ -54,20 +54,10 @@ def mock_energyzero() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_energyzero_service() -> Generator[MagicMock, None, None]:
-    """Return a mocked EnergyZero client."""
-    with patch(
-        "homeassistant.components.energyzero.EnergyZero", autospec=True
-    ) as energyzero_mock:
-        yield apply_energyzero_mock(energyzero_mock)
-
-
-@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_energyzero: MagicMock,
-    mock_energyzero_service: MagicMock,
 ) -> MockConfigEntry:
     """Set up the EnergyZero integration for testing."""
     mock_config_entry.add_to_hass(hass)
