@@ -79,8 +79,6 @@ set_pollution_settings:
             - "level3"
             - "level4"
     night_pollution_level:
-      required: false
-      advanced: false
       default: "level2"
       selector:
         select:
