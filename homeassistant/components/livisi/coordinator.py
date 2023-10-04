@@ -21,6 +21,7 @@ from .const import (
     CONF_PASSWORD,
     DEVICE_POLLING_DELAY,
     LIVISI_REACHABILITY_CHANGE,
+    LIVISI_SHUTTERSTATE_CHANGE,
     LIVISI_STATE_CHANGE,
     LOGGER,
 )
@@ -110,6 +111,12 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
     def on_data(self, event_data: LivisiEvent) -> None:
         """Define a handler to fire when the data is received."""
+        if "shutterLevel" in event_data.properties:
+            self._async_dispatcher_send(
+                LIVISI_SHUTTERSTATE_CHANGE,
+                event_data.source,
+                event_data.properties["shutterLevel"],
+            )
         self._async_dispatcher_send(
             LIVISI_STATE_CHANGE, event_data.source, event_data.onState
         )

@@ -12,7 +12,10 @@ AVATAR_PORT: Final = 9090
 CLASSIC_PORT: Final = 8080
 DEVICE_POLLING_DELAY: Final = 60
 LIVISI_STATE_CHANGE: Final = "livisi_state_change"
+LIVISI_SHUTTERSTATE_CHANGE: Final = "livisi_shutterstate_change"
 LIVISI_REACHABILITY_CHANGE: Final = "livisi_reachability_change"
+LIVISI_NAMESPACE_CORE: Final = "core.RWE"
+LIVISI_NAMESPACE_COSIP: Final = "CosipDevices.RWE"
 
 SWITCH_DEVICE_TYPES: Final = ["ISS", "ISS2", "PSS", "PSSO"]
 VRCC_DEVICE_TYPE: Final = "VRCC"

@@ -4,14 +4,24 @@ from __future__ import annotations
 from typing import Any
 import uuid
 
-from homeassistant.components.cover import CoverEntity, CoverEntityFeature
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    CoverEntity,
+    CoverEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LIVISI_STATE_CHANGE, LOGGER, SHUTTER_DEVICE_TYPE
+from .const import (
+    DOMAIN,
+    LIVISI_NAMESPACE_COSIP,
+    LIVISI_SHUTTERSTATE_CHANGE,
+    LOGGER,
+    SHUTTER_DEVICE_TYPE,
+)
 from .coordinator import LivisiDataUpdateCoordinator
 from .entity import LivisiEntity
 
@@ -59,16 +69,20 @@ class LivisiShutter(LivisiEntity, CoverEntity):
         """Initialize the Livisi switch."""
         super().__init__(config_entry, coordinator, device)
         self._attr_supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.SET_POSITION
         )
         self._capability_id = self.capabilities["RollerShutterActuator"]
+        self._livisiCoverPosition = 0
 
-    async def send_livisi_shutter_command(self, commandtype, params) -> dict:
+    async def send_livisi_shutter_command(self, namespace, commandtype, params) -> dict:
         """Send a generic command to the Livisi API."""
         set_state_payload: dict[str, Any] = {
             "id": uuid.uuid4().hex,
             "type": commandtype,
-            "namespace": "CosipDevices.RWE",
+            "namespace": namespace,
             "target": self._capability_id,
             "params": params,
         }
@@ -82,11 +96,13 @@ class LivisiShutter(LivisiEntity, CoverEntity):
             "rampDirection": {"type": "Constant", "value": "RampUp"}
         }
         response = await self.send_livisi_shutter_command(
-            "StartRamp", open_cover_params
+            LIVISI_NAMESPACE_COSIP, "StartRamp", open_cover_params
         )
         if response is None:
             self._attr_available = False
-            raise HomeAssistantError(f"Failed to open shutter {self._attr_name}")
+            raise HomeAssistantError(
+                f"Failed to open shutter {self._attr_device_info['name']}"
+            )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the shutter."""
@@ -94,26 +110,45 @@ class LivisiShutter(LivisiEntity, CoverEntity):
             "rampDirection": {"type": "Constant", "value": "RampDown"}
         }
         response = await self.send_livisi_shutter_command(
-            "StartRamp", close_cover_params
+            LIVISI_NAMESPACE_COSIP, "StartRamp", close_cover_params
         )
         if response is None:
             self._attr_available = False
-            raise HomeAssistantError(f"Failed to close shutter {self._attr_name}")
+            raise HomeAssistantError(
+                f"Failed to close shutter {self._attr_device_info['name']}"
+            )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the shutter."""
-        response = await self.send_livisi_shutter_command("StopRamp", {})
+        response = await self.send_livisi_shutter_command(
+            LIVISI_NAMESPACE_COSIP, "StopRamp", {}
+        )
         if response is None:
             self._attr_available = False
-            raise HomeAssistantError(f"Failed to close shutter {self._attr_name}")
+            raise HomeAssistantError(
+                f"Failed to close shutter {self._attr_device_info['name']}"
+            )
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Set shutter to specific position."""
+        set_position_params: dict[str, Any] = {
+            "shutterLevel": {"type": "Constant", "value": kwargs[ATTR_POSITION]}
+        }
+        response = await self.send_livisi_shutter_command(
+            LIVISI_NAMESPACE_COSIP, "SetState", set_position_params
+        )
+        LOGGER.debug(response)
+        if response is None:
+            self._attr_available = False
+            raise HomeAssistantError(
+                f"Failed to set position of shutter {self._attr_device_info['name']}"
+            )
 
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        # if self._ads_var is not None:
-        #     return self._state_dict[STATE_KEY_STATE]
-        # if self._ads_var_position is not None:
-        #     return self._state_dict[STATE_KEY_POSITION] == 0
+        if self._attr_current_cover_position is not None:
+            return self._attr_current_cover_position <= 0
         return None
 
     async def async_added_to_hass(self) -> None:
@@ -121,26 +156,23 @@ class LivisiShutter(LivisiEntity, CoverEntity):
         await super().async_added_to_hass()
 
         response = await self.coordinator.async_get_device_state(
-            self._capability_id, "onState"
+            self._capability_id, "shutterLevel"
         )
         if response is None:
-            # self._attr_is_on = False
+            self._attr_current_cover_position = -1
             self._attr_available = False
         else:
-            pass
-            # self._attr_is_on = response
+            self._attr_current_cover_position = response
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{LIVISI_STATE_CHANGE}_{self._capability_id}",
+                f"{LIVISI_SHUTTERSTATE_CHANGE}_{self._capability_id}",
                 self.update_states,
             )
         )
 
     @callback
-    def update_states(self, state: Any) -> None:
+    def update_states(self, shutterLevel: Any) -> None:
         """Update the state of the switch device."""
-        # self._attr_is_on = state
-        LOGGER.info("Cover update %s", state)
-        self._attr_is_closed = True
+        self._attr_current_cover_position = shutterLevel
         self.async_write_ha_state()
