@@ -895,7 +895,6 @@ async def async_process_component_config(  # noqa: C901
             _LOGGER.exception(
                 (
                     "Unknown error validating %s platform config with %s component"
-                    f"Unknown error validating {p_name} platform config with {domain} component"
                     " platform schema"
                 ),
                 p_name,
@@ -913,7 +912,7 @@ async def async_process_component_config(  # noqa: C901
         try:
             p_integration = await async_get_integration_with_requirements(hass, p_name)
         except (RequirementsNotFound, IntegrationNotFound) as ex:
-           _LOGGER.error("Platform error: %s - %s", domain, ex)
+            _LOGGER.error("Platform error: %s - %s", domain, ex)
             continue
 
         try:
