@@ -48,7 +48,7 @@ from homeassistant.util import (
 )
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
-from .const import DATA_CONFIG, DOMAIN
+from .const import CONF_DEBUG_RECORDING_DIR, DATA_CONFIG, DOMAIN
 from .error import (
     IntentRecognitionError,
     PipelineError,
@@ -603,6 +603,8 @@ class PipelineRun:
             )
         )
 
+        wake_word_settings = self.wake_word_settings or WakeWordSettings()
+
         # Remove language since it doesn't apply to wake words yet
         metadata_dict.pop("language", None)
 
@@ -612,14 +614,13 @@ class PipelineRun:
                 {
                     "entity_id": self.wake_word_entity_id,
                     "metadata": metadata_dict,
+                    "timeout": wake_word_settings.timeout or 0,
                 },
             )
         )
 
         if self.debug_recording_queue is not None:
             self.debug_recording_queue.put_nowait(f"00_wake-{self.wake_word_entity_id}")
-
-        wake_word_settings = self.wake_word_settings or WakeWordSettings()
 
         wake_word_vad: VoiceActivityTimeout | None = None
         if (wake_word_settings.timeout is not None) and (
@@ -1032,7 +1033,7 @@ class PipelineRun:
         # Directory to save audio for each pipeline run.
         # Configured in YAML for assist_pipeline.
         if debug_recording_dir := self.hass.data[DATA_CONFIG].get(
-            "debug_recording_dir"
+            CONF_DEBUG_RECORDING_DIR
         ):
             if device_id is None:
                 # <debug_recording_dir>/<pipeline.name>/<run.id>

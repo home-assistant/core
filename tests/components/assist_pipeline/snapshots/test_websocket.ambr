@@ -373,6 +373,7 @@
       'format': 'wav',
       'sample_rate': 16000,
     }),
+    'timeout': 0,
   })
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout.2
@@ -474,6 +475,7 @@
       'format': 'wav',
       'sample_rate': 16000,
     }),
+    'timeout': 1,
   })
 # ---
 # name: test_audio_pipeline_with_wake_word_timeout.2
