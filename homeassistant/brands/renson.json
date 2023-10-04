@@ -1,0 +1,5 @@
+{
+  "domain": "renson",
+  "name": "Renson",
+  "integrations": ["renson", "renson_healthbox3"]
+}

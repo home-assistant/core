@@ -1,0 +1,8 @@
+{
+  "domain": "renson",
+  "name": "Renson Healthbox",
+  "codeowners": ["@rmassch", "@jimmyd-be"],
+  "config_flow": true,
+  "iot_class": "local_polling",
+  "requirements": ["pyhealthbox3==0.0.20"]
+}
