@@ -260,6 +260,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                     noise_suppression_level=audio_settings.noise_suppression_level,
                     auto_gain_dbfs=audio_settings.auto_gain,
                     volume_multiplier=audio_settings.volume_multiplier,
+                    is_vad_enabled=bool(flags & VoiceAssistantCommandFlag.USE_VAD),
                 ),
             )
 
