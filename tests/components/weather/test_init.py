@@ -950,7 +950,7 @@ async def test_get_forecast_unsupported(
             )
 
 
-async def test_issue_forecast_deprecated(
+async def test_issue_forecast_property_deprecated(
     hass: HomeAssistant,
     enable_custom_integrations: None,
     caplog: pytest.LogCaptureFixture,
@@ -986,15 +986,62 @@ async def test_issue_forecast_deprecated(
     assert issue
     assert issue.issue_domain == "test"
     assert issue.issue_id == "deprecated_weather_forecast_test"
-    assert issue.translation_placeholders == {
-        "platform": "test",
-        "report_issue": "report it to the custom integration author.",
-    }
+    assert issue.translation_key == "deprecated_weather_forecast_no_url"
+    assert issue.translation_placeholders == {"platform": "test"}
 
     assert (
-        "custom_components.test.weather::weather.testing is using a forecast attribute on an instance of WeatherEntity"
-        in caplog.text
+        "test::MockWeatherMockLegacyForecastOnly implements the `forecast` property or "
+        "sets `self._attr_forecast` in a subclass of WeatherEntity, this is deprecated "
+        "and will be unsupported from Home Assistant 2024.3. Please report it to the "
+        "author of the 'test' custom integration"
+    ) in caplog.text
+
+
+async def test_issue_forecast_attr_deprecated(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the issue is raised on deprecated forecast attributes."""
+
+    kwargs = {
+        "native_temperature": 38,
+        "native_temperature_unit": UnitOfTemperature.CELSIUS,
+    }
+    platform: WeatherPlatform = getattr(hass.components, "test.weather")
+    caplog.clear()
+    platform.init(empty=True)
+    weather = platform.MockWeather(
+        name="Testing",
+        entity_id="weather.testing",
+        condition=ATTR_CONDITION_SUNNY,
+        **kwargs,
     )
+    weather._attr_forecast = []
+    platform.ENTITIES.append(weather)
+
+    entity0 = platform.ENTITIES[0]
+    assert await async_setup_component(
+        hass, "weather", {"weather": {"platform": "test", "name": "testing"}}
+    )
+    await hass.async_block_till_done()
+
+    assert entity0.state == ATTR_CONDITION_SUNNY
+
+    issues = ir.async_get(hass)
+    issue = issues.async_get_issue("weather", "deprecated_weather_forecast_test")
+    assert issue
+    assert issue.issue_domain == "test"
+    assert issue.issue_id == "deprecated_weather_forecast_test"
+    assert issue.translation_key == "deprecated_weather_forecast_no_url"
+    assert issue.translation_placeholders == {"platform": "test"}
+
+    assert (
+        "test::MockWeather implements the `forecast` property or "
+        "sets `self._attr_forecast` in a subclass of WeatherEntity, this is deprecated "
+        "and will be unsupported from Home Assistant 2024.3. Please report it to the "
+        "author of the 'test' custom integration"
+    ) in caplog.text
 
 
 async def test_issue_forecast_deprecated_no_logging(

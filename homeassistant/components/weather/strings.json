@@ -100,9 +100,13 @@
     }
   },
   "issues": {
-    "deprecated_weather_forecast": {
+    "deprecated_weather_forecast_url": {
+      "title": "The {platform} custom integration is using deprecated weather forecast",
+      "description": "The custom integration `{platform}` implements the `forecast` property or sets `self._attr_forecast` in a subclass of WeatherEntity.\n\nPlease create a bug report at {issue_tracker}."
+    },
+    "deprecated_weather_forecast_no_url": {
       "title": "The {platform} integration is using deprecated forecast",
-      "description": "The integration `{platform}` is using the deprecated forecast attribute.\n\nPlease {report_issue}."
+      "description": "The custom integration `{platform}` implements the `forecast` property or sets `self._attr_forecast` in a subclass of WeatherEntity.\n\nPlease report it to the authoer of the {platform} integration."
     }
   }
 }
