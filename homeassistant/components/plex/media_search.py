@@ -34,6 +34,23 @@ PREFERRED_LIBTYPE_ORDER = (
 _LOGGER = logging.getLogger(__name__)
 
 
+def replacing_legacy_keys(query):
+    search_query = {}
+    for legacy_key, key in LEGACY_PARAM_MAPPING.items():
+        if value := query.pop(legacy_key, None):
+            _LOGGER.debug(
+                "Legacy parameter '%s' used, consider using '%s'", legacy_key, key
+            )
+            search_query[key] = value
+
+
+def default_libtype(query):
+    # Default to a sane libtype if not explicitly provided
+    for preferred_libtype in PREFERRED_LIBTYPE_ORDER:
+        if any(key.startswith(preferred_libtype) for key in query):
+            return preferred_libtype
+
+
 def search_media(
     media_type: str,
     library_section: LibrarySection,
@@ -47,25 +64,15 @@ def search_media(
     Raises MediaNotFound if the search was unsuccessful.
     """
     original_query = kwargs.copy()
-    search_query = {}
     libtype = kwargs.pop("libtype", None)
 
     # Preserve legacy service parameters
-    for legacy_key, key in LEGACY_PARAM_MAPPING.items():
-        if value := kwargs.pop(legacy_key, None):
-            _LOGGER.debug(
-                "Legacy parameter '%s' used, consider using '%s'", legacy_key, key
-            )
-            search_query[key] = value
+    search_query = replacing_legacy_keys(kwargs)
 
     search_query.update(**kwargs)
 
     if not libtype:
-        # Default to a sane libtype if not explicitly provided
-        for preferred_libtype in PREFERRED_LIBTYPE_ORDER:
-            if any(key.startswith(preferred_libtype) for key in search_query):
-                libtype = preferred_libtype
-                break
+        libtype = default_libtype(search_query)
 
     search_query.update(libtype=libtype)
     _LOGGER.debug("Processed search query: %s", search_query)
