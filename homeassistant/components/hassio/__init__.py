@@ -948,34 +948,24 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         # and throw them away.
         #
         enabled_updates_by_addon = self._enabled_updates_by_addon
-        stats_data = await asyncio.gather(
-            *[
-                self._update_addon_stats(slug)
-                for slug in started_addons
-                if first_update or ADDON_UPDATE_STATS in enabled_updates_by_addon[slug]
-            ]
-        )
-        data[DATA_ADDONS_STATS] = dict(stats_data)
-        data[DATA_ADDONS_CHANGELOGS] = dict(
-            await asyncio.gather(
-                *[
-                    self._update_addon_changelog(slug)
-                    for slug in all_addons
-                    if first_update
-                    or ADDON_UPDATE_CHANGELOG in enabled_updates_by_addon[slug]
-                ]
+        for data_key, update_func, enabled_key in (
+            (DATA_ADDONS_STATS, self._update_addon_stats, ADDON_UPDATE_STATS),
+            (
+                DATA_ADDONS_CHANGELOGS,
+                self._update_addon_changelog,
+                ADDON_UPDATE_CHANGELOG,
+            ),
+            (DATA_ADDONS_INFO, self._update_addon_info, ADDON_UPDATE_INFO),
+        ):
+            data[data_key] = dict(
+                await asyncio.gather(
+                    *[
+                        update_func(slug)
+                        for slug in started_addons
+                        if first_update or enabled_key in enabled_updates_by_addon[slug]
+                    ]
+                )
             )
-        )
-        data[DATA_ADDONS_INFO] = dict(
-            await asyncio.gather(
-                *[
-                    self._update_addon_info(slug)
-                    for slug in all_addons
-                    if first_update
-                    or ADDON_UPDATE_INFO in enabled_updates_by_addon[slug]
-                ]
-            )
-        )
 
     async def _update_addon_stats(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Update single addon stats."""
