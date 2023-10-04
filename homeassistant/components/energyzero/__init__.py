@@ -54,24 +54,29 @@ async def __get_prices(
 ) -> ServiceResponse:
     previous_incl_vat = coordinator.energyzero.incl_btw
 
-    coordinator.energyzero.incl_btw = str(call.data[ATTR_INCL_VAT]).lower()
-    start = __get_date(call.data.get(ATTR_START))
-    end = __get_date(call.data.get(ATTR_END))
+    try:
+        coordinator.energyzero.incl_btw = str(call.data[ATTR_INCL_VAT]).lower()
+        start = __get_date(call.data.get(ATTR_START))
+        end = __get_date(call.data.get(ATTR_END))
 
-    data: Electricity | Gas
+        data: Electricity | Gas
 
-    if price_type == PriceType.GAS:
-        data = await coordinator.energyzero.gas_prices(
-            start_date=start,
-            end_date=end,
-        )
-    else:
-        data = await coordinator.energyzero.energy_prices(
-            start_date=start,
-            end_date=end,
-        )
+        if price_type == PriceType.GAS:
+            data = await coordinator.energyzero.gas_prices(
+                start_date=start,
+                end_date=end,
+            )
+        else:
+            data = await coordinator.energyzero.energy_prices(
+                start_date=start,
+                end_date=end,
+            )
 
-    coordinator.energyzero.incl_btw = previous_incl_vat
+        coordinator.energyzero.incl_btw = previous_incl_vat
+    except Exception as error:
+        coordinator.energyzero.incl_btw = previous_incl_vat
+
+        raise error
 
     return __serialize_prices(data)
 
