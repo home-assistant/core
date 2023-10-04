@@ -989,9 +989,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
         return (slug, None)
 
-    async def async_enable_addon_updates(
-        self, slug: str, types: set[str]
-    ) -> CALLBACK_TYPE:
+    @callback
+    def async_enable_addon_updates(self, slug: str, types: set[str]) -> CALLBACK_TYPE:
         """Enable updates for an add-on."""
         enabled_updates = self._enabled_updates_by_addon[slug]
         for key in types:
