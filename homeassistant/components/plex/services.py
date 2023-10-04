@@ -114,6 +114,62 @@ def get_plex_server(
     )
 
 
+def _handle_standard_payloads(
+    hass: HomeAssistant, plex_url: any, plex_server: PlexServer
+):
+    # Handle standard media_browser payloads
+    if plex_url.name:
+        server_id = plex_url.host
+        plex_server = get_plex_server(hass, plex_server_id=server_id)
+        if len(plex_url.parts) == 2:
+            if plex_url.name == "search":
+                return {}, plex_server
+            else:
+                return int(plex_url.name), plex_server
+        else:
+            # For "special" items like radio stations
+            return plex_url.path, plex_server
+    else:  # noqa: PLR5501
+        # Handle legacy payloads without server_id in URL host position
+        if plex_url.host == "search":
+            return {}, None
+        else:
+            return int(plex_url.host), None  # type: ignore[arg-type]
+
+
+def _handle_playqueue_media(
+    playqueue_id: "int | any",
+    supports_playqueues: bool,
+    plex_server: PlexServer,
+    content: "dict[str, int] | any",
+):
+    if not supports_playqueues:
+        raise HomeAssistantError("Plex playqueues are not supported on this device")
+    try:
+        playqueue = plex_server.get_playqueue(playqueue_id)
+    except NotFound as err:
+        raise MediaNotFound(f"PlayQueue '{playqueue_id}' could not be found") from err
+    return PlexMediaSearchResult(playqueue, content)
+
+
+def _handle_content_as_media_or_playqueue(
+    content_type: str,
+    search_query: "dict[str, int] | any",
+    supports_playqueues: bool,
+    shuffle: "int | any",
+    plex_server: PlexServer,
+    content: "dict[str, int] | any",
+):
+    media = plex_server.lookup_media(content_type, **search_query)
+    if supports_playqueues and (isinstance(media, list) or shuffle):
+        playqueue = plex_server.create_playqueue(
+            media, includeRelated=0, shuffle=shuffle
+        )
+        return PlexMediaSearchResult(playqueue, content)
+
+    return PlexMediaSearchResult(media, content)
+
+
 def process_plex_payload(
     hass: HomeAssistant,
     content_type: str,
@@ -130,25 +186,11 @@ def process_plex_payload(
         content_id = content_id.removeprefix(PLEX_URI_SCHEME)
         content = json.loads(content_id)
     elif content_id.startswith(PLEX_URI_SCHEME):
-        # Handle standard media_browser payloads
         plex_url = URL(content_id)
-        if plex_url.name:
-            if len(plex_url.parts) == 2:
-                if plex_url.name == "search":
-                    content = {}
-                else:
-                    content = int(plex_url.name)
-            else:
-                # For "special" items like radio stations
-                content = plex_url.path
-            server_id = plex_url.host
-            plex_server = get_plex_server(hass, plex_server_id=server_id)
-        else:  # noqa: PLR5501
-            # Handle legacy payloads without server_id in URL host position
-            if plex_url.host == "search":
-                content = {}
-            else:
-                content = int(plex_url.host)  # type: ignore[arg-type]
+        content, potential_plex_server = _handle_standard_payloads(
+            hass, plex_url, plex_server
+        )
+        plex_server = potential_plex_server if potential_plex_server else plex_server
         extra_params = dict(plex_url.query)
     else:
         content = json.loads(content_id)
@@ -173,15 +215,9 @@ def process_plex_payload(
     content.update(extra_params)
 
     if playqueue_id := content.pop("playqueue_id", None):
-        if not supports_playqueues:
-            raise HomeAssistantError("Plex playqueues are not supported on this device")
-        try:
-            playqueue = plex_server.get_playqueue(playqueue_id)
-        except NotFound as err:
-            raise MediaNotFound(
-                f"PlayQueue '{playqueue_id}' could not be found"
-            ) from err
-        return PlexMediaSearchResult(playqueue, content)
+        return _handle_playqueue_media(
+            playqueue_id, supports_playqueues, plex_server, content
+        )
 
     search_query = content.copy()
     shuffle = search_query.pop("shuffle", 0)
@@ -190,12 +226,9 @@ def process_plex_payload(
     for internal_key in ("resume", "offset"):
         search_query.pop(internal_key, None)
 
-    media = plex_server.lookup_media(content_type, **search_query)
+    return _handle_content_as_media_or_playqueue(
+        content_type, search_query, supports_playqueues, shuffle, plex_server, content
+    )
 
-    if supports_playqueues and (isinstance(media, list) or shuffle):
-        playqueue = plex_server.create_playqueue(
-            media, includeRelated=0, shuffle=shuffle
-        )
-        return PlexMediaSearchResult(playqueue, content)
 
-    return PlexMediaSearchResult(media, content)
+###############################################################################################
