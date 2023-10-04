@@ -167,7 +167,7 @@ def _filter_bad_internal_external_urls(conf: dict) -> dict:
             # We warn but do not fix, because if this was incorrectly configured,
             # adjusting this value might impact security.
             _LOGGER.warning(
-                f"Invalid {key} set. It's not allowed to have a path (/bla)"
+                "Invalid %s set. It's not allowed to have a path (/bla)", key
             )
 
     return conf
@@ -618,7 +618,9 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     elif LEGACY_CONF_WHITELIST_EXTERNAL_DIRS in config:
         _LOGGER.warning(
-            f"Key {LEGACY_CONF_WHITELIST_EXTERNAL_DIRS} has been replaced with {CONF_ALLOWLIST_EXTERNAL_DIRS}. Please update your config",
+            "Key %s has been replaced with %s. Please update your config",
+            LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
+            CONF_ALLOWLIST_EXTERNAL_DIRS,
         )
         hac.allowlist_external_dirs.update(
             set(config[LEGACY_CONF_WHITELIST_EXTERNAL_DIRS])
@@ -644,7 +646,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         try:
             pkg_cust = CUSTOMIZE_CONFIG_SCHEMA(pkg_cust)
         except vol.Invalid:
-            _LOGGER.warning(f"Package {name} contains invalid customize")
+            _LOGGER.warning("Package %s contains invalid customize", name)
             continue
 
         cust_exact.update(pkg_cust[CONF_CUSTOMIZE])
@@ -834,7 +836,7 @@ async def async_process_component_config(  # noqa: C901
     try:
         component = integration.get_component()
     except LOAD_EXCEPTIONS as ex:
-        _LOGGER.error("Unable to import {domain}: {ex}")
+        _LOGGER.error("Unable to import %s: %s", domain, ex)
         return None
 
     # Check if the integration has a custom config validator
@@ -846,7 +848,7 @@ async def async_process_component_config(  # noqa: C901
         # If the config platform contains bad imports, make sure
         # that still fails.
         if err.name != f"{integration.pkg_path}.config":
-            _LOGGER.error("Error importing config platform {doamin}: {err}")
+            _LOGGER.error("Error importing config platform %s: %s", domain, err)
             return None
 
     if config_validator is not None and hasattr(
@@ -860,7 +862,7 @@ async def async_process_component_config(  # noqa: C901
             async_log_exception(ex, domain, config, hass, integration.documentation)
             return None
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(f"Unknown error calling {domain} config validator")
+            _LOGGER.exception("Unknown error calling %s config validator", domain)
             return None
 
     # No custom config validator, proceed with schema validation
@@ -871,7 +873,7 @@ async def async_process_component_config(  # noqa: C901
             async_log_exception(ex, domain, config, hass, integration.documentation)
             return None
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unknown error calling {domain} CONFIG_SCHEMA")
+            _LOGGER.exception("Unknown error calling %s CONFIG_SCHEMA", domain)
             return None
 
     component_platform_schema = getattr(
@@ -892,9 +894,12 @@ async def async_process_component_config(  # noqa: C901
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 (
+                    "Unknown error validating %s platform config with %s component"
                     f"Unknown error validating {p_name} platform config with {domain} component"
                     " platform schema"
                 ),
+                p_name,
+                domain,
             )
             continue
 
@@ -908,13 +913,13 @@ async def async_process_component_config(  # noqa: C901
         try:
             p_integration = await async_get_integration_with_requirements(hass, p_name)
         except (RequirementsNotFound, IntegrationNotFound) as ex:
-            _LOGGER.error("Platform error: {domain} - {ex}")
+           _LOGGER.error("Platform error: %s - %s", domain, ex)
             continue
 
         try:
             platform = p_integration.get_platform(domain)
         except LOAD_EXCEPTIONS:
-            _LOGGER.exception("Platform error: {domain}")
+            _LOGGER.exception("Platform error: %s", domain)
             continue
 
         # Validate platform specific schema
