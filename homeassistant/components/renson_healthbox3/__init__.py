@@ -28,9 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if CONF_API_KEY in entry.data:
         api_key = entry.data[CONF_API_KEY]
 
-    # if CONF_API_KEY in entry.options:
-    #     api_key = entry.options[CONF_API_KEY]
-
     api: Healthbox3 = Healthbox3(
         host=entry.data[CONF_HOST],
         api_key=api_key,
