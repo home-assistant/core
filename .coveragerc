@@ -1026,6 +1026,11 @@ omit =
     homeassistant/components/renson/fan.py
     homeassistant/components/renson/binary_sensor.py
     homeassistant/components/renson/number.py
+    homeassistant/components/renson_healthbox3/__init__.py
+    homeassistant/components/renson_healthbox3/const.py
+    homeassistant/components/renson_healthbox3/coordinator.py
+    homeassistant/components/renson_healthbox3/entity.py
+    homeassistant/components/renson_healthbox3/sensor.py
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/sensor.py
     homeassistant/components/recorder/repack.py
