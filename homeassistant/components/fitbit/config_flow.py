@@ -11,7 +11,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
 from .const import DOMAIN, OAUTH_SCOPES
-from .exceptions import FitbitApiException, FitbitAuthException
+from .exceptions import FitbitApiException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,12 +59,9 @@ class OAuth2FlowHandler(
         client = api.ConfigFlowFitbitApi(self.hass, data[CONF_TOKEN])
         try:
             profile = await client.async_get_user_profile()
-        except FitbitAuthException as err:
-            _LOGGER.error("Failed to authenticate with Fitbit API: %s", err)
-            return self.async_abort(reason="invalid_access_token")
         except FitbitApiException as err:
             _LOGGER.error("Failed to fetch user profile for Fitbit API: %s", err)
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason=err.reason)
 
         if self.reauth_entry:
             if self.reauth_entry.unique_id != profile.encoded_id:
