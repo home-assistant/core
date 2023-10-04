@@ -241,7 +241,6 @@ SENSORS = [
         measurement=Measurement.SLEEP_HEART_RATE_MAX,
         measure_type=GetSleepSummaryField.HR_MAX,
         translation_key="maximum_heart_rate",
-        name="Maximum heart rate",
         native_unit_of_measurement=UOM_BEATS_PER_MINUTE,
         icon="mdi:heart-pulse",
         state_class=SensorStateClass.MEASUREMENT,
