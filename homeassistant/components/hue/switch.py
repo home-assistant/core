@@ -1,7 +1,7 @@
 """Support for switch platform for Hue resources (V2 only)."""
 from __future__ import annotations
 
-from typing import Any, Type, TypeAlias
+from typing import Any
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.config import BehaviorInstance, BehaviorInstanceController
@@ -46,7 +46,7 @@ async def async_setup_entry(
         controller: BehaviorInstanceController
         | LightLevelController
         | MotionController,
-        switch_class: Type[
+        switch_class: type[
             HueBehaviorInstanceEnabledEntity
             | HueLightSensorEnabledEntity
             | HueMotionSensorEnabledEntity
