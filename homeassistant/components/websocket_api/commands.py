@@ -240,7 +240,9 @@ async def handle_call_service(
     except vol.Invalid as err:
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
     except HomeAssistantError as err:
-        connection.logger.exception(err)
+        connection.logger.error(
+            "Error calling service %s.%s: %s", msg["domain"], msg["service"], err
+        )
         connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
     except Exception as err:  # pylint: disable=broad-except
         connection.logger.exception(err)

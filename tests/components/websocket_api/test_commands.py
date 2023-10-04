@@ -444,7 +444,9 @@ async def test_call_service_schema_validation_error(
 
 
 async def test_call_service_error(
-    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test call service command with error."""
 
@@ -474,6 +476,7 @@ async def test_call_service_error(
     assert msg["success"] is False
     assert msg["error"]["code"] == "home_assistant_error"
     assert msg["error"]["message"] == "error_message"
+    assert "Error calling service domain_test.ha_error: error_message" in caplog.text
 
     await websocket_client.send_json(
         {
