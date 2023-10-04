@@ -20,7 +20,7 @@ _REPORTED_INTEGRATIONS: set[str] = set()
 _CallableT = TypeVar("_CallableT", bound=Callable)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class IntegrationFrame:
     """Integration frame container."""
 
@@ -66,11 +66,11 @@ def get_integration_frame(exclude_integrations: set | None = None) -> Integratio
             break
 
     return IntegrationFrame(
-        path == "custom_components/",
-        found_frame,
-        integration,
-        found_module,
-        found_frame.filename[index:],
+        custom_integration=path == "custom_components/",
+        frame=found_frame,
+        integration=integration,
+        module=found_module,
+        relative_filename=found_frame.filename[index:],
     )
 
 

@@ -42,11 +42,11 @@ async def test_extract_frame_integration(
     """Test extracting the current frame from integration context."""
     integration_frame = frame.get_integration_frame()
     assert integration_frame == frame.IntegrationFrame(
-        False,
-        mock_integration_frame,
-        "hue",
-        None,
-        "homeassistant/components/hue/light.py",
+        custom_integration=False,
+        frame=mock_integration_frame,
+        integration="hue",
+        module=None,
+        relative_filename="homeassistant/components/hue/light.py",
     )
 
 
@@ -59,11 +59,11 @@ async def test_extract_frame_resolve_module(
     integration_frame = call_get_integration_frame()
 
     assert integration_frame == frame.IntegrationFrame(
-        True,
-        ANY,
-        "test_integration_frame",
-        "custom_components.test_integration_frame",
-        "custom_components/test_integration_frame/__init__.py",
+        custom_integration=True,
+        frame=ANY,
+        integration="test_integration_frame",
+        module="custom_components.test_integration_frame",
+        relative_filename="custom_components/test_integration_frame/__init__.py",
     )
 
 
@@ -102,11 +102,11 @@ async def test_extract_frame_integration_with_excluded_integration(
         )
 
     assert integration_frame == frame.IntegrationFrame(
-        False,
-        correct_frame,
-        "mdns",
-        None,
-        "homeassistant/components/mdns/light.py",
+        custom_integration=False,
+        frame=correct_frame,
+        integration="mdns",
+        module=None,
+        relative_filename="homeassistant/components/mdns/light.py",
     )
 
 
