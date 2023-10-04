@@ -539,42 +539,50 @@ class KNXCommonFlow(ABC, FlowHandler):
             errors=errors,
         )
 
+    async def handle_has_user_input(self, user_input: dict) -> None:
+        """Handle async_step_knxkeys_tunnel_select when the user input is available.
+
+        Args:
+            user_input (dict | None): The user input data.
+
+        Returns:
+            None
+        """
+        selected_tunnel_ia: str | None = None
+        _if_user_id: int | None = None
+        if user_input[CONF_KNX_TUNNEL_ENDPOINT_IA] == CONF_KNX_AUTOMATIC:
+            self.new_entry_data |= KNXConfigEntryData(
+                tunnel_endpoint_ia=None,
+            )
+        else:
+            selected_tunnel_ia = user_input[CONF_KNX_TUNNEL_ENDPOINT_IA]
+            self.new_entry_data |= KNXConfigEntryData(
+                tunnel_endpoint_ia=selected_tunnel_ia,
+                user_id=None,
+                user_password=None,
+                device_authentication=None,
+            )
+            _if_user_id = next(
+                (
+                    _if.user_id
+                    for _if in self._tunnel_endpoints
+                    if str(_if.individual_address) == selected_tunnel_ia
+                ),
+                None,
+            )
+        _tunnel_identifier = selected_tunnel_ia or self.new_entry_data.get(CONF_HOST)
+        _tunnel_suffix = f" @ {_tunnel_identifier}" if _tunnel_identifier else ""
+        self.new_title = f"{'Secure ' if _if_user_id else ''}Tunneling{_tunnel_suffix}"
+
     async def async_step_knxkeys_tunnel_select(
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Select if a specific tunnel should be used from knxkeys file."""
         errors = {}
         description_placeholders = {}
+
         if user_input is not None:
-            selected_tunnel_ia: str | None = None
-            _if_user_id: int | None = None
-            if user_input[CONF_KNX_TUNNEL_ENDPOINT_IA] == CONF_KNX_AUTOMATIC:
-                self.new_entry_data |= KNXConfigEntryData(
-                    tunnel_endpoint_ia=None,
-                )
-            else:
-                selected_tunnel_ia = user_input[CONF_KNX_TUNNEL_ENDPOINT_IA]
-                self.new_entry_data |= KNXConfigEntryData(
-                    tunnel_endpoint_ia=selected_tunnel_ia,
-                    user_id=None,
-                    user_password=None,
-                    device_authentication=None,
-                )
-                _if_user_id = next(
-                    (
-                        _if.user_id
-                        for _if in self._tunnel_endpoints
-                        if str(_if.individual_address) == selected_tunnel_ia
-                    ),
-                    None,
-                )
-            _tunnel_identifier = selected_tunnel_ia or self.new_entry_data.get(
-                CONF_HOST
-            )
-            _tunnel_suffix = f" @ {_tunnel_identifier}" if _tunnel_identifier else ""
-            self.new_title = (
-                f"{'Secure ' if _if_user_id else ''}Tunneling{_tunnel_suffix}"
-            )
+            await self.handle_has_user_input(user_input)
             return self.finish_flow()
 
         # this step is only called from async_step_secure_knxkeys so self._keyring is always set
