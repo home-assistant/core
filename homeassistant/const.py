@@ -6,8 +6,8 @@ from typing import Final
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 9
-PATCH_VERSION: Final = "3"
+MINOR_VERSION: Final = 10
+PATCH_VERSION: Final = "0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
@@ -288,6 +288,7 @@ EVENT_HOMEASSISTANT_STARTED: Final = "homeassistant_started"
 EVENT_HOMEASSISTANT_STOP: Final = "homeassistant_stop"
 EVENT_HOMEASSISTANT_FINAL_WRITE: Final = "homeassistant_final_write"
 EVENT_LOGBOOK_ENTRY: Final = "logbook_entry"
+EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: Final = "state_changed"
@@ -459,6 +460,9 @@ ATTR_HIDDEN: Final = "hidden"
 # Location of the entity
 ATTR_LATITUDE: Final = "latitude"
 ATTR_LONGITUDE: Final = "longitude"
+
+# Elevation of the entity
+ATTR_ELEVATION: Final = "elevation"
 
 # Accuracy of location in meters
 ATTR_GPS_ACCURACY: Final = "gps_accuracy"

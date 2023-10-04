@@ -18,12 +18,12 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_SLEEP_PERIOD
+from .const import CONF_SLEEP_PERIOD, OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
 from .entity import (
     RestEntityDescription,
@@ -229,7 +229,28 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     ) -> None:
         """Initialize update entity."""
         super().__init__(coordinator, key, attribute, description)
-        self._in_progress_old_version: str | None = None
+        self._ota_in_progress: bool = False
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_subscribe_ota_events(self._ota_progress_callback)
+        )
+
+    @callback
+    def _ota_progress_callback(self, event: dict[str, Any]) -> None:
+        """Handle device OTA progress."""
+        if self._ota_in_progress:
+            event_type = event["event"]
+            if event_type == OTA_BEGIN:
+                self._attr_in_progress = 0
+            elif event_type == OTA_PROGRESS:
+                self._attr_in_progress = event["progress_percent"]
+            elif event_type in (OTA_ERROR, OTA_SUCCESS):
+                self._attr_in_progress = False
+                self._ota_in_progress = False
+            self.async_write_ha_state()
 
     @property
     def installed_version(self) -> str | None:
@@ -245,16 +266,10 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
 
         return self.installed_version
 
-    @property
-    def in_progress(self) -> bool:
-        """Update installation in progress."""
-        return self._in_progress_old_version == self.installed_version
-
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install the latest firmware version."""
-        self._in_progress_old_version = self.installed_version
         beta = self.entity_description.beta
         update_data = self.coordinator.device.status["sys"]["available_updates"]
         LOGGER.debug("OTA update service - update_data: %s", update_data)
@@ -280,6 +295,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         except InvalidAuthError:
             self.coordinator.entry.async_start_reauth(self.hass)
         else:
+            self._ota_in_progress = True
             LOGGER.debug("OTA update call successful")
 
 

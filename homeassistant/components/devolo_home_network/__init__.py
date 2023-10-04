@@ -1,7 +1,6 @@
 """The devolo Home Network integration."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -36,6 +35,7 @@ from .const import (
     CONNECTED_PLC_DEVICES,
     CONNECTED_WIFI_CLIENTS,
     DOMAIN,
+    FIRMWARE_UPDATE_INTERVAL,
     LONG_UPDATE_INTERVAL,
     NEIGHBORING_WIFI_NETWORKS,
     REGULAR_FIRMWARE,
@@ -74,8 +74,7 @@ async def async_setup_entry(  # noqa: C901
         """Fetch data from API endpoint."""
         assert device.device
         try:
-            async with asyncio.timeout(30):
-                return await device.device.async_check_firmware_available()
+            return await device.device.async_check_firmware_available()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
@@ -83,8 +82,7 @@ async def async_setup_entry(  # noqa: C901
         """Fetch data from API endpoint."""
         assert device.plcnet
         try:
-            async with asyncio.timeout(10):
-                return await device.plcnet.async_get_network_overview()
+            return await device.plcnet.async_get_network_overview()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
@@ -92,8 +90,7 @@ async def async_setup_entry(  # noqa: C901
         """Fetch data from API endpoint."""
         assert device.device
         try:
-            async with asyncio.timeout(10):
-                return await device.device.async_get_wifi_guest_access()
+            return await device.device.async_get_wifi_guest_access()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
         except DevicePasswordProtected as err:
@@ -103,8 +100,7 @@ async def async_setup_entry(  # noqa: C901
         """Fetch data from API endpoint."""
         assert device.device
         try:
-            async with asyncio.timeout(10):
-                return await device.device.async_get_led_setting()
+            return await device.device.async_get_led_setting()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
@@ -112,8 +108,7 @@ async def async_setup_entry(  # noqa: C901
         """Fetch data from API endpoint."""
         assert device.device
         try:
-            async with asyncio.timeout(10):
-                return await device.device.async_get_wifi_connected_station()
+            return await device.device.async_get_wifi_connected_station()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
@@ -121,8 +116,7 @@ async def async_setup_entry(  # noqa: C901
         """Fetch data from API endpoint."""
         assert device.device
         try:
-            async with asyncio.timeout(30):
-                return await device.device.async_get_wifi_neighbor_access_points()
+            return await device.device.async_get_wifi_neighbor_access_points()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
@@ -153,7 +147,7 @@ async def async_setup_entry(  # noqa: C901
             _LOGGER,
             name=REGULAR_FIRMWARE,
             update_method=async_update_firmware_available,
-            update_interval=LONG_UPDATE_INTERVAL,
+            update_interval=FIRMWARE_UPDATE_INTERVAL,
         )
     if device.device and "wifi1" in device.device.features:
         coordinators[CONNECTED_WIFI_CLIENTS] = DataUpdateCoordinator(

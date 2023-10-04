@@ -119,6 +119,7 @@ class TriggerBaseEntity(Entity):
         # We make a copy so our initial render is 'unknown' and not 'unavailable'
         self._rendered = dict(self._static_rendered)
         self._parse_result = {CONF_AVAILABILITY}
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
     @property
     def name(self) -> str | None:
@@ -129,11 +130,6 @@ class TriggerBaseEntity(Entity):
     def unique_id(self) -> str | None:
         """Return unique ID of the entity."""
         return self._unique_id
-
-    @property
-    def device_class(self):  # type: ignore[no-untyped-def]
-        """Return device class of the entity."""
-        return self._config.get(CONF_DEVICE_CLASS)
 
     @property
     def icon(self) -> str | None:

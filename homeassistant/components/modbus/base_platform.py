@@ -42,6 +42,7 @@ from .const import (
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
@@ -58,6 +59,7 @@ from .const import (
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_VERIFY,
+    CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
     SIGNAL_START_ENTITY,
@@ -76,7 +78,7 @@ class BasePlatform(Entity):
     def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
         """Initialize the Modbus binary sensor."""
         self._hub = hub
-        self._slave = entry.get(CONF_SLAVE, 0)
+        self._slave = entry.get(CONF_SLAVE, None) or entry.get(CONF_DEVICE_ADDRESS, 0)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._value: str | None = None
@@ -162,8 +164,12 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         self._structure: str = config[CONF_STRUCTURE]
         self._precision = config[CONF_PRECISION]
         self._scale = config[CONF_SCALE]
+        if self._scale < 1 and not self._precision:
+            self._precision = 2
         self._offset = config[CONF_OFFSET]
-        self._slave_count = config.get(CONF_SLAVE_COUNT, 0)
+        self._slave_count = config.get(CONF_SLAVE_COUNT, None) or config.get(
+            CONF_VIRTUAL_COUNT, 0
+        )
         self._slave_size = self._count = config[CONF_COUNT]
 
     def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:

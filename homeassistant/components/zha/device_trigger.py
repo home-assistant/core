@@ -14,8 +14,8 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN as ZHA_DOMAIN
-from .core.const import DATA_ZHA, DATA_ZHA_DEVICE_TRIGGER_CACHE, ZHA_EVENT
-from .core.helpers import async_get_zha_device
+from .core.const import ZHA_EVENT
+from .core.helpers import async_get_zha_device, get_zha_data
 
 CONF_SUBTYPE = "subtype"
 DEVICE = "device"
@@ -32,13 +32,13 @@ def _get_device_trigger_data(hass: HomeAssistant, device_id: str) -> tuple[str, 
     # First, try checking to see if the device itself is accessible
     try:
         zha_device = async_get_zha_device(hass, device_id)
-    except KeyError:
+    except ValueError:
         pass
     else:
         return str(zha_device.ieee), zha_device.device_automation_triggers
 
     # If not, check the trigger cache but allow any `KeyError`s to propagate
-    return hass.data[DATA_ZHA][DATA_ZHA_DEVICE_TRIGGER_CACHE][device_id]
+    return get_zha_data(hass).device_trigger_cache[device_id]
 
 
 async def async_validate_trigger_config(

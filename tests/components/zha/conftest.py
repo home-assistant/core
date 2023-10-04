@@ -22,9 +22,10 @@ import zigpy.zdo.types as zdo_t
 
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.setup import async_setup_component
 
-from . import common
+from .common import patch_cluster as common_patch_cluster
 
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
@@ -277,7 +278,7 @@ def zigpy_device_mock(zigpy_app_controller):
                 for cluster in itertools.chain(
                     endpoint.in_clusters.values(), endpoint.out_clusters.values()
                 ):
-                    common.patch_cluster(cluster)
+                    common_patch_cluster(cluster)
 
         if attributes is not None:
             for ep_id, clusters in attributes.items():
@@ -305,7 +306,7 @@ def zha_device_joined(hass, setup_zha):
         if setup_zha:
             await setup_zha_fixture()
 
-        zha_gateway = common.get_zha_gateway(hass)
+        zha_gateway = get_zha_gateway(hass)
         zha_gateway.application_controller.devices[zigpy_dev.ieee] = zigpy_dev
         await zha_gateway.async_device_initialized(zigpy_dev)
         await hass.async_block_till_done()
@@ -329,7 +330,7 @@ def zha_device_restored(hass, zigpy_app_controller, setup_zha):
         if setup_zha:
             await setup_zha_fixture()
 
-        zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
+        zha_gateway = get_zha_gateway(hass)
         return zha_gateway.get_device(zigpy_dev.ieee)
 
     return _zha_device

@@ -64,6 +64,9 @@ async def test_pipeline_from_audio_stream_auto(
             channel=stt.AudioChannels.CHANNEL_MONO,
         ),
         stt_stream=audio_data(),
+        audio_settings=assist_pipeline.AudioSettings(
+            is_vad_enabled=False, is_chunking_enabled=False
+        ),
     )
 
     assert process_events(events) == snapshot
@@ -103,6 +106,8 @@ async def test_pipeline_from_audio_stream_legacy(
             "tts_engine": "test",
             "tts_language": "en-US",
             "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": None,
+            "wake_word_id": None,
         }
     )
     msg = await client.receive_json()
@@ -124,6 +129,9 @@ async def test_pipeline_from_audio_stream_legacy(
         ),
         stt_stream=audio_data(),
         pipeline_id=pipeline_id,
+        audio_settings=assist_pipeline.AudioSettings(
+            is_vad_enabled=False, is_chunking_enabled=False
+        ),
     )
 
     assert process_events(events) == snapshot
@@ -163,6 +171,8 @@ async def test_pipeline_from_audio_stream_entity(
             "tts_engine": "test",
             "tts_language": "en-US",
             "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": None,
+            "wake_word_id": None,
         }
     )
     msg = await client.receive_json()
@@ -184,6 +194,9 @@ async def test_pipeline_from_audio_stream_entity(
         ),
         stt_stream=audio_data(),
         pipeline_id=pipeline_id,
+        audio_settings=assist_pipeline.AudioSettings(
+            is_vad_enabled=False, is_chunking_enabled=False
+        ),
     )
 
     assert process_events(events) == snapshot
@@ -223,6 +236,8 @@ async def test_pipeline_from_audio_stream_no_stt(
             "tts_engine": "test",
             "tts_language": "en-AU",
             "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": None,
+            "wake_word_id": None,
         }
     )
     msg = await client.receive_json()
@@ -245,6 +260,9 @@ async def test_pipeline_from_audio_stream_no_stt(
             ),
             stt_stream=audio_data(),
             pipeline_id=pipeline_id,
+            audio_settings=assist_pipeline.AudioSettings(
+                is_vad_enabled=False, is_chunking_enabled=False
+            ),
         )
 
     assert not events
@@ -306,44 +324,47 @@ async def test_pipeline_from_audio_stream_wake_word(
     # [0, 2, ...]
     wake_chunk_2 = bytes(it.islice(it.cycle(range(0, 256, 2)), BYTES_ONE_SECOND))
 
+    bytes_per_chunk = int(0.01 * BYTES_ONE_SECOND)
+
     async def audio_data():
-        yield wake_chunk_1  # 1 second
-        yield wake_chunk_2  # 1 second
+        # 1 second in 10 ms chunks
+        i = 0
+        while i < len(wake_chunk_1):
+            yield wake_chunk_1[i : i + bytes_per_chunk]
+            i += bytes_per_chunk
+
+        # 1 second in 30 ms chunks
+        i = 0
+        while i < len(wake_chunk_2):
+            yield wake_chunk_2[i : i + bytes_per_chunk]
+            i += bytes_per_chunk
+
         yield b"wake word!"
         yield b"part1"
         yield b"part2"
-        yield b"end"
         yield b""
 
-    def continue_stt(self, chunk):
-        # Ensure stt_vad_start event is triggered
-        self.in_command = True
-
-        # Stop on fake end chunk to trigger stt_vad_end
-        return chunk != b"end"
-
-    with patch(
-        "homeassistant.components.assist_pipeline.pipeline.VoiceCommandSegmenter.process",
-        continue_stt,
-    ):
-        await assist_pipeline.async_pipeline_from_audio_stream(
-            hass,
-            context=Context(),
-            event_callback=events.append,
-            stt_metadata=stt.SpeechMetadata(
-                language="",
-                format=stt.AudioFormats.WAV,
-                codec=stt.AudioCodecs.PCM,
-                bit_rate=stt.AudioBitRates.BITRATE_16,
-                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-                channel=stt.AudioChannels.CHANNEL_MONO,
-            ),
-            stt_stream=audio_data(),
-            start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
-            wake_word_settings=assist_pipeline.WakeWordSettings(
-                audio_seconds_to_buffer=1.5
-            ),
-        )
+    await assist_pipeline.async_pipeline_from_audio_stream(
+        hass,
+        context=Context(),
+        event_callback=events.append,
+        stt_metadata=stt.SpeechMetadata(
+            language="",
+            format=stt.AudioFormats.WAV,
+            codec=stt.AudioCodecs.PCM,
+            bit_rate=stt.AudioBitRates.BITRATE_16,
+            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+            channel=stt.AudioChannels.CHANNEL_MONO,
+        ),
+        stt_stream=audio_data(),
+        start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+        wake_word_settings=assist_pipeline.WakeWordSettings(
+            audio_seconds_to_buffer=1.5
+        ),
+        audio_settings=assist_pipeline.AudioSettings(
+            is_vad_enabled=False, is_chunking_enabled=False
+        ),
+    )
 
     assert process_events(events) == snapshot
 
@@ -351,12 +372,14 @@ async def test_pipeline_from_audio_stream_wake_word(
     # 2. queued audio (from mock wake word entity)
     # 3. part1
     # 4. part2
-    assert len(mock_stt_provider.received) == 4
+    assert len(mock_stt_provider.received) > 3
 
-    first_chunk = mock_stt_provider.received[0]
+    first_chunk = bytes(
+        [c_byte for c in mock_stt_provider.received[:-3] for c_byte in c]
+    )
     assert first_chunk == wake_chunk_1[len(wake_chunk_1) // 2 :] + wake_chunk_2
 
-    assert mock_stt_provider.received[1:] == [b"queued audio", b"part1", b"part2"]
+    assert mock_stt_provider.received[-3:] == [b"queued audio", b"part1", b"part2"]
 
 
 async def test_pipeline_save_audio(
@@ -404,6 +427,9 @@ async def test_pipeline_save_audio(
             pipeline_id=pipeline.id,
             start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
             end_stage=assist_pipeline.PipelineStage.STT,
+            audio_settings=assist_pipeline.AudioSettings(
+                is_vad_enabled=False, is_chunking_enabled=False
+            ),
         )
 
         pipeline_dirs = list(temp_dir.iterdir())
@@ -537,3 +563,96 @@ async def test_pipeline_saved_audio_write_error(
                 start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
                 end_stage=assist_pipeline.PipelineStage.STT,
             )
+
+
+async def test_wake_word_detection_aborted(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSttProvider,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test creating a pipeline from an audio stream with wake word."""
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    async def audio_data():
+        yield b"silence!"
+        yield b"wake word!"
+        yield b"part1"
+        yield b"part2"
+        yield b""
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        conversation_id=None,
+        device_id=None,
+        stt_metadata=stt.SpeechMetadata(
+            language="",
+            format=stt.AudioFormats.WAV,
+            codec=stt.AudioCodecs.PCM,
+            bit_rate=stt.AudioBitRates.BITRATE_16,
+            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+            channel=stt.AudioChannels.CHANNEL_MONO,
+        ),
+        stt_stream=audio_data(),
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+            end_stage=assist_pipeline.PipelineStage.TTS,
+            event_callback=events.append,
+            tts_audio_output=None,
+            wake_word_settings=assist_pipeline.WakeWordSettings(
+                audio_seconds_to_buffer=1.5
+            ),
+            audio_settings=assist_pipeline.AudioSettings(
+                is_vad_enabled=False, is_chunking_enabled=False
+            ),
+        ),
+    )
+    await pipeline_input.validate()
+
+    updates = pipeline.to_json()
+    updates.pop("id")
+    await pipeline_store.async_update_item(
+        pipeline_id,
+        updates,
+    )
+    await pipeline_input.execute()
+
+    assert process_events(events) == snapshot
+
+
+def test_pipeline_run_equality(hass: HomeAssistant, init_components) -> None:
+    """Test that pipeline run equality uses unique id."""
+
+    def event_callback(event):
+        pass
+
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass)
+    run_1 = assist_pipeline.pipeline.PipelineRun(
+        hass,
+        context=Context(),
+        pipeline=pipeline,
+        start_stage=assist_pipeline.PipelineStage.STT,
+        end_stage=assist_pipeline.PipelineStage.TTS,
+        event_callback=event_callback,
+    )
+    run_2 = assist_pipeline.pipeline.PipelineRun(
+        hass,
+        context=Context(),
+        pipeline=pipeline,
+        start_stage=assist_pipeline.PipelineStage.STT,
+        end_stage=assist_pipeline.PipelineStage.TTS,
+        event_callback=event_callback,
+    )
+
+    assert run_1 == run_1
+    assert run_1 != run_2
+    assert run_1 != 1234

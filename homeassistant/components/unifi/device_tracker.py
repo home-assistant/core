@@ -24,7 +24,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
 from .entity import (
     HandlerT,
@@ -180,7 +179,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
     UnifiTrackerEntityDescription[Devices, Device](
         key="Device scanner",
         has_entity_name=True,
-        icon="mdi:ethernet",
         allowed_fn=lambda controller, obj_id: controller.option_track_devices,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
@@ -206,9 +204,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
-    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    controller.register_platform_add_entities(
-        UnifiScannerEntity, ENTITY_DESCRIPTIONS, async_add_entities
+    UniFiController.register_platform(
+        hass, config_entry, async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
     )
 
 
