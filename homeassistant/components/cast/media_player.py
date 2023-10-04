@@ -619,7 +619,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         media_id: str,
         extra: Any,
         chromecast: pychromecast.Chromecast,
-    ) -> bool:
+    ):
         try:
             app_data = json.loads(media_id)
             if metadata := extra.get("metadata"):
@@ -639,7 +639,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                     "Extra keys %s were ignored. Please use app_name to cast media",
                     app_data.keys(),
                 )
-            return True
+            return
 
         app_name = app_data.pop("app_name")
         try:
@@ -648,7 +648,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             )
         except NotImplementedError:
             _LOGGER.error("App %s not supported", app_name)
-        return True
+        return
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -667,10 +667,10 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         # Handle media supported by a known cast app
         if media_type == CAST_DOMAIN:
-            if await self._async_play_known_cast_app(
+            await self._async_play_known_cast_app(
                 media_type, media_id, extra, chromecast
-            ):
-                return
+            )
+            return
 
         # Try the cast platforms
         for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
