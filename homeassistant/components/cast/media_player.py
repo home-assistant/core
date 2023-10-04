@@ -620,6 +620,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         extra: Any,
         chromecast: pychromecast.Chromecast,
     ):
+        """Handle media supported by a known cast app."""
         try:
             app_data = json.loads(media_id)
             if metadata := extra.get("metadata"):
