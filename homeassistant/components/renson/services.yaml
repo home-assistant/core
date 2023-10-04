@@ -55,7 +55,6 @@ set_day_night_time:
   fields:
     day:
       required: true
-      advanced: false
       default: "7:00:00"
       example: "7:00:00"
       selector:
