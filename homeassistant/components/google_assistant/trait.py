@@ -942,7 +942,7 @@ class TemperatureControlTrait(_Trait):
         else:
             response["queryOnlyTemperatureControl"] = True
             response["temperatureRange"] = {
-                "minThresholdCelsius": -100,
+                "minThresholdCelsius": 0,
                 "maxThresholdCelsius": 100,
             }
 

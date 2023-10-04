@@ -1237,7 +1237,7 @@ async def test_temperature_control(hass: HomeAssistant) -> None:
     assert trt.sync_attributes() == {
         "queryOnlyTemperatureControl": True,
         "temperatureUnitForUX": "C",
-        "temperatureRange": {"maxThresholdCelsius": 100, "minThresholdCelsius": -100},
+        "temperatureRange": {"maxThresholdCelsius": 100, "minThresholdCelsius": 0},
     }
     assert trt.query_attributes() == {
         "temperatureSetpointCelsius": 18,
@@ -3228,7 +3228,7 @@ async def test_temperature_control_sensor_data(
     assert trt.sync_attributes() == {
         "queryOnlyTemperatureControl": True,
         "temperatureUnitForUX": unit_out,
-        "temperatureRange": {"maxThresholdCelsius": 100, "minThresholdCelsius": -100},
+        "temperatureRange": {"maxThresholdCelsius": 100, "minThresholdCelsius": 0},
     }
 
     if ambient:
