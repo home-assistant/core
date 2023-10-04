@@ -809,8 +809,10 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
+        is_first_update = not self.data
+
         try:
-            await self.force_data_refresh(self.data is None)
+            await self.force_data_refresh(is_first_update)
         except HassioAPIError as err:
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
@@ -854,7 +856,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         new_data[DATA_KEY_HOST] = get_host_info(self.hass) or {}
 
         # If this is the initial refresh, register all addons and return the dict
-        if not self.data:
+        if is_first_update:
             async_register_addons_in_dev_reg(
                 self.entry_id, self.dev_reg, new_data[DATA_KEY_ADDONS].values()
             )
