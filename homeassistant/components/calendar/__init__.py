@@ -481,6 +481,8 @@ def is_offset_reached(
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
 
+    _entity_component_unrecorded_attributes = frozenset({"description"})
+
     _alarm_unsubs: list[CALLBACK_TYPE] = []
 
     @property
@@ -529,6 +531,7 @@ class CalendarEntity(Entity):
 
         for unsub in self._alarm_unsubs:
             unsub()
+        self._alarm_unsubs.clear()
 
         now = dt_util.now()
         event = self.event
@@ -538,6 +541,7 @@ class CalendarEntity(Entity):
         @callback
         def update(_: datetime.datetime) -> None:
             """Run when the active or upcoming event starts or ends."""
+            _LOGGER.debug("Running %s update", self.entity_id)
             self._async_write_ha_state()
 
         if now < event.start_datetime_local:
@@ -551,6 +555,13 @@ class CalendarEntity(Entity):
         self._alarm_unsubs.append(
             async_track_point_in_time(self.hass, update, event.end_datetime_local)
         )
+        _LOGGER.debug(
+            "Scheduled %d updates for %s (%s, %s)",
+            len(self._alarm_unsubs),
+            self.entity_id,
+            event.start_datetime_local,
+            event.end_datetime_local,
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
@@ -559,6 +570,7 @@ class CalendarEntity(Entity):
         """
         for unsub in self._alarm_unsubs:
             unsub()
+        self._alarm_unsubs.clear()
 
     async def async_get_events(
         self,

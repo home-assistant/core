@@ -34,13 +34,13 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
         """Initialize AquaLink sensor."""
         super().__init__(dev)
         self._attr_name = dev.label
-        if dev.name.endswith("_temp"):
-            self._attr_native_unit_of_measurement = (
-                UnitOfTemperature.FAHRENHEIT
-                if dev.system.temp_unit == "F"
-                else UnitOfTemperature.CELSIUS
-            )
-            self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        if not dev.name.endswith("_temp"):
+            return
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        if dev.system.temp_unit == "F":
+            self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
+            return
+        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
     def native_value(self) -> int | float | None:

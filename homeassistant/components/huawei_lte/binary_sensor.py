@@ -65,7 +65,9 @@ class HuaweiLteBaseBinarySensor(HuaweiLteBaseEntityWithDevice, BinarySensorEntit
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
-        self.router.subscriptions[self.key].add(f"{BINARY_SENSOR_DOMAIN}/{self.item}")
+        self.router.subscriptions[self.key].append(
+            f"{BINARY_SENSOR_DOMAIN}/{self.item}"
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from needed data on remove."""
