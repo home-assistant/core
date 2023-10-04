@@ -211,13 +211,13 @@
 # name: test_all_entities.21
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'henk Fat mass',
+      'friendly_name': 'henk Maximum heart rate',
       'icon': 'mdi:heart-pulse',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'bpm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.henk_fat_mass_2',
+    'entity_id': 'sensor.henk_maximum_heart_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '165.0',
@@ -226,13 +226,13 @@
 # name: test_all_entities.22
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'henk Maximum heart rate',
+      'friendly_name': 'henk Minimum heart rate',
       'icon': 'mdi:heart-pulse',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'bpm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.henk_maximum_heart_rate',
+    'entity_id': 'sensor.henk_minimum_heart_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '166.0',
