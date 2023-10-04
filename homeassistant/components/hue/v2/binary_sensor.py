@@ -156,7 +156,6 @@ class HueTamperSensor(HueBaseEntity, BinarySensorEntity):
         key="tamper_sensor",
         device_class=BinarySensorDeviceClass.TAMPER,
         has_entity_name=True,
-        translation_key="tamper_sensor",
     )
 
     @property
