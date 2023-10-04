@@ -49,11 +49,13 @@ class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
+        await super().async_added_to_hass()
         update_types = KEY_TO_UPDATE_TYPES[self.entity_description.key]
         self.async_on_remove(
-            self.coordinator.async_enable_addon_updates(self._addon_slug, update_types)
+            self.coordinator.async_enable_addon_updates(
+                self._addon_slug, self.entity_id, update_types
+            )
         )
-        return await super().async_added_to_hass()
 
 
 class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):

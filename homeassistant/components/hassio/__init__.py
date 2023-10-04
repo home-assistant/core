@@ -805,9 +805,9 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
         self.is_hass_os = (get_info(self.hass) or {}).get("hassos") is not None
-        self._enabled_updates_by_addon: defaultdict[str, dict[str, int]] = defaultdict(
-            dict
-        )
+        self._enabled_updates_by_addon: defaultdict[
+            str, dict[str, set[str]]
+        ] = defaultdict(lambda: defaultdict(set))
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -1001,16 +1001,18 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         return (slug, None)
 
     @callback
-    def async_enable_addon_updates(self, slug: str, types: set[str]) -> CALLBACK_TYPE:
+    def async_enable_addon_updates(
+        self, slug: str, entity_id: str, types: set[str]
+    ) -> CALLBACK_TYPE:
         """Enable updates for an add-on."""
         enabled_updates = self._enabled_updates_by_addon[slug]
         for key in types:
-            enabled_updates[key] = enabled_updates.get(key, 0) + 1
+            enabled_updates[key].add(entity_id)
 
         @callback
         def _remove():
             for key in types:
-                enabled_updates[key] -= 1
+                enabled_updates[key].remove(entity_id)
 
         return _remove
 
