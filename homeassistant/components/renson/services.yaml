@@ -47,7 +47,6 @@ set_breeze:
           mode: slider
     activate:
       required: true
-      advanced: false
       default: false
       selector:
         boolean:
