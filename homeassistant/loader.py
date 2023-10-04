@@ -1195,7 +1195,7 @@ def async_get_issue_tracker(
     *,
     integration_domain: str | None = None,
     module: str | None = None,
-) -> str:
+) -> str | None:
     """Return a URL for an integration's issue tracker."""
     issue_tracker = (
         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
@@ -1208,10 +1208,10 @@ def async_get_issue_tracker(
         with suppress(IntegrationNotLoaded):
             integration = async_get_loaded_integration(hass, integration_domain)
             if not integration.is_built_in:
-                return integration.issue_tracker or ""
+                return integration.issue_tracker
 
     if module and "custom_components" in module:
-        return ""
+        return None
 
     if integration_domain:
         issue_tracker += f"+label%3A%22integration%3A+{integration_domain}%22"

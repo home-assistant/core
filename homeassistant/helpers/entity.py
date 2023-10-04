@@ -1255,9 +1255,8 @@ class Entity(ABC):
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2024.1
         platform_name = self.platform.platform_name if self.platform else None
-        module = type(self).__module__
         return async_suggest_report_issue(
-            self.hass, integration_domain=platform_name, module=module
+            self.hass, integration_domain=platform_name, module=type(self).__module__
         )
 
 

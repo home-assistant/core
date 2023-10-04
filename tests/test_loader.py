@@ -777,16 +777,16 @@ CUSTOM_ISSUE_TRACKER = "https://blablabla.com"
         ("bla_custom", "custom_components.bla_custom.sensor", CUSTOM_ISSUE_TRACKER),
         ("bla_custom", None, CUSTOM_ISSUE_TRACKER),
         # Custom integration without known issue tracker
-        (None, "custom_components.bla.sensor", ""),
-        ("bla_custom_no_tracker", "custom_components.bla_custom.sensor", ""),
-        ("bla_custom_no_tracker", None, ""),
-        ("hue", "custom_components.bla.sensor", ""),
+        (None, "custom_components.bla.sensor", None),
+        ("bla_custom_no_tracker", "custom_components.bla_custom.sensor", None),
+        ("bla_custom_no_tracker", None, None),
+        ("hue", "custom_components.bla.sensor", None),
         # Integration domain has priority over module
-        ("bla_custom_no_tracker", "homeassistant.components.bla_custom.sensor", ""),
+        ("bla_custom_no_tracker", "homeassistant.components.bla_custom.sensor", None),
     ],
 )
 async def test_async_get_issue_tracker(
-    hass, domain: str | None, module: str | None, issue_tracker: str
+    hass, domain: str | None, module: str | None, issue_tracker: str | None
 ) -> None:
     """Test async_get_issue_tracker."""
     mock_integration(hass, MockModule("bla_built_in"))
@@ -816,7 +816,7 @@ async def test_async_get_issue_tracker(
         (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER),
         ("hue", "homeassistant.components.mqtt.sensor", CORE_ISSUE_TRACKER_HUE),
         # Custom integration with known issue tracker - can't find it without hass
-        ("bla_custom", "custom_components.bla_custom.sensor", ""),
+        ("bla_custom", "custom_components.bla_custom.sensor", None),
         # Assumed to be a core integration without hass and without module
         ("bla_custom", None, CORE_ISSUE_TRACKER_CUSTOM),
     ],
