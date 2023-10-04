@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
+from .entity import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 
 
@@ -55,6 +55,6 @@ DEVICE_TRACKER_TYPES: tuple[RenaultDataEntityDescription, ...] = (
         key="location",
         coordinator="location",
         icon="mdi:car",
-        name="Location",
+        translation_key="location",
     ),
 )

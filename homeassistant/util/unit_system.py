@@ -277,6 +277,12 @@ METRIC_SYSTEM = UnitSystem(
         ("water", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
+        # Convert wind speeds except knots to km/h
+        **{
+            ("wind_speed", unit): UnitOfSpeed.KILOMETERS_PER_HOUR
+            for unit in UnitOfSpeed
+            if unit not in (UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.KNOTS)
+        },
     },
     length=UnitOfLength.KILOMETERS,
     mass=UnitOfMass.GRAMS,
@@ -341,6 +347,12 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         # Convert non-USCS volumes of water meters
         ("water", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         ("water", UnitOfVolume.LITERS): UnitOfVolume.GALLONS,
+        # Convert wind speeds except knots to mph
+        **{
+            ("wind_speed", unit): UnitOfSpeed.MILES_PER_HOUR
+            for unit in UnitOfSpeed
+            if unit not in (UnitOfSpeed.KNOTS, UnitOfSpeed.MILES_PER_HOUR)
+        },
     },
     length=UnitOfLength.MILES,
     mass=UnitOfMass.POUNDS,

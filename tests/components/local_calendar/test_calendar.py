@@ -1,6 +1,7 @@
 """Tests for calendar platform of local calendar."""
 
 import datetime
+import textwrap
 
 import pytest
 
@@ -938,5 +939,93 @@ async def test_create_event_service(
             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
             "location": "Test Location",
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    "ics_content",
+    [
+        textwrap.dedent(
+            """\
+            BEGIN:VCALENDAR
+            BEGIN:VEVENT
+            SUMMARY:Bastille Day Party
+            DTSTART:19970714
+            DTEND:19970714
+            END:VEVENT
+            END:VCALENDAR
+        """
+        ),
+        textwrap.dedent(
+            """\
+            BEGIN:VCALENDAR
+            BEGIN:VEVENT
+            SUMMARY:Bastille Day Party
+            DTSTART:19970714
+            DTEND:19970710
+            END:VEVENT
+            END:VCALENDAR
+        """
+        ),
+    ],
+    ids=["no_duration", "negative"],
+)
+async def test_invalid_all_day_event(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    get_events: GetEventsFn,
+) -> None:
+    """Test all day events with invalid durations, which are coerced to be valid."""
+    events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"date": "1997-07-14"},
+            "end": {"date": "1997-07-15"},
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    "ics_content",
+    [
+        textwrap.dedent(
+            """\
+            BEGIN:VCALENDAR
+            BEGIN:VEVENT
+            SUMMARY:Bastille Day Party
+            DTSTART:19970714T110000
+            DTEND:19970714T110000
+            END:VEVENT
+            END:VCALENDAR
+        """
+        ),
+        textwrap.dedent(
+            """\
+            BEGIN:VCALENDAR
+            BEGIN:VEVENT
+            SUMMARY:Bastille Day Party
+            DTSTART:19970714T110000
+            DTEND:19970710T100000
+            END:VEVENT
+            END:VCALENDAR
+        """
+        ),
+    ],
+    ids=["no_duration", "negative"],
+)
+async def test_invalid_event_duration(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    get_events: GetEventsFn,
+) -> None:
+    """Test events with invalid durations, which are coerced to be valid."""
+    events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T11:30:00-06:00"},
         }
     ]

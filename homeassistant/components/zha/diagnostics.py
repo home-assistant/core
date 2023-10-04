@@ -7,6 +7,7 @@ from typing import Any
 
 from zigpy.config import CONF_NWK_EXTENDED_PAN_ID
 from zigpy.profiles import PROFILES
+from zigpy.types import Channels
 from zigpy.zcl import Cluster
 
 from homeassistant.components.diagnostics.util import async_redact_data
@@ -24,14 +25,10 @@ from .core.const import (
     ATTR_PROFILE_ID,
     ATTR_VALUE,
     CONF_ALARM_MASTER_CODE,
-    DATA_ZHA,
-    DATA_ZHA_CONFIG,
-    DATA_ZHA_GATEWAY,
     UNKNOWN,
 )
 from .core.device import ZHADevice
-from .core.gateway import ZHAGateway
-from .core.helpers import async_get_zha_device
+from .core.helpers import async_get_zha_device, get_zha_data, get_zha_gateway
 
 KEYS_TO_REDACT = {
     ATTR_IEEE,
@@ -65,13 +62,21 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    config: dict = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
-    gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_data = get_zha_data(hass)
+    app = get_zha_gateway(hass).application_controller
+
+    energy_scan = await app.energy_scan(
+        channels=Channels.ALL_CHANNELS, duration_exp=4, count=1
+    )
+
     return async_redact_data(
         {
-            "config": config,
+            "config": zha_data.yaml_config,
             "config_entry": config_entry.as_dict(),
-            "application_state": shallow_asdict(gateway.application_controller.state),
+            "application_state": shallow_asdict(app.state),
+            "energy_scan": {
+                channel: 100 * energy / 255 for channel, energy in energy_scan.items()
+            },
             "versions": {
                 "bellows": version("bellows"),
                 "zigpy": version("zigpy"),

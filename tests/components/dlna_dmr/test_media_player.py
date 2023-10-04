@@ -50,6 +50,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
+    CONNECTION_UPNP,
     async_get as async_get_dr,
 )
 from homeassistant.helpers.entity_component import async_update_entity
@@ -347,7 +348,10 @@ async def test_setup_entry_mac_address(
 
     # Check the device registry connections for MAC address
     dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
     assert device is not None
     assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) in device.connections
 
@@ -364,7 +368,10 @@ async def test_setup_entry_no_mac_address(
 
     # Check the device registry connections does not include the MAC address
     dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
     assert device is not None
     assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) not in device.connections
 
@@ -427,7 +434,10 @@ async def test_available_device(
     """Test a DlnaDmrEntity with a connected DmrDevice."""
     # Check hass device information is filled in
     dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
     assert device is not None
     # Device properties are set in dmr_device_mock before the entity gets constructed
     assert device.manufacturer == "device_manufacturer"
@@ -1274,6 +1284,7 @@ async def test_unavailable_device(
     hass.config_entries.async_update_entry(
         config_entry_mock, options={CONF_POLL_AVAILABILITY: True}
     )
+    await hass.async_block_till_done()
     await async_update_entity(hass, mock_entity_id)
     domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
         MOCK_DEVICE_LOCATION
@@ -1322,7 +1333,10 @@ async def test_unavailable_device(
 
     # Check hass device information has not been filled in yet
     dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
     assert device is None
 
     # Unload config entry to clean up
@@ -1359,7 +1373,10 @@ async def test_become_available(
 
     # Check hass device information has not been filled in yet
     dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
     assert device is None
 
     # Mock device is now available.
@@ -1398,7 +1415,10 @@ async def test_become_available(
     assert mock_state.state == MediaPlayerState.IDLE
     # Check hass device information is now filled in
     dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
     assert device is not None
     assert device.manufacturer == "device_manufacturer"
     assert device.model == "device_model_name"
@@ -2230,7 +2250,10 @@ async def test_config_update_mac_address(
 
     # Check the device registry connections does not include the MAC address
     dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
     assert device is not None
     assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) not in device.connections
 
@@ -2247,6 +2270,9 @@ async def test_config_update_mac_address(
     await hass.async_block_till_done()
 
     # Device registry connections should now include the MAC address
-    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
     assert device is not None
     assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) in device.connections

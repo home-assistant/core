@@ -156,9 +156,18 @@ MANIFEST_JSON = Manifest(
                 "src": f"/static/icons/favicon-{size}x{size}.png",
                 "sizes": f"{size}x{size}",
                 "type": "image/png",
-                "purpose": "maskable any",
+                "purpose": "any",
             }
             for size in (192, 384, 512, 1024)
+        ]
+        + [
+            {
+                "src": f"/static/icons/maskable_icon-{size}x{size}.png",
+                "sizes": f"{size}x{size}",
+                "type": "image/png",
+                "purpose": "maskable",
+            }
+            for size in (48, 72, 96, 128, 192, 384, 512)
         ],
         "screenshots": [
             {
@@ -171,6 +180,7 @@ MANIFEST_JSON = Manifest(
         "name": "Home Assistant",
         "short_name": "Assistant",
         "start_url": "/?homescreen=1",
+        "id": "/?homescreen=1",
         "theme_color": DEFAULT_THEME_COLOR,
         "prefer_related_applications": True,
         "related_applications": [
@@ -222,6 +232,9 @@ class Panel:
     # If the panel should only be visible to admins
     require_admin = False
 
+    # If the panel is a configuration panel for a integration
+    config_panel_domain: str | None = None
+
     def __init__(
         self,
         component_name: str,
@@ -230,6 +243,7 @@ class Panel:
         frontend_url_path: str | None,
         config: dict[str, Any] | None,
         require_admin: bool,
+        config_panel_domain: str | None,
     ) -> None:
         """Initialize a built-in panel."""
         self.component_name = component_name
@@ -238,6 +252,7 @@ class Panel:
         self.frontend_url_path = frontend_url_path or component_name
         self.config = config
         self.require_admin = require_admin
+        self.config_panel_domain = config_panel_domain
 
     @callback
     def to_response(self) -> PanelRespons:
@@ -249,6 +264,7 @@ class Panel:
             "config": self.config,
             "url_path": self.frontend_url_path,
             "require_admin": self.require_admin,
+            "config_panel_domain": self.config_panel_domain,
         }
 
 
@@ -264,6 +280,7 @@ def async_register_built_in_panel(
     require_admin: bool = False,
     *,
     update: bool = False,
+    config_panel_domain: str | None = None,
 ) -> None:
     """Register a built-in panel."""
     panel = Panel(
@@ -273,6 +290,7 @@ def async_register_built_in_panel(
         frontend_url_path,
         config,
         require_admin,
+        config_panel_domain,
     )
 
     panels = hass.data.setdefault(DATA_PANELS, {})
@@ -720,3 +738,4 @@ class PanelRespons(TypedDict):
     config: dict[str, Any] | None
     url_path: str | None
     require_admin: bool
+    config_panel_domain: str | None

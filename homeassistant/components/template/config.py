@@ -5,9 +5,11 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_exception, config_without_domain
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_SENSORS, CONF_UNIQUE_ID
 from homeassistant.helpers import config_validation as cv
@@ -16,11 +18,13 @@ from homeassistant.helpers.trigger import async_validate_trigger_config
 from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
+    image as image_platform,
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
+    weather as weather_platform,
 )
-from .const import CONF_TRIGGER, DOMAIN
+from .const import CONF_ACTION, CONF_TRIGGER, DOMAIN
 
 PACKAGE_MERGE_HINT = "list"
 
@@ -28,6 +32,7 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
+        vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(NUMBER_DOMAIN): vol.All(
             cv.ensure_list, [number_platform.NUMBER_SCHEMA]
         ),
@@ -48,6 +53,12 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         ),
         vol.Optional(BUTTON_DOMAIN): vol.All(
             cv.ensure_list, [button_platform.BUTTON_SCHEMA]
+        ),
+        vol.Optional(IMAGE_DOMAIN): vol.All(
+            cv.ensure_list, [image_platform.IMAGE_SCHEMA]
+        ),
+        vol.Optional(WEATHER_DOMAIN): vol.All(
+            cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
         ),
     }
 )

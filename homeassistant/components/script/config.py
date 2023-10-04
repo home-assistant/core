@@ -23,6 +23,10 @@ from homeassistant.const import (
     CONF_SELECTOR,
     CONF_SEQUENCE,
     CONF_VARIABLES,
+    SERVICE_RELOAD,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -49,6 +53,32 @@ from .helpers import async_get_blueprints
 
 PACKAGE_MERGE_HINT = "dict"
 
+_MINIMAL_SCRIPT_ENTITY_SCHEMA = vol.Schema(
+    {
+        CONF_ALIAS: cv.string,
+        vol.Optional(CONF_DESCRIPTION): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+_INVALID_OBJECT_IDS = {
+    SERVICE_RELOAD,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SERVICE_TOGGLE,
+}
+
+_SCRIPT_OBJECT_ID_SCHEMA = vol.All(
+    cv.slug,
+    vol.NotIn(
+        _INVALID_OBJECT_IDS,
+        (
+            "A script's object_id must not be one of "
+            f"{', '.join(sorted(_INVALID_OBJECT_IDS))}"
+        ),
+    ),
+)
+
 SCRIPT_ENTITY_SCHEMA = make_script_schema(
     {
         vol.Optional(CONF_ALIAS): cv.string,
@@ -74,7 +104,11 @@ SCRIPT_ENTITY_SCHEMA = make_script_schema(
 
 
 async def _async_validate_config_item(
-    hass: HomeAssistant, object_id: str, config: ConfigType, warn_on_errors: bool
+    hass: HomeAssistant,
+    object_id: str,
+    config: ConfigType,
+    raise_on_errors: bool,
+    warn_on_errors: bool,
 ) -> ScriptConfig:
     """Validate config item."""
     raw_config = None
@@ -110,6 +144,15 @@ async def _async_validate_config_item(
         )
         return
 
+    def _minimal_config() -> ScriptConfig:
+        """Try validating id, alias and description."""
+        minimal_config = _MINIMAL_SCRIPT_ENTITY_SCHEMA(config)
+        script_config = ScriptConfig(minimal_config)
+        script_config.raw_blueprint_inputs = raw_blueprint_inputs
+        script_config.raw_config = raw_config
+        script_config.validation_failed = True
+        return script_config
+
     if is_blueprint_instance_config(config):
         uses_blueprint = True
         blueprints = async_get_blueprints(hass)
@@ -121,7 +164,9 @@ async def _async_validate_config_item(
                     "Failed to generate script from blueprint: %s",
                     err,
                 )
-            raise
+            if raise_on_errors:
+                raise
+            return _minimal_config()
 
         raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
@@ -136,7 +181,9 @@ async def _async_validate_config_item(
                     blueprint_inputs.inputs,
                     err,
                 )
-            raise HomeAssistantError from err
+            if raise_on_errors:
+                raise HomeAssistantError(err) from err
+            return _minimal_config()
 
     script_name = f"Script with object id '{object_id}'"
     if isinstance(config, Mapping):
@@ -144,7 +191,7 @@ async def _async_validate_config_item(
             script_name = f"Script with alias '{config[CONF_ALIAS]}'"
 
     try:
-        cv.slug(object_id)
+        _SCRIPT_OBJECT_ID_SCHEMA(object_id)
     except vol.Invalid as err:
         _log_invalid_script(err, script_name, "has invalid object id", object_id)
         raise
@@ -152,10 +199,16 @@ async def _async_validate_config_item(
         validated_config = SCRIPT_ENTITY_SCHEMA(config)
     except vol.Invalid as err:
         _log_invalid_script(err, script_name, "could not be validated", config)
-        raise
+        if raise_on_errors:
+            raise
+        return _minimal_config()
+
+    script_config = ScriptConfig(validated_config)
+    script_config.raw_blueprint_inputs = raw_blueprint_inputs
+    script_config.raw_config = raw_config
 
     try:
-        validated_config[CONF_SEQUENCE] = await async_validate_actions_config(
+        script_config[CONF_SEQUENCE] = await async_validate_actions_config(
             hass, validated_config[CONF_SEQUENCE]
         )
     except (
@@ -165,11 +218,11 @@ async def _async_validate_config_item(
         _log_invalid_script(
             err, script_name, "failed to setup actions", validated_config
         )
-        raise
+        if raise_on_errors:
+            raise
+        script_config.validation_failed = True
+        return script_config
 
-    script_config = ScriptConfig(validated_config)
-    script_config.raw_blueprint_inputs = raw_blueprint_inputs
-    script_config.raw_config = raw_config
     return script_config
 
 
@@ -178,6 +231,7 @@ class ScriptConfig(dict):
 
     raw_config: ConfigType | None = None
     raw_blueprint_inputs: ConfigType | None = None
+    validation_failed: bool = False
 
 
 async def _try_async_validate_config_item(
@@ -187,7 +241,7 @@ async def _try_async_validate_config_item(
 ) -> ScriptConfig | None:
     """Validate config item."""
     try:
-        return await _async_validate_config_item(hass, object_id, config, True)
+        return await _async_validate_config_item(hass, object_id, config, False, True)
     except (vol.Invalid, HomeAssistantError):
         return None
 
@@ -198,7 +252,7 @@ async def async_validate_config_item(
     config: dict[str, Any],
 ) -> ScriptConfig | None:
     """Validate config item, called by EditScriptConfigView."""
-    return await _async_validate_config_item(hass, object_id, config, False)
+    return await _async_validate_config_item(hass, object_id, config, True, False)
 
 
 async def async_validate_config(hass, config):

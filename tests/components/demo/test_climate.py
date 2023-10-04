@@ -1,4 +1,5 @@
 """The tests for the demo climate component."""
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -40,6 +41,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -50,8 +52,18 @@ ENTITY_ECOBEE = "climate.ecobee"
 ENTITY_HEATPUMP = "climate.heatpump"
 
 
+@pytest.fixture
+async def climate_only() -> None:
+    """Enable only the climate platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.CLIMATE],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_demo_climate(hass):
+async def setup_demo_climate(hass, climate_only):
     """Initialize setup demo climate."""
     hass.config.units = METRIC_SYSTEM
     assert await async_setup_component(hass, DOMAIN, {"climate": {"platform": "demo"}})
@@ -184,6 +196,28 @@ async def test_set_target_temp_range_bad_attr(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_TEMPERATURE) is None
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 21.0
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 24.0
+
+
+async def test_set_temp_with_hvac_mode(hass: HomeAssistant) -> None:
+    """Test the setting of the hvac_mode in set_temperature."""
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get(ATTR_TEMPERATURE) == 21
+    assert state.state == HVACMode.COOL
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_CLIMATE,
+            ATTR_TEMPERATURE: 23,
+            ATTR_HVAC_MODE: HVACMode.OFF,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == HVACMode.OFF
+    assert state.attributes.get(ATTR_TEMPERATURE) == 23
 
 
 async def test_set_target_humidity_bad_attr(hass: HomeAssistant) -> None:

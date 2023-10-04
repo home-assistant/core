@@ -10,22 +10,18 @@
       }
     },
     "abort": {
-      "authorize_url_timeout": "Timeout generating authorize URL.",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "The Spotify integration is not configured. Please follow the documentation.",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "reauth_account_mismatch": "The Spotify account authenticated with, does not match the account needed re-authentication."
     },
-    "create_entry": { "default": "Successfully authenticated with Spotify." }
+    "create_entry": {
+      "default": "Successfully authenticated with Spotify."
+    }
   },
   "system_health": {
     "info": {
       "api_endpoint_reachable": "Spotify API endpoint reachable"
-    }
-  },
-  "issues": {
-    "removed_yaml": {
-      "title": "The Spotify YAML configuration has been removed",
-      "description": "Configuring Spotify using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
   }
 }

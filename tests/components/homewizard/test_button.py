@@ -18,7 +18,7 @@ async def test_identify_button_entity_not_loaded_when_not_available(
 ) -> None:
     """Does not load button when device has no support for it."""
 
-    api = get_mock_device(product_type="HWE-P1")
+    api = get_mock_device(product_type="SDM230-WIFI")
 
     with patch(
         "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",

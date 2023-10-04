@@ -1,0 +1,13 @@
+# serializer version: 1
+# name: test_user_management
+  list([
+    dict({
+      'id': 'system-users',
+      'name': 'Users',
+      'policy': dict({
+        'entities': True,
+      }),
+      'system_generated': True,
+    }),
+  ])
+# ---

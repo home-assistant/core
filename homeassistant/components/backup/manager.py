@@ -18,13 +18,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.json import save_json
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
 
+BUF_SIZE = 2**20 * 4  # 4MB
 
-@dataclass
+
+@dataclass(slots=True)
 class Backup:
     """Backup class."""
 
@@ -99,7 +101,7 @@ class BackupManager:
         backups: dict[str, Backup] = {}
         for backup_path in self.backup_dir.glob("*.tar"):
             try:
-                with tarfile.open(backup_path, "r:") as backup_file:
+                with tarfile.open(backup_path, "r:", bufsize=BUF_SIZE) as backup_file:
                     if data_file := backup_file.extractfile("./backup.json"):
                         data = json_loads_object(data_file.read())
                         backup = Backup(
@@ -174,7 +176,7 @@ class BackupManager:
                     raise result
 
             backup_name = f"Core {HAVERSION}"
-            date_str = dt.now().isoformat()
+            date_str = dt_util.now().isoformat()
             slug = _generate_slug(date_str, backup_name)
 
             backup_data = {
@@ -227,7 +229,7 @@ class BackupManager:
             self.backup_dir.mkdir()
 
         with TemporaryDirectory() as tmp_dir, SecureTarFile(
-            tar_file_path, "w", gzip=False
+            tar_file_path, "w", gzip=False, bufsize=BUF_SIZE
         ) as tar_file:
             tmp_dir_path = Path(tmp_dir)
             save_json(
@@ -237,6 +239,7 @@ class BackupManager:
             with SecureTarFile(
                 tmp_dir_path.joinpath("./homeassistant.tar.gz").as_posix(),
                 "w",
+                bufsize=BUF_SIZE,
             ) as core_tar:
                 atomic_contents_add(
                     tar_file=core_tar,

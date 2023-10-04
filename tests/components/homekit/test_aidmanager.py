@@ -2,7 +2,7 @@
 import os
 from unittest.mock import patch
 
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 
 from homeassistant.components.homekit.aidmanager import (
     AccessoryAidStorage,
@@ -386,7 +386,7 @@ async def test_aid_generation_no_unique_ids_handles_collision(
     await aid_storage.async_save()
     await hass.async_block_till_done()
 
-    with patch("fnvhash.fnv1a_32", side_effect=Exception):
+    with patch("fnv_hash_fast.fnv1a_32", side_effect=Exception):
         aid_storage = AccessoryAidStorage(hass, config_entry)
     await aid_storage.async_initialize()
 

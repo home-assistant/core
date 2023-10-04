@@ -27,22 +27,13 @@ async def async_setup_entry(
 class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
-    ICON = "mdi:delete-variant"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} Bin Full"
+    _attr_icon = "mdi:delete-variant"
+    _attr_translation_key = "bin_full"
 
     @property
     def unique_id(self):
         """Return the ID of this sensor."""
         return f"bin_{self._blid}"
-
-    @property
-    def icon(self):
-        """Return the icon of this sensor."""
-        return self.ICON
 
     @property
     def is_on(self):

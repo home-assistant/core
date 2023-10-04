@@ -27,8 +27,6 @@ from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
 
-ICON = "mdi:security"
-
 CURRENT_STATE_MAP = {
     0: STATE_ALARM_ARMED_HOME,
     1: STATE_ALARM_ARMED_AWAY,
@@ -72,6 +70,7 @@ async def async_setup_entry(
 class HomeKitAlarmControlPanelEntity(HomeKitEntity, AlarmControlPanelEntity):
     """Representation of a Homekit Alarm Control Panel."""
 
+    _attr_icon = "mdi:security"
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -85,11 +84,6 @@ class HomeKitAlarmControlPanelEntity(HomeKitEntity, AlarmControlPanelEntity):
             CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET,
             CharacteristicsTypes.BATTERY_LEVEL,
         ]
-
-    @property
-    def icon(self) -> str:
-        """Return icon."""
-        return ICON
 
     @property
     def state(self) -> str:

@@ -5,7 +5,6 @@ from typing import Any
 
 from aioambient import Websocket
 from aioambient.errors import WebsocketError
-from aioambient.util import get_public_device_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -19,11 +18,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.helpers.entity_registry as er
 
 from .const import (
@@ -117,7 +112,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         en_reg.async_clear_config_entry(entry.entry_id)
 
         version = entry.version = 2
-        hass.config_entries.async_update_entry(entry)
 
     LOGGER.info("Migration to version %s successful", version)
 
@@ -149,6 +143,7 @@ class AmbientStation:
             """Define a handler to fire when the data is received."""
             mac = data["macAddress"]
 
+            # If data has not changed, don't update:
             if data == self.stations[mac][ATTR_LAST_DATA]:
                 return
 
@@ -197,71 +192,3 @@ class AmbientStation:
     async def ws_disconnect(self) -> None:
         """Disconnect from the websocket."""
         await self.websocket.disconnect()
-
-
-class AmbientWeatherEntity(Entity):
-    """Define a base Ambient PWS entity."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = False
-
-    def __init__(
-        self,
-        ambient: AmbientStation,
-        mac_address: str,
-        station_name: str,
-        description: EntityDescription,
-    ) -> None:
-        """Initialize the entity."""
-        self._ambient = ambient
-
-        public_device_id = get_public_device_id(mac_address)
-        self._attr_device_info = DeviceInfo(
-            configuration_url=(
-                f"https://ambientweather.net/dashboard/{public_device_id}"
-            ),
-            identifiers={(DOMAIN, mac_address)},
-            manufacturer="Ambient Weather",
-            name=station_name.capitalize(),
-        )
-
-        self._attr_unique_id = f"{mac_address}_{description.key}"
-        self._mac_address = mac_address
-        self.entity_description = description
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def update() -> None:
-            """Update the state."""
-            if self.entity_description.key == TYPE_SOLARRADIATION_LX:
-                self._attr_available = (
-                    self._ambient.stations[self._mac_address][ATTR_LAST_DATA][
-                        TYPE_SOLARRADIATION
-                    ]
-                    is not None
-                )
-            else:
-                self._attr_available = (
-                    self._ambient.stations[self._mac_address][ATTR_LAST_DATA][
-                        self.entity_description.key
-                    ]
-                    is not None
-                )
-
-            self.update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, f"ambient_station_data_update_{self._mac_address}", update
-            )
-        )
-
-        self.update_from_latest_data()
-
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the entity from the latest data."""
-        raise NotImplementedError

@@ -85,6 +85,9 @@ async def test_async_get_device_diagnostics__single_fan(
     diag = await get_diagnostics_for_device(hass, hass_client, config_entry, device)
 
     assert isinstance(diag, dict)
+    diag["home_assistant"]["entities"] = sorted(
+        diag["home_assistant"]["entities"], key=lambda ent: ent["entity_id"]
+    )
     assert diag == snapshot(
         matcher=path_type(
             {

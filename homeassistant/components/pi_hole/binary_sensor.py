@@ -8,7 +8,6 @@ from typing import Any
 from hole import Hole
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -40,44 +39,8 @@ class PiHoleBinarySensorEntityDescription(
 
 BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
-        # Deprecated, scheduled to be removed in 2022.6
-        key="core_update_available",
-        name="Core Update Available",
-        entity_registry_enabled_default=False,
-        device_class=BinarySensorDeviceClass.UPDATE,
-        extra_value=lambda api: {
-            "current_version": api.versions["core_current"],
-            "latest_version": api.versions["core_latest"],
-        },
-        state_value=lambda api: bool(api.versions["core_update"]),
-    ),
-    PiHoleBinarySensorEntityDescription(
-        # Deprecated, scheduled to be removed in 2022.6
-        key="web_update_available",
-        name="Web Update Available",
-        entity_registry_enabled_default=False,
-        device_class=BinarySensorDeviceClass.UPDATE,
-        extra_value=lambda api: {
-            "current_version": api.versions["web_current"],
-            "latest_version": api.versions["web_latest"],
-        },
-        state_value=lambda api: bool(api.versions["web_update"]),
-    ),
-    PiHoleBinarySensorEntityDescription(
-        # Deprecated, scheduled to be removed in 2022.6
-        key="ftl_update_available",
-        name="FTL Update Available",
-        entity_registry_enabled_default=False,
-        device_class=BinarySensorDeviceClass.UPDATE,
-        extra_value=lambda api: {
-            "current_version": api.versions["FTL_current"],
-            "latest_version": api.versions["FTL_latest"],
-        },
-        state_value=lambda api: bool(api.versions["FTL_update"]),
-    ),
-    PiHoleBinarySensorEntityDescription(
         key="status",
-        name="Status",
+        translation_key="status",
         icon="mdi:pi-hole",
         state_value=lambda api: bool(api.data.get("status") == "enabled"),
     ),
@@ -109,6 +72,7 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
     """Representation of a Pi-hole binary sensor."""
 
     entity_description: PiHoleBinarySensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -121,12 +85,7 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
         """Initialize a Pi-hole sensor."""
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
-
-        if description.key == "status":
-            self._attr_name = f"{name}"
-        else:
-            self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{self._server_unique_id}/{description.name}"
+        self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
 
     @property
     def is_on(self) -> bool:

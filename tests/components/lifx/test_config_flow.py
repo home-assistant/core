@@ -1,4 +1,5 @@
 """Tests for the lifx integration config flow."""
+from ipaddress import ip_address
 import socket
 from unittest.mock import patch
 
@@ -388,8 +389,8 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname=LABEL,
                 name=LABEL,
                 port=None,
@@ -443,8 +444,8 @@ async def test_discovered_by_dhcp_or_discovery(
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname=LABEL,
                 name=LABEL,
                 port=None,
@@ -484,8 +485,8 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname=LABEL,
                 name=LABEL,
                 port=None,
@@ -546,9 +547,11 @@ async def test_suggested_area(hass: HomeAssistant) -> None:
             self.bulb = bulb
             self.lifx_group = kwargs.get("lifx_group")
 
-        def __call__(self, *args, **kwargs):
+        def __call__(self, callb=None, *args, **kwargs):
             """Call command."""
             self.bulb.group = self.lifx_group
+            if callb:
+                callb(self.bulb, self.lifx_group)
 
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "1.2.3.4"}, unique_id=SERIAL

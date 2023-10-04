@@ -6,6 +6,8 @@ from RFXtrx import RFXtrxDevice, get_device
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
+from . import get_device_tuple_from_identifiers
+
 
 @callback
 def async_get_device_object(hass: HomeAssistant, device_id: str) -> RFXtrxDevice:
@@ -15,7 +17,9 @@ def async_get_device_object(hass: HomeAssistant, device_id: str) -> RFXtrxDevice
     if registry_device is None:
         raise ValueError(f"Device {device_id} not found")
 
-    device_tuple = list(list(registry_device.identifiers)[0])
+    device_tuple = get_device_tuple_from_identifiers(registry_device.identifiers)
+    assert device_tuple
+
     return get_device(
-        int(device_tuple[1], 16), int(device_tuple[2], 16), device_tuple[3]
+        int(device_tuple[0], 16), int(device_tuple[1], 16), device_tuple[2]
     )

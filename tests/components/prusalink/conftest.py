@@ -42,8 +42,8 @@ def mock_printer_api(hass):
             "material": "PLA",
         },
         "temperature": {
-            "tool0": {"actual": 47.8, "target": 0.0, "display": 0.0, "offset": 0},
-            "bed": {"actual": 41.9, "target": 0.0, "offset": 0},
+            "tool0": {"actual": 47.8, "target": 210.1, "display": 0.0, "offset": 0},
+            "bed": {"actual": 41.9, "target": 60.5, "offset": 0},
         },
         "state": {
             "text": "Operational",

@@ -31,11 +31,11 @@ from .device_automation_helpers import (
     NODE_STATUSES,
     async_bypass_dynamic_config_validation,
     generate_config_parameter_subtype,
-    get_config_parameter_value_schema,
 )
 from .helpers import (
     async_get_node_from_device_id,
     check_type_schema_map,
+    get_value_state_schema,
     get_zwave_value_from_config,
     remove_keys_with_empty_values,
 )
@@ -209,7 +209,7 @@ async def async_get_condition_capabilities(
     # Add additional fields to the automation trigger UI
     if config[CONF_TYPE] == CONFIG_PARAMETER_TYPE:
         value_id = config[CONF_VALUE_ID]
-        value_schema = get_config_parameter_value_schema(node, value_id)
+        value_schema = get_value_state_schema(node.values[value_id])
         if value_schema is None:
             return {}
         return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}

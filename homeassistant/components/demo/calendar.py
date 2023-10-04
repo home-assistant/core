@@ -1,23 +1,22 @@
-"""Demo platform that has two fake binary sensors."""
+"""Demo platform that has two fake calendars."""
 from __future__ import annotations
 
 import datetime
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Demo Calendar platform."""
-    add_entities(
+    """Set up the Demo Calendar config entry."""
+    async_add_entities(
         [
             DemoCalendar(calendar_data_future(), "Calendar 1"),
             DemoCalendar(calendar_data_current(), "Calendar 2"),
@@ -27,10 +26,10 @@ def setup_platform(
 
 def calendar_data_future() -> CalendarEvent:
     """Representation of a Demo Calendar for a future event."""
-    one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    half_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
     return CalendarEvent(
-        start=one_hour_from_now,
-        end=one_hour_from_now + datetime.timedelta(minutes=60),
+        start=half_hour_from_now,
+        end=half_hour_from_now + datetime.timedelta(minutes=60),
         summary="Future Event",
         description="Future Description",
         location="Future Location",
@@ -67,4 +66,9 @@ class DemoCalendar(CalendarEntity):
         end_date: datetime.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
+        assert start_date < end_date
+        if self._event.start_datetime_local >= end_date:
+            return []
+        if self._event.end_datetime_local < start_date:
+            return []
         return [self._event]

@@ -17,5 +17,71 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "air_temperature": {
+        "name": "Air temperature"
+      },
+      "road_temperature": {
+        "name": "Road temperature"
+      },
+      "precipitation": {
+        "name": "Precipitation type",
+        "state": {
+          "drizzle": "Drizzle",
+          "hail": "Hail",
+          "none": "None",
+          "rain": "Rain",
+          "snow": "Snow",
+          "rain_snow_mixed": "Rain and snow mixed",
+          "freezing_rain": "Freezing rain"
+        }
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_direction_text": {
+        "name": "Wind direction text",
+        "state": {
+          "east": "East",
+          "north_east": "North east",
+          "east_south_east": "East-south east",
+          "north": "North",
+          "north_north_east": "North-north east",
+          "north_north_west": "North-north west",
+          "north_west": "North west",
+          "south": "South",
+          "south_east": "South east",
+          "south_south_west": "South-south west",
+          "south_west": "South west",
+          "west": "West"
+        }
+      },
+      "wind_speed_max": {
+        "name": "Wind speed max"
+      },
+      "precipitation_amountname": {
+        "name": "Precipitation name",
+        "state": {
+          "error": "Error",
+          "mild_rain": "Mild rain",
+          "moderate_rain": "Moderate rain",
+          "heavy_rain": "Heavy rain",
+          "mild_snow_rain": "Mild rain and snow mixed",
+          "moderate_snow_rain": "Moderate rain and snow mixed",
+          "heavy_snow_rain": "Heavy rain and snow mixed",
+          "mild_snow": "Mild snow",
+          "moderate_snow": "Moderate snow",
+          "heavy_snow": "Heavy snow",
+          "other": "Other",
+          "none": "None",
+          "unknown": "Unknown"
+        }
+      },
+      "measure_time": {
+        "name": "Measure time"
+      }
+    }
   }
 }

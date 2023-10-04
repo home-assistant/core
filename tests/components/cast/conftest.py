@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pychromecast
+from pychromecast.controllers import multizone
 import pytest
 
 
@@ -30,7 +31,7 @@ def castbrowser_mock():
 @pytest.fixture
 def mz_mock():
     """Mock pychromecast MultizoneManager."""
-    return MagicMock(spec_set=pychromecast.controllers.multizone.MultizoneManager)
+    return MagicMock(spec_set=multizone.MultizoneManager)
 
 
 @pytest.fixture

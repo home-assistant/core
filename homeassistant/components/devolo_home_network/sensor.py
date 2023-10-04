@@ -26,7 +26,7 @@ from .const import (
     DOMAIN,
     NEIGHBORING_WIFI_NETWORKS,
 )
-from .entity import DevoloEntity
+from .entity import DevoloCoordinatorEntity
 
 _DataT = TypeVar(
     "_DataT",
@@ -113,7 +113,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DevoloSensorEntity(DevoloEntity[_DataT], SensorEntity):
+class DevoloSensorEntity(DevoloCoordinatorEntity[_DataT], SensorEntity):
     """Representation of a devolo sensor."""
 
     entity_description: DevoloSensorEntityDescription[_DataT]

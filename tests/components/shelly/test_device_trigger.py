@@ -1,5 +1,6 @@
 """The tests for Shelly device triggers."""
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -24,11 +25,7 @@ from homeassistant.setup import async_setup_component
 
 from . import init_integration
 
-from tests.common import (
-    MockConfigEntry,
-    assert_lists_same,
-    async_get_device_automations,
-)
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.mark.parametrize(
@@ -74,7 +71,7 @@ async def test_get_triggers_block_device(
         hass, DeviceAutomationType.TRIGGER, device.id
     )
     triggers = [value for value in triggers if value["domain"] == DOMAIN]
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_get_triggers_rpc_device(hass: HomeAssistant, mock_rpc_device) -> None:
@@ -106,7 +103,7 @@ async def test_get_triggers_rpc_device(hass: HomeAssistant, mock_rpc_device) -> 
         hass, DeviceAutomationType.TRIGGER, device.id
     )
     triggers = [value for value in triggers if value["domain"] == DOMAIN]
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_get_triggers_button(hass: HomeAssistant, mock_block_device) -> None:
@@ -131,7 +128,7 @@ async def test_get_triggers_button(hass: HomeAssistant, mock_block_device) -> No
         hass, DeviceAutomationType.TRIGGER, device.id
     )
     triggers = [value for value in triggers if value["domain"] == DOMAIN]
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_get_triggers_non_initialized_devices(
@@ -149,7 +146,7 @@ async def test_get_triggers_non_initialized_devices(
         hass, DeviceAutomationType.TRIGGER, device.id
     )
     triggers = [value for value in triggers if value["domain"] == DOMAIN]
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_get_triggers_for_invalid_device_id(

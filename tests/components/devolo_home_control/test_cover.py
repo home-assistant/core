@@ -1,24 +1,27 @@
 """Tests for the devolo Home Control cover platform."""
 from unittest.mock import patch
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.cover import ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     STATE_CLOSED,
-    STATE_OPEN,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
 from .mocks import HomeControlMock, HomeControlMockCover
 
 
-async def test_cover(hass: HomeAssistant) -> None:
+async def test_cover(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test setup and state change of a cover device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockCover()
@@ -31,15 +34,8 @@ async def test_cover(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get(f"{DOMAIN}.test")
-    assert state is not None
-    assert state.state == STATE_OPEN
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test"
-    assert (
-        state.attributes[ATTR_CURRENT_POSITION]
-        == test_gateway.devices["Test"]
-        .multi_level_switch_property["devolo.Blinds"]
-        .value
-    )
+    assert state == snapshot
+    assert entity_registry.async_get(f"{DOMAIN}.test") == snapshot
 
     # Emulate websocket message: position changed
     test_gateway.publisher.dispatch("Test", ("devolo.Blinds", 0.0))

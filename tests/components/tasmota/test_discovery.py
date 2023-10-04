@@ -140,15 +140,15 @@ async def test_correct_config_discovery(
 
     # Verify device and registry entries are created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
-    entity_entry = entity_reg.async_get("switch.test")
+    entity_entry = entity_reg.async_get("switch.tasmota_test")
     assert entity_entry is not None
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state is not None
-    assert state.name == "Test"
+    assert state.name == "Tasmota Test"
 
     assert (mac, "switch", "relay", 0) in hass.data[ALREADY_DISCOVERED]
 
@@ -174,7 +174,7 @@ async def test_device_discover(
 
     # Verify device and registry entries are created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
     assert device_entry.configuration_url == f"http://{config['ip']}/"
@@ -205,7 +205,7 @@ async def test_device_discover_deprecated(
 
     # Verify device and registry entries are created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
     assert device_entry.manufacturer == "Tasmota"
@@ -238,7 +238,7 @@ async def test_device_update(
 
     # Verify device entry is created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
 
@@ -256,7 +256,7 @@ async def test_device_update(
 
     # Verify device entry is updated
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
     assert device_entry.model == "Another model"
@@ -285,7 +285,7 @@ async def test_device_remove(
 
     # Verify device entry is created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
 
@@ -298,7 +298,7 @@ async def test_device_remove(
 
     # Verify device entry is removed
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is None
 
@@ -334,7 +334,7 @@ async def test_device_remove_multiple_config_entries_1(
 
     # Verify device entry is created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
     assert device_entry.config_entries == {tasmota_entry.entry_id, mock_entry.entry_id}
@@ -348,7 +348,7 @@ async def test_device_remove_multiple_config_entries_1(
 
     # Verify device entry is not removed
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
     assert device_entry.config_entries == {mock_entry.entry_id}
@@ -390,7 +390,7 @@ async def test_device_remove_multiple_config_entries_2(
 
     # Verify device entry is created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
     assert device_entry.config_entries == {tasmota_entry.entry_id, mock_entry.entry_id}
@@ -404,7 +404,7 @@ async def test_device_remove_multiple_config_entries_2(
 
     # Verify device entry is not removed
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
     assert device_entry.config_entries == {tasmota_entry.entry_id}
@@ -440,7 +440,7 @@ async def test_device_remove_stale(
 
     # Verify device entry was created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
 
@@ -449,7 +449,7 @@ async def test_device_remove_stale(
 
     # Verify device entry is removed
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is None
 
@@ -475,7 +475,7 @@ async def test_device_rediscover(
 
     # Verify device entry is created
     device_entry1 = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry1 is not None
 
@@ -488,7 +488,7 @@ async def test_device_rediscover(
 
     # Verify device entry is removed
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is None
 
@@ -501,7 +501,7 @@ async def test_device_rediscover(
 
     # Verify device entry is created, and id is reused
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
     assert device_entry1.id == device_entry.id
@@ -530,11 +530,11 @@ async def test_entity_duplicate_discovery(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     state_duplicate = hass.states.get("binary_sensor.beer1")
 
     assert state is not None
-    assert state.name == "Test"
+    assert state.name == "Tasmota Test"
     assert state_duplicate is None
     assert (
         f"Entity already added, sending update: switch ('{mac}', 'switch', 'relay', 0)"
@@ -602,7 +602,7 @@ async def test_same_topic(
     # Verify device registry entries are created for both devices
     for config in configs[0:2]:
         device_entry = device_reg.async_get_device(
-            set(), {(dr.CONNECTION_NETWORK_MAC, config["mac"])}
+            connections={(dr.CONNECTION_NETWORK_MAC, config["mac"])}
         )
         assert device_entry is not None
         assert device_entry.configuration_url == f"http://{config['ip']}/"
@@ -613,11 +613,11 @@ async def test_same_topic(
 
     # Verify entities are created only for the first device
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, configs[0]["mac"])}
+        connections={(dr.CONNECTION_NETWORK_MAC, configs[0]["mac"])}
     )
     assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 1
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, configs[1]["mac"])}
+        connections={(dr.CONNECTION_NETWORK_MAC, configs[1]["mac"])}
     )
     assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 0
 
@@ -637,7 +637,7 @@ async def test_same_topic(
 
     # Verify device registry entries was created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, configs[2]["mac"])}
+        connections={(dr.CONNECTION_NETWORK_MAC, configs[2]["mac"])}
     )
     assert device_entry is not None
     assert device_entry.configuration_url == f"http://{configs[2]['ip']}/"
@@ -648,7 +648,7 @@ async def test_same_topic(
 
     # Verify no entities were created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, configs[2]["mac"])}
+        connections={(dr.CONNECTION_NETWORK_MAC, configs[2]["mac"])}
     )
     assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 0
 
@@ -667,7 +667,7 @@ async def test_same_topic(
 
     # Verify entities are created also for the third device
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, configs[2]["mac"])}
+        connections={(dr.CONNECTION_NETWORK_MAC, configs[2]["mac"])}
     )
     assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 1
 
@@ -686,7 +686,7 @@ async def test_same_topic(
 
     # Verify entities are created also for the second device
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, configs[1]["mac"])}
+        connections={(dr.CONNECTION_NETWORK_MAC, configs[1]["mac"])}
     )
     assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 1
 
@@ -716,7 +716,7 @@ async def test_topic_no_prefix(
 
     # Verify device registry entry is created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, config["mac"])}
+        connections={(dr.CONNECTION_NETWORK_MAC, config["mac"])}
     )
     assert device_entry is not None
     assert device_entry.configuration_url == f"http://{config['ip']}/"
@@ -727,7 +727,7 @@ async def test_topic_no_prefix(
 
     # Verify entities are not created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, config["mac"])}
+        connections={(dr.CONNECTION_NETWORK_MAC, config["mac"])}
     )
     assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 0
 
@@ -747,7 +747,7 @@ async def test_topic_no_prefix(
 
     # Verify entities are created
     device_entry = device_reg.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, config["mac"])}
+        connections={(dr.CONNECTION_NETWORK_MAC, config["mac"])}
     )
     assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 1
 

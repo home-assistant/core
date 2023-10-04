@@ -46,7 +46,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 
     @property
     def has_master_light(self) -> bool:
-        """Return if the coordinated device has an master light."""
+        """Return if the coordinated device has a master light."""
         return self.keep_master_light or (
             self.data is not None and len(self.data.state.segments) > 1
         )

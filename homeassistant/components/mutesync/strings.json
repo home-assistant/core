@@ -12,5 +12,15 @@
       "invalid_auth": "Enable authentication in mütesync Preferences > Authentication",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "in_meeting": {
+        "name": "In meeting"
+      },
+      "muted": {
+        "name": "Muted"
+      }
+    }
   }
 }

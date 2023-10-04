@@ -6,7 +6,7 @@ import json
 import logging
 from typing import Any, TypedDict, cast, overload
 
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -39,7 +39,6 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
 # SQLAlchemy Schema
-# pylint: disable=invalid-name
 Base = declarative_base()
 
 SCHEMA_VERSION = 25

@@ -38,14 +38,14 @@ class FritzBinarySensorEntityDescription(
 SENSOR_TYPES: tuple[FritzBinarySensorEntityDescription, ...] = (
     FritzBinarySensorEntityDescription(
         key="is_connected",
-        name="Connection",
+        translation_key="is_connected",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status, _: bool(status.is_connected),
     ),
     FritzBinarySensorEntityDescription(
         key="is_linked",
-        name="Link",
+        translation_key="is_linked",
         device_class=BinarySensorDeviceClass.PLUG,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status, _: bool(status.is_linked),
@@ -80,7 +80,10 @@ class FritzBoxBinarySensor(FritzBoxBaseCoordinatorEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if isinstance(
-            state := self.coordinator.data.get(self.entity_description.key), bool
+            state := self.coordinator.data["entity_states"].get(
+                self.entity_description.key
+            ),
+            bool,
         ):
             return state
         return None

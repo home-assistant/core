@@ -12,7 +12,7 @@
         "description": "Do you want to add the printer {model} with serial number `{serial_number}` to Home Assistant?",
         "title": "Discovered Brother Printer",
         "data": {
-          "type": "Type of the printer"
+          "type": "[%key:component::brother::config::step::user::data::type%]"
         }
       }
     },
@@ -24,6 +24,112 @@
     "abort": {
       "unsupported_model": "This printer model is not supported.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status"
+      },
+      "page_counter": {
+        "name": "Page counter"
+      },
+      "bw_pages": {
+        "name": "B/W pages"
+      },
+      "color_pages": {
+        "name": "Color pages"
+      },
+      "duplex_unit_page_counter": {
+        "name": "Duplex unit page counter"
+      },
+      "drum_remaining_life": {
+        "name": "Drum remaining lifetime"
+      },
+      "drum_remaining_pages": {
+        "name": "Drum remaining pages"
+      },
+      "drum_page_counter": {
+        "name": "Drum page counter"
+      },
+      "black_drum_remaining_life": {
+        "name": "Black drum remaining lifetime"
+      },
+      "black_drum_remaining_pages": {
+        "name": "Black drum remaining pages"
+      },
+      "black_drum_page_counter": {
+        "name": "Black drum page counter"
+      },
+      "cyan_drum_remaining_life": {
+        "name": "Cyan drum remaining lifetime"
+      },
+      "cyan_drum_remaining_pages": {
+        "name": "Cyan drum remaining pages"
+      },
+      "cyan_drum_page_counter": {
+        "name": "Cyan drum page counter"
+      },
+      "magenta_drum_remaining_life": {
+        "name": "Magenta drum remaining lifetime"
+      },
+      "magenta_drum_remaining_pages": {
+        "name": "Magenta drum remaining pages"
+      },
+      "magenta_drum_page_counter": {
+        "name": "Magenta drum page counter"
+      },
+      "yellow_drum_remaining_life": {
+        "name": "Yellow drum remaining lifetime"
+      },
+      "yellow_drum_remaining_pages": {
+        "name": "Yellow drum remaining pages"
+      },
+      "yellow_drum_page_counter": {
+        "name": "Yellow drum page counter"
+      },
+      "belt_unit_remaining_life": {
+        "name": "Belt unit remaining lifetime"
+      },
+      "fuser_remaining_life": {
+        "name": "Fuser remaining lifetime"
+      },
+      "laser_remaining_life": {
+        "name": "Laser remaining lifetime"
+      },
+      "pf_kit_1_remaining_life": {
+        "name": "PF Kit 1 remaining lifetime"
+      },
+      "pf_kit_mp_remaining_life": {
+        "name": "PF Kit MP remaining lifetime"
+      },
+      "black_toner_remaining": {
+        "name": "Black toner remaining"
+      },
+      "cyan_toner_remaining": {
+        "name": "Cyan toner remaining"
+      },
+      "magenta_toner_remaining": {
+        "name": "Magenta toner remaining"
+      },
+      "yellow_toner_remaining": {
+        "name": "Yellow toner remaining"
+      },
+      "black_ink_remaining": {
+        "name": "Black ink remaining"
+      },
+      "cyan_ink_remaining": {
+        "name": "Cyan ink remaining"
+      },
+      "magenta_ink_remaining": {
+        "name": "Magenta ink remaining"
+      },
+      "yellow_ink_remaining": {
+        "name": "Yellow ink remaining"
+      },
+      "last_restart": {
+        "name": "Last restart"
+      }
     }
   }
 }

@@ -10,7 +10,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import discovery, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    discovery,
+    entity_registry as er,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -182,7 +186,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
     entity_registry = er.async_get(hass)
-    hass.data[DATA_UTILITY][entry.entry_id] = {}
+    hass.data[DATA_UTILITY][entry.entry_id] = {
+        "source": entry.options[CONF_SOURCE_SENSOR],
+    }
     hass.data[DATA_UTILITY][entry.entry_id][DATA_TARIFF_SENSORS] = []
 
     try:
@@ -218,7 +224,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener, called when the config entry options are changed."""
+    old_source = hass.data[DATA_UTILITY][entry.entry_id]["source"]
     await hass.config_entries.async_reload(entry.entry_id)
+
+    if old_source == entry.options[CONF_SOURCE_SENSOR]:
+        return
+
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    old_source_entity = entity_registry.async_get(old_source)
+    if not old_source_entity or not old_source_entity.device_id:
+        return
+
+    device_registry.async_update_device(
+        old_source_entity.device_id, remove_config_entry_id=entry.entry_id
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

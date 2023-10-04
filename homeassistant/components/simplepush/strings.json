@@ -17,11 +17,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  },
-  "issues": {
-    "removed_yaml": {
-      "title": "The Simplepush YAML configuration has been removed",
-      "description": "Configuring Simplepush using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the Simplepush YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }
