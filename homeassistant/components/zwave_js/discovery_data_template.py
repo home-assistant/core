@@ -153,7 +153,6 @@ from .const import (
     ENTITY_DESC_KEY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_UV_INDEX,
     ENTITY_DESC_KEY_VOLTAGE,
-    LOGGER,
 )
 from .helpers import ZwaveValueID
 
@@ -422,8 +421,6 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             )
 
         if value.command_class == CommandClass.SENSOR_MULTILEVEL:
-            if value.property_ == "Air temperature":
-                LOGGER.error(value.data)
             try:
                 sensor_type = get_multilevel_sensor_type(value)
                 multilevel_sensor_scale_type = get_multilevel_sensor_scale_type(value)
