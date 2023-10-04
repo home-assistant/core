@@ -29,7 +29,7 @@ def mock_all(aioclient_mock: AiohttpClientMocker, request):
 
 
 def _install_test_addon_stats_mock(aioclient_mock: AiohttpClientMocker):
-    """Install mocks."""
+    """Install mock to provide valid stats for the test addon."""
     aioclient_mock.get(
         "http://127.0.0.1/addons/test/stats",
         json={
@@ -49,7 +49,7 @@ def _install_test_addon_stats_mock(aioclient_mock: AiohttpClientMocker):
 
 
 def _install_test_addon_stats_failure_mock(aioclient_mock: AiohttpClientMocker):
-    """Install mocks."""
+    """Install mocks to raise an exception when fetching stats for the test addon."""
     aioclient_mock.get(
         "http://127.0.0.1/addons/test/stats",
         exc=HassioAPIError,
@@ -57,7 +57,7 @@ def _install_test_addon_stats_failure_mock(aioclient_mock: AiohttpClientMocker):
 
 
 def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
-    """Install mocks."""
+    """Install default mocks."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
