@@ -27,6 +27,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -155,6 +156,7 @@ class HueTamperSensor(HueBaseEntity, BinarySensorEntity):
     entity_description = BinarySensorEntityDescription(
         key="tamper_sensor",
         device_class=BinarySensorDeviceClass.TAMPER,
+        entity_category=EntityCategory.DIAGNOSTIC,
         has_entity_name=True,
     )
 
