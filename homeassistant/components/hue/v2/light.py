@@ -89,7 +89,7 @@ class HueLight(HueBaseEntity, LightEntity):
                 self._supported_color_modes.add(ColorMode.BRIGHTNESS)
             # support transition if brightness control
             self._attr_supported_features |= LightEntityFeature.TRANSITION
-        self._restore_brightness: float | None = None
+        self._last_brightness: float | None = None
         self._color_temp_active: bool = False
         # get list of supported effects (combine effects and timed_effects)
         self._attr_effect_list = []
@@ -205,9 +205,17 @@ class HueLight(HueBaseEntity, LightEntity):
         xy_color = kwargs.get(ATTR_XY_COLOR)
         color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
-        if self._restore_brightness and brightness is None:
-            brightness = self._restore_brightness
-            self._restore_brightness = None
+        if self._last_brightness and brightness is None:
+            # The Hue bridge sets the brightness to 1% when turning on a bulb
+            # when a transition was used to turn off the bulb.
+            # This issue has been reported on the Hue forum several times:
+            # https://developers.meethue.com/forum/t/brightness-turns-down-to-1-automatically-shortly-after-sending-off-signal-hue-bug/5692
+            # https://developers.meethue.com/forum/t/lights-turn-on-with-lowest-brightness-via-siri-if-turned-off-via-api/6700
+            # https://developers.meethue.com/forum/t/using-transitiontime-with-on-false-resets-bri-to-1/4585
+            # https://developers.meethue.com/forum/t/bri-value-changing-in-switching-lights-on-off/6323
+            # https://developers.meethue.com/forum/t/fade-in-fade-out/6673
+            brightness = self._last_brightness
+            self._last_brightness = None
         self._color_temp_active = color_temp is not None
         flash = kwargs.get(ATTR_FLASH)
         effect = effect_str = kwargs.get(ATTR_EFFECT)
@@ -245,7 +253,7 @@ class HueLight(HueBaseEntity, LightEntity):
         """Turn the light off."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         if transition is not None and self.resource.dimming:
-            self._restore_brightness = self.resource.dimming.brightness
+            self._last_brightness = self.resource.dimming.brightness
         flash = kwargs.get(ATTR_FLASH)
 
         if flash is not None:
