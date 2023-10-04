@@ -137,8 +137,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             elif payload == self._config[CONF_PAYLOAD_RESET]:
                 self._location_name = None
             else:
-                assert isinstance(msg.payload, str)
-                self._location_name = msg.payload
+                self._location_name = str(msg.payload)
 
         state_topic: str | None = self._config.get(CONF_STATE_TOPIC)
         if state_topic is None:
