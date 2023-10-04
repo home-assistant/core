@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for Twitch."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
 import logging
@@ -62,47 +63,73 @@ class TwitchUpdateCoordinator(DataUpdateCoordinator[dict[str, TwitchChannelData]
         self._client = client
         self._options = options
 
+    async def _get_channel_data(
+        self,
+        user: TwitchUser,
+        channel: TwitchUser,
+    ) -> TwitchChannelData:
+        """Get channel data."""
+        self.logger.debug("Channel: %s", channel.display_name)
+
+        stream: Stream | None = await first(
+            self._client.get_streams(user_id=[channel.id])
+        )
+        subscription: UserSubscription | None = None
+        following: FollowedChannelsResult | None = None
+
+        if self._client.has_required_auth(AuthType.USER, OAUTH_SCOPES):
+            try:
+                subscription = await self._client.check_user_subscription(
+                    user_id=user.id,
+                    broadcaster_id=channel.id,
+                )
+            except TwitchResourceNotFound:
+                self.logger.debug("User is not subscribed to: %s", channel.display_name)
+            except TwitchAPIException as exc:
+                self.logger.error(
+                    "Error response on check_user_subscription for %s: %s",
+                    channel.display_name,
+                    exc,
+                )
+            following = await self._client.get_followed_channels(
+                user_id=user.id,
+                broadcaster_id=channel.id,
+            )
+
+        followers = (await self._client.get_channel_followers(channel.id)).total
+
+        return TwitchChannelData(
+            channel,
+            stream=stream,
+            followers=followers,
+            following=following,
+            subscription=subscription,
+        )
+
     async def _async_get_data(self) -> dict[str, TwitchChannelData]:
         """Get data from Twitch."""
         user = await first(self._client.get_users())
         assert user
 
-        data: dict[str, TwitchChannelData] = {}
-        channels = self._options[CONF_CHANNELS]
+        channels: list[TwitchUser] = []
+
+        channel_options = self._options[CONF_CHANNELS]
         # Split channels into chunks of 100 to avoid hitting the rate limit
-        for chunk in [channels[i : i + 100] for i in range(0, len(channels), 100)]:
-            async for channel in self._client.get_users(logins=chunk):
-                subscription: UserSubscription | None = None
-                following: FollowedChannelsResult | None = None
+        for chunk in [
+            channel_options[i : i + 100] for i in range(0, len(channel_options), 100)
+        ]:
+            channels.extend(
+                [channel async for channel in self._client.get_users(logins=chunk)]
+            )
 
-                if self._client.has_required_auth(AuthType.USER, OAUTH_SCOPES):
-                    try:
-                        subscription = await self._client.check_user_subscription(
-                            user_id=user.id,
-                            broadcaster_id=channel.id,
-                        )
-                    except TwitchResourceNotFound:
-                        self.logger.debug("User is not subscribed")
-                    except TwitchAPIException as exc:
-                        self.logger.error(
-                            "Error response on check_user_subscription: %s", exc
-                        )
-                    following = await self._client.get_followed_channels(
-                        user_id=user.id,
-                        broadcaster_id=channel.id,
-                    )
+        data: dict[str, TwitchChannelData] = {}
 
-                data[channel.id] = TwitchChannelData(
-                    channel,
-                    stream=await first(
-                        self._client.get_streams(user_id=[channel.id], first=1)
-                    ),
-                    followers=(
-                        await self._client.get_followed_channels(channel.id)
-                    ).total,
-                    following=following,
-                    subscription=subscription,
-                )
+        # Get data for each channel asynchronously as tasks
+        for channel_data in await asyncio.gather(
+            *[self._get_channel_data(user, channel) for channel in channels]
+        ):
+            data[channel_data.user.id] = channel_data
+
         return data
 
     async def _async_update_data(self) -> dict[str, TwitchChannelData]:
@@ -110,7 +137,7 @@ class TwitchUpdateCoordinator(DataUpdateCoordinator[dict[str, TwitchChannelData]
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(60):
+            async with async_timeout.timeout(120):
                 return await self._async_get_data()
         except TwitchAuthorizationException as err:
             self.logger.error("Error while authenticating: %s", err)
