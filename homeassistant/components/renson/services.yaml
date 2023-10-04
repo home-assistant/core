@@ -99,8 +99,6 @@ set_pollution_settings:
       selector:
         boolean:
     airquality_control:
-      required: false
-      advanced: false
       default: true
       selector:
         boolean:
