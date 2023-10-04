@@ -6,6 +6,7 @@ import logging
 from typing import Literal
 
 import openai
+from litellm import acompletion
 from openai import error
 import voluptuous as vol
 
@@ -161,7 +162,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
         _LOGGER.debug("Prompt for %s: %s", model, messages)
 
         try:
-            result = await openai.ChatCompletion.acreate(
+            result = await acompletion(
                 api_key=self.entry.data[CONF_API_KEY],
                 model=model,
                 messages=messages,
