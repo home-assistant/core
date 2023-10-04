@@ -12,9 +12,11 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_DEBUG_RECORDING_DIR,
     CONF_PIPELINE_TIMEOUT,
+    CONF_WAKE_WORD_COOLDOWN,
     CONF_WAKE_WORD_TIMEOUT,
     DATA_CONFIG,
     DEFAULT_PIPELINE_TIMEOUT,
+    DEFAULT_WAKE_WORD_COOLDOWN,
     DEFAULT_WAKE_WORD_TIMEOUT,
     DOMAIN,
 )
@@ -61,6 +63,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_WAKE_WORD_TIMEOUT, default=DEFAULT_WAKE_WORD_TIMEOUT
                 ): vol.Any(float, int),
+                vol.Optional(
+                    CONF_WAKE_WORD_COOLDOWN, default=DEFAULT_WAKE_WORD_COOLDOWN
+                ): vol.Any(float, int),
             },
         )
     },
@@ -70,6 +75,7 @@ CONFIG_SCHEMA = vol.Schema(
 DEFAULT_CONFIG = {
     CONF_PIPELINE_TIMEOUT: DEFAULT_PIPELINE_TIMEOUT,
     CONF_WAKE_WORD_TIMEOUT: DEFAULT_WAKE_WORD_TIMEOUT,
+    CONF_WAKE_WORD_COOLDOWN: DEFAULT_WAKE_WORD_COOLDOWN,
 }
 
 
