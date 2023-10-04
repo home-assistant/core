@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
@@ -29,6 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     DOMAIN as HASS_DOMAIN,
     HassJob,
     HomeAssistant,
@@ -55,6 +57,9 @@ from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState  # no
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
 from .const import (
+    ADDON_UPDATE_CHANGELOG,
+    ADDON_UPDATE_INFO,
+    ADDON_UPDATE_STATS,
     ATTR_ADDON,
     ATTR_ADDONS,
     ATTR_AUTO_UPDATE,
@@ -800,11 +805,12 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
         self.is_hass_os = (get_info(self.hass) or {}).get("hassos") is not None
+        self._enabled_updates_by_addon: dict[str, set[str]] = defaultdict(set)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
-            await self.force_data_refresh()
+            await self.force_data_refresh(self.data is None)
         except HassioAPIError as err:
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
@@ -898,7 +904,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         self.hass.data[DATA_SUPERVISOR_INFO] = await self.hassio.get_supervisor_info()
         await self.async_refresh()
 
-    async def force_data_refresh(self) -> None:
+    async def force_data_refresh(self, first_update: bool) -> None:
         """Force update of the addon info."""
         (
             self.hass.data[DATA_INFO],
@@ -917,11 +923,17 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         all_addons = self.hass.data[DATA_SUPERVISOR_INFO].get("addons", [])
+        enabled_updates_by_addon = self._enabled_updates_by_addon
         started_addons = [
             addon for addon in all_addons if addon[ATTR_STATE] == ATTR_STARTED
         ]
         stats_data = await asyncio.gather(
-            *[self._update_addon_stats(addon[ATTR_SLUG]) for addon in started_addons]
+            *[
+                self._update_addon_stats(addon[ATTR_SLUG])
+                for addon in started_addons
+                if first_update
+                or ADDON_UPDATE_STATS in enabled_updates_by_addon[addon[ATTR_SLUG]]
+            ]
         )
         self.hass.data[DATA_ADDONS_STATS] = dict(stats_data)
         self.hass.data[DATA_ADDONS_CHANGELOGS] = dict(
@@ -929,16 +941,24 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 *[
                     self._update_addon_changelog(addon[ATTR_SLUG])
                     for addon in all_addons
+                    if first_update
+                    or ADDON_UPDATE_CHANGELOG
+                    in enabled_updates_by_addon[addon[ATTR_SLUG]]
                 ]
             )
         )
         self.hass.data[DATA_ADDONS_INFO] = dict(
             await asyncio.gather(
-                *[self._update_addon_info(addon[ATTR_SLUG]) for addon in all_addons]
+                *[
+                    self._update_addon_info(addon[ATTR_SLUG])
+                    for addon in all_addons
+                    if first_update
+                    or ADDON_UPDATE_INFO in enabled_updates_by_addon[addon[ATTR_SLUG]]
+                ]
             )
         )
 
-    async def _update_addon_stats(self, slug):
+    async def _update_addon_stats(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Update single addon stats."""
         try:
             stats = await self.hassio.get_addon_stats(slug)
@@ -947,7 +967,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.warning("Could not fetch stats for %s: %s", slug, err)
         return (slug, None)
 
-    async def _update_addon_changelog(self, slug):
+    async def _update_addon_changelog(self, slug: str) -> tuple[str, str | None]:
         """Return the changelog for an add-on."""
         try:
             changelog = await self.hassio.get_addon_changelog(slug)
@@ -956,7 +976,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.warning("Could not fetch changelog for %s: %s", slug, err)
         return (slug, None)
 
-    async def _update_addon_info(self, slug):
+    async def _update_addon_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Return the info for an add-on."""
         try:
             info = await self.hassio.get_addon_info(slug)
@@ -964,6 +984,16 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         except HassioAPIError as err:
             _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
         return (slug, None)
+
+    async def async_enable_addon_updates(self, slug: str, key: str) -> CALLBACK_TYPE:
+        """Enable updates for an add-on."""
+        self._enabled_updates_by_addon[slug].add(key)
+
+        @callback
+        def _remove():
+            self._enabled_updates_by_addon[slug].remove(key)
+
+        return _remove
 
     async def _async_refresh(
         self,

@@ -1,6 +1,7 @@
 """Base for Hass.io entities."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -16,6 +17,10 @@ from .const import (
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
 )
+
+KEY_TO_UPDATE_TYPE: dict[str, str] = {}
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
@@ -45,6 +50,18 @@ class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
             and self.entity_description.key
             in self.coordinator.data[DATA_KEY_ADDONS].get(self._addon_slug, {})
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        try:
+            update_type = KEY_TO_UPDATE_TYPE[self.entity_description.key]
+        except KeyError:
+            _LOGGER.warning("No update type for %s", self.entity_description.key)
+            return await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_enable_addon_updates(self._addon_slug, update_type)
+        )
+        return await super().async_added_to_hass()
 
 
 class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):

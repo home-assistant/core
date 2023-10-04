@@ -82,6 +82,10 @@ PLACEHOLDER_KEY_COMPONENTS = "components"
 
 ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
 
+ADDON_UPDATE_STATS = "stats"
+ADDON_UPDATE_CHANGELOG = "changelog"
+ADDON_UPDATE_INFO = "info"
+
 
 class SupervisorEntityModel(StrEnum):
     """Supervisor entity model."""
