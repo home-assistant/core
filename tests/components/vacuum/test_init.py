@@ -55,6 +55,7 @@ async def test_deprecated_base_class(
             TEST_DOMAIN,
             async_setup_entry=async_setup_entry_init,
         ),
+        built_in=False,
     )
 
     entity1 = VacuumEntity()
