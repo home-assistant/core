@@ -313,8 +313,8 @@ class WebDavCalendarData:
             or hasattr(vevent, "description")
             and pattern.match(vevent.description.value)
             or hasattr(vevent, "categories")
-            and pattern.match(vevent.categories.value)
-            or pattern.mactch(vevent.__string__())
+            and pattern.match(str(vevent.categories.value))
+            or pattern.match(str(vevent))
         )
 
     @staticmethod
