@@ -936,6 +936,17 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             all_addons.append(slug)
             if addon[ATTR_STATE] == ATTR_STARTED:
                 started_addons.append(slug)
+        #
+        # Update add-on info if its the first update or
+        # there is at least one entity that needs the data.
+        #
+        # When entities are added they call async_enable_addon_updates
+        # to enable updates for the endpoints they need via
+        # async_added_to_hass. This ensures that we only update
+        # the data for the endpoints that are needed to avoid unnecessary
+        # API calls since otherwise we would fetch stats for all add-ons
+        # and throw them away.
+        #
         enabled_updates_by_addon = self._enabled_updates_by_addon
         stats_data = await asyncio.gather(
             *[
