@@ -131,9 +131,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             and not self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED)
             and self._ac["myZone"] > 0
         ):
-            return self.coordinator.data["aircons"][self.ac_key]["zones"][
-                f"z{self._ac['myZone']:02}"
-            ]["setTemp"]
+            return self._myzone["setTemp"]
         return self._ac["setTemp"]
 
     @property
