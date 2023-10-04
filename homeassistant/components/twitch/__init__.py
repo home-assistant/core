@@ -1,6 +1,8 @@
 """The Twitch component."""
 from __future__ import annotations
 
+import logging
+
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from twitchAPI.twitch import Twitch
 
@@ -14,6 +16,9 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .const import DOMAIN, OAUTH_SCOPES, PLATFORMS
+from .coordinator import TwitchUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -40,7 +45,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client.auto_refresh_auth = False
     await client.set_user_authentication(access_token, scope=OAUTH_SCOPES)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
+    coordinator = TwitchUpdateCoordinator(
+        hass,
+        _LOGGER,
+        client,
+        entry.options,
+    )
+
+    # Set data
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

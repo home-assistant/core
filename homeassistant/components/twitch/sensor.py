@@ -1,14 +1,6 @@
 """Support for the Twitch stream status."""
 from __future__ import annotations
 
-from twitchAPI.helper import first
-from twitchAPI.twitch import (
-    AuthType,
-    Twitch,
-    TwitchAPIException,
-    TwitchResourceNotFound,
-    TwitchUser,
-)
 import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
@@ -24,7 +16,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_CHANNELS, DOMAIN, LOGGER, OAUTH_SCOPES
+from .const import CONF_CHANNELS, DOMAIN
+from .coordinator import TwitchUpdateCoordinator
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -97,22 +90,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize entries."""
-    client = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TwitchUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    channels = entry.options[CONF_CHANNELS]
-
-    entities: list[TwitchSensor] = []
-
-    # Split channels into chunks of 100 to avoid hitting the rate limit
-    for chunk in chunk_list(channels, 100):
-        entities.extend(
-            [
-                TwitchSensor(channel, client)
-                async for channel in client.get_users(logins=chunk)
-            ]
-        )
-
-    async_add_entities(entities, True)
+    async_add_entities(
+        [
+            TwitchSensor(coordinator, channel)
+            for channel in entry.options[CONF_CHANNELS]
+        ],
+        True,
+    )
 
 
 class TwitchSensor(SensorEntity):
@@ -120,30 +106,29 @@ class TwitchSensor(SensorEntity):
 
     _attr_icon = ICON
 
-    def __init__(self, channel: TwitchUser, client: Twitch) -> None:
+    def __init__(
+        self,
+        coordinator: TwitchUpdateCoordinator,
+        key: str,
+    ) -> None:
         """Initialize the sensor."""
-        self._client = client
-        self._channel = channel
-        self._enable_user_auth = client.has_required_auth(AuthType.USER, OAUTH_SCOPES)
-        self._attr_name = channel.display_name
-        self._attr_unique_id = channel.id
+        self.coordinator = coordinator
+        self._key = key
 
     async def async_update(self) -> None:
         """Update device state."""
-        followers = (await self._client.get_channel_followers(self._channel.id)).total
+        if not (data := self.coordinator.data.get(self._key)):
+            return
+
         self._attr_extra_state_attributes = {
-            ATTR_FOLLOWING: followers,
-            ATTR_VIEWS: self._channel.view_count,
+            ATTR_FOLLOWING: data.followers,
+            ATTR_VIEWS: data.user.view_count,
         }
-        if self._enable_user_auth:
-            await self._async_add_user_attributes()
-        if stream := (
-            await first(self._client.get_streams(user_id=[self._channel.id], first=1))
-        ):
+        if data.stream:
             self._attr_native_value = STATE_STREAMING
-            self._attr_extra_state_attributes[ATTR_GAME] = stream.game_name
-            self._attr_extra_state_attributes[ATTR_TITLE] = stream.title
-            self._attr_entity_picture = stream.thumbnail_url
+            self._attr_extra_state_attributes[ATTR_GAME] = data.stream.game_name
+            self._attr_extra_state_attributes[ATTR_TITLE] = data.stream.title
+            self._attr_entity_picture = data.stream.thumbnail_url
             if self._attr_entity_picture is not None:
                 self._attr_entity_picture = self._attr_entity_picture.format(
                     height=24,
@@ -153,28 +138,18 @@ class TwitchSensor(SensorEntity):
             self._attr_native_value = STATE_OFFLINE
             self._attr_extra_state_attributes[ATTR_GAME] = None
             self._attr_extra_state_attributes[ATTR_TITLE] = None
-            self._attr_entity_picture = self._channel.profile_image_url
+            self._attr_entity_picture = data.user.profile_image_url
 
-    async def _async_add_user_attributes(self) -> None:
-        if not (user := await first(self._client.get_users())):
-            return
-        self._attr_extra_state_attributes[ATTR_SUBSCRIPTION] = False
-        try:
-            sub = await self._client.check_user_subscription(
-                user_id=user.id, broadcaster_id=self._channel.id
-            )
-            self._attr_extra_state_attributes[ATTR_SUBSCRIPTION] = True
-            self._attr_extra_state_attributes[ATTR_SUBSCRIPTION_GIFTED] = sub.is_gift
-        except TwitchResourceNotFound:
-            LOGGER.debug("User is not subscribed")
-        except TwitchAPIException as exc:
-            LOGGER.error("Error response on check_user_subscription: %s", exc)
-
-        follows = await self._client.get_followed_channels(
-            user.id, broadcaster_id=self._channel.id
+        self._attr_extra_state_attributes[ATTR_SUBSCRIPTION] = (
+            data.subscription is not None
         )
-        self._attr_extra_state_attributes[ATTR_FOLLOW] = follows.total > 0
-        if follows.total:
-            self._attr_extra_state_attributes[ATTR_FOLLOW_SINCE] = follows.data[
-                0
-            ].followed_at
+        self._attr_extra_state_attributes[ATTR_SUBSCRIPTION_GIFTED] = (
+            data.subscription.is_gift if data.subscription else None
+        )
+
+        self._attr_extra_state_attributes[ATTR_FOLLOW] = (
+            data.following.total > 0 if data.following is not None else None
+        )
+        self._attr_extra_state_attributes[ATTR_FOLLOW_SINCE] = (
+            data.following.data[0].followed_at if data.following is not None else None
+        )
