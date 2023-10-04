@@ -2,7 +2,6 @@ set_timer_level:
   fields:
     timer_level:
       required: true
-      advanced: false
       default: "level1"
       selector:
         select:
