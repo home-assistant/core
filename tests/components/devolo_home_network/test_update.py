@@ -1,6 +1,7 @@
 """Tests for the devolo Home Network update."""
 from devolo_plc_api.device_api import UPDATE_NOT_AVAILABLE, UpdateFirmwareCheck
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.devolo_home_network.const import (
@@ -18,7 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.util import dt as dt_util
 
 from . import configure_integration
 from .const import FIRMWARE_UPDATE_AVAILABLE
@@ -41,7 +41,10 @@ async def test_update_setup(hass: HomeAssistant) -> None:
 
 
 async def test_update_firmware(
-    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test updating a device."""
     entry = configure_integration(hass)
@@ -75,7 +78,8 @@ async def test_update_firmware(
     mock_device.device.async_check_firmware_available.return_value = (
         UpdateFirmwareCheck(result=UPDATE_NOT_AVAILABLE)
     )
-    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
+    freezer.tick(LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -86,7 +90,9 @@ async def test_update_firmware(
 
 
 async def test_device_failure_check(
-    hass: HomeAssistant, mock_device: MockDevice
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test device failure during check."""
     entry = configure_integration(hass)
@@ -100,7 +106,8 @@ async def test_device_failure_check(
     assert state is not None
 
     mock_device.device.async_check_firmware_available.side_effect = DeviceUnavailable
-    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
+    freezer.tick(LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)

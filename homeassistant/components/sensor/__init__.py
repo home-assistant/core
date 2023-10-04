@@ -8,12 +8,12 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 import logging
-from math import ceil, floor, log10
+from math import ceil, floor, isfinite, log10
 from typing import Any, Final, Self, cast, final
 
 from homeassistant.config_entries import ConfigEntry
 
-# pylint: disable=[hass-deprecated-import]
+# pylint: disable-next=hass-deprecated-import
 from homeassistant.const import (  # noqa: F401
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_UNIT_OF_MEASUREMENT,
@@ -148,6 +148,8 @@ class SensorEntityDescription(EntityDescription):
 
 class SensorEntity(Entity):
     """Base class for sensor entities."""
+
+    _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
 
     entity_description: SensorEntityDescription
     _attr_device_class: SensorDeviceClass | None
@@ -345,7 +347,7 @@ class SensorEntity(Entity):
         """Return initial entity options.
 
         These will be stored in the entity registry the first time the entity is seen,
-        and then never updated.
+        and then only updated if the unit system is changed.
         """
         suggested_unit_of_measurement = self._get_initial_suggested_unit()
 
@@ -582,7 +584,11 @@ class SensorEntity(Entity):
         if not isinstance(value, (int, float, Decimal)):
             try:
                 if isinstance(value, str) and "." not in value and "e" not in value:
-                    numerical_value = int(value)
+                    try:
+                        numerical_value = int(value)
+                    except ValueError:
+                        # Handle nan, inf
+                        numerical_value = float(value)
                 else:
                     numerical_value = float(value)  # type:ignore[arg-type]
             except (TypeError, ValueError) as err:
@@ -595,6 +601,15 @@ class SensorEntity(Entity):
                 ) from err
         else:
             numerical_value = value
+
+        if not isfinite(numerical_value):
+            raise ValueError(
+                f"Sensor {self.entity_id} has device class '{device_class}', "
+                f"state class '{state_class}' unit '{unit_of_measurement}' and "
+                f"suggested precision '{suggested_precision}' thus indicating it "
+                f"has a numeric value; however, it has the non-finite value: "
+                f"'{numerical_value}'"
+            )
 
         if native_unit_of_measurement != unit_of_measurement and (
             converter := UNIT_CONVERTERS.get(device_class)
@@ -770,7 +785,7 @@ class SensorEntity(Entity):
             registry = er.async_get(self.hass)
             initial_options = self.get_initial_entity_options() or {}
             registry.async_update_entity_options(
-                self.entity_id,
+                self.registry_entry.entity_id,
                 f"{DOMAIN}.private",
                 initial_options.get(f"{DOMAIN}.private"),
             )

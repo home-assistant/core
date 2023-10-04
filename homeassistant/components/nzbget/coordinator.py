@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -32,7 +31,6 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         *,
         config: Mapping[str, Any],
-        options: Mapping[str, Any],
     ) -> None:
         """Initialize global NZBGet data updater."""
         self.nzbget = NZBGetAPI(
@@ -47,13 +45,8 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
         self._completed_downloads_init = False
         self._completed_downloads = set[tuple]()
 
-        update_interval = timedelta(seconds=options[CONF_SCAN_INTERVAL])
-
         super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=update_interval,
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=5)
         )
 
     def _check_completed_downloads(self, history):

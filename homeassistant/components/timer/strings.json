@@ -62,6 +62,10 @@
           "description": "Duration to add or subtract to the running timer."
         }
       }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads timers from the YAML-configuration."
     }
   }
 }

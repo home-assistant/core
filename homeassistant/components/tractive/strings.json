@@ -33,8 +33,9 @@
       "activity": {
         "name": "Activity",
         "state": {
-          "ok": "OK",
-          "good": "Good"
+          "good": "Good",
+          "low": "Low",
+          "ok": "OK"
         }
       },
       "activity_time": {
@@ -58,8 +59,9 @@
       "sleep": {
         "name": "Sleep",
         "state": {
-          "ok": "OK",
-          "good": "Good"
+          "good": "[%key:component::tractive::entity::sensor::activity::state::good%]",
+          "low": "[%key:component::tractive::entity::sensor::activity::state::low%]",
+          "ok": "[%key:component::tractive::entity::sensor::activity::state::ok%]"
         }
       },
       "tracker_battery_level": {

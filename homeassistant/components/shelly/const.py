@@ -181,3 +181,8 @@ PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
 NOT_CALIBRATED_ISSUE_ID = "not_calibrated_{unique}"
 
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
+
+OTA_BEGIN = "ota_begin"
+OTA_ERROR = "ota_error"
+OTA_PROGRESS = "ota_progress"
+OTA_SUCCESS = "ota_success"

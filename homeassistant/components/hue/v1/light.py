@@ -224,7 +224,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Once we do a rooms update, we cancel the listener
         # until the next time lights are added
         bridge.reset_jobs.remove(cancel_update_rooms_listener)
-        cancel_update_rooms_listener()  # pylint: disable=not-callable
+        cancel_update_rooms_listener()
         cancel_update_rooms_listener = None
 
     @callback
