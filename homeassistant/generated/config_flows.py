@@ -382,6 +382,7 @@ FLOWS = {
         "recollect_waste",
         "renault",
         "renson",
+        "renson_healthbox3",
         "reolink",
         "rfxtrx",
         "rhasspy",

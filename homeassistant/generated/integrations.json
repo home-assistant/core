@@ -4670,9 +4670,20 @@
     },
     "renson": {
       "name": "Renson",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "integrations": {
+        "renson": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Renson"
+        },
+        "renson_healthbox3": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Renson healthbox"
+        }
+      }
     },
     "reolink": {
       "name": "Reolink IP NVR/camera",

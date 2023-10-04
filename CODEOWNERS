@@ -1036,6 +1036,7 @@ build.json @home-assistant/supervisor
 /tests/components/renault/ @epenet
 /homeassistant/components/renson/ @jimmyd-be
 /tests/components/renson/ @jimmyd-be
+/homeassistant/components/renson_healthbox3/ @jimmyd-be @rmassch
 /homeassistant/components/reolink/ @starkillerOG
 /tests/components/reolink/ @starkillerOG
 /homeassistant/components/repairs/ @home-assistant/core

@@ -1,14 +1,11 @@
-"""Sensor platform for healthbox."""
+"""Sensor data of the Renson ventilation unit."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-from decimal import Decimal
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
-    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -18,46 +15,64 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER, MANUFACTURER, HealthboxRoom
-from .coordinator import HealthboxDataUpdateCoordinator
+from . import RensonData
+from .const import (
+    DOMAIN,
+    HealthboxGlobalSensorEntityDescription,
+    HealthboxRoomSensorEntityDescription,
+)
+from .coordinator import RensonCoordinator
+from .entity import RensonEntity
 
-
-@dataclass
-class HealthboxGlobalEntityDescriptionMixin:
-    """Mixin values for Healthbox Global entities."""
-
-    value_fn: Callable[[], float | int | str | Decimal | None]
-
-
-@dataclass
-class HealthboxGlobalSensorEntityDescription(
-    SensorEntityDescription, HealthboxGlobalEntityDescriptionMixin
-):
-    """Class describing Healthbox Global sensor entities."""
-
-
-@dataclass
-class HealthboxRoomEntityDescriptionMixin:
-    """Mixin values for Healthbox Room entities."""
-
-    room: HealthboxRoom
-    value_fn: Callable[[], float | int | str | Decimal | None]
-
-
-@dataclass
-class HealthboxRoomSensorEntityDescription(
-    SensorEntityDescription, HealthboxRoomEntityDescriptionMixin
-):
-    """Class describing Healthbox Room sensor entities."""
+HEALTHBOX_GLOBAL_SENSORS: tuple[HealthboxGlobalSensorEntityDescription, ...] = (
+    HealthboxGlobalSensorEntityDescription(
+        key="global_aqi",
+        name="Global Air Quality Index",
+        native_unit_of_measurement=None,
+        icon="mdi:leaf",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.global_aqi,
+        suggested_display_precision=2,
+    ),
+    HealthboxGlobalSensorEntityDescription(
+        key="error_count",
+        name="Error Count",
+        native_unit_of_measurement=None,
+        icon="mdi:alert-outline",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.error_count,
+        suggested_display_precision=0,
+    ),
+    HealthboxGlobalSensorEntityDescription(
+        key="wifi_status",
+        name="WiFi Status",
+        icon="mdi:wifi",
+        value_fn=lambda x: x.wifi.status,
+    ),
+    HealthboxGlobalSensorEntityDescription(
+        key="wifi_internet_connection",
+        name="WiFi Internet Connection",
+        native_unit_of_measurement=None,
+        icon="mdi:web",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.wifi.internet_connection,
+    ),
+    HealthboxGlobalSensorEntityDescription(
+        key="wifi_ssid",
+        name="WiFi SSID",
+        icon="mdi:wifi-settings",
+        value_fn=lambda x: x.wifi.ssid,
+    ),
+)
 
 
 def generate_room_sensors_for_healthbox(
-    coordinator: HealthboxDataUpdateCoordinator,
+    coordinator: RensonCoordinator,
 ) -> list[HealthboxRoomSensorEntityDescription]:
     """Generate sensors for each room."""
     room_sensors: list[HealthboxRoomSensorEntityDescription] = []
@@ -179,154 +194,63 @@ def generate_room_sensors_for_healthbox(
     return room_sensors
 
 
-def generate_global_sensors_for_healthbox(
-    coordinator: HealthboxDataUpdateCoordinator,
-) -> list[HealthboxGlobalSensorEntityDescription]:
-    """Generate global sensors."""
-    global_sensors: list[HealthboxGlobalSensorEntityDescription] = []
-    global_sensors.append(
-        HealthboxGlobalSensorEntityDescription(
-            key="global_aqi",
-            name="Global Air Quality Index",
-            native_unit_of_measurement=None,
-            icon="mdi:leaf",
-            device_class=SensorDeviceClass.AQI,
-            state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda x: x.global_aqi,
-            suggested_display_precision=2,
-        )
-    )
-    global_sensors.append(
-        HealthboxGlobalSensorEntityDescription(
-            key="error_count",
-            name="Error Count",
-            native_unit_of_measurement=None,
-            icon="mdi:alert-outline",
-            state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda x: x.error_count,
-            suggested_display_precision=0,
-        )
-    )
-    if coordinator.api.wifi.status:
-        global_sensors.append(
-            HealthboxGlobalSensorEntityDescription(
-                key="wifi_status",
-                name="WiFi Status",
-                icon="mdi:wifi",
-                value_fn=lambda x: x.wifi.status,
-            )
-        )
-    if coordinator.api.wifi.internet_connection is not None:
-        global_sensors.append(
-            HealthboxGlobalSensorEntityDescription(
-                key="wifi_internet_connection",
-                name="WiFi Internet Connection",
-                native_unit_of_measurement=None,
-                icon="mdi:web",
-                state_class=SensorStateClass.MEASUREMENT,
-                value_fn=lambda x: x.wifi.internet_connection,
-            )
-        )
-    if coordinator.api.wifi.ssid:
-        global_sensors.append(
-            HealthboxGlobalSensorEntityDescription(
-                key="wifi_ssid",
-                name="WiFi SSID",
-                icon="mdi:wifi-settings",
-                value_fn=lambda x: x.wifi.ssid,
-            )
-        )
-    return global_sensors
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the sensor platform."""
-    coordinator: HealthboxDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
-
-    global_sensors = generate_global_sensors_for_healthbox(coordinator=coordinator)
-    room_sensors = generate_room_sensors_for_healthbox(coordinator=coordinator)
-    entities = []
-
-    for description in global_sensors:
-        entities.append(HealthboxGlobalSensor(coordinator, description))
-    for description in room_sensors:
-        entities.append(HealthboxRoomSensor(coordinator, description))
-
-    async_add_entities(entities)
-
-
-class HealthboxGlobalSensor(
-    CoordinatorEntity[HealthboxDataUpdateCoordinator], SensorEntity
-):
+class HealthboxGlobalSensor(RensonEntity, SensorEntity):
     """Representation of a Healthbox  Room Sensor."""
 
     entity_description: HealthboxGlobalSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: HealthboxDataUpdateCoordinator,
+        coordinator: RensonCoordinator,
         description: HealthboxGlobalSensorEntityDescription,
     ) -> None:
         """Initialize Sensor Domain."""
-        super().__init__(coordinator)
+        super().__init__(description.key, coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.key}"
         self._attr_name = f"Healthbox {description.name}"
-        self._attr_device_info = DeviceInfo(
-            name=f"{coordinator.api.serial}",
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            manufacturer=MANUFACTURER,
-            model=coordinator.api.description,
-            hw_version=coordinator.api.warranty_number,
-            sw_version=coordinator.api.firmware_version,
-        )
 
-    @property
-    def native_value(self) -> float | int | str | Decimal:
-        """Sensor native value."""
-        return self.entity_description.value_fn(self.coordinator.api)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+
+        self._attr_native_value = self.entity_description.value_fn(self.coordinator.api)
+
+        self.async_write_ha_state()
 
 
-class HealthboxRoomSensor(
-    CoordinatorEntity[HealthboxDataUpdateCoordinator], SensorEntity
-):
+class HealthboxRoomSensor(RensonEntity, SensorEntity):
     """Representation of a Healthbox Room Sensor."""
 
     entity_description: HealthboxRoomSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: HealthboxDataUpdateCoordinator,
+        coordinator: RensonCoordinator,
         description: HealthboxRoomSensorEntityDescription,
     ) -> None:
         """Initialize Sensor Domain."""
-        super().__init__(coordinator)
+        super().__init__(description.key, coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.room.room_id}-{description.key}"
+        self._attr_unique_id = f"{DOMAIN}-{description.room.room_id}-{description.key}"
         self._attr_name = f"{description.name}"
         self._attr_device_info = DeviceInfo(
             name=self.entity_description.room.name,
             identifiers={
                 (
                     DOMAIN,
-                    f"{coordinator.config_entry.unique_id}_{self.entity_description.room.room_id}",
+                    f"{DOMAIN}_{self.entity_description.room.room_id}",
                 )
             },
             manufacturer="Renson",
             model="Healthbox Room",
         )
 
-    @property
-    def native_value(self) -> float | int | str | Decimal:
-        """Sensor native value."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+
         room_id: int = int(self.entity_description.room.room_id)
 
         matching_room = [
@@ -334,10 +258,32 @@ class HealthboxRoomSensor(
         ]
 
         if len(matching_room) != 1:
-            error_msg: str = f"No matching room found for id {room_id}"
-            LOGGER.error(error_msg)
+            pass
         else:
             matching_room = matching_room[0]
-            return self.entity_description.value_fn(matching_room)
+            self._attr_native_value = self.entity_description.value_fn(matching_room)
 
-        return None
+        self.async_write_ha_state()
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Renson sensor platform."""
+
+    data: RensonData = hass.data[DOMAIN][config_entry.entry_id]
+
+    entities: list[Any] = []
+    entities = [
+        HealthboxGlobalSensor(data.coordinator, description)
+        for description in HEALTHBOX_GLOBAL_SENSORS
+    ]
+
+    room_sensors = generate_room_sensors_for_healthbox(coordinator=data.coordinator)
+
+    for description in room_sensors:
+        entities.append(HealthboxRoomSensor(data.coordinator, description))
+
+    async_add_entities(entities)
