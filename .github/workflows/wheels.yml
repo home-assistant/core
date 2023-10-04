@@ -26,7 +26,7 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.6.0
+        uses: actions/checkout@v4.1.0
 
       - name: Get information
         id: info
@@ -56,7 +56,7 @@ jobs:
             echo "CI_BUILD=1"
             echo "ENABLE_HEADLESS=1"
 
-            # Use C-Extension for sqlalchemy
+            # Use C-Extension for SQLAlchemy
             echo "REQUIRE_SQLALCHEMY_CEXT=1"
           ) > .env_file
 
@@ -84,7 +84,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.6.0
+        uses: actions/checkout@v4.1.0
 
       - name: Download env_file
         uses: actions/download-artifact@v3
@@ -122,7 +122,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.6.0
+        uses: actions/checkout@v4.1.0
 
       - name: Download env_file
         uses: actions/download-artifact@v3
@@ -186,7 +186,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
-          skip-binary: aiohttp;grpcio;sqlalchemy;protobuf
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtaa"
@@ -200,7 +200,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
-          skip-binary: aiohttp;grpcio;sqlalchemy;protobuf
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtab"
@@ -214,7 +214,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
-          skip-binary: aiohttp;grpcio;sqlalchemy;protobuf
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtac"

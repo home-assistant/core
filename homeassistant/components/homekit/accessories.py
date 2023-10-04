@@ -183,7 +183,9 @@ def get_accessory(  # noqa: C901
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         feature_list = config.get(CONF_FEATURE_LIST, [])
 
-        if device_class == MediaPlayerDeviceClass.TV:
+        if device_class == MediaPlayerDeviceClass.RECEIVER:
+            a_type = "ReceiverMediaPlayer"
+        elif device_class == MediaPlayerDeviceClass.TV:
             a_type = "TelevisionMediaPlayer"
         elif validate_media_player_features(state, feature_list):
             a_type = "MediaPlayer"
@@ -274,7 +276,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         aid: int,
         config: dict,
         *args: Any,
-        category: str = CATEGORY_OTHER,
+        category: int = CATEGORY_OTHER,
         device_id: str | None = None,
         **kwargs: Any,
     ) -> None:
@@ -463,7 +465,9 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
     def async_update_state_callback(self, new_state: State | None) -> None:
         """Handle state change listener callback."""
         _LOGGER.debug("New_state: %s", new_state)
-        if new_state is None:
+        # HomeKit handles unavailable state via the available property
+        # so we should not propagate it here
+        if new_state is None or new_state.state == STATE_UNAVAILABLE:
             return
         battery_state = None
         battery_charging_state = None

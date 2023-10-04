@@ -71,10 +71,17 @@ class LogiCam(Camera):
         """Initialize Logi Circle camera."""
         super().__init__()
         self._camera = camera
-        self._id = self._camera.mac_address
-        self._has_battery = self._camera.supports_feature("battery_level")
+        self._has_battery = camera.supports_feature("battery_level")
         self._ffmpeg = ffmpeg
         self._listeners = []
+        self._attr_unique_id = camera.mac_address
+        self._attr_device_info = DeviceInfo(
+            identifiers={(LOGI_CIRCLE_DOMAIN, camera.id)},
+            manufacturer=DEVICE_BRAND,
+            model=camera.model_name,
+            name=camera.name,
+            sw_version=camera.firmware,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Connect camera methods to signals."""
@@ -116,22 +123,6 @@ class LogiCam(Camera):
         """Disconnect dispatcher listeners when removed."""
         for detach in self._listeners:
             detach()
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return DeviceInfo(
-            identifiers={(LOGI_CIRCLE_DOMAIN, self._camera.id)},
-            manufacturer=DEVICE_BRAND,
-            model=self._camera.model_name,
-            name=self._camera.name,
-            sw_version=self._camera.firmware,
-        )
 
     @property
     def extra_state_attributes(self):

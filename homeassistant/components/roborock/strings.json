@@ -27,6 +27,20 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "mop_attached": {
+        "name": "Mop attached"
+      },
+      "mop_drying_status": {
+        "name": "Mop drying"
+      },
+      "water_box_attached": {
+        "name": "Water box attached"
+      },
+      "water_shortage": {
+        "name": "Water shortage"
+      }
+    },
     "number": {
       "volume": {
         "name": "Volume"
@@ -39,8 +53,31 @@
       "cleaning_time": {
         "name": "Cleaning time"
       },
+      "clean_percent": {
+        "name": "Cleaning progress"
+      },
+      "dock_error": {
+        "name": "Dock error",
+        "state": {
+          "ok": "Ok",
+          "duct_blockage": "Duct blockage",
+          "water_empty": "Water empty",
+          "waste_water_tank_full": "Waste water tank full",
+          "dirty_tank_latch_open": "Dirty tank latch open",
+          "no_dustbin": "No dustbin"
+        }
+      },
       "main_brush_time_left": {
         "name": "Main brush time left"
+      },
+      "mop_drying_remaining_time": {
+        "name": "Mop drying remaining time"
+      },
+      "last_clean_start": {
+        "name": "Last clean begin"
+      },
+      "last_clean_end": {
+        "name": "Last clean end"
       },
       "side_brush_time_left": {
         "name": "Side brush time left"
@@ -139,7 +176,8 @@
           "moderate": "Moderate",
           "high": "High",
           "intense": "Intense",
-          "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]"
+          "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
+          "custom_water_flow": "Custom water flow"
         }
       }
     },

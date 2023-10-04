@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, TypeVar,
 import attr
 import voluptuous as vol
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -148,7 +149,7 @@ def _protect_entity_options(
     return ReadOnlyDict({key: ReadOnlyDict(val) for key, val in data.items()})
 
 
-@attr.s(slots=True, frozen=True)
+@attr.s(frozen=True)
 class RegistryEntry:
     """Entity Registry Entry."""
 
@@ -182,13 +183,6 @@ class RegistryEntry:
     supported_features: int = attr.ib(default=0)
     translation_key: str | None = attr.ib(default=None)
     unit_of_measurement: str | None = attr.ib(default=None)
-
-    _partial_repr: str | None | UndefinedType = attr.ib(
-        cmp=False, default=UNDEFINED, init=False, repr=False
-    )
-    _display_repr: str | None | UndefinedType = attr.ib(
-        cmp=False, default=UNDEFINED, init=False, repr=False
-    )
 
     @domain.default
     def _domain_default(self) -> str:
@@ -231,21 +225,17 @@ class RegistryEntry:
                 display_dict["dp"] = precision
         return display_dict
 
-    @property
+    @cached_property
     def display_json_repr(self) -> str | None:
         """Return a cached partial JSON representation of the entry.
 
         This version only includes what's needed for display.
         """
-        if self._display_repr is not UNDEFINED:
-            return self._display_repr
-
         try:
             dict_repr = self._as_display_dict
             json_repr: str | None = JSON_DUMP(dict_repr) if dict_repr else None
-            object.__setattr__(self, "_display_repr", json_repr)
+            return json_repr
         except (ValueError, TypeError):
-            object.__setattr__(self, "_display_repr", None)
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.entity_id,
@@ -253,8 +243,8 @@ class RegistryEntry:
                     find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
                 ),
             )
-        # Mypy doesn't understand the __setattr__ business
-        return self._display_repr  # type: ignore[return-value]
+
+        return None
 
     @property
     def as_partial_dict(self) -> dict[str, Any]:
@@ -278,17 +268,13 @@ class RegistryEntry:
             "unique_id": self.unique_id,
         }
 
-    @property
+    @cached_property
     def partial_json_repr(self) -> str | None:
         """Return a cached partial JSON representation of the entry."""
-        if self._partial_repr is not UNDEFINED:
-            return self._partial_repr
-
         try:
             dict_repr = self.as_partial_dict
-            object.__setattr__(self, "_partial_repr", JSON_DUMP(dict_repr))
+            return JSON_DUMP(dict_repr)
         except (ValueError, TypeError):
-            object.__setattr__(self, "_partial_repr", None)
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.entity_id,
@@ -296,8 +282,7 @@ class RegistryEntry:
                     find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
                 ),
             )
-        # Mypy doesn't understand the __setattr__ business
-        return self._partial_repr  # type: ignore[return-value]
+        return None
 
     @callback
     def write_unavailable_state(self, hass: HomeAssistant) -> None:
@@ -430,7 +415,7 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         return data
 
 
-class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
+class EntityRegistryItems(UserDict[str, RegistryEntry]):
     """Container for entity registry items, maps entity_id -> entry.
 
     Maintains two additional indexes:
@@ -450,11 +435,12 @@ class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
 
     def __setitem__(self, key: str, entry: RegistryEntry) -> None:
         """Add an item."""
-        if key in self:
-            old_entry = self[key]
+        data = self.data
+        if key in data:
+            old_entry = data[key]
             del self._entry_ids[old_entry.id]
             del self._index[(old_entry.domain, old_entry.platform, old_entry.unique_id)]
-        super().__setitem__(key, entry)
+        data[key] = entry
         self._entry_ids[entry.id] = entry
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
 

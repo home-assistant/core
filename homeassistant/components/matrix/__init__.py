@@ -1,10 +1,28 @@
 """The Matrix bot component."""
-from functools import partial
+from __future__ import annotations
+
+import asyncio
 import logging
 import mimetypes
 import os
+import re
+from typing import NewType, TypedDict
 
-from matrix_client.client import MatrixClient, MatrixRequestError
+import aiofiles.os
+from nio import AsyncClient, Event, MatrixRoom
+from nio.events.room_events import RoomMessageText
+from nio.responses import (
+    ErrorResponse,
+    JoinError,
+    JoinResponse,
+    LoginError,
+    Response,
+    UploadError,
+    UploadResponse,
+    WhoamiError,
+    WhoamiResponse,
+)
+from PIL import Image
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
@@ -16,8 +34,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
@@ -35,15 +53,29 @@ CONF_COMMANDS = "commands"
 CONF_WORD = "word"
 CONF_EXPRESSION = "expression"
 
+EVENT_MATRIX_COMMAND = "matrix_command"
+
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
 
 MESSAGE_FORMATS = [FORMAT_HTML, FORMAT_TEXT]
 DEFAULT_MESSAGE_FORMAT = FORMAT_TEXT
 
-EVENT_MATRIX_COMMAND = "matrix_command"
-
 ATTR_FORMAT = "format"  # optional message format
 ATTR_IMAGES = "images"  # optional images
+
+WordCommand = NewType("WordCommand", str)
+ExpressionCommand = NewType("ExpressionCommand", re.Pattern)
+RoomID = NewType("RoomID", str)
+
+
+class ConfigCommand(TypedDict, total=False):
+    """Corresponds to a single COMMAND_SCHEMA."""
+
+    name: str  # CONF_NAME
+    rooms: list[RoomID] | None  # CONF_ROOMS
+    word: WordCommand | None  # CONF_WORD
+    expression: ExpressionCommand | None  # CONF_EXPRESSION
+
 
 COMMAND_SCHEMA = vol.All(
     vol.Schema(
@@ -51,7 +83,7 @@ COMMAND_SCHEMA = vol.All(
             vol.Exclusive(CONF_WORD, "trigger"): cv.string,
             vol.Exclusive(CONF_EXPRESSION, "trigger"): cv.is_regex,
             vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_ROOMS): vol.All(cv.ensure_list, [cv.string]),
         }
     ),
     cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION),
@@ -75,7 +107,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
 SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
     {
         vol.Required(ATTR_MESSAGE): cv.string,
@@ -90,30 +121,26 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Matrix bot component."""
     config = config[DOMAIN]
 
-    try:
-        bot = MatrixBot(
-            hass,
-            os.path.join(hass.config.path(), SESSION_FILE),
-            config[CONF_HOMESERVER],
-            config[CONF_VERIFY_SSL],
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            config[CONF_ROOMS],
-            config[CONF_COMMANDS],
-        )
-        hass.data[DOMAIN] = bot
-    except MatrixRequestError as exception:
-        _LOGGER.error("Matrix failed to log in: %s", str(exception))
-        return False
+    matrix_bot = MatrixBot(
+        hass,
+        os.path.join(hass.config.path(), SESSION_FILE),
+        config[CONF_HOMESERVER],
+        config[CONF_VERIFY_SSL],
+        config[CONF_USERNAME],
+        config[CONF_PASSWORD],
+        config[CONF_ROOMS],
+        config[CONF_COMMANDS],
+    )
+    hass.data[DOMAIN] = matrix_bot
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
-        bot.handle_send_message,
+        matrix_bot.handle_send_message,
         schema=SERVICE_SCHEMA_SEND_MESSAGE,
     )
 
@@ -123,164 +150,141 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class MatrixBot:
     """The Matrix Bot."""
 
+    _client: AsyncClient
+
     def __init__(
         self,
-        hass,
-        config_file,
-        homeserver,
-        verify_ssl,
-        username,
-        password,
-        listening_rooms,
-        commands,
-    ):
+        hass: HomeAssistant,
+        config_file: str,
+        homeserver: str,
+        verify_ssl: bool,
+        username: str,
+        password: str,
+        listening_rooms: list[RoomID],
+        commands: list[ConfigCommand],
+    ) -> None:
         """Set up the client."""
         self.hass = hass
 
         self._session_filepath = config_file
-        self._auth_tokens = self._get_auth_tokens()
+        self._access_tokens: JsonObjectType = {}
 
         self._homeserver = homeserver
         self._verify_tls = verify_ssl
         self._mx_id = username
         self._password = password
 
+        self._client = AsyncClient(
+            homeserver=self._homeserver, user=self._mx_id, ssl=self._verify_tls
+        )
+
         self._listening_rooms = listening_rooms
 
-        # We have to fetch the aliases for every room to make sure we don't
-        # join it twice by accident. However, fetching aliases is costly,
-        # so we only do it once per room.
-        self._aliases_fetched_for = set()
+        self._word_commands: dict[RoomID, dict[WordCommand, ConfigCommand]] = {}
+        self._expression_commands: dict[RoomID, list[ConfigCommand]] = {}
+        self._load_commands(commands)
 
-        # Word commands are stored dict-of-dict: First dict indexes by room ID
-        #  / alias, second dict indexes by the word
-        self._word_commands = {}
+        async def stop_client(event: HassEvent) -> None:
+            """Run once when Home Assistant stops."""
+            if self._client is not None:
+                await self._client.close()
 
-        # Regular expression commands are stored as a list of commands per
-        # room, i.e., a dict-of-list
-        self._expression_commands = {}
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_client)
 
+        async def handle_startup(event: HassEvent) -> None:
+            """Run once when Home Assistant finished startup."""
+            self._access_tokens = await self._get_auth_tokens()
+            await self._login()
+            await self._join_rooms()
+            # Sync once so that we don't respond to past events.
+            await self._client.sync(timeout=30_000)
+
+            self._client.add_event_callback(self._handle_room_message, RoomMessageText)
+
+            await self._client.sync_forever(
+                timeout=30_000,
+                loop_sleep_time=1_000,
+            )  # milliseconds.
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
+
+    def _load_commands(self, commands: list[ConfigCommand]) -> None:
         for command in commands:
-            if not command.get(CONF_ROOMS):
-                command[CONF_ROOMS] = listening_rooms
+            # Set the command for all listening_rooms, unless otherwise specified.
+            command.setdefault(CONF_ROOMS, self._listening_rooms)  # type: ignore[misc]
 
-            if command.get(CONF_WORD):
-                for room_id in command[CONF_ROOMS]:
-                    if room_id not in self._word_commands:
-                        self._word_commands[room_id] = {}
-                    self._word_commands[room_id][command[CONF_WORD]] = command
+            # COMMAND_SCHEMA guarantees that exactly one of CONF_WORD and CONF_expression are set.
+            if (word_command := command.get(CONF_WORD)) is not None:
+                for room_id in command[CONF_ROOMS]:  # type: ignore[literal-required]
+                    self._word_commands.setdefault(room_id, {})
+                    self._word_commands[room_id][word_command] = command  # type: ignore[index]
             else:
-                for room_id in command[CONF_ROOMS]:
-                    if room_id not in self._expression_commands:
-                        self._expression_commands[room_id] = []
+                for room_id in command[CONF_ROOMS]:  # type: ignore[literal-required]
+                    self._expression_commands.setdefault(room_id, [])
                     self._expression_commands[room_id].append(command)
 
-        # Log in. This raises a MatrixRequestError if login is unsuccessful
-        self._client = self._login()
-
-        def handle_matrix_exception(exception):
-            """Handle exceptions raised inside the Matrix SDK."""
-            _LOGGER.error("Matrix exception:\n %s", str(exception))
-
-        self._client.start_listener_thread(exception_handler=handle_matrix_exception)
-
-        def stop_client(_):
-            """Run once when Home Assistant stops."""
-            self._client.stop_listener_thread()
-
-        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_client)
-
-        # Joining rooms potentially does a lot of I/O, so we defer it
-        def handle_startup(_):
-            """Run once when Home Assistant finished startup."""
-            self._join_rooms()
-
-        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
-
-    def _handle_room_message(self, room_id, room, event):
+    async def _handle_room_message(self, room: MatrixRoom, message: Event) -> None:
         """Handle a message sent to a Matrix room."""
-        if event["content"]["msgtype"] != "m.text":
+        # Corresponds to message type 'm.text' and NOT other RoomMessage subtypes, like 'm.notice' and 'm.emote'.
+        if not isinstance(message, RoomMessageText):
             return
-
-        if event["sender"] == self._mx_id:
+        # Don't respond to our own messages.
+        if message.sender == self._mx_id:
             return
+        _LOGGER.debug("Handling message: %s", message.body)
 
-        _LOGGER.debug("Handling message: %s", event["content"]["body"])
+        room_id = RoomID(room.room_id)
 
-        if event["content"]["body"][0] == "!":
-            # Could trigger a single-word command
-            pieces = event["content"]["body"].split(" ")
-            cmd = pieces[0][1:]
+        if message.body.startswith("!"):
+            # Could trigger a single-word command.
+            pieces = message.body.split()
+            word = WordCommand(pieces[0].lstrip("!"))
 
-            command = self._word_commands.get(room_id, {}).get(cmd)
-            if command:
-                event_data = {
+            if command := self._word_commands.get(room_id, {}).get(word):
+                message_data = {
                     "command": command[CONF_NAME],
-                    "sender": event["sender"],
+                    "sender": message.sender,
                     "room": room_id,
                     "args": pieces[1:],
                 }
-                self.hass.bus.fire(EVENT_MATRIX_COMMAND, event_data)
+                self.hass.bus.async_fire(EVENT_MATRIX_COMMAND, message_data)
 
-        # After single-word commands, check all regex commands in the room
+        # After single-word commands, check all regex commands in the room.
         for command in self._expression_commands.get(room_id, []):
-            match = command[CONF_EXPRESSION].match(event["content"]["body"])
+            match: re.Match = command[CONF_EXPRESSION].match(message.body)  # type: ignore[literal-required]
             if not match:
                 continue
-            event_data = {
+            message_data = {
                 "command": command[CONF_NAME],
-                "sender": event["sender"],
+                "sender": message.sender,
                 "room": room_id,
                 "args": match.groupdict(),
             }
-            self.hass.bus.fire(EVENT_MATRIX_COMMAND, event_data)
+            self.hass.bus.async_fire(EVENT_MATRIX_COMMAND, message_data)
 
-    def _join_or_get_room(self, room_id_or_alias):
-        """Join a room or get it, if we are already in the room.
+    async def _join_room(self, room_id_or_alias: str) -> None:
+        """Join a room or do nothing if already joined."""
+        join_response = await self._client.join(room_id_or_alias)
 
-        We can't just always call join_room(), since that seems to crash
-        the client if we're already in the room.
-        """
-        rooms = self._client.get_rooms()
-        if room_id_or_alias in rooms:
-            _LOGGER.debug("Already in room %s", room_id_or_alias)
-            return rooms[room_id_or_alias]
+        if isinstance(join_response, JoinResponse):
+            _LOGGER.debug("Joined or already in room '%s'", room_id_or_alias)
+        elif isinstance(join_response, JoinError):
+            _LOGGER.error(
+                "Could not join room '%s': %s",
+                room_id_or_alias,
+                join_response,
+            )
 
-        for room in rooms.values():
-            if room.room_id not in self._aliases_fetched_for:
-                room.update_aliases()
-                self._aliases_fetched_for.add(room.room_id)
-
-            if (
-                room_id_or_alias in room.aliases
-                or room_id_or_alias == room.canonical_alias
-            ):
-                _LOGGER.debug(
-                    "Already in room %s (known as %s)", room.room_id, room_id_or_alias
-                )
-                return room
-
-        room = self._client.join_room(room_id_or_alias)
-        _LOGGER.info("Joined room %s (known as %s)", room.room_id, room_id_or_alias)
-        return room
-
-    def _join_rooms(self):
+    async def _join_rooms(self) -> None:
         """Join the Matrix rooms that we listen for commands in."""
-        for room_id in self._listening_rooms:
-            try:
-                room = self._join_or_get_room(room_id)
-                room.add_listener(
-                    partial(self._handle_room_message, room_id), "m.room.message"
-                )
+        rooms = [
+            self.hass.async_create_task(self._join_room(room_id))
+            for room_id in self._listening_rooms
+        ]
+        await asyncio.wait(rooms)
 
-            except MatrixRequestError as ex:
-                _LOGGER.error("Could not join room %s: %s", room_id, ex)
-
-    def _get_auth_tokens(self) -> JsonObjectType:
-        """Read sorted authentication tokens from disk.
-
-        Returns the auth_tokens dictionary.
-        """
+    async def _get_auth_tokens(self) -> JsonObjectType:
+        """Read sorted authentication tokens from disk."""
         try:
             return load_json_object(self._session_filepath)
         except HomeAssistantError as ex:
@@ -291,116 +295,179 @@ class MatrixBot:
             )
             return {}
 
-    def _store_auth_token(self, token):
+    async def _store_auth_token(self, token: str) -> None:
         """Store authentication token to session and persistent storage."""
-        self._auth_tokens[self._mx_id] = token
+        self._access_tokens[self._mx_id] = token
 
-        save_json(self._session_filepath, self._auth_tokens)
+        await self.hass.async_add_executor_job(
+            save_json, self._session_filepath, self._access_tokens, True  # private=True
+        )
 
-    def _login(self):
-        """Login to the Matrix homeserver and return the client instance."""
-        # Attempt to generate a valid client using either of the two possible
-        # login methods:
-        client = None
+    async def _login(self) -> None:
+        """Log in to the Matrix homeserver.
 
-        # If we have an authentication token
-        if self._mx_id in self._auth_tokens:
-            try:
-                client = self._login_by_token()
-                _LOGGER.debug("Logged in using stored token")
+        Attempts to use the stored access token.
+        If that fails, then tries using the password.
+        If that also fails, raises LocalProtocolError.
+        """
 
-            except MatrixRequestError as ex:
+        # If we have an access token
+        if (token := self._access_tokens.get(self._mx_id)) is not None:
+            _LOGGER.debug("Restoring login from stored access token")
+            self._client.restore_login(
+                user_id=self._client.user_id,
+                device_id=self._client.device_id,
+                access_token=token,
+            )
+            response = await self._client.whoami()
+            if isinstance(response, WhoamiError):
                 _LOGGER.warning(
-                    "Login by token failed, falling back to password: %d, %s",
-                    ex.code,
-                    ex.content,
+                    "Restoring login from access token failed: %s, %s",
+                    response.status_code,
+                    response.message,
+                )
+                self._client.access_token = (
+                    ""  # Force a soft-logout if the homeserver didn't.
+                )
+            elif isinstance(response, WhoamiResponse):
+                _LOGGER.debug(
+                    "Successfully restored login from access token: user_id '%s', device_id '%s'",
+                    response.user_id,
+                    response.device_id,
                 )
 
-        # If we still don't have a client try password
-        if not client:
-            try:
-                client = self._login_by_password()
-                _LOGGER.debug("Logged in using password")
+        # If the token login did not succeed
+        if not self._client.logged_in:
+            response = await self._client.login(password=self._password)
+            _LOGGER.debug("Logging in using password")
 
-            except MatrixRequestError as ex:
-                _LOGGER.error(
-                    "Login failed, both token and username/password invalid: %d, %s",
-                    ex.code,
-                    ex.content,
+            if isinstance(response, LoginError):
+                _LOGGER.warning(
+                    "Login by password failed: %s, %s",
+                    response.status_code,
+                    response.message,
                 )
-                # Re-raise the error so _setup can catch it
-                raise
 
-        return client
+        if not self._client.logged_in:
+            raise ConfigEntryAuthFailed(
+                "Login failed, both token and username/password are invalid"
+            )
 
-    def _login_by_token(self):
-        """Login using authentication token and return the client."""
-        return MatrixClient(
-            base_url=self._homeserver,
-            token=self._auth_tokens[self._mx_id],
-            user_id=self._mx_id,
-            valid_cert_check=self._verify_tls,
+        await self._store_auth_token(self._client.access_token)
+
+    async def _handle_room_send(
+        self, target_room: RoomID, message_type: str, content: dict
+    ) -> None:
+        """Wrap _client.room_send and handle ErrorResponses."""
+        response: Response = await self._client.room_send(
+            room_id=target_room,
+            message_type=message_type,
+            content=content,
         )
+        if isinstance(response, ErrorResponse):
+            _LOGGER.error(
+                "Unable to deliver message to room '%s': %s",
+                target_room,
+                response,
+            )
+        else:
+            _LOGGER.debug("Message delivered to room '%s'", target_room)
 
-    def _login_by_password(self):
-        """Login using password authentication and return the client."""
-        _client = MatrixClient(
-            base_url=self._homeserver, valid_cert_check=self._verify_tls
+    async def _handle_multi_room_send(
+        self, target_rooms: list[RoomID], message_type: str, content: dict
+    ) -> None:
+        """Wrap _handle_room_send for multiple target_rooms."""
+        _tasks = []
+        for target_room in target_rooms:
+            _tasks.append(
+                self.hass.async_create_task(
+                    self._handle_room_send(
+                        target_room=target_room,
+                        message_type=message_type,
+                        content=content,
+                    )
+                )
+            )
+        await asyncio.wait(_tasks)
+
+    async def _send_image(self, image_path: str, target_rooms: list[RoomID]) -> None:
+        """Upload an image, then send it to all target_rooms."""
+        _is_allowed_path = await self.hass.async_add_executor_job(
+            self.hass.config.is_allowed_path, image_path
         )
-
-        _client.login_with_password(self._mx_id, self._password)
-
-        self._store_auth_token(_client.token)
-
-        return _client
-
-    def _send_image(self, img, target_rooms):
-        _LOGGER.debug("Uploading file from path, %s", img)
-
-        if not self.hass.config.is_allowed_path(img):
-            _LOGGER.error("Path not allowed: %s", img)
+        if not _is_allowed_path:
+            _LOGGER.error("Path not allowed: %s", image_path)
             return
-        with open(img, "rb") as upfile:
-            imgfile = upfile.read()
-        content_type = mimetypes.guess_type(img)[0]
-        mxc = self._client.upload(imgfile, content_type)
-        for target_room in target_rooms:
-            try:
-                room = self._join_or_get_room(target_room)
-                room.send_image(mxc, img, mimetype=content_type)
-            except MatrixRequestError as ex:
-                _LOGGER.error(
-                    "Unable to deliver message to room '%s': %d, %s",
-                    target_room,
-                    ex.code,
-                    ex.content,
-                )
 
-    def _send_message(self, message, data, target_rooms):
-        """Send the message to the Matrix server."""
-        for target_room in target_rooms:
-            try:
-                room = self._join_or_get_room(target_room)
-                if message is not None:
-                    if data.get(ATTR_FORMAT) == FORMAT_HTML:
-                        _LOGGER.debug(room.send_html(message))
-                    else:
-                        _LOGGER.debug(room.send_text(message))
-            except MatrixRequestError as ex:
-                _LOGGER.error(
-                    "Unable to deliver message to room '%s': %d, %s",
-                    target_room,
-                    ex.code,
-                    ex.content,
-                )
-        if ATTR_IMAGES in data:
-            for img in data.get(ATTR_IMAGES, []):
-                self._send_image(img, target_rooms)
+        # Get required image metadata.
+        image = await self.hass.async_add_executor_job(Image.open, image_path)
+        (width, height) = image.size
+        mime_type = mimetypes.guess_type(image_path)[0]
+        file_stat = await aiofiles.os.stat(image_path)
 
-    def handle_send_message(self, service: ServiceCall) -> None:
+        _LOGGER.debug("Uploading file from path, %s", image_path)
+        async with aiofiles.open(image_path, "r+b") as image_file:
+            response, _ = await self._client.upload(
+                image_file,
+                content_type=mime_type,
+                filename=os.path.basename(image_path),
+                filesize=file_stat.st_size,
+            )
+        if isinstance(response, UploadError):
+            _LOGGER.error("Unable to upload image to the homeserver: %s", response)
+            return
+        if isinstance(response, UploadResponse):
+            _LOGGER.debug("Successfully uploaded image to the homeserver")
+        else:
+            _LOGGER.error(
+                "Unknown response received when uploading image to homeserver: %s",
+                response,
+            )
+            return
+
+        content = {
+            "body": os.path.basename(image_path),
+            "info": {
+                "size": file_stat.st_size,
+                "mimetype": mime_type,
+                "w": width,
+                "h": height,
+            },
+            "msgtype": "m.image",
+            "url": response.content_uri,
+        }
+
+        await self._handle_multi_room_send(
+            target_rooms=target_rooms, message_type="m.room.message", content=content
+        )
+
+    async def _send_message(
+        self, message: str, target_rooms: list[RoomID], data: dict | None
+    ) -> None:
+        """Send a message to the Matrix server."""
+        content = {"msgtype": "m.text", "body": message}
+        if data is not None and data.get(ATTR_FORMAT) == FORMAT_HTML:
+            content |= {"format": "org.matrix.custom.html", "formatted_body": message}
+
+        await self._handle_multi_room_send(
+            target_rooms=target_rooms, message_type="m.room.message", content=content
+        )
+
+        if (
+            data is not None
+            and (image_paths := data.get(ATTR_IMAGES, []))
+            and len(target_rooms) > 0
+        ):
+            image_tasks = [
+                self.hass.async_create_task(self._send_image(image_path, target_rooms))
+                for image_path in image_paths
+            ]
+            await asyncio.wait(image_tasks)
+
+    async def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""
-        self._send_message(
-            service.data.get(ATTR_MESSAGE),
-            service.data.get(ATTR_DATA),
+        await self._send_message(
+            service.data[ATTR_MESSAGE],
             service.data[ATTR_TARGET],
+            service.data.get(ATTR_DATA),
         )

@@ -221,6 +221,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -3346,9 +3347,9 @@ async def test_reloadable(
         ("state_topic", "ON", None, "on", None),
         (
             "color_mode_state_topic",
-            "200",
+            "rgb",
             "color_mode",
-            "200",
+            "rgb",
             ("state_topic", "ON"),
         ),
         ("color_temp_state_topic", "200", "color_temp", 200, ("state_topic", "ON")),
@@ -3635,3 +3636,59 @@ async def test_unload_entry(
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            light.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                    "state_topic": "test-topic",
+                    "state_value_template": "{{ value_json.state }}",
+                    "brightness_state_topic": "brightness-state-topic",
+                    "color_mode_state_topic": "color-mode-state-topic",
+                    "color_temp_state_topic": "color-temp-state-topic",
+                    "effect_state_topic": "effect-state-topic",
+                    "effect_list": ["effect1", "effect2"],
+                    "hs_state_topic": "hs-state-topic",
+                    "xy_state_topic": "xy-state-topic",
+                    "rgb_state_topic": "rgb-state-topic",
+                    "rgbw_state_topic": "rgbw-state-topic",
+                    "rgbww_state_topic": "rgbww-state-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("test-topic", '{"state":"ON"}', '{"state":"OFF"}'),
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+        ("brightness-state-topic", "50", "100"),
+        ("color-mode-state-topic", "rgb", "color_temp"),
+        ("color-temp-state-topic", "800", "200"),
+        ("effect-state-topic", "effect1", "effect2"),
+        ("hs-state-topic", "210,50", "200,50"),
+        ("xy-state-topic", "128,128", "96,96"),
+        ("rgb-state-topic", "128,128,128", "128,128,64"),
+        ("rgbw-state-topic", "128,128,128,255", "128,128,128,128"),
+        ("rgbww-state-topic", "128,128,128,32,255", "128,128,128,64,255"),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)

@@ -477,6 +477,7 @@ async def test_validate_trigger_config_unloaded_bad_info(
 
     # Reload ZHA to persist the device info in the cache
     await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     ha_device_registry = dr.async_get(hass)

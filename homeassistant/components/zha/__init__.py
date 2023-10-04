@@ -33,9 +33,6 @@ from .core.const import (
     CONF_USB_PATH,
     CONF_ZIGPY,
     DATA_ZHA,
-    DATA_ZHA_CONFIG,
-    DATA_ZHA_DEVICE_TRIGGER_CACHE,
-    DATA_ZHA_GATEWAY,
     DOMAIN,
     PLATFORMS,
     SIGNAL_ADD_ENTITIES,
@@ -43,6 +40,7 @@ from .core.const import (
 )
 from .core.device import get_device_automation_triggers
 from .core.discovery import GROUP_PROBE
+from .core.helpers import ZHAData, get_zha_data
 from .radio_manager import ZhaRadioManager
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
@@ -81,11 +79,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up ZHA from config."""
-    hass.data[DATA_ZHA] = {}
-
-    if DOMAIN in config:
-        conf = config[DOMAIN]
-        hass.data[DATA_ZHA][DATA_ZHA_CONFIG] = conf
+    zha_data = ZHAData()
+    zha_data.yaml_config = config.get(DOMAIN, {})
+    hass.data[DATA_ZHA] = zha_data
 
     return True
 
@@ -120,14 +116,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         data[CONF_DEVICE][CONF_DEVICE_PATH] = cleaned_path
         hass.config_entries.async_update_entry(config_entry, data=data)
 
-    zha_data = hass.data.setdefault(DATA_ZHA, {})
-    config = zha_data.get(DATA_ZHA_CONFIG, {})
+    zha_data = get_zha_data(hass)
 
-    for platform in PLATFORMS:
-        zha_data.setdefault(platform, [])
-
-    if config.get(CONF_ENABLE_QUIRKS, True):
-        setup_quirks(custom_quirks_path=config.get(CONF_CUSTOM_QUIRKS_PATH))
+    if zha_data.yaml_config.get(CONF_ENABLE_QUIRKS, True):
+        setup_quirks(
+            custom_quirks_path=zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH)
+        )
 
     # temporary code to remove the ZHA storage file from disk.
     # this will be removed in 2022.10.0
@@ -139,8 +133,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.debug("ZHA storage file does not exist or was already removed")
 
     # Load and cache device trigger information early
-    zha_data.setdefault(DATA_ZHA_DEVICE_TRIGGER_CACHE, {})
-
     device_registry = dr.async_get(hass)
     radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
 
@@ -154,14 +146,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             if dev_entry is None:
                 continue
 
-            zha_data[DATA_ZHA_DEVICE_TRIGGER_CACHE][dev_entry.id] = (
+            zha_data.device_trigger_cache[dev_entry.id] = (
                 str(dev.ieee),
                 get_device_automation_triggers(dev),
             )
 
-    _LOGGER.debug("Trigger cache: %s", zha_data[DATA_ZHA_DEVICE_TRIGGER_CACHE])
+    _LOGGER.debug("Trigger cache: %s", zha_data.device_trigger_cache)
 
-    zha_gateway = ZHAGateway(hass, config, config_entry)
+    zha_gateway = ZHAGateway(hass, zha_data.yaml_config, config_entry)
 
     async def async_zha_shutdown():
         """Handle shutdown tasks."""
@@ -172,13 +164,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         # be in when we get here in failure cases
         with contextlib.suppress(KeyError):
             for platform in PLATFORMS:
-                del hass.data[DATA_ZHA][platform]
+                del zha_data.platforms[platform]
 
     config_entry.async_on_unload(async_zha_shutdown)
 
     try:
         await zha_gateway.async_initialize()
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         if RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp:
             try:
                 await repairs.warn_on_wrong_silabs_firmware(
@@ -212,10 +204,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
-    try:
-        del hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    except KeyError:
-        return False
+    zha_data = get_zha_data(hass)
+    zha_data.gateway = None
 
     GROUP_PROBE.cleanup()
     websocket_api.async_unload_api(hass)
@@ -241,7 +231,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             CONF_DEVICE: {CONF_DEVICE_PATH: config_entry.data[CONF_USB_PATH]},
         }
 
-        baudrate = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {}).get(CONF_BAUDRATE)
+        baudrate = get_zha_data(hass).yaml_config.get(CONF_BAUDRATE)
         if data[CONF_RADIO_TYPE] != RadioType.deconz and baudrate in BAUD_RATES:
             data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
 

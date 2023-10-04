@@ -26,12 +26,11 @@ from .core.const import (
     CONF_DATABASE,
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
-    DATA_ZHA,
-    DATA_ZHA_CONFIG,
     DEFAULT_DATABASE_NAME,
     EZSP_OVERWRITE_EUI64,
     RadioType,
 )
+from .core.helpers import get_zha_data
 
 # Only the common radio types will be autoprobed, ordered by new device popularity.
 # XBee takes too long to probe since it scans through all possible bauds and likely has
@@ -145,7 +144,7 @@ class ZhaRadioManager:
         """Connect to the radio with the current config and then clean up."""
         assert self.radio_type is not None
 
-        config = self.hass.data.get(DATA_ZHA, {}).get(DATA_ZHA_CONFIG, {})
+        config = get_zha_data(self.hass).yaml_config
         app_config = config.get(CONF_ZIGPY, {}).copy()
 
         database_path = config.get(
