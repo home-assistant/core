@@ -649,7 +649,6 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             )
         except NotImplementedError:
             _LOGGER.error("App %s not supported", app_name)
-        return
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
