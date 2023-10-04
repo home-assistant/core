@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         entry,
         entry.entry_id,
-        coordinator.current_unique_ids,
+        coordinator.current_entities,
     )
 
     return True

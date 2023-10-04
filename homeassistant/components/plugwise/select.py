@@ -103,7 +103,7 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         self.entity_description = entity_description
         self._attr_options = self.device[entity_description.options_key]
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        coordinator.current_unique_ids.add((SELECT_DOMAIN, self._attr_unique_id))
+        coordinator.current_entities.add((SELECT_DOMAIN, self._attr_unique_id))
 
     @property
     def current_option(self) -> str:

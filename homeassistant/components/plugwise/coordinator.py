@@ -26,7 +26,7 @@ def _async_cleanup_registry_entries(
     hass: HomeAssistant,
     entry: ConfigEntry,
     entry_id: str,
-    current_unique_ids: set[tuple[str, str]],
+    current_entities: set[tuple[str, str]],
 ) -> None:
     """Remove extra entities that are no longer part of the integration."""
     entity_registry = er.async_get(hass)
@@ -37,7 +37,7 @@ def _async_cleanup_registry_entries(
         for entity in existing_entries
     }
 
-    extra_entities = set(entities.keys()).difference(current_unique_ids)
+    extra_entities = set(entities.keys()).difference(current_entities)
     if not extra_entities:
         return
 
@@ -82,7 +82,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             timeout=30,
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
-        self.current_unique_ids: set[tuple[str, str]] = {("dummy", "dummy_id")}
+        self.current_entities: set[tuple[str, str]] = {("dummy", "dummy_id")}
 
     async def _connect(self) -> None:
         """Connect to the Plugwise Smile."""
