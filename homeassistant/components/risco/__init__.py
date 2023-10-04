@@ -82,11 +82,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = entry.data
+    options = entry.options
     risco = RiscoLocal(
         data[CONF_HOST],
         data[CONF_PORT],
         data[CONF_PIN],
-        **{CONF_COMMUNICATION_DELAY: data[CONF_COMMUNICATION_DELAY]},
+        **{CONF_COMMUNICATION_DELAY: options[CONF_COMMUNICATION_DELAY]},
     )
 
     try:
