@@ -1,5 +1,5 @@
 """Advantage Air parent entity class."""
-from typing import Any
+from typing import Any, Optional
 
 from advantage_air import ApiError
 
@@ -63,7 +63,7 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
         return self.coordinator.data["aircons"][self.ac_key]["info"]
 
     @property
-    def _myzone(self) -> dict[str, Any] | None:
+    def _myzone(self) -> Optional[dict[str, Any]]:
         return self.coordinator.data["aircons"][self.ac_key]["zones"].get(
             f"z{self._ac['myZone']:02}"
         )
