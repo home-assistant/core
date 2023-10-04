@@ -37,8 +37,6 @@ set_breeze:
             - "level3"
             - "level4"
     temperature:
-      required: false
-      advanced: false
       default: 18
       selector:
         number:
