@@ -35,6 +35,7 @@ from .const import (
     CONNECTED_PLC_DEVICES,
     CONNECTED_WIFI_CLIENTS,
     DOMAIN,
+    FIRMWARE_UPDATE_INTERVAL,
     LONG_UPDATE_INTERVAL,
     NEIGHBORING_WIFI_NETWORKS,
     REGULAR_FIRMWARE,
@@ -146,7 +147,7 @@ async def async_setup_entry(  # noqa: C901
             _LOGGER,
             name=REGULAR_FIRMWARE,
             update_method=async_update_firmware_available,
-            update_interval=LONG_UPDATE_INTERVAL,
+            update_interval=FIRMWARE_UPDATE_INTERVAL,
         )
     if device.device and "wifi1" in device.device.features:
         coordinators[CONNECTED_WIFI_CLIENTS] = DataUpdateCoordinator(

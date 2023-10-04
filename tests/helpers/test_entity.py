@@ -776,9 +776,10 @@ async def test_warn_slow_write_state_custom_component(
         mock_entity.async_write_ha_state()
 
     assert (
-        "Updating state for comp_test.test_entity "
-        "(<class 'custom_components.bla.sensor.test_warn_slow_write_state_custom_component.<locals>.CustomComponentEntity'>) "
-        "took 10.000 seconds. Please report it to the custom integration author"
+        "Updating state for comp_test.test_entity (<class 'custom_components.bla.sensor"
+        ".test_warn_slow_write_state_custom_component.<locals>.CustomComponentEntity'>)"
+        " took 10.000 seconds. Please report it to the author of the 'hue' custom "
+        "integration"
     ) in caplog.text
 
 
