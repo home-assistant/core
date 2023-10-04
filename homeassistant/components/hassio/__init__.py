@@ -948,20 +948,26 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         # and throw them away.
         #
         enabled_updates_by_addon = self._enabled_updates_by_addon
-        for data_key, update_func, enabled_key in (
-            (DATA_ADDONS_STATS, self._update_addon_stats, ADDON_UPDATE_STATS),
+        for data_key, update_func, enabled_key, wanted_addons in (
+            (
+                DATA_ADDONS_STATS,
+                self._update_addon_stats,
+                ADDON_UPDATE_STATS,
+                started_addons,
+            ),
             (
                 DATA_ADDONS_CHANGELOGS,
                 self._update_addon_changelog,
                 ADDON_UPDATE_CHANGELOG,
+                all_addons,
             ),
-            (DATA_ADDONS_INFO, self._update_addon_info, ADDON_UPDATE_INFO),
+            (DATA_ADDONS_INFO, self._update_addon_info, ADDON_UPDATE_INFO, all_addons),
         ):
             data[data_key] = dict(
                 await asyncio.gather(
                     *[
                         update_func(slug)
-                        for slug in started_addons
+                        for slug in wanted_addons
                         if first_update or enabled_key in enabled_updates_by_addon[slug]
                     ]
                 )
