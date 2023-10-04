@@ -5,7 +5,7 @@
     'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': 1,
-      'timeout': 30,
+      'timeout': 300,
     }),
   })
 # ---
@@ -86,7 +86,7 @@
     'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': 1,
-      'timeout': 30,
+      'timeout': 300,
     }),
   })
 # ---
@@ -179,7 +179,7 @@
     'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': 1,
-      'timeout': 30,
+      'timeout': 300,
     }),
   })
 # ---
@@ -359,7 +359,7 @@
     'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': 1,
-      'timeout': 30,
+      'timeout': 300,
     }),
   })
 # ---
@@ -460,7 +460,7 @@
     'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': 1,
-      'timeout': 30,
+      'timeout': 300,
     }),
   })
 # ---
@@ -491,7 +491,7 @@
     'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': None,
-      'timeout': 30,
+      'timeout': 300,
     }),
   })
 # ---
@@ -564,7 +564,7 @@
     'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': 1,
-      'timeout': 30,
+      'timeout': 300,
     }),
   })
 # ---
@@ -590,7 +590,7 @@
     'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': None,
-      'timeout': 30,
+      'timeout': 300,
     }),
   })
 # ---
@@ -640,7 +640,7 @@
     'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': None,
-      'timeout': 30,
+      'timeout': 300,
     }),
   })
 # ---

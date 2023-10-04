@@ -43,7 +43,7 @@ Mastodon.py==1.5.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==10.0.0
+Pillow==10.0.1
 
 # homeassistant.components.plex
 PlexAPI==4.15.3
@@ -1565,7 +1565,7 @@ pyTibber==0.28.2
 pyW215==0.7.0
 
 # homeassistant.components.w800rf32
-pyW800rf32==0.1
+pyW800rf32==0.4
 
 # homeassistant.components.ads
 pyads==3.2.2
