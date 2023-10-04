@@ -119,6 +119,7 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
                         "version_latest": "2.0.1",
                         "repository": "core",
                         "url": "https://github.com/home-assistant/addons/test",
+                        "icon": False,
                     },
                     {
                         "name": "test2",
@@ -130,6 +131,7 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
                         "version_latest": "3.2.0",
                         "repository": "core",
                         "url": "https://github.com",
+                        "icon": False,
                     },
                 ],
             },
