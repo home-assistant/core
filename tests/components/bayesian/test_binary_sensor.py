@@ -437,7 +437,6 @@ async def test_multiple_observations(hass: HomeAssistant) -> None:
     assert state.attributes.get("observations")[1]["platform"] == "state"
 
 
-
 async def test_multiple_numeric_observations(hass: HomeAssistant) -> None:
     """Test sensor on numeric state platform observations with more than one range."""
 
