@@ -28,6 +28,55 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "boot_time": {
+        "name": "Boot time"
+      },
+      "cpu_power_package": {
+        "name": "CPU package power"
+      },
+      "cpu_speed": {
+        "name": "CPU speed"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
+      },
+      "cpu_voltage": {
+        "name": "CPU voltage"
+      },
+      "kernel": {
+        "name": "Kernel"
+      },
+      "memory_free": {
+        "name": "Memory free"
+      },
+      "memory_used": {
+        "name": "Memory used"
+      },
+      "amount_memory_used": {
+        "name": "Amount of memory used"
+      },
+      "os": {
+        "name": "Operating system"
+      },
+      "load": {
+        "name": "Load"
+      },
+      "version": {
+        "name": "Version"
+      },
+      "version_latest": {
+        "name": "Latest version"
+      },
+      "battery_time_remaining": {
+        "name": "Battery time remaining"
+      },
+      "displays_connected": {
+        "name": "Displays connected"
+      }
+    }
+  },
   "services": {
     "open_path": {
       "name": "Open path",
@@ -82,6 +131,20 @@
         "text": {
           "name": "Text",
           "description": "Text to type."
+        }
+      }
+    },
+    "power_command": {
+      "name": "Power command",
+      "description": "Sends a power command to the system.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]"
+        },
+        "command": {
+          "name": "Command",
+          "description": "Command to call."
         }
       }
     }

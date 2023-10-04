@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from dataclasses import dataclass
 import functools
 import logging
+import sys
 from traceback import FrameSummary, extract_stack
 from typing import Any, TypeVar, cast
 
@@ -18,9 +20,18 @@ _REPORTED_INTEGRATIONS: set[str] = set()
 _CallableT = TypeVar("_CallableT", bound=Callable)
 
 
-def get_integration_frame(
-    exclude_integrations: set | None = None,
-) -> tuple[FrameSummary, str, str]:
+@dataclass(kw_only=True)
+class IntegrationFrame:
+    """Integration frame container."""
+
+    custom_integration: bool
+    frame: FrameSummary
+    integration: str
+    module: str | None
+    relative_filename: str
+
+
+def get_integration_frame(exclude_integrations: set | None = None) -> IntegrationFrame:
     """Return the frame, integration and integration path of the current stack frame."""
     found_frame = None
     if not exclude_integrations:
@@ -46,7 +57,21 @@ def get_integration_frame(
     if found_frame is None:
         raise MissingIntegrationFrame
 
-    return found_frame, integration, path
+    found_module: str | None = None
+    for module, module_obj in dict(sys.modules).items():
+        if not hasattr(module_obj, "__file__"):
+            continue
+        if module_obj.__file__ == found_frame.filename:
+            found_module = module
+            break
+
+    return IntegrationFrame(
+        custom_integration=path == "custom_components/",
+        frame=found_frame,
+        integration=integration,
+        module=found_module,
+        relative_filename=found_frame.filename[index:],
+    )
 
 
 class MissingIntegrationFrame(HomeAssistantError):
@@ -74,28 +99,26 @@ def report(
         _LOGGER.warning(msg, stack_info=True)
         return
 
-    report_integration(what, integration_frame, level)
+    _report_integration(what, integration_frame, level)
 
 
-def report_integration(
+def _report_integration(
     what: str,
-    integration_frame: tuple[FrameSummary, str, str],
+    integration_frame: IntegrationFrame,
     level: int = logging.WARNING,
 ) -> None:
     """Report incorrect usage in an integration.
 
     Async friendly.
     """
-    found_frame, integration, path = integration_frame
-
+    found_frame = integration_frame.frame
     # Keep track of integrations already reported to prevent flooding
     key = f"{found_frame.filename}:{found_frame.lineno}"
     if key in _REPORTED_INTEGRATIONS:
         return
     _REPORTED_INTEGRATIONS.add(key)
 
-    index = found_frame.filename.index(path)
-    if path == "custom_components/":
+    if integration_frame.custom_integration:
         extra = " to the custom integration author"
     else:
         extra = ""
@@ -108,8 +131,8 @@ def report_integration(
         ),
         what,
         extra,
-        integration,
-        found_frame.filename[index:],
+        integration_frame.integration,
+        integration_frame.relative_filename,
         found_frame.lineno,
         (found_frame.line or "?").strip(),
     )

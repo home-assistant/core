@@ -1,4 +1,5 @@
 """Test the Loqed config flow."""
+from ipaddress import ip_address
 import json
 from unittest.mock import Mock, patch
 
@@ -16,8 +17,8 @@ from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 zeroconf_data = zeroconf.ZeroconfServiceInfo(
-    host="192.168.12.34",
-    addresses=["127.0.0.1"],
+    ip_address=ip_address("192.168.12.34"),
+    ip_addresses=[ip_address("192.168.12.34")],
     hostname="LOQED-ffeeddccbbaa.local",
     name="mock_name",
     port=9123,

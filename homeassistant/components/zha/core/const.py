@@ -7,7 +7,7 @@ import logging
 import bellows.zigbee.application
 import voluptuous as vol
 import zigpy.application
-from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
+from zigpy.config import CONF_DEVICE_PATH  # noqa: F401
 import zigpy.types as t
 import zigpy_deconz.zigbee.application
 import zigpy_xbee.zigbee.application
@@ -184,10 +184,9 @@ CUSTOM_CONFIGURATION = "custom_configuration"
 DATA_DEVICE_CONFIG = "zha_device_config"
 DATA_ZHA = "zha"
 DATA_ZHA_CONFIG = "config"
-DATA_ZHA_BRIDGE_ID = "zha_bridge_id"
 DATA_ZHA_CORE_EVENTS = "zha_core_events"
+DATA_ZHA_DEVICE_TRIGGER_CACHE = "zha_device_trigger_cache"
 DATA_ZHA_GATEWAY = "zha_gateway"
-DATA_ZHA_SHUTDOWN_TASK = "zha_shutdown_task"
 
 DEBUG_COMP_BELLOWS = "bellows"
 DEBUG_COMP_ZHA = "homeassistant.components.zha"

@@ -149,6 +149,7 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve switch."""
 
     _attr_translation_key = "watering"
+    _attr_icon = ICON_WATERING
 
     @property
     def is_on(self) -> bool:
@@ -237,11 +238,6 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
 
         return attr
 
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend."""
-        return ICON_WATERING
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._client.turn_on(self._index)
@@ -270,6 +266,7 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve Pause switch."""
 
     _attr_translation_key = "pause"
+    _attr_icon = ICON_PAUSE
 
     @property
     def is_on(self) -> bool:
@@ -296,11 +293,6 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
             attr[ATTR_PAUSE_TIME] = self.pause_time
 
         return attr
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend."""
-        return ICON_PAUSE
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

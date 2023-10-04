@@ -124,9 +124,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 (CONF_HVAC_MODE_FAN_ONLY, HVACMode.FAN_ONLY),
             ):
                 if hvac_mode_kw in mode_value_config:
-                    self._hvac_mode_mapping.append(
-                        (mode_value_config[hvac_mode_kw], hvac_mode)
-                    )
+                    values = mode_value_config[hvac_mode_kw]
+                    if not isinstance(values, list):
+                        values = [values]
+                    for value in values:
+                        self._hvac_mode_mapping.append((value, hvac_mode))
                     self._attr_hvac_modes.append(hvac_mode)
 
         else:
@@ -210,7 +212,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             int.from_bytes(as_bytes[i : i + 2], "big")
             for i in range(0, len(as_bytes), 2)
         ]
-        registers = self._swap_registers(raw_regs)
+        registers = self._swap_registers(raw_regs, 0)
 
         if self._data_type in (
             DataType.INT16,
@@ -245,10 +247,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
 
-        # do not allow multiple active calls to the same platform
-        if self._call_active:
-            return
-        self._call_active = True
         self._attr_target_temperature = await self._async_read_register(
             CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
         )
@@ -280,7 +278,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             if onoff == 0:
                 self._attr_hvac_mode = HVACMode.OFF
 
-        self._call_active = False
         self.async_write_ha_state()
 
     async def _async_read_register(

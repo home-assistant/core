@@ -1,4 +1,5 @@
 """The tests for the Modbus cover component."""
+from freezegun.api import FrozenDateTimeFactory
 from pymodbus.exceptions import ModbusException
 import pytest
 
@@ -6,6 +7,7 @@ from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_STATE_CLOSED,
@@ -56,6 +58,18 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_ADDRESS: 1234,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SLAVE: 10,
+                    CONF_SCAN_INTERVAL: 20,
+                    CONF_LAZY_ERROR: 10,
+                }
+            ]
+        },
+        {
+            CONF_COVERS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_DEVICE_ADDRESS: 10,
                     CONF_SCAN_INTERVAL: 20,
                     CONF_LAZY_ERROR: 10,
                 }
@@ -142,14 +156,13 @@ async def test_coil_cover(hass: HomeAssistant, expected, mock_do_cycle) -> None:
     ],
 )
 async def test_lazy_error_cover(
-    hass: HomeAssistant, start_expect, end_expect, mock_do_cycle
+    hass: HomeAssistant, start_expect, end_expect, mock_do_cycle: FrozenDateTimeFactory
 ) -> None:
     """Run test for given config."""
-    now = mock_do_cycle
     assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
+    await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
+    await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == end_expect
 
 

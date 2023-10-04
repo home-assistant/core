@@ -414,6 +414,7 @@ async def test_bulk_set_config_parameters(
         identifiers={get_device_id(client.driver, multisensor_6)}
     )
     assert device
+
     # Test setting config parameter by property and property_key
     await hass.services.async_call(
         DOMAIN,
@@ -875,7 +876,9 @@ async def test_set_value(
     client.async_send_command.reset_mock()
 
     # Test that when a command fails we raise an exception
-    client.async_send_command.return_value = {"success": False}
+    client.async_send_command.return_value = {
+        "result": {"status": 2, "message": "test"}
+    }
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -924,7 +927,6 @@ async def test_set_value_string(
     hass: HomeAssistant, client, climate_danfoss_lc_13, lock_schlage_be469, integration
 ) -> None:
     """Test set_value service converts number to string when needed."""
-    client.async_send_command.return_value = {"success": True}
 
     # Test that number gets converted to a string when needed
     await hass.services.async_call(
@@ -1240,7 +1242,9 @@ async def test_multicast_set_value(
         )
 
     # Test that when a command is unsuccessful we raise an exception
-    client.async_send_command.return_value = {"success": False}
+    client.async_send_command.return_value = {
+        "result": {"status": 2, "message": "test"}
+    }
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -1381,7 +1385,7 @@ async def test_multicast_set_value_string(
     integration,
 ) -> None:
     """Test multicast_set_value service converts number to string when needed."""
-    client.async_send_command.return_value = {"success": True}
+    client.async_send_command.return_value = {"result": {"status": 255}}
 
     # Test that number gets converted to a string when needed
     await hass.services.async_call(

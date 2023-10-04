@@ -38,7 +38,7 @@ from .test_common import (
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
 from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
-BAD_INDEXED_SENSOR_CONFIG_3 = {
+BAD_LIST_SENSOR_CONFIG_3 = {
     "sn": {
         "Time": "2020-09-25T12:47:15",
         "ENERGY": {
@@ -47,7 +47,9 @@ BAD_INDEXED_SENSOR_CONFIG_3 = {
     }
 }
 
-INDEXED_SENSOR_CONFIG = {
+# This configuration has some sensors where values are lists
+# Home Assistant maps this to one sensor for each list item
+LIST_SENSOR_CONFIG = {
     "sn": {
         "Time": "2020-09-25T12:47:15",
         "ENERGY": {
@@ -74,7 +76,8 @@ INDEXED_SENSOR_CONFIG = {
     }
 }
 
-INDEXED_SENSOR_CONFIG_2 = {
+# Same as LIST_SENSOR_CONFIG, but Total is also a list
+LIST_SENSOR_CONFIG_2 = {
     "sn": {
         "Time": "2020-09-25T12:47:15",
         "ENERGY": {
@@ -101,8 +104,9 @@ INDEXED_SENSOR_CONFIG_2 = {
     }
 }
 
-
-NESTED_SENSOR_CONFIG_1 = {
+# This configuration has some sensors where values are dicts
+# Home Assistant maps this to one sensor for each dictionary item
+DICT_SENSOR_CONFIG_1 = {
     "sn": {
         "Time": "2020-03-03T00:00:00+00:00",
         "TX23": {
@@ -119,7 +123,43 @@ NESTED_SENSOR_CONFIG_1 = {
     }
 }
 
-NESTED_SENSOR_CONFIG_2 = {
+# Similar to LIST_SENSOR_CONFIG, but Total is a dict
+DICT_SENSOR_CONFIG_2 = {
+    "sn": {
+        "Time": "2023-01-27T11:04:56",
+        "ENERGY": {
+            "Total": {
+                "Phase1": 0.017,
+                "Phase2": 0.017,
+            },
+            "TotalStartTime": "2018-11-23T15:33:47",
+        },
+    }
+}
+
+NUMBERED_SENSOR_CONFIG = {
+    "sn": {
+        "Time": "2020-09-25T12:47:15",
+        "ANALOG": {
+            "Temperature1": 2.4,
+            "Temperature2": 2.4,
+            "Illuminance3": 2.4,
+        },
+        "TempUnit": "C",
+    }
+}
+
+NUMBERED_SENSOR_CONFIG_2 = {
+    "sn": {
+        "Time": "2020-09-25T12:47:15",
+        "ANALOG": {
+            "CTEnergy1": {"Energy": 0.5, "Power": 2300, "Voltage": 230, "Current": 10},
+        },
+        "TempUnit": "C",
+    }
+}
+
+TEMPERATURE_SENSOR_CONFIG = {
     "sn": {
         "Time": "2023-01-27T11:04:56",
         "DS18B20": {
@@ -131,65 +171,33 @@ NESTED_SENSOR_CONFIG_2 = {
 }
 
 
-async def test_controlling_state_via_mqtt(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
-) -> None:
-    """Test state update via MQTT."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
-    sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
-    mac = config["mac"]
-
-    async_fire_mqtt_message(
-        hass,
-        f"{DEFAULT_PREFIX}/{mac}/config",
-        json.dumps(config),
-    )
-    await hass.async_block_till_done()
-    async_fire_mqtt_message(
-        hass,
-        f"{DEFAULT_PREFIX}/{mac}/sensors",
-        json.dumps(sensor_config),
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.tasmota_dht11_temperature")
-    assert state.state == "unavailable"
-    assert not state.attributes.get(ATTR_ASSUMED_STATE)
-
-    entity_reg = er.async_get(hass)
-    entry = entity_reg.async_get("sensor.tasmota_dht11_temperature")
-    assert entry.disabled is False
-    assert entry.disabled_by is None
-    assert entry.entity_category is None
-
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
-    await hass.async_block_till_done()
-    state = hass.states.get("sensor.tasmota_dht11_temperature")
-    assert state.state == STATE_UNKNOWN
-    assert not state.attributes.get(ATTR_ASSUMED_STATE)
-
-    # Test periodic state update
-    async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/SENSOR", '{"DHT11":{"Temperature":20.5}}'
-    )
-    state = hass.states.get("sensor.tasmota_dht11_temperature")
-    assert state.state == "20.5"
-
-    # Test polled state update
-    async_fire_mqtt_message(
-        hass,
-        "tasmota_49A3BC/stat/STATUS10",
-        '{"StatusSNS":{"DHT11":{"Temperature":20.0}}}',
-    )
-    state = hass.states.get("sensor.tasmota_dht11_temperature")
-    assert state.state == "20.0"
-
-
 @pytest.mark.parametrize(
     ("sensor_config", "entity_ids", "messages", "states"),
     [
         (
-            NESTED_SENSOR_CONFIG_1,
+            DEFAULT_SENSOR_CONFIG,
+            ["sensor.tasmota_dht11_temperature"],
+            (
+                '{"DHT11":{"Temperature":20.5}}',
+                '{"StatusSNS":{"DHT11":{"Temperature":20.0}}}',
+            ),
+            (
+                {
+                    "sensor.tasmota_dht11_temperature": {
+                        "state": "20.5",
+                        "attributes": {
+                            "device_class": "temperature",
+                            "unit_of_measurement": "°C",
+                        },
+                    },
+                },
+                {
+                    "sensor.tasmota_dht11_temperature": {"state": "20.0"},
+                },
+            ),
+        ),
+        (
+            DICT_SENSOR_CONFIG_1,
             ["sensor.tasmota_tx23_speed_act", "sensor.tasmota_tx23_dir_card"],
             (
                 '{"TX23":{"Speed":{"Act":"12.3"},"Dir": {"Card": "WSW"}}}',
@@ -197,17 +205,50 @@ async def test_controlling_state_via_mqtt(
             ),
             (
                 {
-                    "sensor.tasmota_tx23_speed_act": "12.3",
-                    "sensor.tasmota_tx23_dir_card": "WSW",
+                    "sensor.tasmota_tx23_speed_act": {
+                        "state": "12.3",
+                        "attributes": {
+                            "device_class": None,
+                            "unit_of_measurement": "km/h",
+                        },
+                    },
+                    "sensor.tasmota_tx23_dir_card": {"state": "WSW"},
                 },
                 {
-                    "sensor.tasmota_tx23_speed_act": "23.4",
-                    "sensor.tasmota_tx23_dir_card": "ESE",
+                    "sensor.tasmota_tx23_speed_act": {"state": "23.4"},
+                    "sensor.tasmota_tx23_dir_card": {"state": "ESE"},
                 },
             ),
         ),
         (
-            NESTED_SENSOR_CONFIG_2,
+            LIST_SENSOR_CONFIG,
+            [
+                "sensor.tasmota_energy_totaltariff_0",
+                "sensor.tasmota_energy_totaltariff_1",
+            ],
+            (
+                '{"ENERGY":{"TotalTariff":[1.2,3.4]}}',
+                '{"StatusSNS":{"ENERGY":{"TotalTariff":[5.6,7.8]}}}',
+            ),
+            (
+                {
+                    "sensor.tasmota_energy_totaltariff_0": {
+                        "state": "1.2",
+                        "attributes": {
+                            "device_class": None,
+                            "unit_of_measurement": None,
+                        },
+                    },
+                    "sensor.tasmota_energy_totaltariff_1": {"state": "3.4"},
+                },
+                {
+                    "sensor.tasmota_energy_totaltariff_0": {"state": "5.6"},
+                    "sensor.tasmota_energy_totaltariff_1": {"state": "7.8"},
+                },
+            ),
+        ),
+        (
+            TEMPERATURE_SENSOR_CONFIG,
             ["sensor.tasmota_ds18b20_temperature", "sensor.tasmota_ds18b20_id"],
             (
                 '{"DS18B20":{"Id": "01191ED79190","Temperature": 12.3}}',
@@ -215,18 +256,229 @@ async def test_controlling_state_via_mqtt(
             ),
             (
                 {
-                    "sensor.tasmota_ds18b20_temperature": "12.3",
-                    "sensor.tasmota_ds18b20_id": "01191ED79190",
+                    "sensor.tasmota_ds18b20_temperature": {
+                        "state": "12.3",
+                        "attributes": {
+                            "device_class": "temperature",
+                            "unit_of_measurement": "°C",
+                        },
+                    },
+                    "sensor.tasmota_ds18b20_id": {"state": "01191ED79190"},
                 },
                 {
-                    "sensor.tasmota_ds18b20_temperature": "23.4",
-                    "sensor.tasmota_ds18b20_id": "meep",
+                    "sensor.tasmota_ds18b20_temperature": {"state": "23.4"},
+                    "sensor.tasmota_ds18b20_id": {"state": "meep"},
+                },
+            ),
+        ),
+        # Test simple Total sensor
+        (
+            LIST_SENSOR_CONFIG,
+            ["sensor.tasmota_energy_total"],
+            (
+                '{"ENERGY":{"Total":1.2,"TotalStartTime":"2018-11-23T15:33:47"}}',
+                '{"StatusSNS":{"ENERGY":{"Total":5.6,"TotalStartTime":"2018-11-23T16:33:47"}}}',
+            ),
+            (
+                {
+                    "sensor.tasmota_energy_total": {
+                        "state": "1.2",
+                        "attributes": {
+                            "device_class": "energy",
+                            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
+                            "unit_of_measurement": "kWh",
+                        },
+                    },
+                },
+                {
+                    "sensor.tasmota_energy_total": {"state": "5.6"},
+                },
+            ),
+        ),
+        # Test list Total sensors
+        (
+            LIST_SENSOR_CONFIG_2,
+            ["sensor.tasmota_energy_total_0", "sensor.tasmota_energy_total_1"],
+            (
+                '{"ENERGY":{"Total":[1.2, 3.4],"TotalStartTime":"2018-11-23T15:33:47"}}',
+                '{"StatusSNS":{"ENERGY":{"Total":[5.6, 7.8],"TotalStartTime":"2018-11-23T16:33:47"}}}',
+            ),
+            (
+                {
+                    "sensor.tasmota_energy_total_0": {
+                        "state": "1.2",
+                        "attributes": {
+                            "device_class": "energy",
+                            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
+                            "unit_of_measurement": "kWh",
+                        },
+                    },
+                    "sensor.tasmota_energy_total_1": {
+                        "state": "3.4",
+                        "attributes": {
+                            "device_class": "energy",
+                            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
+                            "unit_of_measurement": "kWh",
+                        },
+                    },
+                },
+                {
+                    "sensor.tasmota_energy_total_0": {"state": "5.6"},
+                    "sensor.tasmota_energy_total_1": {"state": "7.8"},
+                },
+            ),
+        ),
+        # Test dict Total sensors
+        (
+            DICT_SENSOR_CONFIG_2,
+            [
+                "sensor.tasmota_energy_total_phase1",
+                "sensor.tasmota_energy_total_phase2",
+            ],
+            (
+                '{"ENERGY":{"Total":{"Phase1":1.2, "Phase2":3.4},"TotalStartTime":"2018-11-23T15:33:47"}}',
+                '{"StatusSNS":{"ENERGY":{"Total":{"Phase1":5.6, "Phase2":7.8},"TotalStartTime":"2018-11-23T15:33:47"}}}',
+            ),
+            (
+                {
+                    "sensor.tasmota_energy_total_phase1": {
+                        "state": "1.2",
+                        "attributes": {
+                            "device_class": "energy",
+                            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
+                            "unit_of_measurement": "kWh",
+                        },
+                    },
+                    "sensor.tasmota_energy_total_phase2": {
+                        "state": "3.4",
+                        "attributes": {
+                            "device_class": "energy",
+                            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
+                            "unit_of_measurement": "kWh",
+                        },
+                    },
+                },
+                {
+                    "sensor.tasmota_energy_total_phase1": {"state": "5.6"},
+                    "sensor.tasmota_energy_total_phase2": {"state": "7.8"},
+                },
+            ),
+        ),
+        (
+            NUMBERED_SENSOR_CONFIG,
+            [
+                "sensor.tasmota_analog_temperature1",
+                "sensor.tasmota_analog_temperature2",
+                "sensor.tasmota_analog_illuminance3",
+            ],
+            (
+                (
+                    '{"ANALOG":{"Temperature1":1.2,"Temperature2":3.4,'
+                    '"Illuminance3": 5.6}}'
+                ),
+                (
+                    '{"StatusSNS":{"ANALOG":{"Temperature1": 7.8,"Temperature2": 9.0,'
+                    '"Illuminance3":1.2}}}'
+                ),
+            ),
+            (
+                {
+                    "sensor.tasmota_analog_temperature1": {
+                        "state": "1.2",
+                        "attributes": {
+                            "device_class": "temperature",
+                            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                            "unit_of_measurement": "°C",
+                        },
+                    },
+                    "sensor.tasmota_analog_temperature2": {
+                        "state": "3.4",
+                        "attributes": {
+                            "device_class": "temperature",
+                            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                            "unit_of_measurement": "°C",
+                        },
+                    },
+                    "sensor.tasmota_analog_illuminance3": {
+                        "state": "5.6",
+                        "attributes": {
+                            "device_class": "illuminance",
+                            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                            "unit_of_measurement": "lx",
+                        },
+                    },
+                },
+                {
+                    "sensor.tasmota_analog_temperature1": {"state": "7.8"},
+                    "sensor.tasmota_analog_temperature2": {"state": "9.0"},
+                    "sensor.tasmota_analog_illuminance3": {"state": "1.2"},
+                },
+            ),
+        ),
+        (
+            NUMBERED_SENSOR_CONFIG_2,
+            [
+                "sensor.tasmota_analog_ctenergy1_energy",
+                "sensor.tasmota_analog_ctenergy1_power",
+                "sensor.tasmota_analog_ctenergy1_voltage",
+                "sensor.tasmota_analog_ctenergy1_current",
+            ],
+            (
+                (
+                    '{"ANALOG":{"CTEnergy1":'
+                    '{"Energy":0.5,"Power":2300,"Voltage":230,"Current":10}}}'
+                ),
+                (
+                    '{"StatusSNS":{"ANALOG":{"CTEnergy1":'
+                    '{"Energy":1.0,"Power":1150,"Voltage":230,"Current":5}}}}'
+                ),
+            ),
+            (
+                {
+                    "sensor.tasmota_analog_ctenergy1_energy": {
+                        "state": "0.5",
+                        "attributes": {
+                            "device_class": "energy",
+                            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
+                            "unit_of_measurement": "kWh",
+                        },
+                    },
+                    "sensor.tasmota_analog_ctenergy1_power": {
+                        "state": "2300",
+                        "attributes": {
+                            "device_class": "power",
+                            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                            "unit_of_measurement": "W",
+                        },
+                    },
+                    "sensor.tasmota_analog_ctenergy1_voltage": {
+                        "state": "230",
+                        "attributes": {
+                            "device_class": "voltage",
+                            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                            "unit_of_measurement": "V",
+                        },
+                    },
+                    "sensor.tasmota_analog_ctenergy1_current": {
+                        "state": "10",
+                        "attributes": {
+                            "device_class": "current",
+                            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                            "unit_of_measurement": "A",
+                        },
+                    },
+                },
+                {
+                    "sensor.tasmota_analog_ctenergy1_energy": {"state": "1.0"},
+                    "sensor.tasmota_analog_ctenergy1_power": {"state": "1150"},
+                    "sensor.tasmota_analog_ctenergy1_voltage": {"state": "230"},
+                    "sensor.tasmota_analog_ctenergy1_current": {"state": "5"},
                 },
             ),
         ),
     ],
 )
-async def test_nested_sensor_state_via_mqtt(
+async def test_controlling_state_via_mqtt(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
@@ -236,6 +488,7 @@ async def test_nested_sensor_state_via_mqtt(
     states,
 ) -> None:
     """Test state update via MQTT."""
+    entity_reg = er.async_get(hass)
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(sensor_config)
     mac = config["mac"]
@@ -258,6 +511,11 @@ async def test_nested_sensor_state_via_mqtt(
         assert state.state == "unavailable"
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
+        entry = entity_reg.async_get(entity_id)
+        assert entry.disabled is False
+        assert entry.disabled_by is None
+        assert entry.entity_category is None
+
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     for entity_id in entity_ids:
@@ -269,21 +527,74 @@ async def test_nested_sensor_state_via_mqtt(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/SENSOR", messages[0])
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
-        assert state.state == states[0][entity_id]
+        expected_state = states[0][entity_id]
+        assert state.state == expected_state["state"]
+        for attribute, expected in expected_state.get("attributes", {}).items():
+            assert state.attributes.get(attribute) == expected
 
     # Test polled state update
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/STATUS10", messages[1])
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
-        assert state.state == states[1][entity_id]
+        expected_state = states[1][entity_id]
+        assert state.state == expected_state["state"]
+        for attribute, expected in expected_state.get("attributes", {}).items():
+            assert state.attributes.get(attribute) == expected
 
 
-async def test_indexed_sensor_state_via_mqtt(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+@pytest.mark.parametrize(
+    ("sensor_config", "entity_ids", "states"),
+    [
+        (
+            # The AS33935 energy sensor is not reporting energy in W
+            {"sn": {"Time": "2020-09-25T12:47:15", "AS3935": {"Energy": None}}},
+            ["sensor.tasmota_as3935_energy"],
+            {
+                "sensor.tasmota_as3935_energy": {
+                    "device_class": None,
+                    "state_class": None,
+                    "unit_of_measurement": None,
+                },
+            },
+        ),
+        (
+            # The AS33935 energy sensor is not reporting energy in W
+            {"sn": {"Time": "2020-09-25T12:47:15", "LD2410": {"Energy": None}}},
+            ["sensor.tasmota_ld2410_energy"],
+            {
+                "sensor.tasmota_ld2410_energy": {
+                    "device_class": None,
+                    "state_class": None,
+                    "unit_of_measurement": None,
+                },
+            },
+        ),
+        (
+            # Check other energy sensors work
+            {"sn": {"Time": "2020-09-25T12:47:15", "Other": {"Energy": None}}},
+            ["sensor.tasmota_other_energy"],
+            {
+                "sensor.tasmota_other_energy": {
+                    "device_class": "energy",
+                    "state_class": "total",
+                    "unit_of_measurement": "kWh",
+                },
+            },
+        ),
+    ],
+)
+async def test_quantity_override(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+    sensor_config,
+    entity_ids,
+    states,
 ) -> None:
-    """Test state update via MQTT."""
+    """Test quantity override for certain sensors."""
+    entity_reg = er.async_get(hass)
     config = copy.deepcopy(DEFAULT_CONFIG)
-    sensor_config = copy.deepcopy(INDEXED_SENSOR_CONFIG)
+    sensor_config = copy.deepcopy(sensor_config)
     mac = config["mac"]
 
     async_fire_mqtt_message(
@@ -299,133 +610,17 @@ async def test_indexed_sensor_state_via_mqtt(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.tasmota_energy_totaltariff_1")
-    assert state.state == "unavailable"
-    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state.state == "unavailable"
+        expected_state = states[entity_id]
+        for attribute, expected in expected_state.get("attributes", {}).items():
+            assert state.attributes.get(attribute) == expected
 
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
-    await hass.async_block_till_done()
-    state = hass.states.get("sensor.tasmota_energy_totaltariff_1")
-    assert state.state == STATE_UNKNOWN
-    assert not state.attributes.get(ATTR_ASSUMED_STATE)
-
-    # Test periodic state update
-    async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/SENSOR", '{"ENERGY":{"TotalTariff":[1.2,3.4]}}'
-    )
-    state = hass.states.get("sensor.tasmota_energy_totaltariff_1")
-    assert state.state == "3.4"
-
-    # Test polled state update
-    async_fire_mqtt_message(
-        hass,
-        "tasmota_49A3BC/stat/STATUS10",
-        '{"StatusSNS":{"ENERGY":{"TotalTariff":[5.6,7.8]}}}',
-    )
-    state = hass.states.get("sensor.tasmota_energy_totaltariff_1")
-    assert state.state == "7.8"
-
-
-async def test_indexed_sensor_state_via_mqtt2(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
-) -> None:
-    """Test state update via MQTT for sensor with last_reset property."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
-    sensor_config = copy.deepcopy(INDEXED_SENSOR_CONFIG)
-    mac = config["mac"]
-
-    async_fire_mqtt_message(
-        hass,
-        f"{DEFAULT_PREFIX}/{mac}/config",
-        json.dumps(config),
-    )
-    await hass.async_block_till_done()
-    async_fire_mqtt_message(
-        hass,
-        f"{DEFAULT_PREFIX}/{mac}/sensors",
-        json.dumps(sensor_config),
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.tasmota_energy_total")
-    assert state.state == "unavailable"
-    assert not state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
-
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
-    await hass.async_block_till_done()
-    state = hass.states.get("sensor.tasmota_energy_total")
-    assert state.state == STATE_UNKNOWN
-    assert not state.attributes.get(ATTR_ASSUMED_STATE)
-
-    # Test periodic state update
-    async_fire_mqtt_message(
-        hass,
-        "tasmota_49A3BC/tele/SENSOR",
-        '{"ENERGY":{"Total":1.2,"TotalStartTime":"2018-11-23T15:33:47"}}',
-    )
-    state = hass.states.get("sensor.tasmota_energy_total")
-    assert state.state == "1.2"
-
-    # Test polled state update
-    async_fire_mqtt_message(
-        hass,
-        "tasmota_49A3BC/stat/STATUS10",
-        '{"StatusSNS":{"ENERGY":{"Total":5.6,"TotalStartTime":"2018-11-23T16:33:47"}}}',
-    )
-    state = hass.states.get("sensor.tasmota_energy_total")
-    assert state.state == "5.6"
-
-
-async def test_indexed_sensor_state_via_mqtt3(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
-) -> None:
-    """Test state update via MQTT for indexed sensor with last_reset property."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
-    sensor_config = copy.deepcopy(INDEXED_SENSOR_CONFIG_2)
-    mac = config["mac"]
-
-    async_fire_mqtt_message(
-        hass,
-        f"{DEFAULT_PREFIX}/{mac}/config",
-        json.dumps(config),
-    )
-    await hass.async_block_till_done()
-    async_fire_mqtt_message(
-        hass,
-        f"{DEFAULT_PREFIX}/{mac}/sensors",
-        json.dumps(sensor_config),
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.tasmota_energy_total_1")
-    assert state.state == "unavailable"
-    assert not state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
-
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
-    await hass.async_block_till_done()
-    state = hass.states.get("sensor.tasmota_energy_total_1")
-    assert state.state == STATE_UNKNOWN
-    assert not state.attributes.get(ATTR_ASSUMED_STATE)
-
-    # Test periodic state update
-    async_fire_mqtt_message(
-        hass,
-        "tasmota_49A3BC/tele/SENSOR",
-        '{"ENERGY":{"Total":[1.2, 3.4],"TotalStartTime":"2018-11-23T15:33:47"}}',
-    )
-    state = hass.states.get("sensor.tasmota_energy_total_1")
-    assert state.state == "3.4"
-
-    # Test polled state update
-    async_fire_mqtt_message(
-        hass,
-        "tasmota_49A3BC/stat/STATUS10",
-        '{"StatusSNS":{"ENERGY":{"Total":[5.6,7.8],"TotalStartTime":"2018-11-23T16:33:47"}}}',
-    )
-    state = hass.states.get("sensor.tasmota_energy_total_1")
-    assert state.state == "7.8"
+        entry = entity_reg.async_get(entity_id)
+        assert entry.disabled is False
+        assert entry.disabled_by is None
+        assert entry.entity_category is None
 
 
 async def test_bad_indexed_sensor_state_via_mqtt(
@@ -433,7 +628,7 @@ async def test_bad_indexed_sensor_state_via_mqtt(
 ) -> None:
     """Test state update via MQTT where sensor is not matching configuration."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    sensor_config = copy.deepcopy(BAD_INDEXED_SENSOR_CONFIG_3)
+    sensor_config = copy.deepcopy(BAD_LIST_SENSOR_CONFIG_3)
     mac = config["mac"]
 
     async_fire_mqtt_message(
@@ -602,6 +797,58 @@ async def test_status_sensor_state_via_mqtt(
         "sensor.tasmota_status"
     )
     assert not entity.force_update
+
+
+@pytest.mark.parametrize("status_sensor_disabled", [False])
+async def test_battery_sensor_state_via_mqtt(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
+    """Test state update via MQTT."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["bat"] = 1  # BatteryPercentage feature enabled
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.tasmota_battery_level")
+    assert state.state == "unavailable"
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.tasmota_battery_level")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    # Test pushed state update
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/tele/STATE", '{"BatteryPercentage":55}'
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.tasmota_battery_level")
+    assert state.state == "55"
+    assert state.attributes == {
+        "device_class": "battery",
+        "friendly_name": "Tasmota Battery Level",
+        "state_class": "measurement",
+        "unit_of_measurement": "%",
+    }
+
+    # Test polled state update
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS11",
+        '{"StatusSTS":{"BatteryPercentage":50}}',
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.tasmota_battery_level")
+    assert state.state == "50"
 
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
@@ -784,7 +1031,7 @@ async def test_nested_sensor_attributes(
 ) -> None:
     """Test correct attributes for sensors."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    sensor_config = copy.deepcopy(NESTED_SENSOR_CONFIG_1)
+    sensor_config = copy.deepcopy(DICT_SENSOR_CONFIG_1)
     mac = config["mac"]
 
     async_fire_mqtt_message(

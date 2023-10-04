@@ -18,8 +18,8 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -83,13 +83,15 @@ class SwitcherBaseSwitchEntity(
 ):
     """Representation of a Switcher switch entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.control_result: bool | None = None
 
         # Entity class attributes
-        self._attr_name = coordinator.name
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
@@ -118,7 +120,7 @@ class SwitcherBaseSwitchEntity(
         if error or not response or not response.successful:
             _LOGGER.error(
                 "Call api for %s failed, api: '%s', args: %s, response/error: %s",
-                self.name,
+                self.coordinator.name,
                 api,
                 args,
                 response or error,
@@ -150,7 +152,7 @@ class SwitcherBaseSwitchEntity(
         _LOGGER.warning(
             "Service '%s' is not supported by %s",
             SERVICE_SET_AUTO_OFF_NAME,
-            self.name,
+            self.coordinator.name,
         )
 
     async def async_turn_on_with_timer_service(self, timer_minutes: int) -> None:
@@ -158,7 +160,7 @@ class SwitcherBaseSwitchEntity(
         _LOGGER.warning(
             "Service '%s' is not supported by %s",
             SERVICE_TURN_ON_WITH_TIMER_NAME,
-            self.name,
+            self.coordinator.name,
         )
 
 

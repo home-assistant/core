@@ -80,7 +80,10 @@ def mock_lock():
         is_jammed=False,
         battery_level=20,
         firmware_version="1.0",
+        lock_and_leave_enabled=True,
+        beeper_enabled=True,
     )
     mock_lock.logs.return_value = []
     mock_lock.last_changed_by.return_value = "thumbturn"
+    mock_lock.keypad_disabled.return_value = False
     return mock_lock

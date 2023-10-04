@@ -49,7 +49,7 @@ class _GlobalFreezeContext:
         self._loop.call_soon_threadsafe(self._enter)
         return self
 
-    def __exit__(  # pylint: disable=useless-return
+    def __exit__(
         self,
         exc_type: type[BaseException],
         exc_val: BaseException,
@@ -117,7 +117,7 @@ class _ZoneFreezeContext:
         self._loop.call_soon_threadsafe(self._enter)
         return self
 
-    def __exit__(  # pylint: disable=useless-return
+    def __exit__(
         self,
         exc_type: type[BaseException],
         exc_val: BaseException,
