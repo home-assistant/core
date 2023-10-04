@@ -910,23 +910,25 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def force_data_refresh(self, first_update: bool) -> None:
         """Force update of the addon info."""
+        data = self.hass.data
+        hassio = self.hassio
         (
-            self.hass.data[DATA_INFO],
-            self.hass.data[DATA_CORE_INFO],
-            self.hass.data[DATA_CORE_STATS],
-            self.hass.data[DATA_SUPERVISOR_INFO],
-            self.hass.data[DATA_SUPERVISOR_STATS],
-            self.hass.data[DATA_OS_INFO],
+            data[DATA_INFO],
+            data[DATA_CORE_INFO],
+            data[DATA_CORE_STATS],
+            data[DATA_SUPERVISOR_INFO],
+            data[DATA_SUPERVISOR_STATS],
+            data[DATA_OS_INFO],
         ) = await asyncio.gather(
-            self.hassio.get_info(),
-            self.hassio.get_core_info(),
-            self.hassio.get_core_stats(),
-            self.hassio.get_supervisor_info(),
-            self.hassio.get_supervisor_stats(),
-            self.hassio.get_os_info(),
+            hassio.get_info(),
+            hassio.get_core_info(),
+            hassio.get_core_stats(),
+            hassio.get_supervisor_info(),
+            hassio.get_supervisor_stats(),
+            hassio.get_os_info(),
         )
 
-        _addon_data = self.hass.data[DATA_SUPERVISOR_INFO].get("addons", [])
+        _addon_data = data[DATA_SUPERVISOR_INFO].get("addons", [])
         all_addons: list[str] = []
         started_addons: list[str] = []
         for addon in _addon_data:
@@ -942,8 +944,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 if first_update or ADDON_UPDATE_STATS in enabled_updates_by_addon[slug]
             ]
         )
-        self.hass.data[DATA_ADDONS_STATS] = dict(stats_data)
-        self.hass.data[DATA_ADDONS_CHANGELOGS] = dict(
+        data[DATA_ADDONS_STATS] = dict(stats_data)
+        data[DATA_ADDONS_CHANGELOGS] = dict(
             await asyncio.gather(
                 *[
                     self._update_addon_changelog(slug)
@@ -953,7 +955,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 ]
             )
         )
-        self.hass.data[DATA_ADDONS_INFO] = dict(
+        data[DATA_ADDONS_INFO] = dict(
             await asyncio.gather(
                 *[
                     self._update_addon_info(slug)
