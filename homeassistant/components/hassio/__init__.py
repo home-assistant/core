@@ -966,7 +966,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         """Update single addon stats."""
         try:
             stats = await self.hassio.get_addon_stats(slug)
-            _LOGGER.warning("Addon stats: %s %s", slug, stats)
             return (slug, stats)
         except HassioAPIError as err:
             _LOGGER.warning("Could not fetch stats for %s: %s", slug, err)
@@ -976,7 +975,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         """Return the changelog for an add-on."""
         try:
             changelog = await self.hassio.get_addon_changelog(slug)
-            _LOGGER.warning("Addon change: %s %s", slug, changelog)
             return (slug, changelog)
         except HassioAPIError as err:
             _LOGGER.warning("Could not fetch changelog for %s: %s", slug, err)
@@ -986,7 +984,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         """Return the info for an add-on."""
         try:
             info = await self.hassio.get_addon_info(slug)
-            _LOGGER.warning("Addon info: %s %s", slug, info)
             return (slug, info)
         except HassioAPIError as err:
             _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
