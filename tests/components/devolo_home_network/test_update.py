@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
-    LONG_UPDATE_INTERVAL,
+    FIRMWARE_UPDATE_INTERVAL,
 )
 from homeassistant.components.update import (
     DOMAIN as PLATFORM,
@@ -78,7 +78,7 @@ async def test_update_firmware(
     mock_device.device.async_check_firmware_available.return_value = (
         UpdateFirmwareCheck(result=UPDATE_NOT_AVAILABLE)
     )
-    freezer.tick(LONG_UPDATE_INTERVAL)
+    freezer.tick(FIRMWARE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -106,7 +106,7 @@ async def test_device_failure_check(
     assert state is not None
 
     mock_device.device.async_check_firmware_available.side_effect = DeviceUnavailable
-    freezer.tick(LONG_UPDATE_INTERVAL)
+    freezer.tick(FIRMWARE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
