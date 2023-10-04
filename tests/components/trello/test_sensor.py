@@ -8,10 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.trello.conftest import (
-    ComponentSetup,
-    mock_fetch_json,
-)
+from tests.components.trello.conftest import ComponentSetup, mock_fetch_json
 
 
 async def test_sensor_setup_entry(

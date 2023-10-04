@@ -11,13 +11,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from . import TrelloAdapter
-from .const import (
-    CONF_BOARD_IDS,
-    CONF_USER_EMAIL,
-    CONF_USER_ID,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_BOARD_IDS, CONF_USER_EMAIL, CONF_USER_ID, DOMAIN, LOGGER
 
 CREDS_FORM_SCHEMA = vol.Schema(
     {
