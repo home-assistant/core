@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from enum import Enum
 import logging
 from typing import Final
 
@@ -12,7 +13,6 @@ LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(minutes=10)
 THRESHOLD_HOUR: Final = 14
 
-ATTR_TYPE: Final = "type"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
 ATTR_INCL_VAT: Final = "incl_vat"
@@ -21,13 +21,19 @@ SERVICE_TYPE_DEVICE_NAMES = {
     "today_energy": "Energy market price",
     "today_gas": "Gas market price",
 }
-SERVICE_NAME: Final = "get_prices"
-SERVICE_PRICE_TYPES: Final = ["energy", "gas"]
+GAS_SERVICE_NAME: Final = "get_gas_prices"
+ENERGY_SERVICE_NAME: Final = "get_energy_prices"
 SERVICE_SCHEMA: Final = vol.Schema(
     {
-        vol.Required(ATTR_TYPE): vol.In(SERVICE_PRICE_TYPES),
         vol.Optional(ATTR_START): str,
         vol.Optional(ATTR_END): str,
         vol.Optional(ATTR_INCL_VAT, default=True): bool,
     }
 )
+
+
+class PriceType(Enum):
+    """Type of price."""
+
+    ENERGY = "energy"
+    GAS = "gas"

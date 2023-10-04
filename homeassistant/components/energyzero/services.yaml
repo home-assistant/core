@@ -1,13 +1,22 @@
-get_prices:
+get_gas_prices:
   fields:
-    type:
-      required: true
-      example: "gas"
+    incl_vat:
+      required: false
+      example: false
       selector:
-        select:
-          options:
-            - "gas"
-            - "energy"
+        boolean:
+    start:
+      required: false
+      example: "2023-01-01 00:00:00"
+      selector:
+        datetime:
+    end:
+      required: false
+      example: "2023-01-01 00:00:00"
+      selector:
+        datetime:
+get_energy_prices:
+  fields:
     incl_vat:
       required: false
       example: false

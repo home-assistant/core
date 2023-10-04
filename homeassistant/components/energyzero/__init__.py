@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from energyzero import Electricity, EnergyZero, Gas
+from energyzero import Electricity, Gas
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -14,24 +14,24 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_END,
     ATTR_INCL_VAT,
     ATTR_START,
-    ATTR_TYPE,
     DOMAIN,
-    SERVICE_NAME,
+    ENERGY_SERVICE_NAME,
+    GAS_SERVICE_NAME,
     SERVICE_SCHEMA,
+    PriceType,
 )
 from .coordinator import EnergyZeroDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
 
-def _get_date(date_input: str | None) -> date | datetime:
+def __get_date(date_input: str | None) -> date | datetime:
     """Get date."""
     if not date_input:
         return dt_util.now().date()
@@ -47,26 +47,33 @@ def __serialize_prices(prices: Electricity | Gas) -> ServiceResponse:
     return {str(timestamp): price for timestamp, price in prices.prices.items()}
 
 
-async def _get_prices(hass: HomeAssistant, call: ServiceCall) -> ServiceResponse:
-    """Search prices."""
-    price_type = call.data[ATTR_TYPE]
+async def __get_prices(
+    coordinator: EnergyZeroDataUpdateCoordinator,
+    call: ServiceCall,
+    price_type: PriceType,
+) -> ServiceResponse:
+    previous_incl_vat = coordinator.energyzero.incl_btw
 
-    energyzero = EnergyZero(
-        session=async_get_clientsession(hass),
-        incl_btw=str(call.data[ATTR_INCL_VAT]).lower(),
-    )
+    coordinator.energyzero.incl_btw = str(call.data[ATTR_INCL_VAT]).lower()
+    start = __get_date(call.data.get(ATTR_START))
+    end = __get_date(call.data.get(ATTR_END))
 
-    start = _get_date(call.data.get(ATTR_START))
-    end = _get_date(call.data.get(ATTR_END))
+    data: Electricity | Gas
 
-    if price_type == "energy":
-        return __serialize_prices(
-            await energyzero.energy_prices(start_date=start, end_date=end)
+    if price_type == PriceType.GAS:
+        data = await coordinator.energyzero.gas_prices(
+            start_date=start,
+            end_date=end,
+        )
+    else:
+        data = await coordinator.energyzero.energy_prices(
+            start_date=start,
+            end_date=end,
         )
 
-    return __serialize_prices(
-        await energyzero.gas_prices(start_date=start, end_date=end)
-    )
+    coordinator.energyzero.incl_btw = previous_incl_vat
+
+    return __serialize_prices(data)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -83,14 +90,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def get_prices(call: ServiceCall) -> ServiceResponse:
-        """Search prices."""
-        return await _get_prices(hass, call)
+    async def get_gas_prices(call: ServiceCall) -> ServiceResponse:
+        """Search gas prices."""
+        return await __get_prices(coordinator, call, PriceType.GAS)
+
+    async def get_energy_prices(call: ServiceCall) -> ServiceResponse:
+        """Search energy prices."""
+        return await __get_prices(coordinator, call, PriceType.ENERGY)
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_NAME,
-        get_prices,
+        GAS_SERVICE_NAME,
+        get_gas_prices,
+        schema=SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        ENERGY_SERVICE_NAME,
+        get_energy_prices,
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
