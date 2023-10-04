@@ -15,7 +15,6 @@ set_timer_level:
             - "breeze"
     time:
       required: true
-      advanced: false
       default: 0
       selector:
         number:
