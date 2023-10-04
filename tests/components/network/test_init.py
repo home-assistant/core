@@ -712,3 +712,120 @@ async def test_async_get_source_ip_no_ip_loopback(
         await hass.async_block_till_done()
 
         assert await network.async_get_source_ip(hass) == "127.0.0.1"
+
+
+_ADAPTERS_WITH_MANUAL_CONFIG = [
+    {
+        "auto": True,
+        "index": 1,
+        "default": False,
+        "enabled": True,
+        "ipv4": [],
+        "ipv6": [
+            {
+                "address": "2001:db8::",
+                "network_prefix": 64,
+                "flowinfo": 1,
+                "scope_id": 1,
+            },
+            {
+                "address": "fe80::1234:5678:9abc:def0",
+                "network_prefix": 64,
+                "flowinfo": 1,
+                "scope_id": 1,
+            },
+        ],
+        "name": "eth0",
+    },
+    {
+        "auto": True,
+        "index": 2,
+        "default": False,
+        "enabled": True,
+        "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
+        "ipv6": [],
+        "name": "eth1",
+    },
+    {
+        "auto": True,
+        "index": 3,
+        "default": False,
+        "enabled": True,
+        "ipv4": [{"address": "172.16.1.5", "network_prefix": 23}],
+        "ipv6": [
+            {
+                "address": "fe80::dead:beef:dead:beef",
+                "network_prefix": 64,
+                "flowinfo": 1,
+                "scope_id": 3,
+            }
+        ],
+        "name": "eth2",
+    },
+    {
+        "auto": False,
+        "index": 4,
+        "default": False,
+        "enabled": False,
+        "ipv4": [{"address": "169.254.3.2", "network_prefix": 16}],
+        "ipv6": [],
+        "name": "vtun0",
+    },
+]
+
+
+async def test_async_get_announce_addresses(hass: HomeAssistant) -> None:
+    """Test addresses for mDNS/etc announcement."""
+    first_ip = "172.16.1.5"
+    with patch(
+        "homeassistant.components.network.async_get_source_ip",
+        return_value=first_ip,
+    ), patch(
+        "homeassistant.components.network.async_get_adapters",
+        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    ):
+        actual = await network.async_get_announce_addresses(hass)
+    assert actual[0] == first_ip and actual == [
+        first_ip,
+        "2001:db8::",
+        "fe80::1234:5678:9abc:def0",
+        "192.168.1.5",
+        "fe80::dead:beef:dead:beef",
+    ]
+
+    first_ip = "192.168.1.5"
+    with patch(
+        "homeassistant.components.network.async_get_source_ip",
+        return_value=first_ip,
+    ), patch(
+        "homeassistant.components.network.async_get_adapters",
+        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    ):
+        actual = await network.async_get_announce_addresses(hass)
+
+    assert actual[0] == first_ip and actual == [
+        first_ip,
+        "2001:db8::",
+        "fe80::1234:5678:9abc:def0",
+        "172.16.1.5",
+        "fe80::dead:beef:dead:beef",
+    ]
+
+
+async def test_async_get_announce_addresses_no_source_ip(hass: HomeAssistant) -> None:
+    """Test addresses for mDNS/etc announcement without source ip."""
+    with patch(
+        "homeassistant.components.network.async_get_source_ip",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.network.async_get_adapters",
+        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    ):
+        actual = await network.async_get_announce_addresses(hass)
+    assert actual == [
+        "2001:db8::",
+        "fe80::1234:5678:9abc:def0",
+        "192.168.1.5",
+        "172.16.1.5",
+        "fe80::dead:beef:dead:beef",
+    ]

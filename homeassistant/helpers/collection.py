@@ -8,8 +8,9 @@ from dataclasses import dataclass
 from itertools import groupby
 import logging
 from operator import attrgetter
-from typing import Any, Generic, TypedDict, TypeVar
+from typing import Any, Generic, TypedDict
 
+from typing_extensions import TypeVar
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -32,10 +33,13 @@ CHANGE_ADDED = "added"
 CHANGE_UPDATED = "updated"
 CHANGE_REMOVED = "removed"
 
-_T = TypeVar("_T")
+_ItemT = TypeVar("_ItemT")
+_StoreT = TypeVar("_StoreT", bound="SerializedStorageCollection")
+_StorageCollectionT = TypeVar("_StorageCollectionT", bound="StorageCollection")
+_EntityT = TypeVar("_EntityT", bound=Entity, default=Entity)
 
 
-@dataclass
+@dataclass(slots=True)
 class CollectionChangeSet:
     """Class to represent a change set.
 
@@ -123,38 +127,42 @@ class CollectionEntity(Entity):
         """Handle updated configuration."""
 
 
-class ObservableCollection(ABC, Generic[_T]):
+class ObservableCollection(ABC, Generic[_ItemT]):
     """Base collection type that can be observed."""
 
     def __init__(self, id_manager: IDManager | None) -> None:
         """Initialize the base collection."""
         self.id_manager = id_manager or IDManager()
-        self.data: dict[str, _T] = {}
+        self.data: dict[str, _ItemT] = {}
         self.listeners: list[ChangeListener] = []
         self.change_set_listeners: list[ChangeSetListener] = []
 
         self.id_manager.add_collection(self.data)
 
     @callback
-    def async_items(self) -> list[_T]:
+    def async_items(self) -> list[_ItemT]:
         """Return list of items in collection."""
         return list(self.data.values())
 
     @callback
-    def async_add_listener(self, listener: ChangeListener) -> None:
+    def async_add_listener(self, listener: ChangeListener) -> Callable[[], None]:
         """Add a listener.
 
         Will be called with (change_type, item_id, updated_config).
         """
         self.listeners.append(listener)
+        return lambda: self.listeners.remove(listener)
 
     @callback
-    def async_add_change_set_listener(self, listener: ChangeSetListener) -> None:
+    def async_add_change_set_listener(
+        self, listener: ChangeSetListener
+    ) -> Callable[[], None]:
         """Add a listener for a full change set.
 
         Will be called with [(change_type, item_id, updated_config), ...]
         """
         self.change_set_listeners.append(listener)
+        return lambda: self.change_set_listeners.remove(listener)
 
     async def notify_changes(self, change_sets: Iterable[CollectionChangeSet]) -> None:
         """Notify listeners of a change."""
@@ -226,12 +234,12 @@ class SerializedStorageCollection(TypedDict):
     items: list[dict[str, Any]]
 
 
-class StorageCollection(ObservableCollection[_T], ABC):
+class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
     """Offer a CRUD interface on top of JSON storage."""
 
     def __init__(
         self,
-        store: Store[SerializedStorageCollection],
+        store: Store[_StoreT],
         id_manager: IDManager | None = None,
     ) -> None:
         """Initialize the storage collection."""
@@ -250,16 +258,14 @@ class StorageCollection(ObservableCollection[_T], ABC):
         """Home Assistant object."""
         return self.store.hass
 
-    async def _async_load_data(self) -> SerializedStorageCollection | None:
+    async def _async_load_data(self) -> _StoreT | None:
         """Load the data."""
         return await self.store.async_load()
 
     async def async_load(self) -> None:
         """Load the storage Manager."""
-        raw_storage = await self._async_load_data()
-
-        if raw_storage is None:
-            raw_storage = {"items": []}
+        if not (raw_storage := await self._async_load_data()):
+            return
 
         for item in raw_storage["items"]:
             self.data[item[CONF_ID]] = self._deserialize_item(item)
@@ -281,25 +287,25 @@ class StorageCollection(ObservableCollection[_T], ABC):
         """Suggest an ID based on the config."""
 
     @abstractmethod
-    async def _update_data(self, item: _T, update_data: dict) -> _T:
+    async def _update_data(self, item: _ItemT, update_data: dict) -> _ItemT:
         """Return a new updated item."""
 
     @abstractmethod
-    def _create_item(self, item_id: str, data: dict) -> _T:
+    def _create_item(self, item_id: str, data: dict) -> _ItemT:
         """Create an item from validated config."""
 
     @abstractmethod
-    def _deserialize_item(self, data: dict) -> _T:
+    def _deserialize_item(self, data: dict) -> _ItemT:
         """Create an item from its serialized representation."""
 
     @abstractmethod
-    def _serialize_item(self, item_id: str, item: _T) -> dict:
-        """Return the serialized representation of an item.
+    def _serialize_item(self, item_id: str, item: _ItemT) -> dict:
+        """Return the serialized representation of an item for storing.
 
         The serialized representation must include the item_id in the "id" key.
         """
 
-    async def async_create_item(self, data: dict) -> _T:
+    async def async_create_item(self, data: dict) -> _ItemT:
         """Create a new item."""
         validated_data = await self._process_create_data(data)
         item_id = self.id_manager.generate_id(self._get_suggested_id(validated_data))
@@ -309,7 +315,7 @@ class StorageCollection(ObservableCollection[_T], ABC):
         await self.notify_changes([CollectionChangeSet(CHANGE_ADDED, item_id, item)])
         return item
 
-    async def async_update_item(self, item_id: str, updates: dict) -> _T:
+    async def async_update_item(self, item_id: str, updates: dict) -> _ItemT:
         """Update item."""
         if item_id not in self.data:
             raise ItemNotFound(item_id)
@@ -346,8 +352,8 @@ class StorageCollection(ObservableCollection[_T], ABC):
         self.store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self) -> SerializedStorageCollection:
-        """Return JSON-compatible date for storing to file."""
+    def _base_data_to_save(self) -> SerializedStorageCollection:
+        """Return JSON-compatible data for storing to file."""
         return {
             "items": [
                 self._serialize_item(item_id, item)
@@ -355,8 +361,13 @@ class StorageCollection(ObservableCollection[_T], ABC):
             ]
         }
 
+    @abstractmethod
+    @callback
+    def _data_to_save(self) -> _StoreT:
+        """Return JSON-compatible date for storing to file."""
 
-class DictStorageCollection(StorageCollection[dict]):
+
+class DictStorageCollection(StorageCollection[dict, SerializedStorageCollection]):
     """A specialized StorageCollection where the items are untyped dicts."""
 
     def _create_item(self, item_id: str, data: dict) -> dict:
@@ -368,8 +379,13 @@ class DictStorageCollection(StorageCollection[dict]):
         return data
 
     def _serialize_item(self, item_id: str, item: dict) -> dict:
-        """Return the serialized representation of an item."""
+        """Return the serialized representation of an item for storing."""
         return item
+
+    @callback
+    def _data_to_save(self) -> SerializedStorageCollection:
+        """Return JSON-compatible date for storing to file."""
+        return self._base_data_to_save()
 
 
 class IDLessCollection(YamlCollection):
@@ -407,7 +423,7 @@ def sync_entity_lifecycle(
     hass: HomeAssistant,
     domain: str,
     platform: str,
-    entity_component: EntityComponent,
+    entity_component: EntityComponent[_EntityT],
     collection: StorageCollection | YamlCollection,
     entity_class: type[CollectionEntity],
 ) -> None:
@@ -477,12 +493,12 @@ def sync_entity_lifecycle(
     collection.async_add_change_set_listener(_collection_changed)
 
 
-class StorageCollectionWebsocket:
+class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
     """Class to expose storage collection management over websocket."""
 
     def __init__(
         self,
-        storage_collection: StorageCollection,
+        storage_collection: _StorageCollectionT,
         api_prefix: str,
         model_name: str,
         create_schema: dict,
@@ -565,6 +581,7 @@ class StorageCollectionWebsocket:
             ),
         )
 
+    @callback
     def ws_list_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
@@ -635,3 +652,7 @@ class StorageCollectionWebsocket:
             )
 
         connection.send_result(msg["id"])
+
+
+class DictStorageCollectionWebsocket(StorageCollectionWebsocket[DictStorageCollection]):
+    """Class to expose storage collection management over websocket."""

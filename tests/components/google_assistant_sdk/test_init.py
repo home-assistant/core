@@ -7,15 +7,17 @@ from unittest.mock import call, patch
 import aiohttp
 import pytest
 
+from homeassistant.components import conversation
 from homeassistant.components.google_assistant_sdk import DOMAIN
+from homeassistant.components.google_assistant_sdk.const import SUPPORTED_LANGUAGE_CODES
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .conftest import ComponentSetup, ExpectedCredentials
 
-from tests.common import async_fire_time_changed, async_mock_service
+from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -28,13 +30,9 @@ async def fetch_api_url(hass_client, url):
     return response.status, contents
 
 
-@pytest.mark.parametrize(
-    "enable_conversation_agent", [False, True], ids=["", "enable_conversation_agent"]
-)
 async def test_setup_success(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    enable_conversation_agent: bool,
 ) -> None:
     """Test successful setup and unload."""
     await setup_integration()
@@ -42,12 +40,6 @@ async def test_setup_success(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
-
-    if enable_conversation_agent:
-        hass.config_entries.async_update_entry(
-            entries[0], options={"enable_conversation_agent": True}
-        )
-        await hass.async_block_till_done()
 
     await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
@@ -170,20 +162,26 @@ async def test_send_text_commands(
 
     command1 = "open the garage door"
     command2 = "1234"
+    command1_response = "what's the PIN?"
+    command2_response = "opened the garage door"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
-    ) as mock_text_assistant:
-        await hass.services.async_call(
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        side_effect=[
+            (command1_response, None, None),
+            (command2_response, None, None),
+        ],
+    ) as mock_assist_call:
+        response = await hass.services.async_call(
             DOMAIN,
             "send_text_command",
             {"command": [command1, command2]},
             blocking=True,
+            return_response=True,
         )
-    mock_text_assistant.assert_called_once_with(
-        ExpectedCredentials(), "en-US", audio_out=False
-    )
-    mock_text_assistant.assert_has_calls([call().__enter__().assist(command1)])
-    mock_text_assistant.assert_has_calls([call().__enter__().assist(command2)])
+        assert response == {
+            "responses": [{"text": command1_response}, {"text": command2_response}]
+        }
+    mock_assist_call.assert_has_calls([call(command1), call(command2)])
 
 
 @pytest.mark.parametrize(
@@ -208,6 +206,7 @@ async def test_send_text_command_expired_token_refresh_failure(
     requires_reauth: ConfigEntryState,
 ) -> None:
     """Test failure refreshing token in send_text_command."""
+    await async_setup_component(hass, "homeassistant", {})
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -228,6 +227,7 @@ async def test_send_text_command_expired_token_refresh_failure(
             {"command": "turn on tv"},
             blocking=True,
         )
+    await hass.async_block_till_done()
 
     assert any(entry.async_get_active_flows(hass, {"reauth"})) == requires_reauth
 
@@ -319,6 +319,7 @@ async def test_send_text_command_media_player(
 async def test_conversation_agent(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test GoogleAssistantConversationAgent."""
     await setup_integration()
@@ -329,27 +330,20 @@ async def test_conversation_agent(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
-    hass.config_entries.async_update_entry(
-        entry, options={"enable_conversation_agent": True}
-    )
-    await hass.async_block_till_done()
+
+    agent = await conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
+    assert agent.supported_languages == SUPPORTED_LANGUAGE_CODES
 
     text1 = "tell me a joke"
     text2 = "tell me another one"
     with patch(
         "homeassistant.components.google_assistant_sdk.TextAssistant"
     ) as mock_text_assistant:
-        await hass.services.async_call(
-            "conversation",
-            "process",
-            {"text": text1},
-            blocking=True,
+        await conversation.async_converse(
+            hass, text1, None, Context(), "en-US", config_entry.entry_id
         )
-        await hass.services.async_call(
-            "conversation",
-            "process",
-            {"text": text2},
-            blocking=True,
+        await conversation.async_converse(
+            hass, text2, None, Context(), "en-US", config_entry.entry_id
         )
 
     # Assert constructor is called only once since it's reused across requests
@@ -361,6 +355,7 @@ async def test_conversation_agent(
 
 async def test_conversation_agent_refresh_token(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -373,21 +368,14 @@ async def test_conversation_agent_refresh_token(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
-    hass.config_entries.async_update_entry(
-        entry, options={"enable_conversation_agent": True}
-    )
-    await hass.async_block_till_done()
 
     text1 = "tell me a joke"
     text2 = "tell me another one"
     with patch(
         "homeassistant.components.google_assistant_sdk.TextAssistant"
     ) as mock_text_assistant:
-        await hass.services.async_call(
-            "conversation",
-            "process",
-            {"text": text1},
-            blocking=True,
+        await conversation.async_converse(
+            hass, text1, None, Context(), "en-US", config_entry.entry_id
         )
 
         # Expire the token between requests
@@ -403,11 +391,8 @@ async def test_conversation_agent_refresh_token(
             },
         )
 
-        await hass.services.async_call(
-            "conversation",
-            "process",
-            {"text": text2},
-            blocking=True,
+        await conversation.async_converse(
+            hass, text2, None, Context(), "en-US", config_entry.entry_id
         )
 
     # Assert constructor is called twice since the token was expired
@@ -416,5 +401,40 @@ async def test_conversation_agent_refresh_token(
     mock_text_assistant.assert_has_calls(
         [call(ExpectedCredentials(updated_access_token), "en-US")]
     )
+    mock_text_assistant.assert_has_calls([call().assist(text1)])
+    mock_text_assistant.assert_has_calls([call().assist(text2)])
+
+
+async def test_conversation_agent_language_changed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test GoogleAssistantConversationAgent when language is changed."""
+    await setup_integration()
+
+    assert await async_setup_component(hass, "conversation", {})
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+
+    text1 = "tell me a joke"
+    text2 = "cuéntame un chiste"
+    with patch(
+        "homeassistant.components.google_assistant_sdk.TextAssistant"
+    ) as mock_text_assistant:
+        await conversation.async_converse(
+            hass, text1, None, Context(), "en-US", config_entry.entry_id
+        )
+        await conversation.async_converse(
+            hass, text2, None, Context(), "es-ES", config_entry.entry_id
+        )
+
+    # Assert constructor is called twice since the language was changed
+    assert mock_text_assistant.call_count == 2
+    mock_text_assistant.assert_has_calls([call(ExpectedCredentials(), "en-US")])
+    mock_text_assistant.assert_has_calls([call(ExpectedCredentials(), "es-ES")])
     mock_text_assistant.assert_has_calls([call().assist(text1)])
     mock_text_assistant.assert_has_calls([call().assist(text2)])

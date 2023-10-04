@@ -95,7 +95,7 @@ async def get_node_from_device_entry(
     node = next(
         (
             node
-            for node in await matter_client.get_nodes()
+            for node in matter_client.get_nodes()
             for endpoint in node.endpoints.values()
             if get_device_id(server_info, endpoint) == device_id
         ),

@@ -10,9 +10,10 @@ import voluptuous as vol
 
 from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.device_registry import format_mac
 
 from .connectivity import validate_auth
 from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN
@@ -66,7 +67,9 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                ip = gethostbyname(user_input[CONF_HOST])
+                ip = await self.hass.async_add_executor_job(
+                    gethostbyname, user_input[CONF_HOST]
+                )
             except gaierror:
                 errors["base"] = "cannot_connect"
 
@@ -75,7 +78,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
                     device_mac = await self.hass.async_add_executor_job(
                         pyobihai.get_device_mac
                     )
-                    await self.async_set_unique_id(device_mac)
+                    await self.async_set_unique_id(format_mac(device_mac))
                     self._abort_if_unique_id_configured()
 
                     return self.async_create_entry(
@@ -102,7 +105,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Attempt to confirm."""
         assert self._dhcp_discovery_info
-        await self.async_set_unique_id(self._dhcp_discovery_info.macaddress)
+        await self.async_set_unique_id(format_mac(self._dhcp_discovery_info.macaddress))
         self._abort_if_unique_id_configured()
 
         if user_input is None:
@@ -133,28 +136,3 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         return await self.async_step_user(user_input=user_input)
-
-    # DEPRECATED
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Handle a flow initialized by importing a config."""
-
-        try:
-            _ = gethostbyname(config[CONF_HOST])
-        except gaierror:
-            return self.async_abort(reason="cannot_connect")
-
-        if pyobihai := await async_validate_creds(self.hass, config):
-            device_mac = await self.hass.async_add_executor_job(pyobihai.get_device_mac)
-            await self.async_set_unique_id(device_mac)
-            self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(
-                title=config.get(CONF_NAME, config[CONF_HOST]),
-                data={
-                    CONF_HOST: config[CONF_HOST],
-                    CONF_PASSWORD: config[CONF_PASSWORD],
-                    CONF_USERNAME: config[CONF_USERNAME],
-                },
-            )
-
-        return self.async_abort(reason="invalid_auth")

@@ -1,0 +1,68 @@
+{
+  "services": {
+    "feedback_off": {
+      "name": "Feedback off",
+      "description": "Turns feedback sounds off.",
+      "fields": {
+        "site_id": {
+          "name": "Site ID",
+          "description": "Site to turn sounds on, defaults to all sites."
+        }
+      }
+    },
+    "feedback_on": {
+      "name": "Feedback on",
+      "description": "Turns feedback sounds on.",
+      "fields": {
+        "site_id": {
+          "name": "Site ID",
+          "description": "[%key:component::snips::services::feedback_off::fields::site_id::description%]"
+        }
+      }
+    },
+    "say": {
+      "name": "Say",
+      "description": "Sends a TTS message to Snips.",
+      "fields": {
+        "custom_data": {
+          "name": "Custom data",
+          "description": "Custom data that will be included with all messages in this session."
+        },
+        "site_id": {
+          "name": "Site ID",
+          "description": "Site to use to start session, defaults to default."
+        },
+        "text": {
+          "name": "Text",
+          "description": "Text to say."
+        }
+      }
+    },
+    "say_action": {
+      "name": "Say action",
+      "description": "Sends a TTS message to Snips to listen for a response.",
+      "fields": {
+        "can_be_enqueued": {
+          "name": "Can be enqueued",
+          "description": "If True, session waits for an open session to end, if False session is dropped if one is running."
+        },
+        "custom_data": {
+          "name": "[%key:component::snips::services::say::fields::custom_data::name%]",
+          "description": "[%key:component::snips::services::say::fields::custom_data::description%]"
+        },
+        "intent_filter": {
+          "name": "Intent filter",
+          "description": "Optional Array of Strings - A list of intents names to restrict the NLU resolution to on the first query."
+        },
+        "site_id": {
+          "name": "Site ID",
+          "description": "[%key:component::snips::services::say::fields::site_id::description%]"
+        },
+        "text": {
+          "name": "Text",
+          "description": "[%key:component::snips::services::say::fields::text::description%]"
+        }
+      }
+    }
+  }
+}

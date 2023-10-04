@@ -1,38 +1,28 @@
 start_recording:
-  name: Start recording
-  description: Enable continuous recording.
   target:
     entity:
       integration: agent_dvr
       domain: camera
 
 stop_recording:
-  name: Stop recording
-  description: Disable continuous recording.
   target:
     entity:
       integration: agent_dvr
       domain: camera
 
 enable_alerts:
-  name: Enable alerts
-  description: Enable alerts
   target:
     entity:
       integration: agent_dvr
       domain: camera
 
 disable_alerts:
-  name: Disable alerts
-  description: Disable alerts
   target:
     entity:
       integration: agent_dvr
       domain: camera
 
 snapshot:
-  name: Snapshot
-  description: Take a photo
   target:
     entity:
       integration: agent_dvr

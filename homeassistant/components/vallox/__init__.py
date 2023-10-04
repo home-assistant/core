@@ -17,12 +17,12 @@ from vallox_websocket_api.vallox import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -157,22 +157,6 @@ class ValloxState:
 
 class ValloxDataUpdateCoordinator(DataUpdateCoordinator[ValloxState]):
     """The DataUpdateCoordinator for Vallox."""
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the integration from configuration.yaml (DEPRECATED)."""
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config[DOMAIN],
-        )
-    )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -319,6 +303,8 @@ class ValloxServiceHandler:
 
 class ValloxEntity(CoordinatorEntity[ValloxDataUpdateCoordinator]):
     """Representation of a Vallox entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, name: str, coordinator: ValloxDataUpdateCoordinator) -> None:
         """Initialize a Vallox entity."""

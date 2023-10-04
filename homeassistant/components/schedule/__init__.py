@@ -21,18 +21,15 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.collection import (
     CollectionEntity,
     DictStorageCollection,
+    DictStorageCollectionWebsocket,
     IDManager,
     SerializedStorageCollection,
-    StorageCollectionWebsocket,
     YamlCollection,
     sync_entity_lifecycle,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -157,10 +154,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input select."""
     component = EntityComponent[Schedule](LOGGER, DOMAIN, hass)
 
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
-
     id_manager = IDManager()
 
     yaml_collection = YamlCollection(LOGGER, id_manager)
@@ -182,7 +175,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    StorageCollectionWebsocket(
+    DictStorageCollectionWebsocket(
         storage_collection,
         DOMAIN,
         DOMAIN,
@@ -239,6 +232,10 @@ class ScheduleStorageCollection(DictStorageCollection):
 
 class Schedule(CollectionEntity):
     """Schedule entity."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_EDITABLE, ATTR_NEXT_EVENT}
+    )
 
     _attr_has_entity_name = True
     _attr_should_poll = False

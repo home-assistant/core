@@ -519,9 +519,7 @@ async def test_device(
                     "original_icon": None,
                     "original_name": "Koogeek-LS1-20833F Identify",
                     "state": {
-                        "attributes": {
-                            "friendly_name": "Koogeek-LS1-20833F " "Identify"
-                        },
+                        "attributes": {"friendly_name": "Koogeek-LS1-20833F Identify"},
                         "entity_id": "button.koogeek_ls1_20833f_identify",
                         "last_changed": ANY,
                         "last_updated": ANY,

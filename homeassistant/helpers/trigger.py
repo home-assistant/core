@@ -95,7 +95,7 @@ class TriggerInfo(TypedDict):
     trigger_data: TriggerData
 
 
-@dataclass
+@dataclass(slots=True)
 class PluggableActionsEntry:
     """Holder to keep track of all plugs and actions for a given trigger."""
 

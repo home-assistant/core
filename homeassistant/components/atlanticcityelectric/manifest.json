@@ -1,0 +1,6 @@
+{
+  "domain": "atlanticcityelectric",
+  "name": "Atlantic City Electric",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

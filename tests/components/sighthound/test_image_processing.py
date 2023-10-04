@@ -46,6 +46,12 @@ MOCK_DETECTIONS = {
 MOCK_NOW = datetime.datetime(2020, 2, 20, 10, 5, 3)
 
 
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
+
+
 @pytest.fixture
 def mock_detections():
     """Return a mock detection."""

@@ -339,7 +339,7 @@ class InfluxQLSensorData:
             return
 
         self.query = (
-            f"select {self.group}({self.field}) as {INFLUX_CONF_VALUE} from"
+            f"select {self.group}({self.field}) as {INFLUX_CONF_VALUE} from"  # noqa: S608
             f" {self.measurement} where {where_clause}"
         )
 

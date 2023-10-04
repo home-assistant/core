@@ -119,6 +119,11 @@ class RfxtrxOffDelayMixin(Entity):
             self._timeout()
             self._timeout = None
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        self._cancel_timeout()
+        return await super().async_will_remove_from_hass()
+
 
 class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
     """Representation of a RFXtrx chime."""

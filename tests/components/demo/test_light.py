@@ -1,4 +1,6 @@
 """The tests for the demo light component."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.demo import DOMAIN
@@ -16,15 +18,25 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 ENTITY_LIGHT = "light.bed_light"
 
 
+@pytest.fixture
+async def light_only() -> None:
+    """Enable only the light platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.LIGHT],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_comp(hass):
+async def setup_comp(hass, light_only):
     """Set up demo component."""
     assert await async_setup_component(
         hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": DOMAIN}}

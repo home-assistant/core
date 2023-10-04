@@ -1,8 +1,8 @@
 """Entity representing a Google Mail account."""
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, MANUFACTURER

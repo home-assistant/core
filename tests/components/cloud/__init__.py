@@ -9,6 +9,10 @@ from homeassistant.setup import async_setup_component
 
 async def mock_cloud(hass, config=None):
     """Mock cloud."""
+    # The homeassistant integration is needed by cloud. It's not in it's requirements
+    # because it's always setup by bootstrap. Set it up manually in tests.
+    assert await async_setup_component(hass, "homeassistant", {})
+
     assert await async_setup_component(hass, cloud.DOMAIN, {"cloud": config or {}})
     cloud_inst = hass.data["cloud"]
     with patch("hass_nabucasa.Cloud.run_executor", AsyncMock(return_value=None)):

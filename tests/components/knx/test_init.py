@@ -280,7 +280,7 @@ async def test_async_remove_entry(
         "pathlib.Path.rmdir"
     ) as rmdir_mock:
         assert await hass.config_entries.async_remove(config_entry.entry_id)
-        unlink_mock.assert_called_once()
+        assert unlink_mock.call_count == 3
         rmdir_mock.assert_called_once()
     await hass.async_block_till_done()
 

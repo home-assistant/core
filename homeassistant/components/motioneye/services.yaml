@@ -1,6 +1,4 @@
 set_text_overlay:
-  name: Set Text Overlay
-  description: Sets the text overlay for a camera.
   target:
     device:
       integration: motioneye
@@ -8,8 +6,6 @@ set_text_overlay:
       integration: motioneye
   fields:
     left_text:
-      name: Left Text Overlay
-      description: Text to display on the left
       required: false
       advanced: false
       example: "timestamp"
@@ -22,8 +18,6 @@ set_text_overlay:
             - "timestamp"
             - "custom-text"
     custom_left_text:
-      name: Left Custom Text
-      description: Custom text to display on the left
       required: false
       advanced: false
       example: "Hello on the left!"
@@ -32,8 +26,6 @@ set_text_overlay:
         text:
           multiline: true
     right_text:
-      name: Right Text Overlay
-      description: Text to display on the right
       required: false
       advanced: false
       example: "timestamp"
@@ -46,8 +38,6 @@ set_text_overlay:
             - "timestamp"
             - "custom-text"
     custom_right_text:
-      name: Right Custom Text
-      description: Custom text to display on the right
       required: false
       advanced: false
       example: "Hello on the right!"
@@ -57,8 +47,6 @@ set_text_overlay:
           multiline: true
 
 action:
-  name: Action
-  description: Trigger a motionEye action
   target:
     device:
       integration: motioneye
@@ -66,8 +54,6 @@ action:
       integration: motioneye
   fields:
     action:
-      name: Action
-      description: Action to trigger
       required: true
       advanced: false
       example: "snapshot"
@@ -101,8 +87,6 @@ action:
             - "preset9"
 
 snapshot:
-  name: Snapshot
-  description: Trigger a motionEye still snapshot
   target:
     device:
       integration: motioneye

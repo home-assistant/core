@@ -1,34 +1,38 @@
 """The HTTP api to control the cloud integration."""
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Coroutine, Mapping
+from contextlib import suppress
 import dataclasses
 from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import aiohttp
-import async_timeout
+from aiohttp import web
 import attr
 from hass_nabucasa import Cloud, auth, thingtalk
 from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice import MAP_VOICE
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import assist_pipeline, conversation, websocket_api
 from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
 )
 from homeassistant.components.google_assistant import helpers as google_helpers
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.homeassistant import exposed_entities
+from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.location import async_detect_location_info
 
+from .alexa_config import entity_supported as entity_supported_by_alexa
+from .client import CloudClient
 from .const import (
     DOMAIN,
     PREF_ALEXA_REPORT_STATE,
@@ -47,7 +51,7 @@ from .subscription import async_subscription_info
 _LOGGER = logging.getLogger(__name__)
 
 
-_CLOUD_ERRORS = {
+_CLOUD_ERRORS: dict[type[Exception], tuple[HTTPStatus, str]] = {
     asyncio.TimeoutError: (
         HTTPStatus.BAD_GATEWAY,
         "Unable to reach the Home Assistant cloud.",
@@ -59,7 +63,7 @@ _CLOUD_ERRORS = {
 }
 
 
-async def async_setup(hass):
+async def async_setup(hass: HomeAssistant) -> None:
     """Initialize the HTTP API."""
     websocket_api.async_register_command(hass, websocket_cloud_status)
     websocket_api.async_register_command(hass, websocket_subscription)
@@ -73,6 +77,7 @@ async def async_setup(hass):
     websocket_api.async_register_command(hass, google_assistant_list)
     websocket_api.async_register_command(hass, google_assistant_update)
 
+    websocket_api.async_register_command(hass, alexa_get)
     websocket_api.async_register_command(hass, alexa_list)
     websocket_api.async_register_command(hass, alexa_sync)
 
@@ -103,16 +108,25 @@ async def async_setup(hass):
     )
 
 
-def _handle_cloud_errors(handler):
+_HassViewT = TypeVar("_HassViewT", bound=HomeAssistantView)
+_P = ParamSpec("_P")
+
+
+def _handle_cloud_errors(
+    handler: Callable[Concatenate[_HassViewT, web.Request, _P], Awaitable[web.Response]]
+) -> Callable[
+    Concatenate[_HassViewT, web.Request, _P], Coroutine[Any, Any, web.Response]
+]:
     """Webview decorator to handle auth errors."""
 
     @wraps(handler)
-    async def error_handler(view, request, *args, **kwargs):
+    async def error_handler(
+        view: _HassViewT, request: web.Request, *args: _P.args, **kwargs: _P.kwargs
+    ) -> web.Response:
         """Handle exceptions that raise from the wrapped request handler."""
         try:
             result = await handler(view, request, *args, **kwargs)
             return result
-
         except Exception as err:  # pylint: disable=broad-except
             status, msg = _process_cloud_exception(err, request.path)
             return view.json_message(
@@ -122,25 +136,37 @@ def _handle_cloud_errors(handler):
     return error_handler
 
 
-def _ws_handle_cloud_errors(handler):
+def _ws_handle_cloud_errors(
+    handler: Callable[
+        [HomeAssistant, websocket_api.ActiveConnection, dict[str, Any]],
+        Coroutine[None, None, None],
+    ]
+) -> Callable[
+    [HomeAssistant, websocket_api.ActiveConnection, dict[str, Any]],
+    Coroutine[None, None, None],
+]:
     """Websocket decorator to handle auth errors."""
 
     @wraps(handler)
-    async def error_handler(hass, connection, msg):
+    async def error_handler(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
         """Handle exceptions that raise from the wrapped handler."""
         try:
             return await handler(hass, connection, msg)
 
         except Exception as err:  # pylint: disable=broad-except
             err_status, err_msg = _process_cloud_exception(err, msg["type"])
-            connection.send_error(msg["id"], err_status, err_msg)
+            connection.send_error(msg["id"], str(err_status), err_msg)
 
     return error_handler
 
 
-def _process_cloud_exception(exc, where):
+def _process_cloud_exception(exc: Exception, where: str) -> tuple[HTTPStatus, str]:
     """Process a cloud exception."""
-    err_info = None
+    err_info: tuple[HTTPStatus, str] | None = None
 
     for err, value_info in _CLOUD_ERRORS.items():
         if isinstance(exc, err):
@@ -160,11 +186,12 @@ class GoogleActionsSyncView(HomeAssistantView):
     url = "/api/cloud/google_actions/sync"
     name = "api:cloud:google_actions/sync"
 
+    @require_admin
     @_handle_cloud_errors
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Trigger a Google Actions sync."""
         hass = request.app["hass"]
-        cloud: Cloud = hass.data[DOMAIN]
+        cloud: Cloud[CloudClient] = hass.data[DOMAIN]
         gconf = await cloud.client.get_google_config()
         status = await gconf.async_sync_entities(gconf.agent_user_id)
         return self.json({}, status_code=status)
@@ -176,17 +203,39 @@ class CloudLoginView(HomeAssistantView):
     url = "/api/cloud/login"
     name = "api:cloud:login"
 
+    @require_admin
     @_handle_cloud_errors
     @RequestDataValidator(
         vol.Schema({vol.Required("email"): str, vol.Required("password"): str})
     )
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle login request."""
+
+        def cloud_assist_pipeline(hass: HomeAssistant) -> str | None:
+            """Return the ID of a cloud-enabled assist pipeline or None."""
+            for pipeline in assist_pipeline.async_get_pipelines(hass):
+                if (
+                    pipeline.conversation_engine == conversation.HOME_ASSISTANT_AGENT
+                    and pipeline.stt_engine == DOMAIN
+                    and pipeline.tts_engine == DOMAIN
+                ):
+                    return pipeline.id
+            return None
+
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
         await cloud.login(data["email"], data["password"])
 
-        return self.json({"success": True})
+        # Make sure the pipeline store is loaded, needed because assist_pipeline
+        # is an after dependency of cloud
+        await assist_pipeline.async_setup_pipeline_store(hass)
+        new_cloud_pipeline_id: str | None = None
+        if (cloud_assist_pipeline(hass)) is None:
+            if cloud_pipeline := await assist_pipeline.async_create_default_pipeline(
+                hass, DOMAIN, DOMAIN
+            ):
+                new_cloud_pipeline_id = cloud_pipeline.id
+        return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
 
 
 class CloudLogoutView(HomeAssistantView):
@@ -195,13 +244,14 @@ class CloudLogoutView(HomeAssistantView):
     url = "/api/cloud/logout"
     name = "api:cloud:logout"
 
+    @require_admin
     @_handle_cloud_errors
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Handle logout request."""
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.logout()
 
         return self.json_message("ok")
@@ -213,6 +263,7 @@ class CloudRegisterView(HomeAssistantView):
     url = "/api/cloud/register"
     name = "api:cloud:register"
 
+    @require_admin
     @_handle_cloud_errors
     @RequestDataValidator(
         vol.Schema(
@@ -222,7 +273,7 @@ class CloudRegisterView(HomeAssistantView):
             }
         )
     )
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle registration request."""
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
@@ -240,7 +291,7 @@ class CloudRegisterView(HomeAssistantView):
             if location_info.zip_code is not None:
                 client_metadata["NC_ZIP_CODE"] = location_info.zip_code
 
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_register(
                 data["email"],
                 data["password"],
@@ -256,14 +307,15 @@ class CloudResendConfirmView(HomeAssistantView):
     url = "/api/cloud/resend_confirm"
     name = "api:cloud:resend_confirm"
 
+    @require_admin
     @_handle_cloud_errors
     @RequestDataValidator(vol.Schema({vol.Required("email"): str}))
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle resending confirm email code request."""
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_resend_email_confirm(data["email"])
 
         return self.json_message("ok")
@@ -275,14 +327,15 @@ class CloudForgotPasswordView(HomeAssistantView):
     url = "/api/cloud/forgot_password"
     name = "api:cloud:forgot_password"
 
+    @require_admin
     @_handle_cloud_errors
     @RequestDataValidator(vol.Schema({vol.Required("email"): str}))
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle forgot password request."""
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_forgot_password(data["email"])
 
         return self.json_message("ok")
@@ -305,11 +358,20 @@ async def websocket_cloud_status(
     )
 
 
-def _require_cloud_login(handler):
+def _require_cloud_login(
+    handler: Callable[
+        [HomeAssistant, websocket_api.ActiveConnection, dict[str, Any]],
+        None,
+    ]
+) -> Callable[[HomeAssistant, websocket_api.ActiveConnection, dict[str, Any]], None,]:
     """Websocket decorator that requires cloud to be logged in."""
 
     @wraps(handler)
-    def with_cloud_auth(hass, connection, msg):
+    def with_cloud_auth(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
         """Require to be logged into the cloud."""
         cloud = hass.data[DOMAIN]
         if not cloud.is_logged_in:
@@ -376,7 +438,7 @@ async def websocket_update_prefs(
     if changes.get(PREF_ALEXA_REPORT_STATE):
         alexa_config = await cloud.client.get_alexa_config()
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await alexa_config.async_get_access_token()
         except asyncio.TimeoutError:
             connection.send_error(
@@ -442,7 +504,9 @@ async def websocket_hook_delete(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-async def _account_data(hass: HomeAssistant, cloud: Cloud):
+async def _account_data(
+    hass: HomeAssistant, cloud: Cloud[CloudClient]
+) -> dict[str, Any]:
     """Generate the auth data JSON response."""
 
     assert hass.config.api
@@ -485,6 +549,7 @@ async def _account_data(hass: HomeAssistant, cloud: Cloud):
         "logged_in": True,
         "prefs": client.prefs.as_dict(),
         "remote_certificate": certificate,
+        "remote_certificate_status": remote.certificate_status,
         "remote_connected": remote.is_connected,
         "remote_domain": remote.instance_domain,
         "http_use_ssl": hass.config.api.use_ssl,
@@ -542,15 +607,14 @@ async def google_assistant_get(
     """Get data for a single google assistant entity."""
     cloud = hass.data[DOMAIN]
     gconf = await cloud.client.get_google_config()
-    entity_registry = er.async_get(hass)
     entity_id: str = msg["entity_id"]
     state = hass.states.get(entity_id)
 
-    if not entity_registry.async_is_registered(entity_id) or not state:
+    if not state:
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_NOT_FOUND,
-            f"{entity_id} unknown or not in the entity registry",
+            f"{entity_id} unknown",
         )
         return
 
@@ -563,10 +627,16 @@ async def google_assistant_get(
         )
         return
 
+    assistant_options: Mapping[str, Any] = {}
+    with suppress(HomeAssistantError, KeyError):
+        settings = exposed_entities.async_get_entity_settings(hass, entity_id)
+        assistant_options = settings[CLOUD_GOOGLE]
+
     result = {
         "entity_id": entity.entity_id,
         "traits": [trait.name for trait in entity.traits()],
         "might_2fa": entity.might_2fa_traits(),
+        PREF_DISABLE_2FA: assistant_options.get(PREF_DISABLE_2FA),
     }
 
     connection.send_result(msg["id"], result)
@@ -585,14 +655,11 @@ async def google_assistant_list(
     """List all google assistant entities."""
     cloud = hass.data[DOMAIN]
     gconf = await cloud.client.get_google_config()
-    entity_registry = er.async_get(hass)
     entities = google_helpers.async_get_entities(hass, gconf)
 
     result = []
 
     for entity in entities:
-        if not entity_registry.async_is_registered(entity.entity_id):
-            continue
         result.append(
             {
                 "entity_id": entity.entity_id,
@@ -621,28 +688,51 @@ async def google_assistant_update(
     msg: dict[str, Any],
 ) -> None:
     """Update google assistant entity config."""
-    entity_registry = er.async_get(hass)
     entity_id: str = msg["entity_id"]
 
-    if not (registry_entry := entity_registry.async_get(entity_id)):
+    assistant_options: Mapping[str, Any] = {}
+    with suppress(HomeAssistantError, KeyError):
+        settings = exposed_entities.async_get_entity_settings(hass, entity_id)
+        assistant_options = settings[CLOUD_GOOGLE]
+
+    disable_2fa = msg[PREF_DISABLE_2FA]
+    if assistant_options.get(PREF_DISABLE_2FA) == disable_2fa:
+        return
+
+    exposed_entities.async_set_assistant_option(
+        hass, CLOUD_GOOGLE, entity_id, PREF_DISABLE_2FA, disable_2fa
+    )
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.websocket_command(
+    {
+        "type": "cloud/alexa/entities/get",
+        "entity_id": str,
+    }
+)
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def alexa_get(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get data for a single alexa entity."""
+    entity_id: str = msg["entity_id"]
+
+    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity_supported_by_alexa(
+        hass, entity_id
+    ):
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_ALLOWED,
-            f"can't configure {entity_id}",
+            websocket_api.const.ERR_NOT_SUPPORTED,
+            f"{entity_id} not supported by Alexa",
         )
         return
 
-    disable_2fa = msg[PREF_DISABLE_2FA]
-    assistant_options: Mapping[str, Any]
-    if (
-        assistant_options := registry_entry.options.get(CLOUD_GOOGLE, {})
-    ) and assistant_options.get(PREF_DISABLE_2FA) == disable_2fa:
-        return
-
-    assistant_options = assistant_options | {PREF_DISABLE_2FA: disable_2fa}
-    entity_registry.async_update_entity_options(
-        entity_id, CLOUD_GOOGLE, assistant_options
-    )
     connection.send_result(msg["id"])
 
 
@@ -659,14 +749,11 @@ async def alexa_list(
     """List all alexa entities."""
     cloud = hass.data[DOMAIN]
     alexa_config = await cloud.client.get_alexa_config()
-    entity_registry = er.async_get(hass)
     entities = alexa_entities.async_get_entities(hass, alexa_config)
 
     result = []
 
     for entity in entities:
-        if not entity_registry.async_is_registered(entity.entity_id):
-            continue
         result.append(
             {
                 "entity_id": entity.entity_id,
@@ -691,7 +778,7 @@ async def alexa_sync(
     cloud = hass.data[DOMAIN]
     alexa_config = await cloud.client.get_alexa_config()
 
-    async with async_timeout.timeout(10):
+    async with asyncio.timeout(10):
         try:
             success = await alexa_config.async_sync_entities()
         except alexa_errors.NoTokenAvailable:
@@ -720,7 +807,7 @@ async def thingtalk_convert(
     """Convert a query."""
     cloud = hass.data[DOMAIN]
 
-    async with async_timeout.timeout(10):
+    async with asyncio.timeout(10):
         try:
             connection.send_result(
                 msg["id"], await thingtalk.async_convert(cloud, msg["query"])

@@ -48,8 +48,9 @@ async def test_prefs_default_voice(
     """Test cloud provider uses the preferences."""
     assert cloud_prefs.tts_default_voice == ("en-US", "female")
 
+    tts_info = {"platform_loaded": Mock()}
     provider_pref = await tts.async_get_engine(
-        Mock(data={const.DOMAIN: cloud_with_prefs}), None, {}
+        Mock(data={const.DOMAIN: cloud_with_prefs}), None, tts_info
     )
     provider_conf = await tts.async_get_engine(
         Mock(data={const.DOMAIN: cloud_with_prefs}),
@@ -73,17 +74,22 @@ async def test_prefs_default_voice(
 
 async def test_provider_properties(cloud_with_prefs) -> None:
     """Test cloud provider."""
+    tts_info = {"platform_loaded": Mock()}
     provider = await tts.async_get_engine(
-        Mock(data={const.DOMAIN: cloud_with_prefs}), None, {}
+        Mock(data={const.DOMAIN: cloud_with_prefs}), None, tts_info
     )
-    assert provider.supported_options == ["gender", "audio_output"]
+    assert provider.supported_options == ["gender", "voice", "audio_output"]
     assert "nl-NL" in provider.supported_languages
+    assert tts.Voice(
+        "ColetteNeural", "ColetteNeural"
+    ) in provider.async_get_supported_voices("nl-NL")
 
 
 async def test_get_tts_audio(cloud_with_prefs) -> None:
     """Test cloud provider."""
+    tts_info = {"platform_loaded": Mock()}
     provider = await tts.async_get_engine(
-        Mock(data={const.DOMAIN: cloud_with_prefs}), None, {}
+        Mock(data={const.DOMAIN: cloud_with_prefs}), None, tts_info
     )
-    assert provider.supported_options == ["gender", "audio_output"]
+    assert provider.supported_options == ["gender", "voice", "audio_output"]
     assert "nl-NL" in provider.supported_languages

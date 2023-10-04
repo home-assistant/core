@@ -1,8 +1,9 @@
 """Test ESPHome enum mapper."""
 
+from enum import StrEnum
+
 from aioesphomeapi import APIIntEnum
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components.esphome.enum_mapper import EsphomeEnumMapper
 
 

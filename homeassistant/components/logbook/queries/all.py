@@ -18,13 +18,13 @@ from .common import apply_states_filters, select_events_without_states, select_s
 def all_stmt(
     start_day: float,
     end_day: float,
-    event_types: tuple[str, ...],
+    event_type_ids: tuple[int, ...],
     filters: Filters | None,
     context_id_bin: bytes | None = None,
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
     stmt = lambda_stmt(
-        lambda: select_events_without_states(start_day, end_day, event_types)
+        lambda: select_events_without_states(start_day, end_day, event_type_ids)
     )
     if context_id_bin is not None:
         stmt += lambda s: s.where(Events.context_id_bin == context_id_bin).union_all(

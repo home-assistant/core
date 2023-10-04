@@ -183,6 +183,8 @@ class FanEntityDescription(ToggleEntityDescription):
 class FanEntity(ToggleEntity):
     """Base class for fan entities."""
 
+    _entity_component_unrecorded_attributes = frozenset({ATTR_PRESET_MODES})
+
     entity_description: FanEntityDescription
     _attr_current_direction: str | None = None
     _attr_oscillating: bool | None = None

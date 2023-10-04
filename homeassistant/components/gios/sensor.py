@@ -18,8 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -91,7 +90,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="no2",
     ),
     GiosSensorEntityDescription(
         key=ATTR_NO2,
@@ -109,7 +107,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.OZONE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="o3",
     ),
     GiosSensorEntityDescription(
         key=ATTR_O3,
@@ -127,7 +124,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="pm10",
     ),
     GiosSensorEntityDescription(
         key=ATTR_PM10,
@@ -145,7 +141,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="pm25",
     ),
     GiosSensorEntityDescription(
         key=ATTR_PM25,
@@ -163,7 +158,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="so2",
     ),
     GiosSensorEntityDescription(
         key=ATTR_SO2,

@@ -1,7 +1,8 @@
 {
   "domain": "brottsplatskartan",
   "name": "Brottsplatskartan",
-  "codeowners": [],
+  "codeowners": ["@gjohansson-ST"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/brottsplatskartan",
   "iot_class": "cloud_polling",
   "loggers": ["brottsplatskartan"],

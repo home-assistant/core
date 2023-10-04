@@ -147,8 +147,10 @@ async def async_remove_config_entry_device(
     api = data.api
     serial = api.information.serial
     storage = api.storage
-    # get_all_cameras does not do I/O
-    all_cameras: list[SynoCamera] = api.surveillance_station.get_all_cameras()
+    all_cameras: list[SynoCamera] = []
+    if api.surveillance_station is not None:
+        # get_all_cameras does not do I/O
+        all_cameras = api.surveillance_station.get_all_cameras()
     device_ids = chain(
         (camera.id for camera in all_cameras),
         storage.volumes_ids,

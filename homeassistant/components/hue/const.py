@@ -1,4 +1,9 @@
 """Constants for the Hue component."""
+from aiohue.v2.models.button import ButtonEvent
+from aiohue.v2.models.relative_rotary import (
+    RelativeRotaryAction,
+    RelativeRotaryDirection,
+)
 
 DOMAIN = "hue"
 
@@ -33,3 +38,26 @@ DEFAULT_ALLOW_UNREACHABLE = False
 # How long to wait to actually do the refresh after requesting it.
 # We wait some time so if we control multiple lights, we batch requests.
 REQUEST_REFRESH_DELAY = 0.3
+
+
+# V2 API SPECIFIC CONSTANTS ##################
+
+DEFAULT_BUTTON_EVENT_TYPES = (
+    # I have never ever seen the `DOUBLE_SHORT_RELEASE` event so leave it out here
+    ButtonEvent.INITIAL_PRESS,
+    ButtonEvent.REPEAT,
+    ButtonEvent.SHORT_RELEASE,
+    ButtonEvent.LONG_PRESS,
+    ButtonEvent.LONG_RELEASE,
+)
+
+DEFAULT_ROTARY_EVENT_TYPES = (RelativeRotaryAction.START, RelativeRotaryAction.REPEAT)
+DEFAULT_ROTARY_EVENT_SUBTYPES = (
+    RelativeRotaryDirection.CLOCK_WISE,
+    RelativeRotaryDirection.COUNTER_CLOCK_WISE,
+)
+
+DEVICE_SPECIFIC_EVENT_TYPES = {
+    # device specific overrides of specific supported button events
+    "Hue tap switch": (ButtonEvent.INITIAL_PRESS,),
+}

@@ -150,7 +150,6 @@ def add_device(
 
     if regenerate_ids:
         regenerate_device_ids(device)
-    device._initial_data = device.dict()
 
     devices = getattr(bootstrap, f"{device.model.value}s")
     devices[device.id] = device

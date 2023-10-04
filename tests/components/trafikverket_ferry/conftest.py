@@ -10,7 +10,7 @@ from pytrafikverket.trafikverket_ferry import FerryStop
 from homeassistant.components.trafikverket_ferry.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import ENTRY_CONFIG
 
@@ -49,30 +49,32 @@ def fixture_get_ferries() -> list[FerryStop]:
     depart1 = FerryStop(
         "13",
         False,
-        datetime(dt.now().year + 1, 5, 1, 12, 0, tzinfo=dt.UTC),
+        datetime(dt_util.now().year + 1, 5, 1, 12, 0, tzinfo=dt_util.UTC),
         [""],
         "0",
-        datetime(dt.now().year, 5, 1, 12, 0, tzinfo=dt.UTC),
+        datetime(dt_util.now().year, 5, 1, 12, 0, tzinfo=dt_util.UTC),
         "Harbor 1",
         "Harbor 2",
     )
     depart2 = FerryStop(
         "14",
         False,
-        datetime(dt.now().year + 1, 5, 1, 12, 0, tzinfo=dt.UTC) + timedelta(minutes=15),
+        datetime(dt_util.now().year + 1, 5, 1, 12, 0, tzinfo=dt_util.UTC)
+        + timedelta(minutes=15),
         [""],
         "0",
-        datetime(dt.now().year, 5, 1, 12, 0, tzinfo=dt.UTC),
+        datetime(dt_util.now().year, 5, 1, 12, 0, tzinfo=dt_util.UTC),
         "Harbor 1",
         "Harbor 2",
     )
     depart3 = FerryStop(
         "15",
         False,
-        datetime(dt.now().year + 1, 5, 1, 12, 0, tzinfo=dt.UTC) + timedelta(minutes=30),
+        datetime(dt_util.now().year + 1, 5, 1, 12, 0, tzinfo=dt_util.UTC)
+        + timedelta(minutes=30),
         [""],
         "0",
-        datetime(dt.now().year, 5, 1, 12, 0, tzinfo=dt.UTC),
+        datetime(dt_util.now().year, 5, 1, 12, 0, tzinfo=dt_util.UTC),
         "Harbor 1",
         "Harbor 2",
     )

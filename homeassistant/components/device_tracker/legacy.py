@@ -12,6 +12,7 @@ import attr
 import voluptuous as vol
 
 from homeassistant import util
+from homeassistant.backports.functools import cached_property
 from homeassistant.components import zone
 from homeassistant.config import async_log_exception, load_yaml_config_file
 from homeassistant.const import (
@@ -262,7 +263,7 @@ class DeviceTrackerPlatform:
     platform: ModuleType = attr.ib()
     config: dict = attr.ib()
 
-    @property
+    @cached_property
     def type(self) -> str | None:
         """Return platform type."""
         methods, platform_type = self.LEGACY_SETUP, PLATFORM_TYPE_LEGACY
@@ -725,6 +726,10 @@ class DeviceTracker:
 
 class Device(RestoreEntity):
     """Base class for a tracked device."""
+
+    # This entity is legacy and does not have a platform.
+    # We can't fix this easily without breaking changes.
+    _no_platform_reported = True
 
     host_name: str | None = None
     location_name: str | None = None
