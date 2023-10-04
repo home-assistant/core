@@ -61,7 +61,6 @@ set_day_night_time:
         time:
     night:
       required: true
-      advanced: false
       default: "22:00:00"
       example: "22:00:00"
       selector:
