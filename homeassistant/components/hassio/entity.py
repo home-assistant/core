@@ -1,7 +1,6 @@
 """Base for Hass.io entities."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -18,8 +17,6 @@ from .const import (
     DATA_KEY_SUPERVISOR,
     KEY_TO_UPDATE_TYPES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
