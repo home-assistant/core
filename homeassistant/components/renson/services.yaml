@@ -27,8 +27,6 @@ set_timer_level:
 set_breeze:
   fields:
     breeze_level:
-      required: false
-      advanced: false
       default: "level3"
       selector:
         select:
