@@ -48,8 +48,8 @@ def log_rate_limits(hass, target, resp, level=20):
 
 def get_service(
     hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
+    _: ConfigType,
+    __: DiscoveryInfoType | None = None,
 ) -> IOSNotificationService | None:
     """Get the iOS notification service."""
     if "notify.ios" not in hass.config.components:
