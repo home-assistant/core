@@ -454,12 +454,12 @@ class ControllerEvents:
             identifier = get_network_identifier_for_notification(
                 self.hass, self.config_entry, self.driver_events.driver.controller
             )
-            # Remove trailing comma if it's there
             notification_msg = (
-                f"`{device_name}` has been factory reset and removed from the Z-Wave "
-                "network"
+                f"`{device_name}` has been factory reset "
+                "and removed from the Z-Wave network"
             )
             if identifier:
+                # Remove trailing comma if it's there
                 if identifier[-1] == ",":
                     identifier = identifier[:-1]
                 notification_msg = f"{notification_msg} {identifier}."
