@@ -805,7 +805,9 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
         self.is_hass_os = (get_info(self.hass) or {}).get("hassos") is not None
-        self._enabled_updates_by_addon: dict[str, set[str]] = defaultdict(set)
+        self._enabled_updates_by_addon: defaultdict[str, dict[str, int]] = defaultdict(
+            dict
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -990,13 +992,18 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
         return (slug, None)
 
-    async def async_enable_addon_updates(self, slug: str, key: str) -> CALLBACK_TYPE:
+    async def async_enable_addon_updates(
+        self, slug: str, types: set[str]
+    ) -> CALLBACK_TYPE:
         """Enable updates for an add-on."""
-        self._enabled_updates_by_addon[slug].add(key)
+        enabled_updates = self._enabled_updates_by_addon[slug]
+        for key in types:
+            enabled_updates[key] = enabled_updates.get(key, 0) + 1
 
         @callback
         def _remove():
-            self._enabled_updates_by_addon[slug].remove(key)
+            for key in types:
+                enabled_updates[key] -= 1
 
         return _remove
 

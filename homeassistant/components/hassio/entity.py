@@ -16,9 +16,8 @@ from .const import (
     DATA_KEY_HOST,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
+    KEY_TO_UPDATE_TYPES,
 )
-
-KEY_TO_UPDATE_TYPE: dict[str, str] = {}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,13 +52,9 @@ class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
-        try:
-            update_type = KEY_TO_UPDATE_TYPE[self.entity_description.key]
-        except KeyError:
-            _LOGGER.warning("No update type for %s", self.entity_description.key)
-            return await super().async_added_to_hass()
+        update_types = KEY_TO_UPDATE_TYPES[self.entity_description.key]
         self.async_on_remove(
-            self.coordinator.async_enable_addon_updates(self._addon_slug, update_type)
+            self.coordinator.async_enable_addon_updates(self._addon_slug, update_types)
         )
         return await super().async_added_to_hass()
 
