@@ -118,8 +118,6 @@ set_pollution_settings:
           unit_of_measurement: "ppm"
           mode: slider
     co2_hysteresis:
-      required: false
-      advanced: false
       default: 100
       selector:
         number:
