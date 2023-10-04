@@ -752,12 +752,8 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         return (media_status, media_status_received)
 
-    @property
-    def state(self) -> MediaPlayerState | None:
-        """Return the state of the player."""
-        # The lovelace app loops media to prevent timing out, don't show that
-        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
-            return MediaPlayerState.PLAYING
+    def _media_status_state(self) -> MediaPlayerState | None:
+        """Return the media player state based on media status"""
         if (media_status := self._media_status()[0]) is not None:
             if media_status.player_state == MEDIA_PLAYER_STATE_PLAYING:
                 return MediaPlayerState.PLAYING
@@ -767,6 +763,16 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 return MediaPlayerState.PAUSED
             if media_status.player_is_idle:
                 return MediaPlayerState.IDLE
+        return None
+
+    @property
+    def state(self) -> MediaPlayerState | None:
+        """Return the state of the player."""
+        # The lovelace app loops media to prevent timing out, don't show that
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return MediaPlayerState.PLAYING
+        if media_status := self._media_status_state() is not None:
+            return media_status
         if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
             if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
                 # Some apps don't report media status, show the player as playing
