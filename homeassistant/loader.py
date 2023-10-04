@@ -1200,11 +1200,11 @@ def async_get_issue_tracker(
     issue_tracker = (
         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
     )
-    if integration_domain is None and module is None:
+    if not integration_domain and not module:
         # If we know nothing about the entity, suggest opening an issue on HA core
         return issue_tracker
 
-    if hass and integration_domain is not None:
+    if hass and integration_domain:
         with suppress(IntegrationNotLoaded):
             integration = async_get_loaded_integration(hass, integration_domain)
             if not integration.is_built_in:
