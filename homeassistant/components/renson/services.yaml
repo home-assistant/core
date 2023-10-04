@@ -95,8 +95,6 @@ set_pollution_settings:
             - "level3"
             - "level4"
     humidity_control:
-      required: false
-      advanced: false
       default: true
       selector:
         boolean:
