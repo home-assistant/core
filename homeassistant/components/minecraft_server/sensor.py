@@ -187,7 +187,8 @@ async def async_setup_entry(
         [
             MinecraftServerSensorEntity(coordinator, description, config_entry)
             for description in SENSOR_DESCRIPTIONS
-            if config_entry.data[CONF_TYPE] in description.supported_server_types
+            if config_entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION)
+            in description.supported_server_types
         ]
     )
 

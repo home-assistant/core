@@ -82,10 +82,14 @@ async def test_bedrock_connection_failed(hass: HomeAssistant) -> None:
 
 
 async def test_java_connection_succeeded(hass: HomeAssistant) -> None:
-    """Test config entry in case of a successful connection with a host name."""
+    """Test config entry in case of a successful connection to a Java Edition server."""
     with patch(
         "homeassistant.components.minecraft_server.api.MinecraftServer.__init__",
-        side_effect=[MinecraftServerAddressError, None],
+        side_effect=[
+            MinecraftServerAddressError,  # async_step_user (Bedrock Edition)
+            None,  # async_step_user (Java Edition)
+            None,  # async_setup_entry
+        ],
         return_value=None,
     ), patch(
         "homeassistant.components.minecraft_server.api.MinecraftServer.async_is_online",
@@ -103,7 +107,7 @@ async def test_java_connection_succeeded(hass: HomeAssistant) -> None:
 
 
 async def test_bedrock_connection_succeeded(hass: HomeAssistant) -> None:
-    """Test config entry in case of a successful connection with a host name."""
+    """Test config entry in case of a successful connection to a Bedrock Edition server."""
     with patch(
         "homeassistant.components.minecraft_server.api.MinecraftServer.__init__",
         side_effect=None,

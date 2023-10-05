@@ -32,7 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Check and create API instance.
     try:
-        api = MinecraftServer(
+        api = await hass.async_add_executor_job(
+            MinecraftServer,
             entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION),
             entry.data[CONF_ADDRESS],
         )
