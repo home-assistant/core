@@ -141,7 +141,7 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     ),
     "pv_isolation_resistance": SensorEntityDescription(
         key="pv_isolation_resistance",
-        name="PV Insulation Resistance",
+        name="PV Isolation Resistance",
         native_unit_of_measurement="kOhms",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
