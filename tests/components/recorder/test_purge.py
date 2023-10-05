@@ -71,16 +71,19 @@ async def test_purge_big_database(
     async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test deleting 2/3 old states from a big database."""
+
     instance = await async_setup_recorder_instance(hass)
 
-    for _ in range(250):
+    for _ in range(50):
         await _add_test_states(hass, wait_recording_done=False)
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with patch.object(instance, "max_bind_vars", 200), patch.object(
+        instance.database_engine, "max_bind_vars", 200
+    ), session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
-        assert states.count() == 1500
+        assert states.count() == 300
         assert state_attributes.count() == 3
 
         purge_before = dt_util.utcnow() - timedelta(days=4)
@@ -93,7 +96,7 @@ async def test_purge_big_database(
             repack=False,
         )
         assert not finished
-        assert states.count() == 500
+        assert states.count() == 100
         assert state_attributes.count() == 1
 
 
