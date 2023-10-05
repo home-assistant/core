@@ -1637,7 +1637,7 @@ async def help_test_entity_category(
 
     # Discover an entity with entity category set to "config"
     unique_id = "veryunique2"
-    config["entity_category"] = "config"
+    config["entity_category"] = "diagnostic"
     config["unique_id"] = unique_id
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
@@ -1645,7 +1645,7 @@ async def help_test_entity_category(
     entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
     assert entity_id is not None and hass.states.get(entity_id)
     entry = ent_registry.async_get(entity_id)
-    assert entry is not None and entry.entity_category == "config"
+    assert entry is not None and entry.entity_category == "diagnostic"
 
     # Discover an entity with entity category set to "no_such_category"
     unique_id = "veryunique3"
