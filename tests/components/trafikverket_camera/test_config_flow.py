@@ -78,19 +78,19 @@ async def test_form_no_location_data(
             result["flow_id"],
             {
                 CONF_API_KEY: "1234567890",
-                CONF_LOCATION: "Test loc",
+                CONF_LOCATION: "Test Cam",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Test location"
+    assert result2["title"] == "Test Camera"
     assert result2["data"] == {
         "api_key": "1234567890",
-        "location": "Test location",
+        "location": "Test Camera",
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result2["result"].unique_id == "trafikverket_camera-Test location"
+    assert result2["result"].unique_id == "trafikverket_camera-Test Camera"
 
 
 @pytest.mark.parametrize(
