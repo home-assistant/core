@@ -37,9 +37,7 @@ from .const import (
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
     PLEXTV_THROTTLE,
-    X_PLEX_DEVICE_NAME,
-    X_PLEX_PLATFORM,
-    X_PLEX_PRODUCT,
+    X_PLEX_ID_STRING,
     X_PLEX_VERSION,
 )
 from .errors import (
@@ -55,9 +53,9 @@ from .models import PlexSession
 _LOGGER = logging.getLogger(__name__)
 
 # Set default headers sent by plexapi
-plexapi.X_PLEX_DEVICE_NAME = X_PLEX_DEVICE_NAME
-plexapi.X_PLEX_PLATFORM = X_PLEX_PLATFORM
-plexapi.X_PLEX_PRODUCT = X_PLEX_PRODUCT
+plexapi.X_PLEX_DEVICE_NAME = X_PLEX_ID_STRING
+plexapi.X_PLEX_PLATFORM = X_PLEX_ID_STRING
+plexapi.X_PLEX_PRODUCT = X_PLEX_ID_STRING
 plexapi.X_PLEX_VERSION = X_PLEX_VERSION
 
 

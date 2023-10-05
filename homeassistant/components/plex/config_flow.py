@@ -49,9 +49,7 @@ from .const import (
     DOMAIN,
     MANUAL_SETUP_STRING,
     PLEX_SERVER_CONFIG,
-    X_PLEX_DEVICE_NAME,
-    X_PLEX_PLATFORM,
-    X_PLEX_PRODUCT,
+    X_PLEX_ID_STRING,
     X_PLEX_VERSION,
 )
 from .errors import NoServersFound, ServerNotSpecified
@@ -304,11 +302,11 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         headers = {"Origin": hass_url}
         payload = {
-            "X-Plex-Device-Name": X_PLEX_DEVICE_NAME,
+            "X-Plex-Device-Name": X_PLEX_ID_STRING,
             "X-Plex-Version": X_PLEX_VERSION,
-            "X-Plex-Product": X_PLEX_PRODUCT,
+            "X-Plex-Product": X_PLEX_ID_STRING,
             "X-Plex-Device": self.hass.config.location_name,
-            "X-Plex-Platform": X_PLEX_PLATFORM,
+            "X-Plex-Platform": X_PLEX_ID_STRING,
             "X-Plex-Model": "Plex OAuth",
         }
         session = async_get_clientsession(self.hass)
