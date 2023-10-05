@@ -16,7 +16,6 @@ class OpenThermController:
         self.room_setpoint = json.get("roomSetpoint")
         self.chw_away = json.get("chwAway")
         self.dhw_away = json.get("dhwAway")
-        self.enabled = json.get("enabled")
         self.chw_temperature = json.get("chwTemperature")
         self.dhw_temperature = json.get("dhwTemperature")
         self.room_temperature = json.get("roomTemperature")
@@ -28,7 +27,6 @@ class OpenThermController:
         """Get json."""
         data = {
             "deviceId": self.device_id,
-            "enabled": self.enabled,
             "roomSetpoint": self.room_setpoint,
             "dhwSetpoint": self.dhw_setpoint,
             "chwAway": self.chw_away,
