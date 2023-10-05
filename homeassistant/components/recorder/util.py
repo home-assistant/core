@@ -87,6 +87,7 @@ MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
 MIN_VERSION_SQLITE = _simple_version("3.31.0")
+MIN_VERSION_SQLITE_MODERN_BIND_VARS = _simple_version("3.32.0")
 
 
 # This is the maximum time after the recorder ends the session
@@ -487,6 +488,9 @@ def setup_connection_for_dialect(
                 _fail_unsupported_version(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
                 )
+
+            if version and version > MIN_VERSION_SQLITE_MODERN_BIND_VARS:
+                pass
 
         # The upper bound on the cache size is approximately 16MiB of memory
         execute_on_connection(dbapi_connection, "PRAGMA cache_size = -16384")
