@@ -51,10 +51,10 @@ async def test_binary_sensors(
     assert sensor.state == "unknown"
 
     # test tamper sensor
-    sensor = hass.states.get("binary_sensor.test_contact_sensor_tampering")
+    sensor = hass.states.get("binary_sensor.test_contact_sensor_tamper")
     assert sensor is not None
     assert sensor.state == "off"
-    assert sensor.name == "Test contact sensor Tampering"
+    assert sensor.name == "Test contact sensor Tamper"
     assert sensor.attributes["device_class"] == "tamper"
     # test tamper sensor when no tamper reports exist
     mock_bridge_v2.api.emit_event(
@@ -66,7 +66,7 @@ async def test_binary_sensors(
         },
     )
     await hass.async_block_till_done()
-    sensor = hass.states.get("binary_sensor.test_contact_sensor_tampering")
+    sensor = hass.states.get("binary_sensor.test_contact_sensor_tamper")
     assert sensor.state == "off"
 
     # test camera_motion sensor
