@@ -25,7 +25,6 @@ async def test_sensor_entities(hass: HomeAssistant, init_integration) -> None:
         + sensor_map[OPTIMIZERS_VIA_INVERTER]
         + sensor_map[ENERGY_METER_VIA_INVERTER]
     )
-    sma_sensor_entities = SENSOR_ENTITIES.keys()
 
     for sensor in pysma_sensor_definitions:
-        assert sensor.name in sma_sensor_entities
+        assert sensor.name in SENSOR_ENTITIES
