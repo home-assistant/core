@@ -1986,7 +1986,7 @@ def is_datetime(value: Any) -> bool:
     return isinstance(value, datetime)
 
 
-def is_string_like(value):
+def is_string_like(value: Any) -> bool:
     """Return whether a value is a string or string like object."""
     return isinstance(value, (str, bytes, bytearray))
 
