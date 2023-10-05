@@ -9,13 +9,23 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST,
     ATTR_FORECAST_APPARENT_TEMP,
+    ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_DEW_POINT,
     ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+    ATTR_FORECAST_NATIVE_DEW_POINT,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRESSURE,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_UV_INDEX,
+    ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_GUST_SPEED,
     ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_APPARENT_TEMPERATURE,
@@ -1005,11 +1015,44 @@ async def test_issue_forecast_property_deprecated(
 ) -> None:
     """Test the issue is raised on deprecated forecast attributes."""
 
+    class MockWeatherMockLegacyForecastOnly(WeatherPlatform.MockWeather):
+        """Mock weather class with mocked legacy forecast."""
+
+        def __init__(self, **values: Any) -> None:
+            """Initialize."""
+            super().__init__(**values)
+            self.forecast_list: list[Forecast] | None = [
+                {
+                    ATTR_FORECAST_NATIVE_TEMP: self.native_temperature,
+                    ATTR_FORECAST_NATIVE_APPARENT_TEMP: self.native_apparent_temperature,
+                    ATTR_FORECAST_NATIVE_TEMP_LOW: self.native_temperature,
+                    ATTR_FORECAST_NATIVE_DEW_POINT: self.native_dew_point,
+                    ATTR_FORECAST_CLOUD_COVERAGE: self.cloud_coverage,
+                    ATTR_FORECAST_NATIVE_PRESSURE: self.native_pressure,
+                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: self.native_wind_gust_speed,
+                    ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
+                    ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
+                    ATTR_FORECAST_UV_INDEX: self.uv_index,
+                    ATTR_FORECAST_NATIVE_PRECIPITATION: self._values.get(
+                        "native_precipitation"
+                    ),
+                    ATTR_FORECAST_HUMIDITY: self.humidity,
+                }
+            ]
+
+        @property
+        def forecast(self) -> list[Forecast] | None:
+            """Return the forecast."""
+            return self.forecast_list
+
+    # Fake that the class belongs to a custom integration
+    MockWeatherMockLegacyForecastOnly.__module__ = "custom_components.test.weather"
+
     kwargs = {
         "native_temperature": 38,
         "native_temperature_unit": UnitOfTemperature.CELSIUS,
     }
-    weather_entity = WeatherPlatform.MockWeatherMockLegacyForecastOnly(
+    weather_entity = MockWeatherMockLegacyForecastOnly(
         name="Testing",
         entity_id="weather.testing",
         condition=ATTR_CONDITION_SUNNY,
