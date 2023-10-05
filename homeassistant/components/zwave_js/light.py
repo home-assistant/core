@@ -77,8 +77,6 @@ async def async_setup_entry(
 
         if info.platform_hint == "black_is_off":
             async_add_entities([ZwaveBlackIsOffLight(config_entry, driver, info)])
-        elif info.platform_hint == "Basic":
-            async_add_entities([ZwaveBasicCCLight(config_entry, driver, info)])
         else:
             async_add_entities([ZwaveLight(config_entry, driver, info)])
 
@@ -131,11 +129,22 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._supported_color_modes: set[ColorMode] = set()
 
         # get additional (optional) values and set features
+        # If the command class is Basic, we must geenerate a name that includes
+        # the command class name to avoid ambiguity
         self._target_brightness = self.get_zwave_value(
             TARGET_VALUE_PROPERTY,
             CommandClass.SWITCH_MULTILEVEL,
             add_to_watched_value_ids=False,
         )
+        if self.info.primary_value.command_class == CommandClass.BASIC:
+            self._attr_name = self.generate_name(
+                include_value_name=True, alternate_value_name="Basic"
+            )
+            self._target_brightness = self.get_zwave_value(
+                TARGET_VALUE_PROPERTY,
+                CommandClass.BASIC,
+                add_to_watched_value_ids=False,
+            )
         self._target_color = self.get_zwave_value(
             TARGET_COLOR_PROPERTY,
             CommandClass.SWITCH_COLOR,
@@ -452,34 +461,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             self._rgbw_color = (red, green, blue, white)
             # Light supports rgbw, set color mode to rgbw
             self._color_mode = ColorMode.RGBW
-
-
-class ZwaveBasicCCLight(ZwaveLight, LightEntity):
-    """Representation of a Z-Wave light for the Basic CC."""
-
-    def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
-    ) -> None:
-        """Initialize the light."""
-        super().__init__(config_entry, driver, info)
-
-        # get additional (optional) values and set features
-        target_brightness = self.get_zwave_value(
-            TARGET_VALUE_PROPERTY,
-            CommandClass.BASIC,
-            add_to_watched_value_ids=False,
-        )
-        assert target_brightness
-        self._target_brightness = target_brightness
-
-        self._set_optimistic_state: bool = False
-
-        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-
-        # Entity class attributes
-        self._attr_name = self.generate_name(
-            include_value_name=True, alternate_value_name=info.platform_hint
-        )
 
 
 class ZwaveBlackIsOffLight(ZwaveLight):

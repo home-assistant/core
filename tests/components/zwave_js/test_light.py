@@ -863,7 +863,7 @@ async def test_black_is_off_zdb5100(
     assert args["value"] == {"red": 255, "green": 76, "blue": 255}
 
 
-async def test_basic_light(
+async def test_basic_cc_light(
     hass: HomeAssistant, client, ge_in_wall_dimmer_switch, integration
 ) -> None:
     """Test light is created from Basic CC."""
@@ -878,6 +878,7 @@ async def test_basic_light(
     state = hass.states.get(BASIC_LIGHT_ENTITY)
     assert state
     assert state.state == STATE_UNKNOWN
+    assert state.attributes["supported_features"] == 0
 
     # Send value to 0
     event = Event(

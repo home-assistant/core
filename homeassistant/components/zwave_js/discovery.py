@@ -980,7 +980,6 @@ DISCOVERY_SCHEMAS = [
     # light for Basic CC
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
-        hint="Basic",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.BASIC},
             type={ValueType.NUMBER},
