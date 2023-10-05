@@ -2078,7 +2078,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.115.1
+zeroconf==0.115.2
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
