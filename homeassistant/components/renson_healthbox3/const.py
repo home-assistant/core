@@ -8,7 +8,7 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntityDescription
 
-DOMAIN = "renson"
+DOMAIN = "renson_healthbox3"
 MANUFACTURER = "Renson"
 LOGGER: Logger = getLogger(__package__)
 
