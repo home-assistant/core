@@ -77,6 +77,8 @@ async def async_setup_entry(
 
         if info.platform_hint == "black_is_off":
             async_add_entities([ZwaveBlackIsOffLight(config_entry, driver, info)])
+        elif info.platform_hint == "Basic":
+            async_add_entities([ZwaveBasicLight(config_entry, driver, info)])
         else:
             async_add_entities([ZwaveLight(config_entry, driver, info)])
 
@@ -449,6 +451,79 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             self._rgbw_color = (red, green, blue, white)
             # Light supports rgbw, set color mode to rgbw
             self._color_mode = ColorMode.RGBW
+
+
+class ZwaveBasicLight(ZWaveBaseEntity, LightEntity):
+    """Representation of a Z-Wave light for the Basic CC."""
+
+    def __init__(
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize the light."""
+        super().__init__(config_entry, driver, info)
+
+        # get additional (optional) values and set features
+        target_brightness = self.get_zwave_value(
+            TARGET_VALUE_PROPERTY,
+            CommandClass.BASIC,
+            add_to_watched_value_ids=False,
+        )
+        assert target_brightness
+        self._target_brightness = target_brightness
+
+        self._set_optimistic_state: bool = False
+
+        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+        # Entity class attributes
+        self._attr_name = self.generate_name(
+            include_value_name=True, alternate_value_name=info.platform_hint
+        )
+
+    @property
+    def brightness(self) -> int | None:
+        """Return the brightness of this light between 0..255.
+
+        Z-Wave multilevel switches use a range of [0, 99] to control brightness.
+        """
+        if self.info.primary_value.value is None:
+            return None
+        return round((cast(int, self.info.primary_value.value) / 99) * 255)
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if device is on (brightness above 0)."""
+        if self._set_optimistic_state:
+            self._set_optimistic_state = False
+            return True
+        brightness = self.brightness
+        return brightness > 0 if brightness is not None else None
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the device on."""
+        # set brightness
+        await self._async_set_brightness(kwargs.get(ATTR_BRIGHTNESS))
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the light off."""
+        await self._async_set_brightness(0)
+
+    async def _async_set_brightness(self, brightness: int | None) -> None:
+        """Set new brightness to light."""
+        if brightness is None:
+            zwave_brightness = SET_TO_PREVIOUS_VALUE
+        else:
+            # Zwave multilevel switches use a range of [0, 99] to control brightness.
+            zwave_brightness = byte_to_zwave_brightness(brightness)
+
+        # setting a value requires setting targetValue
+        await self._async_set_value(self._target_brightness, zwave_brightness)
+        # We do an optimistic state update when setting to a previous value
+        # to avoid waiting for the value to be updated from the device which is
+        # typically delayed and causes a confusing UX.
+        if zwave_brightness == SET_TO_PREVIOUS_VALUE:
+            self._set_optimistic_state = True
+            self.async_write_ha_state()
 
 
 class ZwaveBlackIsOffLight(ZwaveLight):
