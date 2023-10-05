@@ -71,7 +71,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         super().__init__(
             point_client,
             device_id,
-            DEVICES[device_name].get("device_class", device_name),
+            DEVICES[device_name].get("device_class"),
         )
         self._device_name = device_name
         self._async_unsub_hook_dispatcher_connect = None
