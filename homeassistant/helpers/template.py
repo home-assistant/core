@@ -1981,7 +1981,7 @@ def _tuple(value):
     return tuple(value)
 
 
-def is_datetime(value):
+def is_datetime(value: Any) -> bool:
     """Return whether a value is a datetime."""
     return isinstance(value, datetime)
 
