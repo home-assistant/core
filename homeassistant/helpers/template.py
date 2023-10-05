@@ -1961,7 +1961,7 @@ def is_list(value: Any) -> bool:
     return isinstance(value, list)
 
 
-def is_set(value):
+def is_set(value: Any) -> bool:
     """Return whether a value is a set."""
     return isinstance(value, set)
 
