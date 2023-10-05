@@ -183,6 +183,18 @@ class EventProcessor:
         )
 
 
+def check_continuous(
+    sensors: dict[str, bool], entity_id: str, ent_reg: er.EntityRegistry
+) -> bool | None:
+    """Check if the sensor is continuous."""
+    if (is_continuous := sensors.get(entity_id)) is None and split_entity_id(entity_id)[
+        0
+    ] == SENSOR_DOMAIN:
+        is_continuous = is_sensor_continuous(ent_reg, entity_id)
+        sensors[entity_id] = is_continuous
+    return is_continuous
+
+
 def _humanify(
     rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result,
     ent_reg: er.EntityRegistry,
@@ -216,12 +228,7 @@ def _humanify(
             entity_id = row.entity_id
             assert entity_id is not None
             # Skip continuous sensors
-            if (
-                is_continuous := continuous_sensors.get(entity_id)
-            ) is None and split_entity_id(entity_id)[0] == SENSOR_DOMAIN:
-                is_continuous = is_sensor_continuous(ent_reg, entity_id)
-                continuous_sensors[entity_id] = is_continuous
-            if is_continuous:
+            if check_continuous(continuous_sensors, entity_id, ent_reg):
                 continue
 
             data = {
