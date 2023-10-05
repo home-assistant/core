@@ -97,7 +97,7 @@
     },
     "sensor": {
       "zigbee_connectivity": {
-        "name": "Zigbee Connectivity",
+        "name": "Zigbee connectivity",
         "state": {
           "connected": "[%key:common::state::connected%]",
           "disconnected": "[%key:common::state::disconnected%]",
