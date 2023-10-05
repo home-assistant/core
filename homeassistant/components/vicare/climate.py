@@ -112,6 +112,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ViCare climate platform."""
     entities = []
+    hasMultipleDevices = (
+        len(hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]) > 1
+    )
 
     for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
         api = getattr(
@@ -131,6 +134,7 @@ async def async_setup_entry(
                 api,
                 circuit,
                 device,
+                hasMultipleDevices,
             )
             entities.append(entity)
 
@@ -159,8 +163,12 @@ class ViCareClimate(ClimateEntity):
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_preset_modes = list(HA_TO_VICARE_PRESET_HEATING)
 
-    def __init__(self, name, api, circuit, device_config):
+    def __init__(self, name, api, circuit, device_config, hasMultipleDevices: bool):
         """Initialize the climate device."""
+        device_name = device_config.getModel()
+        if hasMultipleDevices:
+            device_name = f"{device_config.getModel()}-{device_config.getConfig().serial}"
+
         self._attr_name = name
         self._api = api
         self._circuit = circuit
@@ -171,7 +179,7 @@ class ViCareClimate(ClimateEntity):
         self._attr_unique_id = f"{device_config.getConfig().serial}-{circuit.id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=f"{device_config.getModel()}-{device_config.getConfig().serial}",
+            name=device_name,
             manufacturer="Viessmann",
             model=device_config.getModel(),
             configuration_url="https://developer.viessmann.com/",
