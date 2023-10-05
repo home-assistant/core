@@ -71,6 +71,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Fan Group platform."""
+
+    # Log the types of hass and discovery_info
+    _LOGGER.info(
+        "Hass: %s, Info: %s", type(hass).__name__, type(discovery_info).__name__
+    )
+
     async_add_entities(
         [FanGroup(config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES])]
     )
