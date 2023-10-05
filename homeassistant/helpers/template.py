@@ -1971,7 +1971,7 @@ def is_tuple(value: Any) -> bool:
     return isinstance(value, tuple)
 
 
-def _set(value):
+def _set(value: Any) -> set[Any]:
     """Convert value to set."""
     return set(value)
 
