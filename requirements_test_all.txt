@@ -398,7 +398,7 @@ apprise==1.5.0
 aprslib==0.7.0
 
 # homeassistant.components.aranet
-aranet4==2.1.3
+aranet4==2.2.2
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.4.0
