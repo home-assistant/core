@@ -38,9 +38,9 @@ from ..const import (
     CONF_STATE_TOPIC,
 )
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
 from ..models import ReceiveMessage
-from ..util import get_mqtt_data, valid_publish_topic
+from ..util import valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
@@ -126,7 +126,7 @@ PLATFORM_SCHEMA_STATE_MODERN = (
             vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
                 cv.ensure_list, [cv.string]
             ),
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(
                 CONF_PAYLOAD_CLEAN_SPOT, default=DEFAULT_PAYLOAD_CLEAN_SPOT
             ): cv.string,
@@ -170,6 +170,7 @@ async def async_setup_entity_state(
 class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     """Representation of a MQTT-controlled state vacuum."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
 
@@ -230,6 +231,9 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(
+            self, {"_attr_battery_level", "_attr_fan_speed", "_attr_state"}
+        )
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle state MQTT message."""
             payload = json_loads_object(msg.payload)
@@ -241,7 +245,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 )
                 del payload[STATE]
             self._update_state_attributes(payload)
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if state_topic := self._config.get(CONF_STATE_TOPIC):
             topics["state_position_topic"] = {

@@ -1,15 +1,20 @@
 """Test ESPHome sensors."""
+from collections.abc import Awaitable, Callable
+import logging
 import math
 
 from aioesphomeapi import (
     APIClient,
     EntityCategory as ESPHomeEntityCategory,
+    EntityInfo,
+    EntityState,
     LastResetType,
     SensorInfo,
     SensorState,
     SensorStateClass as ESPHomeSensorStateClass,
     TextSensorInfo,
     TextSensorState,
+    UserService,
 )
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
@@ -18,13 +23,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 
+from .conftest import MockESPHomeDevice
+
 
 async def test_generic_numeric_sensor(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
 ) -> None:
     """Test a generic sensor entity."""
+    logging.getLogger("homeassistant.components.esphome").setLevel(logging.DEBUG)
     entity_info = [
         SensorInfo(
             object_id="mysensor",
@@ -35,7 +46,7 @@ async def test_generic_numeric_sensor(
     ]
     states = [SensorState(key=1, state=50)]
     user_service = []
-    await mock_generic_device_entry(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
         user_service=user_service,
@@ -44,6 +55,34 @@ async def test_generic_numeric_sensor(
     state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "50"
+
+    # Test updating state
+    mock_device.set_state(SensorState(key=1, state=60))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == "60"
+
+    # Test sending the same state again
+    mock_device.set_state(SensorState(key=1, state=60))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == "60"
+
+    # Test we can still update after the same state
+    mock_device.set_state(SensorState(key=1, state=70))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == "70"
+
+    # Test invalid data from the underlying api does not crash us
+    mock_device.set_state(SensorState(key=1, state=object()))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == "70"
 
 
 async def test_generic_numeric_sensor_with_entity_category_and_icon(

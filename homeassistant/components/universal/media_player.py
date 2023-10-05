@@ -40,7 +40,6 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
-    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -85,13 +84,15 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     TrackTemplate,
+    TrackTemplateResult,
     async_track_state_change_event,
     async_track_template_result,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 ATTR_ACTIVE_CHILD = "active_child"
 
@@ -175,7 +176,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self._child_state = None
         self._state_template_result = None
         self._state_template = config.get(CONF_STATE_TEMPLATE)
-        self._device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_unique_id = config.get(CONF_UNIQUE_ID)
         self._browse_media_entity = config.get(CONF_BROWSE_MEDIA_ENTITY)
 
@@ -183,13 +184,18 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         """Subscribe to children and template state changes."""
 
         @callback
-        def _async_on_dependency_update(event):
+        def _async_on_dependency_update(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Update ha state when dependencies update."""
             self.async_set_context(event.context)
             self.async_schedule_update_ha_state(True)
 
         @callback
-        def _async_on_template_update(event, updates):
+        def _async_on_template_update(
+            event: EventType[EventStateChangedData] | None,
+            updates: list[TrackTemplateResult],
+        ) -> None:
             """Update state when template state changes."""
             for data in updates:
                 template = data.template
@@ -286,11 +292,6 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         await self.hass.services.async_call(
             DOMAIN, service_name, service_data, blocking=True, context=self._context
         )
-
-    @property
-    def device_class(self) -> MediaPlayerDeviceClass | None:
-        """Return the class of this device."""
-        return self._device_class
 
     @property
     def master_state(self):

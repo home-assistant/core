@@ -40,6 +40,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
+from .bluetooth.device import ESPHomeBluetoothDevice
 from .dashboard import async_get_dashboard
 
 INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
@@ -80,11 +81,12 @@ class ESPHomeStorage(Store[StoreData]):
     """ESPHome Storage."""
 
 
-@dataclass
+@dataclass(slots=True)
 class RuntimeEntryData:
     """Store runtime data for esphome config entries."""
 
     entry_id: str
+    title: str
     client: APIClient
     store: ESPHomeStorage
     state: dict[type[EntityState], dict[int, EntityState]] = field(default_factory=dict)
@@ -97,6 +99,7 @@ class RuntimeEntryData:
     available: bool = False
     expected_disconnect: bool = False  # Last disconnect was expected (e.g. deep sleep)
     device_info: DeviceInfo | None = None
+    bluetooth_device: ESPHomeBluetoothDevice | None = None
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
     disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
@@ -107,11 +110,6 @@ class RuntimeEntryData:
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: StoreData | None = None
     _pending_storage: Callable[[], StoreData] | None = None
-    ble_connections_free: int = 0
-    ble_connections_limit: int = 0
-    _ble_connection_free_futures: list[asyncio.Future[int]] = field(
-        default_factory=list
-    )
     assist_pipeline_update_callbacks: list[Callable[[], None]] = field(
         default_factory=list
     )
@@ -130,14 +128,16 @@ class RuntimeEntryData:
     @property
     def name(self) -> str:
         """Return the name of the device."""
-        return self.device_info.name if self.device_info else self.entry_id
+        device_info = self.device_info
+        return (device_info and device_info.name) or self.title
 
     @property
     def friendly_name(self) -> str:
         """Return the friendly name of the device."""
-        if self.device_info and self.device_info.friendly_name:
-            return self.device_info.friendly_name
-        return self.name
+        device_info = self.device_info
+        return (device_info and device_info.friendly_name) or self.name.title().replace(
+            "_", " "
+        )
 
     @property
     def signal_device_updated(self) -> str:
@@ -195,37 +195,6 @@ class RuntimeEntryData:
             callbacks.remove(callback_)
 
         return _unsub
-
-    @callback
-    def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
-        """Update the BLE connection limits."""
-        _LOGGER.debug(
-            "%s [%s]: BLE connection limits: used=%s free=%s limit=%s",
-            self.name,
-            self.device_info.mac_address if self.device_info else "unknown",
-            limit - free,
-            free,
-            limit,
-        )
-        self.ble_connections_free = free
-        self.ble_connections_limit = limit
-        if not free:
-            return
-        for fut in self._ble_connection_free_futures:
-            # If wait_for_ble_connections_free gets cancelled, it will
-            # leave a future in the list. We need to check if it's done
-            # before setting the result.
-            if not fut.done():
-                fut.set_result(free)
-        self._ble_connection_free_futures.clear()
-
-    async def wait_for_ble_connections_free(self) -> int:
-        """Wait until there are free BLE connections."""
-        if self.ble_connections_free > 0:
-            return self.ble_connections_free
-        fut: asyncio.Future[int] = asyncio.Future()
-        self._ble_connection_free_futures.append(fut)
-        return await fut
 
     @callback
     def async_set_assist_pipeline_state(self, state: bool) -> None:
@@ -337,30 +306,33 @@ class RuntimeEntryData:
         current_state_by_type = self.state[state_type]
         current_state = current_state_by_type.get(key, _SENTINEL)
         subscription_key = (state_type, key)
+        debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
         if (
             current_state == state
             and subscription_key not in stale_state
             and state_type is not CameraState
             and not (
-                state_type is SensorState  # pylint: disable=unidiomatic-typecheck
+                state_type is SensorState  # noqa: E721
                 and (platform_info := self.info.get(SensorInfo))
                 and (entity_info := platform_info.get(state.key))
                 and (cast(SensorInfo, entity_info)).force_update
             )
         ):
+            if debug_enabled:
+                _LOGGER.debug(
+                    "%s: ignoring duplicate update with key %s: %s",
+                    self.name,
+                    key,
+                    state,
+                )
+            return
+        if debug_enabled:
             _LOGGER.debug(
-                "%s: ignoring duplicate update with key %s: %s",
+                "%s: dispatching update with key %s: %s",
                 self.name,
                 key,
                 state,
             )
-            return
-        _LOGGER.debug(
-            "%s: dispatching update with key %s: %s",
-            self.name,
-            key,
-            state,
-        )
         stale_state.discard(subscription_key)
         current_state_by_type[key] = state
         if subscription := self.state_subscriptions.get(subscription_key):
@@ -401,8 +373,8 @@ class RuntimeEntryData:
 
     async def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
-        if self.device_info is None:
-            raise ValueError("device_info is not set yet")
+        if TYPE_CHECKING:
+            assert self.device_info is not None
         store_data: StoreData = {
             "device_info": self.device_info.to_dict(),
             "services": [],
@@ -411,9 +383,10 @@ class RuntimeEntryData:
         for info_type, infos in self.info.items():
             comp_type = INFO_TO_COMPONENT_TYPE[info_type]
             store_data[comp_type] = [info.to_dict() for info in infos.values()]  # type: ignore[literal-required]
-        for service in self.services.values():
-            store_data["services"].append(service.to_dict())
 
+        store_data["services"] = [
+            service.to_dict() for service in self.services.values()
+        ]
         if store_data == self._storage_contents:
             return
 

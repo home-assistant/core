@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant import const
 
-from .entity import DeviceInfo
+from .device_registry import DeviceInfo
 
 if TYPE_CHECKING:
     # `sensor_state_data` is a second-party library (i.e. maintained by Home Assistant

@@ -232,6 +232,12 @@ def player_plexweb_resources_fixture():
     return load_fixture("plex/player_plexweb_resources.xml")
 
 
+@pytest.fixture(name="player_plexhtpc_resources", scope="session")
+def player_plexhtpc_resources_fixture():
+    """Load resources payload for a Plex HTPC player and return it."""
+    return load_fixture("plex/player_plexhtpc_resources.xml")
+
+
 @pytest.fixture(name="playlists", scope="session")
 def playlists_fixture():
     """Load payload for all playlists and return it."""
@@ -450,8 +456,8 @@ def mock_plex_calls(
     """Mock Plex API calls."""
     requests_mock.get("https://plex.tv/api/users/", text=plextv_shared_users)
     requests_mock.get("https://plex.tv/api/invites/requested", text=empty_payload)
-    requests_mock.get("https://plex.tv/users/account", text=plextv_account)
-    requests_mock.get("https://plex.tv/api/resources", text=plextv_resources)
+    requests_mock.get("https://plex.tv/api/v2/user", text=plextv_account)
+    requests_mock.get("https://plex.tv/api/v2/resources", text=plextv_resources)
 
     url = plex_server_url(entry)
 

@@ -23,5 +23,36 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "fan_1_speed": {
+        "name": "Fan 1 speed"
+      },
+      "fan_2_speed": {
+        "name": "Fan 2 speed"
+      },
+      "ports": {
+        "name": "Ports"
+      },
+      "rx": {
+        "name": "RX"
+      },
+      "rx_errors": {
+        "name": "RX errors"
+      },
+      "rx_speed": {
+        "name": "RX speed"
+      },
+      "tx": {
+        "name": "TX"
+      },
+      "tx_speed": {
+        "name": "TX speed"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
+    }
   }
 }

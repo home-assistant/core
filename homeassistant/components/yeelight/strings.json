@@ -38,6 +38,21 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "nightlight": {
+        "name": "[%key:component::yeelight::entity::light::nightlight::name%]"
+      }
+    },
+    "light": {
+      "nightlight": {
+        "name": "Nightlight"
+      },
+      "ambilight": {
+        "name": "Ambilight"
+      }
+    }
+  },
   "services": {
     "set_mode": {
       "name": "Set mode",

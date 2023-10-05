@@ -18,16 +18,19 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTime,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from .const import (
     CONF_ROUND_DIGITS,
@@ -210,14 +213,12 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
-        def calc_derivative(event: Event) -> None:
+        def calc_derivative(event: EventType[EventStateChangedData]) -> None:
             """Handle the sensor state changes."""
-            old_state: State | None
-            new_state: State | None
             if (
-                (old_state := event.data.get("old_state")) is None
+                (old_state := event.data["old_state"]) is None
                 or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-                or (new_state := event.data.get("new_state")) is None
+                or (new_state := event.data["new_state"]) is None
                 or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             ):
                 return

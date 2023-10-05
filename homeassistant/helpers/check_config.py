@@ -5,9 +5,8 @@ from collections import OrderedDict
 import logging
 import os
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant import loader
@@ -94,8 +93,6 @@ async def async_check_ha_config_file(  # noqa: C901
     try:
         if not await hass.async_add_executor_job(os.path.isfile, config_path):
             return result.add_error("File configuration.yaml not found.")
-
-        assert hass.config.config_dir is not None
 
         config = await hass.async_add_executor_job(
             load_yaml_config_file,

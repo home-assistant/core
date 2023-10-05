@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from gardena_bluetooth.const import Valve
+from gardena_bluetooth.const import Sensor, Valve
 from gardena_bluetooth.parse import CharacteristicBool
 
 from homeassistant.components.binary_sensor import (
@@ -26,6 +26,11 @@ class GardenaBluetoothBinarySensorEntityDescription(BinarySensorEntityDescriptio
 
     char: CharacteristicBool = field(default_factory=lambda: CharacteristicBool(""))
 
+    @property
+    def context(self) -> set[str]:
+        """Context needed for update coordinator."""
+        return {self.char.uuid}
+
 
 DESCRIPTIONS = (
     GardenaBluetoothBinarySensorEntityDescription(
@@ -34,6 +39,13 @@ DESCRIPTIONS = (
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         char=Valve.connected_state,
+    ),
+    GardenaBluetoothBinarySensorEntityDescription(
+        key=Sensor.connected_state.uuid,
+        translation_key="sensor_connected_state",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        char=Sensor.connected_state,
     ),
 )
 
@@ -44,7 +56,7 @@ async def async_setup_entry(
     """Set up binary sensor based on a config entry."""
     coordinator: Coordinator = hass.data[DOMAIN][entry.entry_id]
     entities = [
-        GardenaBluetoothBinarySensor(coordinator, description)
+        GardenaBluetoothBinarySensor(coordinator, description, description.context)
         for description in DESCRIPTIONS
         if description.key in coordinator.characteristics
     ]

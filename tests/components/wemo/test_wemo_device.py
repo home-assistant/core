@@ -4,7 +4,6 @@ from dataclasses import asdict
 from datetime import timedelta
 from unittest.mock import call, patch
 
-import async_timeout
 import pytest
 from pywemo.exceptions import ActionException, PyWeMoException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
@@ -77,7 +76,7 @@ async def test_long_press_event(
         "testing_params",
     )
 
-    async with async_timeout.timeout(8):
+    async with asyncio.timeout(8):
         await got_event.wait()
 
     assert event_data == {
@@ -108,7 +107,7 @@ async def test_subscription_callback(
         pywemo_registry.callbacks[device.wemo.name], device.wemo, "", ""
     )
 
-    async with async_timeout.timeout(8):
+    async with asyncio.timeout(8):
         await got_callback.wait()
     assert device.last_update_success
 

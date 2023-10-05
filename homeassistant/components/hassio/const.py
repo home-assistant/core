@@ -1,5 +1,5 @@
 """Hass.io const variables."""
-from homeassistant.backports.enum import StrEnum
+from enum import StrEnum
 
 DOMAIN = "hassio"
 
@@ -9,6 +9,7 @@ ATTR_ADMIN = "admin"
 ATTR_COMPRESSED = "compressed"
 ATTR_CONFIG = "config"
 ATTR_DATA = "data"
+ATTR_SESSION_DATA_USER_ID = "user_id"
 ATTR_DISCOVERY = "discovery"
 ATTR_ENABLE = "enable"
 ATTR_ENDPOINT = "endpoint"
