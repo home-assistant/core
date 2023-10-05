@@ -1693,7 +1693,7 @@ pywizlight==0.5.14
 pyws66i==1.1
 
 # homeassistant.components.yardian
-pyyardian==1.1.0
+pyyardian==1.1.1
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
