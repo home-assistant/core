@@ -684,16 +684,14 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         media_id = async_process_play_media_url(self.hass, media_id)
 
         # Configure play command for when playing a HLS stream
-        if is_hass_url(self.hass, media_id):
-            parsed = yarl.URL(media_id)
-            if parsed.path.startswith("/api/hls/"):
-                extra = {
-                    **extra,
-                    "stream_type": "LIVE",
-                    "media_info": {
-                        "hlsVideoSegmentFormat": "fmp4",
-                    },
-                }
+        if is_hass_url(self.hass, media_id) and yarl.URL(media_id).path.startswith("/api/hls/"):
+            extra = {
+                **extra,
+                "stream_type": "LIVE",
+                "media_info": {
+                    "hlsVideoSegmentFormat": "fmp4",
+                },
+            }
         elif (
             media_id.endswith(".m3u")
             or media_id.endswith(".m3u8")
