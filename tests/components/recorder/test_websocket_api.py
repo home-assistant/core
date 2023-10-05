@@ -639,15 +639,14 @@ async def test_statistic_during_period(
     stats = get_latest_short_term_statistics(
         hass, {"sensor.test"}, {"last_reset", "max", "mean", "min", "state", "sum"}
     )
-    offset * 5 * 60
     start = imported_stats_5min[-1]["start"].timestamp()
     end = start + (5 * 60)
     assert stats == {
         "sensor.test": [
             {
-                "end": start,
+                "end": end,
                 "last_reset": None,
-                "start": end,
+                "start": start,
                 "state": None,
                 "sum": 38.0,
             }
