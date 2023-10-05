@@ -86,7 +86,7 @@ class ProximitySensor(SensorEntity):
 
         self.data: dict[str, int | str | None] = {
             ATTR_DIST_FROM: None,
-            ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
+            ATTR_DIR_OF_TRAVEL: slugify(DEFAULT_DIR_OF_TRAVEL),
             ATTR_NEAREST: DEFAULT_NEAREST,
         }
 
@@ -148,7 +148,7 @@ class ProximitySensor(SensorEntity):
         # No-one to track so reset the entity.
         if not devices_to_calculate:
             self.data[ATTR_DIST_FROM] = None
-            self.data[ATTR_DIR_OF_TRAVEL] = DEFAULT_DIR_OF_TRAVEL
+            self.data[ATTR_DIR_OF_TRAVEL] = slugify(DEFAULT_DIR_OF_TRAVEL)
             self.data[ATTR_NEAREST] = DEFAULT_NEAREST
             self.async_write_ha_state()
             return

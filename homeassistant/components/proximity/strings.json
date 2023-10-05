@@ -7,8 +7,10 @@
         "state": {
           "arrived": "Arrived",
           "away_from": "Away from",
+          "not_set": "Not set",
           "stationary": "Stationary",
-          "towards": "Towards"
+          "towards": "Towards",
+          "unknown": "Unknown"
         }
       },
       "nearest": { "name": "Nearest device" }
