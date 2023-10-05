@@ -1966,7 +1966,7 @@ def is_set(value: Any) -> bool:
     return isinstance(value, set)
 
 
-def is_tuple(value):
+def is_tuple(value: Any) -> bool:
     """Return whether a value is a tuple."""
     return isinstance(value, tuple)
 
