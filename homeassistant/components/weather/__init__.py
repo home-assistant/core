@@ -365,7 +365,7 @@ class WeatherEntity(Entity, PostInit):
         )
         if issue_tracker:
             translation_placeholders["issue_tracker"] = issue_tracker
-            translation_key="deprecated_weather_forecast_url"
+            translation_key = "deprecated_weather_forecast_url"
         ir.async_create_issue(
             self.hass,
             DOMAIN,
