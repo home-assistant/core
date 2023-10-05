@@ -1924,7 +1924,7 @@ def get_latest_short_term_statistics(
                 for metadata_id in missing_metadata_ids
                 if (
                     latest_id := cache_latest_short_term_statistic_id_for_metadata_id(
-                        run_cache, session, metadata_id
+                        run_cache, session, metadata_id, orm_rows=False
                     )
                 )
                 is not None
@@ -2309,9 +2309,15 @@ def _import_statistics_with_session(
 
     # We just inserted new short term statistics, so we need to update the
     # ShortTermStatisticsRunCache with the latest id for the metadata_id
+    #
+    # Because we are in the same session and we want to read rows
+    # that have not been flushed yet, we need to pass orm_rows=True
+    # to cache_latest_short_term_statistic_id_for_metadata_id
+    # to ensure that it gets the rows that were just inserted
+    #
     run_cache = get_short_term_statistics_run_cache(instance.hass)
     cache_latest_short_term_statistic_id_for_metadata_id(
-        run_cache, session, metadata_id
+        run_cache, session, metadata_id, orm_rows=True
     )
 
     return True
@@ -2326,7 +2332,10 @@ def get_short_term_statistics_run_cache(
 
 
 def cache_latest_short_term_statistic_id_for_metadata_id(
-    run_cache: ShortTermStatisticsRunCache, session: Session, metadata_id: int
+    run_cache: ShortTermStatisticsRunCache,
+    session: Session,
+    metadata_id: int,
+    orm_rows: bool,
 ) -> int | None:
     """Cache the latest short term statistic for a given metadata_id.
 
@@ -2339,7 +2348,11 @@ def cache_latest_short_term_statistic_id_for_metadata_id(
         execute_stmt_lambda_element(
             session,
             _find_latest_short_term_statistic_for_metadata_id_stmt(metadata_id),
-            orm_rows=False,
+            orm_rows=orm_rows
+            # _import_statistics_with_session needs to be able
+            # to read back the rows it just inserted without
+            # a flush so we have to pass orm_rows so we get
+            # back the latest data.
         ),
     ):
         id_: int = latest[0].id
