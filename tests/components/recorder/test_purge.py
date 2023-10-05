@@ -74,7 +74,8 @@ async def test_purge_big_database(
     instance = await async_setup_recorder_instance(hass)
 
     for _ in range(1000):
-        await _add_test_states(hass)
+        await _add_test_states(hass, wait_recording_done=False)
+    await async_wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
@@ -1436,7 +1437,7 @@ async def test_purge_entities(
         assert states.count() == 0
 
 
-async def _add_test_states(hass: HomeAssistant):
+async def _add_test_states(hass: HomeAssistant, wait_recording_done: bool = True):
     """Add multiple states to the db for testing."""
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
@@ -1446,8 +1447,9 @@ async def _add_test_states(hass: HomeAssistant):
     async def set_state(entity_id, state, **kwargs):
         """Set the state."""
         hass.states.async_set(entity_id, state, **kwargs)
-        await hass.async_block_till_done()
-        await async_wait_recording_done(hass)
+        if wait_recording_done:
+            await hass.async_block_till_done()
+            await async_wait_recording_done(hass)
 
     with freeze_time() as freezer:
         for event_id in range(6):
