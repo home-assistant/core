@@ -62,6 +62,12 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
     def _ac(self) -> dict[str, Any]:
         return self.coordinator.data["aircons"][self.ac_key]["info"]
 
+    @property
+    def _myzone(self) -> dict[str, Any]:
+        return self.coordinator.data["aircons"][self.ac_key]["zones"].get(
+            f"z{self._ac['myZone']:02}"
+        )
+
 
 class AdvantageAirZoneEntity(AdvantageAirAcEntity):
     """Parent class for Advantage Air Zone Entities."""

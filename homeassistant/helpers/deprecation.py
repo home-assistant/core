@@ -132,24 +132,24 @@ def deprecated_function(
 def _print_deprecation_warning(obj: Any, replacement: str, description: str) -> None:
     logger = logging.getLogger(obj.__module__)
     try:
-        _, integration, path = get_integration_frame()
-        if path == "custom_components/":
+        integration_frame = get_integration_frame()
+        if integration_frame.custom_integration:
             logger.warning(
                 (
                     "%s was called from %s, this is a deprecated %s. Use %s instead,"
                     " please report this to the maintainer of %s"
                 ),
                 obj.__name__,
-                integration,
+                integration_frame.integration,
                 description,
                 replacement,
-                integration,
+                integration_frame.integration,
             )
         else:
             logger.warning(
                 "%s was called from %s, this is a deprecated %s. Use %s instead",
                 obj.__name__,
-                integration,
+                integration_frame.integration,
                 description,
                 replacement,
             )

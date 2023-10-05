@@ -49,6 +49,7 @@ class OpenThermSensor(SensorEntity):
     """Representation of an OpenTherm Gateway sensor."""
 
     _attr_should_poll = False
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, gw_dev, var, source, device_class, unit, friendly_name_format):
         """Initialize the OpenTherm Gateway sensor."""
@@ -58,37 +59,39 @@ class OpenThermSensor(SensorEntity):
         self._gateway = gw_dev
         self._var = var
         self._source = source
-        self._value = None
-        self._device_class = device_class
-        self._unit = unit
+        self._attr_device_class = device_class
+        self._attr_native_unit_of_measurement = unit
         if TRANSLATE_SOURCE[source] is not None:
             friendly_name_format = (
                 f"{friendly_name_format} ({TRANSLATE_SOURCE[source]})"
             )
-        self._friendly_name = friendly_name_format.format(gw_dev.name)
+        self._attr_name = friendly_name_format.format(gw_dev.name)
         self._unsub_updates = None
+        self._attr_unique_id = f"{gw_dev.gw_id}-{source}-{var}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, gw_dev.gw_id)},
+            manufacturer="Schelte Bron",
+            model="OpenTherm Gateway",
+            name=gw_dev.name,
+            sw_version=gw_dev.gw_version,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates from the component."""
-        _LOGGER.debug("Added OpenTherm Gateway sensor %s", self._friendly_name)
+        _LOGGER.debug("Added OpenTherm Gateway sensor %s", self._attr_name)
         self._unsub_updates = async_dispatcher_connect(
             self.hass, self._gateway.update_signal, self.receive_report
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from updates from the component."""
-        _LOGGER.debug("Removing OpenTherm Gateway sensor %s", self._friendly_name)
+        _LOGGER.debug("Removing OpenTherm Gateway sensor %s", self._attr_name)
         self._unsub_updates()
 
     @property
     def available(self):
         """Return availability of the sensor."""
-        return self._value is not None
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Disable sensors by default."""
-        return False
+        return self._attr_native_value is not None
 
     @callback
     def receive_report(self, status):
@@ -96,41 +99,5 @@ class OpenThermSensor(SensorEntity):
         value = status[self._source].get(self._var)
         if isinstance(value, float):
             value = f"{value:2.1f}"
-        self._value = value
+        self._attr_native_value = value
         self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Return the friendly name of the sensor."""
-        return self._friendly_name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._gateway.gw_id)},
-            manufacturer="Schelte Bron",
-            model="OpenTherm Gateway",
-            name=self._gateway.name,
-            sw_version=self._gateway.gw_version,
-        )
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self._gateway.gw_id}-{self._source}-{self._var}"
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self._value
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit

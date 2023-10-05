@@ -160,6 +160,8 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     writeable: bool | None = None
     # [optional] the value's states map must include ANY of these key/value pairs
     any_available_states: set[tuple[int, str]] | None = None
+    # [optional] the value's value must match this value
+    value: Any | None = None
 
 
 @dataclass
@@ -378,6 +380,61 @@ DISCOVERY_SCHEMAS = [
             )
         ],
     ),
+    # Fibaro Shutter Fibaro FGR223
+    # Combine both switch_multilevel endpoints into shutter_tilt
+    # if operating mode (151) is set to venetian blind (2)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter_tilt",
+        manufacturer_id={0x010F},
+        product_id={0x1000, 0x1001},
+        product_type={0x0303},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={1},
+            type={ValueType.NUMBER},
+        ),
+        data_template=CoverTiltDataTemplate(
+            current_tilt_value_id=ZwaveValueID(
+                property_=CURRENT_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+                endpoint=2,
+            ),
+            target_tilt_value_id=ZwaveValueID(
+                property_=TARGET_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+                endpoint=2,
+            ),
+        ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={151},
+                endpoint={0},
+                value={2},
+            )
+        ],
+    ),
+    # Fibaro Shutter Fibaro FGR223
+    # Disable endpoint 2 (slat),
+    # as these are either combined with endpoint one as shutter_tilt
+    # or it has no practical function.
+    # CC: Switch_Multilevel
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter",
+        manufacturer_id={0x010F},
+        product_id={0x1000, 0x1001},
+        product_type={0x0303},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={2},
+            type={ValueType.NUMBER},
+        ),
+        entity_registry_enabled_default=False,
+    ),
     # Fibaro Nice BiDi-ZWave (IBT4ZWAVE)
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
@@ -587,6 +644,19 @@ DISCOVERY_SCHEMAS = [
             property_key={None},
         ),
         absent_values=[SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA],
+    ),
+    # Logic Group ZDB5100
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        hint="black_is_off",
+        manufacturer_id={0x0234},
+        product_id={0x0121},
+        product_type={0x0003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_COLOR},
+            property={CURRENT_COLOR_PROPERTY},
+            property_key={None},
+        ),
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
@@ -1222,6 +1292,9 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
             for key, val in schema.any_available_states
         )
     ):
+        return False
+    # check value
+    if schema.value is not None and value.value not in schema.value:
         return False
     return True
 
