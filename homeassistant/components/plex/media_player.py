@@ -203,9 +203,8 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self._attr_available = True
 
         try:
-            device_url = self.device.url("/")
+            self.device.url("/")
         except plexapi.exceptions.BadRequest:
-            device_url = "127.0.0.1"
             self.device.proxyThroughServer()
         self._device_protocol_capabilities = self.device.protocolCapabilities
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import typing
 
 from plexapi.base import PlexObject
 from plexapi.exceptions import BadRequest, NotFound
@@ -34,7 +35,8 @@ PREFERRED_LIBTYPE_ORDER = (
 _LOGGER = logging.getLogger(__name__)
 
 
-def replacing_legacy_keys(query):
+def _replacing_legacy_keys(query: dict[str, typing.Any]):
+    """Preserve legacy service parameters."""
     search_query = {}
     for legacy_key, key in LEGACY_PARAM_MAPPING.items():
         if value := query.pop(legacy_key, None):
@@ -42,10 +44,11 @@ def replacing_legacy_keys(query):
                 "Legacy parameter '%s' used, consider using '%s'", legacy_key, key
             )
             search_query[key] = value
+    return search_query
 
 
-def default_libtype(query):
-    # Default to a sane libtype if not explicitly provided
+def _default_libtype(query: dict):
+    """Use a sane libtype by default if not explicitly provided."""
     for preferred_libtype in PREFERRED_LIBTYPE_ORDER:
         if any(key.startswith(preferred_libtype) for key in query):
             return preferred_libtype
@@ -66,13 +69,12 @@ def search_media(
     original_query = kwargs.copy()
     libtype = kwargs.pop("libtype", None)
 
-    # Preserve legacy service parameters
-    search_query = replacing_legacy_keys(kwargs)
+    search_query = _replacing_legacy_keys(kwargs)
 
     search_query.update(**kwargs)
 
     if not libtype:
-        libtype = default_libtype(search_query)
+        libtype = _default_libtype(search_query)
 
     search_query.update(libtype=libtype)
     _LOGGER.debug("Processed search query: %s", search_query)

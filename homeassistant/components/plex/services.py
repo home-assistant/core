@@ -1,6 +1,7 @@
 """Services for the Plex integration."""
 import json
 import logging
+import typing
 
 from plexapi.exceptions import NotFound
 import voluptuous as vol
@@ -115,7 +116,7 @@ def get_plex_server(
 
 
 def _handle_standard_payloads(
-    hass: HomeAssistant, plex_url: any, plex_server: PlexServer
+    hass: HomeAssistant, plex_url: typing.Any, plex_server: PlexServer | None
 ):
     # Handle standard media_browser payloads
     if plex_url.name:
@@ -124,24 +125,20 @@ def _handle_standard_payloads(
         if len(plex_url.parts) == 2:
             if plex_url.name == "search":
                 return {}, plex_server
-            else:
-                return int(plex_url.name), plex_server
-        else:
-            # For "special" items like radio stations
-            return plex_url.path, plex_server
-    else:  # noqa: PLR5501
-        # Handle legacy payloads without server_id in URL host position
-        if plex_url.host == "search":
-            return {}, None
-        else:
-            return int(plex_url.host), None  # type: ignore[arg-type]
+            return int(plex_url.name), plex_server
+        # For "special" items like radio stations
+        return plex_url.path, plex_server
+    # Handle legacy payloads without server_id in URL host position
+    if plex_url.host == "search":  # noqa: PLR5501
+        return {}, None
+    return int(plex_url.host), None  # type: ignore[arg-type]
 
 
 def _handle_playqueue_media(
-    playqueue_id: "int | any",
+    playqueue_id: "int | typing.Any",
     supports_playqueues: bool,
-    plex_server: PlexServer,
-    content: "dict[str, int] | any",
+    plex_server: PlexServer | None,
+    content: "dict[str, int] | typing.Any",
 ):
     if not supports_playqueues:
         raise HomeAssistantError("Plex playqueues are not supported on this device")
@@ -154,11 +151,11 @@ def _handle_playqueue_media(
 
 def _handle_content_as_media_or_playqueue(
     content_type: str,
-    search_query: "dict[str, int] | any",
+    search_query: "dict[str, int] | typing.Any",
     supports_playqueues: bool,
-    shuffle: "int | any",
-    plex_server: PlexServer,
-    content: "dict[str, int] | any",
+    shuffle: "int | typing.Any",
+    plex_server: PlexServer | None,
+    content: "dict[str, int] | typing.Any",
 ):
     media = plex_server.lookup_media(content_type, **search_query)
     if supports_playqueues and (isinstance(media, list) or shuffle):
