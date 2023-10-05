@@ -1,5 +1,4 @@
 """Data UpdateCoordinator for the Husqvarna Automower integration."""
-from dataclasses import fields
 from datetime import timedelta
 import logging
 
@@ -50,13 +49,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[aioautomower.MowerLis
         return await self.mowersession.get_status()
 
     @callback
-    def callback(self, ws_data: aioautomower.MowerData):
+    def callback(self, ws_data: aioautomower.MowerList):
         """Process websocket callbacks and write them to the DataUpdateCoordinator."""
-        if self.data and ws_data:
-            for mower in self.data.data:
-                if mower.id == ws_data.id:
-                    for field in fields(ws_data.attributes):
-                        field_value = getattr(ws_data.attributes, field.name)
-                        if field_value:
-                            setattr(mower.attributes, field.name, field_value)
-        self.async_set_updated_data(self.data)
+        self.async_set_updated_data(ws_data)
