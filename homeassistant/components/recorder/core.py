@@ -243,6 +243,11 @@ class Recorder(threading.Thread):
         self._dialect_name: SupportedDialect | None = None
         self.enabled = True
 
+        # For safety we default to the lowest value for max_bind_vars
+        # of all the DB types (SQLITE_MAX_BIND_VARS).
+        #
+        # We update the value once we connect to the DB
+        # and determine what is actually supported.
         self.max_bind_vars = SQLITE_MAX_BIND_VARS
 
     @property
