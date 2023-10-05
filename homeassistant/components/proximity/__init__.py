@@ -5,9 +5,15 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT, CONF_ZONE
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_ZONE,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -46,10 +52,10 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Get the zones and offsets from configuration.yaml."""
     hass.data.setdefault(DOMAIN, {})
-    for zone, proximity_config in config[DOMAIN].items():
-        _LOGGER.debug("setup %s with config:%s", zone, proximity_config)
+    for friendly_name, proximity_config in config[DOMAIN].items():
+        _LOGGER.debug("setup %s with config:%s", friendly_name, proximity_config)
 
-        coordinator = ProximityDataUpdateCoordinator(hass, zone, proximity_config)
+        coordinator = ProximityDataUpdateCoordinator(hass, friendly_name, proximity_config)
 
         async_track_state_change(
             hass,
@@ -58,12 +64,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         await coordinator.async_refresh()
-        hass.data[DOMAIN][zone] = coordinator
+        hass.data[DOMAIN][friendly_name] = coordinator
 
-        proximity = Proximity(hass, zone, coordinator)
+        proximity = Proximity(hass, friendly_name, coordinator)
         await proximity.async_added_to_hass()
         proximity.async_write_ha_state()
 
+        await async_load_platform(
+            hass,
+            "sensor",
+            DOMAIN,
+            {CONF_NAME: friendly_name, **proximity_config},
+            config,
+        )
     return True
 
 

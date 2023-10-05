@@ -1,3 +1,18 @@
 {
-  "title": "Proximity"
+  "title": "Proximity",
+  "entity": {
+    "sensor": {
+      "distance_to_zone": { "name": "Distance to zone" },
+      "dir_of_travel": {
+        "name": "Direction of travel",
+        "state": {
+          "arrived": "Arrived",
+          "away_from": "Away from",
+          "stationary": "Stationary",
+          "towards": "Towards"
+        }
+      },
+      "nearest": { "name": "Nearest device" }
+    }
+  }
 }
