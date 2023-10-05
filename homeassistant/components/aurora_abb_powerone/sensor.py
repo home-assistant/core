@@ -93,17 +93,14 @@ class AuroraSensor(CoordinatorEntity[AuroraAbbDataUpdateCoordinator], SensorEnti
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._data = data
         self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{data[ATTR_SERIAL_NUMBER]}_{self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{data[ATTR_SERIAL_NUMBER]}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._data[ATTR_SERIAL_NUMBER])},
+            identifiers={(DOMAIN, data[ATTR_SERIAL_NUMBER])},
             manufacturer=MANUFACTURER,
-            model=self._data[ATTR_MODEL],
-            name=self._data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME),
-            sw_version=self._data[ATTR_FIRMWARE],
+            model=data[ATTR_MODEL],
+            name=data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME),
+            sw_version=data[ATTR_FIRMWARE],
         )
 
     @property
