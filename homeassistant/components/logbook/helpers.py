@@ -112,6 +112,21 @@ def event_forwarder_filtered(
     device_ids: list[str] | None,
 ) -> Callable[[Event], None]:
     """Make a callable to filter events."""
+
+    @callback
+    def _forward_events_filtered_by_entities_filter(event: Event) -> None:
+        assert entities_filter is not None
+        event_data = event.data
+        entity_ids = extract_attr(event_data, ATTR_ENTITY_ID)
+        if entity_ids and not any(
+            entities_filter(entity_id) for entity_id in entity_ids
+        ):
+            return
+        domain = event_data.get(ATTR_DOMAIN)
+        if domain and not entities_filter(f"{domain}._"):
+            return
+        target(event)
+
     if not entities_filter and not entity_ids and not device_ids:
         # No filter
         # - Script Trace (context ids)
@@ -121,21 +136,6 @@ def event_forwarder_filtered(
     if entities_filter:
         # We have an entity filter:
         # - Logbook panel
-
-        @callback
-        def _forward_events_filtered_by_entities_filter(event: Event) -> None:
-            assert entities_filter is not None
-            event_data = event.data
-            entity_ids = extract_attr(event_data, ATTR_ENTITY_ID)
-            if entity_ids and not any(
-                entities_filter(entity_id) for entity_id in entity_ids
-            ):
-                return
-            domain = event_data.get(ATTR_DOMAIN)
-            if domain and not entities_filter(f"{domain}._"):
-                return
-            target(event)
-
         return _forward_events_filtered_by_entities_filter
 
     # We are filtering on entity_ids and/or device_ids:
