@@ -65,12 +65,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
-    hass: HomeAssistant,
+    _hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    _discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Fan Group platform."""
+    """Set up the Fan Group platform.
+
+    Note:
+    _hass and _discovery_info are kept for compatibility with Home Assistant's
+    expected platform setup signature, even though they aren't used in this method.
+    """
     async_add_entities(
         [FanGroup(config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES])]
     )
