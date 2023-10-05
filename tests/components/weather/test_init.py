@@ -977,10 +977,31 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
 ISSUE_TRACKER = "https://blablabla.com"
 
 
+@pytest.mark.parametrize(
+    ("manifest_extra", "translation_key", "translation_placeholders_extra", "report"),
+    [
+        (
+            {},
+            "deprecated_weather_forecast_no_url",
+            {},
+            "report it to the author of the 'test' custom integration",
+        ),
+        (
+            {"issue_tracker": ISSUE_TRACKER},
+            "deprecated_weather_forecast_url",
+            {"issue_tracker": ISSUE_TRACKER},
+            "create a bug report at https://blablabla.com",
+        ),
+    ],
+)
 async def test_issue_forecast_property_deprecated(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    config_flow_fixture,
+    config_flow_fixture: None,
+    manifest_extra: dict[str, str],
+    translation_key: str,
+    translation_placeholders_extra: dict[str, str],
+    report: str,
 ) -> None:
     """Test the issue is raised on deprecated forecast attributes."""
 
@@ -1015,7 +1036,7 @@ async def test_issue_forecast_property_deprecated(
         MockModule(
             "test",
             async_setup_entry=async_setup_entry_init,
-            partial_manifest={"issue_tracker": ISSUE_TRACKER},
+            partial_manifest=manifest_extra,
         ),
         built_in=False,
     )
@@ -1037,17 +1058,16 @@ async def test_issue_forecast_property_deprecated(
     assert issue
     assert issue.issue_domain == "test"
     assert issue.issue_id == "deprecated_weather_forecast_test"
-    assert issue.translation_key == "deprecated_weather_forecast_url"
-    assert issue.translation_placeholders == {
-        "platform": "test",
-        "issue_tracker": ISSUE_TRACKER,
-    }
+    assert issue.translation_key == translation_key
+    assert (
+        issue.translation_placeholders
+        == {"platform": "test"} | translation_placeholders_extra
+    )
 
     assert (
         "test::MockWeatherMockLegacyForecastOnly implements the `forecast` property or "
         "sets `self._attr_forecast` in a subclass of WeatherEntity, this is deprecated "
-        "and will be unsupported from Home Assistant 2024.3. Please create a bug report"
-        f" at {ISSUE_TRACKER}"
+        f"and will be unsupported from Home Assistant 2024.3. Please {report}"
     ) in caplog.text
 
 
