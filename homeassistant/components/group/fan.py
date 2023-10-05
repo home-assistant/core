@@ -82,12 +82,13 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _hass: HomeAssistant,  # Unused
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
+    _discovery_info: DiscoveryInfoType | None = None,  # Unused
 ) -> None:
     """Initialize Fan Group config entry."""
-    registry = er.async_get(hass)
+    registry = er.async_get(_hass)
     entities = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITIES]
     )
