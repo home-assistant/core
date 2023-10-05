@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNKNOWN,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfMass,
@@ -37,6 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
@@ -2496,3 +2498,26 @@ def test_device_class_units_state_classes(hass: HomeAssistant) -> None:
     ) - NON_NUMERIC_DEVICE_CLASSES - {SensorDeviceClass.MONETARY}
     # DEVICE_CLASS_STATE_CLASSES should include all device classes
     assert set(DEVICE_CLASS_STATE_CLASSES) == set(SensorDeviceClass)
+
+
+async def test_entity_category_config_raises_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test error is raised when entity category is set to config."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = sensor = platform.MockSensor(
+        name="Test", entity_category=EntityCategory.CONFIG
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Entity <class 'custom_components.test.sensor.MockSensor'> cannot be added as the entity category is set to config"
+        in caplog.text
+    )
+
+    assert not hass.states.get("sensor.test")
+    assert sensor._platform_state == EntityPlatformState.NOT_ADDED
