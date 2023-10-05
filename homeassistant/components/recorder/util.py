@@ -31,7 +31,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 import homeassistant.util.dt as dt_util
 
-from .const import DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect,DEFAULT_MAX_BIND_VARS, SQLITE_MAX_BIND_VARS, SQLITE_MODERN_MAX_BIND_VARS
+from .const import (
+    DATA_INSTANCE,
+    DEFAULT_MAX_BIND_VARS,
+    DOMAIN,
+    SQLITE_MAX_BIND_VARS,
+    SQLITE_MODERN_MAX_BIND_VARS,
+    SQLITE_URL_PREFIX,
+    SupportedDialect,
+)
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
