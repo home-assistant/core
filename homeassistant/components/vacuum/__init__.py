@@ -40,7 +40,11 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_suggest_report_issue, bind_hass
+from homeassistant.loader import (
+    async_get_issue_tracker,
+    async_suggest_report_issue,
+    bind_hass,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -384,6 +388,16 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         # we don't worry about demo and mqtt has it's own deprecation warnings.
         if self.platform.platform_name in ("demo", "mqtt"):
             return
+        translation_key = "deprecated_vacuum_base_class"
+        translation_placeholders = {"platform": self.platform.platform_name}
+        issue_tracker = async_get_issue_tracker(
+            hass,
+            integration_domain=self.platform.platform_name,
+            module=type(self).__module__,
+        )
+        if issue_tracker:
+            translation_placeholders["issue_tracker"] = issue_tracker
+            translation_key = "deprecated_vacuum_base_class_url"
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -393,10 +407,8 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
             is_persistent=False,
             issue_domain=self.platform.platform_name,
             severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_vacuum_base_class",
-            translation_placeholders={
-                "platform": self.platform.platform_name,
-            },
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
         )
 
         report_issue = async_suggest_report_issue(
