@@ -1956,7 +1956,7 @@ def is_number(value):
     return True
 
 
-def is_list(value):
+def is_list(value: Any) -> bool:
     """Return whether a value is a list."""
     return isinstance(value, list)
 
