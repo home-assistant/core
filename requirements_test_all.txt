@@ -42,7 +42,7 @@ HATasmota==0.7.3
 Pillow==10.0.1
 
 # homeassistant.components.plex
-PlexAPI==4.15.3
+PlexAPI==4.15.4
 
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
@@ -528,7 +528,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==2.11.0
+dbus-fast==2.11.1
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -605,7 +605,7 @@ energyzero==0.5.0
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.5.36
+env-canada==0.5.37
 
 # homeassistant.components.season
 ephem==4.1.2
@@ -1468,7 +1468,7 @@ pypjlink2==1.2.1
 pyplaato==0.0.18
 
 # homeassistant.components.point
-pypoint==2.3.0
+pypoint==2.3.2
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
@@ -1693,7 +1693,7 @@ pywizlight==0.5.14
 pyws66i==1.1
 
 # homeassistant.components.yardian
-pyyardian==1.1.0
+pyyardian==1.1.1
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
