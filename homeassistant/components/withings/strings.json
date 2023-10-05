@@ -89,6 +89,9 @@
       "maximum_heart_rate": {
         "name": "Maximum heart rate"
       },
+      "minimum_heart_rate": {
+        "name": "Minimum heart rate"
+      },
       "light_sleep": {
         "name": "Light sleep"
       },

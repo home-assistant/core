@@ -173,8 +173,7 @@ async def main():
         )
         return
 
-    pyfile = re.compile(r".+\.py$")
-    pyfiles = [file for file in files if pyfile.match(file)]
+    pyfiles = [file for file in files if file.endswith(".py")]
 
     print("=============================")
     printc("bold", "CHANGED FILES:\n", "\n ".join(pyfiles))
