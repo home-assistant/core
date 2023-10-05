@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from aurorapy.client import AuroraError, AuroraTimeoutError
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_DEVICE_NAME,
@@ -14,7 +15,6 @@ from homeassistant.components.aurora_abb_powerone.const import (
 )
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -95,11 +95,10 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert energy.state == "12.35"
 
 
-async def test_sensor_dark(hass: HomeAssistant) -> None:
+async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Test that darkness (no comms) is handled correctly."""
     mock_entry = _mock_config_entry()
 
-    utcnow = dt_util.utcnow()
     # sun is up
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
@@ -126,7 +125,6 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
         power = hass.states.get("sensor.mydevicename_power_output")
         assert power is not None
         assert power.state == "45.7"
-    utcnow = dt_util.utcnow()
 
     # sunset
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
@@ -136,7 +134,8 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
         "aurorapy.client.AuroraSerialClient.cumulated_energy",
         side_effect=AuroraTimeoutError("No response after 3 tries"),
     ):
-        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL * 2)
+        freezer.tick(SCAN_INTERVAL * 2)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         power = hass.states.get("sensor.mydevicename_total_energy")
         assert power.state == "unknown"
@@ -147,7 +146,8 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
         "aurorapy.client.AuroraSerialClient.cumulated_energy",
         side_effect=_simulated_returns,
     ):
-        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL * 4)
+        freezer.tick(SCAN_INTERVAL * 4)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         power = hass.states.get("sensor.mydevicename_power_output")
         assert power is not None
@@ -160,7 +160,8 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
         "aurorapy.client.AuroraSerialClient.cumulated_energy",
         side_effect=AuroraError("No response after 10 seconds"),
     ):
-        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL * 6)
+        freezer.tick(SCAN_INTERVAL * 6)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         power = hass.states.get("sensor.mydevicename_power_output")
         assert power.state == "unknown"  # should this be 'available'?
