@@ -2,7 +2,6 @@
   "title": "Proximity",
   "entity": {
     "sensor": {
-      "distance_to_zone": { "name": "Distance to zone" },
       "dir_of_travel": {
         "name": "Direction of travel",
         "state": {
