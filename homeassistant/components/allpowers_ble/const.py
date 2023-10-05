@@ -2,4 +2,4 @@
 
 DOMAIN = "allpowers_ble"
 
-LOCAL_NAMES = {"HLK-AllpowersB"}
+LOCAL_NAMES = {"ALLPOWERS-S300"}

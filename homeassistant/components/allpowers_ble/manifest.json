@@ -3,7 +3,13 @@
   "name": "Allpowers BLE",
   "bluetooth": [
     {
-      "local_name": "ALLPOWERS S*"
+      "local_name": "AP S*"
+    },
+    {
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "service_uuid": "0000fff1-0000-1000-8000-00805f9b34fb"
     }
   ],
   "codeowners": ["@9madninjaskillz"],
@@ -12,5 +18,5 @@
   "documentation": "https://www.home-assistant.io/integrations/allpowers_ble/",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["bluetooth-data-tools==0.3.0", "allpowers-ble==0.1.1"]
+  "requirements": ["bluetooth-data-tools==1.12.0", "allpowers-ble==0.0.1"]
 }

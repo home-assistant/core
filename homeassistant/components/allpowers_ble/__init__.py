@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) or await get_device(address)
     if not ble_device:
         raise ConfigEntryNotReady(
-            f"Could not find AllpowersB device with address {address}"
+            f"Could not find Allpowers device with address {address}"
         )
     allpowers_ble = AllpowersBLE(ble_device)
 
