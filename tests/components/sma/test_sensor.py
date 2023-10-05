@@ -1,13 +1,14 @@
 """Test the sma sensor platform."""
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfPower
-from homeassistant.core import HomeAssistant
-from homeassistant.components.sma.sensor import SENSOR_ENTITIES
-from pysma.definitions import sensor_map
 from pysma.const import (
     ENERGY_METER_VIA_INVERTER,
     GENERIC_SENSORS,
     OPTIMIZERS_VIA_INVERTER,
 )
+from pysma.definitions import sensor_map
+
+from homeassistant.components.sma.sensor import SENSOR_ENTITIES
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfPower
+from homeassistant.core import HomeAssistant
 
 
 async def test_sensors(hass: HomeAssistant, init_integration) -> None:
@@ -18,7 +19,7 @@ async def test_sensors(hass: HomeAssistant, init_integration) -> None:
 
 
 async def test_SENSOR_ENTITIES(hass: HomeAssistant, init_integration) -> None:
-    """Test SENSOR_ENTITIES contains a SensorEntityDescription for each pysma sensor"""
+    """Test SENSOR_ENTITIES contains a SensorEntityDescription for each pysma sensor."""
     pysma_sensor_definitions = (
         sensor_map[GENERIC_SENSORS]
         + sensor_map[OPTIMIZERS_VIA_INVERTER]
