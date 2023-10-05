@@ -4,15 +4,10 @@ from unittest.mock import ANY, patch
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.assist_pipeline.const import (
-    CONF_PIPELINE_TIMEOUT,
-    CONF_WAKE_WORD_TIMEOUT,
-    DOMAIN,
-)
+from homeassistant.components.assist_pipeline.const import DOMAIN
 from homeassistant.components.assist_pipeline.pipeline import Pipeline, PipelineData
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
 
 from .conftest import MockWakeWordEntity
 
@@ -1812,46 +1807,6 @@ async def test_audio_pipeline_with_enhancements(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"events": events}
-
-
-async def test_config_timeouts(
-    hass: HomeAssistant,
-    init_supporting_components,
-    hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test changing timeouts via YAML config."""
-    assert await async_setup_component(
-        hass,
-        DOMAIN,
-        {DOMAIN: {CONF_PIPELINE_TIMEOUT: 10, CONF_WAKE_WORD_TIMEOUT: 1}},
-    )
-
-    client = await hass_ws_client(hass)
-
-    await client.send_json_auto_id(
-        {
-            "type": "assist_pipeline/run",
-            "start_stage": "wake_word",
-            "end_stage": "tts",
-            "input": {"sample_rate": 16000},
-        }
-    )
-
-    # result
-    msg = await client.receive_json()
-    assert msg["success"], msg
-
-    # run start
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-start"
-    msg["event"]["data"]["pipeline"] = ANY
-    assert msg["event"]["data"]["runner_data"]["timeout"] == 10
-
-    # wake_word
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "wake_word-start"
-    assert msg["event"]["data"]["timeout"] == 1
 
 
 async def test_wake_word_cooldown(

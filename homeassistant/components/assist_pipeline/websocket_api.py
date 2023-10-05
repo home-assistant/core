@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import language as language_util
 
-from .const import CONF_PIPELINE_TIMEOUT, CONF_WAKE_WORD_TIMEOUT, DATA_CONFIG, DOMAIN
+from .const import DEFAULT_PIPELINE_TIMEOUT, DEFAULT_WAKE_WORD_TIMEOUT, DOMAIN
 from .error import PipelineNotFound
 from .pipeline import (
     AudioSettings,
@@ -114,8 +114,7 @@ async def websocket_run(
         )
         return
 
-    config = hass.data[DATA_CONFIG]
-    timeout = msg.get("timeout", config[CONF_PIPELINE_TIMEOUT])
+    timeout = msg.get("timeout", DEFAULT_PIPELINE_TIMEOUT)
     start_stage = PipelineStage(msg["start_stage"])
     end_stage = PipelineStage(msg["end_stage"])
     handler_id: int | None = None
@@ -137,7 +136,7 @@ async def websocket_run(
 
         if start_stage == PipelineStage.WAKE_WORD:
             wake_word_settings = WakeWordSettings(
-                timeout=msg["input"].get("timeout", config[CONF_WAKE_WORD_TIMEOUT]),
+                timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT),
                 audio_seconds_to_buffer=msg_input.get("audio_seconds_to_buffer", 0),
             )
 

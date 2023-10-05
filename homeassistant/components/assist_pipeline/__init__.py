@@ -9,17 +9,7 @@ from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_DEBUG_RECORDING_DIR,
-    CONF_PIPELINE_TIMEOUT,
-    CONF_WAKE_WORD_COOLDOWN,
-    CONF_WAKE_WORD_TIMEOUT,
-    DATA_CONFIG,
-    DEFAULT_PIPELINE_TIMEOUT,
-    DEFAULT_WAKE_WORD_COOLDOWN,
-    DEFAULT_WAKE_WORD_TIMEOUT,
-    DOMAIN,
-)
+from .const import CONF_DEBUG_RECORDING_DIR, DATA_CONFIG, DOMAIN
 from .error import PipelineNotFound
 from .pipeline import (
     AudioSettings,
@@ -57,31 +47,16 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_DEBUG_RECORDING_DIR): str,
-                vol.Optional(
-                    CONF_PIPELINE_TIMEOUT, default=DEFAULT_PIPELINE_TIMEOUT
-                ): vol.Any(float, int),
-                vol.Optional(
-                    CONF_WAKE_WORD_TIMEOUT, default=DEFAULT_WAKE_WORD_TIMEOUT
-                ): vol.Any(float, int),
-                vol.Optional(
-                    CONF_WAKE_WORD_COOLDOWN, default=DEFAULT_WAKE_WORD_COOLDOWN
-                ): vol.Any(float, int),
             },
         )
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-DEFAULT_CONFIG = {
-    CONF_PIPELINE_TIMEOUT: DEFAULT_PIPELINE_TIMEOUT,
-    CONF_WAKE_WORD_TIMEOUT: DEFAULT_WAKE_WORD_TIMEOUT,
-    CONF_WAKE_WORD_COOLDOWN: DEFAULT_WAKE_WORD_COOLDOWN,
-}
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Assist pipeline integration."""
-    hass.data[DATA_CONFIG] = config.get(DOMAIN, DEFAULT_CONFIG)
+    hass.data[DATA_CONFIG] = config.get(DOMAIN, {})
 
     await async_setup_pipeline_store(hass)
     async_register_websocket_api(hass)

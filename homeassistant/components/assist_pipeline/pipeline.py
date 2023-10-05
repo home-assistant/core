@@ -50,9 +50,9 @@ from homeassistant.util.limited_size_dict import LimitedSizeDict
 
 from .const import (
     CONF_DEBUG_RECORDING_DIR,
-    CONF_WAKE_WORD_COOLDOWN,
     DATA_CONFIG,
     DATA_LAST_WAKE_UP,
+    DEFAULT_WAKE_WORD_COOLDOWN,
     DOMAIN,
 )
 from .error import (
@@ -405,6 +405,9 @@ class WakeWordSettings:
     audio_seconds_to_buffer: float = 0
     """Seconds of audio to buffer before detection and forward to STT."""
 
+    cooldown_seconds: float = DEFAULT_WAKE_WORD_COOLDOWN
+    """Seconds after a wake word detection where other detections are ignored."""
+
 
 @dataclass(frozen=True)
 class AudioSettings:
@@ -656,18 +659,6 @@ class PipelineRun:
                 self.pipeline.wake_word_id,
             )
 
-            if result is not None:
-                last_wake_up = self.hass.data.get(DATA_LAST_WAKE_UP)
-                if last_wake_up is not None:
-                    cooldown_sec = self.hass.data[DATA_CONFIG][CONF_WAKE_WORD_COOLDOWN]
-                    sec_since_last_wake_up = time.monotonic() - last_wake_up
-                    if sec_since_last_wake_up < cooldown_sec:
-                        _LOGGER.debug("Duplicate wake word detection occurred")
-                        raise WakeWordDetectionAborted
-
-                # Record last wake up time to block duplicate detections
-                self.hass.data[DATA_LAST_WAKE_UP] = time.monotonic()
-
             if stt_audio_buffer is not None:
                 # All audio kept from right before the wake word was detected as
                 # a single chunk.
@@ -689,6 +680,17 @@ class PipelineRun:
         if result is None:
             wake_word_output: dict[str, Any] = {}
         else:
+            # Avoid duplicate detections by checking cooldown
+            last_wake_up = self.hass.data.get(DATA_LAST_WAKE_UP)
+            if last_wake_up is not None:
+                sec_since_last_wake_up = time.monotonic() - last_wake_up
+                if sec_since_last_wake_up < wake_word_settings.cooldown_seconds:
+                    _LOGGER.debug("Duplicate wake word detection occurred")
+                    raise WakeWordDetectionAborted
+
+            # Record last wake up time to block duplicate detections
+            self.hass.data[DATA_LAST_WAKE_UP] = time.monotonic()
+
             if result.queued_audio:
                 # Add audio that was pending at detection.
                 #
