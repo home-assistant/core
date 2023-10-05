@@ -177,87 +177,91 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             entity=self,
         ).async_render_with_possible_json_value
 
+    @callback
+    def off_delay_listener(self, now: datetime) -> None:
+        """Switch device off after a delay."""
+        self._delay_listener = None
+        self._attr_is_on = False
+        self.async_write_ha_state()
+
+    @callback
+    def state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle a new received MQTT state message."""
+        # auto-expire enabled?
+        if self._expire_after:
+            # When expire_after is set, and we receive a message, assume device is
+            # not expired since it has to be to receive the message
+            self._expired = False
+
+            # Reset old trigger
+            if self._expiration_trigger:
+                self._expiration_trigger()
+
+            # Set new trigger
+            expiration_at = dt_util.utcnow() + timedelta(seconds=self._expire_after)
+
+            self._expiration_trigger = async_track_point_in_utc_time(
+                self.hass, self._value_is_expired, expiration_at
+            )
+
+        payload = self._value_template(msg.payload)
+        if not payload.strip():  # No output from template, ignore
+            _LOGGER.debug(
+                (
+                    "Empty template output for entity: %s with state topic: %s."
+                    " Payload: '%s', with value template '%s'"
+                ),
+                self.entity_id,
+                self._config[CONF_STATE_TOPIC],
+                msg.payload,
+                self._config.get(CONF_VALUE_TEMPLATE),
+            )
+            return
+
+        if payload == self._config[CONF_PAYLOAD_ON]:
+            self._attr_is_on = True
+        elif payload == self._config[CONF_PAYLOAD_OFF]:
+            self._attr_is_on = False
+        elif payload == PAYLOAD_NONE:
+            self._attr_is_on = None
+        else:  # Payload is not for this entity
+            template_info = ""
+            if self._config.get(CONF_VALUE_TEMPLATE) is not None:
+                template_info = (
+                    f", template output: '{str(payload)}', with value template"
+                    f" '{str(self._config.get(CONF_VALUE_TEMPLATE))}'"
+                )
+            _LOGGER.info(
+                (
+                    "No matching payload found for entity: %s with state topic: %s."
+                    " Payload: '%s'%s"
+                ),
+                self.entity_id,
+                self._config[CONF_STATE_TOPIC],
+                msg.payload,
+                template_info,
+            )
+            return
+
+        if self._delay_listener is not None:
+            self._delay_listener()
+            self._delay_listener = None
+
+        off_delay: int | None = self._config.get(CONF_OFF_DELAY)
+        if self._attr_is_on and off_delay is not None:
+            self._delay_listener = evt.async_call_later(
+                self.hass, off_delay, self.off_delay_listener
+            )
+
+        get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
         @callback
-        def off_delay_listener(now: datetime) -> None:
-            """Switch device off after a delay."""
-            self._delay_listener = None
-            self._attr_is_on = False
-            self.async_write_ha_state()
-
-        @callback
         @log_messages(self.hass, self.entity_id)
-        def state_message_received(msg: ReceiveMessage) -> None:
-            """Handle a new received MQTT state message."""
-            # auto-expire enabled?
-            if self._expire_after:
-                # When expire_after is set, and we receive a message, assume device is
-                # not expired since it has to be to receive the message
-                self._expired = False
-
-                # Reset old trigger
-                if self._expiration_trigger:
-                    self._expiration_trigger()
-
-                # Set new trigger
-                expiration_at = dt_util.utcnow() + timedelta(seconds=self._expire_after)
-
-                self._expiration_trigger = async_track_point_in_utc_time(
-                    self.hass, self._value_is_expired, expiration_at
-                )
-
-            payload = self._value_template(msg.payload)
-            if not payload.strip():  # No output from template, ignore
-                _LOGGER.debug(
-                    (
-                        "Empty template output for entity: %s with state topic: %s."
-                        " Payload: '%s', with value template '%s'"
-                    ),
-                    self.entity_id,
-                    self._config[CONF_STATE_TOPIC],
-                    msg.payload,
-                    self._config.get(CONF_VALUE_TEMPLATE),
-                )
-                return
-
-            if payload == self._config[CONF_PAYLOAD_ON]:
-                self._attr_is_on = True
-            elif payload == self._config[CONF_PAYLOAD_OFF]:
-                self._attr_is_on = False
-            elif payload == PAYLOAD_NONE:
-                self._attr_is_on = None
-            else:  # Payload is not for this entity
-                template_info = ""
-                if self._config.get(CONF_VALUE_TEMPLATE) is not None:
-                    template_info = (
-                        f", template output: '{str(payload)}', with value template"
-                        f" '{str(self._config.get(CONF_VALUE_TEMPLATE))}'"
-                    )
-                _LOGGER.info(
-                    (
-                        "No matching payload found for entity: %s with state topic: %s."
-                        " Payload: '%s'%s"
-                    ),
-                    self.entity_id,
-                    self._config[CONF_STATE_TOPIC],
-                    msg.payload,
-                    template_info,
-                )
-                return
-
-            if self._delay_listener is not None:
-                self._delay_listener()
-                self._delay_listener = None
-
-            off_delay: int | None = self._config.get(CONF_OFF_DELAY)
-            if self._attr_is_on and off_delay is not None:
-                self._delay_listener = evt.async_call_later(
-                    self.hass, off_delay, off_delay_listener
-                )
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+        def state_message_received_wrapper(msg: ReceiveMessage) -> None:
+            self.state_message_received(msg)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
@@ -265,7 +269,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             {
                 "state_topic": {
                     "topic": self._config[CONF_STATE_TOPIC],
-                    "msg_callback": state_message_received,
+                    "msg_callback": state_message_received_wrapper,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
                 }
