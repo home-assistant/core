@@ -49,7 +49,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except UnknownError:
             errors["base"] = "cannot_connect"
 
-        camera_location = camera_info.location if camera_info else None
+        camera_location = camera_info.camera_name if camera_info else None
         return (errors, camera_location)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
