@@ -21,7 +21,7 @@ from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE, HomeAssistant
 import homeassistant.helpers.aiohttp_client as client
 from homeassistant.util.color import RGBColor
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -155,10 +155,9 @@ async def test_warning_close_session_integration(
         session = client.async_get_clientsession(hass)
         await session.close()
     assert (
-        "Detected that integration 'hue' closes the Home Assistant aiohttp session at "
-        "homeassistant/components/hue/light.py, line 23: await session.close(), "
-        "please create a bug report at https://github.com/home-assistant/core/issues?"
-        "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
+        "Detected integration that closes the Home Assistant aiohttp session. "
+        "Please report issue for hue using this method at "
+        "homeassistant/components/hue/light.py, line 23: await session.close()"
     ) in caplog.text
 
 
@@ -167,7 +166,6 @@ async def test_warning_close_session_custom(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test log warning message when closing the session from custom context."""
-    mock_integration(hass, MockModule("hue"), built_in=False)
     with patch(
         "homeassistant.helpers.frame.extract_stack",
         return_value=[
@@ -191,10 +189,10 @@ async def test_warning_close_session_custom(
         session = client.async_get_clientsession(hass)
         await session.close()
     assert (
-        "Detected that custom integration 'hue' closes the Home Assistant aiohttp "
-        "session at custom_components/hue/light.py, line 23: await session.close(), "
-        "please report it to the author of the 'hue' custom integration"
-    ) in caplog.text
+        "Detected integration that closes the Home Assistant aiohttp session. Please"
+        " report issue to the custom integration author for hue using this method at"
+        " custom_components/hue/light.py, line 23: await session.close()" in caplog.text
+    )
 
 
 async def test_async_aiohttp_proxy_stream(
