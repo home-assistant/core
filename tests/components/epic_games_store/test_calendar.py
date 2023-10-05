@@ -10,6 +10,8 @@ from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
 
+from tests.common import async_fire_time_changed
+
 
 async def test_setup_component(hass: HomeAssistant, service_multiple: Mock) -> None:
     """Test setup component with calendars."""
@@ -27,18 +29,36 @@ async def test_discount_games(
     service_multiple: Mock,
 ) -> None:
     """Test setup component with calendars."""
-    freezer.move_to("2022-11-01T15:00:00.000Z")
+    freezer.move_to("2022-10-15T00:00:00.000Z")
 
     await setup_platform(hass, CALENDAR_DOMAIN)
 
     state = hass.states.get("calendar.epic_games_store_discount_games")
     assert state.state == STATE_OFF
+
+    freezer.move_to("2022-10-30T00:00:00.000Z")
+    async_fire_time_changed(hass)
+
+    state = hass.states.get("calendar.epic_games_store_discount_games")
+    assert state.state == STATE_ON
+
     cal_attrs = dict(state.attributes)
     cal_games = cal_attrs.pop("games")
     assert cal_attrs == {
         "friendly_name": "Epic Games Store Discount Games",
+        "message": "Shadow of the Tomb Raider: Definitive Edition",
+        "all_day": False,
+        "start_time": "2022-10-18 08:00:00",
+        "end_time": "2022-11-01 08:00:00",
+        "location": "",
+        "description": "In Shadow of the Tomb Raider Definitive Edition experience the final chapter of Lara\u2019s origin as she is forged into the Tomb Raider she is destined to be.\n\nhttps://store.epicgames.com/fr/p/shadow-of-the-tomb-raider",
     }
-    assert len(cal_games) == 0
+    assert [cal_game["title"] for cal_game in cal_games] == [
+        "Shadow of the Tomb Raider: Definitive Edition",
+        "Terraforming Mars",
+        "A Game Of Thrones: The Board Game Digital Edition",
+        "Fallout 3: Game of the Year Edition",
+    ]
 
 
 async def test_free_games(
@@ -47,12 +67,13 @@ async def test_free_games(
     service_multiple: Mock,
 ) -> None:
     """Test setup component with calendars."""
-    freezer.move_to("2022-11-01T15:00:00.000Z")
+    freezer.move_to("2022-10-30T00:00:00.000Z")
 
     await setup_platform(hass, CALENDAR_DOMAIN)
 
     state = hass.states.get("calendar.epic_games_store_free_games")
     assert state.state == STATE_ON
+
     cal_attrs = dict(state.attributes)
     cal_games = cal_attrs.pop("games")
     assert cal_attrs == {
@@ -64,4 +85,9 @@ async def test_free_games(
         "location": "",
         "description": "Take control of the most technologically advanced army in the Imperium - The Adeptus Mechanicus. Your every decision will weigh heavily on the outcome of the mission, in this turn-based tactical game. Will you be blessed by the Omnissiah?\n\nhttps://store.epicgames.com/fr/p/warhammer-mechanicus-0e4b71",
     }
-    assert len(cal_games) == 4
+    assert [cal_game["title"] for cal_game in cal_games] == [
+        "Warhammer 40,000: Mechanicus - Standard Edition",
+        "Saturnalia",
+        "Rising Storm 2: Vietnam",
+        "Filament",
+    ]

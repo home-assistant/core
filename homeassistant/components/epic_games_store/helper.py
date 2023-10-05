@@ -56,8 +56,10 @@ def format_game_data(raw_game_data: dict[str, Any], locale: str) -> dict[str, An
         and raw_game_data["price"]["totalPrice"]["discountPrice"] == 0
     ):
         promotion_data = current_promotions[0]["promotionalOffers"][0]
-    elif not current_promotions and upcoming_promotions:
-        promotion_data = upcoming_promotions[0]["promotionalOffers"][0]
+    else:
+        promotion_data = (current_promotions or upcoming_promotions)[0][
+            "promotionalOffers"
+        ][0]
 
     return {
         "title": raw_game_data["title"].replace("\xa0", " "),
