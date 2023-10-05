@@ -102,26 +102,10 @@ homeassistant.util.pil
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.pressure
----------------------------
-
-.. automodule:: homeassistant.util.pressure
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 homeassistant.util.ssl
 ----------------------
 
 .. automodule:: homeassistant.util.ssl
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-homeassistant.util.temperature
-------------------------------
-
-.. automodule:: homeassistant.util.temperature
    :members:
    :undoc-members:
    :show-inheritance:
