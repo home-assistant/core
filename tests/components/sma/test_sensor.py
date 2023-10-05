@@ -18,7 +18,7 @@ async def test_sensors(hass: HomeAssistant, init_integration) -> None:
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
 
 
-async def test_SENSOR_ENTITIES(hass: HomeAssistant, init_integration) -> None:
+async def test_sensor_entities(hass: HomeAssistant, init_integration) -> None:
     """Test SENSOR_ENTITIES contains a SensorEntityDescription for each pysma sensor."""
     pysma_sensor_definitions = (
         sensor_map[GENERIC_SENSORS]
