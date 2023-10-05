@@ -37,24 +37,27 @@ class ViCareBinarySensorEntityDescription(
 
 CIRCUIT_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ViCareBinarySensorEntityDescription(
-        key="circulationpump_active",
-        name="Circulation pump active",
-        device_class=BinarySensorDeviceClass.POWER,
+        key="circulationpump",
+        name="Circulation pump",
+        icon="mdi:pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getCirculationPumpActive(),
     ),
     ViCareBinarySensorEntityDescription(
-        key="frost_protection_active",
-        name="Frost protection active",
-        device_class=BinarySensorDeviceClass.POWER,
+        key="frost_protection",
+        name="Frost protection",
+        icon="mdi:snowflake",
+        device_class=None,
         value_getter=lambda api: api.getFrostProtectionActive(),
     ),
 )
 
 BURNER_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ViCareBinarySensorEntityDescription(
-        key="burner_active",
-        name="Burner active",
-        device_class=BinarySensorDeviceClass.POWER,
+        key="burner",
+        name="Burner",
+        icon="mdi:fire",
+        device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getActive(),
     ),
 )
