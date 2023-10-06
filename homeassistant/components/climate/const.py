@@ -64,6 +64,22 @@ PRESET_SLEEP = "sleep"
 # Device is reacting to activity (e.g. movement sensors)
 PRESET_ACTIVITY = "activity"
 
+
+class FanState(StrEnum):
+    """Fan state for climate devices."""
+
+    ON = "on"
+    OFF = "off"
+    AUTO = "auto"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    TOP = "top"
+    MIDDLE = "middle"
+    FOCUS = "focus"
+    DIFFUSE = "diffuse"
+
+
 # Possible fan state
 FAN_ON = "on"
 FAN_OFF = "off"

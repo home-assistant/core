@@ -14,13 +14,14 @@ from .const import DOMAIN
 from .coordinator import SwitchBotCoordinator
 
 _LOGGER = getLogger(__name__)
-PLATFORMS: list[Platform] = [Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
 
 
 @dataclass
 class SwitchbotDevices:
     """Switchbot devices data."""
 
+    climates: list[Remote]
     switches: list[Device | Remote]
 
 
@@ -65,6 +66,15 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     data = SwitchbotCloudData(
         api=api,
         devices=SwitchbotDevices(
+            climates=[
+                prepare_device(hass, api, device, coordinators)
+                for device in devices
+                if isinstance(device, Remote)
+                and (
+                    device.device_type.endswith("Air Conditioner")
+                    or device.device_type.endswith("Fan")
+                )
+            ],
             switches=[
                 prepare_device(hass, api, device, coordinators)
                 for device in devices

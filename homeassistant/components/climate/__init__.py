@@ -98,6 +98,7 @@ from .const import (  # noqa: F401
     SWING_ON,
     SWING_VERTICAL,
     ClimateEntityFeature,
+    FanState,
     HVACAction,
     HVACMode,
 )
