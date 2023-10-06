@@ -3,6 +3,7 @@ import logging
 from typing import Any
 
 import motionmount
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
@@ -22,6 +23,30 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Set up the instance."""
         self.discovery_info: dict[str, Any] = {}
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a flow initiated by the user."""
+        if user_input is None:
+            return self._show_setup_form()
+
+        try:
+            await self._validate_input(user_input)
+        except ConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        except TimeoutError:
+            return self.async_abort(reason="time_out")
+        except motionmount.NotConnectedError:
+            return self.async_abort(reason="not_connected")
+        except motionmount.MotionMountResponseError:
+            return self.async_abort(reason="invalid_response")
+
+        await self._async_set_unique_id_and_abort_if_already_configured(
+            user_input[CONF_HOST]
+        )
+
+        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -91,3 +116,16 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         mm = motionmount.MotionMount(data[CONF_HOST], data[CONF_PORT])
         await mm.connect()
         await mm.disconnect()
+
+    def _show_setup_form(self, errors: dict | None = None) -> FlowResult:
+        """Show the setup form to the user."""
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_PORT, default=23): int,
+                }
+            ),
+            errors=errors or {},
+        )

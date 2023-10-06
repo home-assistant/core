@@ -4,13 +4,10 @@
     "step": {
       "user": {
         "title": "Link your MotionMount",
-        "description": "Set up your printer via Internet Printing Protocol (IPP) to integrate with Home Assistant.",
+        "description": "Set up your MotionMount to integrate with Home Assistant.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "base_path": "Relative path to the printer",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "port": "[%key:common::config_flow::data::port%]"
         }
       },
       "zeroconf_confirm": {
@@ -20,6 +17,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "time_out": "Failed to connect due to a time out.",
       "not_connected": "Failed to connect.",
