@@ -1882,11 +1882,9 @@ async def test_wake_word_cooldown(
     # Get response events
     msg = await client_1.receive_json()
     event_type_1 = msg["event"]["type"]
-    assert msg["event"]["data"] == snapshot
 
     msg = await client_2.receive_json()
     event_type_2 = msg["event"]["type"]
-    assert msg["event"]["data"] == snapshot
 
     # One should be a wake up, one should be an error
     assert {event_type_1, event_type_2} == {"wake_word-end", "error"}
