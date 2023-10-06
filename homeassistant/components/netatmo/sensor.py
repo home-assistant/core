@@ -69,6 +69,8 @@ SUPPORTED_PUBLIC_SENSOR_TYPES: tuple[str, ...] = (
     "gust_angle",
 )
 
+COMPASS_ICON_STRING = "mdi:compass-outline"
+
 
 @dataclass
 class NetatmoRequiredKeysMixin:
@@ -184,7 +186,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Direction",
         netatmo_name="wind_direction",
         entity_registry_enabled_default=True,
-        icon="mdi:compass-outline",
+        icon=COMPASS_ICON_STRING,
     ),
     NetatmoSensorEntityDescription(
         key="windangle_value",
@@ -192,7 +194,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="wind_angle",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=COMPASS_ICON_STRING,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
@@ -209,7 +211,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Gust Direction",
         netatmo_name="gust_direction",
         entity_registry_enabled_default=False,
-        icon="mdi:compass-outline",
+        icon=COMPASS_ICON_STRING,
     ),
     NetatmoSensorEntityDescription(
         key="gustangle_value",
@@ -217,7 +219,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="gust_angle",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=COMPASS_ICON_STRING,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
