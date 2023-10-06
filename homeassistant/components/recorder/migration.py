@@ -194,16 +194,14 @@ def validate_db_schema(
     if is_current := _schema_is_current(current_version):
         # We can only check for further errors if the schema is current, because
         # columns may otherwise not exist etc.
-        schema_errors = _find_schema_errors(hass, instance, session_maker)
+        schema_errors = _find_schema_errors(instance)
 
     valid = is_current and not schema_errors
 
     return SchemaValidationStatus(current_version, schema_errors, valid)
 
 
-def _find_schema_errors(
-    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
-) -> set[str]:
+def _find_schema_errors(instance: Recorder) -> set[str]:
     """Find schema errors."""
     schema_errors: set[str] = set()
     schema_errors |= statistics_validate_db_schema(instance)
