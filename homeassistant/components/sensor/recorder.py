@@ -44,6 +44,8 @@ DEFAULT_STATISTICS = {
     SensorStateClass.MEASUREMENT: {"mean", "min", "max"},
     SensorStateClass.TOTAL: {"sum"},
     SensorStateClass.TOTAL_INCREASING: {"sum"},
+    SensorStateClass.SUM_OF_STATE: {"sum"},
+    SensorStateClass.SUM_OF_STATE_IF_DIFFERENT: {"sum"},
 }
 
 EQUIVALENT_UNITS = {
@@ -637,9 +639,16 @@ def _compile_statistics(  # noqa: C901
             if new_state is None or old_state is None:
                 # No valid updates
                 continue
-
+            
+            if state_class == SensorStateClass.SUM_OF_STATE_IF_DIFFERENT and old_state == new_state:
+                # No valid updates
+                continue
+            
             # Update the sum with the last state
-            _sum += new_state - old_state
+            if state_class == SensorStateClass.SUM_OF_STATE or state_class == SensorStateClass.SUM_OF_STATE_IF_DIFFERENT:
+                _sum += new_state
+            else:
+                _sum += new_state - old_state
             if last_reset is not None:
                 stat["last_reset"] = dt_util.parse_datetime(last_reset)
             stat["sum"] = _sum

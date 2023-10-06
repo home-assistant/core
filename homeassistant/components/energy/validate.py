@@ -5,7 +5,8 @@ from collections.abc import Mapping, Sequence
 import dataclasses
 import functools
 
-from homeassistant.components import recorder, sensor
+from homeassistant.components import recorder
+from .. import sensor
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     STATE_UNAVAILABLE,
@@ -222,6 +223,8 @@ def _async_validate_usage_stat(
         sensor.SensorStateClass.MEASUREMENT,
         sensor.SensorStateClass.TOTAL,
         sensor.SensorStateClass.TOTAL_INCREASING,
+        sensor.SensorStateClass.SUM_OF_STATE,
+        sensor.SensorStateClass.SUM_OF_STATE_IF_DIFFERENT,
     ]
     if state_class not in allowed_state_classes:
         issues.add_issue(hass, "entity_unexpected_state_class", entity_id, state_class)

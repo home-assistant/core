@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 from tuya_iot.device import TuyaDeviceStatusRange
 
-from homeassistant.components.sensor import (
+from ..sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -20,6 +20,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfPower,
     UnitOfTime,
+    UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -354,6 +355,15 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ADD_ELE,
+            translation_key="add_ele",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.SUM_OF_STATE_IF_DIFFERENT,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            icon="mdi:lightning-bolt-outline",
+            entity_registry_enabled_default=True,
         ),
     ),
     # IoT Switch

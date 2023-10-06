@@ -8,7 +8,7 @@ import logging
 
 from tuya_iot import TuyaCloudOpenAPIEndpoint
 
-from homeassistant.components.sensor import SensorDeviceClass
+from ..sensor import SensorDeviceClass
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
@@ -171,6 +171,7 @@ class DPCode(StrEnum):
     CUR_CURRENT = "cur_current"  # Actual current
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
+    ADD_ELE = "add_ele" #Added watt since last heartbeat
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"

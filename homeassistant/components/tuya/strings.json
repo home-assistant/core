@@ -463,6 +463,9 @@
       "voltage": {
         "name": "[%key:component::sensor::entity_component::voltage::name%]"
       },
+      "add_ele": {
+        "name": "[%key:component::sensor::entity_component::add_ele::name%]"
+      },
       "battery_state": {
         "name": "Battery state"
       },

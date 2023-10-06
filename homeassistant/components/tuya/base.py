@@ -111,6 +111,7 @@ class ElectricityTypeData:
     electriccurrent: str | None = None
     power: str | None = None
     voltage: str | None = None
+    add_ele: str | None = None
 
     @classmethod
     def from_json(cls, data: str) -> Self:
@@ -124,8 +125,9 @@ class ElectricityTypeData:
         voltage = struct.unpack(">H", raw[0:2])[0] / 10.0
         electriccurrent = struct.unpack(">L", b"\x00" + raw[2:5])[0] / 1000.0
         power = struct.unpack(">L", b"\x00" + raw[5:8])[0] / 1000.0
+        add_ele = struct.unpack(">L", b"\x00" + raw[8:11])[0] / 1000.0
         return cls(
-            electriccurrent=str(electriccurrent), power=str(power), voltage=str(voltage)
+            electriccurrent=str(electriccurrent), power=str(power), voltage=str(voltage), add_ele=str(add_ele)
         )
 
 
