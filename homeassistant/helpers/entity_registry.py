@@ -1323,11 +1323,17 @@ async def async_migrate_entries(
     config_entry_id: str,
     entry_callback: Callable[[RegistryEntry], dict[str, Any] | None],
 ) -> None:
-    """Migrator of unique IDs."""
+    """Migrate entity registry entries which belong to a config entry.
+
+    Can be used as a migrator of unique_ids or to update other entity registry data.
+    Can also be used to remove duplicated entity registry entries.
+    """
     ent_reg = async_get(hass)
 
-    for entry in ent_reg.entities.values():
+    for entry in list(ent_reg.entities.values()):
         if entry.config_entry_id != config_entry_id:
+            continue
+        if not ent_reg.entities.get_entry(entry.id):
             continue
 
         updates = entry_callback(entry)

@@ -24,12 +24,12 @@ from .entity import HydrawiseEntity
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="next_cycle",
-        name="Next Cycle",
+        translation_key="next_cycle",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key="watering_time",
-        name="Watering Time",
+        translation_key="watering_time",
         icon="mdi:water-pump",
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),

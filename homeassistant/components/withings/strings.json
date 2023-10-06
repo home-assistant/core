@@ -22,15 +22,6 @@
       "default": "Successfully authenticated with Withings."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "use_webhook": "Use webhooks"
-        }
-      }
-    }
-  },
   "entity": {
     "binary_sensor": {
       "in_bed": {
@@ -97,6 +88,9 @@
       },
       "maximum_heart_rate": {
         "name": "Maximum heart rate"
+      },
+      "minimum_heart_rate": {
+        "name": "Minimum heart rate"
       },
       "light_sleep": {
         "name": "Light sleep"
