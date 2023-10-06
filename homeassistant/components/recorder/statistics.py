@@ -1653,13 +1653,11 @@ def _statistics_during_period_with_session(
 
     result = _sorted_statistics_to_dict(
         hass,
-        session,
         stats,
         statistic_ids,
         metadata,
         True,
         table,
-        start_time,
         units,
         types,
     )
@@ -1771,13 +1769,11 @@ def _get_last_statistics(
         # Return statistics combined with metadata
         return _sorted_statistics_to_dict(
             hass,
-            session,
             stats,
             statistic_ids,
             metadata,
             convert_units,
             table,
-            None,
             None,
             types,
         )
@@ -1857,13 +1853,11 @@ def get_latest_short_term_statistics(
         # Return statistics combined with metadata
         return _sorted_statistics_to_dict(
             hass,
-            session,
             stats,
             statistic_ids,
             metadata,
             False,
             StatisticsShortTerm,
-            None,
             None,
             types,
         )
@@ -1940,13 +1934,11 @@ def _fast_build_sum_list(
 
 def _sorted_statistics_to_dict(  # noqa: C901
     hass: HomeAssistant,
-    session: Session,
     stats: Sequence[Row[Any]],
     statistic_ids: set[str] | None,
     _metadata: dict[str, tuple[int, StatisticMetaData]],
     convert_units: bool,
     table: type[StatisticsBase],
-    start_time: datetime | None,
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
