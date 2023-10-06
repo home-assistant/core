@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareRequiredKeysMixin
+from . import ViCareEntity, ViCareRequiredKeysMixin
 from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
@@ -102,7 +102,7 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 )
 
 
-def _build_entity(name, vicare_api, device_config, sensor):
+def _build_entity(name, vicare_api, device_config, sensor, hasMultipleDevices: bool):
     """Create a ViCare binary sensor entity."""
     try:
         sensor.value_getter(vicare_api)
@@ -119,11 +119,12 @@ def _build_entity(name, vicare_api, device_config, sensor):
         vicare_api,
         device_config,
         sensor,
+        hasMultipleDevices,
     )
 
 
 async def _entities_from_descriptions(
-    hass, entities, sensor_descriptions, iterables, device
+    hass, entities, sensor_descriptions, iterables, device, hasMultipleDevices
 ):
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
@@ -137,6 +138,7 @@ async def _entities_from_descriptions(
                 current,
                 device,
                 description,
+                hasMultipleDevices,
             )
             if entity is not None:
                 entities.append(entity)
@@ -149,6 +151,7 @@ async def async_setup_entry(
 ) -> None:
     """Create the ViCare binary sensor devices."""
     entities = []
+    hasMultipleDevices = len(hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]) > 1
 
     for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
         api = getattr(
@@ -164,27 +167,28 @@ async def async_setup_entry(
                 api,
                 device,
                 description,
+                hasMultipleDevices,
             )
             if entity is not None:
                 entities.append(entity)
 
         try:
             await _entities_from_descriptions(
-                hass, entities, CIRCUIT_SENSORS, api.circuits, device
+                hass, entities, CIRCUIT_SENSORS, api.circuits, device, hasMultipleDevices
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No circuits found")
 
         try:
             await _entities_from_descriptions(
-                hass, entities, BURNER_SENSORS, api.burners, device
+                hass, entities, BURNER_SENSORS, api.burners, device, hasMultipleDevices
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No burners found")
 
         try:
             await _entities_from_descriptions(
-                hass, entities, COMPRESSOR_SENSORS, api.compressors, device
+                hass, entities, COMPRESSOR_SENSORS, api.compressors, device, hasMultipleDevices
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No compressors found")
@@ -192,14 +196,14 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViCareBinarySensor(BinarySensorEntity):
+class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
     """Representation of a ViCare sensor."""
 
     _attr_has_entity_name = True
     entity_description: ViCareBinarySensorEntityDescription
 
     def __init__(
-        self, name, api, device_config, description: ViCareBinarySensorEntityDescription
+        self, name, api, device_config, description: ViCareBinarySensorEntityDescription, hasMultipleDevices: bool
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
@@ -207,13 +211,7 @@ class ViCareBinarySensor(BinarySensorEntity):
         self._api = api
         self.entity_description = description
         self._device_config = device_config
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=f"{device_config.getModel()}-{device_config.getConfig().serial}",
-            manufacturer="Viessmann",
-            model=device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
+        ViCareEntity.__init__(self, device_config, hasMultipleDevices)
 
     @property
     def available(self):
