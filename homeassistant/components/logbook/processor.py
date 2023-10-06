@@ -188,21 +188,7 @@ class ContinueException(Exception):
     """Raise an exception to skip the current iteration in a loop.
     Similar to the `continue` statement.
     """
-
     pass
-
-
-def check_continuous(
-    sensors: dict[str, bool], entity_id: str, ent_reg: er.EntityRegistry
-) -> bool | None:
-    """Check if the sensor is continuous."""
-    if (is_continuous := sensors.get(entity_id)) is None and split_entity_id(entity_id)[
-        0
-    ] == SENSOR_DOMAIN:
-        is_continuous = is_sensor_continuous(ent_reg, entity_id)
-        sensors[entity_id] = is_continuous
-    return is_continuous
-
 
 class EventTypeHandler:
     """Deal with different event types. It's used in _humanify()."""
@@ -236,9 +222,18 @@ class EventTypeHandler:
         self.ent_reg = ent_reg
         self.context_augmenter = context_augmenter
 
-    def update_by_row(self, row):
+    def check_continuous(self, entity_id: str) -> bool | None:
+        """Check if the sensor is continuous."""
+        if (is_continuous := self.continuous_sensors.get(entity_id)) is None and split_entity_id(entity_id)[
+            0
+        ] == SENSOR_DOMAIN:
+            is_continuous = is_sensor_continuous(self.ent_reg, entity_id)
+            self.continuous_sensors[entity_id] = is_continuous
+        return is_continuous
+
+    def update_by_row(self, row: Generator[EventAsRow, None, None] | Sequence[Row] | Result):
         """Update variables by row."""
-        self.row = row
+        self.row: Generator[EventAsRow, None, None] | Sequence[Row] | Result = row
         self.context_id_bin: bytes = self.row.context_id_bin
         if self.memoize_new_contexts:
             self.memoize_context(self.context_id_bin, self.row)
@@ -255,8 +250,8 @@ class EventTypeHandler:
         entity_id = self.row.entity_id
         assert entity_id is not None
         # Skip continuous sensors
-        if check_continuous(self.continuous_sensors, entity_id, self.ent_reg):
-            raise ContinueException
+        if self.check_continuous(entity_id):
+            raise ContinueException()
 
         data = {
             LOGBOOK_ENTRY_WHEN: self.format_time(self.row),
@@ -275,7 +270,7 @@ class EventTypeHandler:
         """Deal with event type EVENT_LOGBOOK_ENTRY."""
         event = self.event_cache.get(self.row)
         if not (event_data := event.data):
-            raise ContinueException
+            raise ContinueException()
         entry_domain = event_data.get(ATTR_DOMAIN)
         entry_entity_id = event_data.get(ATTR_ENTITY_ID)
         if entry_domain is None and entry_entity_id is not None:
