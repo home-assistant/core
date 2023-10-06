@@ -18,8 +18,8 @@ from .coordinator import TrelloDataUpdateCoordinator
 class TrelloSensor(CoordinatorEntity[TrelloDataUpdateCoordinator], SensorEntity):
     """Representation of a TrelloSensor."""
 
-    _attr_native_unit_of_measurement: str | None = "Cards"
-    _attr_state_class: SensorStateClass | str | None = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = "Cards"
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
