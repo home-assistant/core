@@ -275,12 +275,6 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         main_operation = self._control_backfill(
             main_operation, MAIN_OPERATION_STATE, OverkizCommandParam.ON
         )
-        target_temperature = target_temperature or self.target_temperature
-        if not target_temperature:
-            raise homeassistant.exceptions.InvalidStateError(
-                "Target temperature not set"
-            )
-
         fan_mode = self._control_backfill(
             fan_mode,
             FAN_SPEED_STATE,
@@ -313,22 +307,32 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             auto_manu_mode = OverkizCommandParam.OFF
 
         # In all the hvac modes except AUTO, the temperature command parameter is the target temperature
-        temperature_command = target_temperature
-
-        # In the hvac mode AUTO, the temperature command parameter is a temperature_change which is the delta between a pivot temperature (23) and the target temperature
+        temperature_command = None
+        target_temperature = target_temperature or self.target_temperature
         if hvac_mode == OverkizCommandParam.AUTO:
+            # In the hvac mode AUTO, the temperature command parameter is a temperature_change which is the delta between a pivot temperature (23) and the target temperature
             temperature_change = 0
+
             if target_temperature:
                 temperature_change = target_temperature - AUTO_PIVOT_TEMPERATURE
             elif self.temperature_change:
                 temperature_change = self.temperature_change
 
             # Keep temperature_change in the API accepted range
-            if temperature_change > AUTO_TEMPERATURE_CHANGE_MAX:
-                temperature_change = AUTO_TEMPERATURE_CHANGE_MAX
-            elif temperature_change < AUTO_TEMPERATURE_CHANGE_MIN:
-                temperature_change = AUTO_TEMPERATURE_CHANGE_MIN
+            temperature_change = min(
+                max(temperature_change, AUTO_TEMPERATURE_CHANGE_MIN),
+                AUTO_TEMPERATURE_CHANGE_MAX,
+            )
+
             temperature_command = temperature_change
+        else:
+            # In other modes, the temperature command is the target temperature
+            if not target_temperature:
+                raise homeassistant.exceptions.InvalidStateError(
+                    "Target temperature not set"
+                )
+
+            temperature_command = target_temperature
 
         command_data = [
             main_operation,  # Main Operation
