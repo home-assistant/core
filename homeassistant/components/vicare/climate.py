@@ -36,6 +36,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import ViCareEntity
 from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
@@ -149,7 +150,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViCareClimate(ClimateEntity):
+class ViCareClimate(ViCareEntity, ClimateEntity):
     """Representation of the ViCare heating climate device."""
 
     _attr_has_entity_name = True
@@ -165,9 +166,6 @@ class ViCareClimate(ClimateEntity):
 
     def __init__(self, name, api, circuit, device_config, hasMultipleDevices: bool):
         """Initialize the climate device."""
-        device_name = device_config.getModel()
-        if hasMultipleDevices:
-            device_name = f"{device_config.getModel()}-{device_config.getConfig().serial}"
 
         self._attr_name = name
         self._api = api
@@ -177,13 +175,7 @@ class ViCareClimate(ClimateEntity):
         self._current_program = None
         self._current_action = None
         self._attr_unique_id = f"{device_config.getConfig().serial}-{circuit.id}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=device_name,
-            manufacturer="Viessmann",
-            model=device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
+        ViCareEntity.__init__(self, device_config, hasMultipleDevices)
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
