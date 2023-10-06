@@ -114,6 +114,8 @@ class KNXCommonFlow(ABC, FlowHandler):
         self._gatewayscanner: GatewayScanner | None = None
         self._async_scan_gen: AsyncGenerator[GatewayDescriptor, None] | None = None
 
+        # This is a python workaround. Optimally we would use the constants directly in the
+        # switch statement.
         self._tunneling_constant: str = str(CONF_KNX_TUNNELING.lower())
         self._routing_constant: str = str(CONF_KNX_ROUTING.lower())
 
@@ -639,6 +641,32 @@ class KNXCommonFlow(ABC, FlowHandler):
             description_placeholders=description_placeholders,
         )
 
+    async def _validate_user(
+        self,
+        user_input: dict | None,
+        individual_address: str,
+        multicast_group: str,
+        local: Any,
+    ) -> dict:
+        errors: dict = {}
+
+        try:
+            ia_validator(individual_address)
+        except vol.Invalid:
+            errors[CONF_KNX_INDIVIDUAL_ADDRESS] = "invalid_individual_address"
+        try:
+            ip_v4_validator(multicast_group, multicast=True)
+        except vol.Invalid:
+            errors[CONF_KNX_MCAST_GRP] = "invalid_ip_address"
+        if local:
+            try:
+                _local_ip = await xknx_validate_ip(local)
+                ip_v4_validator(_local_ip, multicast=False)
+            except (vol.Invalid, XKNXException):
+                errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
+
+        return errors
+
     async def async_step_routing(self, user_input: dict | None = None) -> FlowResult:
         """Routing setup."""
         errors: dict = {}
@@ -659,20 +687,12 @@ class KNXCommonFlow(ABC, FlowHandler):
         )
 
         if user_input is not None:
-            try:
-                ia_validator(_individual_address)
-            except vol.Invalid:
-                errors[CONF_KNX_INDIVIDUAL_ADDRESS] = "invalid_individual_address"
-            try:
-                ip_v4_validator(_multicast_group, multicast=True)
-            except vol.Invalid:
-                errors[CONF_KNX_MCAST_GRP] = "invalid_ip_address"
-            if _local := user_input.get(CONF_KNX_LOCAL_IP):
-                try:
-                    _local_ip = await xknx_validate_ip(_local)
-                    ip_v4_validator(_local_ip, multicast=False)
-                except (vol.Invalid, XKNXException):
-                    errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
+            _local = user_input.get(CONF_KNX_LOCAL_IP)
+
+            _user_errors = await self._validate_user(
+                user_input, _individual_address, _multicast_group, _local
+            )
+            errors.update(_user_errors)
 
             if not errors:
                 connection_type = (
