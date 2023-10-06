@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+import contextlib
 from typing import Any
 
 from aiohttp.hdrs import METH_HEAD, METH_POST
@@ -214,9 +215,12 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
     """Generate the full URL for a webhook_id."""
     if CONF_CLOUDHOOK_URL not in entry.data:
-        webhook_url = await cloud.async_create_cloudhook(
-            hass, entry.data[CONF_WEBHOOK_ID]
-        )
+        webhook_id = entry.data[CONF_WEBHOOK_ID]
+        # Some users already have their webhook as cloudhook.
+        # We remove them to be sure we can create a new one.
+        with contextlib.suppress(ValueError):
+            await cloud.async_delete_cloudhook(hass, webhook_id)
+        webhook_url = await cloud.async_create_cloudhook(hass, webhook_id)
         data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
         hass.config_entries.async_update_entry(entry, data=data)
         return webhook_url
