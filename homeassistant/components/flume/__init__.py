@@ -112,7 +112,7 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 
     async def notifications(call: ServiceCall) -> ServiceResponse:
         """Return the user notifications."""
-        entry_id: str = call.data[SERVICE_NOTIFICATIONS_FIELD_CONFIG_ENTRY]
+        entry_id: str = call.data[CONF_CONFIG_ENTRY]
         entry: ConfigEntry | None = hass.config_entries.async_get_entry(entry_id)
         if not entry:
             raise ValueError(f"Invalid config entry: {entry_id}")
@@ -121,7 +121,7 @@ async def async_setup_service(hass: HomeAssistant) -> None:
         notification_coordinator: FlumeNotificationDataUpdateCoordinator = (
             flume_domain_data[FLUME_NOTIFICATIONS_COORDINATOR]
         )
-        if call.data[SERVICE_NOTIFICATIONS_FIELD_FORCE]:
+        if call.data[CONF_FORCE]:
             await notification_coordinator.async_refresh()
         return {
             "notifications": flume_domain_data[
