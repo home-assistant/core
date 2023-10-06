@@ -1,15 +1,17 @@
 """Tests for the withings component."""
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any
 from urllib.parse import urlparse
 
 from aiohttp.test_utils import TestClient
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @dataclass
@@ -53,3 +55,12 @@ async def setup_integration(
         )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
+
+
+async def prepare_webhook_setup(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Prepare webhooks are registered by waiting a second."""
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
