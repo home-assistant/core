@@ -5,7 +5,7 @@ import logging
 from auroranoaa import AuroraForecast
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, Platform
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
@@ -29,11 +29,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     longitude = conf[CONF_LONGITUDE]
     latitude = conf[CONF_LATITUDE]
     threshold = options.get(CONF_THRESHOLD, DEFAULT_THRESHOLD)
-    name = conf[CONF_NAME]
 
     coordinator = AuroraDataUpdateCoordinator(
         hass=hass,
-        name=name,
         api=api,
         latitude=latitude,
         longitude=longitude,
