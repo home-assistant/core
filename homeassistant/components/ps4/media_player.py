@@ -442,7 +442,6 @@ class PS4Device(MediaPlayerEntity):
                 return
 
         _LOGGER.warning("Could not start title. '%s' is not in source list", source)
-        return
 
     async def async_send_command(self, command: str) -> None:
         """Send Button Command."""
