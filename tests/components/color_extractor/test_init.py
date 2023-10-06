@@ -8,7 +8,7 @@ from homeassistant.setup import async_setup_component
 
 async def test_legacy_migration(hass: HomeAssistant) -> None:
     """Test migration from yaml to config flow."""
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1

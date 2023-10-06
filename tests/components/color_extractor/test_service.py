@@ -254,7 +254,7 @@ def _get_file_mock(file_path):
 
 @patch("os.path.isfile", Mock(return_value=True))
 @patch("os.access", Mock(return_value=True))
-async def test_file(hass: HomeAssistant) -> None:
+async def test_file(hass: HomeAssistant, setup_integration) -> None:
     """Test that the file only service reads a file and translates to light RGB."""
     service_data = {
         ATTR_PATH: "/opt/image.png",
@@ -265,9 +265,6 @@ async def test_file(hass: HomeAssistant) -> None:
 
     # Add our /opt/ path to the allowed list of paths
     hass.config.allowlist_external_dirs.add("/opt/")
-
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
 
     # Verify pre service check
     state = hass.states.get(LIGHT_ENTITY)
@@ -295,7 +292,7 @@ async def test_file(hass: HomeAssistant) -> None:
 
 @patch("os.path.isfile", Mock(return_value=True))
 @patch("os.access", Mock(return_value=True))
-async def test_file_denied_dir(hass: HomeAssistant) -> None:
+async def test_file_denied_dir(hass: HomeAssistant, setup_integration) -> None:
     """Test that the file only service fails to read an image in a dir not explicitly allowed."""
     service_data = {
         ATTR_PATH: "/path/to/a/dir/not/allowed/image.png",
@@ -303,9 +300,6 @@ async def test_file_denied_dir(hass: HomeAssistant) -> None:
         # Standard light service data which we pass
         ATTR_BRIGHTNESS_PCT: 100,
     }
-
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
 
     # Verify pre service check
     state = hass.states.get(LIGHT_ENTITY)
