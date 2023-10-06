@@ -26,12 +26,10 @@ def redact_store(data: dict[str, Any]) -> dict[str, Any]:
     id_num = 0
     diagnostics = {}
     for store_data in data.values():
-        if not (local_store := store_data.get("event_sync")):
-            continue
+        local_store: dict[str, Any] = store_data.get("event_sync", {})
         for calendar_data in local_store.values():
             id_num += 1
-            if not (items := calendar_data.get("items")):
-                continue
+            items: dict[str, Any] = calendar_data.get("items", {})
             diagnostics[f"calendar#{id_num}"] = {
                 "events": [
                     async_redact_data(item, TO_REDACT) for item in items.values()
