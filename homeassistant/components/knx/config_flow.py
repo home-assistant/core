@@ -114,6 +114,9 @@ class KNXCommonFlow(ABC, FlowHandler):
         self._gatewayscanner: GatewayScanner | None = None
         self._async_scan_gen: AsyncGenerator[GatewayDescriptor, None] | None = None
 
+        self._tunneling_constant: str = str(CONF_KNX_TUNNELING.lower())
+        self._routing_constant: str = str(CONF_KNX_ROUTING.lower())
+
     @abstractmethod
     def finish_flow(self) -> FlowResult:
         """Finish the flow."""
@@ -146,22 +149,24 @@ class KNXCommonFlow(ABC, FlowHandler):
                 self._found_gateways = list(
                     self._gatewayscanner.found_gateways.values()
                 )
-            connection_type = user_input[CONF_KNX_CONNECTION_TYPE]
-            if connection_type == CONF_KNX_ROUTING:
-                return await self.async_step_routing()
 
-            if connection_type == CONF_KNX_TUNNELING:
-                self._found_tunnels = [
-                    gateway
-                    for gateway in self._found_gateways
-                    if gateway.supports_tunnelling
-                ]
-                self._found_tunnels.sort(
-                    key=lambda tunnel: tunnel.individual_address.raw
-                    if tunnel.individual_address
-                    else 0
-                )
-                return await self.async_step_tunnel()
+            connection_type = user_input[CONF_KNX_CONNECTION_TYPE]
+
+            match connection_type:
+                case self._routing_constant:
+                    return await self.async_step_routing()
+                case self._tunneling_constant:
+                    self._found_tunnels = [
+                        gateway
+                        for gateway in self._found_gateways
+                        if gateway.supports_tunnelling
+                    ]
+                    self._found_tunnels.sort(
+                        key=lambda tunnel: tunnel.individual_address.raw
+                        if tunnel.individual_address
+                        else 0
+                    )
+                    return await self.async_step_tunnel()
 
             # Automatic connection type
             self.new_entry_data = KNXConfigEntryData(
@@ -521,8 +526,8 @@ class KNXCommonFlow(ABC, FlowHandler):
                     str(_if.individual_address) for _if in self._keyring.interfaces
                 ]:
                     return self.finish_flow()
-                if not errors:
-                    return await self.async_step_knxkeys_tunnel_select()
+
+                return await self.async_step_knxkeys_tunnel_select()
 
         fields = {
             vol.Required(CONF_KEYRING_FILE): selector.FileSelector(
