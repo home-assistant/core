@@ -20,6 +20,7 @@ class TrelloSensor(CoordinatorEntity[TrelloDataUpdateCoordinator], SensorEntity)
 
     _attr_native_unit_of_measurement = "Cards"
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -34,7 +35,14 @@ class TrelloSensor(CoordinatorEntity[TrelloDataUpdateCoordinator], SensorEntity)
         self.coordinator = coordinator
         self._attr_unique_id = f"list_{list_.id}".lower()
         self._attr_name = list_.name
-        self._attr_has_entity_name = True
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, board.id)},
+            name=board.name,
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="Trello",
+            model="Board",
+        )
 
     @property
     def available(self) -> bool:
@@ -55,17 +63,6 @@ class TrelloSensor(CoordinatorEntity[TrelloDataUpdateCoordinator], SensorEntity)
             self._attr_name = board.lists[self.list_id].name
             self.async_write_ha_state()
         super()._handle_coordinator_update()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.board.id)},
-            name=self.board.name,
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer="Trello",
-            model="Board",
-        )
 
 
 async def async_setup_entry(
