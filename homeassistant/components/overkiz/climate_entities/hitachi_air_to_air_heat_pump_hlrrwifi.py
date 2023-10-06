@@ -233,7 +233,9 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
     ) -> None:
         """Execute globalControl command with all parameters. There is no option to only set a single parameter, without passing all other values."""
 
-        main_operation = main_operation or OverkizCommandParam.ON
+        main_operation = self._control_backfill(
+            main_operation, MAIN_OPERATION_STATE, OverkizCommandParam.ON
+        )
         target_temperature = target_temperature or self.target_temperature
         if not target_temperature:
             raise homeassistant.exceptions.InvalidStateError(
