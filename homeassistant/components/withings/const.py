@@ -9,9 +9,6 @@ CONF_CLOUDHOOK_URL = "cloudhook_url"
 
 DATA_MANAGER = "data_manager"
 
-COORDINATOR = "coordinator"
-CALLBACKS = "callbacks"
-
 CONFIG = "config"
 DOMAIN = "withings"
 LOG_NAMESPACE = "homeassistant.components.withings"

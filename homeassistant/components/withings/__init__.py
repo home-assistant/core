@@ -43,11 +43,9 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api import ConfigEntryWithingsApi
 from .const import (
-    CALLBACKS,
     CONF_CLOUDHOOK_URL,
     CONF_PROFILES,
     CONF_USE_WEBHOOK,
-    COORDINATOR,
     DEFAULT_TITLE,
     DOMAIN,
     LOGGER,
@@ -137,19 +135,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        COORDINATOR: coordinator,
-        CALLBACKS: [],
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     async def unregister_webhook(
         _: Any,
     ) -> None:
         LOGGER.debug("Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID])
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        await hass.data[DOMAIN][entry.entry_id][
-            COORDINATOR
-        ].async_unsubscribe_webhooks()
+        await hass.data[DOMAIN][entry.entry_id].async_unsubscribe_webhooks()
 
     async def register_webhook(
         _: Any,
@@ -178,9 +171,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             get_webhook_handler(coordinator),
         )
 
-        await hass.data[DOMAIN][entry.entry_id][COORDINATOR].async_subscribe_webhooks(
-            webhook_url
-        )
+        await hass.data[DOMAIN][entry.entry_id].async_subscribe_webhooks(webhook_url)
         LOGGER.debug("Register Withings webhook: %s", webhook_url)
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
@@ -192,17 +183,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
             await unregister_webhook(None)
-            callback = async_call_later(hass, 30, register_webhook)
-            hass.data[DOMAIN][entry.entry_id][CALLBACKS].append(callback)
+            entry.async_on_unload(async_call_later(hass, 30, register_webhook))
 
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):
             await register_webhook(None)
-        callback = cloud.async_listen_connection_change(hass, manage_cloudhook)
-        hass.data[DOMAIN][entry.entry_id][CALLBACKS].append(callback)
+        entry.async_on_unload(
+            cloud.async_listen_connection_change(hass, manage_cloudhook)
+        )
     else:
-        callback = async_at_started(hass, register_webhook)
-        hass.data[DOMAIN][entry.entry_id][CALLBACKS].append(callback)
+        entry.async_on_unload(async_at_started(hass, register_webhook))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -213,9 +203,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Withings config entry."""
     webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-
-    for callback in hass.data[DOMAIN][entry.entry_id][CALLBACKS]:
-        callback()
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
