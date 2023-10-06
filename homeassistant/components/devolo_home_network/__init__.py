@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -54,6 +55,7 @@ async def async_setup_entry(  # noqa: C901
     hass.data.setdefault(DOMAIN, {})
     zeroconf_instance = await zeroconf.async_get_async_instance(hass)
     async_client = get_async_client(hass)
+    device_registry = dr.async_get(hass)
 
     try:
         device = Device(
@@ -73,6 +75,7 @@ async def async_setup_entry(  # noqa: C901
     async def async_update_firmware_available() -> UpdateFirmwareCheck:
         """Fetch data from API endpoint."""
         assert device.device
+        update_sw_version(device_registry, device)
         try:
             return await device.device.async_check_firmware_available()
         except DeviceUnavailable as err:
@@ -81,6 +84,7 @@ async def async_setup_entry(  # noqa: C901
     async def async_update_connected_plc_devices() -> LogicalNetwork:
         """Fetch data from API endpoint."""
         assert device.plcnet
+        update_sw_version(device_registry, device)
         try:
             return await device.plcnet.async_get_network_overview()
         except DeviceUnavailable as err:
@@ -89,6 +93,7 @@ async def async_setup_entry(  # noqa: C901
     async def async_update_guest_wifi_status() -> WifiGuestAccessGet:
         """Fetch data from API endpoint."""
         assert device.device
+        update_sw_version(device_registry, device)
         try:
             return await device.device.async_get_wifi_guest_access()
         except DeviceUnavailable as err:
@@ -99,6 +104,7 @@ async def async_setup_entry(  # noqa: C901
     async def async_update_led_status() -> bool:
         """Fetch data from API endpoint."""
         assert device.device
+        update_sw_version(device_registry, device)
         try:
             return await device.device.async_get_led_setting()
         except DeviceUnavailable as err:
@@ -107,6 +113,7 @@ async def async_setup_entry(  # noqa: C901
     async def async_update_wifi_connected_station() -> list[ConnectedStationInfo]:
         """Fetch data from API endpoint."""
         assert device.device
+        update_sw_version(device_registry, device)
         try:
             return await device.device.async_get_wifi_connected_station()
         except DeviceUnavailable as err:
@@ -115,6 +122,7 @@ async def async_setup_entry(  # noqa: C901
     async def async_update_wifi_neighbor_access_points() -> list[NeighborAPInfo]:
         """Fetch data from API endpoint."""
         assert device.device
+        update_sw_version(device_registry, device)
         try:
             return await device.device.async_get_wifi_neighbor_access_points()
         except DeviceUnavailable as err:
@@ -211,3 +219,16 @@ def platforms(device: Device) -> set[Platform]:
     if device.device and "update" in device.device.features:
         supported_platforms.add(Platform.UPDATE)
     return supported_platforms
+
+
+@callback
+def update_sw_version(device_registry: dr.DeviceRegistry, device: Device) -> None:
+    """Update device registry with new firmware version."""
+    if (
+        device_entry := device_registry.async_get_device(
+            identifiers={(DOMAIN, str(device.serial_number))}
+        )
+    ) and device_entry.sw_version != device.firmware_version:
+        device_registry.async_update_device(
+            device_id=device_entry.id, sw_version=device.firmware_version
+        )
