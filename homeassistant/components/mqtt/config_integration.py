@@ -17,7 +17,6 @@ from homeassistant.helpers import config_validation as cv
 from . import (
     cover as cover_platform,
     event as event_platform,
-    number as number_platform,
     sensor as sensor_platform,
     update as update_platform,
 )
@@ -57,10 +56,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.LAWN_MOWER.value: vol.All(cv.ensure_list, [dict]),
         Platform.LIGHT.value: vol.All(cv.ensure_list, [dict]),
         Platform.LOCK.value: vol.All(cv.ensure_list, [dict]),
-        Platform.NUMBER.value: vol.All(
-            cv.ensure_list,
-            [number_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.NUMBER.value: vol.All(cv.ensure_list, [dict]),
         Platform.SCENE.value: vol.All(cv.ensure_list, [dict]),
         Platform.SELECT.value: vol.All(cv.ensure_list, [dict]),
         Platform.SENSOR.value: vol.All(
