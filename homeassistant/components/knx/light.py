@@ -306,8 +306,25 @@ class KNXLight(KnxEntity, LightEntity):
         white = white * brightness // 255 if white is not None else None
         await self._device.set_color(rgb, white)
 
-    # Reduced cognitive complexity from 37 to 16. We evaluated that that this is an acceptable value and
-    # minimizing the complexity further would not increase the readability and make it more complex.
+    async def _set_color_based_on_mode(self, brightness: int) -> None:
+        match self.color_mode:
+            case ColorMode.XY:
+                await self._device.set_xyy_color(XYYColor(brightness=brightness))
+
+            case ColorMode.RGBW:
+                _rgbw = self.rgbw_color
+                if not _rgbw or not any(_rgbw):
+                    _rgbw = (0, 0, 0, 255)
+
+                await self.async_turn_on_set_color(_rgbw[:3], _rgbw[3], brightness)
+
+            case ColorMode.RGB:
+                _rgb = self.rgb_color
+                if not _rgb or not any(_rgb):
+                    _rgb = (255, 255, 255)
+
+                await self.async_turn_on_set_color(_rgb, None, brightness)
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -376,30 +393,7 @@ class KNXLight(KnxEntity, LightEntity):
             await self._device.set_brightness(brightness)
             return
 
-        match self.color_mode:
-            case ColorMode.XY:
-                await self._device.set_xyy_color(XYYColor(brightness=brightness))
-
-            case ColorMode.RGBW:
-                _rgbw = self.rgbw_color
-                if self._color_invalid(_rgbw):
-                    _rgbw = (0, 0, 0, 255)
-
-                assert _rgbw is not None
-                await self.async_turn_on_set_color(_rgbw[:3], _rgbw[3], brightness)
-
-            case ColorMode.RGB:
-                _rgb = self.rgb_color
-                if self._color_invalid(_rgb):
-                    _rgb = (255, 255, 255)
-
-                assert _rgb is not None
-                await self.async_turn_on_set_color(_rgb, None, brightness)
-
-    def _color_invalid(
-        self, color: tuple[int, int, int] | tuple[int, int, int, int] | None
-    ) -> bool:
-        return not color or not any(color)
+        await self._set_color_based_on_mode(brightness)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
