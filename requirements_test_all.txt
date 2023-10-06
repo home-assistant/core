@@ -25,7 +25,7 @@ CO2Signal==0.4.2
 DoorBirdPy==2.1.0
 
 # homeassistant.components.homekit
-HAP-python==4.7.1
+HAP-python==4.8.0
 
 # homeassistant.components.tasmota
 HATasmota==0.7.3
@@ -528,7 +528,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==2.11.0
+dbus-fast==2.11.1
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -605,7 +605,7 @@ energyzero==0.5.0
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.5.36
+env-canada==0.5.37
 
 # homeassistant.components.season
 ephem==4.1.2
@@ -786,7 +786,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231002.0
+home-assistant-frontend==20231005.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.10.2
@@ -903,7 +903,7 @@ logi-circle==0.2.3
 london-tube-status==0.5
 
 # homeassistant.components.loqed
-loqedAPI==2.1.7
+loqedAPI==2.1.8
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
@@ -1672,7 +1672,7 @@ pyvizio==0.1.61
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==0.5.0
+pywaze==0.5.1
 
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.4.3
@@ -1693,7 +1693,7 @@ pywizlight==0.5.14
 pyws66i==1.1
 
 # homeassistant.components.yardian
-pyyardian==1.1.0
+pyyardian==1.1.1
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
@@ -2078,7 +2078,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.115.1
+zeroconf==0.115.2
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
