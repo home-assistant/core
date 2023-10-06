@@ -423,6 +423,7 @@ async def test_fossil_energy_consumption_no_co2(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
+        period1.isoformat(): pytest.approx(22.0),
         period2.isoformat(): pytest.approx(33.0 - 22.0),
         period3.isoformat(): pytest.approx(55.0 - 33.0),
         period4.isoformat(): pytest.approx(88.0 - 55.0),
@@ -445,6 +446,7 @@ async def test_fossil_energy_consumption_no_co2(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
+        period1.isoformat(): pytest.approx(22.0),
         period2_day_start.isoformat(): pytest.approx(33.0 - 22.0),
         period3.isoformat(): pytest.approx(55.0 - 33.0),
         period4_day_start.isoformat(): pytest.approx(88.0 - 55.0),
@@ -467,7 +469,7 @@ async def test_fossil_energy_consumption_no_co2(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        period1.isoformat(): pytest.approx(33.0 - 22.0),
+        period1.isoformat(): pytest.approx(33.0),
         period3.isoformat(): pytest.approx((55.0 - 33.0) + (88.0 - 55.0)),
     }
 
@@ -586,8 +588,9 @@ async def test_fossil_energy_consumption_hole(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        period2.isoformat(): pytest.approx(3.0 - 20.0),
-        period3.isoformat(): pytest.approx(55.0 - 3.0),
+        period1.isoformat(): pytest.approx(20.0),
+        period2.isoformat(): pytest.approx(3.0),
+        period3.isoformat(): pytest.approx(32.0),
         period4.isoformat(): pytest.approx(88.0 - 55.0),
     }
 
@@ -608,8 +611,9 @@ async def test_fossil_energy_consumption_hole(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        period2_day_start.isoformat(): pytest.approx(3.0 - 20.0),
-        period3.isoformat(): pytest.approx(55.0 - 3.0),
+        period1.isoformat(): pytest.approx(20.0),
+        period2_day_start.isoformat(): pytest.approx(3.0),
+        period3.isoformat(): pytest.approx(32.0),
         period4_day_start.isoformat(): pytest.approx(88.0 - 55.0),
     }
 
@@ -630,8 +634,8 @@ async def test_fossil_energy_consumption_hole(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        period1.isoformat(): pytest.approx(3.0 - 20.0),
-        period3.isoformat(): pytest.approx((55.0 - 3.0) + (88.0 - 55.0)),
+        period1.isoformat(): pytest.approx(23.0),
+        period3.isoformat(): pytest.approx((55.0 - 3.0) + (88.0 - 55.0) - 20.0),
     }
 
 
@@ -930,6 +934,7 @@ async def test_fossil_energy_consumption(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
+        period1.isoformat(): pytest.approx(11.0 * 0.2),
         period2.isoformat(): pytest.approx((33.0 - 22.0) * 0.3),
         period3.isoformat(): pytest.approx((44.0 - 33.0) * 0.6),
         period4.isoformat(): pytest.approx((55.0 - 44.0) * 0.9),
@@ -952,6 +957,7 @@ async def test_fossil_energy_consumption(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
+        period1.isoformat(): pytest.approx(11.0 * 0.2),
         period2_day_start.isoformat(): pytest.approx((33.0 - 22.0) * 0.3),
         period3.isoformat(): pytest.approx((44.0 - 33.0) * 0.6),
         period4_day_start.isoformat(): pytest.approx((55.0 - 44.0) * 0.9),
@@ -974,7 +980,7 @@ async def test_fossil_energy_consumption(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        period1.isoformat(): pytest.approx((33.0 - 22.0) * 0.3),
+        period1.isoformat(): pytest.approx(11.0 * 0.5),
         period3.isoformat(): pytest.approx(
             ((44.0 - 33.0) * 0.6) + ((55.0 - 44.0) * 0.9)
         ),
