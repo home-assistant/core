@@ -163,7 +163,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_preset_modes = list(HA_TO_VICARE_PRESET_HEATING)
 
-    def __init__(self, name, api, circuit, device_config, has_multiple_devices: bool):
+    def __init__(self, name, api, circuit, device_config, has_multiple_devices: bool) -> None:
         """Initialize the climate device."""
 
         self._attr_name = name
