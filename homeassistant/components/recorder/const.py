@@ -30,6 +30,12 @@ QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY = 0.65
 # have upgraded their sqlite version
 SQLITE_MAX_BIND_VARS = 998
 
+# The maximum bind vars for sqlite 3.32.0 and above, but
+# capped at 4000 to avoid performance issues
+SQLITE_MODERN_MAX_BIND_VARS = 4000
+
+DEFAULT_MAX_BIND_VARS = 4000
+
 DB_WORKER_PREFIX = "DbWorker"
 
 ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}

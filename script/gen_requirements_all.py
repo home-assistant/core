@@ -72,9 +72,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.58.0
-grpcio-status==1.58.0
-grpcio-reflection==1.58.0
+grpcio==1.59.0
+grpcio-status==1.59.0
+grpcio-reflection==1.59.0
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,

@@ -14,6 +14,7 @@ from homeassistant.components.recorder.db_schema import Statistics, StatisticsSh
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
+    get_latest_short_term_statistics,
     get_metadata,
     get_short_term_statistics_run_cache,
     list_statistic_ids,
@@ -634,6 +635,22 @@ async def test_statistic_during_period(
         "min": min(stat["min"] for stat in imported_stats_5min[:]) * 1000,
         "change": (imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"])
         * 1000,
+    }
+    stats = get_latest_short_term_statistics(
+        hass, {"sensor.test"}, {"last_reset", "max", "mean", "min", "state", "sum"}
+    )
+    start = imported_stats_5min[-1]["start"].timestamp()
+    end = start + (5 * 60)
+    assert stats == {
+        "sensor.test": [
+            {
+                "end": end,
+                "last_reset": None,
+                "start": start,
+                "state": None,
+                "sum": 38.0,
+            }
+        ]
     }
 
 
