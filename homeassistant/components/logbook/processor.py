@@ -51,6 +51,7 @@ from .const import (
     CONTEXT_STATE,
     CONTEXT_USER_ID,
     DOMAIN,
+    EXTERNAL_EVENTS,
     LOGBOOK_ENTRY_DOMAIN,
     LOGBOOK_ENTRY_ENTITY_ID,
     LOGBOOK_ENTRY_ICON,
@@ -183,6 +184,14 @@ class EventProcessor:
         )
 
 
+class ContinueException(Exception):
+    """Raise an exception to skip the current iteration in a loop.
+    Similar to the `continue` statement.
+    """
+
+    pass
+
+
 def check_continuous(
     sensors: dict[str, bool], entity_id: str, ent_reg: er.EntityRegistry
 ) -> bool | None:
@@ -193,6 +202,109 @@ def check_continuous(
         is_continuous = is_sensor_continuous(ent_reg, entity_id)
         sensors[entity_id] = is_continuous
     return is_continuous
+
+
+class EventTypeHandler:
+    """Deal with different event types. It's used in _humanify()."""
+
+    def __init__(
+        self,
+        continuous_sensors,
+        context_lookup,
+        external_events,
+        event_cache,
+        entity_name_cache,
+        include_entity_name,
+        format_time,
+        memoize_new_contexts,
+        memoize_context,
+        ent_reg,
+        context_augmenter,
+    ):
+        self.row = ""
+        self.event_type = ""
+        self.context_id_bin = ""
+        self.continuous_sensors = continuous_sensors
+        self.context_lookup = context_lookup
+        self.external_events = external_events
+        self.event_cache = event_cache
+        self.entity_name_cache = entity_name_cache
+        self.include_entity_name = include_entity_name
+        self.format_time = format_time
+        self.memoize_new_contexts = memoize_new_contexts
+        self.memoize_context = memoize_context
+        self.ent_reg = ent_reg
+        self.context_augmenter = context_augmenter
+
+    def update_by_row(self, row):
+        """Update variables by row."""
+        self.row = row
+        self.context_id_bin: bytes = self.row.context_id_bin
+        if self.memoize_new_contexts:
+            self.memoize_context(self.context_id_bin, self.row)
+        if self.row.context_only:
+            raise ContinueException()
+        self.event_type = self.row.event_type
+
+    def handle_event_call_service(self):
+        """Deal with event type EVENT_CALL_SERVICE."""
+        raise ContinueException()
+
+    def handle_pseudo_event_state_changed(self):
+        """Deal with event type PSEUDO_EVENT_STATE_CHANGED."""
+        entity_id = self.row.entity_id
+        assert entity_id is not None
+        # Skip continuous sensors
+        if check_continuous(self.continuous_sensors, entity_id, self.ent_reg):
+            raise ContinueException
+
+        data = {
+            LOGBOOK_ENTRY_WHEN: self.format_time(self.row),
+            LOGBOOK_ENTRY_STATE: self.row.state,
+            LOGBOOK_ENTRY_ENTITY_ID: entity_id,
+        }
+        if self.include_entity_name:
+            data[LOGBOOK_ENTRY_NAME] = self.entity_name_cache.get(entity_id)
+        if icon := self.row.icon:
+            data[LOGBOOK_ENTRY_ICON] = icon
+
+        self.context_augmenter.augment(data, self.row, self.context_id_bin)
+        return data
+
+    def handle_event_logbook_entry(self):
+        """Deal with event type EVENT_LOGBOOK_ENTRY."""
+        event = self.event_cache.get(self.row)
+        if not (event_data := event.data):
+            raise ContinueException
+        entry_domain = event_data.get(ATTR_DOMAIN)
+        entry_entity_id = event_data.get(ATTR_ENTITY_ID)
+        if entry_domain is None and entry_entity_id is not None:
+            with suppress(IndexError):
+                entry_domain = split_entity_id(str(entry_entity_id))[0]
+        data = {
+            LOGBOOK_ENTRY_WHEN: self.format_time(self.row),
+            LOGBOOK_ENTRY_NAME: event_data.get(ATTR_NAME),
+            LOGBOOK_ENTRY_MESSAGE: event_data.get(ATTR_MESSAGE),
+            LOGBOOK_ENTRY_DOMAIN: entry_domain,
+            LOGBOOK_ENTRY_ENTITY_ID: entry_entity_id,
+        }
+        self.context_augmenter.augment(data, self.row, self.context_id_bin)
+        return data
+
+    def handle_external_events(self):
+        """Deal with event type that is in external_events."""
+        domain, describe_event = self.external_events[self.event_type]
+        try:
+            data = describe_event(self.event_cache.get(self.row))
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Error with %s describe event for %s", domain, self.event_type
+            )
+            raise ContinueException()
+        data[LOGBOOK_ENTRY_WHEN] = self.format_time(self.row)
+        data[LOGBOOK_ENTRY_DOMAIN] = domain
+        self.context_augmenter.augment(data, self.row, self.context_id_bin)
+        return data
 
 
 def _humanify(
@@ -212,70 +324,40 @@ def _humanify(
     format_time = logbook_run.format_time
     memoize_new_contexts = logbook_run.memoize_new_contexts
     memoize_context = context_lookup.setdefault
+    event_type_handler = EventTypeHandler(
+        continuous_sensors,
+        context_lookup,
+        external_events,
+        event_cache,
+        entity_name_cache,
+        include_entity_name,
+        format_time,
+        memoize_new_contexts,
+        memoize_context,
+        ent_reg,
+        context_augmenter,
+    )
 
     # Process rows
     for row in rows:
-        context_id_bin: bytes = row.context_id_bin
-        if memoize_new_contexts:
-            memoize_context(context_id_bin, row)
-        if row.context_only:
-            continue
+        event_type_handler.update_by_row(row)
         event_type = row.event_type
 
-        if event_type == EVENT_CALL_SERVICE:
+        if event_type in external_events:
+            event_type = EXTERNAL_EVENTS
+
+        event_type_dispatcher = {
+            EVENT_CALL_SERVICE: event_type_handler.handle_event_call_service,
+            PSEUDO_EVENT_STATE_CHANGED: event_type_handler.handle_pseudo_event_state_changed,
+            EXTERNAL_EVENTS: event_type_handler.handle_external_events,
+            EVENT_LOGBOOK_ENTRY: event_type_handler.handle_event_logbook_entry,
+        }
+
+        try:
+            data = event_type_dispatcher[event_type]()
+            yield data
+        except ContinueException:
             continue
-        if event_type is PSEUDO_EVENT_STATE_CHANGED:
-            entity_id = row.entity_id
-            assert entity_id is not None
-            # Skip continuous sensors
-            if check_continuous(continuous_sensors, entity_id, ent_reg):
-                continue
-
-            data = {
-                LOGBOOK_ENTRY_WHEN: format_time(row),
-                LOGBOOK_ENTRY_STATE: row.state,
-                LOGBOOK_ENTRY_ENTITY_ID: entity_id,
-            }
-            if include_entity_name:
-                data[LOGBOOK_ENTRY_NAME] = entity_name_cache.get(entity_id)
-            if icon := row.icon:
-                data[LOGBOOK_ENTRY_ICON] = icon
-
-            context_augmenter.augment(data, row, context_id_bin)
-            yield data
-
-        elif event_type in external_events:
-            domain, describe_event = external_events[event_type]
-            try:
-                data = describe_event(event_cache.get(row))
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception(
-                    "Error with %s describe event for %s", domain, event_type
-                )
-                continue
-            data[LOGBOOK_ENTRY_WHEN] = format_time(row)
-            data[LOGBOOK_ENTRY_DOMAIN] = domain
-            context_augmenter.augment(data, row, context_id_bin)
-            yield data
-
-        elif event_type == EVENT_LOGBOOK_ENTRY:
-            event = event_cache.get(row)
-            if not (event_data := event.data):
-                continue
-            entry_domain = event_data.get(ATTR_DOMAIN)
-            entry_entity_id = event_data.get(ATTR_ENTITY_ID)
-            if entry_domain is None and entry_entity_id is not None:
-                with suppress(IndexError):
-                    entry_domain = split_entity_id(str(entry_entity_id))[0]
-            data = {
-                LOGBOOK_ENTRY_WHEN: format_time(row),
-                LOGBOOK_ENTRY_NAME: event_data.get(ATTR_NAME),
-                LOGBOOK_ENTRY_MESSAGE: event_data.get(ATTR_MESSAGE),
-                LOGBOOK_ENTRY_DOMAIN: entry_domain,
-                LOGBOOK_ENTRY_ENTITY_ID: entry_entity_id,
-            }
-            context_augmenter.augment(data, row, context_id_bin)
-            yield data
 
 
 class ContextAugmenter:

@@ -19,7 +19,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import JSON_DUMP
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, INVALID_START_TIME
 from .helpers import (
     async_determine_event_types,
     async_filter_entities,
@@ -276,11 +276,11 @@ async def ws_event_stream(
     end_time: dt | None = None
     if end_time_str:
         if not (end_time := dt_util.parse_datetime(end_time_str)):
-            connection.send_error(msg_id, "invalid_end_time", "Invalid end_time")
+            connection.send_error(msg_id, "invalid_end_time", INVALID_START_TIME)
             return
         end_time = dt_util.as_utc(end_time)
         if end_time < start_time:
-            connection.send_error(msg_id, "invalid_end_time", "Invalid end_time")
+            connection.send_error(msg_id, "invalid_end_time", INVALID_START_TIME)
             return
 
     device_ids = msg.get("device_ids")
@@ -474,7 +474,7 @@ async def ws_get_events(
     elif parsed_end_time := dt_util.parse_datetime(end_time_str):
         end_time = dt_util.as_utc(parsed_end_time)
     else:
-        connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
+        connection.send_error(msg["id"], "invalid_end_time", INVALID_START_TIME)
         return
 
     if start_time > utc_now:
