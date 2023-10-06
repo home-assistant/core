@@ -1924,7 +1924,13 @@ def get_latest_short_term_statistics(
                 for metadata_id in missing_metadata_ids
                 if (
                     latest_id := cache_latest_short_term_statistic_id_for_metadata_id(
-                        run_cache, session, metadata_id, orm_rows=False
+                        # orm_rows=False is used here because we are in
+                        # a read-only session, and there will never be
+                        # any pending inserts in the session.
+                        run_cache,
+                        session,
+                        metadata_id,
+                        orm_rows=False,
                     )
                 )
                 is not None
@@ -2309,13 +2315,13 @@ def _import_statistics_with_session(
 
     # We just inserted new short term statistics, so we need to update the
     # ShortTermStatisticsRunCache with the latest id for the metadata_id
+    run_cache = get_short_term_statistics_run_cache(instance.hass)
     #
     # Because we are in the same session and we want to read rows
     # that have not been flushed yet, we need to pass orm_rows=True
     # to cache_latest_short_term_statistic_id_for_metadata_id
     # to ensure that it gets the rows that were just inserted
     #
-    run_cache = get_short_term_statistics_run_cache(instance.hass)
     cache_latest_short_term_statistic_id_for_metadata_id(
         run_cache, session, metadata_id, orm_rows=True
     )
