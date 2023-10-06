@@ -100,7 +100,7 @@ class ViCareEntity(Entity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=device_name
+            name=device_name,
             manufacturer="Viessmann",
             model=device_config.getModel(),
             configuration_url="https://developer.viessmann.com/",
