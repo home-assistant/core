@@ -2,8 +2,6 @@
 from collections.abc import Mapping
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
@@ -11,7 +9,6 @@ from homeassistant.components.water_heater import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
@@ -19,8 +16,6 @@ import homeassistant.util.dt as dt_util
 from . import OSOEnergyEntity
 from .const import DOMAIN
 
-ATTR_UNTIL_TEMP_LIMIT = "until_temp_limit"
-ATTR_V40MIN = "v40_min"
 EXTRA_HEATER_ATTR: dict[str, dict[str, Any]] = {
     "heater_state": {
         "ha_name": "heater_state",
@@ -61,10 +56,6 @@ EXTRA_HEATER_ATTR: dict[str, dict[str, Any]] = {
 HEATER_MIN_TEMP = 10
 HEATER_MAX_TEMP = 80
 MANUFACTURER = "OSO Energy"
-SERVICE_TURN_ON = "turn_on"
-SERVICE_TURN_OFF = "turn_off"
-SERVICE_SET_V40MIN = "set_v40_min"
-SERVICE_SET_PROFILE = "set_profile"
 
 
 async def async_setup_entry(
@@ -78,50 +69,6 @@ async def async_setup_entry(
         for dev in devices:
             entities.append(OSOEnergyWaterHeater(osoenergy, dev))
     async_add_entities(entities, True)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_TURN_ON,
-        {vol.Required(ATTR_UNTIL_TEMP_LIMIT): vol.All(cv.boolean)},
-        "async_oso_turn_on",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_TURN_OFF,
-        {vol.Required(ATTR_UNTIL_TEMP_LIMIT): vol.All(cv.boolean)},
-        "async_oso_turn_off",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_V40MIN,
-        {
-            vol.Required(ATTR_V40MIN): vol.All(
-                vol.Coerce(float), vol.Range(min=200, max=550)
-            ),
-        },
-        "async_set_v40_min",
-    )
-
-    service_set_profile_schema = {}
-    for hour in range(24):
-        service_set_profile_schema[vol.Optional(f"hour_{hour:02d}")] = vol.All(
-            vol.Coerce(int), vol.Range(min=10, max=75)
-        )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_PROFILE,
-        service_set_profile_schema,
-        "async_set_profile",
-    )
-
-
-def _get_utc_hour(local_hour: int):
-    """Get the utc hour."""
-    now = dt_util.now()
-    local_time = now.replace(hour=local_hour, minute=0, second=0, microsecond=0)
-    utc_hour = dt_util.as_utc(local_time)
-    return utc_hour.hour
 
 
 def _get_local_hour(utc_hour: int):
@@ -234,34 +181,10 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
         """Turn off hotwater."""
         await self.osoenergy.hotwater.turn_off(self.device, True)
 
-    async def async_oso_turn_on(self, until_temp_limit) -> None:
-        """Handle the service call."""
-        await self.osoenergy.hotwater.turn_on(self.device, until_temp_limit)
-
-    async def async_oso_turn_off(self, until_temp_limit) -> None:
-        """Handle the service call."""
-        await self.osoenergy.hotwater.turn_off(self.device, until_temp_limit)
-
-    async def async_set_v40_min(self, v40_min) -> None:
-        """Handle the service call."""
-        await self.osoenergy.hotwater.set_v40_min(self.device, v40_min)
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = int(kwargs.get("temperature", self.target_temperature))
         profile = [target_temperature] * 24
-
-        await self.osoenergy.hotwater.set_profile(self.device, profile)
-
-    async def async_set_profile(self, **kwargs: Any) -> None:
-        """Handle the service call."""
-        profile = self.device.get("attributes", {}).get("profile")
-
-        for hour in range(24):
-            hour_key = f"hour_{hour:02d}"
-
-            if hour_key in kwargs:
-                profile[_get_utc_hour(hour)] = kwargs[hour_key]
 
         await self.osoenergy.hotwater.set_profile(self.device, profile)
 
