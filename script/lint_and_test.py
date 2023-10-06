@@ -223,7 +223,14 @@ async def main():
         return
 
     code, _ = await async_exec(
-        "pytest", "-vv", "--force-sugar", "--", *test_files, display=True
+        "python3",
+        "-m",
+        "pytest",
+        "-vv",
+        "--force-sugar",
+        "--",
+        *test_files,
+        display=True,
     )
     print("=============================")
 
