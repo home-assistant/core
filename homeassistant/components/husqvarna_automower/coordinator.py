@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 import aioautomower
+from aioautomower.const import MowerAttributes
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
@@ -13,7 +14,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[aioautomower.MowerList]):
+class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttributes]]):
     """Class to manage fetching Husqvarna data."""
 
     def __init__(
@@ -38,7 +39,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[aioautomower.MowerLis
         )
         self.ws_connected: bool = False
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> dict[str, MowerAttributes]:
         """Subscribe for websocket and poll data from the API."""
         if not self.ws_connected:
             await self.mowersession.connect()

@@ -1,7 +1,7 @@
-"""Husqvarna automower entity."""
+"""Husqvarna Automower lawn mower entity."""
 import logging
 
-from aioautomower.const import MowerActivities, MowerData, MowerStates
+from aioautomower.const import MowerActivities, MowerStates
 
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
@@ -58,7 +58,7 @@ async def async_setup_entry(
     """Set up lawn mower platform."""
     coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        AutomowerLawnMowerEntity(mower, coordinator) for mower in coordinator.data.data
+        AutomowerLawnMowerEntity(mower_id, coordinator) for mower_id in coordinator.data
     )
 
 
@@ -69,10 +69,12 @@ class AutomowerLawnMowerEntity(LawnMowerEntity, AutomowerBaseEntity):
     _attr_supported_features = SUPPORT_STATE_SERVICES
 
     def __init__(
-        self, mower: MowerData, coordinator: AutomowerDataUpdateCoordinator
+        self,
+        mower_id: str,
+        coordinator: AutomowerDataUpdateCoordinator,
     ) -> None:
         """Set up HusqvarnaAutomowerEntity."""
-        super().__init__(mower, coordinator)
+        super().__init__(mower_id, coordinator)
         self._attr_unique_id = f"{self.mower_id}_lawn_mower"
 
     @property

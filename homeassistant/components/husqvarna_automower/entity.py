@@ -2,7 +2,7 @@
 
 import logging
 
-from aioautomower.const import MowerAttributes, MowerData
+from aioautomower.const import MowerAttributes
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -20,13 +20,14 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
     _attr_should_poll = False
 
     def __init__(
-        self, mower: MowerData, coordinator: AutomowerDataUpdateCoordinator
+        self,
+        mower_id: str,
+        coordinator: AutomowerDataUpdateCoordinator,
     ) -> None:
         """Initialize AutomowerEntity."""
-        super().__init__(mower, coordinator)
-        self.mower = mower
+        super().__init__(coordinator)
         self.coordinator = coordinator
-        self.mower_id = mower.id
+        self.mower_id = mower_id
         mower_name = self.mower_attributes.system.name
         mower_model = self.mower_attributes.system.model
 
@@ -42,4 +43,4 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
     @property
     def mower_attributes(self) -> MowerAttributes:
         """Get the mower attributes of the current mower."""
-        return self.mower.attributes
+        return self.coordinator.data[self.mower_id]
