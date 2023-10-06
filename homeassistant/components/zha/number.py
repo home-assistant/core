@@ -1012,15 +1012,7 @@ class ZonnSmartTemperatureCalibration(
     _zcl_attribute: str = "temperature_calibration"
     _attr_name: str = "Temperature calibration offset"
     _attr_icon: str = ICONS[0]
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Set the offset value."""
-        await super().async_set_native_value(value * 10.0)
-
-    @property
-    def native_value(self) -> float:
-        """Return the current offset value."""
-        return super().native_value / 10.0
+    _attr_multiplier: float = 0.1
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -1039,6 +1031,7 @@ class ZonnSmartWindowOpenTemperature(
     _zcl_attribute: str = "opened_window_temperature"
     _attr_name: str = "Window open temperature"
     _attr_icon: str = ICONS[0]
+    _attr_multiplier: float = 0.1
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the window open temperature value."""
