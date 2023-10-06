@@ -108,7 +108,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_service(hass: HomeAssistant) -> None:
     """Add the services for the flume integration."""
 
-    async def notifications(call: ServiceCall) -> ServiceResponse:
+    async def list_notifications(call: ServiceCall) -> ServiceResponse:
         """Return the user notifications."""
         entry_id: str = call.data[CONF_CONFIG_ENTRY]
         entry: ConfigEntry | None = hass.config_entries.async_get_entry(entry_id)
@@ -125,7 +125,7 @@ async def async_setup_service(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN,
         SERVICE_LIST_NOTIFICATIONS,
-        notifications,
+        list_notifications,
         schema=LIST_NOTIFICATIONS_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
