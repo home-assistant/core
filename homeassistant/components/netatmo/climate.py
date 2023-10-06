@@ -243,35 +243,42 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 data["event_type"] == EVENT_TYPE_SET_POINT
                 and self._room.entity_id == room["id"]
             ):
-                if room["therm_setpoint_mode"] == STATE_NETATMO_OFF:
-                    self._attr_hvac_mode = HVACMode.OFF
-                    self._attr_preset_mode = STATE_NETATMO_OFF
-                    self._attr_target_temperature = 0
-                elif room["therm_setpoint_mode"] == STATE_NETATMO_MAX:
-                    self._attr_hvac_mode = HVACMode.HEAT
-                    self._attr_preset_mode = PRESET_MAP_NETATMO[PRESET_BOOST]
-                    self._attr_target_temperature = DEFAULT_MAX_TEMP
-                elif room["therm_setpoint_mode"] == STATE_NETATMO_MANUAL:
-                    self._attr_hvac_mode = HVACMode.HEAT
-                    self._attr_target_temperature = room["therm_setpoint_temperature"]
-                else:
-                    self._attr_target_temperature = room["therm_setpoint_temperature"]
-                    if self._attr_target_temperature == DEFAULT_MAX_TEMP:
-                        self._attr_hvac_mode = HVACMode.HEAT
-                self.async_write_ha_state()
-                return
+                self._handle_set_point(room)
 
             if (
                 data["event_type"] == EVENT_TYPE_CANCEL_SET_POINT
                 and self._room.entity_id == room["id"]
             ):
-                if self._attr_hvac_mode == HVACMode.OFF:
-                    self._attr_hvac_mode = HVACMode.AUTO
-                    self._attr_preset_mode = PRESET_MAP_NETATMO[PRESET_SCHEDULE]
+                self._handle_cancel_set_point(room)
 
-                self.async_update_callback()
-                self.async_write_ha_state()
-                return
+
+    def _handle_set_point(self, room: dict):
+        if room["therm_setpoint_mode"] == STATE_NETATMO_OFF:
+            self._attr_hvac_mode = HVACMode.OFF
+            self._attr_preset_mode = STATE_NETATMO_OFF
+            self._attr_target_temperature = 0
+        elif room["therm_setpoint_mode"] == STATE_NETATMO_MAX:
+            self._attr_hvac_mode = HVACMode.HEAT
+            self._attr_preset_mode = PRESET_MAP_NETATMO[PRESET_BOOST]
+            self._attr_target_temperature = DEFAULT_MAX_TEMP
+        elif room["therm_setpoint_mode"] == STATE_NETATMO_MANUAL:
+            self._attr_hvac_mode = HVACMode.HEAT
+            self._attr_target_temperature = room["therm_setpoint_temperature"]
+        else:
+            self._attr_target_temperature = room["therm_setpoint_temperature"]
+            if self._attr_target_temperature == DEFAULT_MAX_TEMP:
+                self._attr_hvac_mode = HVACMode.HEAT
+        self.async_write_ha_state()
+        return
+
+    def _handle_cancel_set_point(self, room: dict):
+        if self._attr_hvac_mode == HVACMode.OFF:
+            self._attr_hvac_mode = HVACMode.AUTO
+            self._attr_preset_mode = PRESET_MAP_NETATMO[PRESET_SCHEDULE]
+
+        self.async_update_callback()
+        self.async_write_ha_state()
+        return
 
     @property
     def hvac_action(self) -> HVACAction:
