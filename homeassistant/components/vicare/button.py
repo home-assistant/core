@@ -51,7 +51,9 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 )
 
 
-def _build_entity(name, vicare_api, device_config, description, has_multiple_devices: bool):
+def _build_entity(
+    name, vicare_api, device_config, description, has_multiple_devices: bool
+):
     """Create a ViCare button entity."""
     _LOGGER.debug("Found device %s", name)
     try:
@@ -113,7 +115,12 @@ class ViCareButton(ViCareEntity, ButtonEntity):
     entity_description: ViCareButtonEntityDescription
 
     def __init__(
-        self, name, api, device_config, description: ViCareButtonEntityDescription, has_multiple_devices: bool
+        self,
+        name,
+        api,
+        device_config,
+        description: ViCareButtonEntityDescription,
+        has_multiple_devices: bool,
     ) -> None:
         """Initialize the button."""
         self.entity_description = description

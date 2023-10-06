@@ -97,7 +97,7 @@ async def async_setup_entry(
                 api,
                 circuit,
                 device,
-                has_multiple_devices, 
+                has_multiple_devices,
             )
             entities.append(entity)
 

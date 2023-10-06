@@ -174,21 +174,36 @@ async def async_setup_entry(
 
         try:
             await _entities_from_descriptions(
-                hass, entities, CIRCUIT_SENSORS, api.circuits, device, has_multiple_devices
+                hass,
+                entities,
+                CIRCUIT_SENSORS,
+                api.circuits,
+                device,
+                has_multiple_devices,
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No circuits found")
 
         try:
             await _entities_from_descriptions(
-                hass, entities, BURNER_SENSORS, api.burners, device, has_multiple_devices
+                hass,
+                entities,
+                BURNER_SENSORS,
+                api.burners,
+                device,
+                has_multiple_devices,
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No burners found")
 
         try:
             await _entities_from_descriptions(
-                hass, entities, COMPRESSOR_SENSORS, api.compressors, device, has_multiple_devices
+                hass,
+                entities,
+                COMPRESSOR_SENSORS,
+                api.compressors,
+                device,
+                has_multiple_devices,
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No compressors found")
@@ -203,7 +218,12 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
     entity_description: ViCareBinarySensorEntityDescription
 
     def __init__(
-        self, name, api, device_config, description: ViCareBinarySensorEntityDescription, has_multiple_devices: bool
+        self,
+        name,
+        api,
+        device_config,
+        description: ViCareBinarySensorEntityDescription,
+        has_multiple_devices: bool,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
