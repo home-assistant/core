@@ -138,7 +138,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
                 f"{name}: error in structure format --> {str(err)}"
             ) from err
         bytecount = count * 2
-        if bytecount != size:
+        if (bytecount != size) and (config[CONF_DATA_TYPE] != DataType.CUSTOM):
             raise vol.Invalid(
                 f"{name}: Size of structure is {size} bytes but `{CONF_COUNT}: {count}` is {bytecount} bytes"
             )
