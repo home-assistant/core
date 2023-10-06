@@ -539,7 +539,7 @@ class KNXCommonFlow(ABC, FlowHandler):
             errors=errors,
         )
 
-    async def handle_has_user_input(self, user_input: dict) -> None:
+    async def __handle_has_user_input(self, user_input: dict) -> None:
         """Handle async_step_knxkeys_tunnel_select when the user input is available.
 
         Args:
@@ -582,7 +582,7 @@ class KNXCommonFlow(ABC, FlowHandler):
         description_placeholders = {}
 
         if user_input is not None:
-            await self.handle_has_user_input(user_input)
+            await self.__handle_has_user_input(user_input)
             return self.finish_flow()
 
         # this step is only called from async_step_secure_knxkeys so self._keyring is always set

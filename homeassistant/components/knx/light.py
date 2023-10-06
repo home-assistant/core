@@ -285,6 +285,29 @@ class KNXLight(KnxEntity, LightEntity):
         """Flag supported color modes."""
         return {self.color_mode}
 
+    async def async_turn_on_set_color(
+        self, rgb: tuple[int, int, int], white: int | None, brightness: int | None
+    ) -> None:
+        """Set color of light. Normalize colors for brightness when not writable."""
+        if self._device.brightness.writable:
+            # let the KNX light controller handle brightness
+            await self._device.set_color(rgb, white)
+            if brightness:
+                await self._device.set_brightness(brightness)
+            return
+
+        if brightness is None:
+            # normalize for brightness if brightness is derived from color
+            brightness = self.brightness or 255
+        rgb = cast(
+            tuple[int, int, int],
+            tuple(color * brightness // 255 for color in rgb),
+        )
+        white = white * brightness // 255 if white is not None else None
+        await self._device.set_color(rgb, white)
+
+    # Reduced cognitive complexity from 37 to 16. We evaluated that that this is an acceptable value and
+    # minimizing the complexity further would not increase the readability and make it more complex.
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -306,33 +329,12 @@ class KNXLight(KnxEntity, LightEntity):
             await self._device.set_on()
             return
 
-        async def set_color(
-            rgb: tuple[int, int, int], white: int | None, brightness: int | None
-        ) -> None:
-            """Set color of light. Normalize colors for brightness when not writable."""
-            if self._device.brightness.writable:
-                # let the KNX light controller handle brightness
-                await self._device.set_color(rgb, white)
-                if brightness:
-                    await self._device.set_brightness(brightness)
-                return
-
-            if brightness is None:
-                # normalize for brightness if brightness is derived from color
-                brightness = self.brightness or 255
-            rgb = cast(
-                tuple[int, int, int],
-                tuple(color * brightness // 255 for color in rgb),
-            )
-            white = white * brightness // 255 if white is not None else None
-            await self._device.set_color(rgb, white)
-
         # return after RGB(W) color has changed as it implicitly sets the brightness
         if rgbw is not None:
-            await set_color(rgbw[:3], rgbw[3], brightness)
+            await self.async_turn_on_set_color(rgbw[:3], rgbw[3], brightness)
             return
         if rgb is not None:
-            await set_color(rgb, None, brightness)
+            await self.async_turn_on_set_color(rgb, None, brightness)
             return
 
         if color_temp is not None:
@@ -340,6 +342,7 @@ class KNXLight(KnxEntity, LightEntity):
                 self._attr_max_color_temp_kelvin,
                 max(self._attr_min_color_temp_kelvin, color_temp),
             )
+
             if self._device.supports_color_temperature:
                 await self._device.set_color_temperature(color_temp)
             elif self._device.supports_tunable_white:
@@ -365,28 +368,38 @@ class KNXLight(KnxEntity, LightEntity):
             sat = round(hs_color[1])
             await self._device.set_hs_color((hue, sat))
 
-        if brightness is not None:
-            # brightness: 1..255; 0 brightness will call async_turn_off()
-            if self._device.brightness.writable:
-                await self._device.set_brightness(brightness)
-                return
-            # brightness without color in kwargs; set via color
-            if self.color_mode == ColorMode.XY:
+        if brightness is None:
+            return
+
+        # brightness: 1..255; 0 brightness will call async_turn_off()
+        if self._device.brightness.writable:
+            await self._device.set_brightness(brightness)
+            return
+
+        match self.color_mode:
+            case ColorMode.XY:
                 await self._device.set_xyy_color(XYYColor(brightness=brightness))
-                return
-            # default to white if color not known for RGB(W)
-            if self.color_mode == ColorMode.RGBW:
+
+            case ColorMode.RGBW:
                 _rgbw = self.rgbw_color
-                if not _rgbw or not any(_rgbw):
+                if self._color_invalid(_rgbw):
                     _rgbw = (0, 0, 0, 255)
-                await set_color(_rgbw[:3], _rgbw[3], brightness)
-                return
-            if self.color_mode == ColorMode.RGB:
+
+                assert _rgbw is not None
+                await self.async_turn_on_set_color(_rgbw[:3], _rgbw[3], brightness)
+
+            case ColorMode.RGB:
                 _rgb = self.rgb_color
-                if not _rgb or not any(_rgb):
+                if self._color_invalid(_rgb):
                     _rgb = (255, 255, 255)
-                await set_color(_rgb, None, brightness)
-                return
+
+                assert _rgb is not None
+                await self.async_turn_on_set_color(_rgb, None, brightness)
+
+    def _color_invalid(
+        self, color: tuple[int, int, int] | tuple[int, int, int, int] | None
+    ) -> bool:
+        return not color or not any(color)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
