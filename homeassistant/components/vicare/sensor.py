@@ -597,7 +597,12 @@ def _build_entity(name, vicare_api, device_config, sensor, has_multiple_devices:
 
 
 async def _entities_from_descriptions(
-    hass: HomeAssistant, entities, sensor_descriptions, iterables, device, has_multiple_devices: bool
+    hass: HomeAssistant,
+    entities,
+    sensor_descriptions,
+    iterables,
+    device,
+    has_multiple_devices: bool,
 ):
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:

@@ -115,7 +115,9 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _attr_max_temp = VICARE_TEMP_WATER_MAX
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
 
-    def __init__(self, name, api, circuit, device_config, has_multiple_devices: bool) -> None:
+    def __init__(
+        self, name, api, circuit, device_config, has_multiple_devices: bool
+    ) -> None:
         """Initialize the DHW water_heater device."""
         self._attr_name = name
         self._api = api
