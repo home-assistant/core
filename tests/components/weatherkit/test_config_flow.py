@@ -166,7 +166,7 @@ async def test_auto_fix_key_input(
         return_value=[DataSetType.CURRENT_WEATHER],
     ):
         user_input = EXAMPLE_USER_INPUT.copy()
-        user_input[CONF_KEY_PEM] = input_header + "whateverkey" + input_footer
+        user_input[CONF_KEY_PEM] = f"{input_header}whateverkey{input_footer}"
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input,
