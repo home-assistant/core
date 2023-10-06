@@ -196,6 +196,7 @@ class EventTypeHandler:
 
     def __init__(
         self,
+        rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result,
         continuous_sensors: dict[str, bool],
         context_lookup: dict[bytes | None, Row | EventAsRow | None],
         external_events: dict[
@@ -211,6 +212,7 @@ class EventTypeHandler:
         context_augmenter: ContextAugmenter,
     ) -> None:
         """Init the event type handler."""
+        self.rows = rows
         self.context_id_bin = b""
         self.event_type = ""
         self.continuous_sensors = continuous_sensors
@@ -224,6 +226,28 @@ class EventTypeHandler:
         self.memoize_context = memoize_context
         self.ent_reg = ent_reg
         self.context_augmenter = context_augmenter
+        self.event_type_dispatcher = {
+            EVENT_CALL_SERVICE: self.handle_event_call_service,
+            PSEUDO_EVENT_STATE_CHANGED: self.handle_pseudo_event_state_changed,
+            EXTERNAL_EVENTS: self.handle_external_events,
+            EVENT_LOGBOOK_ENTRY: self.handle_event_logbook_entry,
+        }
+
+    def process_rows(self) -> Generator[dict[str, Any], None, None]:
+        """Process rows."""
+        for row in self.rows:
+            try:
+                self.update_by_row(row)
+                event_type = row.event_type
+
+                if event_type in self.external_events:
+                    event_type = EXTERNAL_EVENTS
+
+                data = self.event_type_dispatcher[event_type](row)
+                if data:
+                    yield data
+            except ContinueException:
+                continue
 
     def check_continuous(self, entity_id: str) -> bool | None:
         """Check if the sensor is continuous."""
@@ -236,43 +260,44 @@ class EventTypeHandler:
 
     def update_by_row(self, row: EventAsRow | Row) -> None:
         """Update variables by row."""
-        self.row = row
-        self.context_id_bin = self.row.context_id_bin
+        self.context_id_bin = row.context_id_bin
         if self.memoize_new_contexts:
-            self.memoize_context(self.context_id_bin, self.row)
-        if self.row.context_only:
+            self.memoize_context(self.context_id_bin, row)
+        if row.context_only:
             raise ContinueException()
-        if self.row.event_type:
-            self.event_type = self.row.event_type
+        if row.event_type:
+            self.event_type = row.event_type
 
-    def handle_event_call_service(self) -> None:
+    def handle_event_call_service(self, _: Any) -> None:
         """Deal with event type EVENT_CALL_SERVICE."""
         raise ContinueException()
 
-    def handle_pseudo_event_state_changed(self) -> dict[str, Any]:
+    def handle_pseudo_event_state_changed(
+        self, row: EventAsRow | Row
+    ) -> dict[str, Any]:
         """Deal with event type PSEUDO_EVENT_STATE_CHANGED."""
-        entity_id = self.row.entity_id
+        entity_id = row.entity_id
         assert entity_id is not None
         # Skip continuous sensors
         if self.check_continuous(entity_id):
             raise ContinueException()
 
         data = {
-            LOGBOOK_ENTRY_WHEN: self.format_time(self.row),
-            LOGBOOK_ENTRY_STATE: self.row.state,
+            LOGBOOK_ENTRY_WHEN: self.format_time(row),
+            LOGBOOK_ENTRY_STATE: row.state,
             LOGBOOK_ENTRY_ENTITY_ID: entity_id,
         }
         if self.include_entity_name:
             data[LOGBOOK_ENTRY_NAME] = self.entity_name_cache.get(entity_id)
-        if icon := self.row.icon:
+        if icon := row.icon:
             data[LOGBOOK_ENTRY_ICON] = icon
 
-        self.context_augmenter.augment(data, self.row, self.context_id_bin)
+        self.context_augmenter.augment(data, row, self.context_id_bin)
         return data
 
-    def handle_event_logbook_entry(self) -> dict[str, Any]:
+    def handle_event_logbook_entry(self, row: EventAsRow | Row) -> dict[str, Any]:
         """Deal with event type EVENT_LOGBOOK_ENTRY."""
-        event = self.event_cache.get(self.row)
+        event = self.event_cache.get(row)
         if not (event_data := event.data):
             raise ContinueException()
         entry_domain = event_data.get(ATTR_DOMAIN)
@@ -281,28 +306,28 @@ class EventTypeHandler:
             with suppress(IndexError):
                 entry_domain = split_entity_id(str(entry_entity_id))[0]
         data = {
-            LOGBOOK_ENTRY_WHEN: self.format_time(self.row),
+            LOGBOOK_ENTRY_WHEN: self.format_time(row),
             LOGBOOK_ENTRY_NAME: event_data.get(ATTR_NAME),
             LOGBOOK_ENTRY_MESSAGE: event_data.get(ATTR_MESSAGE),
             LOGBOOK_ENTRY_DOMAIN: entry_domain,
             LOGBOOK_ENTRY_ENTITY_ID: entry_entity_id,
         }
-        self.context_augmenter.augment(data, self.row, self.context_id_bin)
+        self.context_augmenter.augment(data, row, self.context_id_bin)
         return data
 
-    def handle_external_events(self) -> dict[str, Any]:
+    def handle_external_events(self, row: EventAsRow | Row) -> dict[str, Any]:
         """Deal with event type that is in external_events."""
         domain, describe_event = self.external_events[self.event_type]
         try:
-            data = describe_event(self.event_cache.get(self.row))
+            data = describe_event(self.event_cache.get(row))
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error with %s describe event for %s", domain, self.event_type
             )
             raise ContinueException() from Exception
-        data[LOGBOOK_ENTRY_WHEN] = self.format_time(self.row)
+        data[LOGBOOK_ENTRY_WHEN] = self.format_time(row)
         data[LOGBOOK_ENTRY_DOMAIN] = domain
-        self.context_augmenter.augment(data, self.row, self.context_id_bin)
+        self.context_augmenter.augment(data, row, self.context_id_bin)
         return data
 
 
@@ -324,6 +349,7 @@ def _humanify(
     memoize_new_contexts = logbook_run.memoize_new_contexts
     memoize_context = context_lookup.setdefault
     event_type_handler = EventTypeHandler(
+        rows,
         continuous_sensors,
         context_lookup,
         external_events,
@@ -337,28 +363,7 @@ def _humanify(
         context_augmenter,
     )
 
-    event_type_dispatcher = {
-        EVENT_CALL_SERVICE: event_type_handler.handle_event_call_service,
-        PSEUDO_EVENT_STATE_CHANGED: event_type_handler.handle_pseudo_event_state_changed,
-        EXTERNAL_EVENTS: event_type_handler.handle_external_events,
-        EVENT_LOGBOOK_ENTRY: event_type_handler.handle_event_logbook_entry,
-    }
-
-    # Process rows
-    for row in rows:
-        try:
-            event_type_handler.update_by_row(row)
-            event_type = row.event_type
-
-            if event_type in external_events:
-                event_type = EXTERNAL_EVENTS
-
-
-            data = event_type_dispatcher[event_type]()
-            if data:
-                yield data
-        except ContinueException:
-            continue
+    return event_type_handler.process_rows()
 
 
 class ContextAugmenter:
