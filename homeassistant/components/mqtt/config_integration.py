@@ -24,7 +24,6 @@ from . import (
     event as event_platform,
     fan as fan_platform,
     humidifier as humidifier_platform,
-    image as image_platform,
     lawn_mower as lawn_mower_platform,
     light as light_platform,
     lock as lock_platform,
@@ -92,10 +91,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
             cv.ensure_list,
             [humidifier_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
-        Platform.IMAGE.value: vol.All(
-            cv.ensure_list,
-            [image_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.IMAGE.value: vol.All(cv.ensure_list, [dict]),
         Platform.LAWN_MOWER.value: vol.All(
             cv.ensure_list,
             [lawn_mower_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
