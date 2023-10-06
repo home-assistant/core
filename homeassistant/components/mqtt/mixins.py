@@ -81,6 +81,7 @@ from .const import (
     CONF_OBJECT_ID,
     CONF_ORIGIN,
     CONF_QOS,
+    CONF_SCHEMA,
     CONF_SUGGESTED_AREA,
     CONF_SW_VERSION,
     CONF_TOPIC,
@@ -342,17 +343,19 @@ async def async_setup_entry_helper(
 async def async_mqtt_entry_helper(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    entity_class: type[MqttEntity],
+    entity_class: type[MqttEntity] | None,
     domain: str,
     async_add_entities: AddEntitiesCallback,
     discovery_schema: vol.Schema,
     platform_schema_modern: vol.Schema,
+    schema_class_mapping: dict[str, type[MqttEntity]] | None = None,
 ) -> None:
     """Set up entity, automation or tag creation dynamically through MQTT discovery."""
     mqtt_data = get_mqtt_data(hass)
 
     async def async_discover(discovery_payload: MQTTDiscoveryPayload) -> None:
         """Discover and add an MQTT entity, automation or tag."""
+        nonlocal entity_class
         if not mqtt_config_entry_enabled(hass):
             _LOGGER.warning(
                 (
@@ -366,6 +369,10 @@ async def async_mqtt_entry_helper(
         discovery_data = discovery_payload.discovery_data
         try:
             config: DiscoveryInfoType = discovery_schema(discovery_payload)
+            if schema_class_mapping is not None:
+                entity_class = schema_class_mapping[config[CONF_SCHEMA]]
+            if TYPE_CHECKING:
+                assert entity_class is not None
             async_add_entities([entity_class(hass, config, entry, discovery_data)])
         except vol.Invalid as err:
             discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
@@ -390,6 +397,7 @@ async def async_mqtt_entry_helper(
 
     async def _async_setup_entities() -> None:
         """Set up MQTT items from configuration.yaml."""
+        nonlocal entity_class
         mqtt_data = get_mqtt_data(hass)
         if not (config_yaml := mqtt_data.config):
             return
@@ -404,6 +412,10 @@ async def async_mqtt_entry_helper(
         for yaml_config in yaml_configs:
             try:
                 config = platform_schema_modern(yaml_config)
+                if schema_class_mapping is not None:
+                    entity_class = schema_class_mapping[config[CONF_SCHEMA]]
+                if TYPE_CHECKING:
+                    assert entity_class is not None
                 entities.append(entity_class(hass, config, entry, None))
             except vol.Invalid as ex:
                 error = str(ex)
