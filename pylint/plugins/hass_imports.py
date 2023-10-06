@@ -18,6 +18,12 @@ class ObsoleteImportMatch:
 
 
 _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
+    "homeassistant.backports.enum": [
+        ObsoleteImportMatch(
+            reason="We can now use the Python 3.11 provided enum.StrEnum instead",
+            constant=re.compile(r"^StrEnum$"),
+        ),
+    ],
     "homeassistant.components.alarm_control_panel": [
         ObsoleteImportMatch(
             reason="replaced by AlarmControlPanelEntityFeature enum",
@@ -379,7 +385,7 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
 }
 
 
-class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
+class HassImportsFormatChecker(BaseChecker):
     """Checker for imports."""
 
     name = "hass_imports"
@@ -409,7 +415,7 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
     }
     options = ()
 
-    def __init__(self, linter: PyLinter | None = None) -> None:
+    def __init__(self, linter: PyLinter) -> None:
         """Initialize the HassImportsFormatChecker."""
         super().__init__(linter)
         self.current_package: str | None = None

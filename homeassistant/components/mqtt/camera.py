@@ -4,6 +4,7 @@ from __future__ import annotations
 from base64 import b64decode
 import functools
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -41,7 +42,7 @@ MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
 
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_IMAGE_ENCODING): "b64",
     }
@@ -80,8 +81,10 @@ async def _async_setup_entity(
 class MqttCamera(MqttEntity, Camera):
     """representation of a MQTT camera."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format: str = camera.ENTITY_ID_FORMAT
     _attributes_extra_blocked: frozenset[str] = MQTT_CAMERA_ATTRIBUTES_BLOCKED
+    _last_image: bytes | None = None
 
     def __init__(
         self,
@@ -91,8 +94,6 @@ class MqttCamera(MqttEntity, Camera):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT Camera."""
-        self._last_image: bytes | None = None
-
         Camera.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -111,7 +112,8 @@ class MqttCamera(MqttEntity, Camera):
             if CONF_IMAGE_ENCODING in self._config:
                 self._last_image = b64decode(msg.payload)
             else:
-                assert isinstance(msg.payload, bytes)
+                if TYPE_CHECKING:
+                    assert isinstance(msg.payload, bytes)
                 self._last_image = msg.payload
 
         self._sub_state = subscription.async_prepare_subscribe_topics(

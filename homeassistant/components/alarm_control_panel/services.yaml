@@ -1,22 +1,16 @@
 # Describes the format for available alarm control panel services
 
 alarm_disarm:
-  name: Disarm
-  description: Send the alarm the command for disarm.
   target:
     entity:
       domain: alarm_control_panel
   fields:
     code:
-      name: Code
-      description: An optional code to disarm the alarm control panel with.
       example: "1234"
       selector:
         text:
 
 alarm_arm_custom_bypass:
-  name: Arm with custom bypass
-  description: Send arm custom bypass command.
   target:
     entity:
       domain: alarm_control_panel
@@ -24,15 +18,11 @@ alarm_arm_custom_bypass:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
   fields:
     code:
-      name: Code
-      description: An optional code to arm custom bypass the alarm control panel with.
       example: "1234"
       selector:
         text:
 
 alarm_arm_home:
-  name: Arm home
-  description: Send the alarm the command for arm home.
   target:
     entity:
       domain: alarm_control_panel
@@ -40,15 +30,11 @@ alarm_arm_home:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
   fields:
     code:
-      name: Code
-      description: An optional code to arm home the alarm control panel with.
       example: "1234"
       selector:
         text:
 
 alarm_arm_away:
-  name: Arm away
-  description: Send the alarm the command for arm away.
   target:
     entity:
       domain: alarm_control_panel
@@ -56,15 +42,11 @@ alarm_arm_away:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_AWAY
   fields:
     code:
-      name: Code
-      description: An optional code to arm away the alarm control panel with.
       example: "1234"
       selector:
         text:
 
 alarm_arm_night:
-  name: Arm night
-  description: Send the alarm the command for arm night.
   target:
     entity:
       domain: alarm_control_panel
@@ -72,15 +54,11 @@ alarm_arm_night:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_NIGHT
   fields:
     code:
-      name: Code
-      description: An optional code to arm night the alarm control panel with.
       example: "1234"
       selector:
         text:
 
 alarm_arm_vacation:
-  name: Arm vacation
-  description: Send the alarm the command for arm vacation.
   target:
     entity:
       domain: alarm_control_panel
@@ -88,15 +66,11 @@ alarm_arm_vacation:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_VACATION
   fields:
     code:
-      name: Code
-      description: An optional code to arm vacation the alarm control panel with.
       example: "1234"
       selector:
         text:
 
 alarm_trigger:
-  name: Trigger
-  description: Send the alarm the command for trigger.
   target:
     entity:
       domain: alarm_control_panel
@@ -104,8 +78,6 @@ alarm_trigger:
         - alarm_control_panel.AlarmControlPanelEntityFeature.TRIGGER
   fields:
     code:
-      name: Code
-      description: An optional code to trigger the alarm control panel with.
       example: "1234"
       selector:
         text:

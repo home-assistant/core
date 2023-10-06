@@ -1,64 +1,63 @@
 # Describes the format for available media player services
 
 turn_on:
-  name: Turn on
-  description: Turn a media player power on.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.TURN_ON
 
 turn_off:
-  name: Turn off
-  description: Turn a media player power off.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.TURN_OFF
 
 toggle:
-  name: Toggle
-  description: Toggles a media player power state.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - - media_player.MediaPlayerEntityFeature.TURN_OFF
+          - media_player.MediaPlayerEntityFeature.TURN_ON
 
 volume_up:
-  name: Turn up volume
-  description: Turn a media player volume up.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.VOLUME_SET
+        - media_player.MediaPlayerEntityFeature.VOLUME_STEP
 
 volume_down:
-  name: Turn down volume
-  description: Turn a media player volume down.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.VOLUME_SET
+        - media_player.MediaPlayerEntityFeature.VOLUME_STEP
 
 volume_mute:
-  name: Mute volume
-  description: Mute a media player's volume.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.VOLUME_MUTE
   fields:
     is_volume_muted:
-      name: Muted
-      description: True/false for mute/unmute.
       required: true
       selector:
         boolean:
 
 volume_set:
-  name: Set volume
-  description: Set a media player's volume level.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.VOLUME_SET
   fields:
     volume_level:
-      name: Level
-      description: Volume level to set as float.
       required: true
       selector:
         number:
@@ -67,57 +66,56 @@ volume_set:
           step: 0.01
 
 media_play_pause:
-  name: Play/Pause
-  description: Toggle media player play/pause state.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - - media_player.MediaPlayerEntityFeature.PAUSE
+          - media_player.MediaPlayerEntityFeature.PLAY
 
 media_play:
-  name: Play
-  description: Send the media player the command for play.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY
 
 media_pause:
-  name: Pause
-  description: Send the media player the command for pause.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PAUSE
 
 media_stop:
-  name: Stop
-  description: Send the media player the stop command.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.STOP
 
 media_next_track:
-  name: Next
-  description: Send the media player the command for next track.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.NEXT_TRACK
 
 media_previous_track:
-  name: Previous
-  description: Send the media player the command for previous track.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PREVIOUS_TRACK
 
 media_seek:
-  name: Seek
-  description: Send the media player the command to seek in current playing media.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SEEK
   fields:
     seek_position:
-      name: Position
-      description: Position to seek to. The format is platform dependent.
       required: true
       selector:
         number:
@@ -127,33 +125,25 @@ media_seek:
           mode: box
 
 play_media:
-  name: Play media
-  description: Send the media player the command for playing media.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
   fields:
     media_content_id:
-      name: Content ID
-      description: The ID of the content to play. Platform dependent.
       required: true
       example: "https://home-assistant.io/images/cast/splash.png"
       selector:
         text:
 
     media_content_type:
-      name: Content type
-      description:
-        The type of the content to play. Like image, music, tvshow, video,
-        episode, channel or playlist.
       required: true
       example: "music"
       selector:
         text:
 
     enqueue:
-      name: Enqueue
-      description: If the content should be played now or be added to the queue.
       filter:
         supported_features:
           - media_player.MediaPlayerEntityFeature.MEDIA_ENQUEUE
@@ -161,105 +151,88 @@ play_media:
       selector:
         select:
           options:
-            - label: "Play now"
-              value: "play"
-            - label: "Play next"
-              value: "next"
-            - label: "Add to queue"
-              value: "add"
-            - label: "Play now and clear queue"
-              value: "replace"
+            - "play"
+            - "next"
+            - "add"
+            - "replace"
+          translation_key: enqueue
     announce:
-      name: Announce
-      description: If the media should be played as an announcement.
+      filter:
+        supported_features:
+          - media_player.MediaPlayerEntityFeature.MEDIA_ANNOUNCE
       required: false
       example: "true"
       selector:
         boolean:
 
 select_source:
-  name: Select source
-  description: Send the media player the command to change input source.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SELECT_SOURCE
   fields:
     source:
-      name: Source
-      description: Name of the source to switch to. Platform dependent.
       required: true
       example: "video1"
       selector:
         text:
 
 select_sound_mode:
-  name: Select sound mode
-  description: Send the media player the command to change sound mode.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SELECT_SOUND_MODE
   fields:
     sound_mode:
-      name: Sound mode
-      description: Name of the sound mode to switch to.
       example: "Music"
       selector:
         text:
 
 clear_playlist:
-  name: Clear playlist
-  description: Send the media player the command to clear players playlist.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.CLEAR_PLAYLIST
 
 shuffle_set:
-  name: Shuffle
-  description: Set shuffling state.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SHUFFLE_SET
   fields:
     shuffle:
-      name: Shuffle
-      description: True/false for enabling/disabling shuffle.
       required: true
       selector:
         boolean:
 
 repeat_set:
-  name: Repeat
-  description: Set repeat mode
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.REPEAT_SET
   fields:
     repeat:
-      name: Repeat mode
-      description: Repeat mode to set.
       required: true
       selector:
         select:
           options:
-            - label: "Off"
-              value: "off"
-            - label: "Repeat all"
-              value: "all"
-            - label: "Repeat one"
-              value: "one"
-
+            - "off"
+            - "all"
+            - "one"
+          translation_key: repeat
 join:
-  name: Join
-  description:
-    Group players together. Only works on platforms with support for player
-    groups.
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.GROUPING
   fields:
     group_members:
-      name: Group members
-      description: The players which will be synced with the target player.
       required: true
       example: |
         - media_player.multiroom_player2
@@ -270,10 +243,8 @@ join:
           domain: media_player
 
 unjoin:
-  description:
-    Unjoin the player from a group. Only works on platforms with support for
-    player groups.
-  name: Unjoin
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.GROUPING

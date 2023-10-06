@@ -1,7 +1,7 @@
 """The tests for the Media group platform."""
+import asyncio
 from unittest.mock import Mock, patch
 
-import async_timeout
 import pytest
 
 from homeassistant.components.group import DOMAIN
@@ -192,7 +192,9 @@ async def test_supported_features(hass: HomeAssistant) -> None:
         | MediaPlayerEntityFeature.STOP
     )
     play_media = (
-        MediaPlayerEntityFeature.PLAY_MEDIA | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+        MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
     )
     volume = (
         MediaPlayerEntityFeature.VOLUME_MUTE
@@ -581,7 +583,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ENTITY_ID) == ["media_player.group_1"]
 
     # Test controlling the nested group
-    async with async_timeout.timeout(0.5):
+    async with asyncio.timeout(0.5):
         await hass.services.async_call(
             MEDIA_DOMAIN,
             SERVICE_TURN_OFF,

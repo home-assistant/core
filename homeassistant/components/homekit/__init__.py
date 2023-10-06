@@ -856,8 +856,7 @@ class HomeKit:
         connection = (dr.CONNECTION_NETWORK_MAC, formatted_mac)
         identifier = (DOMAIN, self._entry_id, BRIDGE_SERIAL_NUMBER)
         self._async_purge_old_bridges(dev_reg, identifier, connection)
-        is_accessory_mode = self._homekit_mode == HOMEKIT_MODE_ACCESSORY
-        hk_mode_name = "Accessory" if is_accessory_mode else "Bridge"
+        accessory_type = type(self.driver.accessory).__name__
         dev_reg.async_get_or_create(
             config_entry_id=self._entry_id,
             identifiers={
@@ -866,7 +865,7 @@ class HomeKit:
             connections={connection},
             manufacturer=MANUFACTURER,
             name=accessory_friendly_name(self._entry_title, self.driver.accessory),
-            model=f"HomeKit {hk_mode_name}",
+            model=accessory_type,
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 

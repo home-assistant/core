@@ -1017,6 +1017,7 @@ async def test_remove_device_removes_entities(
 ) -> None:
     """Test that we remove entities tied to a device."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1046,7 +1047,9 @@ async def test_remove_config_entry_from_device_removes_entities(
 ) -> None:
     """Test that we remove entities tied to a device when config entry is removed."""
     config_entry_1 = MockConfigEntry(domain="hue")
+    config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(domain="device_tracker")
+    config_entry_2.add_to_hass(hass)
 
     # Create device with two config entries
     device_registry.async_get_or_create(
@@ -1112,7 +1115,9 @@ async def test_remove_config_entry_from_device_removes_entities_2(
 ) -> None:
     """Test that we don't remove entities with no config entry when device is modified."""
     config_entry_1 = MockConfigEntry(domain="hue")
+    config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(domain="device_tracker")
+    config_entry_2.add_to_hass(hass)
 
     # Create device with two config entries
     device_registry.async_get_or_create(
@@ -1155,6 +1160,7 @@ async def test_update_device_race(
 ) -> None:
     """Test race when a device is created, updated and removed."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Create device
     device_entry = device_registry.async_get_or_create(
@@ -1331,6 +1337,7 @@ async def test_disabled_entities_excluded_from_entity_list(
 ) -> None:
     """Test that disabled entities are excluded from async_entries_for_device."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1677,3 +1684,69 @@ async def test_restore_entity(hass, update_events, freezer):
     assert update_events[11] == {"action": "remove", "entity_id": "light.hue_1234"}
     # Restore entities the 3rd time
     assert update_events[12] == {"action": "create", "entity_id": "light.hue_1234"}
+
+
+async def test_async_migrate_entry_delete_self(hass):
+    """Test async_migrate_entry."""
+    registry = er.async_get(hass)
+    config_entry1 = MockConfigEntry(domain="test1")
+    config_entry2 = MockConfigEntry(domain="test2")
+    entry1 = registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry1, original_name="Entry 1"
+    )
+    entry2 = registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry1, original_name="Entry 2"
+    )
+    entry3 = registry.async_get_or_create(
+        "light", "hue", "90AB", config_entry=config_entry2, original_name="Entry 3"
+    )
+
+    @callback
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        entries.add(entity_entry.entity_id)
+        if entity_entry == entry1:
+            registry.async_remove(entry1.entity_id)
+            return None
+        if entity_entry == entry2:
+            return {"original_name": "Entry 2 renamed"}
+        return None
+
+    entries = set()
+    await er.async_migrate_entries(hass, config_entry1.entry_id, _async_migrator)
+    assert entries == {entry1.entity_id, entry2.entity_id}
+    assert not registry.async_is_registered(entry1.entity_id)
+    entry2 = registry.async_get(entry2.entity_id)
+    assert entry2.original_name == "Entry 2 renamed"
+    assert registry.async_get(entry3.entity_id) is entry3
+
+
+async def test_async_migrate_entry_delete_other(hass):
+    """Test async_migrate_entry."""
+    registry = er.async_get(hass)
+    config_entry1 = MockConfigEntry(domain="test1")
+    config_entry2 = MockConfigEntry(domain="test2")
+    entry1 = registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry1, original_name="Entry 1"
+    )
+    entry2 = registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry1, original_name="Entry 2"
+    )
+    registry.async_get_or_create(
+        "light", "hue", "90AB", config_entry=config_entry2, original_name="Entry 3"
+    )
+
+    @callback
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        entries.add(entity_entry.entity_id)
+        if entity_entry == entry1:
+            registry.async_remove(entry2.entity_id)
+            return None
+        if entity_entry == entry2:
+            # We should not get here
+            pytest.fail()
+        return None
+
+    entries = set()
+    await er.async_migrate_entries(hass, config_entry1.entry_id, _async_migrator)
+    assert entries == {entry1.entity_id}
+    assert not registry.async_is_registered(entry2.entity_id)

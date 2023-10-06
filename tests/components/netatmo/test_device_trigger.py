@@ -161,7 +161,7 @@ async def test_if_fires_on_event(
         },
     )
 
-    device = device_registry.async_get_device(set(), {connection})
+    device = device_registry.async_get_device(connections={connection})
     assert device is not None
 
     # Fake that the entity is turning on.
@@ -244,7 +244,7 @@ async def test_if_fires_on_event_legacy(
         },
     )
 
-    device = device_registry.async_get_device(set(), {connection})
+    device = device_registry.async_get_device(connections={connection})
     assert device is not None
 
     # Fake that the entity is turning on.
@@ -328,7 +328,7 @@ async def test_if_fires_on_event_with_subtype(
         },
     )
 
-    device = device_registry.async_get_device(set(), {connection})
+    device = device_registry.async_get_device(connections={connection})
     assert device is not None
 
     # Fake that the entity is turning on.

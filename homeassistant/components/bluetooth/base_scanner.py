@@ -131,6 +131,9 @@ class BaseHaScanner(ABC):
                 self.name,
                 SCANNER_WATCHDOG_TIMEOUT,
             )
+            self.scanning = False
+            return
+        self.scanning = not self._connecting
 
     @contextmanager
     def connecting(self) -> Generator[None, None, None]:
@@ -302,8 +305,21 @@ class BaseHaRemoteScanner(BaseHaScanner):
         advertisement_monotonic_time: float,
     ) -> None:
         """Call the registered callback."""
+        self.scanning = not self._connecting
         self._last_detection = advertisement_monotonic_time
-        if prev_discovery := self._discovered_device_advertisement_datas.get(address):
+        try:
+            prev_discovery = self._discovered_device_advertisement_datas[address]
+        except KeyError:
+            # We expect this is the rare case and since py3.11+ has
+            # near zero cost try on success, and we can avoid .get()
+            # which is slower than [] we use the try/except pattern.
+            device = BLEDevice(
+                address=address,
+                name=local_name,
+                details=self._details | details,
+                rssi=rssi,  # deprecated, will be removed in newer bleak
+            )
+        else:
             # Merge the new data with the old data
             # to function the same as BlueZ which
             # merges the dicts on PropertiesChanged
@@ -344,13 +360,6 @@ class BaseHaRemoteScanner(BaseHaScanner):
             device.details = self._details | details
             # pylint: disable-next=protected-access
             device._rssi = rssi  # deprecated, will be removed in newer bleak
-        else:
-            device = BLEDevice(
-                address=address,
-                name=local_name,
-                details=self._details | details,
-                rssi=rssi,  # deprecated, will be removed in newer bleak
-            )
 
         advertisement_data = AdvertisementData(
             local_name=None if local_name == "" else local_name,

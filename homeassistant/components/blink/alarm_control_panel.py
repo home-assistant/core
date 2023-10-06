@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
@@ -42,6 +42,7 @@ class BlinkSyncModule(AlarmControlPanelEntity):
     _attr_icon = ICON
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
     _attr_name = None
+    _attr_has_entity_name = True
 
     def __init__(self, data, name, sync):
         """Initialize the alarm control panel."""

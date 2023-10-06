@@ -2386,6 +2386,65 @@ async def test_wrapped_instance_with_service_uuids(
         assert len(detected) == 2
 
 
+async def test_wrapped_instance_with_service_uuids_with_coro_callback(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, enable_bluetooth: None
+) -> None:
+    """Test consumers can use the wrapped instance with a service_uuids list as if it was normal BleakScanner.
+
+    Verify that coro callbacks are supported.
+    """
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        detected = []
+
+        async def _device_detected(
+            device: BLEDevice, advertisement_data: AdvertisementData
+        ) -> None:
+            """Handle a detected device."""
+            detected.append((device, advertisement_data))
+
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
+        switchbot_adv = generate_advertisement_data(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
+        switchbot_adv_2 = generate_advertisement_data(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
+        empty_adv = generate_advertisement_data(local_name="empty")
+
+        assert _get_manager() is not None
+        scanner = HaBleakScannerWrapper(
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+        )
+        scanner.register_detection_callback(_device_detected)
+
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
+
+        await hass.async_block_till_done()
+
+        assert len(detected) == 2
+
+        # The UUIDs list we created in the wrapped scanner with should be respected
+        # and we should not get another callback
+        inject_advertisement(hass, empty_device, empty_adv)
+        assert len(detected) == 2
+
+
 async def test_wrapped_instance_with_broken_callbacks(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, enable_bluetooth: None
 ) -> None:

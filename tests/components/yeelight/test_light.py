@@ -181,7 +181,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         await hass.services.async_call(domain, service, data, blocking=True)
         if payload is None:
             mocked_method.assert_called_once()
-        elif type(payload) == list:
+        elif isinstance(payload, list):
             mocked_method.assert_called_once_with(*payload)
         else:
             mocked_method.assert_called_once_with(**payload)

@@ -5,17 +5,16 @@ from collections.abc import Callable
 from contextlib import suppress
 import dataclasses
 from datetime import timedelta
-import inspect
 import logging
 from math import ceil, floor
-from typing import Any, final
+from typing import Any, Self, final
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -24,6 +23,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_suggest_report_issue
 
 from .const import (  # noqa: F401
     ATTR_MAX,
@@ -157,6 +157,10 @@ def floor_decimal(value: float, precision: float = 0) -> float:
 class NumberEntity(Entity):
     """Representation of a Number entity."""
 
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_MIN, ATTR_MAX, ATTR_STEP, ATTR_MODE}
+    )
+
     entity_description: NumberEntityDescription
     _attr_device_class: NumberDeviceClass | None
     _attr_max_value: None
@@ -189,14 +193,10 @@ class NumberEntity(Entity):
                 "value",
             )
         ):
-            module = inspect.getmodule(cls)
-            if module and module.__file__ and "custom_components" in module.__file__:
-                report_issue = "report it to the custom integration author."
-            else:
-                report_issue = (
-                    "create a bug report at "
-                    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-                )
+            hass: HomeAssistant | None = None
+            with suppress(HomeAssistantError):
+                hass = async_get_hass()
+            report_issue = async_suggest_report_issue(hass, module=cls.__module__)
             _LOGGER.warning(
                 (
                     "%s::%s is overriding deprecated methods on an instance of "

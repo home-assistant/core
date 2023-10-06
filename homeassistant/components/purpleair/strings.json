@@ -93,7 +93,7 @@
         }
       },
       "settings": {
-        "title": "Settings",
+        "title": "[%key:component::purpleair::options::step::init::menu_options::settings%]",
         "data": {
           "show_on_map": "Show configured sensor locations on the map"
         }

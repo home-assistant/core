@@ -36,7 +36,6 @@ class BraviaTVButtonDescription(
 BUTTONS: tuple[BraviaTVButtonDescription, ...] = (
     BraviaTVButtonDescription(
         key="reboot",
-        translation_key="restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda coordinator: coordinator.async_reboot_device(),

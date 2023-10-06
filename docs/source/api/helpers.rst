@@ -214,14 +214,6 @@ homeassistant.helpers.location
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.logging
------------------------------
-
-.. automodule:: homeassistant.helpers.logging
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 homeassistant.helpers.network
 -----------------------------
 
