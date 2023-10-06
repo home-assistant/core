@@ -183,7 +183,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         assert self.device.blocks
 
         # For buttons which are battery powered - set initial value for last_event_count
-        if self.model in SHBTN_MODELS and self._last_input_events_count.get(1) is None:
+        if self.model in SHBTN_MODELS and 1 not in self._last_input_events_count:
             for block in self.device.blocks:
                 if block.type != "device":
                     continue
@@ -205,17 +205,18 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 self._last_cfg_changed = None
 
             # For dual mode bulbs ignore change if it is due to mode/effect change
-            if self.model in DUAL_MODE_LIGHT_MODELS:
-                if "mode" in block.sensor_ids:
-                    if self._last_mode != block.mode:
-                        self._last_cfg_changed = None
-                    self._last_mode = block.mode
+            if self.model in DUAL_MODE_LIGHT_MODELS and "mode" in block.sensor_ids:
+                if self._last_mode != block.mode:
+                    self._last_cfg_changed = None
+                self._last_mode = block.mode
 
-            if self.model in MODELS_SUPPORTING_LIGHT_EFFECTS:
-                if "effect" in block.sensor_ids:
-                    if self._last_effect != block.effect:
-                        self._last_cfg_changed = None
-                    self._last_effect = block.effect
+            if (
+                self.model in MODELS_SUPPORTING_LIGHT_EFFECTS
+                and "effect" in block.sensor_ids
+            ):
+                if self._last_effect != block.effect:
+                    self._last_cfg_changed = None
+                self._last_effect = block.effect
 
             if (
                 "inputEvent" not in block.sensor_ids
@@ -229,10 +230,17 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             last_event_count = self._last_input_events_count.get(channel)
             self._last_input_events_count[channel] = block.inputEventCnt
 
-            if (
-                last_event_count is None
-                or last_event_count == block.inputEventCnt
-                or event_type == ""
+            def should_skip_event(
+                last_event_count: int, input_event_count: int, event_type: str
+            ) -> bool:
+                return (
+                    last_event_count is None
+                    or last_event_count == input_event_count
+                    or event_type == ""
+                )
+
+            if last_event_count is None or should_skip_event(
+                last_event_count, block.inputEventcnt, event_type
             ):
                 LOGGER.debug("Skipping block event %s", event_type)
                 continue
