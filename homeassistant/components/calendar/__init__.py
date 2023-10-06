@@ -540,9 +540,9 @@ class CalendarEntity(Entity):
 
         @callback
         def update(_: datetime.datetime) -> None:
-            """Run when the active or upcoming event starts or ends."""
+            """Update state and reschedule next alarms."""
             _LOGGER.debug("Running %s update", self.entity_id)
-            self._async_write_ha_state()
+            self.async_write_ha_state()
 
         if now < event.start_datetime_local:
             self._alarm_unsubs.append(
