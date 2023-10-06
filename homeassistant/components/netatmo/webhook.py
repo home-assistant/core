@@ -30,7 +30,7 @@ SUBEVENT_TYPE_MAP = {
 
 
 async def async_handle_webhook(
-    hass: HomeAssistant, webhook_id: str, request: Request
+    hass: HomeAssistant, _: str, request: Request
 ) -> None:
     """Handle webhook callback."""
     try:
