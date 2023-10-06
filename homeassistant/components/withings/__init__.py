@@ -217,7 +217,7 @@ async def async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) 
     if CONF_CLOUDHOOK_URL not in entry.data:
         webhook_id = entry.data[CONF_WEBHOOK_ID]
         # Some users already have their webhook as cloudhook.
-        # We remove them to be sure.
+        # We remove them to be sure we can create a new one.
         with contextlib.suppress(ValueError):
             await cloud.async_delete_cloudhook(hass, webhook_id)
         webhook_url = await cloud.async_create_cloudhook(hass, webhook_id)
