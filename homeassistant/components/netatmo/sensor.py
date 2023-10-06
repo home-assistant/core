@@ -755,28 +755,8 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        data = None
 
-        if self.entity_description.netatmo_name == "temperature":
-            data = self._station.get_latest_temperatures()
-        elif self.entity_description.netatmo_name == "pressure":
-            data = self._station.get_latest_pressures()
-        elif self.entity_description.netatmo_name == "humidity":
-            data = self._station.get_latest_humidities()
-        elif self.entity_description.netatmo_name == "rain":
-            data = self._station.get_latest_rain()
-        elif self.entity_description.netatmo_name == "sum_rain_1":
-            data = self._station.get_60_min_rain()
-        elif self.entity_description.netatmo_name == "sum_rain_24":
-            data = self._station.get_24_h_rain()
-        elif self.entity_description.netatmo_name == "wind_strength":
-            data = self._station.get_latest_wind_strengths()
-        elif self.entity_description.netatmo_name == "gust_strength":
-            data = self._station.get_latest_gust_strengths()
-        elif self.entity_description.netatmo_name == "wind_angle":
-            data = self._station.get_latest_wind_angles()
-        elif self.entity_description.netatmo_name == "gust_angle":
-            data = self._station.get_latest_gust_angles()
+        data = self._get_entity_data(self.entity_description.netatmo_name)
 
         if not data:
             if self.available:
@@ -798,3 +778,26 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
 
         self._attr_available = self.state is not None
         self.async_write_ha_state()
+
+    def _get_entity_data(self, name: str):
+        if name == "temperature":
+            return self._station.get_latest_temperatures()
+        if name == "pressure":
+            return self._station.get_latest_pressures()
+        if name == "humidity":
+            return self._station.get_latest_humidities()
+        if name == "rain":
+            return self._station.get_latest_rain()
+        if name == "sum_rain_1":
+            return self._station.get_60_min_rain()
+        if name == "sum_rain_24":
+            return self._station.get_24_h_rain()
+        if name == "wind_strength":
+            return self._station.get_latest_wind_strengths()
+        if name == "gust_strength":
+            return self._station.get_latest_gust_strengths()
+        if name == "wind_angle":
+            return self._station.get_latest_wind_angles()
+        if name == "gust_angle":
+            return self._station.get_latest_gust_angles()
+        return None
