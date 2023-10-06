@@ -170,6 +170,16 @@ jobs:
 
           split -l $(expr $(expr $(cat requirements_all.txt | wc -l) + 1) / 3) requirements_all.txt requirements_all.txt
 
+      - name: Create requirements for cython<3
+        run: |
+          # Some dependencies still require 'cython<3'
+          # and don't yet use isolated build environments.
+          # Build these first.
+          # grpcio: https://github.com/grpc/grpc/issues/33918
+
+          touch requirements_old-cython.txt
+          cat homeassistant/package_constraints.txt | grep 'grpcio==' >> requirements_old-cython.txt
+
       - name: Adjust build env
         run: |
           if [ "${{ matrix.arch }}" = "i386" ]; then
@@ -178,6 +188,21 @@ jobs:
 
           # Do not pin numpy in wheels building
           sed -i "/numpy/d" homeassistant/package_constraints.txt
+
+      - name: Build wheels (old cython)
+        uses: home-assistant/wheels@2023.10.1
+        with:
+          abi: ${{ matrix.abi }}
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          env-file: true
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements_old-cython.txt"
+          pip: "'cython<3'"
 
       - name: Build wheels (part 1)
         uses: home-assistant/wheels@2023.10.1
