@@ -93,6 +93,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class ViCareEntity(Entity):
     """Base class for ViCare entities."""
     def __init__(self, device_config, hasMultipleDevices: bool) -> None:
+        """Initialize the entity."""
         device_name = device_config.getModel()
         if hasMultipleDevices:
             device_name = f"{device_config.getModel()}-{device_config.getConfig().serial}"
