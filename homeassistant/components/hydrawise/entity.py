@@ -41,7 +41,7 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
 
     def _update_attrs(self) -> None:
         """Update state attributes."""
-        return
+        return  # pragma: no cover
 
     @callback
     def _handle_coordinator_update(self) -> None:
