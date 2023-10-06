@@ -4,8 +4,10 @@ from __future__ import annotations
 import enum
 import functools
 import numbers
-from typing import TYPE_CHECKING, Any, Self
+import sys
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 from zigpy import types
 
 from homeassistant.components.climate import HVACAction
@@ -57,10 +59,10 @@ from .core.const import (
     CLUSTER_HANDLER_SOIL_MOISTURE,
     CLUSTER_HANDLER_TEMPERATURE,
     CLUSTER_HANDLER_THERMOSTAT,
+    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
-from .core.helpers import get_zha_data
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -99,8 +101,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
-    zha_data = get_zha_data(hass)
-    entities_to_create = zha_data.platforms[Platform.SENSOR]
+    entities_to_create = hass.data[DATA_ZHA][Platform.SENSOR]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -147,10 +148,7 @@ class Sensor(ZhaEntity, SensorEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if (
-            cls.SENSOR_ATTR in cluster_handler.cluster.unsupported_attributes
-            or cls.SENSOR_ATTR not in cluster_handler.cluster.attributes_by_name
-        ):
+        if cls.SENSOR_ATTR in cluster_handler.cluster.unsupported_attributes:
             return None
 
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
@@ -229,7 +227,7 @@ class Battery(Sensor):
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
 
     @staticmethod
-    def formatter(value: int) -> int | None:
+    def formatter(value: int) -> int | None:  # pylint: disable=arguments-differ
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
@@ -277,14 +275,8 @@ class ElectricalMeasurement(Sensor):
             attrs["measurement_type"] = self._cluster_handler.measurement_type
 
         max_attr_name = f"{self.SENSOR_ATTR}_max"
-
-        try:
-            max_v = self._cluster_handler.cluster.get(max_attr_name)
-        except KeyError:
-            pass
-        else:
-            if max_v is not None:
-                attrs[max_attr_name] = str(self.formatter(max_v))
+        if (max_v := self._cluster_handler.cluster.get(max_attr_name)) is not None:
+            attrs[max_attr_name] = str(self.formatter(max_v))
 
         return attrs
 
@@ -485,7 +477,7 @@ class SmartEnergyMetering(Sensor):
         if self._cluster_handler.device_type is not None:
             attrs["device_type"] = self._cluster_handler.device_type
         if (status := self._cluster_handler.status) is not None:
-            if isinstance(status, enum.IntFlag):
+            if isinstance(status, enum.IntFlag) and sys.version_info >= (3, 11):
                 attrs["status"] = str(
                     status.name if status.name is not None else status.value
                 )
@@ -730,9 +722,7 @@ class PPBVOCLevel(Sensor):
     """VOC Level sensor."""
 
     SENSOR_ATTR = "measured_value"
-    _attr_device_class: SensorDeviceClass = (
-        SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS
-    )
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "VOC level"
     _decimals = 0
@@ -746,7 +736,6 @@ class PM25(Sensor):
     """Particulate Matter 2.5 microns or less sensor."""
 
     SENSOR_ATTR = "measured_value"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.PM25
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "Particulate matter"
     _decimals = 0
@@ -968,7 +957,6 @@ class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
     _attr_icon = "mdi:timer"
     _attr_name: str = "Device run time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
 
 
 @MULTI_MATCH(cluster_handler_names="ikea_airpurifier")
@@ -981,7 +969,6 @@ class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
     _attr_icon = "mdi:timer"
     _attr_name: str = "Filter run time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
 
 
 class AqaraFeedingSource(types.enum8):
@@ -1050,30 +1037,11 @@ class AqaraSmokeDensityDbm(Sensor, id_suffix="smoke_density_dbm"):
     _attr_icon: str = "mdi:google-circles-communities"
     _attr_suggested_display_precision: int = 3
 
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
-class SmartEnergyCurrentSumDeliveredMetering(Sensor, id_suffix="current_summ_delivered"):
-    """Sensor that displays the Current summation delivered of the 3 phases kWh """
 
-    SENSOR_ATTR = "current_summ_delivered"
-    _attr_name: str = "Current Summation Delivered"
-    _attr_native_unit_of_measurement = "kWh"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_icon: str = "mdi:lightning-bolt"
-    _divisor = 1000
-    _attr_suggested_display_precision: int = 0
-
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
-class SmartEnergyInstantaneousDemandMetering(Sensor, id_suffix="instantaneous_demand"):
-    """Sensor that displays the Current summation delivered of the 3 phases kWh """
-
-    SENSOR_ATTR = "instantaneous_demand"
-    _attr_name: str = "Instantaneous Demand"
-    _attr_native_unit_of_measurement = "W"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_icon: str = "mdi:lightning-bolt"
-    _attr_suggested_display_precision: int = 0
-
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL1PowerMetering(Sensor, id_suffix="L1_phase_power"):
     """Sensor that displays the power of L1 phase in W """
 
@@ -1084,7 +1052,10 @@ class SmartEnergyL1PowerMetering(Sensor, id_suffix="L1_phase_power"):
     _attr_icon: str = "mdi:lightning-bolt"
     _attr_suggested_display_precision: int = 0
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL2PowerMetering(Sensor, id_suffix="L2_phase_power"):
     """Sensor that displays the power of L2 phase in W """
 
@@ -1095,7 +1066,10 @@ class SmartEnergyL2PowerMetering(Sensor, id_suffix="L2_phase_power"):
     _attr_icon: str = "mdi:lightning-bolt"
     _attr_suggested_display_precision: int = 0
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL3PowerMetering(Sensor, id_suffix="L3_phase_power"):
     """Sensor that displays the power of L3 phase in W """
 
@@ -1106,7 +1080,10 @@ class SmartEnergyL3PowerMetering(Sensor, id_suffix="L3_phase_power"):
     _attr_icon: str = "mdi:lightning-bolt"
     _attr_suggested_display_precision: int = 0
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL1ReactivePowerMetering(Sensor, id_suffix="L1_phase_reactive_power"):
     """Sensor that displays the reactive power of L1 phase in W """
 
@@ -1117,7 +1094,10 @@ class SmartEnergyL1ReactivePowerMetering(Sensor, id_suffix="L1_phase_reactive_po
     _attr_icon: str = "mdi:lightning-bolt"
     _attr_suggested_display_precision: int = 0
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL2ReactivePowerMetering(Sensor, id_suffix="L2_phase_reactive_power"):
     """Sensor that displays the reactive power of L2 phase in W """
 
@@ -1128,7 +1108,10 @@ class SmartEnergyL2ReactivePowerMetering(Sensor, id_suffix="L2_phase_reactive_po
     _attr_icon: str = "mdi:lightning-bolt"
     _attr_suggested_display_precision: int = 0
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL3ReactivePowerMetering(Sensor, id_suffix="L3_phase_reactive_power"):
     """Sensor that displays the reactive power of L3 phase in W """
 
@@ -1139,7 +1122,10 @@ class SmartEnergyL3ReactivePowerMetering(Sensor, id_suffix="L3_phase_reactive_po
     _attr_icon: str = "mdi:lightning-bolt"
     _attr_suggested_display_precision: int = 0
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyReactivePower3PhaseMetering(Sensor, id_suffix="reactive_power_summation_of_the_3_phases"):
     """Sensor that displays the reactive power summation of the phases in W """
 
@@ -1150,7 +1136,10 @@ class SmartEnergyReactivePower3PhaseMetering(Sensor, id_suffix="reactive_power_s
     _attr_icon: str = "mdi:lightning-bolt"
     _attr_suggested_display_precision: int = 0
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL1VoltageMetering(Sensor, id_suffix="L1_phase_voltage"):
     """Sensor that displays the voltage of L1 phase in V """
 
@@ -1162,7 +1151,10 @@ class SmartEnergyL1VoltageMetering(Sensor, id_suffix="L1_phase_voltage"):
     _divisor = 10
     _attr_suggested_display_precision: int = 1
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL2VoltageMetering(Sensor, id_suffix="L2_phase_voltage"):
     """Sensor that displays the voltage of L2 phase in V """
 
@@ -1174,7 +1166,10 @@ class SmartEnergyL2VoltageMetering(Sensor, id_suffix="L2_phase_voltage"):
     _divisor = 10
     _attr_suggested_display_precision: int = 1
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL3VoltageMetering(Sensor, id_suffix="L3_phase_voltage"):
     """Sensor that displays the voltage of L3 phase in V """
 
@@ -1186,7 +1181,10 @@ class SmartEnergyL3VoltageMetering(Sensor, id_suffix="L3_phase_voltage"):
     _divisor = 10
     _attr_suggested_display_precision: int = 1
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL1CurrentMetering(Sensor, id_suffix="L1_phase_current"):
     """Sensor that displays the current of L3 phase in A """
 
@@ -1198,7 +1196,10 @@ class SmartEnergyL1CurrentMetering(Sensor, id_suffix="L1_phase_current"):
     _divisor = 1000
     _attr_suggested_display_precision: int = 2
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL2CurrentMetering(Sensor, id_suffix="L2_phase_current"):
     """Sensor that displays the current of L3 phase in A """
 
@@ -1210,7 +1211,10 @@ class SmartEnergyL2CurrentMetering(Sensor, id_suffix="L2_phase_current"):
     _divisor = 1000
     _attr_suggested_display_precision: int = 2
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL3CurrentMetering(Sensor, id_suffix="L3_phase_current"):
     """Sensor that displays the current of L3 phase in A """
 
@@ -1222,7 +1226,10 @@ class SmartEnergyL3CurrentMetering(Sensor, id_suffix="L3_phase_current"):
     _divisor = 1000
     _attr_suggested_display_precision: int = 2
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyCurrentSummationMetering(Sensor, id_suffix="current_summation_of_the_3_phases"):
     """Sensor that displays the cureent summation of the 3 phases in A """
 
@@ -1234,7 +1241,10 @@ class SmartEnergyCurrentSummationMetering(Sensor, id_suffix="current_summation_o
     _divisor = 1000
     _attr_suggested_display_precision: int = 0
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyLeakageCurrentMetering(Sensor, id_suffix="leakage_current"):
     """Sensor that displays the leakage cureent in A """
 
@@ -1246,7 +1256,10 @@ class SmartEnergyLeakageCurrentMetering(Sensor, id_suffix="leakage_current"):
     _divisor = 1000
     _attr_suggested_display_precision: int = 0
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL1PhaseEnergyConsumptionMetering(Sensor, id_suffix="L1_phase_energy_consumption"):
     """Sensor that displays the L1 energy consumption in kWh """
 
@@ -1258,7 +1271,10 @@ class SmartEnergyL1PhaseEnergyConsumptionMetering(Sensor, id_suffix="L1_phase_en
     _divisor = 1000
     _attr_suggested_display_precision: int = 0
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL2PhaseEnergyConsumptionMetering(Sensor, id_suffix="L2_phase_energy_consumption"):
     """Sensor that displays the L2 energy consumption in kWh """
 
@@ -1270,7 +1286,10 @@ class SmartEnergyL2PhaseEnergyConsumptionMetering(Sensor, id_suffix="L2_phase_en
     _divisor = 1000
     _attr_suggested_display_precision: int = 0
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyL3PhaseEnergyConsumptionMetering(Sensor, id_suffix="L3_phase_energy_consumption"):
     """Sensor that displays the L3 energy consumption in kWh """
 
@@ -1282,7 +1301,10 @@ class SmartEnergyL3PhaseEnergyConsumptionMetering(Sensor, id_suffix="L3_phase_en
     _divisor = 1000
     _attr_suggested_display_precision: int = 0
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyReactiveEnergySummation3PhasesMetering(Sensor, id_suffix="reactive_energy_summation_of_the_3_phases"):
     """Sensor that displays the reactive energy summation of the 3 phases in kWh """
 
@@ -1294,7 +1316,10 @@ class SmartEnergyReactiveEnergySummation3PhasesMetering(Sensor, id_suffix="react
     _divisor = 1000
     _attr_suggested_display_precision: int = 0
     
-@MULTI_MATCH(cluster_handler_names="owon_smartenergy_metering", models={"PC321"})
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+    models={"PC321"},
+)
 class SmartEnergyReactiveEnergySummation3PhasesMetering(Sensor, id_suffix="frequency"):
     """Sensor that displays the frequency in Hz """
 
