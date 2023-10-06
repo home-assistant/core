@@ -20,7 +20,6 @@ from . import (
     event as event_platform,
     humidifier as humidifier_platform,
     lawn_mower as lawn_mower_platform,
-    lock as lock_platform,
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
@@ -72,10 +71,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
             [lawn_mower_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.LIGHT.value: vol.All(cv.ensure_list, [dict]),
-        Platform.LOCK.value: vol.All(
-            cv.ensure_list,
-            [lock_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.LOCK.value: vol.All(cv.ensure_list, [dict]),
         Platform.NUMBER.value: vol.All(
             cv.ensure_list,
             [number_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
