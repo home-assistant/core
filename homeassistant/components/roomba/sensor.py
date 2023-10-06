@@ -1,5 +1,9 @@
 """Sensor for checking the battery level of Roomba."""
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -67,6 +71,7 @@ class BatteryCycles(IRobotEntity, SensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:counter"
 
     @property
     def name(self):
@@ -79,14 +84,9 @@ class BatteryCycles(IRobotEntity, SensorEntity):
         return f"battery_cycles_{self._blid}"
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the unit_of_measurement of the device."""
-        return ""
-
-    @property
-    def icon(self):
-        """Return the counter icon."""
-        return "mdi:counter"
+    def state_class(self):
+        """Return the state class of this entity, from STATE_CLASSES, if any."""
+        return SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self):
@@ -100,6 +100,8 @@ class CleaningTime(IRobotEntity, SensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:clock"
+    _attr_native_unit_of_measurement = UnitOfTime.HOURS
 
     @property
     def name(self):
@@ -112,16 +114,6 @@ class CleaningTime(IRobotEntity, SensorEntity):
         return f"total_cleaning_time_{self._blid}"
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the unit_of_measurement of the device."""
-        return UnitOfTime.HOURS
-
-    @property
-    def icon(self):
-        """Return the icon for the cleaning time."""
-        return "mdi:clock"
-
-    @property
     def native_value(self):
         """Return the state of the sensor."""
         return self._run_stats.get("hr")
@@ -131,6 +123,7 @@ class AverageMissionTime(IRobotEntity, SensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:clock"
 
     @property
     def name(self):
@@ -148,11 +141,6 @@ class AverageMissionTime(IRobotEntity, SensorEntity):
         return UnitOfTime.MINUTES
 
     @property
-    def icon(self):
-        """Return the icon for the average mission time."""
-        return "mdi:clock"
-
-    @property
     def native_value(self):
         """Return the state of the sensor."""
         return self._mission_stats.get("aMssnM")
@@ -168,6 +156,7 @@ class MissionSensor(IRobotEntity, SensorEntity):
         self._mission_value_string = mission_value_string
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:counter"
 
     @property
     def name(self):
@@ -180,14 +169,9 @@ class MissionSensor(IRobotEntity, SensorEntity):
         return f"{self._mission_type}_missions_{self._blid}"
 
     @property
-    def icon(self):
-        """Return the counter icon."""
-        return "mdi:counter"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit_of_measurement of the device."""
-        return ""
+    def state_class(self):
+        """Return the state class of this entity, from STATE_CLASSES, if any."""
+        return SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self):
@@ -199,6 +183,7 @@ class ScrubsCount(IRobotEntity, SensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:counter"
 
     @property
     def name(self):
@@ -211,14 +196,9 @@ class ScrubsCount(IRobotEntity, SensorEntity):
         return f"scrubs_count_{self._blid}"
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the unit_of_measurement of the device."""
-        return ""
-
-    @property
-    def icon(self):
-        """Return the counter icon."""
-        return "mdi:counter"
+    def state_class(self):
+        """Return the state class of this entity, from STATE_CLASSES, if any."""
+        return SensorStateClass.MEASUREMENT
 
     @property
     def entity_registry_enabled_default(self):
