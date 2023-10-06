@@ -30,10 +30,9 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareRequiredKeysMixin
+from . import ViCareEntity, ViCareRequiredKeysMixin
 from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
