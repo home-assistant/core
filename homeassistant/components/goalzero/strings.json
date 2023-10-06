@@ -54,9 +54,6 @@
       "wh_stored": {
         "name": "Energy stored"
       },
-      "volts": {
-        "name": "Voltage"
-      },
       "soc_percent": {
         "name": "State of charge percent"
       },
