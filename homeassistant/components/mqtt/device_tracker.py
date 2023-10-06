@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import functools
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -137,7 +138,9 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             elif payload == self._config[CONF_PAYLOAD_RESET]:
                 self._location_name = None
             else:
-                self._location_name = str(msg.payload)
+                if TYPE_CHECKING:
+                    assert isinstance(msg.payload, str)
+                self._location_name = msg.payload
 
         state_topic: str | None = self._config.get(CONF_STATE_TOPIC)
         if state_topic is None:
