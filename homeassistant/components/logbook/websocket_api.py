@@ -247,6 +247,57 @@ async def _async_events_consumer(
             )
 
 
+def handle_live_stream(live_stream: LogbookLiveStream) -> None:
+    """Handle live streams when unsubscribing from all events."""
+    if live_stream.task:
+        live_stream.task.cancel()
+    if live_stream.wait_sync_task:
+        live_stream.wait_sync_task.cancel()
+    if live_stream.end_time_unsub:
+        live_stream.end_time_unsub()
+        live_stream.end_time_unsub = None
+
+
+def validate_time(
+    connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None | tuple[dt, dt | None, int, dt]:
+    """Validate start time and end time."""
+    start_time_str = msg["start_time"]
+    msg_id: int = msg["id"]
+    utc_now = dt_util.utcnow()
+
+    if start_time := dt_util.parse_datetime(start_time_str):
+        start_time = dt_util.as_utc(start_time)
+
+    if not start_time or start_time > utc_now:
+        connection.send_error(msg_id, "invalid_start_time", INVALID_START_TIME)
+        return None
+
+    end_time_str = msg.get("end_time")
+    end_time: dt | None = None
+    if end_time_str:
+        if not (end_time := dt_util.parse_datetime(end_time_str)):
+            connection.send_error(msg_id, "invalid_end_time", INVALID_START_TIME)
+            return None
+        end_time = dt_util.as_utc(end_time)
+        if end_time < start_time:
+            connection.send_error(msg_id, "invalid_end_time", INVALID_START_TIME)
+            return None
+
+    return start_time, end_time, msg_id, utc_now
+
+
+def get_entities_filter(
+    hass: HomeAssistant, event_processor: EventProcessor
+) -> Callable[[str], bool] | None:
+    """Get the entity filter."""
+    entities_filter: Callable[[str], bool] | None = None
+    if not event_processor.limited_select:
+        logbook_config: LogbookConfig = hass.data[DOMAIN]
+        entities_filter = logbook_config.entity_filter
+    return entities_filter
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "logbook/event_stream",
@@ -261,27 +312,11 @@ async def ws_event_stream(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle logbook stream events websocket command."""
-    start_time_str = msg["start_time"]
-    msg_id: int = msg["id"]
-    utc_now = dt_util.utcnow()
-
-    if start_time := dt_util.parse_datetime(start_time_str):
-        start_time = dt_util.as_utc(start_time)
-
-    if not start_time or start_time > utc_now:
-        connection.send_error(msg_id, "invalid_start_time", "Invalid start_time")
+    validate_result = validate_time(connection, msg)
+    if not validate_result:
         return
 
-    end_time_str = msg.get("end_time")
-    end_time: dt | None = None
-    if end_time_str:
-        if not (end_time := dt_util.parse_datetime(end_time_str)):
-            connection.send_error(msg_id, "invalid_end_time", INVALID_START_TIME)
-            return
-        end_time = dt_util.as_utc(end_time)
-        if end_time < start_time:
-            connection.send_error(msg_id, "invalid_end_time", INVALID_START_TIME)
-            return
+    start_time, end_time, msg_id, utc_now = validate_result
 
     device_ids = msg.get("device_ids")
     entity_ids = msg.get("entity_ids")
@@ -331,13 +366,7 @@ async def ws_event_stream(
         for subscription in subscriptions:
             subscription()
         subscriptions.clear()
-        if live_stream.task:
-            live_stream.task.cancel()
-        if live_stream.wait_sync_task:
-            live_stream.wait_sync_task.cancel()
-        if live_stream.end_time_unsub:
-            live_stream.end_time_unsub()
-            live_stream.end_time_unsub = None
+        handle_live_stream(live_stream)
 
     if end_time:
         live_stream.end_time_unsub = async_track_point_in_utc_time(
@@ -356,11 +385,7 @@ async def ws_event_stream(
             )
             _unsub()
 
-    entities_filter: Callable[[str], bool] | None = None
-    if not event_processor.limited_select:
-        logbook_config: LogbookConfig = hass.data[DOMAIN]
-        entities_filter = logbook_config.entity_filter
-
+    entities_filter = get_entities_filter(hass, event_processor)
     async_subscribe_events(
         hass,
         subscriptions,
