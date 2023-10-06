@@ -2,20 +2,10 @@
 from unittest.mock import call, patch
 
 import pytest
-from zhaquirks.const import (
-    DEVICE_TYPE,
-    ENDPOINTS,
-    INPUT_CLUSTERS,
-    OUTPUT_CLUSTERS,
-    PROFILE_ID,
-)
 from zigpy.exceptions import ZigbeeException
 from zigpy.profiles import zha
-from zigpy.quirks import CustomCluster, CustomDevice
-import zigpy.types as t
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
-from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -87,60 +77,6 @@ async def light(zigpy_device_mock):
             }
         },
         node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00",
-    )
-
-    return zigpy_device
-
-
-class TuyaTRVQuirk(CustomDevice):
-    """Quirk TRV Boost function attribute."""
-
-    class TuyaManufCluster(CustomCluster, ManufacturerSpecificCluster):
-        """Tuya manufacturer specific cluster."""
-
-        cluster_id = 0xEF00
-        ep_attribute = "tuya_manufacturer"
-
-        attributes = {
-            0xEF01: ("opened_window_temperature", t.uint32_t),
-            0xEF02: ("temperature_calibration", t.int32s),
-        }
-
-        def __init__(self, *args, **kwargs):
-            """Initialize with task."""
-            super().__init__(*args, **kwargs)
-            self._attr_cache.update(
-                {0xEF01: 200}
-            )  # entity won't be created without this
-            self._attr_cache.update({0xEF02: 5})  # entity won't be created without this
-
-    replacement = {
-        ENDPOINTS: {
-            1: {
-                PROFILE_ID: zha.PROFILE_ID,
-                DEVICE_TYPE: zha.DeviceType.LEVEL_CONTROL_SWITCH,
-                INPUT_CLUSTERS: [general.Basic.cluster_id, TuyaManufCluster],
-                OUTPUT_CLUSTERS: [],
-            },
-        }
-    }
-
-
-@pytest.fixture
-async def zygpy_device_tuya_trv(zigpy_device_mock):
-    """Zigpy Tuya TRV device."""
-
-    zigpy_device = zigpy_device_mock(
-        {
-            1: {
-                SIG_EP_TYPE: zha.DeviceType.LEVEL_CONTROL_SWITCH,
-                SIG_EP_INPUT: [general.Basic.cluster_id],
-                SIG_EP_OUTPUT: [],
-            }
-        },
-        quirk=TuyaTRVQuirk,
-        manufacturer="_TZE200_hue3yfsn",
-        quirk_class="zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG",
     )
 
     return zigpy_device
@@ -251,66 +187,6 @@ async def test_number(
     assert hass.states.get(entity_id).state == "40.0"
     assert cluster.read_attributes.call_count == 10
     assert "present_value" in cluster.read_attributes.call_args[0][0]
-
-
-@pytest.mark.parametrize(
-    ("entity", "attr_name", "attr_id", "new_value", "new_value_raw"),
-    (
-        (
-            "temperature_calibration_offset",
-            "temperature_calibration",
-            0xEF01,
-            "-3.5",
-            -35,
-        ),
-        ("window_open_temperature", "opened_window_temperature", 0xEF02, "16.0", 160),
-    ),
-)
-async def test_tuya_trv_attr(
-    hass: HomeAssistant,
-    zha_device_joined,
-    zygpy_device_tuya_trv,
-    entity: str,
-    attr_name: str,
-    attr_id: int,
-    new_value: float,
-    new_value_raw: int,
-) -> None:
-    """Test Tuya TRV number entities."""
-
-    entity_registry = er.async_get(hass)
-    trv_cluster = zygpy_device_tuya_trv.endpoints.get(1).tuya_manufacturer
-    zha_device = await zha_device_joined(zygpy_device_tuya_trv)
-
-    entity_id = find_entity_id(Platform.NUMBER, zha_device, hass, qualifier=entity)
-    assert entity_id is not None
-
-    state = hass.states.get(entity_id)
-    assert state
-
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.CONFIG
-
-    # change value from HA
-    with patch(
-        "zigpy.zcl.Cluster.write_attributes",
-        return_value=[zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS],
-    ):
-        # set value via UI
-        await hass.services.async_call(
-            NUMBER_DOMAIN,
-            "set_value",
-            {"entity_id": entity_id, "value": new_value},
-            blocking=True,
-        )
-        assert trv_cluster.write_attributes.mock_calls == [
-            call({attr_name: new_value_raw}, manufacturer=None)
-        ]
-
-    # change value from device
-    await send_attributes_report(hass, trv_cluster, {attr_id: new_value_raw})
-    assert hass.states.get(entity_id).state == new_value
 
 
 @pytest.mark.parametrize(
