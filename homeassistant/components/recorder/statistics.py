@@ -1986,8 +1986,10 @@ def _sorted_statistics_to_dict(  # noqa: C901
             if state := hass.states.get(statistic_id):
                 state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
+            # Ensure that convert is not None
+            convert = convert or (lambda x: x)
         else:
-            convert = None
+            convert = lambda x: x
 
         if sum_only:
             # This function is extremely flexible and can handle all types of
@@ -2020,28 +2022,16 @@ def _sorted_statistics_to_dict(  # noqa: C901
             }
             if last_reset_ts_idx is not None:
                 row["last_reset"] = db_state[last_reset_ts_idx]
-            if convert:
-                if mean_idx is not None:
-                    row["mean"] = convert(db_state[mean_idx])
-                if min_idx is not None:
-                    row["min"] = convert(db_state[min_idx])
-                if max_idx is not None:
-                    row["max"] = convert(db_state[max_idx])
-                if state_idx is not None:
-                    row["state"] = convert(db_state[state_idx])
-                if sum_idx is not None:
-                    row["sum"] = convert(db_state[sum_idx])
-            else:
-                if mean_idx is not None:
-                    row["mean"] = db_state[mean_idx]
-                if min_idx is not None:
-                    row["min"] = db_state[min_idx]
-                if max_idx is not None:
-                    row["max"] = db_state[max_idx]
-                if state_idx is not None:
-                    row["state"] = db_state[state_idx]
-                if sum_idx is not None:
-                    row["sum"] = db_state[sum_idx]
+            if mean_idx is not None:
+                row["mean"] = convert(db_state[mean_idx])
+            if min_idx is not None:
+                row["min"] = convert(db_state[min_idx])
+            if max_idx is not None:
+                row["max"] = convert(db_state[max_idx])
+            if state_idx is not None:
+                row["state"] = convert(db_state[state_idx])
+            if sum_idx is not None:
+                row["sum"] = convert(db_state[sum_idx])
             ent_results_append(row)
 
     return result
