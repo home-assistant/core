@@ -48,7 +48,13 @@ from homeassistant.util import (
 )
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
-from .const import DATA_CONFIG, DOMAIN
+from .const import (
+    CONF_DEBUG_RECORDING_DIR,
+    DATA_CONFIG,
+    DATA_LAST_WAKE_UP,
+    DEFAULT_WAKE_WORD_COOLDOWN,
+    DOMAIN,
+)
 from .error import (
     IntentRecognitionError,
     PipelineError,
@@ -399,6 +405,9 @@ class WakeWordSettings:
     audio_seconds_to_buffer: float = 0
     """Seconds of audio to buffer before detection and forward to STT."""
 
+    cooldown_seconds: float = DEFAULT_WAKE_WORD_COOLDOWN
+    """Seconds after a wake word detection where other detections are ignored."""
+
 
 @dataclass(frozen=True)
 class AudioSettings:
@@ -603,6 +612,8 @@ class PipelineRun:
             )
         )
 
+        wake_word_settings = self.wake_word_settings or WakeWordSettings()
+
         # Remove language since it doesn't apply to wake words yet
         metadata_dict.pop("language", None)
 
@@ -612,14 +623,13 @@ class PipelineRun:
                 {
                     "entity_id": self.wake_word_entity_id,
                     "metadata": metadata_dict,
+                    "timeout": wake_word_settings.timeout or 0,
                 },
             )
         )
 
         if self.debug_recording_queue is not None:
             self.debug_recording_queue.put_nowait(f"00_wake-{self.wake_word_entity_id}")
-
-        wake_word_settings = self.wake_word_settings or WakeWordSettings()
 
         wake_word_vad: VoiceActivityTimeout | None = None
         if (wake_word_settings.timeout is not None) and (
@@ -670,6 +680,17 @@ class PipelineRun:
         if result is None:
             wake_word_output: dict[str, Any] = {}
         else:
+            # Avoid duplicate detections by checking cooldown
+            last_wake_up = self.hass.data.get(DATA_LAST_WAKE_UP)
+            if last_wake_up is not None:
+                sec_since_last_wake_up = time.monotonic() - last_wake_up
+                if sec_since_last_wake_up < wake_word_settings.cooldown_seconds:
+                    _LOGGER.debug("Duplicate wake word detection occurred")
+                    raise WakeWordDetectionAborted
+
+            # Record last wake up time to block duplicate detections
+            self.hass.data[DATA_LAST_WAKE_UP] = time.monotonic()
+
             if result.queued_audio:
                 # Add audio that was pending at detection.
                 #
@@ -1032,7 +1053,7 @@ class PipelineRun:
         # Directory to save audio for each pipeline run.
         # Configured in YAML for assist_pipeline.
         if debug_recording_dir := self.hass.data[DATA_CONFIG].get(
-            "debug_recording_dir"
+            CONF_DEBUG_RECORDING_DIR
         ):
             if device_id is None:
                 # <debug_recording_dir>/<pipeline.name>/<run.id>
