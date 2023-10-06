@@ -234,6 +234,10 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             self.async_write_ha_state()
             return
 
+        self._handle_rooms(home, data)
+
+
+    def _handle_rooms(self, home, data):
         for room in home.get("rooms", []):
             if (
                 data["event_type"] == EVENT_TYPE_SET_POINT
