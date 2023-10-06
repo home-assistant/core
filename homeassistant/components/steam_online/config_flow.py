@@ -42,39 +42,31 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SteamOptionsFlowHandler(config_entry)
 
+    async def create_entry(self, user_input, name):
+        """Create entry or update existing entry."""
+        entry = await self.async_set_unique_id(user_input[CONF_ACCOUNT])
+        if entry and self.source == config_entries.SOURCE_REAUTH:
+            self.hass.config_entries.async_update_entry(entry, data=user_input)
+            await self.hass.config_entries.async_reload(entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=name,
+            data=user_input,
+            options={CONF_ACCOUNTS: {user_input[CONF_ACCOUNT]: name}},
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is None and self.entry:
             user_input = {CONF_ACCOUNT: self.entry.data[CONF_ACCOUNT]}
-        elif user_input is not None:
-            try:
-                res = await self.hass.async_add_executor_job(validate_input, user_input)
-                if res is not None:
-                    name = str(res["personaname"])
-                else:
-                    errors["base"] = "invalid_account"
-            except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
-                errors["base"] = "cannot_connect"
-                if "403" in str(ex):
-                    errors["base"] = "invalid_auth"
-            except Exception as ex:  # pylint:disable=broad-except
-                LOGGER.exception("Unknown exception: %s", ex)
-                errors["base"] = "unknown"
+        elif user_input:
+            errors, name = await self.validate_user_input(user_input)
             if not errors:
-                entry = await self.async_set_unique_id(user_input[CONF_ACCOUNT])
-                if entry and self.source == config_entries.SOURCE_REAUTH:
-                    self.hass.config_entries.async_update_entry(entry, data=user_input)
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=name,
-                    data=user_input,
-                    options={CONF_ACCOUNTS: {user_input[CONF_ACCOUNT]: name}},
-                )
+                return await self.create_entry(user_input, name)
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
@@ -91,6 +83,27 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=PLACEHOLDERS,
         )
+
+    async def validate_user_input(
+        self, user_input: dict
+    ) -> tuple[dict[str, str], str | None]:
+        """Validate user input and handle exceptions."""
+        errors: dict[str, str] = {}
+        name = None  # Initialize name as None
+        try:
+            res = await self.hass.async_add_executor_job(validate_input, user_input)
+            if res is not None:
+                name = str(res["personaname"])
+            else:
+                errors["base"] = "invalid_account"
+        except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
+            errors["base"] = "cannot_connect"
+            if "403" in str(ex):
+                errors["base"] = "invalid_auth"
+        except Exception as ex:  # pylint:disable=broad-except
+            LOGGER.exception("Unknown exception: %s", ex)
+            errors["base"] = "unknown"
+        return errors, name
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
