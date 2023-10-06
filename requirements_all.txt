@@ -997,7 +997,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231002.0
+home-assistant-frontend==20231005.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.10.2
@@ -1285,7 +1285,7 @@ nextcord==2.0.0a8
 nextdns==1.4.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.2.0
+nibe==2.4.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1701,7 +1701,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.1.2
 
 # homeassistant.components.fibaro
-pyfibaro==0.7.2
+pyfibaro==0.7.5
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -2246,7 +2246,7 @@ pyvlx==0.2.20
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==0.5.0
+pywaze==0.5.1
 
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.4.3
@@ -2784,7 +2784,7 @@ zamg==0.3.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.115.1
+zeroconf==0.115.2
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

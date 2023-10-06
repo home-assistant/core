@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -88,6 +89,20 @@ async def test_full_flow(
     }
 
 
+@pytest.mark.parametrize(
+    ("http_status", "json", "error_reason"),
+    [
+        (HTTPStatus.INTERNAL_SERVER_ERROR, None, "cannot_connect"),
+        (HTTPStatus.FORBIDDEN, None, "cannot_connect"),
+        (
+            HTTPStatus.UNAUTHORIZED,
+            {
+                "errors": [{"errorType": "invalid_grant"}],
+            },
+            "invalid_access_token",
+        ),
+    ],
+)
 async def test_api_failure(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -95,6 +110,9 @@ async def test_api_failure(
     current_request_with_host: None,
     requests_mock: Mocker,
     setup_credentials: None,
+    http_status: HTTPStatus,
+    json: Any,
+    error_reason: str,
 ) -> None:
     """Test a failure to fetch the profile during the setup flow."""
     result = await hass.config_entries.flow.async_init(
@@ -126,12 +144,15 @@ async def test_api_failure(
     )
 
     requests_mock.register_uri(
-        "GET", PROFILE_API_URL, status_code=HTTPStatus.INTERNAL_SERVER_ERROR
+        "GET",
+        PROFILE_API_URL,
+        status_code=http_status,
+        json=json,
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "cannot_connect"
+    assert result.get("reason") == error_reason
 
 
 async def test_config_entry_already_exists(
