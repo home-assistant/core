@@ -31,13 +31,11 @@ from .const import (
 )
 from .coordinator import FlumeNotificationDataUpdateCoordinator
 
-SERVICE_NOTIFICATIONS = "notifications"
+SERVICE_LIST_NOTIFICATIONS = "list_notifications"
 CONF_CONFIG_ENTRY = "config_entry"
-CONF_FORCE = "force"
-NOTIFICATIONS_SERVICE_SCHEMA = vol.All(
+LIST_NOTIFICATIONS_SERVICE_SCHEMA = vol.All(
     {
         vol.Required(CONF_CONFIG_ENTRY): ConfigEntrySelector(),
-        vol.Required(CONF_FORCE, default=False): bool,
     },
 )
 
@@ -118,11 +116,6 @@ async def async_setup_service(hass: HomeAssistant) -> None:
             raise ValueError(f"Invalid config entry: {entry_id}")
         if not (flume_domain_data := hass.data[DOMAIN].get(entry_id)):
             raise ValueError(f"Config entry not loaded: {entry_id}")
-        notification_coordinator: FlumeNotificationDataUpdateCoordinator = (
-            flume_domain_data[FLUME_NOTIFICATIONS_COORDINATOR]
-        )
-        if call.data[CONF_FORCE]:
-            await notification_coordinator.async_refresh()
         return {
             "notifications": flume_domain_data[
                 FLUME_NOTIFICATIONS_COORDINATOR
@@ -131,8 +124,8 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_NOTIFICATIONS,
+        SERVICE_LIST_NOTIFICATIONS,
         notifications,
-        schema=NOTIFICATIONS_SERVICE_SCHEMA,
+        schema=LIST_NOTIFICATIONS_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
