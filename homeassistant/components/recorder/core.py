@@ -711,7 +711,7 @@ class Recorder(threading.Thread):
             # Give up if we could not connect
             return
 
-        schema_status = migration.validate_db_schema(self.hass, self, self.get_session)
+        schema_status = migration.validate_db_schema(self, self.get_session)
         if schema_status is None:
             # Give up if we could not validate the schema
             return

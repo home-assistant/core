@@ -177,7 +177,7 @@ def _schema_is_current(current_version: int) -> bool:
 
 
 def validate_db_schema(
-    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
+    instance: Recorder, session_maker: Callable[[], Session]
 ) -> SchemaValidationStatus | None:
     """Check if the schema is valid.
 
