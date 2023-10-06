@@ -693,7 +693,6 @@ async def async_setup_entry(
 class ViCareSensor(ViCareEntity, SensorEntity):
     """Representation of a ViCare sensor."""
 
-    _attr_has_entity_name = True
     entity_description: ViCareSensorEntityDescription
 
     def __init__(

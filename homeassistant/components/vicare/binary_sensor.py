@@ -214,7 +214,6 @@ async def async_setup_entry(
 class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
     """Representation of a ViCare sensor."""
 
-    _attr_has_entity_name = True
     entity_description: ViCareBinarySensorEntityDescription
 
     def __init__(

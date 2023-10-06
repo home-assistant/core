@@ -111,7 +111,6 @@ async def async_setup_entry(
 class ViCareButton(ViCareEntity, ButtonEntity):
     """Representation of a ViCare button."""
 
-    _attr_has_entity_name = True
     entity_description: ViCareButtonEntityDescription
 
     def __init__(
