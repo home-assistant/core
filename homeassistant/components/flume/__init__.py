@@ -32,12 +32,12 @@ from .const import (
 from .coordinator import FlumeNotificationDataUpdateCoordinator
 
 SERVICE_NOTIFICATIONS = "notifications"
-SERVICE_NOTIFICATIONS_FIELD_CONFIG_ENTRY = "config_entry"
-SERVICE_NOTIFICATIONS_FIELD_FORCE = "force"
+CONF_CONFIG_ENTRY = "config_entry"
+CONF_FORCE = "force"
 NOTIFICATIONS_SERVICE_SCHEMA = vol.All(
     {
-        vol.Required(SERVICE_NOTIFICATIONS_FIELD_CONFIG_ENTRY): ConfigEntrySelector(),
-        vol.Required(SERVICE_NOTIFICATIONS_FIELD_FORCE, default=False): bool,
+        vol.Required(CONF_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(CONF_FORCE, default=False): bool,
     },
 )
 
