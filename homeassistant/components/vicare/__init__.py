@@ -13,6 +13,7 @@ from PyViCare.PyViCareDevice import Device
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS, VICARE_DEVICE_LIST
@@ -87,3 +88,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return unload_ok
+
+
+class ViCareEntity(Entity):
+    def __init__(self, device_config, hasMultipleDevices: bool):
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_config.getConfig().serial)},
+            name=f"{device_config.getModel()}-{device_config.getConfig().serial}" if hasMultipleDevices else device_config.getModel(),
+            manufacturer="Viessmann",
+            model=device_config.getModel(),
+            configuration_url="https://developer.viessmann.com/",
+        )
