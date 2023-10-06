@@ -15,13 +15,13 @@ bluetooth-data-tools==1.12.0
 certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==41.0.4
-dbus-fast==2.11.0
+dbus-fast==2.11.1
 fnv-hash-fast==0.4.1
 ha-av==10.1.1
 hass-nabucasa==0.71.0
 hassil==1.2.5
 home-assistant-bluetooth==1.10.3
-home-assistant-frontend==20231002.0
+home-assistant-frontend==20231005.0
 home-assistant-intents==2023.10.2
 httpx==0.24.1
 ifaddr==0.2.0
@@ -52,7 +52,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtc-noise-gain==1.2.3
 yarl==1.9.2
-zeroconf==0.115.1
+zeroconf==0.115.2
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238

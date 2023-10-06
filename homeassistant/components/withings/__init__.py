@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+import contextlib
 from typing import Any
 
 from aiohttp.hdrs import METH_HEAD, METH_POST
@@ -37,7 +38,6 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from .api import ConfigEntryWithingsApi
@@ -160,7 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         webhook_name = "Withings"
         if entry.title != DEFAULT_TITLE:
-            webhook_name = " ".join([DEFAULT_TITLE, entry.title])
+            webhook_name = f"{DEFAULT_TITLE} {entry.title}"
 
         webhook_register(
             hass,
@@ -182,14 +182,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
             await unregister_webhook(None)
-            async_call_later(hass, 30, register_webhook)
+            entry.async_on_unload(async_call_later(hass, 30, register_webhook))
 
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):
-            await register_webhook(None)
-        cloud.async_listen_connection_change(hass, manage_cloudhook)
+            entry.async_on_unload(async_call_later(hass, 1, register_webhook))
+        entry.async_on_unload(
+            cloud.async_listen_connection_change(hass, manage_cloudhook)
+        )
     else:
-        async_at_started(hass, register_webhook)
+        entry.async_on_unload(async_call_later(hass, 1, register_webhook))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -214,9 +216,12 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
     """Generate the full URL for a webhook_id."""
     if CONF_CLOUDHOOK_URL not in entry.data:
-        webhook_url = await cloud.async_create_cloudhook(
-            hass, entry.data[CONF_WEBHOOK_ID]
-        )
+        webhook_id = entry.data[CONF_WEBHOOK_ID]
+        # Some users already have their webhook as cloudhook.
+        # We remove them to be sure we can create a new one.
+        with contextlib.suppress(ValueError):
+            await cloud.async_delete_cloudhook(hass, webhook_id)
+        webhook_url = await cloud.async_create_cloudhook(hass, webhook_id)
         data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
         hass.config_entries.async_update_entry(entry, data=data)
         return webhook_url
