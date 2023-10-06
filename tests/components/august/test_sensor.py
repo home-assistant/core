@@ -331,15 +331,12 @@ async def test_restored_state(
 
     # Home assistant is not running yet
     hass.state = CoreState.not_running
-    last_reset = "2023-09-22T00:00:00.000000+00:00"
     mock_restore_cache_with_extra_data(
         hass,
         [
             (
                 fake_state,
-                {
-                    "last_reset": last_reset,
-                },
+                {"native_value": "Tag Unlock", "native_unit_of_measurement": None},
             )
         ],
     )
