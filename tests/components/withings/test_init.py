@@ -421,6 +421,7 @@ async def test_setup_with_cloud(
         assert hass.components.cloud.async_active_subscription() is True
         assert hass.components.cloud.async_is_connected() is True
         fake_create_cloudhook.assert_called_once()
+        fake_delete_cloudhook.assert_called_once()
 
         assert (
             hass.config_entries.async_entries("withings")[0].data["cloudhook_url"]
@@ -432,7 +433,7 @@ async def test_setup_with_cloud(
 
         for config_entry in hass.config_entries.async_entries("withings"):
             await hass.config_entries.async_remove(config_entry.entry_id)
-            fake_delete_cloudhook.assert_called_once()
+            fake_delete_cloudhook.call_count == 2
 
         await hass.async_block_till_done()
         assert not hass.config_entries.async_entries(DOMAIN)
