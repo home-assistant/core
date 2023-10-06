@@ -62,11 +62,12 @@ def _get_color(file_handler) -> tuple:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Color extractor component."""
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data={}
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data={}
+            )
         )
-    )
 
     return True
 
