@@ -59,6 +59,7 @@ from .const import (
     FITBIT_DEFAULT_RESOURCES,
     FitbitUnitSystem,
 )
+from .exceptions import FitbitApiException
 from .model import FitbitDevice
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -707,12 +708,22 @@ class FitbitSensor(SensorEntity):
         resource_type = self.entity_description.key
         if resource_type == "devices/battery" and self.device is not None:
             device_id = self.device.id
-            registered_devs: list[FitbitDevice] = await self.api.async_get_devices()
-            self.device = next(
-                device for device in registered_devs if device.id == device_id
-            )
-            self._attr_native_value = self.device.battery
+            try:
+                registered_devs: list[FitbitDevice] = await self.api.async_get_devices()
+            except FitbitApiException:
+                self._attr_available = False
+            else:
+                self._attr_available = True
+                self.device = next(
+                    device for device in registered_devs if device.id == device_id
+                )
+                self._attr_native_value = self.device.battery
+            return
 
-        else:
+        try:
             result = await self.api.async_get_latest_time_series(resource_type)
+        except FitbitApiException:
+            self._attr_available = False
+        else:
+            self._attr_available = True
             self._attr_native_value = self.entity_description.value_fn(result)
