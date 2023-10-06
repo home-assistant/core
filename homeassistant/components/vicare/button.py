@@ -16,10 +16,9 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareRequiredKeysMixinWithSet
+from . import ViCareEntity, ViCareRequiredKeysMixinWithSet
 from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
@@ -52,7 +51,7 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 )
 
 
-def _build_entity(name, vicare_api, device_config, description):
+def _build_entity(name, vicare_api, device_config, description, has_multiple_devices: bool):
     """Create a ViCare button entity."""
     _LOGGER.debug("Found device %s", name)
     try:
@@ -70,6 +69,7 @@ def _build_entity(name, vicare_api, device_config, description):
         vicare_api,
         device_config,
         description,
+        has_multiple_devices,
     )
 
 
@@ -80,6 +80,9 @@ async def async_setup_entry(
 ) -> None:
     """Create the ViCare button entities."""
     entities = []
+    has_multiple_devices = (
+        len(hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]) > 1
+    )
 
     for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
         api = getattr(
@@ -95,6 +98,7 @@ async def async_setup_entry(
                 api,
                 device,
                 description,
+                has_multiple_devices,
             )
             if entity is not None:
                 entities.append(entity)
@@ -102,26 +106,20 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViCareButton(ButtonEntity):
+class ViCareButton(ViCareEntity, ButtonEntity):
     """Representation of a ViCare button."""
 
     _attr_has_entity_name = True
     entity_description: ViCareButtonEntityDescription
 
     def __init__(
-        self, name, api, device_config, description: ViCareButtonEntityDescription
+        self, name, api, device_config, description: ViCareButtonEntityDescription, has_multiple_devices: bool
     ) -> None:
         """Initialize the button."""
         self.entity_description = description
         self._device_config = device_config
         self._api = api
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=f"{device_config.getModel()}-{device_config.getConfig().serial}",
-            manufacturer="Viessmann",
-            model=device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
+        ViCareEntity.__init__(self, device_config, has_multiple_devices)
 
     def press(self) -> None:
         """Handle the button press."""

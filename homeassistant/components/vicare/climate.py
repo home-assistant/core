@@ -112,7 +112,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ViCare climate platform."""
     entities = []
-    hasMultipleDevices = (
+    has_multiple_devices = (
         len(hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]) > 1
     )
 
@@ -134,7 +134,7 @@ async def async_setup_entry(
                 api,
                 circuit,
                 device,
-                hasMultipleDevices,
+                has_multiple_devices,
             )
             entities.append(entity)
 
@@ -163,7 +163,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_preset_modes = list(HA_TO_VICARE_PRESET_HEATING)
 
-    def __init__(self, name, api, circuit, device_config, hasMultipleDevices: bool):
+    def __init__(self, name, api, circuit, device_config, has_multiple_devices: bool):
         """Initialize the climate device."""
 
         self._attr_name = name
@@ -174,7 +174,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         self._current_program = None
         self._current_action = None
         self._attr_unique_id = f"{device_config.getConfig().serial}-{circuit.id}"
-        ViCareEntity.__init__(self, device_config, hasMultipleDevices)
+        ViCareEntity.__init__(self, device_config, has_multiple_devices)
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""

@@ -17,9 +17,9 @@ from homeassistant.components.water_heater import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import ViCareEntity
 from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
@@ -76,7 +76,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ViCare climate platform."""
     entities = []
-
+    has_multiple_devices = (
+        len(hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]) > 1
+    )
     for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
         api = getattr(
             device,
@@ -95,13 +97,14 @@ async def async_setup_entry(
                 api,
                 circuit,
                 device,
+                has_multiple_devices, 
             )
             entities.append(entity)
 
     async_add_entities(entities)
 
 
-class ViCareWater(WaterHeaterEntity):
+class ViCareWater(ViCareEntity, WaterHeaterEntity):
     """Representation of the ViCare domestic hot water device."""
 
     _attr_has_entity_name = True
@@ -112,7 +115,7 @@ class ViCareWater(WaterHeaterEntity):
     _attr_max_temp = VICARE_TEMP_WATER_MAX
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
 
-    def __init__(self, name, api, circuit, device_config):
+    def __init__(self, name, api, circuit, device_config, has_multiple_devices: bool):
         """Initialize the DHW water_heater device."""
         self._attr_name = name
         self._api = api
@@ -120,13 +123,7 @@ class ViCareWater(WaterHeaterEntity):
         self._attributes = {}
         self._current_mode = None
         self._attr_unique_id = f"{device_config.getConfig().serial}-{circuit.id}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=f"{device_config.getModel()}-{device_config.getConfig().serial}",
-            manufacturer="Viessmann",
-            model=device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
+        ViCareEntity.__init__(self, device_config, has_multiple_devices)
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
