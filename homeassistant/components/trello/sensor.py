@@ -32,7 +32,6 @@ class TrelloSensor(CoordinatorEntity[TrelloDataUpdateCoordinator], SensorEntity)
         super().__init__(coordinator)
         self.board = board
         self.list_id = list_.id
-        self.coordinator = coordinator
         self._attr_unique_id = f"list_{list_.id}".lower()
         self._attr_name = list_.name
 
