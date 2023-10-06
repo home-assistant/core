@@ -180,8 +180,10 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         """Return the temperature."""
         # When the hvac mode is AUTO, the temperature control uses a temperature_change delta around a pivot temperature
         if self.hvac_mode == HVACMode.AUTO:
-            if (temperature_change := self.temperature_change) and temperature_change:
-                return AUTO_PIVOT_TEMPERATURE + self.temperature_change
+            if (
+                temperature_change := self.device.states[TEMPERATURE_CHANGE_STATE]
+            ) and temperature_change.value_as_int:
+                return AUTO_PIVOT_TEMPERATURE + temperature_change.value_as_int
             return AUTO_PIVOT_TEMPERATURE
 
         if (
