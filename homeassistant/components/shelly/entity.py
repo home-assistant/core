@@ -174,13 +174,16 @@ def async_setup_rpc_attribute_entities(
     coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
     assert coordinator
 
-    if not (sleep_period := config_entry.data[CONF_SLEEP_PERIOD]):
+    sleep_period = config_entry.data.get(CONF_SLEEP_PERIOD)
+    polling_coordinator = None
+
+    if not sleep_period:
         polling_coordinator = get_entry_data(hass)[config_entry.entry_id].rpc_poll
         assert polling_coordinator
 
     entities = []
-    for sensor_id in sensors:
-        description = sensors[sensor_id]
+
+    for sensor_id, description in sensors.items():
         key_instances = get_rpc_key_instances(
             coordinator.device.status, description.key
         )
@@ -200,17 +203,14 @@ def async_setup_rpc_attribute_entities(
                 domain = sensor_class.__module__.split(".")[-1]
                 unique_id = f"{coordinator.mac}-{key}-{sensor_id}"
                 async_remove_shelly_entity(hass, domain, unique_id)
-            elif description.use_polling_coordinator:
-                if not sleep_period:
-                    entities.append(
-                        sensor_class(polling_coordinator, key, sensor_id, description)
-                    )
+            elif description.use_polling_coordinator and not sleep_period:
+                entities.append(
+                    sensor_class(polling_coordinator, key, sensor_id, description)
+                )
             else:
                 entities.append(sensor_class(coordinator, key, sensor_id, description))
-    if not entities:
-        return
-
-    async_add_entities(entities)
+    if entities:
+        async_add_entities(entities)
 
 
 @callback
