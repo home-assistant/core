@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_dumps
@@ -447,154 +447,162 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         )
 
 
-async def async_get_broker_settings(
-    flow: ConfigFlow | OptionsFlow,
-    fields: OrderedDict[Any, Any],
-    entry_config: MappingProxyType[str, Any] | None,
-    user_input: dict[str, Any] | None,
+def check_invalid_cert(
+    client_certificate: str | None,
+    client_certificate_id: str | None,
+    user_input: dict[str, Any],
+    certificate: str | None,
+    certificate_id: str | None,
+) -> bool:
+    """Return True if certificate is invalid."""
+    if (
+        not client_certificate
+        and user_input.get(SET_CLIENT_CERT)
+        and not client_certificate_id
+        or not certificate
+        and user_input.get(SET_CA_CERT, "off") == "custom"
+        and not certificate_id
+        or user_input.get(CONF_TRANSPORT) == TRANSPORT_WEBSOCKETS
+        and CONF_WS_PATH not in user_input
+    ):
+        return True
+    return False
+
+
+async def validate_cert(
+    client_certificate: str | None,
+    client_certificate_id: str | None,
+    hass: HomeAssistant,
+    certificate: str | None,
     validated_user_input: dict[str, Any],
+    client_key_id: str | None,
+    client_key: str | None,
     errors: dict[str, str],
 ) -> bool:
-    """Build the config flow schema to collect the broker settings.
+    """Validate certificate."""
+    if client_certificate_id:
+        with process_uploaded_file(
+            hass, client_certificate_id
+        ) as client_certificate_file:
+            client_certificate = client_certificate_file.read_text(
+                encoding=DEFAULT_ENCODING
+            )
+    if client_key_id:
+        with process_uploaded_file(hass, client_key_id) as key_file:
+            client_key = key_file.read_text(encoding=DEFAULT_ENCODING)
 
-    Shows advanced options if one or more are configured
-    or when the advanced_broker_options checkbox was selected.
-    Returns True when settings are collected successfully.
-    """
-    hass = flow.hass
-    advanced_broker_options: bool = False
-    user_input_basic: dict[str, Any] = {}
-    current_config: dict[str, Any] = (
-        entry_config.copy() if entry_config is not None else {}
+    certificate_data: dict[str, Any] = {}
+    if certificate:
+        certificate_data[CONF_CERTIFICATE] = certificate
+    if client_certificate:
+        certificate_data[CONF_CLIENT_CERT] = client_certificate
+        certificate_data[CONF_CLIENT_KEY] = client_key
+
+    validated_user_input.update(certificate_data)
+    await async_create_certificate_temp_files(hass, certificate_data)
+    if error := await hass.async_add_executor_job(
+        check_certicate_chain,
+    ):
+        errors["base"] = error
+        return False
+
+    if SET_CA_CERT in validated_user_input:
+        del validated_user_input[SET_CA_CERT]
+    if SET_CLIENT_CERT in validated_user_input:
+        del validated_user_input[SET_CLIENT_CERT]
+    if validated_user_input.get(CONF_TRANSPORT, TRANSPORT_TCP) == TRANSPORT_TCP:
+        if CONF_WS_PATH in validated_user_input:
+            del validated_user_input[CONF_WS_PATH]
+        if CONF_WS_HEADERS in validated_user_input:
+            del validated_user_input[CONF_WS_HEADERS]
+        return True
+    try:
+        validated_user_input[CONF_WS_HEADERS] = json_loads(
+            validated_user_input.get(CONF_WS_HEADERS, "{}")
+        )
+        schema = vol.Schema({cv.string: cv.template})
+        schema(validated_user_input[CONF_WS_HEADERS])
+    except JSON_DECODE_EXCEPTIONS + (vol.MultipleInvalid,):
+        errors["base"] = "bad_ws_headers"
+        return False
+    return True
+
+
+async def _async_validate_broker_settings(
+    config: dict[str, Any],
+    user_input: dict[str, Any],
+    validated_user_input: dict[str, Any],
+    errors: dict[str, str],
+    hass: HomeAssistant,
+) -> bool:
+    """Additional validation on broker settings for better error messages."""
+
+    # Get current certificate settings from config entry
+    certificate: str | None = (
+        "auto"
+        if user_input.get(SET_CA_CERT, "off") == "auto"
+        else config.get(CONF_CERTIFICATE)
+        if user_input.get(SET_CA_CERT, "off") == "custom"
+        else None
+    )
+    client_certificate: str | None = (
+        config.get(CONF_CLIENT_CERT) if user_input.get(SET_CLIENT_CERT) else None
+    )
+    client_key: str | None = (
+        config.get(CONF_CLIENT_KEY) if user_input.get(SET_CLIENT_CERT) else None
     )
 
-    async def _async_validate_broker_settings(
-        config: dict[str, Any],
-        user_input: dict[str, Any],
-        validated_user_input: dict[str, Any],
-        errors: dict[str, str],
-    ) -> bool:
-        """Additional validation on broker settings for better error messages."""
+    # Prepare entry update with uploaded files
+    validated_user_input.update(user_input)
+    client_certificate_id: str | None = user_input.get(CONF_CLIENT_CERT)
+    client_key_id: str | None = user_input.get(CONF_CLIENT_KEY)
+    if (
+        client_certificate_id
+        and not client_key_id
+        or not client_certificate_id
+        and client_key_id
+    ):
+        errors["base"] = "invalid_inclusion"
+        return False
+    certificate_id: str | None = user_input.get(CONF_CERTIFICATE)
+    if certificate_id:
+        with process_uploaded_file(hass, certificate_id) as certificate_file:
+            certificate = certificate_file.read_text(encoding=DEFAULT_ENCODING)
 
-        # Get current certificate settings from config entry
-        certificate: str | None = (
-            "auto"
-            if user_input.get(SET_CA_CERT, "off") == "auto"
-            else config.get(CONF_CERTIFICATE)
-            if user_input.get(SET_CA_CERT, "off") == "custom"
-            else None
-        )
-        client_certificate: str | None = (
-            config.get(CONF_CLIENT_CERT) if user_input.get(SET_CLIENT_CERT) else None
-        )
-        client_key: str | None = (
-            config.get(CONF_CLIENT_KEY) if user_input.get(SET_CLIENT_CERT) else None
-        )
+    # Return to form for file upload CA cert or client cert and key
+    if check_invalid_cert(
+        client_certificate,
+        client_certificate_id,
+        user_input,
+        certificate,
+        certificate_id,
+    ):
+        return False
 
-        # Prepare entry update with uploaded files
-        validated_user_input.update(user_input)
-        client_certificate_id: str | None = user_input.get(CONF_CLIENT_CERT)
-        client_key_id: str | None = user_input.get(CONF_CLIENT_KEY)
-        if (
-            client_certificate_id
-            and not client_key_id
-            or not client_certificate_id
-            and client_key_id
-        ):
-            errors["base"] = "invalid_inclusion"
-            return False
-        certificate_id: str | None = user_input.get(CONF_CERTIFICATE)
-        if certificate_id:
-            with process_uploaded_file(hass, certificate_id) as certificate_file:
-                certificate = certificate_file.read_text(encoding=DEFAULT_ENCODING)
+    return await validate_cert(
+        client_certificate,
+        client_certificate_id,
+        hass,
+        certificate,
+        validated_user_input,
+        client_key_id,
+        client_key,
+        errors,
+    )
 
-        # Return to form for file upload CA cert or client cert and key
-        if (
-            not client_certificate
-            and user_input.get(SET_CLIENT_CERT)
-            and not client_certificate_id
-            or not certificate
-            and user_input.get(SET_CA_CERT, "off") == "custom"
-            and not certificate_id
-            or user_input.get(CONF_TRANSPORT) == TRANSPORT_WEBSOCKETS
-            and CONF_WS_PATH not in user_input
-        ):
-            return False
 
-        if client_certificate_id:
-            with process_uploaded_file(
-                hass, client_certificate_id
-            ) as client_certificate_file:
-                client_certificate = client_certificate_file.read_text(
-                    encoding=DEFAULT_ENCODING
-                )
-        if client_key_id:
-            with process_uploaded_file(hass, client_key_id) as key_file:
-                client_key = key_file.read_text(encoding=DEFAULT_ENCODING)
-
-        certificate_data: dict[str, Any] = {}
-        if certificate:
-            certificate_data[CONF_CERTIFICATE] = certificate
-        if client_certificate:
-            certificate_data[CONF_CLIENT_CERT] = client_certificate
-            certificate_data[CONF_CLIENT_KEY] = client_key
-
-        validated_user_input.update(certificate_data)
-        await async_create_certificate_temp_files(hass, certificate_data)
-        if error := await hass.async_add_executor_job(
-            check_certicate_chain,
-        ):
-            errors["base"] = error
-            return False
-
-        if SET_CA_CERT in validated_user_input:
-            del validated_user_input[SET_CA_CERT]
-        if SET_CLIENT_CERT in validated_user_input:
-            del validated_user_input[SET_CLIENT_CERT]
-        if validated_user_input.get(CONF_TRANSPORT, TRANSPORT_TCP) == TRANSPORT_TCP:
-            if CONF_WS_PATH in validated_user_input:
-                del validated_user_input[CONF_WS_PATH]
-            if CONF_WS_HEADERS in validated_user_input:
-                del validated_user_input[CONF_WS_HEADERS]
-            return True
-        try:
-            validated_user_input[CONF_WS_HEADERS] = json_loads(
-                validated_user_input.get(CONF_WS_HEADERS, "{}")
-            )
-            schema = vol.Schema({cv.string: cv.template})
-            schema(validated_user_input[CONF_WS_HEADERS])
-        except JSON_DECODE_EXCEPTIONS + (vol.MultipleInvalid,):
-            errors["base"] = "bad_ws_headers"
-            return False
-        return True
-
-    if user_input:
-        user_input_basic = user_input.copy()
-        advanced_broker_options = user_input_basic.get(ADVANCED_OPTIONS, False)
-        if ADVANCED_OPTIONS not in user_input or advanced_broker_options is False:
-            if await _async_validate_broker_settings(
-                current_config,
-                user_input_basic,
-                validated_user_input,
-                errors,
-            ):
-                return True
-        # Get defaults settings from previous post
-        current_broker = user_input_basic.get(CONF_BROKER)
-        current_port = user_input_basic.get(CONF_PORT, DEFAULT_PORT)
-        current_user = user_input_basic.get(CONF_USERNAME)
-        current_pass = user_input_basic.get(CONF_PASSWORD)
-    else:
-        # Get default settings from entry (if any)
-        current_broker = current_config.get(CONF_BROKER)
-        current_port = current_config.get(CONF_PORT, DEFAULT_PORT)
-        current_user = current_config.get(CONF_USERNAME)
-        current_pass = current_config.get(CONF_PASSWORD)
-
-    # Treat the previous post as an update of the current settings
-    # (if there was a basic broker setup step)
-    current_config.update(user_input_basic)
-
+def build_form(
+    fields: OrderedDict[Any, Any],
+    current_config: dict[str, Any],
+    current_broker: str | None,
+    current_port: str | None,
+    current_user: str | None,
+    current_pass: str | None,
+    advanced_broker_options: bool,
+    flow: ConfigFlow | OptionsFlow,
+    user_input_basic: dict[str, Any],
+) -> bool:
+    """Update fields to build form."""
     # Get default settings for advanced broker options
     current_client_id = current_config.get(CONF_CLIENT_ID)
     current_keepalive = current_config.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE)
@@ -623,7 +631,6 @@ async def async_get_broker_settings(
         or current_transport == TRANSPORT_WEBSOCKETS
     )
 
-    # Build form
     fields[vol.Required(CONF_BROKER, default=current_broker)] = TEXT_SELECTOR
     fields[vol.Required(CONF_PORT, default=current_port)] = PORT_SELECTOR
     fields[
@@ -732,6 +739,79 @@ async def async_get_broker_settings(
                 CONF_WS_HEADERS, description={"suggested_value": current_ws_headers}
             )
         ] = WS_HEADERS_SELECTOR
+    return False
+
+
+async def async_get_broker_settings(
+    flow: ConfigFlow | OptionsFlow,
+    fields: OrderedDict[Any, Any],
+    entry_config: MappingProxyType[str, Any] | None,
+    user_input: dict[str, Any] | None,
+    validated_user_input: dict[str, Any],
+    errors: dict[str, str],
+) -> bool:
+    """Build the config flow schema to collect the broker settings.
+
+    Shows advanced options if one or more are configured
+    or when the advanced_broker_options checkbox was selected.
+    Returns True when settings are collected successfully.
+    """
+    hass = flow.hass
+    advanced_broker_options: bool = False
+    user_input_basic: dict[str, Any] = {}
+    current_config: dict[str, Any] = (
+        entry_config.copy() if entry_config is not None else {}
+    )
+
+    async def async_validate_broker_settings_wrapper(
+        config: dict[str, Any],
+        user_input: dict[str, Any],
+        validated_user_input: dict[str, Any],
+        errors: dict[str, str],
+    ) -> bool:
+        return await _async_validate_broker_settings(
+            config, user_input, validated_user_input, errors, hass
+        )
+
+    if user_input:
+        user_input_basic = user_input.copy()
+        advanced_broker_options = user_input_basic.get(ADVANCED_OPTIONS, False)
+        if ADVANCED_OPTIONS not in user_input or advanced_broker_options is False:
+            if await async_validate_broker_settings_wrapper(
+                current_config,
+                user_input_basic,
+                validated_user_input,
+                errors,
+            ):
+                return True
+        # Get defaults settings from previous post
+        current_broker = user_input_basic.get(CONF_BROKER)
+        current_port = user_input_basic.get(CONF_PORT, DEFAULT_PORT)
+        current_user = user_input_basic.get(CONF_USERNAME)
+        current_pass = user_input_basic.get(CONF_PASSWORD)
+    else:
+        # Get default settings from entry (if any)
+        current_broker = current_config.get(CONF_BROKER)
+        current_port = current_config.get(CONF_PORT, DEFAULT_PORT)
+        current_user = current_config.get(CONF_USERNAME)
+        current_pass = current_config.get(CONF_PASSWORD)
+
+    # Treat the previous post as an update of the current settings
+    # (if there was a basic broker setup step)
+    current_config.update(user_input_basic)
+
+    # Build form
+    build_form(
+        fields,
+        current_config,
+        current_broker,
+        current_port,
+        current_user,
+        current_pass,
+        advanced_broker_options,
+        flow,
+        user_input_basic,
+    )
 
     # Show form
     return False
