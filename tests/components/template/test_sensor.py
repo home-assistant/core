@@ -8,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.components import sensor, template
+from homeassistant.components.template.sensor import TriggerSensorEntity
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_ICON,
@@ -1569,6 +1570,23 @@ async def test_entity_last_reset_setup(
         total_trigger_state.attributes.get("last_reset")
         == datetime(2023, 1, 1).isoformat()
     )
+
+
+async def test_entity_last_reset_static_value(hass: HomeAssistant) -> None:
+    """Test static last_reset marked as static_rendered."""
+
+    tse = TriggerSensorEntity(
+        hass,
+        None,
+        {
+            "name": Template("Static last_reset entity", hass),
+            "state": Template("{{ states('sensor.test_state') | int(0) }}", hass),
+            "state_class": "total",
+            "last_reset": Template("2023-01-01T00:00:00", hass),
+        },
+    )
+
+    assert "last_reset" in tse._static_rendered
 
 
 async def test_entity_last_reset_parsing(
