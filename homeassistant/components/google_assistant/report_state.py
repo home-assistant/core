@@ -80,11 +80,10 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         ):
             return
 
-        # For doorbell events we use notitication and we need to synchronize
-        # them using a `SYNC` response together with other state changes.
-        # We only want to trigger on this state attribute (timestamp) to avoid false positives.
-        # See: https://developers.home.google.com/cloud-to-cloud/guides/doorbell#objectdetection
-        # We do not support a combined camera stream.
+        # We only trigger notifications on changes in the state value, not attributes.
+        # This is mainly designed for our event entity types
+        # We need to synchronize notifications using a `SYNC` response,
+        # together with other state changes.
         if (
             old_state
             and old_state.state != new_state.state
