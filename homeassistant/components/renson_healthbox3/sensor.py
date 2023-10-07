@@ -1,11 +1,15 @@
 """Sensor data of the Renson ventilation unit."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -19,20 +23,120 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RensonData
-from .const import (
-    DOMAIN,
-    HealthboxGlobalSensorEntityDescription,
-    HealthboxRoomSensorEntityDescription,
-)
+from .const import DOMAIN
 from .coordinator import RensonCoordinator
 from .entity import RensonEntity
+
+
+class HealthboxRoomBoost:
+    """Healthbox  Room Boost object."""
+
+    level: float
+    enabled: bool
+    remaining: int
+
+    def __init__(
+        self, level: float = 100, enabled: bool = False, remaining: int = 900
+    ) -> None:
+        """Initialize the HB Room Boost."""
+        self.level = level
+        self.enabled = enabled
+        self.remaining = remaining
+
+
+class HealthboxRoom:
+    """Healthbox  Room object."""
+
+    boost: HealthboxRoomBoost
+
+    def __init__(self, room_id: int, room_data: dict[str, Any]) -> None:
+        """Initialize the HB Room."""
+        self.room_id: int = room_id
+        self.name: str = room_data["name"]
+        self.type: str = room_data["type"]
+        self.sensors_data: list = room_data["sensor"]
+        self.room_type: str = room_data["type"]
+
+    @property
+    def indoor_temperature(self) -> Decimal:
+        """HB Indoor Temperature."""
+        return [
+            sensor["parameter"]["temperature"]["value"]
+            for sensor in self.sensors_data
+            if "temperature" in sensor["parameter"]
+        ][0]
+
+    @property
+    def indoor_humidity(self) -> Decimal:
+        """HB Indoor Humidity."""
+        return [
+            sensor["parameter"]["humidity"]["value"]
+            for sensor in self.sensors_data
+            if "humidity" in sensor["parameter"]
+        ][0]
+
+    @property
+    def indoor_co2_concentration(self) -> Decimal | None:
+        """HB Indoor CO2 Concentration."""
+        co2_concentration = None
+        try:
+            co2_concentration = [
+                sensor["parameter"]["concentration"]["value"]
+                for sensor in self.sensors_data
+                if "concentration" in sensor["parameter"]
+            ][0]
+        except IndexError:
+            co2_concentration = None
+        return co2_concentration
+
+    @property
+    def indoor_aqi(self) -> Decimal | None:
+        """HB Indoor Air Quality Index."""
+        aqi = None
+        try:
+            aqi = [
+                sensor["parameter"]["index"]["value"]
+                for sensor in self.sensors_data
+                if "index" in sensor["parameter"]
+            ][0]
+        except IndexError:
+            aqi = None
+        return aqi
+
+
+@dataclass
+class HealthboxGlobalEntityDescriptionMixin:
+    """Mixin values for Healthbox Global entities."""
+
+    value_fn: Callable[[Any], Any]
+
+
+@dataclass
+class HealthboxGlobalSensorEntityDescription(
+    SensorEntityDescription, HealthboxGlobalEntityDescriptionMixin
+):
+    """Class describing Healthbox Global sensor entities."""
+
+
+@dataclass
+class HealthboxRoomEntityDescriptionMixin:
+    """Mixin values for Healthbox Room entities."""
+
+    room: HealthboxRoom
+    value_fn: Callable[[Any], Any]
+
+
+@dataclass
+class HealthboxRoomSensorEntityDescription(
+    SensorEntityDescription, HealthboxRoomEntityDescriptionMixin
+):
+    """Class describing Healthbox Room sensor entities."""
+
 
 HEALTHBOX_GLOBAL_SENSORS: tuple[HealthboxGlobalSensorEntityDescription, ...] = (
     HealthboxGlobalSensorEntityDescription(
         key="global_aqi",
         name="Global Air Quality Index",
-        native_unit_of_measurement=None,
         icon="mdi:leaf",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
@@ -42,7 +146,6 @@ HEALTHBOX_GLOBAL_SENSORS: tuple[HealthboxGlobalSensorEntityDescription, ...] = (
     HealthboxGlobalSensorEntityDescription(
         key="error_count",
         name="Error Count",
-        native_unit_of_measurement=None,
         icon="mdi:alert-outline",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.error_count,
@@ -50,21 +153,20 @@ HEALTHBOX_GLOBAL_SENSORS: tuple[HealthboxGlobalSensorEntityDescription, ...] = (
     ),
     HealthboxGlobalSensorEntityDescription(
         key="wifi_status",
-        name="WiFi Status",
+        name="Wi-Fi Status",
         icon="mdi:wifi",
         value_fn=lambda x: x.wifi.status,
     ),
     HealthboxGlobalSensorEntityDescription(
         key="wifi_internet_connection",
-        name="WiFi Internet Connection",
-        native_unit_of_measurement=None,
+        name="Wi-Fi Internet Connection",
         icon="mdi:web",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.wifi.internet_connection,
     ),
     HealthboxGlobalSensorEntityDescription(
         key="wifi_ssid",
-        name="WiFi SSID",
+        name="Wi-Fi SSID",
         icon="mdi:wifi-settings",
         value_fn=lambda x: x.wifi.ssid,
     ),
@@ -127,7 +229,6 @@ def generate_room_sensors_for_healthbox(
                         HealthboxRoomSensorEntityDescription(
                             key=f"{room.room_id}_aqi",
                             name=f"{room.name} Air Quality Index",
-                            native_unit_of_measurement=None,
                             icon="mdi:leaf",
                             device_class=SensorDeviceClass.AQI,
                             state_class=SensorStateClass.MEASUREMENT,
@@ -160,7 +261,6 @@ def generate_room_sensors_for_healthbox(
                     name=f"{room.name} Boost Level",
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:fan",
-                    # device_class=SensorDeviceClass.,
                     state_class=SensorStateClass.MEASUREMENT,
                     room=room,
                     value_fn=lambda x: x.boost.level,
@@ -174,7 +274,6 @@ def generate_room_sensors_for_healthbox(
                     name=f"{room.name} Airflow Ventilation Rate",
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:fan",
-                    # device_class=SensorDeviceClass.,
                     state_class=SensorStateClass.MEASUREMENT,
                     room=room,
                     value_fn=lambda x: x.airflow_ventilation_rate * 100,
@@ -273,16 +372,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Renson sensor platform."""
 
-    data: RensonCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: RensonCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+
+    entities: list[RensonEntity] = []
 
     entities = [
-        HealthboxGlobalSensor(data.coordinator, description)
+        HealthboxGlobalSensor(coordinator, description)
         for description in HEALTHBOX_GLOBAL_SENSORS
     ]
 
-    room_sensors = generate_room_sensors_for_healthbox(coordinator=data.coordinator)
+    room_sensors = generate_room_sensors_for_healthbox(coordinator=coordinator)
 
     for description in room_sensors:
-        entities.append(HealthboxRoomSensor(data.coordinator, description))
+        entities.append(HealthboxRoomSensor(coordinator, description))
 
     async_add_entities(entities)
