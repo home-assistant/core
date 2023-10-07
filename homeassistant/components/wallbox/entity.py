@@ -4,7 +4,6 @@ from __future__ import annotations
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import WallboxCoordinator
 from .const import (
     CHARGER_CURRENT_VERSION_KEY,
     CHARGER_DATA_KEY,
@@ -14,6 +13,7 @@ from .const import (
     CHARGER_SOFTWARE_KEY,
     DOMAIN,
 )
+from .coordinator import WallboxCoordinator
 
 
 class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):

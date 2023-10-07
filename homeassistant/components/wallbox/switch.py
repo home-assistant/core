@@ -8,7 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import WallboxCoordinator
 from .const import (
     CHARGER_DATA_KEY,
     CHARGER_PAUSE_RESUME_KEY,
@@ -17,6 +16,7 @@ from .const import (
     DOMAIN,
     ChargerStatus,
 )
+from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
 
 SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
