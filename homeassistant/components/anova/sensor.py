@@ -22,10 +22,20 @@ from .const import DOMAIN
 from .entity import AnovaDescriptionEntity
 from .models import AnovaData
 
+# Define constants for string literals
+SENSOR_KEY_COOK_TIME = "cook_time"
+SENSOR_KEY_STATE = "state"
+SENSOR_KEY_MODE = "mode"
+SENSOR_KEY_TARGET_TEMPERATURE = "target_temperature"
+SENSOR_KEY_COOK_TIME_REMAINING = "cook_time_remaining"
+SENSOR_KEY_HEATER_TEMPERATURE = "heater_temperature"
+SENSOR_KEY_TRIAC_TEMPERATURE = "triac_temperature"
+SENSOR_KEY_WATER_TEMPERATURE = "water_temperature"
+
 
 @dataclass
 class AnovaSensorEntityDescriptionMixin:
-    """Describes the mixin variables for anova sensors."""
+    """Describes the mixin variables for Anova sensors."""
 
     value_fn: Callable[[APCUpdateSensor], float | int | str]
 
@@ -37,67 +47,74 @@ class AnovaSensorEntityDescription(
     """Describes a Anova sensor."""
 
 
+# List of sensor descriptions using constants
 SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
     AnovaSensorEntityDescription(
-        key="cook_time",
+        key=SENSOR_KEY_COOK_TIME,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         icon="mdi:clock-outline",
-        translation_key="cook_time",
+        translation_key=SENSOR_KEY_COOK_TIME,
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.cook_time,
     ),
     AnovaSensorEntityDescription(
-        key="state", translation_key="state", value_fn=lambda data: data.state
+        key=SENSOR_KEY_STATE,
+        translation_key=SENSOR_KEY_STATE,
+        value_fn=lambda data: data.state,
     ),
     AnovaSensorEntityDescription(
-        key="mode", translation_key="mode", value_fn=lambda data: data.mode
+        key=SENSOR_KEY_MODE,
+        translation_key=SENSOR_KEY_MODE,
+        value_fn=lambda data: data.mode,
     ),
     AnovaSensorEntityDescription(
-        key="target_temperature",
+        key=SENSOR_KEY_TARGET_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:thermometer",
-        translation_key="target_temperature",
+        translation_key=SENSOR_KEY_TARGET_TEMPERATURE,
         value_fn=lambda data: data.target_temperature,
     ),
     AnovaSensorEntityDescription(
-        key="cook_time_remaining",
+        key=SENSOR_KEY_COOK_TIME_REMAINING,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         icon="mdi:clock-outline",
-        translation_key="cook_time_remaining",
+        translation_key=SENSOR_KEY_COOK_TIME_REMAINING,
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.cook_time_remaining,
     ),
     AnovaSensorEntityDescription(
-        key="heater_temperature",
+        key=SENSOR_KEY_HEATER_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:thermometer",
-        translation_key="heater_temperature",
+        translation_key=SENSOR_KEY_HEATER_TEMPERATURE,
         value_fn=lambda data: data.heater_temperature,
     ),
     AnovaSensorEntityDescription(
-        key="triac_temperature",
+        key=SENSOR_KEY_TRIAC_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:thermometer",
-        translation_key="triac_temperature",
+        translation_key=SENSOR_KEY_TRIAC_TEMPERATURE,
         value_fn=lambda data: data.triac_temperature,
     ),
     AnovaSensorEntityDescription(
-        key="water_temperature",
+        key=SENSOR_KEY_WATER_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:thermometer",
-        translation_key="water_temperature",
+        translation_key=SENSOR_KEY_WATER_TEMPERATURE,
         value_fn=lambda data: data.water_temperature,
     ),
 ]
+
+# ... (other code)
 
 
 async def async_setup_entry(
