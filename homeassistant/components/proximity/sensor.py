@@ -40,7 +40,6 @@ _LOGGER = logging.getLogger(__name__)
 SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key=ATTR_DIST_FROM,
-        translation_key=ATTR_DIST_FROM,
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
     ),
