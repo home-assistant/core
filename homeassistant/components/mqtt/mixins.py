@@ -9,6 +9,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast, final
 
 import voluptuous as vol
+import yaml
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -53,6 +54,7 @@ from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import (
     UNDEFINED,
     ConfigType,
@@ -331,6 +333,115 @@ async def async_setup_entry_helper(
         if not setups:
             return
         await asyncio.gather(*setups)
+
+    # discover manual configured MQTT items
+    mqtt_data.reload_handlers[domain] = _async_setup_entities
+    await _async_setup_entities()
+
+
+async def async_mqtt_entry_helper(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    entity_class: type[MqttEntity],
+    domain: str,
+    async_add_entities: AddEntitiesCallback,
+    discovery_schema: vol.Schema,
+    platform_schema_modern: vol.Schema,
+) -> None:
+    """Set up entity, automation or tag creation dynamically through MQTT discovery."""
+    mqtt_data = get_mqtt_data(hass)
+
+    async def async_discover(discovery_payload: MQTTDiscoveryPayload) -> None:
+        """Discover and add an MQTT entity, automation or tag."""
+        if not mqtt_config_entry_enabled(hass):
+            _LOGGER.warning(
+                (
+                    "MQTT integration is disabled, skipping setup of discovered item "
+                    "MQTT %s, payload %s"
+                ),
+                domain,
+                discovery_payload,
+            )
+            return
+        discovery_data = discovery_payload.discovery_data
+        try:
+            config: DiscoveryInfoType = discovery_schema(discovery_payload)
+            async_add_entities([entity_class(hass, config, entry, discovery_data)])
+        except vol.Invalid as err:
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+            clear_discovery_hash(hass, discovery_hash)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
+            async_handle_schema_error(discovery_payload, err)
+        except Exception:
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+            clear_discovery_hash(hass, discovery_hash)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
+            raise
+
+    mqtt_data.reload_dispatchers.append(
+        async_dispatcher_connect(
+            hass, MQTT_DISCOVERY_NEW.format(domain, "mqtt"), async_discover
+        )
+    )
+
+    async def _async_setup_entities() -> None:
+        """Set up MQTT items from configuration.yaml."""
+        mqtt_data = get_mqtt_data(hass)
+        if not (config_yaml := mqtt_data.config):
+            return
+        yaml_configs: list[ConfigType] = [
+            config
+            for config_item in config_yaml
+            for config_domain, configs in config_item.items()
+            for config in configs
+            if config_domain == domain
+        ]
+        entities: list[Entity] = []
+        for yaml_config in yaml_configs:
+            try:
+                config = platform_schema_modern(yaml_config)
+                entities.append(entity_class(hass, config, entry, None))
+            except vol.Invalid as ex:
+                error = str(ex)
+                config_file = getattr(yaml_config, "__config_file__", "?")
+                line = getattr(yaml_config, "__line__", "?")
+                issue_id = hex(hash(frozenset(yaml_config.items())))
+                yaml_config_str = yaml.dump(dict(yaml_config))
+                learn_more_url = (
+                    f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
+                )
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    issue_domain=domain,
+                    is_fixable=False,
+                    severity=IssueSeverity.ERROR,
+                    learn_more_url=learn_more_url,
+                    translation_placeholders={
+                        "domain": domain,
+                        "config_file": config_file,
+                        "line": line,
+                        "config": yaml_config_str,
+                        "error": error,
+                    },
+                    translation_key="invalid_platform_config",
+                )
+                mqtt_data.open_config_issues.add(issue_id)
+                _LOGGER.error(
+                    "%s for manual configured MQTT %s item, in %s, line %s Got %s",
+                    error,
+                    domain,
+                    config_file,
+                    line,
+                    yaml_config,
+                )
+
+        async_add_entities(entities)
 
     # discover manual configured MQTT items
     mqtt_data.reload_handlers[domain] = _async_setup_entities
