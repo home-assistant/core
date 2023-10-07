@@ -25,7 +25,6 @@ from . import (
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
-    switch as switch_platform,
     update as update_platform,
     vacuum as vacuum_platform,
     water_heater as water_heater_platform,
@@ -95,10 +94,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
             [sensor_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.SIREN.value: vol.All(cv.ensure_list, [dict]),
-        Platform.SWITCH.value: vol.All(
-            cv.ensure_list,
-            [switch_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.SWITCH.value: vol.All(cv.ensure_list, [dict]),
         Platform.TEXT.value: vol.All(cv.ensure_list, [dict]),
         Platform.UPDATE.value: vol.All(
             cv.ensure_list,
