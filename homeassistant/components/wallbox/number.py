@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import InvalidAuth, WallboxCoordinator, WallboxEntity
+from . import InvalidAuth, WallboxCoordinator
 from .const import (
     BIDIRECTIONAL_MODEL_PREFIXES,
     CHARGER_DATA_KEY,
@@ -23,6 +23,7 @@ from .const import (
     CHARGER_SERIAL_NUMBER_KEY,
     DOMAIN,
 )
+from .entity import WallboxEntity
 
 
 @dataclass
