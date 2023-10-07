@@ -335,6 +335,17 @@ class MqttCover(MqttEntity, CoverEntity):
             config_attributes=template_config_attributes,
         ).async_render_with_possible_json_value
 
+    def state_stopped(self) -> None:
+        """Handle state stopped."""
+        if self._config.get(CONF_GET_POSITION_TOPIC) is not None:
+            self._state = (
+                STATE_CLOSED
+                if self._position == DEFAULT_POSITION_CLOSED
+                else STATE_OPEN
+            )
+        else:
+            self._state = STATE_CLOSED if self._state == STATE_CLOSING else STATE_OPEN
+
     def state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT state messages."""
         payload = self._value_template(msg.payload)
@@ -344,16 +355,7 @@ class MqttCover(MqttEntity, CoverEntity):
             return
 
         if payload == self._config[CONF_STATE_STOPPED]:
-            if self._config.get(CONF_GET_POSITION_TOPIC) is not None:
-                self._state = (
-                    STATE_CLOSED
-                    if self._position == DEFAULT_POSITION_CLOSED
-                    else STATE_OPEN
-                )
-            else:
-                self._state = (
-                    STATE_CLOSED if self._state == STATE_CLOSING else STATE_OPEN
-                )
+            self.state_stopped()
         elif payload == self._config[CONF_STATE_OPENING]:
             self._state = STATE_OPENING
         elif payload == self._config[CONF_STATE_CLOSING]:

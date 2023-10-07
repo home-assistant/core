@@ -134,6 +134,17 @@ def async_log_discovery_origin_info(
     )
 
 
+def config_availability(discovery_payload: MQTTDiscoveryPayload) -> None:
+    """Configure availability."""
+    if CONF_AVAILABILITY in discovery_payload:
+        for availability_conf in cv.ensure_list(discovery_payload[CONF_AVAILABILITY]):
+            if isinstance(availability_conf, dict):
+                for key in list(availability_conf):
+                    abbreviated_key = key
+                    key = ABBREVIATIONS.get(key, key)
+                    availability_conf[key] = availability_conf.pop(abbreviated_key)
+
+
 def config_payload(discovery_payload: MQTTDiscoveryPayload) -> bool:
     """Configure payload return True if successful."""
     if CONF_DEVICE in discovery_payload:
@@ -158,17 +169,35 @@ def config_payload(discovery_payload: MQTTDiscoveryPayload) -> bool:
             )
             return False
 
-    if CONF_AVAILABILITY in discovery_payload:
-        for availability_conf in cv.ensure_list(discovery_payload[CONF_AVAILABILITY]):
-            if isinstance(availability_conf, dict):
-                for key in list(availability_conf):
-                    abbreviated_key = key
-                    key = ABBREVIATIONS.get(key, key)
-                    availability_conf[key] = availability_conf.pop(abbreviated_key)
+    config_availability(discovery_payload)
 
     config_topic_base(discovery_payload)
 
     return True
+
+
+def init_topic_value(
+    key: str, value: str, discovery_payload: MQTTDiscoveryPayload, base: str
+) -> None:
+    """Initialize topic value."""
+    if isinstance(value, str) and value:
+        if value[0] == TOPIC_BASE and key.endswith("topic"):
+            discovery_payload[key] = f"{base}{value[1:]}"
+        if value[-1] == TOPIC_BASE and key.endswith("topic"):
+            discovery_payload[key] = f"{value[:-1]}{base}"
+
+
+def topic_availability(
+    discovery_payload: MQTTDiscoveryPayload,
+    base: str,
+    availability_conf: dict[str, Any],
+) -> None:
+    """Config topic availability."""
+    if topic := str(availability_conf.get(CONF_TOPIC)):
+        if topic[0] == TOPIC_BASE:
+            availability_conf[CONF_TOPIC] = f"{base}{topic[1:]}"
+        if topic[-1] == TOPIC_BASE:
+            availability_conf[CONF_TOPIC] = f"{topic[:-1]}{base}"
 
 
 def config_topic_base(discovery_payload: MQTTDiscoveryPayload) -> None:
@@ -176,22 +205,14 @@ def config_topic_base(discovery_payload: MQTTDiscoveryPayload) -> None:
     if TOPIC_BASE in discovery_payload:
         base = discovery_payload.pop(TOPIC_BASE)
         for key, value in discovery_payload.items():
-            if isinstance(value, str) and value:
-                if value[0] == TOPIC_BASE and key.endswith("topic"):
-                    discovery_payload[key] = f"{base}{value[1:]}"
-                if value[-1] == TOPIC_BASE and key.endswith("topic"):
-                    discovery_payload[key] = f"{value[:-1]}{base}"
+            init_topic_value(key, value, discovery_payload, base)
         if discovery_payload.get(CONF_AVAILABILITY):
             for availability_conf in cv.ensure_list(
                 discovery_payload[CONF_AVAILABILITY]
             ):
                 if not isinstance(availability_conf, dict):
                     continue
-                if topic := str(availability_conf.get(CONF_TOPIC)):
-                    if topic[0] == TOPIC_BASE:
-                        availability_conf[CONF_TOPIC] = f"{base}{topic[1:]}"
-                    if topic[-1] == TOPIC_BASE:
-                        availability_conf[CONF_TOPIC] = f"{topic[:-1]}{base}"
+                topic_availability(discovery_payload, base, availability_conf)
 
 
 @callback
