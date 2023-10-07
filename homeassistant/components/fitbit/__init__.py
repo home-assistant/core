@@ -1,15 +1,15 @@
 """The fitbit component."""
 
-import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
 from .const import DOMAIN
+from .exceptions import FitbitApiException, FitbitAuthException
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -29,7 +29,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         await fitbit_api.async_get_access_token()
-    except aiohttp.ClientError as err:
+    except FitbitAuthException as err:
+        raise ConfigEntryAuthFailed from err
+    except FitbitApiException as err:
         raise ConfigEntryNotReady from err
 
     hass.data[DOMAIN][entry.entry_id] = fitbit_api

@@ -330,17 +330,17 @@ class ESPHomeManager:
             return None
 
         hass = self.hass
-        voice_assistant_udp_server = VoiceAssistantUDPServer(
+        self.voice_assistant_udp_server = VoiceAssistantUDPServer(
             hass,
             self.entry_data,
             self._handle_pipeline_event,
             self._handle_pipeline_finished,
         )
-        port = await voice_assistant_udp_server.start_server()
+        port = await self.voice_assistant_udp_server.start_server()
 
         assert self.device_id is not None, "Device ID must be set"
         hass.async_create_background_task(
-            voice_assistant_udp_server.run_pipeline(
+            self.voice_assistant_udp_server.run_pipeline(
                 device_id=self.device_id,
                 conversation_id=conversation_id or None,
                 flags=flags,
