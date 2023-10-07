@@ -58,6 +58,11 @@ _CROSSLINE_DETECTED_POLLED_KEY = "crossline_detected_polled"
 _CROSSLINE_DETECTED_NAME = "CrossLine Detected"
 _CROSSLINE_DETECTED_EVENT_CODE = "CrossLineDetection"
 
+_CROSSREGION_DETECTED_KEY = "crossregion_detected"
+_CROSSREGION_DETECTED_POLLED_KEY = "crossregion_detected_polled"
+_CROSSREGION_DETECTED_NAME = "CrossRegion Detected"
+_CROSSREGION_DETECTED_EVENT_CODE = "CrossRegionDetection"
+
 _MOTION_DETECTED_KEY = "motion_detected"
 _MOTION_DETECTED_POLLED_KEY = "motion_detected_polled"
 _MOTION_DETECTED_NAME = "Motion Detected"
@@ -93,6 +98,19 @@ BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = (
         should_poll=True,
     ),
     AmcrestSensorEntityDescription(
+        key=_CROSSREGION_DETECTED_KEY,
+        name=_CROSSREGION_DETECTED_NAME,
+        device_class=BinarySensorDeviceClass.MOTION,
+        event_codes={_CROSSREGION_DETECTED_EVENT_CODE},
+    ),
+    AmcrestSensorEntityDescription(
+        key=_CROSSREGION_DETECTED_POLLED_KEY,
+        name=_CROSSREGION_DETECTED_NAME,
+        device_class=BinarySensorDeviceClass.MOTION,
+        event_codes={_CROSSREGION_DETECTED_EVENT_CODE},
+        should_poll=True,
+    ),
+    AmcrestSensorEntityDescription(
         key=_MOTION_DETECTED_KEY,
         name=_MOTION_DETECTED_NAME,
         device_class=BinarySensorDeviceClass.MOTION,
@@ -117,6 +135,7 @@ _EXCLUSIVE_OPTIONS = [
     {_AUDIO_DETECTED_KEY, _AUDIO_DETECTED_POLLED_KEY},
     {_MOTION_DETECTED_KEY, _MOTION_DETECTED_POLLED_KEY},
     {_CROSSLINE_DETECTED_KEY, _CROSSLINE_DETECTED_POLLED_KEY},
+    {_CROSSREGION_DETECTED_KEY, _CROSSREGION_DETECTED_POLLED_KEY},
 ]
 
 _UPDATE_MSG = "Updating %s binary sensor"
