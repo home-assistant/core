@@ -38,7 +38,7 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
 )
-from .models import MqttOriginInfo, ReceiveMessage
+from .models import MqttData, MqttOriginInfo, ReceiveMessage
 from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,6 +134,207 @@ def async_log_discovery_origin_info(
     )
 
 
+def config_payload(discovery_payload: MQTTDiscoveryPayload) -> bool:
+    """Configure payload return True if successful."""
+    if CONF_DEVICE in discovery_payload:
+        device = discovery_payload[CONF_DEVICE]
+        for key in list(device):
+            abbreviated_key = key
+            key = DEVICE_ABBREVIATIONS.get(key, key)
+            device[key] = device.pop(abbreviated_key)
+
+    if CONF_ORIGIN in discovery_payload:
+        origin_info: dict[str, Any] = discovery_payload[CONF_ORIGIN]
+        try:
+            for key in list(origin_info):
+                abbreviated_key = key
+                key = ORIGIN_ABBREVIATIONS.get(key, key)
+                origin_info[key] = origin_info.pop(abbreviated_key)
+            MQTT_ORIGIN_INFO_SCHEMA(discovery_payload[CONF_ORIGIN])
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.warning(
+                "Unable to parse origin information from discovery message, got %s",
+                discovery_payload[CONF_ORIGIN],
+            )
+            return False
+
+    if CONF_AVAILABILITY in discovery_payload:
+        for availability_conf in cv.ensure_list(discovery_payload[CONF_AVAILABILITY]):
+            if isinstance(availability_conf, dict):
+                for key in list(availability_conf):
+                    abbreviated_key = key
+                    key = ABBREVIATIONS.get(key, key)
+                    availability_conf[key] = availability_conf.pop(abbreviated_key)
+
+    config_topic_base(discovery_payload)
+
+    return True
+
+
+def config_topic_base(discovery_payload: MQTTDiscoveryPayload) -> None:
+    """Configure topic base."""
+    if TOPIC_BASE in discovery_payload:
+        base = discovery_payload.pop(TOPIC_BASE)
+        for key, value in discovery_payload.items():
+            if isinstance(value, str) and value:
+                if value[0] == TOPIC_BASE and key.endswith("topic"):
+                    discovery_payload[key] = f"{base}{value[1:]}"
+                if value[-1] == TOPIC_BASE and key.endswith("topic"):
+                    discovery_payload[key] = f"{value[:-1]}{base}"
+        if discovery_payload.get(CONF_AVAILABILITY):
+            for availability_conf in cv.ensure_list(
+                discovery_payload[CONF_AVAILABILITY]
+            ):
+                if not isinstance(availability_conf, dict):
+                    continue
+                if topic := str(availability_conf.get(CONF_TOPIC)):
+                    if topic[0] == TOPIC_BASE:
+                        availability_conf[CONF_TOPIC] = f"{base}{topic[1:]}"
+                    if topic[-1] == TOPIC_BASE:
+                        availability_conf[CONF_TOPIC] = f"{topic[:-1]}{base}"
+
+
+@callback
+def async_discovery_message_received(
+    discovery_topic: str,
+    mqtt_data: MqttData,
+    msg: ReceiveMessage,
+    hass: HomeAssistant,
+) -> None:  # noqa: C901
+    """Process the received message."""
+    mqtt_data.last_discovery = time.time()
+    payload = msg.payload
+    topic = msg.topic
+    topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
+
+    if not (match := TOPIC_MATCHER.match(topic_trimmed)):
+        if topic_trimmed.endswith("config"):
+            _LOGGER.warning(
+                (
+                    "Received message on illegal discovery topic '%s'. The topic"
+                    " contains "
+                    "not allowed characters. For more information see "
+                    "https://www.home-assistant.io/integrations/mqtt/#discovery-topic"
+                ),
+                topic,
+            )
+        return
+
+    component, node_id, object_id = match.groups()
+
+    if component not in SUPPORTED_COMPONENTS:
+        _LOGGER.warning("Integration %s is not supported", component)
+        return
+
+    if payload:
+        try:
+            discovery_payload = MQTTDiscoveryPayload(json_loads_object(payload))
+        except ValueError:
+            _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
+            return
+    else:
+        discovery_payload = MQTTDiscoveryPayload({})
+
+    for key in list(discovery_payload):
+        abbreviated_key = key
+        key = ABBREVIATIONS.get(key, key)
+        discovery_payload[key] = discovery_payload.pop(abbreviated_key)
+
+    if not config_payload(discovery_payload):
+        return
+
+    # If present, the node_id will be included in the discovered object id
+    discovery_id = " ".join((node_id, object_id)) if node_id else object_id
+    discovery_hash = (component, discovery_id)
+
+    if discovery_payload:
+        # Attach MQTT topic to the payload, used for debug prints
+        setattr(
+            discovery_payload,
+            "__configuration_source__",
+            f"MQTT (topic: '{topic}')",
+        )
+        discovery_data = {
+            ATTR_DISCOVERY_HASH: discovery_hash,
+            ATTR_DISCOVERY_PAYLOAD: discovery_payload,
+            ATTR_DISCOVERY_TOPIC: topic,
+        }
+        setattr(discovery_payload, "discovery_data", discovery_data)
+
+        discovery_payload[CONF_PLATFORM] = "mqtt"
+
+    if discovery_hash in mqtt_data.discovery_pending_discovered:
+        pending = mqtt_data.discovery_pending_discovered[discovery_hash]["pending"]
+        pending.appendleft(discovery_payload)
+        _LOGGER.debug(
+            "Component has already been discovered: %s %s, queuing update",
+            component,
+            discovery_id,
+        )
+        return
+
+    async_process_discovery_payload(
+        component, discovery_id, discovery_payload, mqtt_data, hass
+    )
+
+
+@callback
+def async_process_discovery_payload(
+    component: str,
+    discovery_id: str,
+    payload: MQTTDiscoveryPayload,
+    mqtt_data: MqttData,
+    hass: HomeAssistant,
+) -> None:
+    """Process the payload of a new discovery."""
+
+    _LOGGER.debug("Process discovery payload %s", payload)
+    discovery_hash = (component, discovery_id)
+    if discovery_hash in mqtt_data.discovery_already_discovered or payload:
+
+        @callback
+        def discovery_done(_: Any) -> None:
+            pending = mqtt_data.discovery_pending_discovered[discovery_hash]["pending"]
+            _LOGGER.debug("Pending discovery for %s: %s", discovery_hash, pending)
+            if not pending:
+                mqtt_data.discovery_pending_discovered[discovery_hash]["unsub"]()
+                mqtt_data.discovery_pending_discovered.pop(discovery_hash)
+            else:
+                payload = pending.pop()
+                async_process_discovery_payload(
+                    component, discovery_id, payload, mqtt_data, hass
+                )
+
+        if discovery_hash not in mqtt_data.discovery_pending_discovered:
+            mqtt_data.discovery_pending_discovered[discovery_hash] = {
+                "unsub": async_dispatcher_connect(
+                    hass,
+                    MQTT_DISCOVERY_DONE.format(discovery_hash),
+                    discovery_done,
+                ),
+                "pending": deque([]),
+            }
+
+    if discovery_hash in mqtt_data.discovery_already_discovered:
+        # Dispatch update
+        message = f"Component has already been discovered: {component} {discovery_id}, sending update"
+        async_log_discovery_origin_info(message, payload)
+        async_dispatcher_send(
+            hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload
+        )
+    elif payload:
+        # Add component
+        message = f"Found new component: {component} {discovery_id}"
+        async_log_discovery_origin_info(message, payload)
+        mqtt_data.discovery_already_discovered.add(discovery_hash)
+        async_dispatcher_send(
+            hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), payload
+        )
+    else:
+        # Unhandled discovery message
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+
+
 async def async_start(  # noqa: C901
     hass: HomeAssistant, discovery_topic: str, config_entry: ConfigEntry
 ) -> None:
@@ -142,184 +343,10 @@ async def async_start(  # noqa: C901
     mqtt_integrations = {}
 
     @callback
-    def async_discovery_message_received(msg: ReceiveMessage) -> None:  # noqa: C901
-        """Process the received message."""
-        mqtt_data.last_discovery = time.time()
-        payload = msg.payload
-        topic = msg.topic
-        topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
-
-        if not (match := TOPIC_MATCHER.match(topic_trimmed)):
-            if topic_trimmed.endswith("config"):
-                _LOGGER.warning(
-                    (
-                        "Received message on illegal discovery topic '%s'. The topic"
-                        " contains "
-                        "not allowed characters. For more information see "
-                        "https://www.home-assistant.io/integrations/mqtt/#discovery-topic"
-                    ),
-                    topic,
-                )
-            return
-
-        component, node_id, object_id = match.groups()
-
-        if component not in SUPPORTED_COMPONENTS:
-            _LOGGER.warning("Integration %s is not supported", component)
-            return
-
-        if payload:
-            try:
-                discovery_payload = MQTTDiscoveryPayload(json_loads_object(payload))
-            except ValueError:
-                _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
-                return
-        else:
-            discovery_payload = MQTTDiscoveryPayload({})
-
-        for key in list(discovery_payload):
-            abbreviated_key = key
-            key = ABBREVIATIONS.get(key, key)
-            discovery_payload[key] = discovery_payload.pop(abbreviated_key)
-
-        if CONF_DEVICE in discovery_payload:
-            device = discovery_payload[CONF_DEVICE]
-            for key in list(device):
-                abbreviated_key = key
-                key = DEVICE_ABBREVIATIONS.get(key, key)
-                device[key] = device.pop(abbreviated_key)
-
-        if CONF_ORIGIN in discovery_payload:
-            origin_info: dict[str, Any] = discovery_payload[CONF_ORIGIN]
-            try:
-                for key in list(origin_info):
-                    abbreviated_key = key
-                    key = ORIGIN_ABBREVIATIONS.get(key, key)
-                    origin_info[key] = origin_info.pop(abbreviated_key)
-                MQTT_ORIGIN_INFO_SCHEMA(discovery_payload[CONF_ORIGIN])
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.warning(
-                    "Unable to parse origin information "
-                    "from discovery message, got %s",
-                    discovery_payload[CONF_ORIGIN],
-                )
-                return
-
-        if CONF_AVAILABILITY in discovery_payload:
-            for availability_conf in cv.ensure_list(
-                discovery_payload[CONF_AVAILABILITY]
-            ):
-                if isinstance(availability_conf, dict):
-                    for key in list(availability_conf):
-                        abbreviated_key = key
-                        key = ABBREVIATIONS.get(key, key)
-                        availability_conf[key] = availability_conf.pop(abbreviated_key)
-
-        if TOPIC_BASE in discovery_payload:
-            base = discovery_payload.pop(TOPIC_BASE)
-            for key, value in discovery_payload.items():
-                if isinstance(value, str) and value:
-                    if value[0] == TOPIC_BASE and key.endswith("topic"):
-                        discovery_payload[key] = f"{base}{value[1:]}"
-                    if value[-1] == TOPIC_BASE and key.endswith("topic"):
-                        discovery_payload[key] = f"{value[:-1]}{base}"
-            if discovery_payload.get(CONF_AVAILABILITY):
-                for availability_conf in cv.ensure_list(
-                    discovery_payload[CONF_AVAILABILITY]
-                ):
-                    if not isinstance(availability_conf, dict):
-                        continue
-                    if topic := str(availability_conf.get(CONF_TOPIC)):
-                        if topic[0] == TOPIC_BASE:
-                            availability_conf[CONF_TOPIC] = f"{base}{topic[1:]}"
-                        if topic[-1] == TOPIC_BASE:
-                            availability_conf[CONF_TOPIC] = f"{topic[:-1]}{base}"
-
-        # If present, the node_id will be included in the discovered object id
-        discovery_id = " ".join((node_id, object_id)) if node_id else object_id
-        discovery_hash = (component, discovery_id)
-
-        if discovery_payload:
-            # Attach MQTT topic to the payload, used for debug prints
-            setattr(
-                discovery_payload,
-                "__configuration_source__",
-                f"MQTT (topic: '{topic}')",
-            )
-            discovery_data = {
-                ATTR_DISCOVERY_HASH: discovery_hash,
-                ATTR_DISCOVERY_PAYLOAD: discovery_payload,
-                ATTR_DISCOVERY_TOPIC: topic,
-            }
-            setattr(discovery_payload, "discovery_data", discovery_data)
-
-            discovery_payload[CONF_PLATFORM] = "mqtt"
-
-        if discovery_hash in mqtt_data.discovery_pending_discovered:
-            pending = mqtt_data.discovery_pending_discovered[discovery_hash]["pending"]
-            pending.appendleft(discovery_payload)
-            _LOGGER.debug(
-                "Component has already been discovered: %s %s, queuing update",
-                component,
-                discovery_id,
-            )
-            return
-
-        async_process_discovery_payload(component, discovery_id, discovery_payload)
-
-    @callback
-    def async_process_discovery_payload(
-        component: str, discovery_id: str, payload: MQTTDiscoveryPayload
-    ) -> None:
-        """Process the payload of a new discovery."""
-
-        _LOGGER.debug("Process discovery payload %s", payload)
-        discovery_hash = (component, discovery_id)
-        if discovery_hash in mqtt_data.discovery_already_discovered or payload:
-
-            @callback
-            def discovery_done(_: Any) -> None:
-                pending = mqtt_data.discovery_pending_discovered[discovery_hash][
-                    "pending"
-                ]
-                _LOGGER.debug("Pending discovery for %s: %s", discovery_hash, pending)
-                if not pending:
-                    mqtt_data.discovery_pending_discovered[discovery_hash]["unsub"]()
-                    mqtt_data.discovery_pending_discovered.pop(discovery_hash)
-                else:
-                    payload = pending.pop()
-                    async_process_discovery_payload(component, discovery_id, payload)
-
-            if discovery_hash not in mqtt_data.discovery_pending_discovered:
-                mqtt_data.discovery_pending_discovered[discovery_hash] = {
-                    "unsub": async_dispatcher_connect(
-                        hass,
-                        MQTT_DISCOVERY_DONE.format(discovery_hash),
-                        discovery_done,
-                    ),
-                    "pending": deque([]),
-                }
-
-        if discovery_hash in mqtt_data.discovery_already_discovered:
-            # Dispatch update
-            message = f"Component has already been discovered: {component} {discovery_id}, sending update"
-            async_log_discovery_origin_info(message, payload)
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload
-            )
-        elif payload:
-            # Add component
-            message = f"Found new component: {component} {discovery_id}"
-            async_log_discovery_origin_info(message, payload)
-            mqtt_data.discovery_already_discovered.add(discovery_hash)
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), payload
-            )
-        else:
-            # Unhandled discovery message
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
+    def async_discovery_message_received_wrapper(
+        msg: ReceiveMessage,
+    ) -> None:  # noqa: C901
+        async_discovery_message_received(discovery_topic, mqtt_data, msg, hass)
 
     discovery_topics = [
         f"{discovery_topic}/+/+/config",
@@ -327,7 +354,9 @@ async def async_start(  # noqa: C901
     ]
     mqtt_data.discovery_unsubscribe = await asyncio.gather(
         *(
-            mqtt.async_subscribe(hass, topic, async_discovery_message_received, 0)
+            mqtt.async_subscribe(
+                hass, topic, async_discovery_message_received_wrapper, 0
+            )
             for topic in discovery_topics
         )
     )
