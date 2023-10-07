@@ -31,14 +31,6 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "AP S*",
     },
     {
-        "domain": "allpowers_ble",
-        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
-    },
-    {
-        "domain": "allpowers_ble",
-        "service_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
-    },
-    {
         "connectable": False,
         "domain": "aranet",
         "manufacturer_id": 1794,
