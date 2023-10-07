@@ -504,8 +504,11 @@ class ElkEntity(Entity):
         """Return the underlying element's attributes as a dict."""
         return {"index": self._element.index + 1}
 
-    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
-        pass
+
+def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
+    # TODO: This method is for handle changes in the 'element' with the given 'changeset'.
+    # Implement the necessary logic to process these changes, or remove it.
+    pass
 
     @callback
     def _element_callback(self, element: Element, changeset: dict[str, Any]) -> None:
