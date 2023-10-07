@@ -598,11 +598,6 @@ async def test_device_battery_level_update_failed(
                 "status_code": HTTPStatus.OK,
                 "json": [DEVICE_RESPONSE_CHARGE_2],
             },
-            # A second spurious update request on startup
-            {
-                "status_code": HTTPStatus.OK,
-                "json": [DEVICE_RESPONSE_CHARGE_2],
-            },
             # Fail when requesting an update
             {
                 "status_code": HTTPStatus.INTERNAL_SERVER_ERROR,
