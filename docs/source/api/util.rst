@@ -46,14 +46,6 @@ homeassistant.util.decorator
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.distance
----------------------------
-
-.. automodule:: homeassistant.util.distance
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 homeassistant.util.dt
 ---------------------
 
@@ -110,14 +102,6 @@ homeassistant.util.pil
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.pressure
----------------------------
-
-.. automodule:: homeassistant.util.pressure
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 homeassistant.util.ssl
 ----------------------
 
@@ -126,26 +110,10 @@ homeassistant.util.ssl
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.temperature
-------------------------------
-
-.. automodule:: homeassistant.util.temperature
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 homeassistant.util.unit\_system
 -------------------------------
 
 .. automodule:: homeassistant.util.unit_system
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-homeassistant.util.volume
--------------------------
-
-.. automodule:: homeassistant.util.volume
    :members:
    :undoc-members:
    :show-inheritance:

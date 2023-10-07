@@ -876,7 +876,7 @@
     "color_extractor": {
       "name": "ColorExtractor",
       "integration_type": "hub",
-      "config_flow": false
+      "config_flow": true
     },
     "comed": {
       "name": "Commonwealth Edison (ComEd)",
@@ -1280,6 +1280,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "eastron": {
+      "name": "Eastron",
+      "integration_type": "virtual",
+      "supported_by": "homewizard"
     },
     "easyenergy": {
       "name": "easyEnergy",
@@ -1733,7 +1738,7 @@
     "fitbit": {
       "name": "Fitbit",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "fivem": {
@@ -2602,12 +2607,6 @@
       "name": "IMAP",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_push"
-    },
-    "imap_email_content": {
-      "name": "IMAP Email Content",
-      "integration_type": "hub",
-      "config_flow": false,
       "iot_class": "cloud_push"
     },
     "incomfort": {
@@ -6021,7 +6020,7 @@
     "twitch": {
       "name": "Twitch",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "twitter": {
@@ -6346,6 +6345,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "weatherflow": {
+      "name": "WeatherFlow",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "webhook": {
       "name": "Webhook",

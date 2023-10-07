@@ -5,7 +5,8 @@ For more details about this platform, please refer to the documentation at
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+import contextlib
+from typing import Any
 
 from aiohttp.hdrs import METH_HEAD, METH_POST
 from aiohttp.web import Request, Response
@@ -30,13 +31,13 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_TOKEN,
     CONF_WEBHOOK_ID,
-    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .api import ConfigEntryWithingsApi
@@ -44,7 +45,7 @@ from .const import (
     CONF_CLOUDHOOK_URL,
     CONF_PROFILES,
     CONF_USE_WEBHOOK,
-    CONFIG,
+    DEFAULT_TITLE,
     DOMAIN,
     LOGGER,
 )
@@ -81,31 +82,31 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Withings component."""
-    if not (conf := config.get(DOMAIN)):
-        # Apply the defaults.
-        conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
-        hass.data[DOMAIN] = {CONFIG: conf}
-        return True
 
-    hass.data[DOMAIN] = {CONFIG: conf}
-
-    # Setup the oauth2 config flow.
-    if CONF_CLIENT_ID in conf:
-        await async_import_client_credential(
+    if conf := config.get(DOMAIN):
+        async_create_issue(
             hass,
-            DOMAIN,
-            ClientCredential(
-                conf[CONF_CLIENT_ID],
-                conf[CONF_CLIENT_SECRET],
-            ),
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Withings",
+            },
         )
-        LOGGER.warning(
-            "Configuration of Withings integration OAuth2 credentials in YAML "
-            "is deprecated and will be removed in a future release; Your "
-            "existing OAuth Application Credentials have been imported into "
-            "the UI automatically and can be safely removed from your "
-            "configuration.yaml file"
-        )
+        if CONF_CLIENT_ID in conf:
+            await async_import_client_credential(
+                hass,
+                DOMAIN,
+                ClientCredential(
+                    conf[CONF_CLIENT_ID],
+                    conf[CONF_CLIENT_SECRET],
+                ),
+            )
 
     return True
 
@@ -136,14 +137,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     async def unregister_webhook(
-        call_or_event_or_dt: ServiceCall | Event | datetime | None,
+        _: Any,
     ) -> None:
         LOGGER.debug("Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID])
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         await hass.data[DOMAIN][entry.entry_id].async_unsubscribe_webhooks()
 
     async def register_webhook(
-        call_or_event_or_dt: ServiceCall | Event | datetime | None,
+        _: Any,
     ) -> None:
         if cloud.async_active_subscription(hass):
             webhook_url = await async_cloudhook_generate_url(hass, entry)
@@ -157,10 +158,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             return
 
+        webhook_name = "Withings"
+        if entry.title != DEFAULT_TITLE:
+            webhook_name = f"{DEFAULT_TITLE} {entry.title}"
+
         webhook_register(
             hass,
             DOMAIN,
-            "Withings",
+            webhook_name,
             entry.data[CONF_WEBHOOK_ID],
             get_webhook_handler(coordinator),
         )
@@ -177,17 +182,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
             await unregister_webhook(None)
-            async_call_later(hass, 30, register_webhook)
+            entry.async_on_unload(async_call_later(hass, 30, register_webhook))
 
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):
-            await register_webhook(None)
-        cloud.async_listen_connection_change(hass, manage_cloudhook)
-
-    elif hass.state == CoreState.running:
-        await register_webhook(None)
+            entry.async_on_unload(async_call_later(hass, 1, register_webhook))
+        entry.async_on_unload(
+            cloud.async_listen_connection_change(hass, manage_cloudhook)
+        )
     else:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, register_webhook)
+        entry.async_on_unload(async_call_later(hass, 1, register_webhook))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -212,9 +216,12 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
     """Generate the full URL for a webhook_id."""
     if CONF_CLOUDHOOK_URL not in entry.data:
-        webhook_url = await cloud.async_create_cloudhook(
-            hass, entry.data[CONF_WEBHOOK_ID]
-        )
+        webhook_id = entry.data[CONF_WEBHOOK_ID]
+        # Some users already have their webhook as cloudhook.
+        # We remove them to be sure we can create a new one.
+        with contextlib.suppress(ValueError):
+            await cloud.async_delete_cloudhook(hass, webhook_id)
+        webhook_url = await cloud.async_create_cloudhook(hass, webhook_id)
         data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
         hass.config_entries.async_update_entry(entry, data=data)
         return webhook_url
