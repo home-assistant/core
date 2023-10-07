@@ -22,7 +22,12 @@ def merge_policies(policies: list[PolicyType]) -> PolicyType:
     return new_policy
 
 
-def _merge_policies(sources: list[CategoryType]) -> CategoryType:
+from typing import Dict, Union, List
+
+CategoryType = Union[bool, Dict[str, "CategoryType"]]
+
+
+def _merge_policies(sources: List[CategoryType]) -> CategoryType:
     """Merge a policy."""
     # When merging policies, the most permissive wins.
     # This means we order it like this:
@@ -35,33 +40,29 @@ def _merge_policies(sources: list[CategoryType]) -> CategoryType:
     # If there are multiple sources with a dict as policy, we recursively
     # merge each key in the source.
 
-    policy: CategoryType = None
-    seen: set[str] = set()
-    for source in sources:
-        if source is None:
-            continue
+    def merge_dicts(dicts: List[Dict[str, CategoryType]]) -> Dict[str, CategoryType]:
+        merged_dict: Dict[str, CategoryType] = {}
+        seen: set[str] = set()
+        for dictionary in dicts:
+            for key, value in dictionary.items():
+                if key not in seen:
+                    seen.add(key)
+                    if key in merged_dict and isinstance(value, dict):
+                        # Recursively merge sub-dictionaries
+                        merged_dict[key] = merge_dicts(
+                            [d.get(key, {}) for d in dicts if isinstance(d, dict)]
+                        )
+                    else:
+                        merged_dict[key] = value
+        return merged_dict
 
-        # A source that's True will always win. Shortcut return.
+    result: CategoryType = None
+    for source in sources:
         if source is True:
             return True
-
-        assert isinstance(source, dict)
-
-        if policy is None:
-            policy = cast(CategoryType, {})
-
-        assert isinstance(policy, dict)
-
-        for key in source:
-            if key in seen:
-                continue
-            seen.add(key)
-
-            key_sources = []
-            for src in sources:
-                if isinstance(src, dict):
-                    key_sources.append(src.get(key))
-
-            policy[key] = _merge_policies(key_sources)
-
-    return policy
+        elif isinstance(source, dict):
+            if result is None:
+                result = {}
+            if isinstance(result, dict):
+                result = merge_dicts([result, source])
+    return result
