@@ -18,12 +18,6 @@ PLATFORMS = [
 ]
 
 
-@dataclass
-class RensonData:
-    """Renson data class."""
-
-    api: Healthbox3
-    coordinator: RensonCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
