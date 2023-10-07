@@ -335,6 +335,89 @@ class MqttCover(MqttEntity, CoverEntity):
             config_attributes=template_config_attributes,
         ).async_render_with_possible_json_value
 
+    def state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT state messages."""
+        payload = self._value_template(msg.payload)
+
+        if not payload:
+            _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
+            return
+
+        if payload == self._config[CONF_STATE_STOPPED]:
+            if self._config.get(CONF_GET_POSITION_TOPIC) is not None:
+                self._state = (
+                    STATE_CLOSED
+                    if self._position == DEFAULT_POSITION_CLOSED
+                    else STATE_OPEN
+                )
+            else:
+                self._state = (
+                    STATE_CLOSED if self._state == STATE_CLOSING else STATE_OPEN
+                )
+        elif payload == self._config[CONF_STATE_OPENING]:
+            self._state = STATE_OPENING
+        elif payload == self._config[CONF_STATE_CLOSING]:
+            self._state = STATE_CLOSING
+        elif payload == self._config[CONF_STATE_OPEN]:
+            self._state = STATE_OPEN
+        elif payload == self._config[CONF_STATE_CLOSED]:
+            self._state = STATE_CLOSED
+        else:
+            _LOGGER.warning(
+                (
+                    "Payload is not supported (e.g. open, closed, opening, closing,"
+                    " stopped): %s"
+                ),
+                payload,
+            )
+            return
+
+        get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+    def position_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT position messages."""
+        payload: ReceivePayloadType = self._get_position_template(msg.payload)
+        payload_dict: Any = None
+
+        if not payload:
+            _LOGGER.debug("Ignoring empty position message from '%s'", msg.topic)
+            return
+
+        with suppress(*JSON_DECODE_EXCEPTIONS):
+            payload_dict = json_loads(payload)
+
+        if payload_dict and isinstance(payload_dict, dict):
+            if "position" not in payload_dict:
+                _LOGGER.warning(
+                    "Template (position_template) returned JSON without position"
+                    " attribute"
+                )
+                return
+            if "tilt_position" in payload_dict:
+                if not self._config.get(CONF_TILT_STATE_OPTIMISTIC):
+                    # reset forced set tilt optimistic
+                    self._tilt_optimistic = False
+                self.tilt_payload_received(payload_dict["tilt_position"])
+            payload = payload_dict["position"]
+
+        try:
+            percentage_payload = self.find_percentage_in_range(
+                float(payload), COVER_PAYLOAD
+            )
+        except ValueError:
+            _LOGGER.warning("Payload '%s' is not numeric", payload)
+            return
+
+        self._position = percentage_payload
+        if self._config.get(CONF_STATE_TOPIC) is None:
+            self._state = (
+                STATE_CLOSED
+                if percentage_payload == DEFAULT_POSITION_CLOSED
+                else STATE_OPEN
+            )
+
+        get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         topics = {}
@@ -353,95 +436,18 @@ class MqttCover(MqttEntity, CoverEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def state_message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT state messages."""
-            payload = self._value_template(msg.payload)
-
-            if not payload:
-                _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
-                return
-
-            if payload == self._config[CONF_STATE_STOPPED]:
-                if self._config.get(CONF_GET_POSITION_TOPIC) is not None:
-                    self._state = (
-                        STATE_CLOSED
-                        if self._position == DEFAULT_POSITION_CLOSED
-                        else STATE_OPEN
-                    )
-                else:
-                    self._state = (
-                        STATE_CLOSED if self._state == STATE_CLOSING else STATE_OPEN
-                    )
-            elif payload == self._config[CONF_STATE_OPENING]:
-                self._state = STATE_OPENING
-            elif payload == self._config[CONF_STATE_CLOSING]:
-                self._state = STATE_CLOSING
-            elif payload == self._config[CONF_STATE_OPEN]:
-                self._state = STATE_OPEN
-            elif payload == self._config[CONF_STATE_CLOSED]:
-                self._state = STATE_CLOSED
-            else:
-                _LOGGER.warning(
-                    (
-                        "Payload is not supported (e.g. open, closed, opening, closing,"
-                        " stopped): %s"
-                    ),
-                    payload,
-                )
-                return
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+        def state_message_received_wrapper(msg: ReceiveMessage) -> None:
+            self.state_message_received(msg)
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def position_message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT position messages."""
-            payload: ReceivePayloadType = self._get_position_template(msg.payload)
-            payload_dict: Any = None
-
-            if not payload:
-                _LOGGER.debug("Ignoring empty position message from '%s'", msg.topic)
-                return
-
-            with suppress(*JSON_DECODE_EXCEPTIONS):
-                payload_dict = json_loads(payload)
-
-            if payload_dict and isinstance(payload_dict, dict):
-                if "position" not in payload_dict:
-                    _LOGGER.warning(
-                        "Template (position_template) returned JSON without position"
-                        " attribute"
-                    )
-                    return
-                if "tilt_position" in payload_dict:
-                    if not self._config.get(CONF_TILT_STATE_OPTIMISTIC):
-                        # reset forced set tilt optimistic
-                        self._tilt_optimistic = False
-                    self.tilt_payload_received(payload_dict["tilt_position"])
-                payload = payload_dict["position"]
-
-            try:
-                percentage_payload = self.find_percentage_in_range(
-                    float(payload), COVER_PAYLOAD
-                )
-            except ValueError:
-                _LOGGER.warning("Payload '%s' is not numeric", payload)
-                return
-
-            self._position = percentage_payload
-            if self._config.get(CONF_STATE_TOPIC) is None:
-                self._state = (
-                    STATE_CLOSED
-                    if percentage_payload == DEFAULT_POSITION_CLOSED
-                    else STATE_OPEN
-                )
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+        def position_message_received_wrapper(msg: ReceiveMessage) -> None:
+            self.position_message_received(msg)
 
         if self._config.get(CONF_GET_POSITION_TOPIC):
             topics["get_position_topic"] = {
                 "topic": self._config.get(CONF_GET_POSITION_TOPIC),
-                "msg_callback": position_message_received,
+                "msg_callback": position_message_received_wrapper,
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
             }
@@ -449,7 +455,7 @@ class MqttCover(MqttEntity, CoverEntity):
         if self._config.get(CONF_STATE_TOPIC):
             topics["state_topic"] = {
                 "topic": self._config.get(CONF_STATE_TOPIC),
-                "msg_callback": state_message_received,
+                "msg_callback": state_message_received_wrapper,
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
             }
