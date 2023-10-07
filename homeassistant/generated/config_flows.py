@@ -291,6 +291,7 @@ FLOWS = {
         "modern_forms",
         "moehlenhoff_alpha2",
         "monoprice",
+        "monzo",
         "moon",
         "mopeka",
         "motion_blinds",
