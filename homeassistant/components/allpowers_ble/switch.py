@@ -1,8 +1,6 @@
 """Allpowers BLE integration binary sensor platform."""
 
 
-import asyncio
-
 from allpowers_ble import AllpowersBLE
 
 from homeassistant.components.light import LightEntity, LightEntityDescription
@@ -114,11 +112,11 @@ class AllpowersBLESwitch(CoordinatorEntity, SwitchEntity):
 
 def _switchap(device, key, status):
     if key == "ac_on":
-        asyncio.run(device.set_ac(status))
+        device.set_ac(status)
     if key == "dc_on":
-        asyncio.run(device.set_dc(status))
+        device.set_dc(status)
     if key == "light_on":
-        asyncio.run(device.set_torch(status))
+        device.set_torch(status)
 
 
 class AllpowersBLELight(CoordinatorEntity, LightEntity):
@@ -160,10 +158,10 @@ class AllpowersBLELight(CoordinatorEntity, LightEntity):
         """If the switch is currently on or off."""
         return self._device.light_on
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        asyncio.run(self._device.set_torch(True))
+        await self._device.set_torch(True)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        asyncio.run(self._device.set_torch(False))
+        await self._device.set_torch(False)

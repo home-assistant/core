@@ -12,5 +12,5 @@
   "documentation": "https://www.home-assistant.io/integrations/allpowers_ble/",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["bluetooth-data-tools==1.12.0", "allpowers-ble==0.0.1"]
+  "requirements": ["bluetooth-data-tools==1.12.0", "allpowers-ble==0.0.2"]
 }
