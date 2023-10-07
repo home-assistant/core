@@ -64,7 +64,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except Healthbox3ApiClientAuthenticationError:
-            errors["base"] = "auth"
+            errors[CONF_API_KEY] = "auth"
         except Healthbox3ApiClientCommunicationError:
             errors["base"] = "connection"
         except Healthbox3ApiClientError:
