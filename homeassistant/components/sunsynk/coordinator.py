@@ -25,7 +25,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class SunsynkCoordinator(DataUpdateCoordinator):
+class SunsynkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for Sunsynk API."""
 
     def __init__(
