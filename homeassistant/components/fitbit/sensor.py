@@ -749,7 +749,7 @@ class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
         }
 
     async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
+        """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
