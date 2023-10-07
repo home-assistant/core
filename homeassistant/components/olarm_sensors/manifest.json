@@ -1,0 +1,12 @@
+{
+  "domain": "olarm_sensors",
+  "name": "Olarm Sensors",
+  "codeowners": ["@rainepretorius"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/rainepretorius/olarm-ha-integration/blob/main/README.md",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/rainepretorius/olarm-ha-integration/issues",
+  "quality_scale": "silver",
+  "requirements": ["aiohttp==3.8.5"]
+}

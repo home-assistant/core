@@ -325,6 +325,7 @@ FLOWS = {
         "nzbget",
         "obihai",
         "octoprint",
+        "olarm_sensors",
         "omnilogic",
         "oncue",
         "ondilo_ico",
