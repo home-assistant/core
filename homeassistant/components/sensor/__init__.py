@@ -11,6 +11,8 @@ import logging
 from math import ceil, floor, isfinite, log10
 from typing import Any, Final, Self, cast, final
 
+from typing_extensions import override
+
 from homeassistant.config_entries import ConfigEntry
 
 # pylint: disable-next=hass-deprecated-import
@@ -262,6 +264,7 @@ class SensorEntity(Entity):
         return self.device_class not in (None, SensorDeviceClass.ENUM)
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -317,6 +320,7 @@ class SensorEntity(Entity):
         return None
 
     @property
+    @override
     def capability_attributes(self) -> Mapping[str, Any] | None:
         """Return the capability attributes."""
         if state_class := self.state_class:
@@ -362,6 +366,7 @@ class SensorEntity(Entity):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if last_reset := self.last_reset:
@@ -439,6 +444,7 @@ class SensorEntity(Entity):
 
     @final
     @property
+    @override
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
         # Highest priority, for registered entities: unit set by user,with fallback to
@@ -468,6 +474,7 @@ class SensorEntity(Entity):
 
     @final
     @property
+    @override
     def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
         native_unit_of_measurement = self.native_unit_of_measurement

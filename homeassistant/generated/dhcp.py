@@ -785,6 +785,16 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "788CB5*",
     },
     {
+        "domain": "tplink",
+        "hostname": "k[lps]*",
+        "macaddress": "3460F9*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lps]*",
+        "macaddress": "1C61B4*",
+    },
+    {
         "domain": "tuya",
         "macaddress": "105A17*",
     },

@@ -19,6 +19,7 @@ from systembridgeconnector.models.disk import Disk
 from systembridgeconnector.models.display import Display
 from systembridgeconnector.models.get_data import GetData
 from systembridgeconnector.models.gpu import Gpu
+from systembridgeconnector.models.media import Media
 from systembridgeconnector.models.media_directories import MediaDirectories
 from systembridgeconnector.models.media_files import File as MediaFile, MediaFiles
 from systembridgeconnector.models.media_get_file import MediaGetFile
@@ -50,6 +51,7 @@ class SystemBridgeCoordinatorData(BaseModel):
     disk: Disk = None
     display: Display = None
     gpu: Gpu = None
+    media: Media = None
     memory: Memory = None
     system: System = None
 
