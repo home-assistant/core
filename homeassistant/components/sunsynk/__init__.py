@@ -25,8 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     sunsunk_coordinator = SunsynkCoordinator(hass, api, inverter_sn)
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         CONF_NAME: inverter_sn,
         SUNSYNK_COORDINATOR: sunsunk_coordinator,
     }
