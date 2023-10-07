@@ -522,9 +522,6 @@ def _update_states_table_with_foreign_key_options(
         return
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
-    old_states_table = Table(  # noqa: F841
-        TABLE_STATES, MetaData(), *(alter["old_fk"] for alter in alters)  # type: ignore[arg-type]
-    )
 
     for alter in alters:
         with session_scope(session=session_maker()) as session:
@@ -549,9 +546,6 @@ def _drop_foreign_key_constraints(
     for foreign_key in inspector.get_foreign_keys(table):
         if foreign_key["name"] and foreign_key["constrained_columns"] == columns:
             drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))
-
-    # Bind the ForeignKeyConstraints to the table
-    old_table = Table(table, MetaData(), *drops)  # noqa: F841
 
     for drop in drops:
         with session_scope(session=session_maker()) as session:
