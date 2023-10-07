@@ -46,7 +46,7 @@ Mastodon.py==1.5.1
 Pillow==10.0.1
 
 # homeassistant.components.plex
-PlexAPI==4.15.3
+PlexAPI==4.15.4
 
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
@@ -64,7 +64,7 @@ PyFlick==0.0.2
 PyFlume==0.6.5
 
 # homeassistant.components.fronius
-PyFronius==0.7.1
+PyFronius==0.7.2
 
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4
@@ -186,7 +186,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.2.3
+aioairzone-cloud==0.2.4
 
 # homeassistant.components.airzone
 aioairzone==0.6.8
@@ -435,7 +435,7 @@ aprslib==0.7.0
 aqualogic==2.6
 
 # homeassistant.components.aranet
-aranet4==2.1.3
+aranet4==2.2.2
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.4.0
@@ -581,7 +581,7 @@ brunt==1.2.0
 bt-proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==3.1.1
+bthome-ble==3.2.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -955,7 +955,7 @@ ha-ffmpeg==3.1.0
 ha-iotawattpy==0.1.1
 
 # homeassistant.components.philips_js
-ha-philipsjs==3.1.0
+ha-philipsjs==3.1.1
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -1285,7 +1285,7 @@ nextcord==2.0.0a8
 nextdns==1.4.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.2.0
+nibe==2.4.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1499,7 +1499,7 @@ pvo==1.0.0
 py-canary==0.5.3
 
 # homeassistant.components.cpuspeed
-py-cpuinfo==8.0.0
+py-cpuinfo==9.0.0
 
 # homeassistant.components.dormakaba_dkey
 py-dormakaba-dkey==1.0.5
@@ -1508,7 +1508,7 @@ py-dormakaba-dkey==1.0.5
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==0.1.5
+py-nextbusnext==1.0.0
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -1662,7 +1662,7 @@ pydiscovergy==2.0.3
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2023.8.0
+pydrawise==2023.10.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -1701,7 +1701,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.1.2
 
 # homeassistant.components.fibaro
-pyfibaro==0.7.2
+pyfibaro==0.7.5
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -1946,7 +1946,7 @@ pypjlink2==1.2.1
 pyplaato==0.0.18
 
 # homeassistant.components.point
-pypoint==2.3.0
+pypoint==2.3.2
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
@@ -2189,7 +2189,7 @@ python-tado==0.15.0
 python-telegram-bot==13.1
 
 # homeassistant.components.vlc
-python-vlc==1.1.2
+python-vlc==3.0.18122
 
 # homeassistant.components.egardia
 pythonegardia==1.0.52
@@ -2213,7 +2213,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.3.6
+pytrafikverket==0.3.7
 
 # homeassistant.components.usb
 pyudev==0.23.2
@@ -2234,7 +2234,7 @@ pyvera==0.3.13
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==2.1.1
+pyvesync==2.1.10
 
 # homeassistant.components.vizio
 pyvizio==0.1.61

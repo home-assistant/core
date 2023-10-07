@@ -65,7 +65,7 @@ def setup_platform(
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
     # We don't need to trigger import flow from here as it's triggered from `__init__.py`
-    return
+    return  # pragma: no cover
 
 
 async def async_setup_entry(
