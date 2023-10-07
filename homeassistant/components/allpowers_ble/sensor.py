@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfPower
+from homeassistant.const import PERCENTAGE, UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,6 +27,7 @@ WATTS_EXPORT_DESCRIPTION = SensorEntityDescription(
     entity_registry_visible_default=True,
     native_unit_of_measurement=UnitOfPower.WATT,
     state_class=SensorStateClass.MEASUREMENT,
+    name="Power Export",
 )
 
 WATTS_IMPORT_DESCRIPTION = SensorEntityDescription(
@@ -37,12 +38,39 @@ WATTS_IMPORT_DESCRIPTION = SensorEntityDescription(
     entity_registry_visible_default=True,
     native_unit_of_measurement=UnitOfPower.WATT,
     state_class=SensorStateClass.MEASUREMENT,
+    name="Power Import",
+)
+
+
+MINUTES_REMAINING_DESCRIPTION = SensorEntityDescription(
+    key="minutes_remain",
+    translation_key="minutes_remain",
+    device_class=SensorDeviceClass.BATTERY,
+    entity_registry_enabled_default=False,
+    entity_registry_visible_default=True,
+    native_unit_of_measurement=UnitOfTime.MINUTES,
+    state_class=SensorStateClass.TOTAL,
+    name="Minutes Remaining",
+)
+
+
+PERCENTAGE_REMAINING_DESCRIPTION = SensorEntityDescription(
+    key="percent_remain",
+    translation_key="percent_remain",
+    device_class=SensorDeviceClass.BATTERY,
+    entity_registry_enabled_default=False,
+    entity_registry_visible_default=True,
+    native_unit_of_measurement=PERCENTAGE,
+    state_class=SensorStateClass.TOTAL,
+    name="Percent Remaining",
 )
 
 
 SENSOR_DESCRIPTIONS = [
     WATTS_IMPORT_DESCRIPTION,
     WATTS_EXPORT_DESCRIPTION,
+    MINUTES_REMAINING_DESCRIPTION,
+    PERCENTAGE_REMAINING_DESCRIPTION,
 ]
 
 
