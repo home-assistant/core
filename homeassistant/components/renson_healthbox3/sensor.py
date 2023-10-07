@@ -275,7 +275,6 @@ async def async_setup_entry(
 
     data: RensonData = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[Any] = []
     entities = [
         HealthboxGlobalSensor(data.coordinator, description)
         for description in HEALTHBOX_GLOBAL_SENSORS
