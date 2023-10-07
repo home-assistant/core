@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
@@ -115,10 +115,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         assert user_input is not None
 
-        if self._inverter_already_exists(user_input[DATA_INVERTER_SN]):
-            raise AbortFlow("already_configured")
-
         await self.async_set_unique_id(user_input[DATA_INVERTER_SN])
+        self._abort_if_unique_id_configured()
+
         return self.async_create_entry(
             title=f"Inverter {user_input[DATA_INVERTER_SN]}",
             data={

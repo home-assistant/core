@@ -23,11 +23,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api = await SunsynkClient.create(username, password)
 
-    sunsunk_coordinator = SunsynkCoordinator(hass, api, inverter_sn)
+    coordinator = SunsynkCoordinator(hass, api, inverter_sn)
+
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         CONF_NAME: inverter_sn,
-        SUNSYNK_COORDINATOR: sunsunk_coordinator,
+        SUNSYNK_COORDINATOR: coordinator,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

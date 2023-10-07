@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfEnergy, UnitOfPower
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -134,6 +134,8 @@ async def async_setup_entry(
 class SunsynkSensor(CoordinatorEntity[SunsynkCoordinator], SensorEntity):
     """Representation of a grid power usage."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: SunsynkCoordinator,
@@ -159,8 +161,7 @@ class SunsynkSensor(CoordinatorEntity[SunsynkCoordinator], SensorEntity):
         """Return the unique ID."""
         return f"{self.inverter_sn}_{self.entity_description.key}"
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data[self.entity_description.key]
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> str | int | float | None:
+        """Return the state."""
+        return self.coordinator.data[self.entity_description.key]
