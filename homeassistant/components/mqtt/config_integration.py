@@ -32,7 +32,6 @@ from . import (
     scene as scene_platform,
     select as select_platform,
     sensor as sensor_platform,
-    siren as siren_platform,
     switch as switch_platform,
     text as text_platform,
     update as update_platform,
@@ -124,10 +123,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
             cv.ensure_list,
             [sensor_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
-        Platform.SIREN.value: vol.All(
-            cv.ensure_list,
-            [siren_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.SIREN.value: vol.All(cv.ensure_list, [dict]),
         Platform.SWITCH.value: vol.All(
             cv.ensure_list,
             [switch_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
