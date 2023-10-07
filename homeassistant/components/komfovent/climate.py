@@ -43,6 +43,8 @@ class KomfoventDevice(ClimateEntity):
     _attr_supported_features = ClimateEntityFeature.PRESET_MODE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "ventilation_unit"
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,

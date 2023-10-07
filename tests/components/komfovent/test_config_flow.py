@@ -42,18 +42,72 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         (komfovent_api.KomfoventConnectionResult.INVALID_INPUT, "invalid_input"),
     ],
 )
-async def test_form_error_handling(
+async def test_flow_error_authenticating(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     error: komfovent_api.KomfoventConnectionResult,
     expected_response: str,
 ) -> None:
-    """Test errors during flow are handled and dont affect final result."""
+    """Test errors during flow authentication step are handled and dont affect final result."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
         "homeassistant.components.komfovent.config_flow.komfovent_api.get_credentials",
+        return_value=(
+            error,
+            None,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": expected_response}
+
+    final_result = await __test_normal_flow(hass, result2["flow_id"])
+    assert final_result["type"] == FlowResultType.CREATE_ENTRY
+    assert final_result["title"] == "test-name"
+    assert final_result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_response"),
+    [
+        (komfovent_api.KomfoventConnectionResult.NOT_FOUND, "cannot_connect"),
+        (komfovent_api.KomfoventConnectionResult.UNAUTHORISED, "invalid_auth"),
+        (komfovent_api.KomfoventConnectionResult.INVALID_INPUT, "invalid_input"),
+    ],
+)
+async def test_flow_error_device_info(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    error: komfovent_api.KomfoventConnectionResult,
+    expected_response: str,
+) -> None:
+    """Test errors during flow device info download step are handled and dont affect final result."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.komfovent.config_flow.komfovent_api.get_credentials",
+        return_value=(
+            komfovent_api.KomfoventConnectionResult.SUCCESS,
+            komfovent_api.KomfoventCredentials("1.1.1.1", "user", "pass"),
+        ),
+    ), patch(
+        "homeassistant.components.komfovent.config_flow.komfovent_api.get_settings",
         return_value=(
             error,
             None,

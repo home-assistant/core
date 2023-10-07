@@ -1,6 +1,8 @@
 """The Komfovent integration."""
 from __future__ import annotations
 
+from typing import cast
+
 import komfovent_api
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,15 +17,13 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Komfovent from a config entry."""
-    conf_host = str(entry.data[CONF_HOST])
-    conf_username = str(entry.data[CONF_USERNAME])
-    conf_password = str(entry.data[CONF_PASSWORD])
-    _, credentials = komfovent_api.get_credentials(
-        conf_host, conf_username, conf_password
-    )
+    host = cast(str, entry.data[CONF_HOST])
+    username = cast(str, entry.data[CONF_USERNAME])
+    password = cast(str, entry.data[CONF_PASSWORD])
+    _, credentials = komfovent_api.get_credentials(host, username, password)
     result, settings = await komfovent_api.get_settings(credentials)
     if result != komfovent_api.KomfoventConnectionResult.SUCCESS:
-        raise ConfigEntryNotReady(f"Unable to connect to {conf_host}: {result}")
+        raise ConfigEntryNotReady(f"Unable to connect to {host}: {result}")
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (credentials, settings)
 
