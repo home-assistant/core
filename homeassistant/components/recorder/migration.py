@@ -565,69 +565,6 @@ def _drop_foreign_key_constraints(
                     columns,
                 )
 
-
-@database_job_retry_wrapper("Apply migration update", 10)
-def _apply_update(  # noqa: C901
-    instance: Recorder,
-    hass: HomeAssistant,
-    engine: Engine,
-    session_maker: Callable[[], Session],
-    new_version: int,
-    old_version: int,
-) -> None:
-    """Perform operations to bring schema up to date."""
-    assert engine.dialect.name is not None, "Dialect name must be set"
-    dialect = try_parse_enum(SupportedDialect, engine.dialect.name)
-    _column_types = _COLUMN_TYPES_FOR_DIALECT.get(dialect, _SQLITE_COLUMN_TYPES)
-    if new_version > 41 or new_version < 1:
-        raise ValueError(f"No schema migration defined for version {new_version}")
-    else:
-        version_functions[new_version](instance, hass, engine, session_maker, old_version)
-
-version_functions = {
-    1: _apply_update_1,
-    2: _apply_update_2,
-    3: _apply_update_3,
-    4: _apply_update_4,
-    5: _apply_update_5,
-    6: _apply_update_6,
-    7: _apply_update_7,
-    8: _apply_update_8,
-    9: _apply_update_9,
-    10: _apply_update_10,
-    11: _apply_update_11,
-    12: _apply_update_12,
-    13: _apply_update_13,
-    14: _apply_update_14,
-    15: _apply_update_15,
-    16: _apply_update_16,
-    17: _apply_update_17,
-    18: _apply_update_18,
-    19: _apply_update_19,
-    20: _apply_update_20,
-    21: _apply_update_21,
-    22: _apply_update_22,
-    23: _apply_update_23,
-    24: _apply_update_24,
-    25: _apply_update_25,
-    26: _apply_update_26,
-    27: _apply_update_27,
-    28: _apply_update_28,
-    29: _apply_update_29,
-    30: _apply_update_30,
-    31: _apply_update_31,
-    32: _apply_update_32,
-    33: _apply_update_33,
-    34: _apply_update_34,
-    35: _apply_update_35,
-    36: _apply_update_36,
-    37: _apply_update_37,
-    38: _apply_update_38,
-    39: _apply_update_39,
-    40: _apply_update_40,
-    41: _apply_update_41,
-}
-
 def _apply_update_1(instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
@@ -1312,6 +1249,67 @@ def _apply_update_41(instance: Recorder,
     _create_index(session_maker, "event_types", "ix_event_types_event_type")
     _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
 
+version_functions = {
+    1: _apply_update_1,
+    2: _apply_update_2,
+    3: _apply_update_3,
+    4: _apply_update_4,
+    5: _apply_update_5,
+    6: _apply_update_6,
+    7: _apply_update_7,
+    8: _apply_update_8,
+    9: _apply_update_9,
+    10: _apply_update_10,
+    11: _apply_update_11,
+    12: _apply_update_12,
+    13: _apply_update_13,
+    14: _apply_update_14,
+    15: _apply_update_15,
+    16: _apply_update_16,
+    17: _apply_update_17,
+    18: _apply_update_18,
+    19: _apply_update_19,
+    20: _apply_update_20,
+    21: _apply_update_21,
+    22: _apply_update_22,
+    23: _apply_update_23,
+    24: _apply_update_24,
+    25: _apply_update_25,
+    26: _apply_update_26,
+    27: _apply_update_27,
+    28: _apply_update_28,
+    29: _apply_update_29,
+    30: _apply_update_30,
+    31: _apply_update_31,
+    32: _apply_update_32,
+    33: _apply_update_33,
+    34: _apply_update_34,
+    35: _apply_update_35,
+    36: _apply_update_36,
+    37: _apply_update_37,
+    38: _apply_update_38,
+    39: _apply_update_39,
+    40: _apply_update_40,
+    41: _apply_update_41,
+}
+
+@database_job_retry_wrapper("Apply migration update", 10)
+def _apply_update(  # noqa: C901
+    instance: Recorder,
+    hass: HomeAssistant,
+    engine: Engine,
+    session_maker: Callable[[], Session],
+    new_version: int,
+    old_version: int,
+) -> None:
+    """Perform operations to bring schema up to date."""
+    assert engine.dialect.name is not None, "Dialect name must be set"
+    dialect = try_parse_enum(SupportedDialect, engine.dialect.name)
+    _column_types = _COLUMN_TYPES_FOR_DIALECT.get(dialect, _SQLITE_COLUMN_TYPES)
+    if new_version > 41 or new_version < 1:
+        raise ValueError(f"No schema migration defined for version {new_version}")
+    else:
+        version_functions[new_version](instance, hass, engine, session_maker, old_version)
 
 def _correct_table_character_set_and_collation(
     table: str,
