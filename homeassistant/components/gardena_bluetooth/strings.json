@@ -23,6 +23,9 @@
     "binary_sensor": {
       "valve_connected_state": {
         "name": "Valve connection"
+      },
+      "sensor_connected_state": {
+        "name": "Sensor connection"
       }
     },
     "button": {
@@ -43,13 +46,25 @@
       "rain_pause": {
         "name": "Rain pause"
       },
-      "season_pause": {
-        "name": "Season pause"
+      "seasonal_adjust": {
+        "name": "Seasonal adjust"
+      },
+      "sensor_threshold": {
+        "name": "Sensor threshold"
       }
     },
     "sensor": {
       "activation_reason": {
         "name": "Activation reason"
+      },
+      "sensor_battery_level": {
+        "name": "Sensor battery"
+      },
+      "sensor_type": {
+        "name": "Sensor type"
+      },
+      "sensor_measurement_timestamp": {
+        "name": "Sensor timestamp"
       },
       "remaining_open_timestamp": {
         "name": "Valve closing"

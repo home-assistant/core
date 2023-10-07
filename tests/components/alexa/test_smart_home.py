@@ -8,7 +8,7 @@ from homeassistant.components.alexa import smart_home, state_report
 import homeassistant.components.camera as camera
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.media_player import MediaPlayerEntityFeature
-import homeassistant.components.vacuum as vacuum
+from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import Context, Event, HomeAssistant
@@ -2471,6 +2471,75 @@ async def test_thermostat(hass: HomeAssistant) -> None:
     assert call.data["preset_mode"] == "eco"
 
 
+async def test_no_current_target_temp_adjusting_temp(hass: HomeAssistant) -> None:
+    """Test thermostat adjusting temp with no initial target temperature."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    device = (
+        "climate.test_thermostat",
+        "cool",
+        {
+            "temperature": None,
+            "target_temp_high": None,
+            "target_temp_low": None,
+            "current_temperature": 75.0,
+            "friendly_name": "Test Thermostat",
+            "supported_features": 1 | 2 | 4 | 128,
+            "hvac_modes": ["off", "heat", "cool", "auto", "dry", "fan_only"],
+            "preset_mode": None,
+            "preset_modes": ["eco"],
+            "min_temp": 50,
+            "max_temp": 90,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "climate#test_thermostat"
+    assert appliance["displayCategories"][0] == "THERMOSTAT"
+    assert appliance["friendlyName"] == "Test Thermostat"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.PowerController",
+        "Alexa.ThermostatController",
+        "Alexa.TemperatureSensor",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    properties = await reported_properties(hass, "climate#test_thermostat")
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "COOL")
+    properties.assert_not_has_property(
+        "Alexa.ThermostatController",
+        "targetSetpoint",
+    )
+    properties.assert_equal(
+        "Alexa.TemperatureSensor", "temperature", {"value": 75.0, "scale": "FAHRENHEIT"}
+    )
+
+    thermostat_capability = get_capability(capabilities, "Alexa.ThermostatController")
+    assert thermostat_capability is not None
+    configuration = thermostat_capability["configuration"]
+    assert configuration["supportsScheduling"] is False
+
+    supported_modes = ["OFF", "HEAT", "COOL", "AUTO", "ECO", "CUSTOM"]
+    for mode in supported_modes:
+        assert mode in configuration["supportedModes"]
+
+    # Adjust temperature where target temp is not set
+    msg = await assert_request_fails(
+        "Alexa.ThermostatController",
+        "AdjustTargetTemperature",
+        "climate#test_thermostat",
+        "climate.set_temperature",
+        hass,
+        payload={"targetSetpointDelta": {"value": -5.0, "scale": "KELVIN"}},
+    )
+    assert msg["event"]["payload"]["type"] == "INVALID_TARGET_STATE"
+    assert msg["event"]["payload"]["message"] == (
+        "The current target temperature is not set, cannot adjust target temperature"
+    )
+
+
 async def test_thermostat_dual(hass: HomeAssistant) -> None:
     """Test thermostat discovery with auto mode, with upper and lower target temperatures."""
     hass.config.units = US_CUSTOMARY_SYSTEM
@@ -3872,12 +3941,12 @@ async def test_vacuum_discovery(hass: HomeAssistant) -> None:
         "docked",
         {
             "friendly_name": "Test vacuum 1",
-            "supported_features": vacuum.SUPPORT_TURN_ON
-            | vacuum.SUPPORT_TURN_OFF
-            | vacuum.SUPPORT_START
-            | vacuum.SUPPORT_STOP
-            | vacuum.SUPPORT_RETURN_HOME
-            | vacuum.SUPPORT_PAUSE,
+            "supported_features": VacuumEntityFeature.TURN_ON
+            | VacuumEntityFeature.TURN_OFF
+            | VacuumEntityFeature.START
+            | VacuumEntityFeature.STOP
+            | VacuumEntityFeature.RETURN_HOME
+            | VacuumEntityFeature.PAUSE,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3913,12 +3982,12 @@ async def test_vacuum_fan_speed(hass: HomeAssistant) -> None:
         "cleaning",
         {
             "friendly_name": "Test vacuum 2",
-            "supported_features": vacuum.SUPPORT_TURN_ON
-            | vacuum.SUPPORT_TURN_OFF
-            | vacuum.SUPPORT_START
-            | vacuum.SUPPORT_STOP
-            | vacuum.SUPPORT_PAUSE
-            | vacuum.SUPPORT_FAN_SPEED,
+            "supported_features": VacuumEntityFeature.TURN_ON
+            | VacuumEntityFeature.TURN_OFF
+            | VacuumEntityFeature.START
+            | VacuumEntityFeature.STOP
+            | VacuumEntityFeature.PAUSE
+            | VacuumEntityFeature.FAN_SPEED,
             "fan_speed_list": ["off", "low", "medium", "high", "turbo", "super_sucker"],
             "fan_speed": "medium",
         },
@@ -4042,12 +4111,12 @@ async def test_vacuum_pause(hass: HomeAssistant) -> None:
         "cleaning",
         {
             "friendly_name": "Test vacuum 3",
-            "supported_features": vacuum.SUPPORT_TURN_ON
-            | vacuum.SUPPORT_TURN_OFF
-            | vacuum.SUPPORT_START
-            | vacuum.SUPPORT_STOP
-            | vacuum.SUPPORT_PAUSE
-            | vacuum.SUPPORT_FAN_SPEED,
+            "supported_features": VacuumEntityFeature.TURN_ON
+            | VacuumEntityFeature.TURN_OFF
+            | VacuumEntityFeature.START
+            | VacuumEntityFeature.STOP
+            | VacuumEntityFeature.PAUSE
+            | VacuumEntityFeature.FAN_SPEED,
             "fan_speed_list": ["off", "low", "medium", "high", "turbo", "super_sucker"],
             "fan_speed": "medium",
         },
@@ -4080,12 +4149,12 @@ async def test_vacuum_resume(hass: HomeAssistant) -> None:
         "docked",
         {
             "friendly_name": "Test vacuum 4",
-            "supported_features": vacuum.SUPPORT_TURN_ON
-            | vacuum.SUPPORT_TURN_OFF
-            | vacuum.SUPPORT_START
-            | vacuum.SUPPORT_STOP
-            | vacuum.SUPPORT_PAUSE
-            | vacuum.SUPPORT_FAN_SPEED,
+            "supported_features": VacuumEntityFeature.TURN_ON
+            | VacuumEntityFeature.TURN_OFF
+            | VacuumEntityFeature.START
+            | VacuumEntityFeature.STOP
+            | VacuumEntityFeature.PAUSE
+            | VacuumEntityFeature.FAN_SPEED,
             "fan_speed_list": ["off", "low", "medium", "high", "turbo", "super_sucker"],
             "fan_speed": "medium",
         },
@@ -4108,9 +4177,9 @@ async def test_vacuum_discovery_no_turn_on(hass: HomeAssistant) -> None:
         "cleaning",
         {
             "friendly_name": "Test vacuum 5",
-            "supported_features": vacuum.SUPPORT_TURN_OFF
-            | vacuum.SUPPORT_START
-            | vacuum.SUPPORT_RETURN_HOME,
+            "supported_features": VacuumEntityFeature.TURN_OFF
+            | VacuumEntityFeature.START
+            | VacuumEntityFeature.RETURN_HOME,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4138,9 +4207,9 @@ async def test_vacuum_discovery_no_turn_off(hass: HomeAssistant) -> None:
         "cleaning",
         {
             "friendly_name": "Test vacuum 6",
-            "supported_features": vacuum.SUPPORT_TURN_ON
-            | vacuum.SUPPORT_START
-            | vacuum.SUPPORT_RETURN_HOME,
+            "supported_features": VacuumEntityFeature.TURN_ON
+            | VacuumEntityFeature.START
+            | VacuumEntityFeature.RETURN_HOME,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4169,7 +4238,8 @@ async def test_vacuum_discovery_no_turn_on_or_off(hass: HomeAssistant) -> None:
         "cleaning",
         {
             "friendly_name": "Test vacuum 7",
-            "supported_features": vacuum.SUPPORT_START | vacuum.SUPPORT_RETURN_HOME,
+            "supported_features": VacuumEntityFeature.START
+            | VacuumEntityFeature.RETURN_HOME,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4285,7 +4355,7 @@ async def test_initialize_camera_stream(
         msg = await smart_home.async_handle_message(
             hass, get_default_config(hass), request
         )
-        await hass.async_block_till_done()
+        await hass.async_stop()
 
     assert "event" in msg
     response = msg["event"]

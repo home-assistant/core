@@ -17,10 +17,7 @@ from homeassistant.util.dt import utcnow
 
 from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
 
-from tests.common import (
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import async_get_device_automations, async_mock_service
 
 DEVICE_NAME = "My Camera"
 DATA_MESSAGE = {"message": "service-called"}

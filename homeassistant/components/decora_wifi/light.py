@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-# pylint: disable=import-error
 from decora_wifi import DecoraWiFiSession
 from decora_wifi.models.person import Person
 from decora_wifi.models.residence import Residence

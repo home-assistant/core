@@ -154,8 +154,8 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         name = self._attr_name
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._disarm_script = None
-        self._code_arm_required: bool = config[CONF_CODE_ARM_REQUIRED]
-        self._code_format: TemplateCodeFormat = config[CONF_CODE_FORMAT]
+        self._attr_code_arm_required: bool = config[CONF_CODE_ARM_REQUIRED]
+        self._attr_code_format = config[CONF_CODE_FORMAT].value
         if (disarm_action := config.get(CONF_DISARM_ACTION)) is not None:
             self._disarm_script = Script(hass, disarm_action, name, DOMAIN)
         self._arm_away_script = None
@@ -183,14 +183,6 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
 
         self._state: str | None = None
 
-    @property
-    def state(self) -> str | None:
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def supported_features(self) -> AlarmControlPanelEntityFeature:
-        """Return the list of supported features."""
         supported_features = AlarmControlPanelEntityFeature(0)
         if self._arm_night_script is not None:
             supported_features = (
@@ -221,18 +213,12 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             supported_features = (
                 supported_features | AlarmControlPanelEntityFeature.TRIGGER
             )
-
-        return supported_features
-
-    @property
-    def code_format(self) -> CodeFormat | None:
-        """Regex for code format or None if no code is required."""
-        return self._code_format.value
+        self._attr_supported_features = supported_features
 
     @property
-    def code_arm_required(self) -> bool:
-        """Whether the code is required for arm actions."""
-        return self._code_arm_required
+    def state(self) -> str | None:
+        """Return the state of the device."""
+        return self._state
 
     @callback
     def _update_state(self, result):
@@ -254,13 +240,14 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         )
         self._state = None
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         if self._template:
             self.add_template_attribute(
                 "_state", self._template, None, self._update_state
             )
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     async def _async_alarm_arm(self, state, script, code):
         """Arm the panel to specified state with supplied script."""

@@ -4,8 +4,8 @@ from __future__ import annotations
 from boschshcpy import SHCDevice, SHCIntrusionSystem
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get as get_dev_reg
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo, async_get as get_dev_reg
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
@@ -24,6 +24,7 @@ class SHCBaseEntity(Entity):
     """Base representation of a SHC entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self, device: SHCDevice | SHCIntrusionSystem, parent_id: str, entry_id: str
@@ -31,7 +32,6 @@ class SHCBaseEntity(Entity):
         """Initialize the generic SHC device."""
         self._device = device
         self._entry_id = entry_id
-        self._attr_name = device.name
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""

@@ -30,6 +30,7 @@ from .const import (
     ATTR_FILE,
     ATTR_PASSWORD,
     ATTR_PATH,
+    ATTR_THREAD_TS,
     ATTR_URL,
     ATTR_USERNAME,
     CONF_DEFAULT_CHANNEL,
@@ -50,7 +51,10 @@ FILE_URL_SCHEMA = vol.Schema(
 )
 
 DATA_FILE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_FILE): vol.Any(FILE_PATH_SCHEMA, FILE_URL_SCHEMA)}
+    {
+        vol.Required(ATTR_FILE): vol.Any(FILE_PATH_SCHEMA, FILE_URL_SCHEMA),
+        vol.Optional(ATTR_THREAD_TS): cv.string,
+    }
 )
 
 DATA_TEXT_ONLY_SCHEMA = vol.Schema(
@@ -59,6 +63,7 @@ DATA_TEXT_ONLY_SCHEMA = vol.Schema(
         vol.Optional(ATTR_ICON): cv.string,
         vol.Optional(ATTR_BLOCKS): list,
         vol.Optional(ATTR_BLOCKS_TEMPLATE): list,
+        vol.Optional(ATTR_THREAD_TS): cv.string,
     }
 )
 
@@ -73,7 +78,7 @@ class AuthDictT(TypedDict, total=False):
     auth: BasicAuth
 
 
-class FormDataT(TypedDict):
+class FormDataT(TypedDict, total=False):
     """Type for form data, file upload."""
 
     channels: str
@@ -81,6 +86,7 @@ class FormDataT(TypedDict):
     initial_comment: str
     title: str
     token: str
+    thread_ts: str  # Optional key
 
 
 class MessageT(TypedDict, total=False):
@@ -92,6 +98,7 @@ class MessageT(TypedDict, total=False):
     icon_url: str  # Optional key
     icon_emoji: str  # Optional key
     blocks: list[Any]  # Optional key
+    thread_ts: str  # Optional key
 
 
 async def async_get_service(
@@ -142,6 +149,7 @@ class SlackNotificationService(BaseNotificationService):
         targets: list[str],
         message: str,
         title: str | None,
+        thread_ts: str | None,
     ) -> None:
         """Upload a local file (with message) to Slack."""
         if not self._hass.config.is_allowed_path(path):
@@ -158,6 +166,7 @@ class SlackNotificationService(BaseNotificationService):
                 filename=filename,
                 initial_comment=message,
                 title=title or filename,
+                thread_ts=thread_ts,
             )
         except (SlackApiError, ClientError) as err:
             _LOGGER.error("Error while uploading file-based message: %r", err)
@@ -168,6 +177,7 @@ class SlackNotificationService(BaseNotificationService):
         targets: list[str],
         message: str,
         title: str | None,
+        thread_ts: str | None,
         *,
         username: str | None = None,
         password: str | None = None,
@@ -205,6 +215,9 @@ class SlackNotificationService(BaseNotificationService):
             "token": self._client.token,
         }
 
+        if thread_ts:
+            form_data["thread_ts"] = thread_ts
+
         data = FormData(form_data, charset="utf-8")
         data.add_field("file", resp.content, filename=filename)
 
@@ -218,6 +231,7 @@ class SlackNotificationService(BaseNotificationService):
         targets: list[str],
         message: str,
         title: str | None,
+        thread_ts: str | None,
         *,
         username: str | None = None,
         icon: str | None = None,
@@ -237,6 +251,9 @@ class SlackNotificationService(BaseNotificationService):
 
         if blocks:
             message_dict["blocks"] = blocks
+
+        if thread_ts:
+            message_dict["thread_ts"] = thread_ts
 
         tasks = {
             target: self._client.chat_postMessage(**message_dict, channel=target)
@@ -286,6 +303,7 @@ class SlackNotificationService(BaseNotificationService):
                 title,
                 username=data.get(ATTR_USERNAME, self._config.get(ATTR_USERNAME)),
                 icon=data.get(ATTR_ICON, self._config.get(ATTR_ICON)),
+                thread_ts=data.get(ATTR_THREAD_TS),
                 blocks=blocks,
             )
 
@@ -296,11 +314,16 @@ class SlackNotificationService(BaseNotificationService):
                 targets,
                 message,
                 title,
+                thread_ts=data.get(ATTR_THREAD_TS),
                 username=data[ATTR_FILE].get(ATTR_USERNAME),
                 password=data[ATTR_FILE].get(ATTR_PASSWORD),
             )
 
         # Message Type 3: A message that uploads a local file
         return await self._async_send_local_file_message(
-            data[ATTR_FILE][ATTR_PATH], targets, message, title
+            data[ATTR_FILE][ATTR_PATH],
+            targets,
+            message,
+            title,
+            thread_ts=data.get(ATTR_THREAD_TS),
         )

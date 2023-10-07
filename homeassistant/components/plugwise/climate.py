@@ -1,10 +1,10 @@
 """Plugwise Climate component for Home Assistant."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
@@ -145,14 +145,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         """Return the current preset mode."""
         return self.device.get("active_preset")
 
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes."""
-        return {
-            "available_schemas": self.device["available_schedules"],
-            "selected_schema": self.device["select_schedule"],
-        }
-
     @plugwise_command
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -169,6 +161,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
                 self._attr_min_temp <= temperature <= self._attr_max_temp
             ):
                 raise ValueError("Invalid temperature change requested")
+
+        if mode := kwargs.get(ATTR_HVAC_MODE):
+            await self.async_set_hvac_mode(mode)
 
         await self.coordinator.api.set_temperature(self.device["location"], data)
 

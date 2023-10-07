@@ -25,6 +25,7 @@ from awesomeversion import (
 import voluptuous as vol
 
 from . import generated
+from .core import HomeAssistant, callback
 from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
 from .generated.dhcp import DHCP
@@ -37,7 +38,6 @@ from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from .config_entries import ConfigEntry
-    from .core import HomeAssistant
     from .helpers import device_registry as dr
     from .helpers.typing import ConfigType
 
@@ -164,6 +164,13 @@ class Manifest(TypedDict, total=False):
     version: str
     codeowners: list[str]
     loggers: list[str]
+
+
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up the necessary data structures."""
+    _async_mount_config_dir(hass)
+    hass.data[DATA_COMPONENTS] = {}
+    hass.data[DATA_INTEGRATIONS] = {}
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
@@ -770,9 +777,7 @@ class Integration:
             return self._all_dependencies_resolved
 
         try:
-            dependencies = await _async_component_dependencies(
-                self.hass, self.domain, self, set(), set()
-            )
+            dependencies = await _async_component_dependencies(self.hass, self)
             dependencies.discard(self.domain)
             self._all_dependencies = dependencies
             self._all_dependencies_resolved = True
@@ -802,9 +807,7 @@ class Integration:
 
     def get_component(self) -> ComponentProtocol:
         """Return the component."""
-        cache: dict[str, ComponentProtocol] = self.hass.data.setdefault(
-            DATA_COMPONENTS, {}
-        )
+        cache: dict[str, ComponentProtocol] = self.hass.data[DATA_COMPONENTS]
         if self.domain in cache:
             return cache[self.domain]
 
@@ -824,7 +827,7 @@ class Integration:
 
     def get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        cache: dict[str, ModuleType] = self.hass.data.setdefault(DATA_COMPONENTS, {})
+        cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
         full_name = f"{self.domain}.{platform_name}"
         if full_name in cache:
             return cache[full_name]
@@ -870,6 +873,22 @@ def _resolve_integrations_from_root(
     return integrations
 
 
+@callback
+def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integration:
+    """Get an integration which is already loaded.
+
+    Raises IntegrationNotLoaded if the integration is not loaded.
+    """
+    cache = hass.data[DATA_INTEGRATIONS]
+    if TYPE_CHECKING:
+        cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
+    int_or_fut = cache.get(domain, _UNDEF)
+    # Integration is never subclassed, so we can check for type
+    if type(int_or_fut) is Integration:  # noqa: E721
+        return int_or_fut
+    raise IntegrationNotLoaded(domain)
+
+
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get integration."""
     integrations_or_excs = await async_get_integrations(hass, [domain])
@@ -883,11 +902,7 @@ async def async_get_integrations(
     hass: HomeAssistant, domains: Iterable[str]
 ) -> dict[str, Integration | Exception]:
     """Get integrations."""
-    if (cache := hass.data.get(DATA_INTEGRATIONS)) is None:
-        if not _async_mount_config_dir(hass):
-            return {domain: IntegrationNotFound(domain) for domain in domains}
-        cache = hass.data[DATA_INTEGRATIONS] = {}
-
+    cache = hass.data[DATA_INTEGRATIONS]
     results: dict[str, Integration | Exception] = {}
     needed: dict[str, asyncio.Future[None]] = {}
     in_progress: dict[str, asyncio.Future[None]] = {}
@@ -896,7 +911,7 @@ async def async_get_integrations(
     for domain in domains:
         int_or_fut = cache.get(domain, _UNDEF)
         # Integration is never subclassed, so we can check for type
-        if type(int_or_fut) is Integration:  # pylint: disable=unidiomatic-typecheck
+        if type(int_or_fut) is Integration:  # noqa: E721
             results[domain] = int_or_fut
         elif int_or_fut is not _UNDEF:
             in_progress[domain] = cast(asyncio.Future[None], int_or_fut)
@@ -969,10 +984,19 @@ class IntegrationNotFound(LoaderError):
         self.domain = domain
 
 
+class IntegrationNotLoaded(LoaderError):
+    """Raised when a component is not loaded."""
+
+    def __init__(self, domain: str) -> None:
+        """Initialize a component not found error."""
+        super().__init__(f"Integration '{domain}' not loaded.")
+        self.domain = domain
+
+
 class CircularDependency(LoaderError):
     """Raised when a circular dependency is found when resolving components."""
 
-    def __init__(self, from_domain: str, to_domain: str) -> None:
+    def __init__(self, from_domain: str | set[str], to_domain: str) -> None:
         """Initialize circular dependency error."""
         super().__init__(f"Circular dependency detected: {from_domain} -> {to_domain}.")
         self.from_domain = from_domain
@@ -993,10 +1017,7 @@ def _load_file(
             comp_or_platform
         ]
 
-    if (cache := hass.data.get(DATA_COMPONENTS)) is None:
-        if not _async_mount_config_dir(hass):
-            return None
-        cache = hass.data[DATA_COMPONENTS] = {}
+    cache = hass.data[DATA_COMPONENTS]
 
     for path in (f"{base}.{comp_or_platform}" for base in base_paths):
         try:
@@ -1066,7 +1087,7 @@ class Components:
     def __getattr__(self, comp_name: str) -> ModuleWrapper:
         """Fetch a component."""
         # Test integration cache
-        integration = self._hass.data.get(DATA_INTEGRATIONS, {}).get(comp_name)
+        integration = self._hass.data[DATA_INTEGRATIONS].get(comp_name)
 
         if isinstance(integration, Integration):
             component: ComponentProtocol | None = integration.get_component()
@@ -1109,58 +1130,51 @@ def bind_hass(func: _CallableT) -> _CallableT:
 
 async def _async_component_dependencies(
     hass: HomeAssistant,
-    start_domain: str,
     integration: Integration,
-    loaded: set[str],
-    loading: set[str],
 ) -> set[str]:
-    """Recursive function to get component dependencies.
+    """Get component dependencies."""
+    loading = set()
+    loaded = set()
 
-    Async friendly.
-    """
-    domain = integration.domain
-    loading.add(domain)
+    async def component_dependencies_impl(integration: Integration) -> None:
+        """Recursively get component dependencies."""
+        domain = integration.domain
+        loading.add(domain)
 
-    for dependency_domain in integration.dependencies:
-        # Check not already loaded
-        if dependency_domain in loaded:
-            continue
+        for dependency_domain in integration.dependencies:
+            dep_integration = await async_get_integration(hass, dependency_domain)
 
-        # If we are already loading it, we have a circular dependency.
-        if dependency_domain in loading:
-            raise CircularDependency(domain, dependency_domain)
+            # If we are already loading it, we have a circular dependency.
+            # We have to check it here to make sure that every integration that
+            # depends on us, does not appear in our own after_dependencies.
+            if conflict := loading.intersection(dep_integration.after_dependencies):
+                raise CircularDependency(conflict, dependency_domain)
 
-        loaded.add(dependency_domain)
+            # If we have already loaded it, no point doing it again.
+            if dependency_domain in loaded:
+                continue
 
-        dep_integration = await async_get_integration(hass, dependency_domain)
+            # If we are already loading it, we have a circular dependency.
+            if dependency_domain in loading:
+                raise CircularDependency(dependency_domain, domain)
 
-        if start_domain in dep_integration.after_dependencies:
-            raise CircularDependency(start_domain, dependency_domain)
+            await component_dependencies_impl(dep_integration)
 
-        if dep_integration.dependencies:
-            dep_loaded = await _async_component_dependencies(
-                hass, start_domain, dep_integration, loaded, loading
-            )
+        loading.remove(domain)
+        loaded.add(domain)
 
-            loaded.update(dep_loaded)
-
-    loaded.add(domain)
-    loading.remove(domain)
+    await component_dependencies_impl(integration)
 
     return loaded
 
 
-def _async_mount_config_dir(hass: HomeAssistant) -> bool:
+def _async_mount_config_dir(hass: HomeAssistant) -> None:
     """Mount config dir in order to load custom_component.
 
     Async friendly but not a coroutine.
     """
-    if hass.config.config_dir is None:
-        _LOGGER.error("Can't load integrations - configuration directory is not set")
-        return False
     if hass.config.config_dir not in sys.path:
         sys.path.insert(0, hass.config.config_dir)
-    return True
 
 
 def _lookup_path(hass: HomeAssistant) -> list[str]:
@@ -1168,3 +1182,60 @@ def _lookup_path(hass: HomeAssistant) -> list[str]:
     if hass.config.safe_mode:
         return [PACKAGE_BUILTIN]
     return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
+
+
+def is_component_module_loaded(hass: HomeAssistant, module: str) -> bool:
+    """Test if a component module is loaded."""
+    return module in hass.data[DATA_COMPONENTS]
+
+
+@callback
+def async_get_issue_tracker(
+    hass: HomeAssistant | None,
+    *,
+    integration_domain: str | None = None,
+    module: str | None = None,
+) -> str | None:
+    """Return a URL for an integration's issue tracker."""
+    issue_tracker = (
+        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+    )
+    if not integration_domain and not module:
+        # If we know nothing about the entity, suggest opening an issue on HA core
+        return issue_tracker
+
+    if hass and integration_domain:
+        with suppress(IntegrationNotLoaded):
+            integration = async_get_loaded_integration(hass, integration_domain)
+            if not integration.is_built_in:
+                return integration.issue_tracker
+
+    if module and "custom_components" in module:
+        return None
+
+    if integration_domain:
+        issue_tracker += f"+label%3A%22integration%3A+{integration_domain}%22"
+    return issue_tracker
+
+
+@callback
+def async_suggest_report_issue(
+    hass: HomeAssistant | None,
+    *,
+    integration_domain: str | None = None,
+    module: str | None = None,
+) -> str:
+    """Generate a blurb asking the user to file a bug report."""
+    issue_tracker = async_get_issue_tracker(
+        hass, integration_domain=integration_domain, module=module
+    )
+
+    if not issue_tracker:
+        if not integration_domain:
+            return "report it to the custom integration author"
+        return (
+            f"report it to the author of the '{integration_domain}' "
+            "custom integration"
+        )
+
+    return f"create a bug report at {issue_tracker}"

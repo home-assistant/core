@@ -100,7 +100,7 @@ class FakeSchedule:
 
     async def fire_time(self, trigger_time: datetime.datetime) -> None:
         """Fire an alarm and wait."""
-        _LOGGER.debug(f"Firing alarm @ {dt_util.as_local(trigger_time)}")
+        _LOGGER.debug("Firing alarm @ %s", dt_util.as_local(trigger_time))
         self.freezer.move_to(trigger_time)
         async_fire_time_changed(self.hass, trigger_time)
         await self.hass.async_block_till_done()

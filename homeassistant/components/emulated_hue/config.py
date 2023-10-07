@@ -225,7 +225,7 @@ class Config:
     @callback
     def _clear_exposed_cache(self, event: EventType[EventStateChangedData]) -> None:
         """Clear the cache of exposed states."""
-        self.get_exposed_states.cache_clear()  # pylint: disable=no-member
+        self.get_exposed_states.cache_clear()
 
     def is_state_exposed(self, state: State) -> bool:
         """Cache determine if an entity should be exposed on the emulated bridge."""

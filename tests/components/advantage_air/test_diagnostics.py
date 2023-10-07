@@ -3,11 +3,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
-from . import (
-    TEST_SYSTEM_DATA,
-    TEST_SYSTEM_URL,
-    add_mock_config,
-)
+from . import TEST_SYSTEM_DATA, TEST_SYSTEM_URL, add_mock_config
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.test_util.aiohttp import AiohttpClientMocker

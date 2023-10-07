@@ -125,7 +125,13 @@ async def test_device_diagnostics(
         entity["entity_id"] == "test.unrelated_entity"
         for entity in diagnostics_data["entities"]
     )
-    assert diagnostics_data["state"] == multisensor_6.data
+    assert diagnostics_data["state"] == {
+        **multisensor_6.data,
+        "values": {id: val.data for id, val in multisensor_6.values.items()},
+        "endpoints": {
+            str(idx): endpoint.data for idx, endpoint in multisensor_6.endpoints.items()
+        },
+    }
 
 
 async def test_device_diagnostics_error(hass: HomeAssistant, integration) -> None:
@@ -230,7 +236,11 @@ async def test_device_diagnostics_secret_value(
         """Find ultraviolet property value in data."""
         return next(
             val
-            for val in data["values"]
+            for val in (
+                data["values"]
+                if isinstance(data["values"], list)
+                else data["values"].values()
+            )
             if val["commandClass"] == CommandClass.SENSOR_MULTILEVEL
             and val["property"] == PROPERTY_ULTRAVIOLET
         )

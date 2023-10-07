@@ -48,15 +48,6 @@
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A07"
     },
-    "71e1944f2a944b26ad73323e399efef0": {
-      "dev_class": "switching",
-      "members": ["5ca521ac179d468e91d772eeeb8a2117"],
-      "model": "Switchgroup",
-      "name": "Test",
-      "switches": {
-        "relay": true
-      }
-    },
     "aac7b735042c4832ac9ff33aae4f453b": {
       "dev_class": "dishwasher",
       "firmware": "2011-06-27T10:52:18+02:00",
