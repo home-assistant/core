@@ -133,6 +133,30 @@ class HealthboxRoomSensorEntityDescription(
     """Class describing Healthbox Room sensor entities."""
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Renson sensor platform."""
+
+    coordinator: RensonCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+
+    entities: list[RensonEntity] = []
+
+    entities = [
+        HealthboxGlobalSensor(coordinator, description)
+        for description in HEALTHBOX_GLOBAL_SENSORS
+    ]
+
+    room_sensors = generate_room_sensors_for_healthbox(coordinator=coordinator)
+
+    for description in room_sensors:
+        entities.append(HealthboxRoomSensor(coordinator, description))
+
+    async_add_entities(entities)
+
+
 HEALTHBOX_GLOBAL_SENSORS: tuple[HealthboxGlobalSensorEntityDescription, ...] = (
     HealthboxGlobalSensorEntityDescription(
         key="global_aqi",
@@ -363,27 +387,3 @@ class HealthboxRoomSensor(RensonEntity, SensorEntity):
             self._attr_native_value = self.entity_description.value_fn(matching_room)
 
         self.async_write_ha_state()
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Renson sensor platform."""
-
-    coordinator: RensonCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-
-    entities: list[RensonEntity] = []
-
-    entities = [
-        HealthboxGlobalSensor(coordinator, description)
-        for description in HEALTHBOX_GLOBAL_SENSORS
-    ]
-
-    room_sensors = generate_room_sensors_for_healthbox(coordinator=coordinator)
-
-    for description in room_sensors:
-        entities.append(HealthboxRoomSensor(coordinator, description))
-
-    async_add_entities(entities)
