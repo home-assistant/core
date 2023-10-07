@@ -1,6 +1,8 @@
 """Tests for rainbird sensor platform."""
 
 
+from http import HTTPStatus
+
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -8,7 +10,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import RAIN_SENSOR_OFF, RAIN_SENSOR_ON, SERIAL_NUMBER
+from .conftest import (
+    RAIN_SENSOR_OFF,
+    RAIN_SENSOR_ON,
+    SERIAL_NUMBER,
+    mock_response_error,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
@@ -91,6 +98,9 @@ async def test_no_unique_id(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test rainsensor binary sensor with no unique id."""
+
+    # Failure to migrate config entry o a unique id
+    responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
 
     rainsensor = hass.states.get("binary_sensor.rain_bird_controller_rainsensor")
     assert rainsensor is not None

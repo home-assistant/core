@@ -19,11 +19,14 @@ from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from .conftest import (
     CONFIG_ENTRY_DATA,
     HOST,
+    MAC_ADDRESS,
     PASSWORD,
     SERIAL_NUMBER,
     SERIAL_RESPONSE,
     URL,
+    WIFI_PARAMS_RESPONSE,
     ZERO_SERIAL_RESPONSE,
+    mock_json_response,
     mock_response,
 )
 
@@ -34,7 +37,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockRespon
 @pytest.fixture(name="responses")
 def mock_responses() -> list[AiohttpClientMockResponse]:
     """Set up fake serial number response when testing the connection."""
-    return [mock_response(SERIAL_RESPONSE)]
+    return [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)]
 
 
 @pytest.fixture(autouse=True)
@@ -74,14 +77,20 @@ async def complete_flow(hass: HomeAssistant) -> FlowResult:
     ("responses", "expected_config_entry", "expected_unique_id"),
     [
         (
-            [mock_response(SERIAL_RESPONSE)],
+            [
+                mock_response(SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             CONFIG_ENTRY_DATA,
-            SERIAL_NUMBER,
+            MAC_ADDRESS,
         ),
         (
-            [mock_response(ZERO_SERIAL_RESPONSE)],
+            [
+                mock_response(ZERO_SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             {**CONFIG_ENTRY_DATA, "serial_number": 0},
-            None,
+            MAC_ADDRESS,
         ),
     ],
 )
@@ -115,17 +124,32 @@ async def test_controller_flow(
         (
             "other-serial-number",
             {**CONFIG_ENTRY_DATA, "host": "other-host"},
-            [mock_response(SERIAL_RESPONSE)],
+            [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
+            CONFIG_ENTRY_DATA,
+        ),
+        (
+            "11:22:33:44:55:66",
+            {
+                **CONFIG_ENTRY_DATA,
+                "host": "other-host",
+            },
+            [
+                mock_response(SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             CONFIG_ENTRY_DATA,
         ),
         (
             None,
             {**CONFIG_ENTRY_DATA, "serial_number": 0, "host": "other-host"},
-            [mock_response(ZERO_SERIAL_RESPONSE)],
+            [
+                mock_response(ZERO_SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             {**CONFIG_ENTRY_DATA, "serial_number": 0},
         ),
     ],
-    ids=["with-serial", "zero-serial"],
+    ids=["with-serial", "with-mac-address", "zero-serial"],
 )
 async def test_multiple_config_entries(
     hass: HomeAssistant,
@@ -156,19 +180,34 @@ async def test_multiple_config_entries(
         "config_flow_responses",
     ),
     [
+        # Config entry is a pure duplicate with the same mac address unique id
+        (
+            MAC_ADDRESS,
+            CONFIG_ENTRY_DATA,
+            [
+                mock_response(SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
+        ),
+        # Old unique id with serial, but same host
         (
             SERIAL_NUMBER,
             CONFIG_ENTRY_DATA,
-            [mock_response(SERIAL_RESPONSE)],
+            [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
         ),
+        # Old unique id with no serial, but same host
         (
             None,
             {**CONFIG_ENTRY_DATA, "serial_number": 0},
-            [mock_response(ZERO_SERIAL_RESPONSE)],
+            [
+                mock_response(ZERO_SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
         ),
     ],
     ids=[
-        "duplicate-serial-number",
+        "duplicate-mac-unique-id",
+        "duplicate-host-legacy-serial-number",
         "duplicate-host-port-no-serial",
     ],
 )

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+import json
 from typing import Any
 from unittest.mock import patch
 
@@ -24,6 +25,7 @@ HOST = "example.com"
 URL = "http://example.com/stick"
 PASSWORD = "password"
 SERIAL_NUMBER = 0x12635436566
+MAC_ADDRESS = "4C:A1:61:00:11:22"
 
 #
 # Response payloads below come from pyrainbird test cases.
@@ -50,6 +52,20 @@ RAIN_DELAY = "B60010"  # 0x10 is 16
 RAIN_DELAY_OFF = "B60000"
 # ACK command 0x10, Echo 0x06
 ACK_ECHO = "0106"
+WIFI_PARAMS_RESPONSE = {
+    "macAddress": MAC_ADDRESS,
+    "localIpAddress": "1.1.1.38",
+    "localNetmask": "255.255.255.0",
+    "localGateway": "1.1.1.1",
+    "rssi": -61,
+    "wifiSsid": "wifi-ssid-name",
+    "wifiPassword": "wifi-password-name",
+    "wifiSecurity": "wpa2-aes",
+    "apTimeoutNoLan": 20,
+    "apTimeoutIdle": 20,
+    "apSecurity": "unknown",
+    "stickVersion": "Rain Bird Stick Rev C/1.63",
+}
 
 
 CONFIG = {
@@ -66,6 +82,7 @@ CONFIG_ENTRY_DATA = {
     "host": HOST,
     "password": PASSWORD,
     "serial_number": SERIAL_NUMBER,
+    "mac": MAC_ADDRESS,
 }
 
 
@@ -123,17 +140,24 @@ def setup_platforms(
         yield
 
 
-def rainbird_response(data: str) -> bytes:
+def rainbird_json_response(result: dict[str, str]) -> bytes:
     """Create a fake API response."""
     return encryption.encrypt(
-        '{"jsonrpc": "2.0", "result": {"data":"%s"}, "id": 1} ' % data,
+        '{"jsonrpc": "2.0", "result": %s, "id": 1} ' % json.dumps(result),
         PASSWORD,
+    )
+
+
+def mock_json_response(result: dict[str, str]) -> AiohttpClientMockResponse:
+    """Create a fake AiohttpClientMockResponse."""
+    return AiohttpClientMockResponse(
+        "POST", URL, response=rainbird_json_response(result)
     )
 
 
 def mock_response(data: str) -> AiohttpClientMockResponse:
     """Create a fake AiohttpClientMockResponse."""
-    return AiohttpClientMockResponse("POST", URL, response=rainbird_response(data))
+    return mock_json_response({"data": data})
 
 
 def mock_response_error(

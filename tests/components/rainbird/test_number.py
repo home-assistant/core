@@ -22,7 +22,7 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
 @pytest.fixture
@@ -169,9 +169,13 @@ async def test_set_value_error(
 )
 async def test_no_unique_id(
     hass: HomeAssistant,
+    responses: list[AiohttpClientMockResponse],
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test number platform with no unique id."""
+
+    # Failure to migrate config entry to a unique id
+    responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
 
     raindelay = hass.states.get("number.rain_bird_controller_rain_delay")
     assert raindelay is not None

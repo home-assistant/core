@@ -287,6 +287,9 @@ async def test_no_unique_id(
 ) -> None:
     """Test an irrigation switch with no unique id."""
 
+    # Failure to migrate config entry to a unique id
+    responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
+
     zone = hass.states.get("switch.rain_bird_sprinkler_3")
     assert zone is not None
     assert zone.attributes.get("friendly_name") == "Rain Bird Sprinkler 3"

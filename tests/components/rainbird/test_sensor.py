@@ -1,5 +1,6 @@
 """Tests for rainbird sensor platform."""
 
+from http import HTTPStatus
 
 import pytest
 
@@ -8,9 +9,14 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import CONFIG_ENTRY_DATA, RAIN_DELAY, RAIN_DELAY_OFF
-
+from .conftest import (
+    CONFIG_ENTRY_DATA,
+    RAIN_DELAY,
+    RAIN_DELAY_OFF,
+    mock_response_error,
+)
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
 @pytest.fixture
@@ -53,7 +59,7 @@ async def test_sensors(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_unique_id", "config_entry_data"),
+    ("config_entry_unique_id", "config_entry_data", "initial_response"),
     [
         # Config entry setup without a unique id since it had no serial number
         (
@@ -62,6 +68,7 @@ async def test_sensors(
                 **CONFIG_ENTRY_DATA,
                 "serial_number": 0,
             },
+            mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE),
         ),
         # Legacy case for old config entries with serial number 0 preserves old behavior
         (
@@ -70,15 +77,22 @@ async def test_sensors(
                 **CONFIG_ENTRY_DATA,
                 "serial_number": 0,
             },
+            None,
         ),
     ],
 )
 async def test_sensor_no_unique_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    responses: list[AiohttpClientMockResponse],
     config_entry_unique_id: str | None,
+    initial_response: AiohttpClientMockResponse,
 ) -> None:
     """Test sensor platform with no unique id."""
+
+    # Failure to migrate config entry to a unique id
+    if initial_response:
+        responses.insert(0, initial_response)
 
     raindelay = hass.states.get("sensor.rain_bird_controller_raindelay")
     assert raindelay is not None

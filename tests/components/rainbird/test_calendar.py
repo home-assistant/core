@@ -288,9 +288,13 @@ async def test_program_schedule_disabled(
 async def test_no_unique_id(
     hass: HomeAssistant,
     get_events: GetEventsFn,
+    responses: list[AiohttpClientMockResponse],
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test calendar entity with no unique id."""
+
+    # Failure to migrate config entry to a unique id
+    responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
 
     state = hass.states.get(TEST_ENTITY)
     assert state is not None
