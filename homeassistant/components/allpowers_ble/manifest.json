@@ -3,8 +3,13 @@
   "name": "Allpowers BLE",
   "bluetooth": [
     {
-      "local_name": "AP S*",
+      "local_name": "AP S*"
+    },
+    {
       "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "service_uuid": "0000fff1-0000-1000-8000-00805f9b34fb"
     }
   ],
   "codeowners": ["@9madninjaskillz"],

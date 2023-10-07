@@ -29,7 +29,14 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "allpowers_ble",
         "local_name": "AP S*",
+    },
+    {
+        "domain": "allpowers_ble",
         "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "allpowers_ble",
+        "service_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": False,
