@@ -349,6 +349,83 @@ class MqttFan(MqttEntity, FanEntity):
                 entity=self,
             ).async_render_with_possible_json_value
 
+    def state_received(self, msg: ReceiveMessage) -> None:
+        """Handle new received MQTT message."""
+        payload = self._value_templates[CONF_STATE](msg.payload)
+        if not payload:
+            _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
+            return
+        if payload == self._payload["STATE_ON"]:
+            self._attr_is_on = True
+        elif payload == self._payload["STATE_OFF"]:
+            self._attr_is_on = False
+        elif payload == PAYLOAD_NONE:
+            self._attr_is_on = None
+        get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+    def percentage_received(self, msg: ReceiveMessage) -> None:
+        """Handle new received MQTT message for the percentage."""
+        rendered_percentage_payload = self._value_templates[ATTR_PERCENTAGE](
+            msg.payload
+        )
+        if not rendered_percentage_payload:
+            _LOGGER.debug("Ignoring empty speed from '%s'", msg.topic)
+            return
+        if rendered_percentage_payload == self._payload["PERCENTAGE_RESET"]:
+            self._attr_percentage = None
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            return
+        try:
+            percentage = ranged_value_to_percentage(
+                self._speed_range, int(rendered_percentage_payload)
+            )
+        except ValueError:
+            _LOGGER.warning(
+                (
+                    "'%s' received on topic %s. '%s' is not a valid speed within"
+                    " the speed range"
+                ),
+                msg.payload,
+                msg.topic,
+                rendered_percentage_payload,
+            )
+            return
+        if percentage < 0 or percentage > 100:
+            _LOGGER.warning(
+                (
+                    "'%s' received on topic %s. '%s' is not a valid speed within"
+                    " the speed range"
+                ),
+                msg.payload,
+                msg.topic,
+                rendered_percentage_payload,
+            )
+            return
+        self._attr_percentage = percentage
+        get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+    def preset_mode_received(self, msg: ReceiveMessage) -> None:
+        """Handle new received MQTT message for preset mode."""
+        preset_mode = str(self._value_templates[ATTR_PRESET_MODE](msg.payload))
+        if preset_mode == self._payload["PRESET_MODE_RESET"]:
+            self._attr_preset_mode = None
+            self.async_write_ha_state()
+            return
+        if not preset_mode:
+            _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
+            return
+        if not self.preset_modes or preset_mode not in self.preset_modes:
+            _LOGGER.warning(
+                "'%s' received on topic %s. '%s' is not a valid preset mode",
+                msg.payload,
+                msg.topic,
+                preset_mode,
+            )
+            return
+
+        self._attr_preset_mode = preset_mode
+        get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         topics: dict[str, Any] = {}
@@ -366,92 +443,24 @@ class MqttFan(MqttEntity, FanEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def state_received(msg: ReceiveMessage) -> None:
-            """Handle new received MQTT message."""
-            payload = self._value_templates[CONF_STATE](msg.payload)
-            if not payload:
-                _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
-                return
-            if payload == self._payload["STATE_ON"]:
-                self._attr_is_on = True
-            elif payload == self._payload["STATE_OFF"]:
-                self._attr_is_on = False
-            elif payload == PAYLOAD_NONE:
-                self._attr_is_on = None
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+        def state_received_wrapper(msg: ReceiveMessage) -> None:
+            self.state_received(msg)
 
-        add_subscribe_topic(CONF_STATE_TOPIC, state_received)
+        add_subscribe_topic(CONF_STATE_TOPIC, state_received_wrapper)
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def percentage_received(msg: ReceiveMessage) -> None:
-            """Handle new received MQTT message for the percentage."""
-            rendered_percentage_payload = self._value_templates[ATTR_PERCENTAGE](
-                msg.payload
-            )
-            if not rendered_percentage_payload:
-                _LOGGER.debug("Ignoring empty speed from '%s'", msg.topic)
-                return
-            if rendered_percentage_payload == self._payload["PERCENTAGE_RESET"]:
-                self._attr_percentage = None
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-                return
-            try:
-                percentage = ranged_value_to_percentage(
-                    self._speed_range, int(rendered_percentage_payload)
-                )
-            except ValueError:
-                _LOGGER.warning(
-                    (
-                        "'%s' received on topic %s. '%s' is not a valid speed within"
-                        " the speed range"
-                    ),
-                    msg.payload,
-                    msg.topic,
-                    rendered_percentage_payload,
-                )
-                return
-            if percentage < 0 or percentage > 100:
-                _LOGGER.warning(
-                    (
-                        "'%s' received on topic %s. '%s' is not a valid speed within"
-                        " the speed range"
-                    ),
-                    msg.payload,
-                    msg.topic,
-                    rendered_percentage_payload,
-                )
-                return
-            self._attr_percentage = percentage
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+        def percentage_received_wrapper(msg: ReceiveMessage) -> None:
+            self.percentage_received(msg)
 
-        add_subscribe_topic(CONF_PERCENTAGE_STATE_TOPIC, percentage_received)
+        add_subscribe_topic(CONF_PERCENTAGE_STATE_TOPIC, percentage_received_wrapper)
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def preset_mode_received(msg: ReceiveMessage) -> None:
-            """Handle new received MQTT message for preset mode."""
-            preset_mode = str(self._value_templates[ATTR_PRESET_MODE](msg.payload))
-            if preset_mode == self._payload["PRESET_MODE_RESET"]:
-                self._attr_preset_mode = None
-                self.async_write_ha_state()
-                return
-            if not preset_mode:
-                _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
-                return
-            if not self.preset_modes or preset_mode not in self.preset_modes:
-                _LOGGER.warning(
-                    "'%s' received on topic %s. '%s' is not a valid preset mode",
-                    msg.payload,
-                    msg.topic,
-                    preset_mode,
-                )
-                return
+        def preset_mode_received_wrapper(msg: ReceiveMessage) -> None:
+            self.preset_mode_received(msg)
 
-            self._attr_preset_mode = preset_mode
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-
-        add_subscribe_topic(CONF_PRESET_MODE_STATE_TOPIC, preset_mode_received)
+        add_subscribe_topic(CONF_PRESET_MODE_STATE_TOPIC, preset_mode_received_wrapper)
 
         @callback
         @log_messages(self.hass, self.entity_id)

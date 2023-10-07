@@ -209,42 +209,208 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
     await hass.config_entries.async_reload(entry.entry_id)
 
 
+async def _setup_client(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> tuple[MqttData, dict[str, Any]]:
+    """Set up the MQTT client."""
+    # Fetch configuration
+    conf = dict(entry.data)
+    hass_config = await conf_util.async_hass_config_yaml(hass)
+    mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
+    await async_create_certificate_temp_files(hass, conf)
+    client = MQTT(hass, entry, conf)
+    if DOMAIN in hass.data:
+        mqtt_data = get_mqtt_data(hass)
+        mqtt_data.config = mqtt_yaml
+        mqtt_data.client = client
+    else:
+        # Initial setup
+        websocket_api.async_register_command(hass, websocket_subscribe)
+        websocket_api.async_register_command(hass, websocket_mqtt_info)
+        hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
+    client.start(mqtt_data)
+
+    # Restore saved subscriptions
+    if mqtt_data.subscriptions_to_restore:
+        mqtt_data.client.async_restore_tracked_subscriptions(
+            mqtt_data.subscriptions_to_restore
+        )
+        mqtt_data.subscriptions_to_restore = []
+    mqtt_data.reload_dispatchers.append(
+        entry.add_update_listener(_async_config_entry_updated)
+    )
+
+    await mqtt_data.client.async_connect()
+    return (mqtt_data, conf)
+
+
+async def async_publish_service(
+    call: ServiceCall, hass: HomeAssistant, mqtt_data: MqttData
+) -> None:
+    """Handle MQTT publish service calls."""
+    msg_topic: str | None = call.data.get(ATTR_TOPIC)
+    msg_topic_template: str | None = call.data.get(ATTR_TOPIC_TEMPLATE)
+    payload: PublishPayloadType = call.data.get(ATTR_PAYLOAD)
+    payload_template: str | None = call.data.get(ATTR_PAYLOAD_TEMPLATE)
+    qos: int = call.data[ATTR_QOS]
+    retain: bool = call.data[ATTR_RETAIN]
+    if msg_topic_template is not None:
+        try:
+            rendered_topic: Any = template.Template(
+                msg_topic_template, hass
+            ).async_render(parse_result=False)
+            msg_topic = valid_publish_topic(rendered_topic)
+        except (jinja2.TemplateError, TemplateError) as exc:
+            _LOGGER.error(
+                (
+                    "Unable to publish: rendering topic template of %s "
+                    "failed because %s"
+                ),
+                msg_topic_template,
+                exc,
+            )
+            return
+        except vol.Invalid as err:
+            _LOGGER.error(
+                (
+                    "Unable to publish: topic template '%s' produced an "
+                    "invalid topic '%s' after rendering (%s)"
+                ),
+                msg_topic_template,
+                rendered_topic,
+                err,
+            )
+            return
+
+    if payload_template is not None:
+        try:
+            payload = MqttCommandTemplate(
+                template.Template(payload_template), hass=hass
+            ).async_render()
+        except (jinja2.TemplateError, TemplateError) as exc:
+            _LOGGER.error(
+                (
+                    "Unable to publish to %s: rendering payload template of "
+                    "%s failed because %s"
+                ),
+                msg_topic,
+                payload_template,
+                exc,
+            )
+            return
+
+    assert msg_topic is not None
+    await mqtt_data.client.async_publish(msg_topic, payload, qos, retain)
+
+
+async def async_dump_service(call: ServiceCall, hass: HomeAssistant) -> None:
+    """Handle MQTT dump service calls."""
+    messages: list[tuple[str, str]] = []
+
+    @callback
+    def collect_msg(msg: ReceiveMessage) -> None:
+        messages.append((msg.topic, str(msg.payload).replace("\n", "")))
+
+    unsub = await async_subscribe(hass, call.data["topic"], collect_msg)
+
+    def write_dump() -> None:
+        with open(hass.config.path("mqtt_dump.txt"), "w", encoding="utf8") as fp:
+            for msg in messages:
+                fp.write(",".join(msg) + "\n")
+
+    async def finish_dump(_: datetime) -> None:
+        """Write dump to file."""
+        unsub()
+        await hass.async_add_executor_job(write_dump)
+
+    ev.async_call_later(hass, call.data["duration"], finish_dump)
+
+
+async def reload_config(
+    call: ServiceCall, hass: HomeAssistant, mqtt_data: MqttData
+) -> None:
+    """Reload the platforms."""
+    # Fetch updated manual configured items and validate
+    config_yaml = await async_integration_yaml_config(hass, DOMAIN) or {}
+    mqtt_data.config = config_yaml.get(DOMAIN, {})
+
+    # Reload the modern yaml platforms
+    mqtt_platforms = async_get_platforms(hass, DOMAIN)
+    tasks = [
+        entity.async_remove()
+        for mqtt_platform in mqtt_platforms
+        for entity in mqtt_platform.entities.values()
+        # pylint: disable-next=protected-access
+        if not entity._discovery_data  # type: ignore[attr-defined]
+        if mqtt_platform.config_entry and mqtt_platform.domain in RELOADABLE_PLATFORMS
+    ]
+    await asyncio.gather(*tasks)
+
+    await asyncio.gather(
+        *(
+            [
+                mqtt_data.reload_handlers[component]()
+                for component in RELOADABLE_PLATFORMS
+                if component in mqtt_data.reload_handlers
+            ]
+        )
+    )
+
+    # Fire event
+    hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
+
+
+# setup platforms and discovery
+
+
+async def async_setup_reload_service(hass: HomeAssistant, mqtt_data: MqttData) -> None:
+    """Create the reload service for the MQTT domain."""
+    if hass.services.has_service(DOMAIN, SERVICE_RELOAD):
+        return
+
+    async def reload_config_wrapper(call: ServiceCall) -> None:
+        await reload_config(call, hass, mqtt_data)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, reload_config_wrapper)
+
+
+async def async_forward_entry_setup_and_setup_discovery(
+    config_entry: ConfigEntry,
+    conf: ConfigType,
+    hass: HomeAssistant,
+    mqtt_data: MqttData,
+) -> None:
+    """Forward the config entry setup to the platforms and set up discovery."""
+    # Local import to avoid circular dependencies
+    # pylint: disable-next=import-outside-toplevel
+    from . import device_automation, tag
+
+    # Forward the entry setup to the MQTT platforms
+    await asyncio.gather(
+        *(
+            [
+                device_automation.async_setup_entry(hass, config_entry),
+                tag.async_setup_entry(hass, config_entry),
+            ]
+            + [
+                hass.config_entries.async_forward_entry_setup(config_entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    # Setup discovery
+    if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
+        await discovery.async_start(
+            hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), config_entry
+        )
+    # Setup reload service after all platforms have loaded
+    await async_setup_reload_service(hass, mqtt_data)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     conf: dict[str, Any]
     mqtt_data: MqttData
-
-    async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
-        """Set up the MQTT client."""
-        # Fetch configuration
-        conf = dict(entry.data)
-        hass_config = await conf_util.async_hass_config_yaml(hass)
-        mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
-        await async_create_certificate_temp_files(hass, conf)
-        client = MQTT(hass, entry, conf)
-        if DOMAIN in hass.data:
-            mqtt_data = get_mqtt_data(hass)
-            mqtt_data.config = mqtt_yaml
-            mqtt_data.client = client
-        else:
-            # Initial setup
-            websocket_api.async_register_command(hass, websocket_subscribe)
-            websocket_api.async_register_command(hass, websocket_mqtt_info)
-            hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
-        client.start(mqtt_data)
-
-        # Restore saved subscriptions
-        if mqtt_data.subscriptions_to_restore:
-            mqtt_data.client.async_restore_tracked_subscriptions(
-                mqtt_data.subscriptions_to_restore
-            )
-            mqtt_data.subscriptions_to_restore = []
-        mqtt_data.reload_dispatchers.append(
-            entry.add_update_listener(_async_config_entry_updated)
-        )
-
-        await mqtt_data.client.async_connect()
-        return (mqtt_data, conf)
 
     client_available: asyncio.Future[bool]
     if DATA_MQTT_AVAILABLE not in hass.data:
@@ -254,98 +420,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     setup_ok: bool = False
     try:
-        mqtt_data, conf = await _setup_client()
+        mqtt_data, conf = await _setup_client(hass, entry)
         setup_ok = True
     finally:
         if not client_available.done():
             client_available.set_result(setup_ok)
 
-    async def async_publish_service(call: ServiceCall) -> None:
-        """Handle MQTT publish service calls."""
-        msg_topic: str | None = call.data.get(ATTR_TOPIC)
-        msg_topic_template: str | None = call.data.get(ATTR_TOPIC_TEMPLATE)
-        payload: PublishPayloadType = call.data.get(ATTR_PAYLOAD)
-        payload_template: str | None = call.data.get(ATTR_PAYLOAD_TEMPLATE)
-        qos: int = call.data[ATTR_QOS]
-        retain: bool = call.data[ATTR_RETAIN]
-        if msg_topic_template is not None:
-            try:
-                rendered_topic: Any = template.Template(
-                    msg_topic_template, hass
-                ).async_render(parse_result=False)
-                msg_topic = valid_publish_topic(rendered_topic)
-            except (jinja2.TemplateError, TemplateError) as exc:
-                _LOGGER.error(
-                    (
-                        "Unable to publish: rendering topic template of %s "
-                        "failed because %s"
-                    ),
-                    msg_topic_template,
-                    exc,
-                )
-                return
-            except vol.Invalid as err:
-                _LOGGER.error(
-                    (
-                        "Unable to publish: topic template '%s' produced an "
-                        "invalid topic '%s' after rendering (%s)"
-                    ),
-                    msg_topic_template,
-                    rendered_topic,
-                    err,
-                )
-                return
-
-        if payload_template is not None:
-            try:
-                payload = MqttCommandTemplate(
-                    template.Template(payload_template), hass=hass
-                ).async_render()
-            except (jinja2.TemplateError, TemplateError) as exc:
-                _LOGGER.error(
-                    (
-                        "Unable to publish to %s: rendering payload template of "
-                        "%s failed because %s"
-                    ),
-                    msg_topic,
-                    payload_template,
-                    exc,
-                )
-                return
-
-        assert msg_topic is not None
-        await mqtt_data.client.async_publish(msg_topic, payload, qos, retain)
+    # Wrapper to work with async_register(ServiceCall)
+    async def async_publish_wrapper(call: ServiceCall) -> None:
+        await async_publish_service(call, hass, mqtt_data)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
+        DOMAIN, SERVICE_PUBLISH, async_publish_wrapper, schema=MQTT_PUBLISH_SCHEMA
     )
 
-    async def async_dump_service(call: ServiceCall) -> None:
-        """Handle MQTT dump service calls."""
-        messages: list[tuple[str, str]] = []
-
-        @callback
-        def collect_msg(msg: ReceiveMessage) -> None:
-            messages.append((msg.topic, str(msg.payload).replace("\n", "")))
-
-        unsub = await async_subscribe(hass, call.data["topic"], collect_msg)
-
-        def write_dump() -> None:
-            with open(hass.config.path("mqtt_dump.txt"), "w", encoding="utf8") as fp:
-                for msg in messages:
-                    fp.write(",".join(msg) + "\n")
-
-        async def finish_dump(_: datetime) -> None:
-            """Write dump to file."""
-            unsub()
-            await hass.async_add_executor_job(write_dump)
-
-        ev.async_call_later(hass, call.data["duration"], finish_dump)
+    async def async_dump_wrapper(call: ServiceCall) -> None:
+        await async_dump_service(call, hass)
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_DUMP,
-        async_dump_service,
+        async_dump_wrapper,
         schema=vol.Schema(
             {
                 vol.Required("topic"): valid_subscribe_topic,
@@ -354,78 +449,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
-    # setup platforms and discovery
-
-    async def async_setup_reload_service() -> None:
-        """Create the reload service for the MQTT domain."""
-        if hass.services.has_service(DOMAIN, SERVICE_RELOAD):
-            return
-
-        async def _reload_config(call: ServiceCall) -> None:
-            """Reload the platforms."""
-            # Fetch updated manual configured items and validate
-            config_yaml = await async_integration_yaml_config(hass, DOMAIN) or {}
-            mqtt_data.config = config_yaml.get(DOMAIN, {})
-
-            # Reload the modern yaml platforms
-            mqtt_platforms = async_get_platforms(hass, DOMAIN)
-            tasks = [
-                entity.async_remove()
-                for mqtt_platform in mqtt_platforms
-                for entity in mqtt_platform.entities.values()
-                # pylint: disable-next=protected-access
-                if not entity._discovery_data  # type: ignore[attr-defined]
-                if mqtt_platform.config_entry
-                and mqtt_platform.domain in RELOADABLE_PLATFORMS
-            ]
-            await asyncio.gather(*tasks)
-
-            await asyncio.gather(
-                *(
-                    [
-                        mqtt_data.reload_handlers[component]()
-                        for component in RELOADABLE_PLATFORMS
-                        if component in mqtt_data.reload_handlers
-                    ]
-                )
-            )
-
-            # Fire event
-            hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
-
-        async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
-
-    async def async_forward_entry_setup_and_setup_discovery(
-        config_entry: ConfigEntry,
-        conf: ConfigType,
-    ) -> None:
-        """Forward the config entry setup to the platforms and set up discovery."""
-        # Local import to avoid circular dependencies
-        # pylint: disable-next=import-outside-toplevel
-        from . import device_automation, tag
-
-        # Forward the entry setup to the MQTT platforms
-        await asyncio.gather(
-            *(
-                [
-                    device_automation.async_setup_entry(hass, config_entry),
-                    tag.async_setup_entry(hass, config_entry),
-                ]
-                + [
-                    hass.config_entries.async_forward_entry_setup(entry, component)
-                    for component in PLATFORMS
-                ]
-            )
-        )
-        # Setup discovery
-        if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
-            await discovery.async_start(
-                hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
-            )
-        # Setup reload service after all platforms have loaded
-        await async_setup_reload_service()
-
-    await async_forward_entry_setup_and_setup_discovery(entry, conf)
+    await async_forward_entry_setup_and_setup_discovery(entry, conf, hass, mqtt_data)
 
     return True
 

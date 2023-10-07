@@ -306,27 +306,99 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 "encoding": self._config[CONF_ENCODING] or None,
             }
 
+    def state_received(self, msg: ReceiveMessage) -> None:
+        """Handle new received MQTT message."""
+        payload = self._value_templates[CONF_STATE](msg.payload)
+        if not payload:
+            _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
+            return
+        if payload == self._payload["STATE_ON"]:
+            self._attr_is_on = True
+        elif payload == self._payload["STATE_OFF"]:
+            self._attr_is_on = False
+        elif payload == PAYLOAD_NONE:
+            self._attr_is_on = None
+        get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+    def current_humidity_received(self, msg: ReceiveMessage) -> None:
+        """Handle new received MQTT message for the current humidity."""
+        rendered_current_humidity_payload = self._value_templates[
+            ATTR_CURRENT_HUMIDITY
+        ](msg.payload)
+        if rendered_current_humidity_payload == self._payload["HUMIDITY_RESET"]:
+            self._attr_current_humidity = None
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            return
+        if not rendered_current_humidity_payload:
+            _LOGGER.debug("Ignoring empty current humidity from '%s'", msg.topic)
+            return
+        try:
+            current_humidity = round(float(rendered_current_humidity_payload))
+        except ValueError:
+            _LOGGER.warning(
+                "'%s' received on topic %s. '%s' is not a valid humidity",
+                msg.payload,
+                msg.topic,
+                rendered_current_humidity_payload,
+            )
+            return
+        if current_humidity < 0 or current_humidity > 100:
+            _LOGGER.warning(
+                "'%s' received on topic %s. '%s' is not a valid humidity",
+                msg.payload,
+                msg.topic,
+                rendered_current_humidity_payload,
+            )
+            return
+        self._attr_current_humidity = current_humidity
+        get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+    def target_humidity_received(self, msg: ReceiveMessage) -> None:
+        """Handle new received MQTT message for the target humidity."""
+        rendered_target_humidity_payload = self._value_templates[ATTR_HUMIDITY](
+            msg.payload
+        )
+        if not rendered_target_humidity_payload:
+            _LOGGER.debug("Ignoring empty target humidity from '%s'", msg.topic)
+            return
+        if rendered_target_humidity_payload == self._payload["HUMIDITY_RESET"]:
+            self._attr_target_humidity = None
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            return
+        try:
+            target_humidity = round(float(rendered_target_humidity_payload))
+        except ValueError:
+            _LOGGER.warning(
+                "'%s' received on topic %s. '%s' is not a valid target humidity",
+                msg.payload,
+                msg.topic,
+                rendered_target_humidity_payload,
+            )
+            return
+        if (
+            target_humidity < self._attr_min_humidity
+            or target_humidity > self._attr_max_humidity
+        ):
+            _LOGGER.warning(
+                "'%s' received on topic %s. '%s' is not a valid target humidity",
+                msg.payload,
+                msg.topic,
+                rendered_target_humidity_payload,
+            )
+            return
+        self._attr_target_humidity = target_humidity
+        get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         topics: dict[str, Any] = {}
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def state_received(msg: ReceiveMessage) -> None:
-            """Handle new received MQTT message."""
-            payload = self._value_templates[CONF_STATE](msg.payload)
-            if not payload:
-                _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
-                return
-            if payload == self._payload["STATE_ON"]:
-                self._attr_is_on = True
-            elif payload == self._payload["STATE_OFF"]:
-                self._attr_is_on = False
-            elif payload == PAYLOAD_NONE:
-                self._attr_is_on = None
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+        def state_received_wrapper(msg: ReceiveMessage) -> None:
+            self.state_received(msg)
 
-        self.add_subscription(topics, CONF_STATE_TOPIC, state_received)
+        self.add_subscription(topics, CONF_STATE_TOPIC, state_received_wrapper)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -352,83 +424,20 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def current_humidity_received(msg: ReceiveMessage) -> None:
-            """Handle new received MQTT message for the current humidity."""
-            rendered_current_humidity_payload = self._value_templates[
-                ATTR_CURRENT_HUMIDITY
-            ](msg.payload)
-            if rendered_current_humidity_payload == self._payload["HUMIDITY_RESET"]:
-                self._attr_current_humidity = None
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-                return
-            if not rendered_current_humidity_payload:
-                _LOGGER.debug("Ignoring empty current humidity from '%s'", msg.topic)
-                return
-            try:
-                current_humidity = round(float(rendered_current_humidity_payload))
-            except ValueError:
-                _LOGGER.warning(
-                    "'%s' received on topic %s. '%s' is not a valid humidity",
-                    msg.payload,
-                    msg.topic,
-                    rendered_current_humidity_payload,
-                )
-                return
-            if current_humidity < 0 or current_humidity > 100:
-                _LOGGER.warning(
-                    "'%s' received on topic %s. '%s' is not a valid humidity",
-                    msg.payload,
-                    msg.topic,
-                    rendered_current_humidity_payload,
-                )
-                return
-            self._attr_current_humidity = current_humidity
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+        def current_humidity_received_wrapper(msg: ReceiveMessage) -> None:
+            self.current_humidity_received(msg)
 
         self.add_subscription(
-            topics, CONF_CURRENT_HUMIDITY_TOPIC, current_humidity_received
+            topics, CONF_CURRENT_HUMIDITY_TOPIC, current_humidity_received_wrapper
         )
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def target_humidity_received(msg: ReceiveMessage) -> None:
-            """Handle new received MQTT message for the target humidity."""
-            rendered_target_humidity_payload = self._value_templates[ATTR_HUMIDITY](
-                msg.payload
-            )
-            if not rendered_target_humidity_payload:
-                _LOGGER.debug("Ignoring empty target humidity from '%s'", msg.topic)
-                return
-            if rendered_target_humidity_payload == self._payload["HUMIDITY_RESET"]:
-                self._attr_target_humidity = None
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-                return
-            try:
-                target_humidity = round(float(rendered_target_humidity_payload))
-            except ValueError:
-                _LOGGER.warning(
-                    "'%s' received on topic %s. '%s' is not a valid target humidity",
-                    msg.payload,
-                    msg.topic,
-                    rendered_target_humidity_payload,
-                )
-                return
-            if (
-                target_humidity < self._attr_min_humidity
-                or target_humidity > self._attr_max_humidity
-            ):
-                _LOGGER.warning(
-                    "'%s' received on topic %s. '%s' is not a valid target humidity",
-                    msg.payload,
-                    msg.topic,
-                    rendered_target_humidity_payload,
-                )
-                return
-            self._attr_target_humidity = target_humidity
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+        def target_humidity_received_wrapper(msg: ReceiveMessage) -> None:
+            self.target_humidity_received(msg)
 
         self.add_subscription(
-            topics, CONF_TARGET_HUMIDITY_STATE_TOPIC, target_humidity_received
+            topics, CONF_TARGET_HUMIDITY_STATE_TOPIC, target_humidity_received_wrapper
         )
 
         @callback
