@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.11.0"
 dependencies    = [
-    "aiohttp==3.8.5",
+    "aiohttp==3.8.6",
     "astral==2.2",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
