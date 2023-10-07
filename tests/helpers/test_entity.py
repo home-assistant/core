@@ -776,9 +776,10 @@ async def test_warn_slow_write_state_custom_component(
         mock_entity.async_write_ha_state()
 
     assert (
-        "Updating state for comp_test.test_entity "
-        "(<class 'custom_components.bla.sensor.test_warn_slow_write_state_custom_component.<locals>.CustomComponentEntity'>) "
-        "took 10.000 seconds. Please report it to the custom integration author"
+        "Updating state for comp_test.test_entity (<class 'custom_components.bla.sensor"
+        ".test_warn_slow_write_state_custom_component.<locals>.CustomComponentEntity'>)"
+        " took 10.000 seconds. Please report it to the author of the 'hue' custom "
+        "integration"
     ) in caplog.text
 
 
@@ -1550,7 +1551,7 @@ async def test_suggest_report_issue_custom_component(
     mock_integration(
         hass,
         MockModule(
-            domain="test", partial_manifest={"issue_tracker": "httpts://some_url"}
+            domain="test", partial_manifest={"issue_tracker": "https://some_url"}
         ),
         built_in=False,
     )
@@ -1558,4 +1559,4 @@ async def test_suggest_report_issue_custom_component(
     await platform.async_add_entities([mock_entity])
 
     suggestion = mock_entity._suggest_report_issue()
-    assert suggestion == "create a bug report at httpts://some_url"
+    assert suggestion == "create a bug report at https://some_url"

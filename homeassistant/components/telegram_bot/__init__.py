@@ -120,6 +120,7 @@ EVENT_TELEGRAM_SENT = "telegram_sent"
 
 PARSER_HTML = "html"
 PARSER_MD = "markdown"
+PARSER_MD2 = "markdownv2"
 
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
@@ -474,7 +475,11 @@ class TelegramNotificationService:
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
         self._last_message_id = {user: None for user in self.allowed_chat_ids}
-        self._parsers = {PARSER_HTML: ParseMode.HTML, PARSER_MD: ParseMode.MARKDOWN}
+        self._parsers = {
+            PARSER_HTML: ParseMode.HTML,
+            PARSER_MD: ParseMode.MARKDOWN,
+            PARSER_MD2: ParseMode.MARKDOWN_V2,
+        }
         self._parse_mode = self._parsers.get(parser)
         self.bot = bot
         self.hass = hass
