@@ -13,24 +13,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CHARGER_CURRENCY_KEY,
-    CHARGER_CURRENT_VERSION_KEY,
     CHARGER_DATA_KEY,
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
-    CHARGER_NAME_KEY,
-    CHARGER_PART_NUMBER_KEY,
-    CHARGER_SERIAL_NUMBER_KEY,
-    CHARGER_SOFTWARE_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
     CHARGER_STATUS_ID_KEY,
     CODE_KEY,
@@ -241,27 +231,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-
-class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):
-    """Defines a base Wallbox entity."""
-
-    _attr_has_entity_name = True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Wallbox device."""
-        return DeviceInfo(
-            identifiers={
-                (
-                    DOMAIN,
-                    self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY],
-                )
-            },
-            name=f"Wallbox {self.coordinator.data[CHARGER_NAME_KEY]}",
-            manufacturer="Wallbox",
-            model=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY],
-            sw_version=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SOFTWARE_KEY][
-                CHARGER_CURRENT_VERSION_KEY
-            ],
-        )
