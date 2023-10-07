@@ -2189,7 +2189,7 @@ python-tado==0.15.0
 python-telegram-bot==13.1
 
 # homeassistant.components.vlc
-python-vlc==1.1.2
+python-vlc==3.0.18122
 
 # homeassistant.components.egardia
 pythonegardia==1.0.52
