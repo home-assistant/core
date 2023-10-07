@@ -29,7 +29,7 @@ class RensonData:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Renson from a config entry."""
 
-    healthBoxApi = None
+    healthbox_api = None
 
     api_key = None
 
