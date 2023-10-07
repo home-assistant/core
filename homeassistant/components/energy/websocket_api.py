@@ -277,7 +277,7 @@ async def ws_get_fossil_energy_consumption(
         {"mean", "change"},
     )
 
-    def _combine_sum_statistics(
+    def _combine_change_statistics(
         stats: dict[str, list[StatisticsRow]], statistic_ids: list[str]
     ) -> dict[float, float]:
         """Combine multiple statistics, returns a dict indexed by start time."""
@@ -325,7 +325,7 @@ async def ws_get_fossil_energy_consumption(
 
         return result
 
-    merged_energy_statistics = _combine_sum_statistics(
+    merged_energy_statistics = _combine_change_statistics(
         statistics, msg["energy_statistic_ids"]
     )
     indexed_co2_statistics = cast(
