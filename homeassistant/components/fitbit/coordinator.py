@@ -29,7 +29,6 @@ class FitbitDeviceCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, FitbitDevice]:
         """Fetch data from API endpoint."""
-        _LOGGER.debug("_async_update_data")
         async with asyncio.timeout(TIMEOUT):
             try:
                 devices = await self._api.async_get_devices()

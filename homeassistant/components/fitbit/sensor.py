@@ -752,12 +752,10 @@ class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
-        _LOGGER.debug("self.state=%s, %s", self.device, self._attr_native_value)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        _LOGGER.debug("_handle_coordinator_update!")
         self.device = self.coordinator.data[self.device.id]
         self._attr_native_value = self.device.battery
         self.async_write_ha_state()
