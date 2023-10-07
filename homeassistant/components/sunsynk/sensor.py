@@ -146,6 +146,7 @@ class SunsynkSensor(CoordinatorEntity[SunsynkCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self.inverter_sn = inverter_sn
+        self._attr_unique_id = f"{self.inverter_sn}_{self.entity_description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -155,11 +156,6 @@ class SunsynkSensor(CoordinatorEntity[SunsynkCoordinator], SensorEntity):
             name=f"Inverter {self.inverter_sn}",
             manufacturer="Sunsynk",
         )
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique ID."""
-        return f"{self.inverter_sn}_{self.entity_description.key}"
 
     @property
     def native_value(self) -> str | int | float | None:
