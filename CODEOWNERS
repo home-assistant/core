@@ -865,6 +865,8 @@ build.json @home-assistant/supervisor
 /tests/components/moehlenhoff_alpha2/ @j-a-n
 /homeassistant/components/monoprice/ @etsinko @OnFreund
 /tests/components/monoprice/ @etsinko @OnFreund
+/homeassistant/components/monzo/ @jakemartin-icl
+/tests/components/monzo/ @jakemartin-icl
 /homeassistant/components/moon/ @fabaff @frenck
 /tests/components/moon/ @fabaff @frenck
 /homeassistant/components/mopeka/ @bdraco

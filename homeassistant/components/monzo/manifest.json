@@ -1,0 +1,14 @@
+{
+  "domain": "monzo",
+  "name": "Monzo",
+  "after_dependencies": ["cloud"],
+  "codeowners": ["@jakemartin-icl"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/monzo",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
