@@ -22,10 +22,13 @@ from .const import DOMAIN
 from .entity import AnovaDescriptionEntity
 from .models import AnovaData
 
+# Define a constant for the icon
+ICON_THERMOMETER = "mdi:thermometer"
+
 
 @dataclass
 class AnovaSensorEntityDescriptionMixin:
-    """Describes the mixin variables for anova sensors."""
+    """Describes the mixin variables for Anova sensors."""
 
     value_fn: Callable[[APCUpdateSensor], float | int | str]
 
@@ -37,6 +40,7 @@ class AnovaSensorEntityDescription(
     """Describes a Anova sensor."""
 
 
+# List of sensor descriptions using constants
 SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
     AnovaSensorEntityDescription(
         key="cook_time",
@@ -58,7 +62,7 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:thermometer",
+        icon=ICON_THERMOMETER,
         translation_key="target_temperature",
         value_fn=lambda data: data.target_temperature,
     ),
@@ -75,7 +79,7 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:thermometer",
+        icon=ICON_THERMOMETER,
         translation_key="heater_temperature",
         value_fn=lambda data: data.heater_temperature,
     ),
@@ -84,7 +88,7 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:thermometer",
+        icon=ICON_THERMOMETER,
         translation_key="triac_temperature",
         value_fn=lambda data: data.triac_temperature,
     ),
@@ -93,11 +97,13 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:thermometer",
+        icon=ICON_THERMOMETER,
         translation_key="water_temperature",
         value_fn=lambda data: data.water_temperature,
     ),
 ]
+
+# ... (other code)
 
 
 async def async_setup_entry(
