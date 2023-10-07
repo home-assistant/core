@@ -568,8 +568,7 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
 class CountrySelectorConfig(TypedDict, total=False):
     """Class to represent a country selector config."""
 
-    countries: Required[Sequence[str]]
-    multiple: bool
+    countries: list[str]
 
 
 @SELECTORS.register("country")
@@ -580,8 +579,7 @@ class CountrySelector(Selector[CountrySelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Required("countries"): vol.All(vol.Any([str], COUNTRIES)),
-            vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("countries"): [str],
         }
     )
 
@@ -591,16 +589,12 @@ class CountrySelector(Selector[CountrySelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        options: Sequence[str] = []
-        if config_options := self.config["countries"]:
-            options = config_options
-
-        parent_schema = vol.In(options)
-        if not self.config["multiple"]:
-            return parent_schema(vol.Schema(str)(data))
-        if not isinstance(data, list):
-            raise vol.Invalid("Value should be a list")
-        return [parent_schema(vol.Schema(str)(val)) for val in data]
+        country: str = vol.Schema(str)(data)
+        if "countries" in self.config and (
+            country not in self.config["countries"] or country not in COUNTRIES
+        ):
+            raise vol.Invalid(f"Value {country} is not a valid option")
+        return country
 
 
 class DateSelectorConfig(TypedDict):

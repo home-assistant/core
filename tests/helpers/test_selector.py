@@ -483,14 +483,14 @@ def test_config_entry_selector_schema(
     ("schema", "valid_selections", "invalid_selections"),
     (
         (
-            {"countries": ["DE", "SE"]},
-            ("DE", "SE"),
-            ("cat", 0, None, ["red"]),
+            {},
+            ("NL", "DE"),
+            (None, True, 1),
         ),
         (
-            {"countries": ["DE", "SE"], "multiple": True},
-            (["DE"], ["DE", "SE"], []),
-            ("cat", 0, None, "red"),
+            {"countries": ["NL", "DE"]},
+            ("NL", "DE"),
+            (None, True, 1, "sv", "en"),
         ),
     ),
 )
