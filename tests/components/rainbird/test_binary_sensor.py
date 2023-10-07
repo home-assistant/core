@@ -99,7 +99,7 @@ async def test_no_unique_id(
 ) -> None:
     """Test rainsensor binary sensor with no unique id."""
 
-    # Failure to migrate config entry o a unique id
+    # Failure to migrate config entry to a unique id
     responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
 
     rainsensor = hass.states.get("binary_sensor.rain_bird_controller_rainsensor")
