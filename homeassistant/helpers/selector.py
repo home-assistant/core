@@ -569,6 +569,7 @@ class CountrySelectorConfig(TypedDict, total=False):
     """Class to represent a country selector config."""
 
     countries: list[str]
+    no_sort: bool
 
 
 @SELECTORS.register("country")
@@ -580,6 +581,7 @@ class CountrySelector(Selector[CountrySelectorConfig]):
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Optional("countries"): [str],
+            vol.Optional("no_sort", default=False): cv.boolean,
         }
     )
 
