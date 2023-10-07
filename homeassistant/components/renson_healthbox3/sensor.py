@@ -273,7 +273,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Renson sensor platform."""
 
-    data: RensonData = hass.data[DOMAIN][config_entry.entry_id]
+    data: RensonCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = [
         HealthboxGlobalSensor(data.coordinator, description)
