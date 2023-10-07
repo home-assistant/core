@@ -119,6 +119,9 @@ class TwitchUpdateCoordinator(DataUpdateCoordinator[dict[str, TwitchChannelData]
         channels: list[TwitchUser] = []
 
         channel_options = self._options[CONF_CHANNELS]
+
+        # Dont get data for disabled entities
+
         # Split channels into chunks of 100 to avoid hitting the rate limit
         for chunk in chunk_list(channel_options, 100):
             channels.extend(
