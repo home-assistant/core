@@ -25,13 +25,17 @@ from aiounifi.models.wlan import Wlan
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
-    SensorStateClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
     UnitOfTemperature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfPower, UnitOfDataRate
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
