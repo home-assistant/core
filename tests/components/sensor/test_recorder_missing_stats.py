@@ -1,6 +1,7 @@
 """The tests for sensor recorder platform can catch up."""
 from datetime import datetime, timedelta
 from pathlib import Path
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -24,6 +25,15 @@ POWER_SENSOR_ATTRIBUTES = {
     "state_class": "measurement",
     "unit_of_measurement": "kWh",
 }
+
+
+@pytest.fixture(autouse=True)
+def disable_db_issue_creation():
+    """Disable the creation of the database issue."""
+    with patch(
+        "homeassistant.components.recorder.util._async_create_mariadb_range_index_regression_issue"
+    ):
+        yield
 
 
 @pytest.mark.timeout(25)
