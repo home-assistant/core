@@ -85,7 +85,7 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
     ),
     "queue": RadarrSensorEntityDescription[int](
         key="queue",
-        name="Queue",
+        translation_key="queue",
         native_unit_of_measurement="Movies",
         icon="mdi:download",
         entity_registry_enabled_default=False,
