@@ -15,16 +15,13 @@ from elmax_api.exceptions import (
     ElmaxPanelBusyError,
 )
 from elmax_api.http import GenericElmax
-from elmax_api.model.actuator import Actuator
-from elmax_api.model.area import Area
-from elmax_api.model.cover import Cover
 from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
 from httpx import ConnectError, ConnectTimeout
 from packaging import version
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -108,30 +105,6 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
     def panel_entry(self) -> PanelEntry:
         """Return the panel entry."""
         return self._panel_entry
-
-    def get_actuator_state(self, actuator_id: str) -> Actuator:
-        """Return state of a specific actuator."""
-        if self._state_by_endpoint is not None:
-            return self._state_by_endpoint[actuator_id]
-        raise HomeAssistantError("Unknown actuator")
-
-    def get_zone_state(self, zone_id: str) -> Actuator:
-        """Return state of a specific zone."""
-        if self._state_by_endpoint is not None:
-            return self._state_by_endpoint[zone_id]
-        raise HomeAssistantError("Unknown zone")
-
-    def get_area_state(self, area_id: str) -> Area:
-        """Return state of a specific area."""
-        if self._state_by_endpoint is not None and area_id:
-            return self._state_by_endpoint[area_id]
-        raise HomeAssistantError("Unknown area")
-
-    def get_cover_state(self, cover_id: str) -> Cover:
-        """Return state of a specific cover."""
-        if self._state_by_endpoint is not None:
-            return self._state_by_endpoint[cover_id]
-        raise HomeAssistantError("Unknown cover")
 
     @property
     def http_client(self):
