@@ -71,8 +71,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up trello sensors for config entries."""
     config_boards = config_entry.options[CONF_BOARD_IDS]
-    if not config_boards:
-        return
     config_data = config_entry.data
     trello_client = TrelloClient(
         api_key=config_data[CONF_API_KEY],

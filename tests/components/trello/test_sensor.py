@@ -1,9 +1,8 @@
 """Test the trello config flow."""
 from datetime import timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.components.trello.sensor import async_setup_entry
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -68,19 +67,3 @@ async def test_sensor_setup_entry(
     assert ideas_planned.state == "unavailable"
     assert goals_to_do.state == "1"
     assert goals_done.state == "1"
-
-
-async def test_empty_sensor_setup_entry(hass: HomeAssistant) -> None:
-    """Test integration sets up even with no sensors."""
-    mock_config_entry = Mock(
-        options={"board_ids": []}, data={"api_key": "", "api_token": ""}
-    )
-    mock_add_entities = Mock()
-
-    with patch("homeassistant.components.trello.sensor.TrelloClient"), patch(
-        "homeassistant.components.trello.sensor.TrelloDataUpdateCoordinator",
-        autospec=True,
-    ):
-        await async_setup_entry(hass, mock_config_entry, mock_add_entities)
-
-        mock_add_entities.assert_not_called()
