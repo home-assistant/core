@@ -39,7 +39,11 @@ def set_caplog_debug(
 ):
     """Disable all loggers except the DUT set to all messages."""
     caplog.set_level(level=logging.CRITICAL + 1)
+    caplog.set_level(level=logging.DEBUG, logger="homeassistant.components.lorawan")
     caplog.set_level(
         level=logging.DEBUG, logger="homeassistant.components.lorawan.config_flow"
+    )
+    caplog.set_level(
+        level=logging.DEBUG, logger="homeassistant.components.lorawan.sensor"
     )
     return caplog
