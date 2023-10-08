@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import re
 from typing import Any
 
@@ -12,7 +13,23 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
-from .entity import NinaWarningData
+
+
+@dataclass
+class NinaWarningData:
+    """Class to hold the warning data."""
+
+    id: str
+    headline: str
+    description: str
+    sender: str
+    severity: str
+    recommended_actions: str
+    affected_areas: str
+    sent: str
+    start: str
+    expires: str
+    is_valid: bool
 
 
 class NINADataUpdateCoordinator(
