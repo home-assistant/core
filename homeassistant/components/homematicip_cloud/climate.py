@@ -162,8 +162,9 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
                 return PRESET_ECO
 
         return (
-            self._device.activeProfile.name
-            if self._device.activeProfile.name in self._device_profile_names
+            self._get_qualified_profile_name(self._device.activeProfile)
+            if self._get_qualified_profile_name(self._device.activeProfile)
+            in self._device_profile_names
             else None
         )
 
@@ -259,15 +260,19 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         return [
             profile
             for profile in self._device.profiles
-            if profile.visible
-            and profile.name != ""
-            and profile.index in self._relevant_profile_group
+            if profile.visible and profile.index in self._relevant_profile_group
         ]
 
     @property
     def _device_profile_names(self) -> list[str]:
         """Return a collection of profile names."""
-        return [profile.name for profile in self._device_profiles]
+        return [
+            self._get_qualified_profile_name(profile)
+            for profile in self._device_profiles
+        ]
+
+    def _get_qualified_profile_name(self, profile) -> str:
+        return profile.name if profile.name != "" else profile.index
 
     def _get_profile_idx_by_name(self, profile_name: str) -> int:
         """Return a profile index by name."""
@@ -275,7 +280,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         index_name = [
             profile.index
             for profile in self._device_profiles
-            if profile.name == profile_name
+            if self._get_qualified_profile_name(profile) == profile_name
         ]
 
         return relevant_index[index_name[0]]
