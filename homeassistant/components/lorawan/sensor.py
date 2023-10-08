@@ -128,7 +128,7 @@ class LorawanSensorEntity(CoordinatorEntity, SensorEntity):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         coordinator: LorawanSensorCoordinator,
-        sensor: SensorTypes.SensorType,
+        sensor: type[SensorTypes.SensorType],
     ) -> None:
         """Initialize the sensor."""
         self._attr_unique_id = f"{config_entry.unique_id}_{sensor.NAME}"
