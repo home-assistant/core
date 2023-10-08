@@ -1,8 +1,6 @@
 """The Renson integration."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from pyhealthbox3.healthbox3 import Healthbox3
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,12 +16,8 @@ PLATFORMS = [
 ]
 
 
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Renson from a config entry."""
-
-    healthbox_api = None
 
     api_key = None
 
