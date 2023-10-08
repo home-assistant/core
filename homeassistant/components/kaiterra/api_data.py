@@ -48,57 +48,74 @@ class KaiterraApiData:
         self._update_listeners = []
         self.data = {}
 
-    async def async_update(self) -> None:
-        """Get the data from Kaiterra API."""
+   async def async_update(self) -> None:
+    try:
+        data = await self._fetch_sensor_data()
+    except (ClientResponseError, ClientConnectorError, asyncio.TimeoutError) as err:
+        self._handle_error(err)
+        return
 
-        try:
-            async with asyncio.timeout(10):
-                data = await self._api.get_latest_sensor_readings(self._devices)
-        except (ClientResponseError, ClientConnectorError, asyncio.TimeoutError) as err:
-            _LOGGER.debug("Couldn't fetch data from Kaiterra API: %s", err)
-            self.data = {}
-            async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
-            return
+    _LOGGER.debug("New data retrieved: %s", data)
 
-        _LOGGER.debug("New data retrieved: %s", data)
+    try:
+        self._process_sensor_data(data)
+    except (IndexError, TypeError) as err:
+        self._handle_error(err)
 
-        try:
-            self.data = {}
-            for i, device in enumerate(data):
-                if not device:
-                    self.data[self._devices_ids[i]] = {}
-                    continue
+    async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
 
-                aqi, main_pollutant = None, None
-                for sensor_name, sensor in device.items():
-                    if not (points := sensor.get("points")):
-                        continue
+async def _fetch_sensor_data(self):
+    async with asyncio.timeout(10):
+        return await self._api.get_latest_sensor_readings(self._devices)
 
-                    point = points[0]
-                    sensor["value"] = point.get("value")
+def _handle_error(self, error):
+    _LOGGER.debug("Couldn't fetch data from Kaiterra API: %s", error)
+    self.data = {}
+    async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
 
-                    if "aqi" not in point:
-                        continue
+def _process_sensor_data(self, data):
+    self.data = {}
+    for i, device in enumerate(data):
+        if not device:
+            self.data[self._devices_ids[i]] = {}
+            continue
 
-                    sensor["aqi"] = point["aqi"]
-                    if not aqi or aqi < point["aqi"]:
-                        aqi = point["aqi"]
-                        main_pollutant = POLLUTANTS.get(sensor_name)
+        aqi, main_pollutant = self._calculate_aqi_and_pollutant(device)
 
-                level = None
-                for j in range(1, len(self._scale)):
-                    if aqi <= self._scale[j]:
-                        level = self._level[j - 1]
-                        break
+        level = self._calculate_aqi_level(aqi)
 
-                device["aqi"] = {"value": aqi}
-                device["aqi_level"] = {"value": level}
-                device["aqi_pollutant"] = {"value": main_pollutant}
+        self._update_device_data(device, aqi, main_pollutant, level)
 
-                self.data[self._devices_ids[i]] = device
-        except IndexError as err:
-            _LOGGER.error("Parsing error %s", err)
-        except TypeError as err:
-            _LOGGER.error("Type error %s", err)
+def _calculate_aqi_and_pollutant(self, device):
+    aqi, main_pollutant = None, None
+    for sensor_name, sensor in device.items():
+        if not (points := sensor.get("points")):
+            continue
 
-        async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
+        point = points[0]
+        sensor["value"] = point.get("value")
+
+        if "aqi" not in point:
+            continue
+
+        sensor["aqi"] = point["aqi"]
+        if not aqi or aqi < point["aqi"]:
+            aqi = point["aqi"]
+            main_pollutant = POLLUTANTS.get(sensor_name)
+
+    return aqi, main_pollutant
+
+def _calculate_aqi_level(self, aqi):
+    level = None
+    for j in range(1, len(self._scale)):
+        if aqi <= self._scale[j]:
+            level = self._level[j - 1]
+            break
+    return level
+
+def _update_device_data(self, device, aqi, main_pollutant, level):
+    device["aqi"] = {"value": aqi}
+    device["aqi_level"] = {"value": level}
+    device["aqi_pollutant"] = {"value": main_pollutant}
+    self.data[self._devices_ids[i]] = device
+

@@ -105,100 +105,118 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_link(self, user_input=None):
-        """Prompt user input. Create or edit entry."""
-        regions = sorted(COUNTRIES.keys())
-        default_region = None
-        errors = {}
+    """Prompt user input. Create or edit entry."""
+    if user_input is None:
+        return await self._initialize_link_step()
+    
+    return await self._handle_user_input(user_input)
 
-        if user_input is None:
-            # Search for device.
-            # If LOCAL_UDP_PORT cannot be used, a random port will be selected.
-            devices = await self.hass.async_add_executor_job(
-                self.helper.has_devices, self.m_device, LOCAL_UDP_PORT
-            )
+async def _initialize_link_step(self):
+    regions = sorted(COUNTRIES.keys())
+    default_region = None
+    errors = {}
 
-            # Abort if can't find device.
-            if not devices:
-                return self.async_abort(reason="no_devices_found")
+    # Search for device.
+    devices = await self.hass.async_add_executor_job(
+        self._find_devices, self.m_device
+    )
 
-            self.device_list = [device["host-ip"] for device in devices]
+    if not devices:
+        return self.async_abort(reason="no_devices_found")
 
-            # Check that devices found aren't configured per account.
-            entries = self._async_current_entries()
-            if entries:
-                # Retrieve device data from all entries if creds match.
-                conf_devices = [
-                    device
-                    for entry in entries
-                    if self.creds == entry.data[CONF_TOKEN]
-                    for device in entry.data["devices"]
-                ]
+    self.device_list = [device["host-ip"] for device in devices]
 
-                # Remove configured device from search list.
-                for c_device in conf_devices:
-                    if c_device["host"] in self.device_list:
-                        # Remove configured device from search list.
-                        self.device_list.remove(c_device["host"])
+    if self._check_devices_configured():
+        return self.async_abort(reason="already_configured")
 
-                # If list is empty then all devices are configured.
-                if not self.device_list:
-                    return self.async_abort(reason="already_configured")
+    if user_input is not None:
+        self.region = user_input[CONF_REGION]
+        self.name = user_input[CONF_NAME]
+        self.pin = str(user_input[CONF_CODE]).zfill(PIN_LENGTH)
+        self.host = user_input[CONF_IP_ADDRESS]
 
-        # Login to PS4 with user data.
-        if user_input is not None:
-            self.region = user_input[CONF_REGION]
-            self.name = user_input[CONF_NAME]
-            # Assume pin had leading zeros, before coercing to int.
-            self.pin = str(user_input[CONF_CODE]).zfill(PIN_LENGTH)
-            self.host = user_input[CONF_IP_ADDRESS]
+        if await self._login_to_ps4():
+            return await self._create_entry()
 
-            is_ready, is_login = await self.hass.async_add_executor_job(
-                self.helper.link,
-                self.host,
-                self.creds,
-                self.pin,
-                DEFAULT_ALIAS,
-                LOCAL_UDP_PORT,
-            )
+    # Try to find region automatically.
+    self._detect_default_region()
 
-            if is_ready is False:
-                errors["base"] = "cannot_connect"
-            elif is_login is False:
-                errors["base"] = "login_failed"
-            else:
-                device = {
-                    CONF_HOST: self.host,
-                    CONF_NAME: self.name,
-                    CONF_REGION: self.region,
-                }
+    return await self._show_user_input_form(default_region, regions, errors)
 
-                # Create entry.
-                return self.async_create_entry(
-                    title="PlayStation 4",
-                    data={CONF_TOKEN: self.creds, "devices": [device]},
-                )
+def _find_devices(self, m_device):
+    return self.helper.has_devices(m_device, LOCAL_UDP_PORT)
 
-        # Try to find region automatically.
-        if not self.location:
-            self.location = await location.async_detect_location_info(
-                async_get_clientsession(self.hass)
-            )
-        if self.location:
-            country = COUNTRYCODE_NAMES.get(self.location.country_code)
-            if country in COUNTRIES:
-                default_region = country
+def _check_devices_configured(self):
+    entries = self._async_current_entries()
+    if entries:
+        conf_devices = [
+            device
+            for entry in entries
+            if self.creds == entry.data[CONF_TOKEN]
+            for device in entry.data["devices"]
+        ]
 
-        # Show User Input form.
-        link_schema = OrderedDict()
-        link_schema[vol.Required(CONF_IP_ADDRESS)] = vol.In(list(self.device_list))
-        link_schema[vol.Required(CONF_REGION, default=default_region)] = vol.In(
-            list(regions)
+        for c_device in conf_devices:
+            if c_device["host"] in self.device_list:
+                self.device_list.remove(c_device["host"])
+
+        if not self.device_list:
+            return True
+
+    return False
+
+async def _login_to_ps4(self):
+    is_ready, is_login = await self.hass.async_add_executor_job(
+        self.helper.link,
+        self.host,
+        self.creds,
+        self.pin,
+        DEFAULT_ALIAS,
+        LOCAL_UDP_PORT,
+    )
+
+    if is_ready is False:
+        self.errors["base"] = "cannot_connect"
+    elif is_login is False:
+        self.errors["base"] = "login_failed"
+    else:
+        return True
+
+    return False
+
+async def _create_entry(self):
+    device = {
+        CONF_HOST: self.host,
+        CONF_NAME: self.name,
+        CONF_REGION: self.region,
+    }
+
+    return self.async_create_entry(
+        title="PlayStation 4",
+        data={CONF_TOKEN: self.creds, "devices": [device]},
+    )
+
+def _detect_default_region(self):
+    if not self.location:
+        self.location = await location.async_detect_location_info(
+            async_get_clientsession(self.hass)
         )
-        link_schema[vol.Required(CONF_CODE)] = vol.All(
-            vol.Strip, vol.Length(max=PIN_LENGTH), vol.Coerce(int)
-        )
-        link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
+    if self.location:
+        country = COUNTRYCODE_NAMES.get(self.location.country_code)
+        if country in COUNTRIES:
+            self.default_region = country
 
-        return self.async_show_form(
-            step_id="link", data_schema=vol.Schema(link_schema), errors=errors
-        )
+def _show_user_input_form(self, default_region, regions, errors):
+    link_schema = OrderedDict()
+    link_schema[vol.Required(CONF_IP_ADDRESS)] = vol.In(list(self.device_list))
+    link_schema[vol.Required(CONF_REGION, default=default_region)] = vol.In(
+        list(regions)
+    )
+    link_schema[vol.Required(CONF_CODE)] = vol.All(
+        vol.Strip, vol.Length(max=PIN_LENGTH), vol.Coerce(int)
+    )
+    link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
+
+    return self.async_show_form(
+        step_id="link", data_schema=vol.Schema(link_schema), errors=errors
+    )

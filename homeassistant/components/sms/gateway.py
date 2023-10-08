@@ -45,40 +45,53 @@ class Gateway:
         self._first_pull = False
 
     def sms_read_messages(self, state_machine, force=False):
-        """Read all received SMS messages.
+    """Read all received SMS messages.
 
-        @param state_machine: state machine which invoked action
-        @type state_machine: gammu.StateMachine
-        """
-        entries = self.get_and_delete_all_sms(state_machine, force)
-        _LOGGER.debug("SMS entries:%s", entries)
-        data = []
+    @param state_machine: state machine which invoked action
+    @type state_machine: gammu.StateMachine
+    """
+    entries = self.get_and_delete_all_sms(state_machine, force)
+    self.process_sms_entries(entries)
 
-        for entry in entries:
-            decoded_entry = gammu.DecodeSMS(entry)
-            message = entry[0]
-            _LOGGER.debug("Processing sms:%s,decoded:%s", message, decoded_entry)
-            sms_state = message["State"]
-            _LOGGER.debug("SMS state:%s", sms_state)
-            if sms_state == SMS_STATE_UNREAD:
-                if decoded_entry is None:
-                    text = message["Text"]
-                else:
-                    text = ""
-                    for inner_entry in decoded_entry["Entries"]:
-                        if inner_entry["Buffer"] is not None:
-                            text += inner_entry["Buffer"]
+def process_sms_entries(self, entries):
+    """Process and handle the SMS entries."""
+    data = []
 
-                event_data = {
-                    "phone": message["Number"],
-                    "date": str(message["DateTime"]),
-                    "message": text,
-                }
+    for entry in entries:
+        decoded_entry = gammu.DecodeSMS(entry)
+        message = entry[0]
 
-                _LOGGER.debug("Append event data:%s", event_data)
-                data.append(event_data)
+        sms_state = message["State"]
+        if sms_state == SMS_STATE_UNREAD:
+            text = self.get_sms_text(decoded_entry, message)
+            event_data = self.create_event_data(message, text)
+            data.append(event_data)
 
-        self._hass.add_job(self._notify_incoming_sms, data)
+    self.notify_incoming_sms(data)
+
+def get_sms_text(self, decoded_entry, message):
+    """Get the SMS text from the decoded entry or the message itself."""
+    if decoded_entry is None:
+        return message["Text"]
+
+    text = ""
+    for inner_entry in decoded_entry["Entries"]:
+        if inner_entry["Buffer"] is not None:
+            text += inner_entry["Buffer"]
+    return text
+
+def create_event_data(self, message, text):
+    """Create event data for incoming SMS."""
+    return {
+        "phone": message["Number"],
+        "date": str(message["DateTime"]),
+        "message": text,
+    }
+
+def notify_incoming_sms(self, data):
+    """Notify Home Assistant of incoming SMS messages."""
+    self._hass.add_job(self._notify_incoming_sms, data)
+
 
     def get_and_delete_all_sms(self, state_machine, force=False):
         """Read and delete all SMS in the modem."""

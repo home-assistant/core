@@ -296,128 +296,89 @@ class DeviceBroker:
         self.devices = {device.device_id: device for device in devices}
         self.scenes = {scene.scene_id: scene for scene in scenes}
 
-    def _assign_capabilities(self, devices: Iterable):
-        """Assign platforms to capabilities."""
-        assignments = {}
-        for device in devices:
-            capabilities = device.capabilities.copy()
-            slots = {}
-            for platform in PLATFORMS:
-                platform_module = importlib.import_module(
-                    f".{platform}", self.__module__
-                )
-                if not hasattr(platform_module, "get_capabilities"):
-                    continue
-                assigned = platform_module.get_capabilities(capabilities)
-                if not assigned:
-                    continue
-                # Draw-down capabilities and set slot assignment
-                for capability in assigned:
-                    if capability not in capabilities:
-                        continue
-                    capabilities.remove(capability)
-                    slots[capability] = platform
-            assignments[device.device_id] = slots
-        return assignments
-
-    def connect(self):
-        """Connect handlers/listeners for device/lifecycle events."""
-
-        # Setup interval to regenerate the refresh token on a periodic basis.
-        # Tokens expire in 30 days and once expired, cannot be recovered.
-        async def regenerate_refresh_token(now):
-            """Generate a new refresh token and update the config entry."""
-            await self._token.refresh(
-                self._entry.data[CONF_CLIENT_ID],
-                self._entry.data[CONF_CLIENT_SECRET],
-            )
-            self._hass.config_entries.async_update_entry(
-                self._entry,
-                data={
-                    **self._entry.data,
-                    CONF_REFRESH_TOKEN: self._token.refresh_token,
-                },
-            )
-            _LOGGER.debug(
-                "Regenerated refresh token for installed app: %s",
-                self._installed_app_id,
-            )
-
-        self._regenerate_token_remove = async_track_time_interval(
-            self._hass, regenerate_refresh_token, TOKEN_REFRESH_INTERVAL
-        )
-
-        # Connect handler to incoming device events
-        self._event_disconnect = self._smart_app.connect_event(self._event_handler)
-
-    def disconnect(self):
-        """Disconnects handlers/listeners for device/lifecycle events."""
-        if self._regenerate_token_remove:
-            self._regenerate_token_remove()
-        if self._event_disconnect:
-            self._event_disconnect()
-
-    def get_assigned(self, device_id: str, platform: str):
-        """Get the capabilities assigned to the platform."""
-        slots = self._assignments.get(device_id, {})
-        return [key for key, value in slots.items() if value == platform]
-
-    def any_assigned(self, device_id: str, platform: str):
-        """Return True if the platform has any assigned capabilities."""
-        slots = self._assignments.get(device_id, {})
-        return any(value for value in slots.values() if value == platform)
-
     async def _event_handler(self, req, resp, app):
-        """Broker for incoming events."""
-        # Do not process events received from a different installed app
-        # under the same parent SmartApp (valid use-scenario)
-        if req.installed_app_id != self._installed_app_id:
-            return
+    """Broker for incoming events."""
+    if not self._is_same_installed_app(req.installed_app_id):
+        return
 
-        updated_devices = set()
-        for evt in req.events:
-            if evt.event_type != EVENT_TYPE_DEVICE:
-                continue
-            if not (device := self.devices.get(evt.device_id)):
-                continue
-            device.status.apply_attribute_update(
-                evt.component_id,
-                evt.capability,
-                evt.attribute,
-                evt.value,
-                data=evt.data,
-            )
+    updated_devices = self._process_events(req.events)
+    self._fire_button_events(updated_devices)
+    self._fire_push_update_events(updated_devices)
 
-            # Fire events for buttons
-            if (
-                evt.capability == Capability.button
-                and evt.attribute == Attribute.button
-            ):
-                data = {
-                    "component_id": evt.component_id,
-                    "device_id": evt.device_id,
-                    "location_id": evt.location_id,
-                    "value": evt.value,
-                    "name": device.label,
-                    "data": evt.data,
-                }
-                self._hass.bus.async_fire(EVENT_BUTTON, data)
-                _LOGGER.debug("Fired button event: %s", data)
-            else:
-                data = {
-                    "location_id": evt.location_id,
-                    "device_id": evt.device_id,
-                    "component_id": evt.component_id,
-                    "capability": evt.capability,
-                    "attribute": evt.attribute,
-                    "value": evt.value,
-                    "data": evt.data,
-                }
-                _LOGGER.debug("Push update received: %s", data)
+def _is_same_installed_app(self, installed_app_id: str) -> bool:
+    """Check if the event is from the same installed app."""
+    return installed_app_id == self._installed_app_id
 
+def _process_events(self, events: List[Event]) -> Set[str]:
+    """Process incoming events and update device statuses."""
+    updated_devices = set()
+    for evt in events:
+        if evt.event_type != EVENT_TYPE_DEVICE:
+            continue
+        device = self._get_device(evt.device_id)
+        if device:
+            self._update_device_status(device, evt)
             updated_devices.add(device.device_id)
+    return updated_devices
 
-        async_dispatcher_send(self._hass, SIGNAL_SMARTTHINGS_UPDATE, updated_devices)
+def _update_device_status(self, device: Device, evt: Event) -> None:
+    """Update device status based on the event."""
+    device.status.apply_attribute_update(
+        evt.component_id,
+        evt.capability,
+        evt.attribute,
+        evt.value,
+        data=evt.data,
+    )
+
+def _fire_button_events(self, updated_devices: Set[str]) -> None:
+    """Fire events for button presses."""
+    for device_id in updated_devices:
+        device = self._get_device(device_id)
+        if self._is_button_event(device):
+            self._fire_button_event(device)
+
+def _is_button_event(self, device: Device) -> bool:
+    """Check if the device update is a button event."""
+    return (
+        device
+        and device.label
+        and device.status.is_capability_supported(Capability.button)
+    )
+
+def _fire_button_event(self, device: Device) -> None:
+    """Fire a button event."""
+    data = {
+        "component_id": device.status.component_id,
+        "device_id": device.device_id,
+        "location_id": device.status.location_id,
+        "value": device.status.attribute_value(Attribute.button),
+        "name": device.label,
+        "data": device.status.data,
+    }
+    self._hass.bus.async_fire(EVENT_BUTTON, data)
+
+def _fire_push_update_events(self, updated_devices: Set[str]) -> None:
+    """Fire push update events for attribute changes."""
+    for device_id in updated_devices:
+        device = self._get_device(device_id)
+        if device:
+            self._fire_push_update_event(device)
+
+def _fire_push_update_event(self, device: Device) -> None:
+    """Fire a push update event for an attribute change."""
+    data = {
+        "location_id": device.status.location_id,
+        "device_id": device.device_id,
+        "component_id": device.status.component_id,
+        "capability": device.status.capability,
+        "attribute": device.status.attribute,
+        "value": device.status.attribute_value(device.status.attribute),
+        "data": device.status.data,
+    }
+    _LOGGER.debug("Push update received: %s", data)
+    async_dispatcher_send(self._hass, SIGNAL_SMARTTHINGS_UPDATE, {device.device_id})
+
 
 
 class SmartThingsEntity(Entity):

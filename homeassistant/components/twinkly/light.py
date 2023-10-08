@@ -146,140 +146,136 @@ class TwinklyLight(LightEntity):
                     self.supported_features & ~LightEntityFeature.EFFECT
                 )
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn device on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = int(int(kwargs[ATTR_BRIGHTNESS]) / 2.55)
+   async def async_turn_on(self, **kwargs: Any) -> None:
+    """Turn device on."""
+    if ATTR_BRIGHTNESS in kwargs:
+        await self._handle_brightness(kwargs[ATTR_BRIGHTNESS])
 
-            # If brightness is 0, the twinkly will only "disable" the brightness,
-            # which means that it will be 100%.
-            if brightness == 0:
-                await self._client.turn_off()
-                return
+    if ATTR_RGBW_COLOR in kwargs and kwargs[ATTR_RGBW_COLOR] != self._attr_rgbw_color:
+        await self._handle_rgbw_color(kwargs[ATTR_RGBW_COLOR])
 
-            await self._client.set_brightness(brightness)
+    if ATTR_RGB_COLOR in kwargs and kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
+        await self._handle_rgb_color(kwargs[ATTR_RGB_COLOR])
 
-        if (
-            ATTR_RGBW_COLOR in kwargs
-            and kwargs[ATTR_RGBW_COLOR] != self._attr_rgbw_color
-        ):
-            await self._client.interview()
-            if LightEntityFeature.EFFECT & self.supported_features:
-                # Static color only supports rgb
-                await self._client.set_static_colour(
-                    (
-                        kwargs[ATTR_RGBW_COLOR][0],
-                        kwargs[ATTR_RGBW_COLOR][1],
-                        kwargs[ATTR_RGBW_COLOR][2],
-                    )
-                )
-                await self._client.set_mode("color")
-                self._client.default_mode = "color"
-            else:
-                await self._client.set_cycle_colours(
-                    (
-                        kwargs[ATTR_RGBW_COLOR][3],
-                        kwargs[ATTR_RGBW_COLOR][0],
-                        kwargs[ATTR_RGBW_COLOR][1],
-                        kwargs[ATTR_RGBW_COLOR][2],
-                    )
-                )
-                await self._client.set_mode("movie")
-                self._client.default_mode = "movie"
-            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+    if ATTR_EFFECT in kwargs and LightEntityFeature.EFFECT & self.supported_features:
+        await self._handle_effect(kwargs[ATTR_EFFECT])
 
-        if ATTR_RGB_COLOR in kwargs and kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
-            await self._client.interview()
-            if LightEntityFeature.EFFECT & self.supported_features:
-                await self._client.set_static_colour(kwargs[ATTR_RGB_COLOR])
-                await self._client.set_mode("color")
-                self._client.default_mode = "color"
-            else:
-                await self._client.set_cycle_colours(kwargs[ATTR_RGB_COLOR])
-                await self._client.set_mode("movie")
-                self._client.default_mode = "movie"
+    if not self._attr_is_on:
+        await self._client.turn_on()
 
-            self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
+async def async_turn_off(self, **kwargs: Any) -> None:
+    """Turn device off."""
+    await self._client.turn_off()
 
-        if (
-            ATTR_EFFECT in kwargs
-            and LightEntityFeature.EFFECT & self.supported_features
-        ):
-            movie_id = kwargs[ATTR_EFFECT].split(" ")[0]
-            if "id" not in self._current_movie or int(movie_id) != int(
-                self._current_movie["id"]
-            ):
-                await self._client.interview()
-                await self._client.set_current_movie(int(movie_id))
-                await self._client.set_mode("movie")
-                self._client.default_mode = "movie"
-        if not self._attr_is_on:
-            await self._client.turn_on()
+async def async_update(self) -> None:
+    """Asynchronously updates the device properties."""
+    _LOGGER.debug("Updating '%s'", self._client.host)
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn device off."""
+    try:
+        await self._update_power_and_brightness()
+        await self._update_device_info()
+
+        if LightEntityFeature.EFFECT & self.supported_features:
+            await self.async_update_movies()
+            await self.async_update_current_movie()
+
+        if not self._attr_available:
+            _LOGGER.info("Twinkly '%s' is now available", self._client.host)
+
+        self._attr_available = True
+    except (asyncio.TimeoutError, ClientError):
+        self._handle_device_unreachable()
+
+async def _handle_brightness(self, brightness: int) -> None:
+    """Handle brightness change."""
+    brightness_percent = int(brightness / 2.55)
+    
+    if brightness_percent == 0:
         await self._client.turn_off()
+    else:
+        await self._client.set_brightness(brightness_percent)
 
-    async def async_update(self) -> None:
-        """Asynchronously updates the device properties."""
-        _LOGGER.debug("Updating '%s'", self._client.host)
+async def _handle_rgbw_color(self, rgbw_color: Tuple[int, int, int, int]) -> None:
+    """Handle RGBW color change."""
+    await self._client.interview()
 
-        try:
-            self._attr_is_on = await self._client.is_on()
+    if LightEntityFeature.EFFECT & self.supported_features:
+        await self._client.set_static_colour(rgbw_color[:3])
+        await self._client.set_mode("color")
+        self._client.default_mode = "color"
+    else:
+        await self._client.set_cycle_colours((rgbw_color[3], *rgbw_color[:3]))
+        await self._client.set_mode("movie")
+        self._client.default_mode = "movie"
 
-            brightness = await self._client.get_brightness()
-            brightness_value = (
-                int(brightness["value"]) if brightness["mode"] == "enabled" else 100
-            )
+    self._attr_rgbw_color = rgbw_color
 
-            self._attr_brightness = (
-                int(round(brightness_value * 2.55)) if self._attr_is_on else 0
-            )
+async def _handle_rgb_color(self, rgb_color: Tuple[int, int, int]) -> None:
+    """Handle RGB color change."""
+    await self._client.interview()
 
-            device_info = await self._client.get_details()
+    if LightEntityFeature.EFFECT & self.supported_features:
+        await self._client.set_static_colour(rgb_color)
+        await self._client.set_mode("color")
+        self._client.default_mode = "color"
+    else:
+        await self._client.set_cycle_colours(rgb_color)
+        await self._client.set_mode("movie")
+        self._client.default_mode = "movie"
 
-            if (
-                DEV_NAME in device_info
-                and DEV_MODEL in device_info
-                and (
-                    device_info[DEV_NAME] != self._name
-                    or device_info[DEV_MODEL] != self._model
-                )
-            ):
-                self._name = device_info[DEV_NAME]
-                self._model = device_info[DEV_MODEL]
+    self._attr_rgb_color = rgb_color
 
-                # If the name has changed, persist it in conf entry,
-                # so we will be able to restore this new name if hass
-                # is started while the LED string is offline.
-                self.hass.config_entries.async_update_entry(
-                    self._conf,
-                    data={
-                        CONF_HOST: self._client.host,  # this cannot change
-                        CONF_ID: self._attr_unique_id,  # this cannot change
-                        CONF_NAME: self._name,
-                        CONF_MODEL: self._model,
-                    },
-                )
+async def _handle_effect(self, effect: str) -> None:
+    """Handle effect change."""
+    movie_id = effect.split(" ")[0]
 
-            if LightEntityFeature.EFFECT & self.supported_features:
-                await self.async_update_movies()
-                await self.async_update_current_movie()
+    if "id" not in self._current_movie or int(movie_id) != int(self._current_movie["id"]):
+        await self._client.interview()
+        await self._client.set_current_movie(int(movie_id))
+        await self._client.set_mode("movie")
+        self._client.default_mode = "movie"
 
-            if not self._attr_available:
-                _LOGGER.info("Twinkly '%s' is now available", self._client.host)
+async def _update_power_and_brightness(self) -> None:
+    """Update power state and brightness."""
+    self._attr_is_on = await self._client.is_on()
+    
+    brightness = await self._client.get_brightness()
+    brightness_value = int(brightness["value"]) if brightness["mode"] == "enabled" else 100
+    self._attr_brightness = int(round(brightness_value * 2.55)) if self._attr_is_on else 0
 
-            # We don't use the echo API to track the availability since
-            # we already have to pull the device to get its state.
-            self._attr_available = True
-        except (asyncio.TimeoutError, ClientError):
-            # We log this as "info" as it's pretty common that the Christmas
-            # light are not reachable in July
-            if self._attr_available:
-                _LOGGER.info(
-                    "Twinkly '%s' is not reachable (client error)", self._client.host
-                )
-            self._attr_available = False
+async def _update_device_info(self) -> None:
+    """Update device information."""
+    device_info = await self._client.get_details()
+    
+    if (
+        DEV_NAME in device_info
+        and DEV_MODEL in device_info
+        and (
+            device_info[DEV_NAME] != self._name
+            or device_info[DEV_MODEL] != self._model
+        )
+    ):
+        self._name = device_info[DEV_NAME]
+        self._model = device_info[DEV_MODEL]
+        
+        self.hass.config_entries.async_update_entry(
+            self._conf,
+            data={
+                CONF_HOST: self._client.host,
+                CONF_ID: self._attr_unique_id,
+                CONF_NAME: self._name,
+                CONF_MODEL: self._model,
+            },
+        )
+
+def _handle_device_unreachable(self) -> None:
+    """Handle device being unreachable."""
+    if self._attr_available:
+        _LOGGER.info(
+            "Twinkly '%s' is not reachable (client error)", self._client.host
+        )
+    self._attr_available = False
+
 
     async def async_update_movies(self) -> None:
         """Update the list of movies (effects)."""

@@ -122,42 +122,62 @@ class VasttrafikDepartureSensor(SensorEntity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
-        """Get the departure board."""
-        try:
-            self._departureboard = self._planner.departureboard(
-                self._departure["station_id"],
-                direction=self._heading["station_id"] if self._heading else None,
-                date=now() + self._delay,
-            )
-        except vasttrafik.Error:
-            _LOGGER.debug("Unable to read departure board, updating token")
-            self._planner.update_token()
+    """Get the departure board."""
+    try:
+        self._departureboard = self._planner.departureboard(
+            self._departure["station_id"],
+            direction=self._heading["station_id"] if self._heading else None,
+            date=now() + self._delay,
+        )
+    except vasttrafik.Error:
+        self._handle_update_token_error()
+        return
 
-        if not self._departureboard:
-            _LOGGER.debug(
-                "No departures from departure station %s to destination station %s",
-                self._departure["station_name"],
-                self._heading["station_name"] if self._heading else "ANY",
-            )
-            self._state = None
-            self._attributes = {}
-        else:
-            for departure in self._departureboard:
-                line = departure.get("sname")
-                if "cancelled" in departure:
-                    continue
-                if not self._lines or line in self._lines:
-                    if "rtTime" in departure:
-                        self._state = departure["rtTime"]
-                    else:
-                        self._state = departure["time"]
+    if not self._departureboard:
+        self._handle_no_departures()
+    else:
+        self._update_departures()
 
-                    params = {
-                        ATTR_ACCESSIBILITY: departure.get("accessibility"),
-                        ATTR_DIRECTION: departure.get("direction"),
-                        ATTR_LINE: departure.get("sname"),
-                        ATTR_TRACK: departure.get("track"),
-                    }
+def _handle_update_token_error(self) -> None:
+    """Handle error when updating token."""
+    _LOGGER.debug("Unable to read departure board, updating token")
+    self._planner.update_token()
+    self._state = None
+    self._attributes = {}
 
-                    self._attributes = {k: v for k, v in params.items() if v}
-                    break
+def _handle_no_departures(self) -> None:
+    """Handle case when there are no departures."""
+    _LOGGER.debug(
+        "No departures from departure station %s to destination station %s",
+        self._departure["station_name"],
+        self._heading["station_name"] if self._heading else "ANY",
+    )
+    self._state = None
+    self._attributes = {}
+
+def _update_departures(self) -> None:
+    """Update departure information."""
+    for departure in self._departureboard:
+        line = departure.get("sname")
+        if "cancelled" in departure:
+            continue
+        if not self._lines or line in self._lines:
+            self._update_departure_info(departure)
+            break
+
+def _update_departure_info(self, departure: dict) -> None:
+    """Update departure information from the given departure data."""
+    if "rtTime" in departure:
+        self._state = departure["rtTime"]
+    else:
+        self._state = departure["time"]
+
+    params = {
+        ATTR_ACCESSIBILITY: departure.get("accessibility"),
+        ATTR_DIRECTION: departure.get("direction"),
+        ATTR_LINE: departure.get("sname"),
+        ATTR_TRACK: departure.get("track"),
+    }
+
+    self._attributes = {k: v for k, v in params.items() if v}
+
