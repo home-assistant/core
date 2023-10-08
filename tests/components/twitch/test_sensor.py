@@ -12,9 +12,7 @@ from homeassistant.setup import async_setup_component
 
 from ...common import MockConfigEntry
 from . import (
-    TwitchAPIExceptionMock,
     TwitchInvalidTokenMock,
-    TwitchInvalidUserMock,
     TwitchMissingScopeMock,
     TwitchMock,
     TwitchUnauthorizedMock,
@@ -152,19 +150,3 @@ async def test_auth_invalid(
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state is None
-
-
-@pytest.mark.parametrize("twitch_mock", [TwitchInvalidUserMock()])
-async def test_auth_with_invalid_user(
-    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
-) -> None:
-    """Test auth with invalid user."""
-    await setup_integration(hass, config_entry)
-
-
-@pytest.mark.parametrize("twitch_mock", [TwitchAPIExceptionMock()])
-async def test_auth_with_api_exception(
-    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
-) -> None:
-    """Test auth with invalid user."""
-    await setup_integration(hass, config_entry)

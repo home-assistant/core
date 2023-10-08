@@ -10,6 +10,7 @@ from twitchAPI.twitch import (
     MissingScopeException,
     TwitchAPIException,
     TwitchAuthorizationException,
+    TwitchBackendException,
     TwitchResourceNotFound,
 )
 from twitchAPI.type import AuthScope, AuthType
@@ -244,3 +245,13 @@ class TwitchAPIExceptionMock(TwitchMock):
     ) -> UserSubscriptionMock:
         """Check if the user is subscribed."""
         raise TwitchAPIException()
+
+
+class TwitchBackendExceptionMock(TwitchMock):
+    """Twitch mock to test when twitch api throws unknown exception."""
+
+    async def check_user_subscription(
+        self, broadcaster_id: str, user_id: str
+    ) -> UserSubscriptionMock:
+        """Check if the user is subscribed."""
+        raise TwitchBackendException()

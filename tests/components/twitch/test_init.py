@@ -10,7 +10,13 @@ from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import TwitchMock, setup_integration
+from . import (
+    TwitchAPIExceptionMock,
+    TwitchBackendExceptionMock,
+    TwitchInvalidUserMock,
+    TwitchMock,
+    setup_integration,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -114,3 +120,27 @@ async def test_expired_token_refresh_client_error(
     # Verify a transient failure has occurred
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("twitch_mock", [TwitchInvalidUserMock()])
+async def test_auth_with_invalid_user(
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
+) -> None:
+    """Test auth with invalid user."""
+    await setup_integration(hass, config_entry)
+
+
+@pytest.mark.parametrize("twitch_mock", [TwitchAPIExceptionMock()])
+async def test_auth_with_api_exception(
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
+) -> None:
+    """Test auth with invalid user."""
+    await setup_integration(hass, config_entry)
+
+
+@pytest.mark.parametrize("twitch_mock", [TwitchBackendExceptionMock()])
+async def test_auth_with_backend_exception(
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
+) -> None:
+    """Test auth with invalid user."""
+    await setup_integration(hass, config_entry)
