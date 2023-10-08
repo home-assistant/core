@@ -59,7 +59,6 @@ def push_registrations(hass):
     return targets
 
 
-# pylint: disable=invalid-name
 def log_rate_limits(hass, device_name, resp, level=logging.INFO):
     """Output rate limit log line at given level."""
     if ATTR_PUSH_RATE_LIMITS not in resp:

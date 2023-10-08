@@ -43,7 +43,6 @@ OFFSET = "!!"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        # pylint: disable=no-value-for-parameter
         vol.Required(CONF_URL): vol.Url(),
         vol.Optional(CONF_CALENDARS, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,

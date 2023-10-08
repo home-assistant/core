@@ -724,9 +724,9 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
-        self.router.subscriptions[self.key].add(f"{SENSOR_DOMAIN}/{self.item}")
+        self.router.subscriptions[self.key].append(f"{SENSOR_DOMAIN}/{self.item}")
         if self.entity_description.last_reset_item:
-            self.router.subscriptions[self.key].add(
+            self.router.subscriptions[self.key].append(
                 f"{SENSOR_DOMAIN}/{self.entity_description.last_reset_item}"
             )
 

@@ -1,7 +1,7 @@
 """The ReCollect Waste integration."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Any
 
 from aiorecollect.client import Client, PickupEvent
@@ -31,7 +31,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_get_pickup_events() -> list[PickupEvent]:
         """Get the next pickup."""
         try:
-            return await client.async_get_pickup_events()
+            # Retrieve today through to 35 days in the future, to get
+            # coverage across a full two months boundary so that no
+            # upcoming pickups are missed. The api.recollect.net base API
+            # call returns only the current month when no dates are passed.
+            # This ensures that data about when the next pickup is will be
+            # returned when the next pickup is the first day of the next month.
+            # Ex: Today is August 31st, tomorrow is a pickup on September 1st.
+            today = date.today()
+            return await client.async_get_pickup_events(
+                start_date=today,
+                end_date=today + timedelta(days=35),
+            )
         except RecollectError as err:
             raise UpdateFailed(
                 f"Error while requesting data from ReCollect: {err}"

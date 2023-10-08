@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import ComelitSerialBridge
 
-PLATFORMS = [Platform.LIGHT]
+PLATFORMS = [Platform.COVER, Platform.LIGHT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

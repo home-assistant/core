@@ -257,10 +257,10 @@ CORE_CONFIG_SCHEMA = vol.All(
             vol.Optional(CONF_INTERNAL_URL): cv.url,
             vol.Optional(CONF_EXTERNAL_URL): cv.url,
             vol.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): vol.All(
-                cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+                cv.ensure_list, [vol.IsDir()]
             ),
             vol.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
-                cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+                cv.ensure_list, [vol.IsDir()]
             ),
             vol.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): vol.All(
                 cv.ensure_list, [cv.url]
@@ -297,7 +297,6 @@ CORE_CONFIG_SCHEMA = vol.All(
                 ],
                 _no_duplicate_auth_mfa_module,
             ),
-            # pylint: disable-next=no-value-for-parameter
             vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
             vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
             vol.Optional(CONF_CURRENCY): _validate_currency,
@@ -379,14 +378,16 @@ def _write_default_config(config_dir: str) -> bool:
         return True
 
     except OSError:
-        print("Unable to create default configuration file", config_path)  # noqa: T201
+        print(  # noqa: T201
+            f"Unable to create default configuration file {config_path}"
+        )
         return False
 
 
 async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     """Load YAML from a Home Assistant configuration file.
 
-    This function allow a component inside the asyncio loop to reload its
+    This function allows a component inside the asyncio loop to reload its
     configuration by itself. Include package merge.
     """
     secrets = Secrets(Path(hass.config.config_dir))

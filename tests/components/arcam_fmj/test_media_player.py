@@ -228,9 +228,9 @@ async def test_sound_mode_list(player, state, modes, modes_enum) -> None:
 async def test_is_volume_muted(player, state) -> None:
     """Test muted."""
     state.get_mute.return_value = True
-    assert player.is_volume_muted is True  # pylint: disable=singleton-comparison
+    assert player.is_volume_muted is True
     state.get_mute.return_value = False
-    assert player.is_volume_muted is False  # pylint: disable=singleton-comparison
+    assert player.is_volume_muted is False
     state.get_mute.return_value = None
     assert player.is_volume_muted is None
 

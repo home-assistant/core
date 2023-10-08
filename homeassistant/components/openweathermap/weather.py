@@ -17,7 +17,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     Forecast,
-    WeatherEntity,
+    SingleCoordinatorWeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -26,10 +27,9 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_API_CLOUDS,
@@ -60,6 +60,8 @@ from .const import (
     DOMAIN,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
+    FORECAST_MODE_DAILY,
+    FORECAST_MODE_ONECALL_DAILY,
     MANUFACTURER,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
@@ -96,7 +98,7 @@ async def async_setup_entry(
     async_add_entities([owm_weather], False)
 
 
-class OpenWeatherMapWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
+class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordinator]):
     """Implementation of an OpenWeatherMap sensor."""
 
     _attr_attribution = ATTRIBUTION
@@ -123,6 +125,13 @@ class OpenWeatherMapWeather(CoordinatorEntity[WeatherUpdateCoordinator], Weather
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
         )
+        if weather_coordinator.forecast_mode in (
+            FORECAST_MODE_DAILY,
+            FORECAST_MODE_ONECALL_DAILY,
+        ):
+            self._attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
+        else:  # FORECAST_MODE_DAILY or FORECAST_MODE_ONECALL_HOURLY
+            self._attr_supported_features = WeatherEntityFeature.FORECAST_HOURLY
 
     @property
     def condition(self) -> str | None:
@@ -187,3 +196,13 @@ class OpenWeatherMapWeather(CoordinatorEntity[WeatherUpdateCoordinator], Weather
             for forecast in api_forecasts
         ]
         return cast(list[Forecast], forecasts)
+
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self.forecast
+
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast] | None:
+        """Return the hourly forecast in native units."""
+        return self.forecast

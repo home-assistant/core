@@ -16,6 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import const, discovery, registries
 from .cluster_handlers import ClusterHandler
 from .cluster_handlers.general import MultistateInput
+from .helpers import get_zha_data
 
 if TYPE_CHECKING:
     from .cluster_handlers import ClientClusterHandler
@@ -27,7 +28,7 @@ ATTR_IN_CLUSTERS: Final[str] = "input_clusters"
 ATTR_OUT_CLUSTERS: Final[str] = "output_clusters"
 
 _LOGGER = logging.getLogger(__name__)
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 
 
 class Endpoint:
@@ -195,7 +196,7 @@ class Endpoint:
 
     def async_new_entity(
         self,
-        platform: Platform | str,
+        platform: Platform,
         entity_class: CALLABLE_T,
         unique_id: str,
         cluster_handlers: list[ClusterHandler],
@@ -206,7 +207,8 @@ class Endpoint:
         if self.device.status == DeviceStatus.INITIALIZED:
             return
 
-        self.device.hass.data[const.DATA_ZHA][platform].append(
+        zha_data = get_zha_data(self.device.hass)
+        zha_data.platforms[platform].append(
             (entity_class, (unique_id, self.device, cluster_handlers))
         )
 
