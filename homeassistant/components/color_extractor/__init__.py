@@ -24,7 +24,10 @@ from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+CONFIG_SCHEMA = vol.Schema(
+    {vol.Optional(DOMAIN): {}},
+    extra=vol.ALLOW_EXTRA,
+)
 
 # Extend the existing light.turn_on service schema
 SERVICE_SCHEMA = vol.All(
@@ -62,11 +65,12 @@ def _get_color(file_handler) -> tuple:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Color extractor component."""
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data={}
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data={}
+            )
         )
-    )
 
     return True
 

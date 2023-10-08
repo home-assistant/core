@@ -4,9 +4,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from bleak import BleakError
+from bleak.exc import BleakError
 from bluetooth_data_tools import human_readable_name
-from idasen_ha import Desk
+from idasen_ha import AuthFailedError, Desk
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -64,6 +64,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             desk = Desk(None)
             try:
                 await desk.connect(discovery_info.device, monitor_height=False)
+            except AuthFailedError as err:
+                _LOGGER.exception("AuthFailedError", exc_info=err)
+                errors["base"] = "auth_failed"
             except TimeoutError as err:
                 _LOGGER.exception("TimeoutError", exc_info=err)
                 errors["base"] = "cannot_connect"
