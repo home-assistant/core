@@ -27,10 +27,26 @@ def mock_fetch_json(path="trello/batch.json"):
 
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
-    hass: HomeAssistant,
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> Callable[[], Coroutine[Any, Any, None]]:
     """Mock a config entry then set up the component."""
-    mock_config_entry = MockConfigEntry(
+    config_entry.add_to_hass(hass)
+
+    async def func() -> None:
+        with patch(
+            "homeassistant.components.trello.TrelloClient.fetch_json",
+            return_value=mock_fetch_json("trello/batch.json"),
+        ):
+            assert await async_setup_component(hass, DOMAIN, {})
+            await hass.async_block_till_done()
+
+    return func
+
+
+@pytest.fixture(name="config_entry")
+def mock_config_entry() -> MockConfigEntry:
+    """Fixture to set the oauth token expiration time."""
+    return MockConfigEntry(
         domain="trello",
         title="foo@example.com",
         data={
@@ -47,14 +63,3 @@ async def mock_setup_integration(
             ]
         },
     )
-    mock_config_entry.add_to_hass(hass)
-
-    async def func() -> None:
-        with patch(
-            "homeassistant.components.trello.sensor.TrelloClient.fetch_json",
-            return_value=mock_fetch_json("trello/batch.json"),
-        ):
-            assert await async_setup_component(hass, DOMAIN, {})
-            await hass.async_block_till_done()
-
-    return func

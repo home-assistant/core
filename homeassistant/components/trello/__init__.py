@@ -4,14 +4,27 @@ from __future__ import annotations
 from trello import Member, TrelloClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+
+from .const import CONF_BOARD_IDS, DOMAIN
+from .coordinator import TrelloDataUpdateCoordinator
 
 PLATFORMS: list[str] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+    config_boards = entry.options[CONF_BOARD_IDS]
+    config_data = entry.data
+    trello_client = TrelloClient(
+        api_key=config_data[CONF_API_KEY],
+        api_secret=config_data[CONF_API_TOKEN],
+    )
+    trello_coordinator = TrelloDataUpdateCoordinator(hass, trello_client, config_boards)
+    await trello_coordinator.async_config_entry_first_refresh()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = trello_coordinator
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
 

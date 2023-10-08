@@ -1,17 +1,14 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 
-from trello import TrelloClient
-
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_BOARD_IDS, DOMAIN, Board, List
+from .const import DOMAIN, Board, List
 from .coordinator import TrelloDataUpdateCoordinator
 
 
@@ -70,20 +67,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up trello sensors for config entries."""
-    config_boards = config_entry.options[CONF_BOARD_IDS]
-    config_data = config_entry.data
-    trello_client = TrelloClient(
-        api_key=config_data[CONF_API_KEY],
-        api_secret=config_data[CONF_API_TOKEN],
-    )
-    coordinator = TrelloDataUpdateCoordinator(hass, trello_client, config_boards)
-    await coordinator.async_config_entry_first_refresh()
-
-    boards = coordinator.data.values()
+    trello_coordinator: TrelloDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
+    boards = trello_coordinator.data.values()
 
     async_add_entities(
         [
-            TrelloSensor(board, list_, coordinator)
+            TrelloSensor(board, list_, trello_coordinator)
             for board in boards
             for list_ in board.lists.values()
         ],

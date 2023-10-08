@@ -53,7 +53,7 @@ async def test_sensor_setup_entry(
         assert entity.attributes["unit_of_measurement"] == "Cards"
 
     with patch(
-        "homeassistant.components.trello.sensor.TrelloClient.fetch_json",
+        "homeassistant.components.trello.TrelloClient.fetch_json",
         return_value=mock_fetch_json(path="trello/update_batch_with_error.json"),
     ):
         future = dt_util.utcnow() + timedelta(seconds=60)
