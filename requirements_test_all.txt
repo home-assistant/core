@@ -1388,6 +1388,9 @@ pylast==5.1.0
 # homeassistant.components.launch_library
 pylaunches==1.4.0
 
+# homeassistant.components.lorawan
+pyliblorawan==0.1.0
+
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.1
 

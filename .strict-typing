@@ -211,6 +211,7 @@ homeassistant.components.logbook.*
 homeassistant.components.logger.*
 homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
+homeassistant.components.lorawan.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
 homeassistant.components.mastodon.*
