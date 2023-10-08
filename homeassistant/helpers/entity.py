@@ -907,7 +907,7 @@ class Entity(ABC):
                 self._state_info,
             )
         except InvalidStateError:
-            _LOGGER.exception("Failed to set state, fall back to %s", STATE_UNKNOWN)
+            _LOGGER.exception("Failed to set state for %s, fall back to %s", entity_id, STATE_UNKNOWN)
             hass.states.async_set(
                 entity_id, STATE_UNKNOWN, {}, self.force_update, self._context
             )
