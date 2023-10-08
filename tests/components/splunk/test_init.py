@@ -1,10 +1,8 @@
 """Test the Aussie Broadband init."""
 from http import HTTPStatus
-from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
 
-from homeassistant import data_entry_flow
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -32,12 +30,8 @@ async def test_auth_failure(
         status=HTTPStatus.FORBIDDEN,
     )
 
-    with patch(
-        "homeassistant.components.splunk.config_flow.ConfigFlow.async_step_reauth",
-        return_value={"type": data_entry_flow.FlowResultType.FORM},
-    ) as mock_async_step_reauth:
-        await setup_platform(hass)
-        mock_async_step_reauth.assert_called_once()
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_net_failure(
@@ -48,5 +42,6 @@ async def test_net_failure(
         URL,
         side_effect=ClientConnectionError,
     )
+
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
