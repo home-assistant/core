@@ -14,7 +14,6 @@ from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
-    PRESET_NONE,
     HVACAction,
     HVACMode,
 )
@@ -428,11 +427,11 @@ async def test_hmip_heating_group_heat_with_radiator(
     assert ha_state.attributes["min_temp"] == 5.0
     assert ha_state.attributes["max_temp"] == 30.0
     assert ha_state.attributes["temperature"] == 5.0
-    assert ha_state.attributes[ATTR_PRESET_MODE] is None
+    assert ha_state.attributes[ATTR_PRESET_MODE] == "PROFILE_1"
     assert ha_state.attributes[ATTR_PRESET_MODES] == [
-        PRESET_NONE,
         PRESET_BOOST,
         PRESET_ECO,
+        "PROFILE_1",
     ]
 
 
