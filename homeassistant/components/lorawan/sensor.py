@@ -15,11 +15,12 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from pyliblorawan.models import Uplink
+from pyliblorawan.network_servers.ttn import TTN
 
 from .const import DOMAIN, TTN_TOPIC
-from .devices.browan.tbms100 import parse_uplink, supported_sensors
-from .models import SensorTypes, Uplink
-from .network_servers.ttn import TTN
+from .devices.browan import HassTBMS100
+from .models import SensorTypes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ async def _async_setup_entity(
     """Set up MQTT sensor."""
     entities = []
     coordinator = LorawanSensorCoordinator(hass, config_entry)
-    for sensor in supported_sensors():
+    for sensor in HassTBMS100.supported_sensors():
         entities.append(LorawanSensorEntity(hass, config_entry, coordinator, sensor))
     async_add_entities(entities)
     await coordinator.subscribe()
@@ -81,7 +82,7 @@ class LorawanSensorCoordinator(DataUpdateCoordinator):
             """Handle uplink, parse and normalize it."""
             uplink = json.loads(msg.payload)
             uplink = TTN.normalize_uplink(uplink)
-            uplink = await parse_uplink(uplink)
+            uplink = await HassTBMS100.parse_uplink(uplink)
 
             self.async_set_updated_data(uplink)
 
