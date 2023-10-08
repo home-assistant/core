@@ -171,19 +171,19 @@ async def test_device_info(
         "name": "TEST-ENTRY-TITLE",
     }
 
-    with pytest.raises(TypeError) as e:
-        entity._attr_name = UndefinedType._singleton
+    with pytest.raises(TypeError) as e1:
+        entity._attr_name = UndefinedType._singleton  # type: ignore [assignment]
         _ = entity.device_info
-    assert str(e.value) == "name should not be undefined"
+    assert str(e1.value) == "name should not be undefined"
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError) as e2:
         entity._attr_name = None
         _ = entity.device_info
-    assert str(e.value) == "name should not be None"
+    assert str(e2.value) == "name should not be None"
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError) as e3:
         entity._config.unique_id = None
         _ = entity.device_info
-    assert str(e.value) == "config.unique_id should not be None"
+    assert str(e3.value) == "config.unique_id should not be None"
 
     assert set_caplog_debug.record_tuples == []
