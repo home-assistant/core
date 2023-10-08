@@ -73,27 +73,17 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
 
     ent_reg = er.async_get(hass)
 
-    # Test entity migrations
-    # OverkizState enum
-    sensor_discrete_rssi_level = ent_reg.async_get(ENTITY_SENSOR_DISCRETE_RSSI_LEVEL)
-    assert (
-        sensor_discrete_rssi_level.unique_id
-        == "io://1234-5678-1234/3541212-core:DiscreteRSSILevelState"
-    )
+    unique_id_map = {
+        ENTITY_SENSOR_DISCRETE_RSSI_LEVEL: "io://1234-5678-1234/3541212-core:DiscreteRSSILevelState",
+        ENTITY_ALARM_CONTROL_PANEL: "internal://1234-5678-1234/alarm/0-TSKAlarmController",
+        ENTITY_SWITCH_GARAGE: "io://1234-5678-1234/0-OnOff",
+        ENTITY_SENSOR_TARGET_CLOSURE_STATE_2: "io://1234-5678-1234/3541212-core:TargetClosureState",
+    }
 
-    # UIWidget enum
-    alarm_control_panel = ent_reg.async_get(ENTITY_ALARM_CONTROL_PANEL)
-    assert (
-        alarm_control_panel.unique_id
-        == "internal://1234-5678-1234/alarm/0-TSKAlarmController"
-    )
+    # Test if entities will be removed
+    assert set(ent_reg.entities.keys()) == set(unique_id_map)
 
-    # UIClass enum
-    switch_garage = ent_reg.async_get(ENTITY_SWITCH_GARAGE)
-    assert switch_garage.unique_id == "io://1234-5678-1234/0-OnOff"
-
-    # Test if duplicate entities will be removed
-    duplicate_sensor_target_closure_state = ent_reg.async_get(
-        ENTITY_SENSOR_TARGET_CLOSURE_STATE
-    )
-    assert duplicate_sensor_target_closure_state is None
+    # Test if unique ids are migrated
+    for entity_id, unique_id in unique_id_map.items():
+        entry = ent_reg.async_get(entity_id)
+        assert entry.unique_id == unique_id
