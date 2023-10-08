@@ -58,6 +58,8 @@ ATTR_NAVIGATION = "navigation"
 ATTR_CATEGORY = "category"
 ATTR_ZONE = "zone"
 
+STR_CONNECTION_ERROR = "Neato vacuum connection error for '%s': %s"
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -151,9 +153,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
             self._state = self.robot.state
         except NeatoRobotException as ex:
             if self._attr_available:  # print only once when available
-                _LOGGER.error(
-                    "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-                )
+                _LOGGER.error(STR_CONNECTION_ERROR, self.entity_id, ex)
             self._state = None
             self._attr_available = False
             return
@@ -309,18 +309,14 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                 elif self._state["state"] == 3:
                     self.robot.resume_cleaning()
             except NeatoRobotException as ex:
-                _LOGGER.error(
-                    "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-                )
+                _LOGGER.error(STR_CONNECTION_ERROR, self.entity_id, ex)
 
     def pause(self) -> None:
         """Pause the vacuum."""
         try:
             self.robot.pause_cleaning()
         except NeatoRobotException as ex:
-            _LOGGER.error(
-                "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-            )
+            _LOGGER.error(STR_CONNECTION_ERROR, self.entity_id, ex)
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
@@ -330,36 +326,28 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
             self._attr_state = STATE_RETURNING
             self.robot.send_to_base()
         except NeatoRobotException as ex:
-            _LOGGER.error(
-                "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-            )
+            _LOGGER.error(STR_CONNECTION_ERROR, self.entity_id, ex)
 
     def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         try:
             self.robot.stop_cleaning()
         except NeatoRobotException as ex:
-            _LOGGER.error(
-                "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-            )
+            _LOGGER.error(STR_CONNECTION_ERROR, self.entity_id, ex)
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the robot by making it emit a sound."""
         try:
             self.robot.locate()
         except NeatoRobotException as ex:
-            _LOGGER.error(
-                "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-            )
+            _LOGGER.error(STR_CONNECTION_ERROR, self.entity_id, ex)
 
     def clean_spot(self, **kwargs: Any) -> None:
         """Run a spot cleaning starting from the base."""
         try:
             self.robot.start_spot_cleaning()
         except NeatoRobotException as ex:
-            _LOGGER.error(
-                "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-            )
+            _LOGGER.error(STR_CONNECTION_ERROR, self.entity_id, ex)
 
     def neato_custom_cleaning(
         self, mode: str, navigation: str, category: str, zone: str | None = None
@@ -381,6 +369,4 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
         try:
             self.robot.start_cleaning(mode, navigation, category, boundary_id)
         except NeatoRobotException as ex:
-            _LOGGER.error(
-                "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-            )
+            _LOGGER.error(STR_CONNECTION_ERROR, self.entity_id, ex)
