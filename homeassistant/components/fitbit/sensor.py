@@ -33,6 +33,7 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfMass,
     UnitOfTime,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -120,6 +121,13 @@ def _elevation_unit(unit_system: FitbitUnitSystem) -> UnitOfLength:
     if unit_system == FitbitUnitSystem.EN_US:
         return UnitOfLength.FEET
     return UnitOfLength.METERS
+
+
+def _water_unit(unit_system: FitbitUnitSystem) -> UnitOfVolume:
+    """Determine the water unit."""
+    if unit_system == FitbitUnitSystem.EN_US:
+        return UnitOfVolume.FLUID_OUNCES
+    return UnitOfVolume.MILLILITERS
 
 
 @dataclass
@@ -451,6 +459,24 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.DURATION,
         scope="sleep",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    FitbitSensorEntityDescription(
+        key="foods/log/caloriesIn",
+        name="Calories In",
+        native_unit_of_measurement="cal",
+        icon="mdi:food-apple",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        scope="nutrition",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    FitbitSensorEntityDescription(
+        key="foods/log/water",
+        name="Water",
+        icon="mdi:cup-water",
+        unit_fn=_water_unit,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        scope="nutrition",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
