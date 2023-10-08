@@ -2,6 +2,7 @@
   "domain": "python_script",
   "name": "Python Scripts",
   "codeowners": [],
+  "disabled": "Dependencies does not support Python 3.12",
   "documentation": "https://www.home-assistant.io/integrations/python_script",
   "loggers": ["RestrictedPython"],
   "quality_scale": "internal",

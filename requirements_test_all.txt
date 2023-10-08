@@ -108,9 +108,6 @@ PyXiaomiGateway==0.14.3
 # homeassistant.components.rachio
 RachioPy==1.0.3
 
-# homeassistant.components.python_script
-RestrictedPython==6.2
-
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
