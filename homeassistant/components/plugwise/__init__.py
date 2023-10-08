@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Clean-up any old entities that we no longer provide.
+    # Clean-up entities that Plugwise has removed.
     _async_cleanup_registry_entries(
         hass,
         entry,
