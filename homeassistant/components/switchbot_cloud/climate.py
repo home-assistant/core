@@ -149,7 +149,7 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, ClimateEntity):
     _attr_swing_mode = SWING_HORIZONTAL
     _attr_name = None
 
-    # Not sure why I need to set these, but it doesn't work without them
+    # Not sure why I need to set these, but it makes errors without
     _attr_hvac_modes = []
     _attr_hvac_mode = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
