@@ -116,7 +116,13 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(
-                    self.hass, {CONF_HOST: self._reauth_host} | user_input
+                    self.hass,
+                    {
+                        CONF_HOST: self._reauth_host,
+                        CONF_PORT: self._reauth_port,
+                        CONF_DEVICE: self._reauth_device,
+                    }
+                    | user_input,
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"

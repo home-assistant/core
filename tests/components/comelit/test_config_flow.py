@@ -2,11 +2,12 @@
 from unittest.mock import patch
 
 from aiocomelit import CannotAuthenticate, CannotConnect
+from aiocomelit.const import BRIDGE
 import pytest
 
 from homeassistant.components.comelit.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PIN
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PIN, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -39,7 +40,9 @@ async def test_user(hass: HomeAssistant) -> None:
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_HOST] == "fake_host"
-        assert result["data"][CONF_PIN] == "1234"
+        assert result["data"][CONF_PORT] == 80
+        assert result["data"][CONF_PIN] == 1234
+        assert result["data"][CONF_DEVICE] == BRIDGE
         assert not result["result"].unique_id
         await hass.async_block_till_done()
 
