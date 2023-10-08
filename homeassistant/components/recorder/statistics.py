@@ -437,6 +437,7 @@ def compile_missing_statistics(instance: Recorder) -> bool:
     start = start.replace(minute=0, second=0, microsecond=0)
     # Commit every 12 hours of data
     commit_interval = 60 / period_size * 12
+
     with session_scope(
         session=instance.get_session(),
         exception_filter=_filter_unique_constraint_integrity_error(instance),
@@ -1693,14 +1694,6 @@ def _statistics_during_period_with_session(
 
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
-    )
-    _LOGGER.warning(
-        "_generate_statistics_during_period_stmt: start_time=%s, end_time=%s, metadata_ids=%s, table=%s, types=%s",
-        start_time,
-        end_time,
-        metadata_ids,
-        table,
-        types,
     )
     stmt = _generate_statistics_during_period_stmt(
         start_time, end_time, metadata_ids, table, types
