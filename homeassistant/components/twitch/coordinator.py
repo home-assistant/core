@@ -7,7 +7,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from attr import dataclass
 from twitchAPI.helper import first
 from twitchAPI.twitch import (
@@ -25,6 +24,7 @@ from twitchAPI.twitch import (
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_CHANNELS, DOMAIN, OAUTH_SCOPES
@@ -113,20 +113,31 @@ class TwitchUpdateCoordinator(DataUpdateCoordinator[dict[str, TwitchChannelData]
 
     async def _async_get_data(self) -> dict[str, TwitchChannelData]:
         """Get data from Twitch."""
+        entity_registry = er.async_get(self.hass)
+
         user = await first(self._client.get_users())
         assert user
 
+        channel_options: list[str] = self._options[CONF_CHANNELS]
+
         channels: list[TwitchUser] = []
-
-        channel_options = self._options[CONF_CHANNELS]
-
-        # Dont get data for disabled entities
-
         # Split channels into chunks of 100 to avoid hitting the rate limit
         for chunk in chunk_list(channel_options, 100):
-            channels.extend(
-                [channel async for channel in self._client.get_users(logins=chunk)]
-            )
+            async for channel in self._client.get_users(logins=chunk):
+                # Check if the entity is disabled
+                if (
+                    entity := entity_registry.async_get(
+                        f"sensor.{channel.display_name.lower()}"
+                    )
+                ) is not None and entity.disabled:
+                    self.logger.debug(
+                        "Channel %s is disabled",
+                        channel.display_name,
+                    )
+                    continue
+                channels.append(channel)
+
+        self.logger.debug("Enabled channels: %s", len(channels))
 
         data: dict[str, TwitchChannelData] = {}
 
@@ -143,7 +154,7 @@ class TwitchUpdateCoordinator(DataUpdateCoordinator[dict[str, TwitchChannelData]
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(120):
+            async with asyncio.timeout(120):
                 return await self._async_get_data()
         except TwitchAuthorizationException as err:
             self.logger.error("Error while authenticating: %s", err)
