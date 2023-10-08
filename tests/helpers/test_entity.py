@@ -1500,7 +1500,7 @@ async def test_invalid_state(
     assert (
         "homeassistant.helpers.entity",
         logging.ERROR,
-        f"Failed to set state, fall back to {STATE_UNKNOWN}",
+        f"Failed to set state for test.test, fall back to {STATE_UNKNOWN}",
     ) in caplog.record_tuples
 
     ent._attr_state = "x" * 255
