@@ -41,7 +41,7 @@ _MANUFACTURER_SELECTOR = SelectSelector(
 
 _DEVICE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
-        options=[SelectOptionDict(value="tbms100", label="TBMS100")],
+        options=[SelectOptionDict(value="TBMS100", label="TBMS100")],
         mode=SelectSelectorMode.DROPDOWN,
     )
 )

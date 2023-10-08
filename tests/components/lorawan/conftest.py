@@ -15,8 +15,8 @@ def mock_config_entry():
         domain="lorawan",
         title="TEST-ENTRY-TITLE",
         data={
-            "manufacturer": "TEST-MANUFACTURER",
-            "model": "TEST-MODEL",
+            "manufacturer": "browan",
+            "model": "TBMS100",
         },
         unique_id="0011223344556677",
         version=3,

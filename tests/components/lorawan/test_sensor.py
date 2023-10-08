@@ -54,7 +54,7 @@ def test_lorawansensorcoordinator_constructor(
     set_caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test LoRaWAN sensor entity coordinator constructor."""
-    LorawanSensorCoordinator(hass, mock_config_entry)
+    LorawanSensorCoordinator(hass, mock_config_entry, HassTBMS100.parse_uplink)
     mock_coordinator_constructor.assert_called_once_with(
         hass, DUT_LOGGER, name="LorawanSensorCoordinator.TEST-ENTRY-TITLE"
     )
@@ -69,7 +69,9 @@ async def test_lorawansensorcoordinator_subscribe(
     set_caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test LoRaWAN sensor entity coordinator subscription to MQTT."""
-    coordinator = LorawanSensorCoordinator(hass, mock_config_entry)
+    coordinator = LorawanSensorCoordinator(
+        hass, mock_config_entry, HassTBMS100.parse_uplink
+    )
 
     with patch.object(hass.components.mqtt, "async_subscribe") as mock_async_subscribe:
         await coordinator.subscribe()
@@ -88,7 +90,9 @@ async def test_lorawansensorcoordinator_subscribe_callback(
     ttn_uplink: dict,  # noqa: F811
 ) -> None:
     """Test LoRaWAN sensor entity coordinator MQTT callback."""
-    coordinator = LorawanSensorCoordinator(hass, mock_config_entry)
+    coordinator = LorawanSensorCoordinator(
+        hass, mock_config_entry, HassTBMS100.parse_uplink
+    )
     msg = ReceiveMessage("TEST-TOPIC", json.dumps(ttn_uplink), 0, False)
     await coordinator._message_received(msg)
     await hass.async_block_till_done()
@@ -115,7 +119,9 @@ def test_lorawan_sensor_entity_constructor(
     set_caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test LoRaWAN sensor entity constructor."""
-    coordinator = LorawanSensorCoordinator(hass, mock_config_entry)
+    coordinator = LorawanSensorCoordinator(
+        hass, mock_config_entry, HassTBMS100.parse_uplink
+    )
     sensor = SensorTypes.Temperature
     entity = LorawanSensorEntity(hass, mock_config_entry, coordinator, sensor)
 
@@ -139,7 +145,9 @@ async def test_lorawan_sensor_entity_handle_update(
     ttn_uplink: dict,  # noqa: F811
 ) -> None:
     """Test LoRaWAN sensor entity update from coordinator."""
-    coordinator = LorawanSensorCoordinator(hass, mock_config_entry)
+    coordinator = LorawanSensorCoordinator(
+        hass, mock_config_entry, HassTBMS100.parse_uplink
+    )
     sensor = SensorTypes.Temperature
     entity = LorawanSensorEntity(hass, mock_config_entry, coordinator, sensor)
     msg = ReceiveMessage("TEST-TOPIC", json.dumps(ttn_uplink), 0, False)
@@ -160,14 +168,16 @@ async def test_device_info(
     set_caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test LoRaWAN sensor device info."""
-    coordinator = LorawanSensorCoordinator(hass, mock_config_entry)
+    coordinator = LorawanSensorCoordinator(
+        hass, mock_config_entry, HassTBMS100.parse_uplink
+    )
     sensor = SensorTypes.Temperature
     entity = LorawanSensorEntity(hass, mock_config_entry, coordinator, sensor)
 
     assert entity.device_info == {
         "identifiers": {("lorawan", "0011223344556677")},
-        "manufacturer": "TEST-MANUFACTURER",
-        "model": "TEST-MODEL",
+        "manufacturer": "browan",
+        "model": "TBMS100",
         "name": "TEST-ENTRY-TITLE",
     }
 
