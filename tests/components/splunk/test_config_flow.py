@@ -4,7 +4,7 @@ from http import HTTPStatus
 from aiohttp import ClientConnectionError
 
 from homeassistant import config_entries
-from homeassistant.components.aussie_broadband.const import DOMAIN
+from homeassistant.components.splunk import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -26,7 +26,7 @@ async def test_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result1["type"] == FlowResultType.FORM
-    assert result1["errors"] is None
+    assert result1["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result1["flow_id"],
