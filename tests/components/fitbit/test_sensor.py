@@ -14,6 +14,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from .conftest import (
     DEVICES_API_URL,
@@ -427,18 +432,19 @@ async def test_heartrate_scope_config_entry(
 
 
 @pytest.mark.parametrize(
-    ("scopes"),
-    [(["nutrition"])],
+    ("scopes", "unit_system"),
+    [(["nutrition"], METRIC_SYSTEM), (["nutrition"], US_CUSTOMARY_SYSTEM)],
 )
 async def test_nutrition_scope_config_entry(
     hass: HomeAssistant,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
+    unit_system: UnitSystem,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test nutrition sensors are enabled."""
-
+    hass.config.units = unit_system
     register_timeseries(
         "foods/log/water",
         timeseries_response("foods-log-water", "99"),
