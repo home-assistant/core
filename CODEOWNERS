@@ -660,8 +660,8 @@ build.json @home-assistant/supervisor
 /tests/components/kmtronic/ @dgomes
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w
 /tests/components/knx/ @Julius2342 @farmio @marvin-w
-/homeassistant/components/kodi/ @OnFreund @cgtobi
-/tests/components/kodi/ @OnFreund @cgtobi
+/homeassistant/components/kodi/ @OnFreund
+/tests/components/kodi/ @OnFreund
 /homeassistant/components/komfovent/ @ProstoSanja
 /tests/components/komfovent/ @ProstoSanja
 /homeassistant/components/konnected/ @heythisisnate
@@ -1193,8 +1193,8 @@ build.json @home-assistant/supervisor
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn
 /tests/components/songpal/ @rytilahti @shenxn
-/homeassistant/components/sonos/ @cgtobi @jjlawren
-/tests/components/sonos/ @cgtobi @jjlawren
+/homeassistant/components/sonos/ @jjlawren
+/tests/components/sonos/ @jjlawren
 /homeassistant/components/soundtouch/ @kroimon
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff
