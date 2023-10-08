@@ -65,11 +65,11 @@ async def test_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
 
 
-# async def test_windows(
-#    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-# ) -> None:
-#    """Test for successfully setting up the Radarr platform on Windows."""
-#    await setup_integration(hass, aioclient_mock, windows=True)
+async def test_windows(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test for successfully setting up the Radarr platform on Windows."""
+    await setup_integration(hass, aioclient_mock, windows=True)
 
-#    state = hass.states.get("sensor.mock_title_disk_space_tv")
-#    assert state.state == "263.10"
+    state = hass.states.get("sensor.mock_title_disk_space_tv")
+    assert state.state == "263.10"

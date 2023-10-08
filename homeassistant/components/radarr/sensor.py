@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Generic
 
-from aiopyarr import Diskspace, RadarrQueue, RootFolder, SystemStatus
+from aiopyarr import Diskspace, RootFolder, SystemStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -83,14 +83,14 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
         entity_registry_enabled_default=False,
         value_fn=lambda data, _: data,
     ),
-    "queue": RadarrSensorEntityDescription[RadarrQueue](
+    "queue": RadarrSensorEntityDescription[int](
         key="queue",
         name="Queue",
         native_unit_of_measurement="Movies",
         icon="mdi:download",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda data, _: data.totalRecords,
+        value_fn=lambda data, _: data,
     ),
     "status": RadarrSensorEntityDescription[SystemStatus](
         key="start_time",

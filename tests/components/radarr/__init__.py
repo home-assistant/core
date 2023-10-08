@@ -95,13 +95,9 @@ def mock_connection(
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
-    movie_fixture = "movie"
-    if single_return:
-        movie_fixture = f"single-{movie_fixture}"
-
     aioclient_mock.get(
         f"{url}/api/v3/movie",
-        text=load_fixture(f"radarr/{movie_fixture}.json"),
+        text=load_fixture("radarr/movie.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 

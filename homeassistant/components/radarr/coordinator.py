@@ -5,14 +5,7 @@ from abc import ABC, abstractmethod
 from datetime import timedelta
 from typing import Generic, TypeVar, cast
 
-from aiopyarr import (
-    Health,
-    RadarrMovie,
-    RadarrQueue,
-    RootFolder,
-    SystemStatus,
-    exceptions,
-)
+from aiopyarr import Health, RadarrMovie, RootFolder, SystemStatus, exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 
@@ -23,9 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
-T = TypeVar(
-    "T", bound=RadarrQueue | SystemStatus | list[RootFolder] | list[Health] | int
-)
+T = TypeVar("T", bound=SystemStatus | list[RootFolder] | list[Health] | int)
 
 
 class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
@@ -105,6 +96,8 @@ class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
 class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator):
     """Queue update coordinator."""
 
-    async def _fetch_data(self) -> RadarrQueue:
+    async def _fetch_data(self) -> int:
         """Fetch the movies in queue."""
-        return await self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS)
+        return (
+            await self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS)
+        ).totalRecords
