@@ -17,6 +17,7 @@ from elmax_api.exceptions import (
 from elmax_api.http import GenericElmax
 from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
+from elmax_api.push.push import PushNotificationHandler
 from httpx import ConnectError, ConnectTimeout
 from packaging import version
 
@@ -96,7 +97,7 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         self._client = elmax_api_client
         self._panel_entry = panel
         self._state_by_endpoint = {}
-        # self._push_notification_handler = None
+        self._push_notification_handler = None
         super().__init__(
             hass=hass, logger=logger, name=name, update_interval=update_interval
         )
@@ -142,8 +143,11 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
                 "no firewall is blocking it."
             ) from err
 
-        self._fire_data_update(status)
+        # If panel supports it and a it hasn't been registered yet, register the push notification handler
+        if status.push_feature and self._push_notification_handler is None:
+            self._register_push_notification_handler()
 
+        self._fire_data_update(status)
         return status
 
     def _fire_data_update(self, status: PanelStatus):
@@ -156,8 +160,35 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
 
         self.async_set_updated_data(status)
 
+    def _register_push_notification_handler(self):
+        ws_ep = (
+            f"{'wss' if self.http_client.base_url.scheme == 'https' else 'ws'}"
+            f"://{self.http_client.base_url.host}"
+            f":{self.http_client.base_url.port}"
+            f"{self.http_client.base_url.path}/push"
+        )
+        self._push_notification_handler = PushNotificationHandler(
+            endpoint=str(ws_ep),
+            http_client=self.http_client,
+            ssl_context=self.http_client.ssl_context,
+        )
+        self._push_notification_handler.register_push_notification_handler(
+            self._push_handler
+        )
+        self._push_notification_handler.start(loop=self.hass.loop)
+
     async def _push_handler(self, status: PanelStatus) -> None:
         self._fire_data_update(status)
+
+    async def async_shutdown(self) -> None:
+        """Cancel any scheduled call, and ignore new runs."""
+        if self._push_notification_handler is not None:
+            self._push_notification_handler.unregister_push_notification_handler(
+                self._push_handler
+            )
+            self._push_notification_handler.stop()
+        self._push_notification_handler = None
+        return await super().async_shutdown()
 
 
 class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
