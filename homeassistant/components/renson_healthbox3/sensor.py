@@ -160,7 +160,7 @@ async def async_setup_entry(
 HEALTHBOX_GLOBAL_SENSORS: tuple[HealthboxGlobalSensorEntityDescription, ...] = (
     HealthboxGlobalSensorEntityDescription(
         key="global_aqi",
-        name="Global Air Quality Index",
+        translation_key="global_aqi",
         icon="mdi:leaf",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
@@ -169,7 +169,7 @@ HEALTHBOX_GLOBAL_SENSORS: tuple[HealthboxGlobalSensorEntityDescription, ...] = (
     ),
     HealthboxGlobalSensorEntityDescription(
         key="error_count",
-        name="Error Count",
+        translation_key="error_count",
         icon="mdi:alert-outline",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.error_count,
@@ -177,20 +177,20 @@ HEALTHBOX_GLOBAL_SENSORS: tuple[HealthboxGlobalSensorEntityDescription, ...] = (
     ),
     HealthboxGlobalSensorEntityDescription(
         key="wifi_status",
-        name="Wi-Fi Status",
+        translation_key="wifi_status",
         icon="mdi:wifi",
         value_fn=lambda x: x.wifi.status,
     ),
     HealthboxGlobalSensorEntityDescription(
         key="wifi_internet_connection",
-        name="Wi-Fi Internet Connection",
+        translation_key="wifi_internet_connection",
         icon="mdi:web",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.wifi.internet_connection,
     ),
     HealthboxGlobalSensorEntityDescription(
         key="wifi_ssid",
-        name="Wi-Fi SSID",
+        translation_key="wifi_ssid",
         icon="mdi:wifi-settings",
         value_fn=lambda x: x.wifi.ssid,
     ),
