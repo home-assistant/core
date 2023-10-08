@@ -1,0 +1,13 @@
+{
+  "domain": "lorawan",
+  "name": "LoRaWAN",
+  "codeowners": ["@oliv4945"],
+  "config_flow": true,
+  "dependencies": ["mqtt"],
+  "documentation": "https://www.home-assistant.io/integrations/lorawan",
+  "homekit": {},
+  "iot_class": "cloud_push",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}

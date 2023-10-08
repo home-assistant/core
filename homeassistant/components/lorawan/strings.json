@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up a new LoRaWAN device",
+        "description": "MQTT integration needs to be setup to TTN or messages redirected",
+        "data": {
+          "application": "TTN Application ID",
+          "api_key": "TTN application authorization key",
+          "device_eui": "Device EUI (ex: 0011223344556677)",
+          "manufacturer": "Device manufacturer",
+          "model": "Device model",
+          "url": "TTN network server URL"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

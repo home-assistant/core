@@ -3181,6 +3181,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "lorawan": {
+      "name": "LoRaWAN",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "luftdaten": {
       "name": "Sensor.Community",
       "integration_type": "device",
