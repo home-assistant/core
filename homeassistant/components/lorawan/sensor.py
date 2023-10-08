@@ -1,6 +1,8 @@
 """Support for MQTT sensors."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+import importlib
 import json
 import logging
 
@@ -11,7 +13,7 @@ from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.helpers.update_coordinator import (
@@ -20,7 +22,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN, TTN_TOPIC
-from .devices.browan import HassTBMS100
 from .models import SensorTypes
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +44,14 @@ async def _async_setup_entity(
 ) -> None:
     """Set up LoRaWAN sensor."""
     entities = []
-    coordinator = LorawanSensorCoordinator(hass, config_entry)
-    for sensor in HassTBMS100.supported_sensors():
+
+    manufacturer = importlib.import_module(
+        f'homeassistant.components.lorawan.devices.{config_entry.data["manufacturer"]}',
+    )
+    device = getattr(manufacturer, f'Hass{config_entry.data["model"]}')
+
+    coordinator = LorawanSensorCoordinator(hass, config_entry, device.parse_uplink)
+    for sensor in device.supported_sensors():
         entities.append(LorawanSensorEntity(hass, config_entry, coordinator, sensor))
     async_add_entities(entities)
     await coordinator.subscribe()
@@ -57,9 +64,11 @@ class LorawanSensorCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
+        uplink_parser: Callable[[Uplink], Awaitable[Uplink]],
     ) -> None:
         """Initialize the coordinator."""
         self._config = config_entry
+        self._uplink_parser = uplink_parser
         super().__init__(
             hass,
             _LOGGER,
@@ -70,7 +79,7 @@ class LorawanSensorCoordinator(DataUpdateCoordinator):
         """Handle uplink, parse and normalize it."""
         uplink = json.loads(msg.payload)
         uplink = TTN.normalize_uplink(uplink)
-        uplink = await HassTBMS100.parse_uplink(uplink)
+        await self._uplink_parser(uplink)
 
         self.async_set_updated_data(uplink)
 

@@ -25,7 +25,7 @@ FORM_DATA = {
     "url": "https://TEST-URL",
     "device_eui": "aa11223344556677",
     "manufacturer": "browan",
-    "model": "tbms100",
+    "model": "TBMS100",
 }
 
 
