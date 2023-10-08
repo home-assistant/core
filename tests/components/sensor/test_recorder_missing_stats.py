@@ -27,6 +27,7 @@ POWER_SENSOR_ATTRIBUTES = {
 }
 
 
+@pytest.mark.timeout(25)
 def test_compile_missing_statistics(
     caplog: pytest.LogCaptureFixture, freezer: FrozenDateTimeFactory, tmp_path: Path
 ) -> None:
