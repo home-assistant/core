@@ -7,10 +7,11 @@ import logging
 from typing import Final
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import FitbitApi
-from .exceptions import FitbitApiException
+from .exceptions import FitbitApiException, FitbitAuthException
 from .model import FitbitDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,8 +33,10 @@ class FitbitDeviceCoordinator(DataUpdateCoordinator):
         async with asyncio.timeout(TIMEOUT):
             try:
                 devices = await self._api.async_get_devices()
+            except FitbitAuthException as err:
+                raise ConfigEntryAuthFailed(err) from err
             except FitbitApiException as err:
-                raise UpdateFailed(f"Error from Fitbit API: {err}") from err
+                raise UpdateFailed(err) from err
         return {device.id: device for device in devices}
 
 

@@ -40,10 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator: FitbitDeviceCoordinator | None = None
     if fitbit_config.is_allowed_resource(FitbitScope.DEVICE, "devices/battery"):
         coordinator = FitbitDeviceCoordinator(hass, fitbit_api)
-        try:
-            await coordinator.async_config_entry_first_refresh()
-        except FitbitApiException as err:
-            raise ConfigEntryNotReady from err
+        await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = FitbitData(
         api=fitbit_api, device_coordinator=coordinator
