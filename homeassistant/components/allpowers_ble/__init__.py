@@ -17,7 +17,7 @@ from .const import DOMAIN
 from .coordinator import AllpowersBLECoordinator
 from .models import AllpowersBLEData
 
-PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
