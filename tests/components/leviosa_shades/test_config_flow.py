@@ -109,7 +109,7 @@ async def test_config_flow_two_zone_success(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "select"
-    assert result["data_schema"].schema["select_ip"].container == [
+    assert list(result["data_schema"].schema["select_ip"].container) == [
         TEST_HOST1,
         TEST_HOST2,
     ]
