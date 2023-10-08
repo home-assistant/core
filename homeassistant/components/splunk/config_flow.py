@@ -26,18 +26,13 @@ DEFAULT_NAME = "Home Assistant"
 
 SPLUNK_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_TOKEN): cv.string,
-                vol.Optional(CONF_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_SSL, default=False): cv.boolean,
-                vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                # vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
-            }
-        )
-    },
+        vol.Required(CONF_TOKEN): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_SSL, default=False): cv.boolean,
+        vol.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
 )
 
 
@@ -61,9 +56,9 @@ class SplunkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 use_ssl=user_input[CONF_SSL],
                 verify_ssl=user_input[CONF_VERIFY_SSL],
             )
-            if not splunk.check(self, connectivity=True, token=False, busy=False):
+            if not await splunk.check(connectivity=True, token=False, busy=False):
                 errors["base"] = "cannot_connect"
-            elif not splunk.check(self, connectivity=False, token=True, busy=False):
+            elif not await splunk.check(connectivity=False, token=True, busy=False):
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_create_entry(

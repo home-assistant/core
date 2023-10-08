@@ -3,12 +3,12 @@ import asyncio
 from http import HTTPStatus
 import json
 import logging
-import time
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from hass_splunk import SplunkPayloadError, hass_splunk
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -19,12 +19,12 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import state as state_helper
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,46 +54,29 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Splunk component."""
-    conf = config[DOMAIN]
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    token = conf.get(CONF_TOKEN)
-    use_ssl = conf[CONF_SSL]
-    verify_ssl = conf.get(CONF_VERIFY_SSL)
-    name = conf.get(CONF_NAME)
-    entity_filter = conf[CONF_FILTER]
-
-    event_collector = hass_splunk(
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Splunk from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
+    name = entry.data.get(CONF_NAME)
+    splunk = hass_splunk(
         session=async_get_clientsession(hass),
         host=host,
         port=port,
-        token=token,
-        use_ssl=use_ssl,
-        verify_ssl=verify_ssl,
+        token=entry.data[CONF_TOKEN],
+        use_ssl=entry.data[CONF_SSL],
+        verify_ssl=entry.data[CONF_VERIFY_SSL],
     )
 
-    if not await event_collector.check(connectivity=False, token=True, busy=False):
-        return False
-
-    payload = {
-        "time": time.time(),
-        "host": name,
-        "event": {
-            "domain": DOMAIN,
-            "meta": "Splunk integration has started",
-        },
-    }
-
-    await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=False)
+    if not await splunk.check(connectivity=False, token=True, busy=False):
+        # Authentication failure cannot be recovered from.
+        raise ConfigEntryAuthFailed()
 
     async def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""
 
         state = event.data.get("new_state")
-        if state is None or not entity_filter(state.entity_id):
-            return
 
         try:
             _state = state_helper.state_as_number(state)
@@ -102,7 +85,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         payload = {
             "time": event.time_fired.timestamp(),
-            "host": name,
             "event": {
                 "domain": state.domain,
                 "entity_id": state.object_id,
@@ -110,14 +92,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "value": _state,
             },
         }
+        if name:
+            payload["host"] = name
 
         try:
-            await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=True)
+            await splunk.queue(json.dumps(payload, cls=JSONEncoder), send=True)
         except SplunkPayloadError as err:
             if err.status == HTTPStatus.UNAUTHORIZED:
-                _LOGGER.error(err)
-            else:
-                _LOGGER.warning(err)
+                raise ConfigEntryAuthFailed() from err
+            _LOGGER.warning(err)
         except ClientConnectionError as err:
             _LOGGER.warning(err)
         except asyncio.TimeoutError:

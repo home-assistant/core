@@ -10,23 +10,15 @@
     "step": {
       "user": {
         "data": {
-          "ip_address": "[%key:common::config_flow::data::ip%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "token": "HTTP Event Collector Token",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "name": "Host"
         },
-        "description": "Connect to the API of your Advantage Air wall mounted tablet.",
+        "description": "Add Splunk HTTP Event Collector.",
         "title": "[%key:common::action::connect%]"
-      }
-    }
-  },
-  "services": {
-    "set_time_to": {
-      "name": "Set time to",
-      "description": "Controls timers to turn the system on or off after a set number of minutes.",
-      "fields": {
-        "minutes": {
-          "name": "Minutes",
-          "description": "Minutes until action."
-        }
       }
     }
   }
