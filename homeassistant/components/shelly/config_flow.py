@@ -29,6 +29,7 @@ from .const import (
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
+    UNEXPECTED_EXCEPTION,
     BLEScannerMode,
 )
 from .coordinator import async_reconnect_soon, get_entry_data
@@ -128,7 +129,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             except FirmwareUnsupported:
                 return self.async_abort(reason="unsupported_firmware")
             except Exception:  # pylint: disable=broad-except
-                LOGGER.exception("Unexpected exception")
+                LOGGER.exception(UNEXPECTED_EXCEPTION)
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(self.info["mac"])
@@ -144,7 +145,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 except DeviceConnectionError:
                     errors["base"] = "cannot_connect"
                 except Exception:  # pylint: disable=broad-except
-                    LOGGER.exception("Unexpected exception")
+                    LOGGER.exception(UNEXPECTED_EXCEPTION)
                     errors["base"] = "unknown"
                 else:
                     if device_info["model"]:
@@ -180,7 +181,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                LOGGER.exception("Unexpected exception")
+                LOGGER.exception(UNEXPECTED_EXCEPTION)
                 errors["base"] = "unknown"
             else:
                 if device_info["model"]:
@@ -303,7 +304,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, __: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
