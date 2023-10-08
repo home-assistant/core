@@ -22,8 +22,6 @@ SCAN_INTERVAL = timedelta(minutes=1)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Blood Glucose"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
