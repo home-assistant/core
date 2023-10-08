@@ -1,5 +1,6 @@
 """Test LoRaWAN sensor entity."""
 import json
+import logging
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
@@ -110,7 +111,13 @@ async def test_lorawansensorcoordinator_subscribe_callback(
             == 23
         )
 
-    assert set_caplog_debug.record_tuples == []
+    assert set_caplog_debug.record_tuples == [
+        (
+            "homeassistant.components.lorawan.sensor",
+            logging.DEBUG,
+            "Manually updated LorawanSensorCoordinator.TEST-ENTRY-TITLE data",
+        ),
+    ]
 
 
 def test_lorawan_sensor_entity_constructor(
@@ -159,7 +166,13 @@ async def test_lorawan_sensor_entity_handle_update(
         assert entity._attr_native_value == coordinator.data.sensors.temperature
         assert mock_async_write_ha_state.call_count == 1
 
-    assert set_caplog_debug.record_tuples == []
+    assert set_caplog_debug.record_tuples == [
+        (
+            "homeassistant.components.lorawan.sensor",
+            logging.DEBUG,
+            "Manually updated LorawanSensorCoordinator.TEST-ENTRY-TITLE data",
+        ),
+    ]
 
 
 async def test_device_info(
