@@ -195,7 +195,7 @@ async def handle_webhook(
         req_data = await request.json()
     except ValueError:
         _LOGGER.warning("Received invalid JSON from mobile_app device: %s", device_name)
-        return empty_okay_response(status=HTTPStatus.BAD_REQUEST)
+        return empty_okay_response()
 
     if (
         ATTR_WEBHOOK_ENCRYPTED not in req_data
