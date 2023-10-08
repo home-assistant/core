@@ -11,6 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 
 from .coordinator import RainbirdData
 
@@ -72,7 +73,7 @@ async def _fix_unique_id(
     if (new_unique_id := wifi_params.mac_address) is None:
         _LOGGER.warning("Unable to fix missing unique id (was None)")
         return
-
+    new_unique_id = format_mac(new_unique_id)
     entries = hass.config_entries.async_entries(DOMAIN)
     for existing_entry in entries:
         if existing_entry.unique_id == new_unique_id:

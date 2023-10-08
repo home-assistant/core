@@ -26,6 +26,7 @@ URL = "http://example.com/stick"
 PASSWORD = "password"
 SERIAL_NUMBER = 0x12635436566
 MAC_ADDRESS = "4C:A1:61:00:11:22"
+MAC_ADDRESS_UNIQUE_ID = "4c:a1:61:00:11:22"
 
 #
 # Response payloads below come from pyrainbird test cases.

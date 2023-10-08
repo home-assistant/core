@@ -20,6 +20,7 @@ from .conftest import (
     CONFIG_ENTRY_DATA,
     HOST,
     MAC_ADDRESS,
+    MAC_ADDRESS_UNIQUE_ID,
     PASSWORD,
     SERIAL_NUMBER,
     SERIAL_RESPONSE,
@@ -82,7 +83,7 @@ async def complete_flow(hass: HomeAssistant) -> FlowResult:
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
             CONFIG_ENTRY_DATA,
-            MAC_ADDRESS,
+            MAC_ADDRESS_UNIQUE_ID,
         ),
         (
             [
@@ -90,7 +91,7 @@ async def complete_flow(hass: HomeAssistant) -> FlowResult:
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
             {**CONFIG_ENTRY_DATA, "serial_number": 0},
-            MAC_ADDRESS,
+            MAC_ADDRESS_UNIQUE_ID,
         ),
     ],
 )

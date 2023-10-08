@@ -21,6 +21,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     ATTR_DURATION,
@@ -135,7 +136,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # and serial is still persisted in config entry data in case it is needed
         # in the future.
         # Either way, also prevent configuring the same host twice.
-        await self.async_set_unique_id(data[CONF_MAC])
+        await self.async_set_unique_id(format_mac(data[CONF_MAC]))
         self._abort_if_unique_id_configured()
         self._async_abort_entries_match(
             {

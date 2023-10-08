@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import (
     CONFIG_ENTRY_DATA,
     MAC_ADDRESS,
+    MAC_ADDRESS_UNIQUE_ID,
     MODEL_AND_VERSION_RESPONSE,
     WIFI_PARAMS_RESPONSE,
     mock_json_response,
@@ -127,7 +128,7 @@ async def test_fix_unique_id(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state == ConfigEntryState.LOADED
-    assert entries[0].unique_id == MAC_ADDRESS
+    assert entries[0].unique_id == MAC_ADDRESS_UNIQUE_ID
     assert entries[0].data.get(CONF_MAC) == MAC_ADDRESS
 
 
@@ -190,7 +191,7 @@ async def test_fix_unique_id_failure(
 
 @pytest.mark.parametrize(
     ("config_entry_unique_id"),
-    [(MAC_ADDRESS)],
+    [(MAC_ADDRESS_UNIQUE_ID)],
 )
 async def test_fix_unique_id_duplicate(
     hass: HomeAssistant,
@@ -219,7 +220,7 @@ async def test_fix_unique_id_duplicate(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 2
     assert entries[0].state == ConfigEntryState.NOT_LOADED
-    assert entries[0].unique_id is MAC_ADDRESS
+    assert entries[0].unique_id is MAC_ADDRESS_UNIQUE_ID
     assert entries[1].state == ConfigEntryState.NOT_LOADED
     assert entries[1].unique_id is None
 
@@ -229,7 +230,7 @@ async def test_fix_unique_id_duplicate(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 2
     assert entries[0].state == ConfigEntryState.LOADED
-    assert entries[0].unique_id is MAC_ADDRESS
+    assert entries[0].unique_id is MAC_ADDRESS_UNIQUE_ID
     assert entries[1].state == ConfigEntryState.LOADED
     assert entries[1].unique_id is None
 
