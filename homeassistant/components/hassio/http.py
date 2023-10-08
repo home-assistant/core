@@ -156,9 +156,8 @@ class HassIOView(HomeAssistantView):
                 # _stored_content_type is only computed once `content_type` is accessed
                 if path == "backups/new/upload":
                     # We need to reuse the full content type that includes the boundary
-                    headers[
-                        CONTENT_TYPE
-                    ] = request._stored_content_type  # pylint: disable=protected-access
+                    # pylint: disable-next=protected-access
+                    headers[CONTENT_TYPE] = request._stored_content_type  # type: ignore[assignment]
 
         try:
             client = await self._websession.request(

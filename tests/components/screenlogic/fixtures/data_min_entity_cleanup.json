@@ -1,0 +1,38 @@
+{
+  "adapter": {
+    "firmware": {
+      "name": "Protocol Adapter Firmware",
+      "value": "POOL: 5.2 Build 736.0 Rel"
+    }
+  },
+  "controller": {
+    "controller_id": 100,
+    "configuration": {
+      "body_type": {
+        "0": { "min_setpoint": 40, "max_setpoint": 104 },
+        "1": { "min_setpoint": 40, "max_setpoint": 104 }
+      },
+      "is_celsius": { "name": "Is Celsius", "value": 0 },
+      "controller_type": 13,
+      "hardware_type": 0
+    },
+    "model": { "name": "Model", "value": "EasyTouch2 8" },
+    "equipment": {
+      "flags": 24
+    }
+  },
+  "circuit": {},
+  "pump": {
+    "0": { "data": 0 },
+    "1": { "data": 0 },
+    "2": { "data": 0 },
+    "3": { "data": 0 },
+    "4": { "data": 0 },
+    "5": { "data": 0 },
+    "6": { "data": 0 },
+    "7": { "data": 0 }
+  },
+  "body": {},
+  "intellichem": {},
+  "scg": {}
+}

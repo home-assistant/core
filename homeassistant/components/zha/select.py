@@ -23,11 +23,11 @@ from .core.const import (
     CLUSTER_HANDLER_IAS_WD,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_ON_OFF,
-    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     Strobe,
 )
+from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -48,7 +48,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation siren from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.SELECT]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.SELECT]
 
     unsub = async_dispatcher_connect(
         hass,

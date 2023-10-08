@@ -95,7 +95,7 @@ async def async_setup_entry(
     entities.extend(
         FreeboxDiskSensor(router, disk, partition, description)
         for disk in router.disks.values()
-        for partition in disk["partitions"]
+        for partition in disk["partitions"].values()
         for description in DISK_PARTITION_SENSORS
     )
 
@@ -197,7 +197,8 @@ class FreeboxDiskSensor(FreeboxSensor):
     ) -> None:
         """Initialize a Freebox disk sensor."""
         super().__init__(router, description)
-        self._partition = partition
+        self._disk_id = disk["id"]
+        self._partition_id = partition["id"]
         self._attr_name = f"{partition['label']} {description.name}"
         self._attr_unique_id = (
             f"{router.mac} {description.key} {disk['id']} {partition['id']}"
@@ -218,10 +219,10 @@ class FreeboxDiskSensor(FreeboxSensor):
     def async_update_state(self) -> None:
         """Update the Freebox disk sensor."""
         value = None
-        if self._partition.get("total_bytes"):
-            value = round(
-                self._partition["free_bytes"] * 100 / self._partition["total_bytes"], 2
-            )
+        disk: dict[str, Any] = self._router.disks[self._disk_id]
+        partition: dict[str, Any] = disk["partitions"][self._partition_id]
+        if partition.get("total_bytes"):
+            value = round(partition["free_bytes"] * 100 / partition["total_bytes"], 2)
         self._attr_native_value = value
 
 

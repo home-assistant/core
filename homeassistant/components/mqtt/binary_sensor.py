@@ -43,9 +43,9 @@ from .mixins import (
     MqttAvailability,
     MqttEntity,
     async_setup_entry_helper,
+    write_state_on_attr_change,
 )
 from .models import MqttValueTemplate, ReceiveMessage
-from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,22 +98,11 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     """Representation a binary sensor that is updated by MQTT."""
 
     _default_name = DEFAULT_NAME
+    _delay_listener: CALLBACK_TYPE | None = None
     _entity_id_format = binary_sensor.ENTITY_ID_FORMAT
     _expired: bool | None
     _expire_after: int | None
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT binary sensor."""
-        self._expiration_trigger: CALLBACK_TYPE | None = None
-        self._delay_listener: CALLBACK_TYPE | None = None
-
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
+    _expiration_trigger: CALLBACK_TYPE | None = None
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
@@ -191,6 +180,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_is_on", "_expired"})
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT state message."""
             # auto-expire enabled?
@@ -215,7 +205,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                         "Empty template output for entity: %s with state topic: %s."
                         " Payload: '%s', with value template '%s'"
                     ),
-                    self._config[CONF_NAME],
+                    self.entity_id,
                     self._config[CONF_STATE_TOPIC],
                     msg.payload,
                     self._config.get(CONF_VALUE_TEMPLATE),
@@ -240,7 +230,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                         "No matching payload found for entity: %s with state topic: %s."
                         " Payload: '%s'%s"
                     ),
-                    self._config[CONF_NAME],
+                    self.entity_id,
                     self._config[CONF_STATE_TOPIC],
                     msg.payload,
                     template_info,
@@ -256,8 +246,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 self._delay_listener = evt.async_call_later(
                     self.hass, off_delay, off_delay_listener
                 )
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,

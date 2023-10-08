@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -36,25 +37,25 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.ssl import client_context
 
-from . import DOMAIN, PLATFORMS
+from .const import (
+    ATTR_HTML,
+    ATTR_IMAGES,
+    CONF_DEBUG,
+    CONF_ENCRYPTION,
+    CONF_SENDER_NAME,
+    CONF_SERVER,
+    DEFAULT_DEBUG,
+    DEFAULT_ENCRYPTION,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+    ENCRYPTION_OPTIONS,
+)
+
+PLATFORMS = [Platform.NOTIFY]
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_IMAGES = "images"  # optional embedded image file attachments
-ATTR_HTML = "html"
-
-CONF_ENCRYPTION = "encryption"
-CONF_DEBUG = "debug"
-CONF_SERVER = "server"
-CONF_SENDER_NAME = "sender_name"
-
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 587
-DEFAULT_TIMEOUT = 5
-DEFAULT_DEBUG = False
-DEFAULT_ENCRYPTION = "starttls"
-
-ENCRYPTION_OPTIONS = ["tls", "starttls", "none"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

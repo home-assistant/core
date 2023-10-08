@@ -26,6 +26,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
     SERVICE_GET_FORECAST,
@@ -58,6 +59,7 @@ async def test_aemet_weather(
     assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1004.4  # 100440.0 Pa -> hPa
     assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == -0.7
     assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 90.0
+    assert state.attributes.get(ATTR_WEATHER_WIND_GUST_SPEED) == 24.0
     assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 15.0  # 4.17 m/s -> km/h
     forecast = state.attributes.get(ATTR_FORECAST)[0]
     assert forecast.get(ATTR_FORECAST_CONDITION) == ATTR_CONDITION_PARTLYCLOUDY
@@ -101,6 +103,7 @@ async def test_aemet_weather_legacy(
     assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1004.4  # 100440.0 Pa -> hPa
     assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == -0.7
     assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 90.0
+    assert state.attributes.get(ATTR_WEATHER_WIND_GUST_SPEED) == 24.0
     assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 15.0  # 4.17 m/s -> km/h
     forecast = state.attributes.get(ATTR_FORECAST)[0]
     assert forecast.get(ATTR_FORECAST_CONDITION) == ATTR_CONDITION_PARTLYCLOUDY

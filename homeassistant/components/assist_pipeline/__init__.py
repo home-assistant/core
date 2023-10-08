@@ -9,9 +9,10 @@ from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_CONFIG, DOMAIN
+from .const import CONF_DEBUG_RECORDING_DIR, DATA_CONFIG, DOMAIN
 from .error import PipelineNotFound
 from .pipeline import (
+    AudioSettings,
     Pipeline,
     PipelineEvent,
     PipelineEventCallback,
@@ -33,6 +34,7 @@ __all__ = (
     "async_get_pipelines",
     "async_setup",
     "async_pipeline_from_audio_stream",
+    "AudioSettings",
     "Pipeline",
     "PipelineEvent",
     "PipelineEventType",
@@ -43,7 +45,9 @@ __all__ = (
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {vol.Optional("debug_recording_dir"): str},
+            {
+                vol.Optional(CONF_DEBUG_RECORDING_DIR): str,
+            },
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -71,6 +75,7 @@ async def async_pipeline_from_audio_stream(
     conversation_id: str | None = None,
     tts_audio_output: str | None = None,
     wake_word_settings: WakeWordSettings | None = None,
+    audio_settings: AudioSettings | None = None,
     device_id: str | None = None,
     start_stage: PipelineStage = PipelineStage.STT,
     end_stage: PipelineStage = PipelineStage.TTS,
@@ -93,6 +98,7 @@ async def async_pipeline_from_audio_stream(
             event_callback=event_callback,
             tts_audio_output=tts_audio_output,
             wake_word_settings=wake_word_settings,
+            audio_settings=audio_settings or AudioSettings(),
         ),
     )
     await pipeline_input.validate()

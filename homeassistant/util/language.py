@@ -199,3 +199,14 @@ def matches(
 
     # Score < 0 is not a match
     return [tag for _dialect, score, tag in scored if score[0] >= 0]
+
+
+def intersect(languages_1: set[str], languages_2: set[str]) -> set[str]:
+    """Intersect two sets of languages using is_match for aliases."""
+    languages = set()
+    for lang_1 in languages_1:
+        for lang_2 in languages_2:
+            if is_language_match(lang_1, lang_2):
+                languages.add(lang_1)
+
+    return languages

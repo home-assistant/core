@@ -52,6 +52,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     """Define a SmartThings Fan."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_speed_count = int_states_in_range(SPEED_RANGE)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
@@ -94,8 +95,3 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     def percentage(self) -> int:
         """Return the current speed percentage."""
         return ranged_value_to_percentage(SPEED_RANGE, self._device.status.fan_speed)
-
-    @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        return int_states_in_range(SPEED_RANGE)
