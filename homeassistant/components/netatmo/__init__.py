@@ -242,19 +242,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
             await unregister_webhook(None)
-            async_call_later(hass, 30, register_webhook)
+            entry.async_on_unload(async_call_later(hass, 30, register_webhook))
 
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):
             await register_webhook(None)
-        cloud.async_listen_connection_change(hass, manage_cloudhook)
+        entry.async_on_unload(
+            cloud.async_listen_connection_change(hass, manage_cloudhook)
+        )
     else:
-        async_at_started(hass, register_webhook)
+        entry.async_on_unload(async_at_started(hass, register_webhook))
 
     hass.services.async_register(DOMAIN, "register_webhook", register_webhook)
     hass.services.async_register(DOMAIN, "unregister_webhook", unregister_webhook)
 
-    entry.add_update_listener(async_config_entry_updated)
+    entry.async_on_unload(entry.add_update_listener(async_config_entry_updated))
 
     return True
 

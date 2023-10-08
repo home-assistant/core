@@ -2,17 +2,30 @@
 
 
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 from typing import Any
 
 import pytest
+from requests_mock.mocker import Mocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fitbit.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
-from .conftest import PROFILE_USER_ID, timeseries_response
+from .conftest import (
+    DEVICES_API_URL,
+    PROFILE_USER_ID,
+    TIMESERIES_API_URL_FORMAT,
+    timeseries_response,
+)
 
 DEVICE_RESPONSE_CHARGE_2 = {
     "battery": "Medium",
@@ -359,7 +372,6 @@ async def test_activity_scope_config_entry(
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test activity sensors are enabled."""
 
@@ -404,7 +416,6 @@ async def test_heartrate_scope_config_entry(
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test heartrate sensors are enabled."""
 
@@ -421,6 +432,39 @@ async def test_heartrate_scope_config_entry(
 
 
 @pytest.mark.parametrize(
+    ("scopes", "unit_system"),
+    [(["nutrition"], METRIC_SYSTEM), (["nutrition"], US_CUSTOMARY_SYSTEM)],
+)
+async def test_nutrition_scope_config_entry(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    register_timeseries: Callable[[str, dict[str, Any]], None],
+    unit_system: UnitSystem,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test nutrition sensors are enabled."""
+    hass.config.units = unit_system
+    register_timeseries(
+        "foods/log/water",
+        timeseries_response("foods-log-water", "99"),
+    )
+    register_timeseries(
+        "foods/log/caloriesIn",
+        timeseries_response("foods-log-caloriesIn", "1600"),
+    )
+    assert await integration_setup()
+
+    state = hass.states.get("sensor.water")
+    assert state
+    assert (state.state, state.attributes) == snapshot
+
+    state = hass.states.get("sensor.calories_in")
+    assert state
+    assert (state.state, state.attributes) == snapshot
+
+
+@pytest.mark.parametrize(
     ("scopes"),
     [(["sleep"])],
 )
@@ -429,7 +473,6 @@ async def test_sleep_scope_config_entry(
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sleep sensors are enabled."""
 
@@ -471,7 +514,6 @@ async def test_weight_scope_config_entry(
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sleep sensors are enabled."""
 
@@ -493,7 +535,6 @@ async def test_settings_scope_config_entry(
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test heartrate sensors are enabled."""
 
@@ -510,3 +551,82 @@ async def test_settings_scope_config_entry(
     assert [s.entity_id for s in states] == [
         "sensor.charge_2_battery",
     ]
+
+
+@pytest.mark.parametrize(
+    ("scopes"),
+    [(["heartrate"])],
+)
+async def test_sensor_update_failed(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    requests_mock: Mocker,
+) -> None:
+    """Test a failed sensor update when talking to the API."""
+
+    requests_mock.register_uri(
+        "GET",
+        TIMESERIES_API_URL_FORMAT.format(resource="activities/heart"),
+        status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+    )
+
+    assert await integration_setup()
+
+    state = hass.states.get("sensor.resting_heart_rate")
+    assert state
+    assert state.state == "unavailable"
+
+
+@pytest.mark.parametrize(
+    ("scopes", "mock_devices"),
+    [(["settings"], None)],
+)
+async def test_device_battery_level_update_failed(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    requests_mock: Mocker,
+) -> None:
+    """Test API failure for a battery level sensor for devices."""
+
+    requests_mock.register_uri(
+        "GET",
+        DEVICES_API_URL,
+        [
+            {
+                "status_code": HTTPStatus.OK,
+                "json": [DEVICE_RESPONSE_CHARGE_2],
+            },
+            # A second spurious update request on startup
+            {
+                "status_code": HTTPStatus.OK,
+                "json": [DEVICE_RESPONSE_CHARGE_2],
+            },
+            # Fail when requesting an update
+            {
+                "status_code": HTTPStatus.INTERNAL_SERVER_ERROR,
+                "json": {
+                    "errors": [
+                        {
+                            "errorType": "request",
+                            "message": "An error occurred",
+                        }
+                    ]
+                },
+            },
+        ],
+    )
+
+    assert await integration_setup()
+
+    state = hass.states.get("sensor.charge_2_battery")
+    assert state
+    assert state.state == "Medium"
+
+    # Request an update for the entity which will fail
+    await async_update_entity(hass, "sensor.charge_2_battery")
+
+    state = hass.states.get("sensor.charge_2_battery")
+    assert state
+    assert state.state == "unavailable"

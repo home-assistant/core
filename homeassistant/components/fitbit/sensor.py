@@ -33,6 +33,7 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfMass,
     UnitOfTime,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -59,6 +60,7 @@ from .const import (
     FITBIT_DEFAULT_RESOURCES,
     FitbitUnitSystem,
 )
+from .exceptions import FitbitApiException
 from .model import FitbitDevice
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -119,6 +121,13 @@ def _elevation_unit(unit_system: FitbitUnitSystem) -> UnitOfLength:
     if unit_system == FitbitUnitSystem.EN_US:
         return UnitOfLength.FEET
     return UnitOfLength.METERS
+
+
+def _water_unit(unit_system: FitbitUnitSystem) -> UnitOfVolume:
+    """Determine the water unit."""
+    if unit_system == FitbitUnitSystem.EN_US:
+        return UnitOfVolume.FLUID_OUNCES
+    return UnitOfVolume.MILLILITERS
 
 
 @dataclass
@@ -452,6 +461,24 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    FitbitSensorEntityDescription(
+        key="foods/log/caloriesIn",
+        name="Calories In",
+        native_unit_of_measurement="cal",
+        icon="mdi:food-apple",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        scope="nutrition",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    FitbitSensorEntityDescription(
+        key="foods/log/water",
+        name="Water",
+        icon="mdi:cup-water",
+        unit_fn=_water_unit,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        scope="nutrition",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 # Different description depending on clock format
@@ -707,12 +734,22 @@ class FitbitSensor(SensorEntity):
         resource_type = self.entity_description.key
         if resource_type == "devices/battery" and self.device is not None:
             device_id = self.device.id
-            registered_devs: list[FitbitDevice] = await self.api.async_get_devices()
-            self.device = next(
-                device for device in registered_devs if device.id == device_id
-            )
-            self._attr_native_value = self.device.battery
+            try:
+                registered_devs: list[FitbitDevice] = await self.api.async_get_devices()
+            except FitbitApiException:
+                self._attr_available = False
+            else:
+                self._attr_available = True
+                self.device = next(
+                    device for device in registered_devs if device.id == device_id
+                )
+                self._attr_native_value = self.device.battery
+            return
 
-        else:
+        try:
             result = await self.api.async_get_latest_time_series(resource_type)
+        except FitbitApiException:
+            self._attr_available = False
+        else:
+            self._attr_available = True
             self._attr_native_value = self.entity_description.value_fn(result)
