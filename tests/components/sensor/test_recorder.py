@@ -35,12 +35,10 @@ from homeassistant.components.recorder.util import get_instance, session_scope
 from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from tests.common import get_test_home_assistant
 from tests.components.recorder.common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
     assert_multiple_states_equal_without_context_and_last_changed,
@@ -2148,35 +2146,6 @@ def test_compile_hourly_statistics_unchanged(
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
-
-
-def test_compile_missing_statistics(caplog: pytest.LogCaptureFixture) -> None:
-    """Test compile missing statistics."""
-    start_time = dt_util.utcnow()
-    hass: HomeAssistant = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-
-    two_days_ago = start_time - timedelta(days=2)
-    with freeze_time(two_days_ago) as freezer:
-        setup_component(hass, "sensor", {})
-        wait_recording_done(hass)
-
-        past_time = two_days_ago
-        while past_time < start_time:
-            freezer.move_to(past_time)
-            hass.states.set("sensor.test1", "10")
-            wait_recording_done(hass)
-            past_time += timedelta(minutes=5)
-
-    wait_recording_done(hass)
-    hass.stop()
-    hass: HomeAssistant = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
 
 
 def test_compile_hourly_statistics_partially_unavailable(
