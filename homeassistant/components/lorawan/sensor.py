@@ -45,10 +45,38 @@ async def _async_setup_entity(
     """Set up LoRaWAN sensor."""
     entities = []
 
-    manufacturer = importlib.import_module(
-        f'homeassistant.components.lorawan.devices.{config_entry.data["manufacturer"]}',
-    )
-    device = getattr(manufacturer, f'Hass{config_entry.data["model"]}')
+    # Device/manufacture should not generate any error as they are returned
+    # by the config flow selector, but catch the error in case something
+    # goes wrong somewhere
+    if not config_entry.data["manufacturer"].isalnum():
+        _LOGGER.error(
+            'Manufacturer name "%s" is invalid', config_entry.data["manufacturer"]
+        )
+        return
+    try:
+        manufacturer = importlib.import_module(
+            f'homeassistant.components.lorawan.devices.{config_entry.data["manufacturer"]}',
+        )
+    except ImportError:
+        _LOGGER.error('Manufacturer "%s" is unknown', config_entry.data["manufacturer"])
+        return
+
+    if not config_entry.data["model"].isalnum():
+        _LOGGER.error(
+            'Device name "%s" from %s is invalid',
+            config_entry.data["model"],
+            config_entry.data["manufacturer"].capitalize(),
+        )
+        return
+    try:
+        device = getattr(manufacturer, f'Hass{config_entry.data["model"]}')
+    except AttributeError:
+        _LOGGER.error(
+            'Device "%s" from %s is unknown',
+            config_entry.data["model"],
+            config_entry.data["manufacturer"].capitalize(),
+        )
+        return
 
     coordinator = LorawanSensorCoordinator(hass, config_entry, device.parse_uplink)
     for sensor in device.supported_sensors():

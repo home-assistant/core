@@ -1,6 +1,7 @@
 """Test LoRaWAN sensor entity."""
 import json
 import logging
+from types import MappingProxyType
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
@@ -45,6 +46,62 @@ async def test_async_setup_entry(
         assert type(entity) == LorawanSensorEntity
 
     assert set_caplog_debug.record_tuples == []
+
+
+@patch(
+    "homeassistant.components.lorawan.sensor.LorawanSensorCoordinator.subscribe",
+)
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("config_data", "warning_message"),
+    [
+        (
+            {"manufacturer": "TEST-INVALID-MANUFACTURER"},
+            'Manufacturer name "TEST-INVALID-MANUFACTURER" is invalid',
+        ),
+        (
+            {
+                "manufacturer": "browan",
+                "model": "TEST-INVALID-DEVICE",
+            },
+            'Device name "TEST-INVALID-DEVICE" from Browan is invalid',
+        ),
+        (
+            {"manufacturer": "testUnknownManufacturer"},
+            'Manufacturer "testUnknownManufacturer" is unknown',
+        ),
+        (
+            {
+                "manufacturer": "browan",
+                "model": "testUnknownDevice",
+            },
+            'Device "testUnknownDevice" from Browan is unknown',
+        ),
+    ],
+)
+async def test_async_setup_invalid_manufacturer_device(
+    mock_subscribe: AsyncMock,
+    hass: HomeAssistant,
+    mock_config_entry: config_entries.ConfigEntry,
+    set_caplog_debug: pytest.LogCaptureFixture,
+    config_data: dict,
+    warning_message: str,
+) -> None:
+    """Test LoRaWAN sensor entity setup."""
+    async_add_entities = Mock(autospec=True)
+    mock_config_entry.data = MappingProxyType(config_data)
+
+    await async_setup_entry(hass, mock_config_entry, async_add_entities)
+
+    mock_subscribe.assert_not_called()
+
+    assert set_caplog_debug.record_tuples == [
+        (
+            "homeassistant.components.lorawan.sensor",
+            logging.ERROR,
+            warning_message,
+        ),
+    ]
 
 
 @patch("homeassistant.helpers.update_coordinator.DataUpdateCoordinator.__init__")
