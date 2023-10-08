@@ -18,6 +18,8 @@ from homeassistant.components.sensor import SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UndefinedType
 
+from .data import ttn_uplink  # noqa: F401
+
 
 @patch(
     "homeassistant.components.lorawan.sensor.LorawanSensorCoordinator.subscribe",
@@ -83,7 +85,7 @@ async def test_lorawansensorcoordinator_subscribe_callback(
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
     set_caplog_debug: pytest.LogCaptureFixture,
-    ttn_uplink: dict,
+    ttn_uplink: dict,  # noqa: F811
 ) -> None:
     """Test LoRaWAN sensor entity coordinator MQTT callback."""
     coordinator = LorawanSensorCoordinator(hass, mock_config_entry)
@@ -134,7 +136,7 @@ async def test_lorawan_sensor_entity_handle_update(
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
     set_caplog_debug: pytest.LogCaptureFixture,
-    ttn_uplink: dict,
+    ttn_uplink: dict,  # noqa: F811
 ) -> None:
     """Test LoRaWAN sensor entity update from coordinator."""
     coordinator = LorawanSensorCoordinator(hass, mock_config_entry)
