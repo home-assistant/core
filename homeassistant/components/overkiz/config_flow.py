@@ -30,13 +30,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import (
-    CONF_API_TYPE,
-    CONF_SERVER,
-    DEFAULT_SERVER,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_API_TYPE, CONF_SERVER, DEFAULT_SERVER, DOMAIN, LOGGER
 
 
 class DeveloperModeDisabled(HomeAssistantError):
