@@ -15,5 +15,15 @@
       "already_configured": "Warncell ID / name is already configured.",
       "invalid_identifier": "[%key:component::dwd_weather_warnings::config::error::invalid_identifier%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "current_warning_level": {
+        "name": "Current warning level"
+      },
+      "advance_warning_level": {
+        "name": "Advance warning level"
+      }
+    }
   }
 }

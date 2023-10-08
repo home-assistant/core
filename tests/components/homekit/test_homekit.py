@@ -765,6 +765,7 @@ async def test_homekit_start(
     assert device
     formatted_mac = dr.format_mac(homekit.driver.state.mac)
     assert (dr.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
+    assert device.model == "HomeBridge"
 
     assert len(device_registry.devices) == 1
     assert homekit.driver.state.config_version == 1
@@ -1019,6 +1020,7 @@ async def test_homekit_unpair_not_homekit_device(
     not_homekit_entry = MockConfigEntry(
         domain="not_homekit", data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
+    not_homekit_entry.add_to_hass(hass)
     entity_id = "light.demo"
     hass.states.async_set("light.demo", "on")
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
@@ -2008,6 +2010,16 @@ async def test_homekit_start_in_accessory_mode(
     )
     assert hk_driver_start.called
     assert homekit.status == STATUS_RUNNING
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+    )
+    assert device
+    formatted_mac = dr.format_mac(homekit.driver.state.mac)
+    assert (dr.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
+    assert device.model == "Light"
+
+    assert len(device_registry.devices) == 1
 
 
 async def test_homekit_start_in_accessory_mode_unsupported_entity(

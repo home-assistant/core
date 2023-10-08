@@ -1,4 +1,5 @@
 """The tests for Radarr sensor platform."""
+import pytest
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -13,15 +14,43 @@ from . import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.parametrize(
+    ("windows", "single", "root_folder"),
+    [
+        (
+            False,
+            False,
+            "downloads",
+        ),
+        (
+            False,
+            True,
+            "downloads",
+        ),
+        (
+            True,
+            False,
+            "tv",
+        ),
+        (
+            True,
+            True,
+            "tv",
+        ),
+    ],
+)
 async def test_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     entity_registry_enabled_by_default: None,
+    windows: bool,
+    single: bool,
+    root_folder: str,
 ) -> None:
     """Test for successfully setting up the Radarr platform."""
-    await setup_integration(hass, aioclient_mock)
+    await setup_integration(hass, aioclient_mock, windows=windows, single_return=single)
 
-    state = hass.states.get("sensor.mock_title_disk_space_downloads")
+    state = hass.states.get(f"sensor.mock_title_disk_space_{root_folder}")
     assert state.state == "263.10"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "GB"
     state = hass.states.get("sensor.mock_title_movies")
@@ -36,11 +65,11 @@ async def test_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
 
 
-async def test_windows(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test for successfully setting up the Radarr platform on Windows."""
-    await setup_integration(hass, aioclient_mock, windows=True)
+# async def test_windows(
+#    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+# ) -> None:
+#    """Test for successfully setting up the Radarr platform on Windows."""
+#    await setup_integration(hass, aioclient_mock, windows=True)
 
-    state = hass.states.get("sensor.mock_title_disk_space_tv")
-    assert state.state == "263.10"
+#    state = hass.states.get("sensor.mock_title_disk_space_tv")
+#    assert state.state == "263.10"

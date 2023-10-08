@@ -30,14 +30,14 @@ from .. import subscription
 from ..config import MQTT_BASE_SCHEMA
 from ..const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
 from ..models import (
     MqttValueTemplate,
     PayloadSentinel,
     ReceiveMessage,
     ReceivePayloadType,
 )
-from ..util import get_mqtt_data, valid_publish_topic
+from ..util import valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
@@ -215,12 +215,17 @@ async def async_setup_entity_legacy(
 class MqttVacuum(MqttEntity, VacuumEntity):
     """Representation of a MQTT-controlled legacy vacuum."""
 
+    _attr_battery_level = 0
+    _attr_is_on = False
+    _attributes_extra_blocked = MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED
+    _charging: bool = False
+    _cleaning: bool = False
+    _command_topic: str | None
+    _docked: bool = False
     _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
-    _attributes_extra_blocked = MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED
-
-    _command_topic: str | None
     _encoding: str | None
+    _error: str | None = None
     _qos: bool
     _retain: bool
     _payloads: dict[str, str]
@@ -230,25 +235,6 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     _templates: dict[
         str, Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
     ]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the vacuum."""
-        self._attr_battery_level = 0
-        self._attr_is_on = False
-        self._attr_fan_speed = "unknown"
-
-        self._charging = False
-        self._cleaning = False
-        self._docked = False
-        self._error: str | None = None
-
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -313,6 +299,20 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(
+            self,
+            {
+                "_attr_battery_level",
+                "_attr_fan_speed",
+                "_attr_is_on",
+                # We track _attr_status and _charging as they are used to
+                # To determine the batery_icon.
+                # We do not need to track _docked as it is
+                # not leading to entity changes directly.
+                "_attr_status",
+                "_charging",
+            },
+        )
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT message."""
             if (
@@ -386,8 +386,6 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 )
                 if fan_speed and fan_speed is not PayloadSentinel.DEFAULT:
                     self._attr_fan_speed = str(fan_speed)
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         topics_list = {topic for topic in self._state_topics.values() if topic}
         self._sub_state = subscription.async_prepare_subscribe_topics(

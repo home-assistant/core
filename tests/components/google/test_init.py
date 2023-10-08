@@ -20,7 +20,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import UTC, utcnow
 
 from .conftest import (
     CALENDAR_ID,
@@ -645,7 +645,8 @@ async def test_add_event_location(
 
 
 @pytest.mark.parametrize(
-    "config_entry_token_expiry", [datetime.datetime.max.timestamp() + 1]
+    "config_entry_token_expiry",
+    [datetime.datetime.max.replace(tzinfo=UTC).timestamp() + 1],
 )
 async def test_invalid_token_expiry_in_config_entry(
     hass: HomeAssistant,

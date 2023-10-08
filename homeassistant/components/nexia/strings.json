@@ -18,6 +18,49 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "blower_active": {
+        "name": "Blower active"
+      },
+      "emergency_heat_active": {
+        "name": "Emergency heat active"
+      }
+    },
+    "number": {
+      "fan_speed": {
+        "name": "Fan speed"
+      }
+    },
+    "sensor": {
+      "system_status": {
+        "name": "System status"
+      },
+      "air_cleaner_mode": {
+        "name": "Air cleaner mode"
+      },
+      "current_compressor_speed": {
+        "name": "Current compressor speed"
+      },
+      "requested_compressor_speed": {
+        "name": "Requested compressor speed"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "zone_status": {
+        "name": "Zone status"
+      },
+      "zone_setpoint_status": {
+        "name": "Zone setpoint status"
+      }
+    },
+    "switch": {
+      "hold": {
+        "name": "Hold"
+      }
+    }
+  },
   "services": {
     "set_aircleaner_mode": {
       "name": "Set air cleaner mode",

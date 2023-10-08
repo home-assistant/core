@@ -1,8 +1,5 @@
 """Philips Hue Event platform tests for V2 bridge/api."""
-from homeassistant.components.event import (
-    ATTR_EVENT_TYPE,
-    ATTR_EVENT_TYPES,
-)
+from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_platform
@@ -28,6 +25,7 @@ async def test_event(
         "initial_press",
         "repeat",
         "short_release",
+        "long_press",
         "long_release",
     ]
     # trigger firing 'initial_press' event from the device

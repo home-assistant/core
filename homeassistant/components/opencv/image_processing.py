@@ -188,7 +188,6 @@ class OpenCVImageProcessor(ImageProcessingEntity):
                 cv_image, scaleFactor=scale, minNeighbors=neighbors, minSize=min_size
             )
             regions = []
-            # pylint: disable=invalid-name
             for x, y, w, h in detections:
                 regions.append((int(x), int(y), int(w), int(h)))
                 total_matches += 1

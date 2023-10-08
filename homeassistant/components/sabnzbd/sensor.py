@@ -12,13 +12,12 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, SIGNAL_SABNZBD_UPDATED
-from .const import DEFAULT_NAME, KEY_API_DATA, KEY_NAME
+from .const import DEFAULT_NAME, KEY_API_DATA
 
 
 @dataclass
@@ -38,51 +37,51 @@ SPEED_KEY = "kbpersec"
 SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
     SabnzbdSensorEntityDescription(
         key="status",
-        name="Status",
+        translation_key="status",
     ),
     SabnzbdSensorEntityDescription(
         key=SPEED_KEY,
-        name="Speed",
+        translation_key="speed",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="mb",
-        name="Queue",
+        translation_key="queue",
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="mbleft",
-        name="Left",
+        translation_key="left",
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="diskspacetotal1",
-        name="Disk",
+        translation_key="total_disk_space",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="diskspace1",
-        name="Disk Free",
+        translation_key="free_disk_space",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="noofslots_total",
-        name="Queue Count",
+        translation_key="queue_count",
         state_class=SensorStateClass.TOTAL,
     ),
     SabnzbdSensorEntityDescription(
         key="day_size",
-        name="Daily Total",
+        translation_key="daily_total",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
@@ -90,7 +89,7 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
     ),
     SabnzbdSensorEntityDescription(
         key="week_size",
-        name="Weekly Total",
+        translation_key="weekly_total",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
@@ -98,7 +97,7 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
     ),
     SabnzbdSensorEntityDescription(
         key="month_size",
-        name="Monthly Total",
+        translation_key="monthly_total",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
@@ -106,7 +105,7 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
     ),
     SabnzbdSensorEntityDescription(
         key="total_size",
-        name="Total",
+        translation_key="overall_total",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -138,13 +137,9 @@ async def async_setup_entry(
     entry_id = config_entry.entry_id
 
     sab_api_data = hass.data[DOMAIN][entry_id][KEY_API_DATA]
-    client_name = hass.data[DOMAIN][entry_id][KEY_NAME]
 
     async_add_entities(
-        [
-            SabnzbdSensor(sab_api_data, client_name, sensor, entry_id)
-            for sensor in SENSOR_TYPES
-        ]
+        [SabnzbdSensor(sab_api_data, sensor, entry_id) for sensor in SENSOR_TYPES]
     )
 
 
@@ -153,11 +148,11 @@ class SabnzbdSensor(SensorEntity):
 
     entity_description: SabnzbdSensorEntityDescription
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         sabnzbd_api_data,
-        client_name,
         description: SabnzbdSensorEntityDescription,
         entry_id,
     ) -> None:
@@ -166,7 +161,6 @@ class SabnzbdSensor(SensorEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self.entity_description = description
         self._sabnzbd_api = sabnzbd_api_data
-        self._attr_name = f"{client_name} {description.name}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},

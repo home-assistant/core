@@ -97,10 +97,12 @@ async def test_migrate_device_id_no_serial_skip_if_other_owner(
     Create a device registry entry that needs migrate, but belongs to a different
     config entry. It should be ignored.
     """
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
     device_registry = dr.async_get(hass)
 
     bridge = device_registry.async_get_or_create(
-        config_entry_id="XX",
+        config_entry_id=entry.entry_id,
         identifiers=variant.before,
         manufacturer="RYSE Inc.",
         model="RYSE SmartBridge",
@@ -115,7 +117,7 @@ async def test_migrate_device_id_no_serial_skip_if_other_owner(
     bridge = device_registry.async_get(bridge.id)
 
     assert bridge.identifiers == variant.before
-    assert bridge.config_entries == {"XX"}
+    assert bridge.config_entries == {entry.entry_id}
 
 
 @pytest.mark.parametrize("variant", DEVICE_MIGRATION_TESTS)

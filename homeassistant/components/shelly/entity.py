@@ -11,8 +11,8 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
@@ -326,12 +326,12 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         super().__init__(coordinator)
         self.block = block
         self._attr_name = get_block_entity_name(coordinator.device, block)
-        self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
         self._attr_unique_id = f"{coordinator.mac}-{block.description}"
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
         self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
@@ -363,7 +363,6 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
-        self._attr_should_poll = False
         self._attr_device_info = {
             "connections": {(CONNECTION_NETWORK_MAC, coordinator.mac)}
         }
@@ -375,6 +374,7 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Device status by entity key."""
         return cast(dict, self.coordinator.device.status[self.key])
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
         self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
@@ -551,7 +551,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
     """Represent a shelly sleeping block attribute entity."""
 
-    # pylint: disable=super-init-not-called
+    # pylint: disable-next=super-init-not-called
     def __init__(
         self,
         coordinator: ShellyBlockCoordinator,
@@ -569,7 +569,6 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
         self.block: Block | None = block  # type: ignore[assignment]
         self.entity_description = description
 
-        self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
@@ -625,7 +624,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
 
     entity_description: RpcEntityDescription
 
-    # pylint: disable=super-init-not-called
+    # pylint: disable-next=super-init-not-called
     def __init__(
         self,
         coordinator: ShellyRpcCoordinator,
@@ -641,7 +640,6 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self.attribute = attribute
         self.entity_description = description
 
-        self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )

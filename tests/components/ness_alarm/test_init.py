@@ -1,7 +1,7 @@
 """Tests for the ness_alarm component."""
-from enum import Enum
 from unittest.mock import MagicMock, patch
 
+from nessclient import ArmingMode, ArmingState
 import pytest
 
 from homeassistant.components import alarm_control_panel
@@ -24,6 +24,8 @@ from homeassistant.const import (
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
@@ -84,7 +86,7 @@ async def test_dispatch_state_change(hass: HomeAssistant, mock_nessclient) -> No
     await hass.async_block_till_done()
 
     on_state_change = mock_nessclient.on_state_change.call_args[0][0]
-    on_state_change(MockArmingState.ARMING)
+    on_state_change(ArmingState.ARMING, None)
 
     await hass.async_block_till_done()
     assert hass.states.is_state("alarm_control_panel.alarm_panel", STATE_ALARM_ARMING)
@@ -174,13 +176,16 @@ async def test_dispatch_zone_change(hass: HomeAssistant, mock_nessclient) -> Non
 async def test_arming_state_change(hass: HomeAssistant, mock_nessclient) -> None:
     """Test arming state change handing."""
     states = [
-        (MockArmingState.UNKNOWN, STATE_UNKNOWN),
-        (MockArmingState.DISARMED, STATE_ALARM_DISARMED),
-        (MockArmingState.ARMING, STATE_ALARM_ARMING),
-        (MockArmingState.EXIT_DELAY, STATE_ALARM_ARMING),
-        (MockArmingState.ARMED, STATE_ALARM_ARMED_AWAY),
-        (MockArmingState.ENTRY_DELAY, STATE_ALARM_PENDING),
-        (MockArmingState.TRIGGERED, STATE_ALARM_TRIGGERED),
+        (ArmingState.UNKNOWN, None, STATE_UNKNOWN),
+        (ArmingState.DISARMED, None, STATE_ALARM_DISARMED),
+        (ArmingState.ARMING, None, STATE_ALARM_ARMING),
+        (ArmingState.EXIT_DELAY, None, STATE_ALARM_ARMING),
+        (ArmingState.ARMED, None, STATE_ALARM_ARMED_AWAY),
+        (ArmingState.ARMED, ArmingMode.ARMED_AWAY, STATE_ALARM_ARMED_AWAY),
+        (ArmingState.ARMED, ArmingMode.ARMED_HOME, STATE_ALARM_ARMED_HOME),
+        (ArmingState.ARMED, ArmingMode.ARMED_NIGHT, STATE_ALARM_ARMED_NIGHT),
+        (ArmingState.ENTRY_DELAY, None, STATE_ALARM_PENDING),
+        (ArmingState.TRIGGERED, None, STATE_ALARM_TRIGGERED),
     ]
 
     await async_setup_component(hass, DOMAIN, VALID_CONFIG)
@@ -188,22 +193,10 @@ async def test_arming_state_change(hass: HomeAssistant, mock_nessclient) -> None
     assert hass.states.is_state("alarm_control_panel.alarm_panel", STATE_UNKNOWN)
     on_state_change = mock_nessclient.on_state_change.call_args[0][0]
 
-    for arming_state, expected_state in states:
-        on_state_change(arming_state)
+    for arming_state, arming_mode, expected_state in states:
+        on_state_change(arming_state, arming_mode)
         await hass.async_block_till_done()
         assert hass.states.is_state("alarm_control_panel.alarm_panel", expected_state)
-
-
-class MockArmingState(Enum):
-    """Mock nessclient.ArmingState enum."""
-
-    UNKNOWN = "UNKNOWN"
-    DISARMED = "DISARMED"
-    ARMING = "ARMING"
-    EXIT_DELAY = "EXIT_DELAY"
-    ARMED = "ARMED"
-    ENTRY_DELAY = "ENTRY_DELAY"
-    TRIGGERED = "TRIGGERED"
 
 
 class MockClient:
@@ -253,10 +246,5 @@ def mock_nessclient():
 
     with patch(
         "homeassistant.components.ness_alarm.Client", new=_mock_factory, create=True
-    ), patch(
-        "homeassistant.components.ness_alarm.ArmingState", new=MockArmingState
-    ), patch(
-        "homeassistant.components.ness_alarm.alarm_control_panel.ArmingState",
-        new=MockArmingState,
     ):
         yield _mock_instance
