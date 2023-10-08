@@ -1,8 +1,8 @@
 """Coordinator for myUplink."""
+import asyncio.timeouts
 from datetime import datetime, timedelta
 import logging
 
-import async_timeout
 from myuplink.api import MyUplinkAPI
 from myuplink.models import DevicePoint
 
@@ -38,7 +38,7 @@ class MyUplinkDataCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from the myUplink API."""
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             _LOGGER.debug("Coordinator preparing updating")
 
             data: dict[str, any] = {}
