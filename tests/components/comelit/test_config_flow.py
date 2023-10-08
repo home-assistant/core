@@ -69,6 +69,10 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
     with patch(
         "aiocomelit.api.ComeliteSerialBridgeApi.login",
         side_effect=side_effect,
+    ), patch(
+        "aiocomelit.api.ComeliteSerialBridgeApi.logout",
+    ), patch(
+        "homeassistant.components.comelit.async_setup_entry"
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
