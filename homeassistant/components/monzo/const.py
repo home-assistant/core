@@ -37,3 +37,5 @@ DEPOSIT = "deposit"
 WITHDRAW = "withdraw"
 ACCOUNT_ID = "account_id"
 ACCOUNT_TYPE = "type"
+
+CONF_COORDINATOR = "coordinator"

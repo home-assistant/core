@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ACCOUNTS, DOMAIN, POTS
+from .const import ACCOUNTS, CONF_COORDINATOR, DOMAIN, POTS
 from .entity import MonzoBaseEntity
 
 
@@ -71,12 +71,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
 
     entities = []
-    for index, account in enumerate(
-        hass.data[DOMAIN][config_entry.entry_id + ACCOUNTS]
-    ):
+    for index, account in enumerate(hass.data[DOMAIN][config_entry.entry_id][ACCOUNTS]):
         for entity_description in ACC_SENSORS:
             entities.append(
                 MonzoSensor(
@@ -88,7 +86,7 @@ async def async_setup_entry(
                 )
             )
 
-    for index, _pot in enumerate(hass.data[DOMAIN][config_entry.entry_id + POTS]):
+    for index, _pot in enumerate(hass.data[DOMAIN][config_entry.entry_id][POTS]):
         for entity_description in POT_SENSORS:
             entities.append(
                 MonzoSensor(
