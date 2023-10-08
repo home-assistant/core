@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from elmax_api.model.alarm_status import AlarmArmStatus, AlarmStatus
+from elmax_api.model.area import Area
 from elmax_api.model.command import AreaCommand
 from elmax_api.model.panel import PanelStatus
+from helpers.typing import StateType
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -65,6 +67,7 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
     _attr_code_arm_required = False
     _attr_has_entity_name = True
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
+    _last_state: Area
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
@@ -92,12 +95,19 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
         )
         await self.coordinator.async_refresh()
 
+    @property
+    def state(self) -> StateType:
+        """Return the state of the entity."""
+        return (
+            None
+            if self._last_state is None
+            else ALARM_STATE_TO_HA.get(self._last_state.armed_status)
+        )
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_state = ALARM_STATE_TO_HA.get(
-            self.coordinator.get_area_state(self._device.endpoint_id).armed_status
-        )
+        self._attr_state = ALARM_STATE_TO_HA.get(self._last_state.armed_status)
         super()._handle_coordinator_update()
 
 

@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from elmax_api.model.command import CoverCommand
+from elmax_api.model.cover import Cover
 from elmax_api.model.cover_status import CoverStatus
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
@@ -74,19 +75,20 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
     _attr_supported_features = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
+    _last_state: Cover
 
     def __check_cover_status(self, status_to_check: CoverStatus) -> bool | None:
         """Check if the current cover entity is in a specific state."""
-        if (
-            state := self.coordinator.get_cover_state(self._device.endpoint_id).status
-        ) is None:
+        if self._last_state is None:
+            return None
+        if (state := self._last_state.status) is None:
             return None
         return state == status_to_check
 
     @property
     def is_closed(self) -> bool | None:
         """Tells if the cover is closed or not."""
-        return self.coordinator.get_cover_state(self._device.endpoint_id).position == 0
+        return None if self._last_state is None else self._last_state.position == 0
 
     @property
     def current_cover_position(self) -> int | None:
@@ -94,7 +96,7 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        return self.coordinator.get_cover_state(self._device.endpoint_id).position
+        return None if self._last_state is None else self._last_state.position
 
     @property
     def is_opening(self) -> bool | None:
@@ -111,9 +113,7 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
         # To stop the cover, Elmax requires us to re-issue the same command once again.
         # To detect the current motion status, we request an immediate refresh to the coordinator
         await self.coordinator.async_request_refresh()
-        motion_status = self.coordinator.get_cover_state(
-            self._device.endpoint_id
-        ).status
+        motion_status = self._last_state.status
         command = _COMMAND_BY_MOTION_STATUS[motion_status]
         if command:
             await self.coordinator.http_client.execute_command(

@@ -3,6 +3,7 @@ import asyncio
 import logging
 from typing import Any
 
+from elmax_api.model.actuator import Actuator
 from elmax_api.model.command import SwitchCommand
 from elmax_api.model.panel import PanelStatus
 
@@ -61,28 +62,28 @@ async def async_setup_entry(
 class ElmaxSwitch(ElmaxEntity, SwitchEntity):
     """Implement the Elmax switch entity."""
 
+    _last_state: Actuator
+
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return True if entity is on."""
-        return self.coordinator.get_actuator_state(self._device.endpoint_id).opened
+        return None if self._last_state is None else self._last_state.opened
 
     async def _wait_for_state_change(self) -> bool:
         """Refresh data and wait until the state changes."""
-        old_state = self.coordinator.get_actuator_state(self._device.endpoint_id).opened
+        old_state = self._last_state.opened
 
         # Wait a bit at first to let Elmax cloud assimilate the new state.
         await asyncio.sleep(2.0)
         await self.coordinator.async_refresh()
-        new_state = self.coordinator.get_actuator_state(self._device.endpoint_id).opened
+        new_state = self._last_state.opened
 
         # First check attempt.
         if new_state == old_state:
             # Otherwise sleep a bit more and then trigger a final update.
             await asyncio.sleep(5.0)
             await self.coordinator.async_refresh()
-            new_state = self.coordinator.get_actuator_state(
-                self._device.endpoint_id
-            ).opened
+            new_state = self._last_state.opened
 
         return new_state != old_state
 

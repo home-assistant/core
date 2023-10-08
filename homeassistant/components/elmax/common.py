@@ -23,9 +23,13 @@ from elmax_api.model.panel import PanelEntry, PanelStatus
 from httpx import ConnectError, ConnectTimeout
 from packaging import version
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -37,6 +41,7 @@ from .const import (
     DOMAIN,
     ELMAX_LOCAL_API_PATH,
     MIN_APIV2_SUPPORTED_VERSION,
+    SIGNAL_PANEL_UPDATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,6 +84,8 @@ class DummyPanel(PanelEntry):
 class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
     """Coordinator helper to handle Elmax API polling."""
 
+    _state_by_endpoint: dict[str, DeviceEndpoint]
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -91,7 +98,8 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         """Instantiate the object."""
         self._client = elmax_api_client
         self._panel_entry = panel
-        self._state_by_endpoint = None
+        self._state_by_endpoint = {}
+        # self._push_notification_handler = None
         super().__init__(
             hass=hass, logger=logger, name=name, update_interval=update_interval
         )
@@ -135,19 +143,13 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         """Set the client library instance for Elmax API."""
         self._client = client
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> PanelStatus:
         try:
             async with async_timeout.timeout(DEFAULT_TIMEOUT):
                 # The following command might fail in case of the panel is offline.
                 # In this case, just print a warning and return None: listeners will assume the panel
                 # offline.
                 status = await self._client.get_current_panel_status()
-
-                # Store a dictionary for fast endpoint state access
-                self._state_by_endpoint = {
-                    k.endpoint_id: k for k in status.all_endpoints
-                }
-                return status
 
         except ElmaxBadPinError as err:
             raise ConfigEntryAuthFailed("Control panel pin was refused") from err
@@ -167,9 +169,28 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
                 "no firewall is blocking it."
             ) from err
 
+        self._fire_data_update(status)
+
+        return status
+
+    def _fire_data_update(self, status: PanelStatus):
+        # Store a dictionary for fast endpoint state access
+        self._state_by_endpoint = {k.endpoint_id: k for k in status.all_endpoints}
+        # Send the event data to every single device
+        for k, ep_status in self._state_by_endpoint.items():
+            event_signal = f"{SIGNAL_PANEL_UPDATE}-{self.panel_entry.hash}-{k}"
+            async_dispatcher_send(self.hass, event_signal, ep_status)
+
+        self.async_set_updated_data(status)
+
+    async def _push_handler(self, status: PanelStatus) -> None:
+        self._fire_data_update(status)
+
 
 class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
     """Wrapper for Elmax entities."""
+
+    _last_state: DeviceEndpoint = None
 
     def __init__(
         self,
@@ -191,6 +212,22 @@ class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
             model=panel_version,
             sw_version=panel_version,
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Register push notifications callbacks if available."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SIGNAL_PANEL_UPDATE}-{self.coordinator.panel_entry.hash}-{self._device.endpoint_id}",
+                self._handle_update,
+            )
+        )
+        return await super().async_added_to_hass()
+
+    @callback
+    def _handle_update(self, endpoint_status: DeviceEndpoint) -> None:
+        self._last_state = endpoint_status
+        self.async_write_ha_state()
 
     @property
     def available(self) -> bool:

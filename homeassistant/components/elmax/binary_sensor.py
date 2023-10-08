@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from elmax_api.model.panel import PanelStatus
+from elmax_api.model.zone import Zone
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -60,8 +61,9 @@ class ElmaxSensor(ElmaxEntity, BinarySensorEntity):
     """Elmax Sensor entity implementation."""
 
     _attr_device_class = BinarySensorDeviceClass.DOOR
+    _last_state: Zone
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.coordinator.get_zone_state(self._device.endpoint_id).opened
+        return None if self._last_state is None else self._last_state.opened

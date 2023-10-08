@@ -590,7 +590,7 @@ elgato==4.0.1
 elkm1-lib==2.2.6
 
 # homeassistant.components.elmax
-elmax_api==0.0.4
+elmax_api==0.0.5rc3
 
 # homeassistant.components.emulated_roku
 emulated-roku==0.2.1
