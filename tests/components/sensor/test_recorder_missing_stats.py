@@ -4,14 +4,14 @@ from pathlib import Path
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from sqlalchemy import select
 
-from homeassistant.components.recorder import SQLITE_URL_PREFIX, db_schema, get_instance
+from homeassistant.components.recorder import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.statistics import (
-    get_latest_short_term_statistics,
+    get_latest_short_term_statistics_with_session,
     statistics_during_period,
 )
+from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
@@ -54,8 +54,10 @@ def test_compile_missing_statistics(
     freezer.move_to(two_days_ago)
     do_adhoc_statistics(hass, start=two_days_ago)
     wait_recording_done(hass)
-
-    latest = get_latest_short_term_statistics(hass, {"sensor.test1"}, {"state", "sum"})
+    with session_scope(hass=hass, read_only=True) as session:
+        latest = get_latest_short_term_statistics_with_session(
+            hass, session, {"sensor.test1"}, {"state", "sum"}
+        )
     latest_stat = latest["sensor.test1"][0]
     assert latest_stat["start"] == 1609545600.0
     assert latest_stat["end"] == 1609545600.0 + 300
@@ -83,26 +85,16 @@ def test_compile_missing_statistics(
     hass.start()
     wait_recording_done(hass)
     wait_recording_done(hass)
-
-    latest = get_latest_short_term_statistics(
-        hass, {"sensor.test1"}, {"state", "sum", "max", "mean", "min"}
-    )
+    with session_scope(hass=hass, read_only=True) as session:
+        latest = get_latest_short_term_statistics_with_session(
+            hass, session, {"sensor.test1"}, {"state", "sum", "max", "mean", "min"}
+        )
     latest_stat = latest["sensor.test1"][0]
     assert latest_stat["start"] == 1609718100.0
     assert latest_stat["end"] == 1609718100.0 + 300
-
-    import pprint
-
-    pprint.pprint(
-        [
-            "two_days_ago",
-            two_days_ago,
-            two_days_ago.timestamp(),
-            "start_time",
-            start_time,
-            start_time.timestamp(),
-        ]
-    )
+    assert latest_stat["mean"] == 576.0
+    assert latest_stat["min"] == 575.0
+    assert latest_stat["max"] == 576.0
     stats = statistics_during_period(
         hass,
         two_days_ago,
@@ -110,16 +102,10 @@ def test_compile_missing_statistics(
         units={"energy": "kWh"},
         statistic_ids={"sensor.test1"},
         period="hour",
-        types={"change"},
+        types={"mean"},
     )
-    import pprint
-
-    pprint.pprint(["wrong?", stats])
-    instance = get_instance(hass)
-    session = instance.get_session()
-    result = session.execute(select("*").select_from(db_schema.Statistics))
-    pprint.pprint(["all", result.fetchall()])
-
-    # TODO: this looks wrong
-    assert stats is not None
+    # Make sure we have 48 hours of statistics
+    assert len(stats["sensor.test1"]) == 48
+    # Make sure the last mean is 570.5
+    assert stats["sensor.test1"][-1]["mean"] == 570.5
     hass.stop()
