@@ -31,33 +31,38 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
     mock_registry(
         hass,
         {
+            # This entity will be migrated to "io://1234-5678-1234/3541212-core:DiscreteRSSILevelState"
             ENTITY_SENSOR_DISCRETE_RSSI_LEVEL: er.RegistryEntry(
                 entity_id=ENTITY_SENSOR_DISCRETE_RSSI_LEVEL,
                 unique_id="io://1234-5678-1234/3541212-OverkizState.CORE_DISCRETE_RSSI_LEVEL",
                 platform=DOMAIN,
                 config_entry_id=mock_entry.entry_id,
             ),
+            # This entity will be migrated to "internal://1234-5678-1234/alarm/0-TSKAlarmController"
             ENTITY_ALARM_CONTROL_PANEL: er.RegistryEntry(
                 entity_id=ENTITY_ALARM_CONTROL_PANEL,
                 unique_id="internal://1234-5678-1234/alarm/0-UIWidget.TSKALARM_CONTROLLER",
                 platform=DOMAIN,
                 config_entry_id=mock_entry.entry_id,
             ),
+            # This entity will be migrated to "io://1234-5678-1234/0-OnOff"
             ENTITY_SWITCH_GARAGE: er.RegistryEntry(
                 entity_id=ENTITY_SWITCH_GARAGE,
                 unique_id="io://1234-5678-1234/0-UIClass.ON_OFF",
                 platform=DOMAIN,
                 config_entry_id=mock_entry.entry_id,
             ),
+            # This entity will be removed since "io://1234-5678-1234/3541212-core:TargetClosureState" already exists
             ENTITY_SENSOR_TARGET_CLOSURE_STATE: er.RegistryEntry(
                 entity_id=ENTITY_SENSOR_TARGET_CLOSURE_STATE,
-                unique_id="io://xxxx-xxxx-xxxx/3541212-OverkizState.CORE_TARGET_CLOSURE",
+                unique_id="io://1234-5678-1234/3541212-OverkizState.CORE_TARGET_CLOSURE",
                 platform=DOMAIN,
                 config_entry_id=mock_entry.entry_id,
             ),
+            # This entity will not be migrated"
             ENTITY_SENSOR_TARGET_CLOSURE_STATE_2: er.RegistryEntry(
                 entity_id=ENTITY_SENSOR_TARGET_CLOSURE_STATE_2,
-                unique_id="io://xxxx-xxxx-xxxx/3541212-core:TargetClosureState",
+                unique_id="io://1234-5678-1234/3541212-core:TargetClosureState",
                 platform=DOMAIN,
                 config_entry_id=mock_entry.entry_id,
             ),
