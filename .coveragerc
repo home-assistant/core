@@ -376,6 +376,7 @@ omit =
     homeassistant/components/fibaro/binary_sensor.py
     homeassistant/components/fibaro/climate.py
     homeassistant/components/fibaro/cover.py
+    homeassistant/components/fibaro/event.py
     homeassistant/components/fibaro/light.py
     homeassistant/components/fibaro/lock.py
     homeassistant/components/fibaro/sensor.py
