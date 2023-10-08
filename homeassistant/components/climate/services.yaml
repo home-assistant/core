@@ -144,3 +144,5 @@ turn_off:
   target:
     entity:
       domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TURN_OFF

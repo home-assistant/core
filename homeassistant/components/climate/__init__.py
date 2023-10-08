@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -153,7 +154,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF,
+        {},
+        "async_turn_off",
+        [ClimateEntityFeature.TURN_OFF],
+    )
     component.async_register_entity_service(
         SERVICE_SET_HVAC_MODE,
         {vol.Required(ATTR_HVAC_MODE): vol.Coerce(HVACMode)},
@@ -308,6 +314,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
             return PRECISION_TENTHS
         return PRECISION_WHOLE
+
+    @callback
+    def _async_generate_attributes(self) -> tuple[str, dict[str, Any]]:
+        """Calculate state string and attribute mapping."""
+        state, attr = super()._async_generate_attributes()
+        if HVACMode.OFF in self.hvac_modes:
+            attr[ATTR_SUPPORTED_FEATURES] |= ClimateEntityFeature.TURN_OFF
+        return (state, attr)
 
     @property
     def capability_attributes(self) -> dict[str, Any] | None:

@@ -163,6 +163,7 @@ class ClimateEntityFeature(IntFlag):
     PRESET_MODE = 16
     SWING_MODE = 32
     AUX_HEAT = 64
+    TURN_OFF = 128
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
