@@ -25,13 +25,6 @@ from .models import SensorTypes
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXPIRE_AFTER = "expire_after"
-CONF_LAST_RESET_TOPIC = "last_reset_topic"
-CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
-CONF_SUGGESTED_DISPLAY_PRECISION = "suggested_display_precision"
-
-DEFAULT_FORCE_UPDATE = False
-
 
 async def async_setup_entry(
     hass: HomeAssistant,

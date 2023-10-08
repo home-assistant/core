@@ -1,6 +1,11 @@
 """Defines models used by the integration."""
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import UnitOfElectricPotential, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_TEMPERATURE,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
+)
 
 
 class SensorTypes:
@@ -17,7 +22,7 @@ class SensorTypes:
     class BatteryLevel(SensorType):
         """Battery entity type."""
 
-        DATA_KEY = "battery_level"
+        DATA_KEY = ATTR_BATTERY_LEVEL
         UNIT = UnitOfElectricPotential.VOLT
         DEVICE_CLASS = SensorDeviceClass.VOLTAGE
         NAME = "Battery level"
@@ -25,7 +30,7 @@ class SensorTypes:
     class Temperature(SensorType):
         """Temperature entity type."""
 
-        DATA_KEY = "temperature"
+        DATA_KEY = ATTR_TEMPERATURE
         UNIT = UnitOfTemperature.CELSIUS
         DEVICE_CLASS = SensorDeviceClass.TEMPERATURE
         NAME = "Temperature"
