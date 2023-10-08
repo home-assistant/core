@@ -42,13 +42,13 @@ class NightscoutSensor(SensorEntity):
     _attr_translation_key = "blood_sugar"
     _attr_native_unit_of_measurement = "mg/dL"
     _attr_icon = "mdi:cloud-question"
+    _attr_available = False
 
     def __init__(self, api: NightscoutAPI, unique_id) -> None:
         """Initialize the Nightscout sensor."""
         self.api = api
         self._attr_unique_id = unique_id
         self._attr_extra_state_attributes: dict[str, Any] = {}
-        self._attr_available = False
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
 
     async def async_update(self) -> None:
