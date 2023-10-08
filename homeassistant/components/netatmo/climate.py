@@ -46,7 +46,7 @@ from .const import (
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
     NETATMO_CREATE_CLIMATE,
-    SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+    SERVICE_SET_PRESET_MODE_WITH_OPTIONAL_END_DATETIME,
     SERVICE_SET_SCHEDULE,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoRoom
@@ -131,12 +131,12 @@ async def async_setup_entry(
         "_async_service_set_schedule",
     )
     platform.async_register_entity_service(
-        SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+        SERVICE_SET_PRESET_MODE_WITH_OPTIONAL_END_DATETIME,
         {
             vol.Required(ATTR_PRESET_MODE): cv.string,
-            vol.Required(ATTR_END_DATETIME): cv.datetime,
+            vol.Optional(ATTR_END_DATETIME): cv.datetime,
         },
-        "_async_service_set_preset_mode_with_end_datetime",
+        "_async_service_set_preset_mode_with_optional_end_datetime",
     )
 
 
@@ -424,7 +424,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             schedule_id,
         )
 
-    async def _async_service_set_preset_mode_with_end_datetime(
+    async def _async_service_set_preset_mode_with_optional_end_datetime(
         self, **kwargs: Any
     ) -> None:
         preset_mode = kwargs.get(ATTR_PRESET_MODE)
@@ -432,12 +432,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         end_timestamp = None
 
         if preset_mode not in THERM_MODES:
-            _LOGGER.error(
-                "%s does not support end datetime. Only %s are supported",
-                preset_mode,
-                ", ".join(THERM_MODES),
+            msg = (
+                f"{preset_mode} does not support end datetime. "
+                "Only 'away' and 'Frost Guard' are supported"
             )
-            return
+            raise ValueError(msg)
 
         if end_datetime:
             end_timestamp = int(dt_util.as_timestamp(end_datetime))

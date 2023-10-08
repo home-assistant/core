@@ -21,12 +21,12 @@ from homeassistant.components.netatmo.climate import PRESET_FROST_GUARD, PRESET_
 from homeassistant.components.netatmo.const import (
     ATTR_END_DATETIME,
     ATTR_SCHEDULE_NAME,
-    SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+    SERVICE_SET_PRESET_MODE_WITH_OPTIONAL_END_DATETIME,
     SERVICE_SET_SCHEDULE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import selected_platforms, simulate_webhook
 
@@ -477,11 +477,11 @@ async def test_service_preset_mode_with_end_time_thermostats(
     # Test setting a valid preset mode (that allow an end datetime in Netatmo == THERM_MODES) and a valid end datetime
     await hass.services.async_call(
         "netatmo",
-        SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+        SERVICE_SET_PRESET_MODE_WITH_OPTIONAL_END_DATETIME,
         {
             ATTR_ENTITY_ID: climate_entity_livingroom,
             ATTR_PRESET_MODE: PRESET_AWAY,
-            ATTR_END_DATETIME: (dt.now() + timedelta(days=10)).strftime(
+            ATTR_END_DATETIME: (dt_util.now() + timedelta(days=10)).strftime(
                 "%Y-%m-%d %H:%M:%S"
             ),
         },
@@ -505,23 +505,47 @@ async def test_service_preset_mode_with_end_time_thermostats(
     )
 
     # Test setting an in valid preset mode (not in THERM_MODES) and a valid end datetime
-    with patch("pyatmo.home.Home.async_set_thermmode") as mock_set_home_thermmode:
+    with pytest.raises(ValueError):
         await hass.services.async_call(
             "netatmo",
-            SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+            SERVICE_SET_PRESET_MODE_WITH_OPTIONAL_END_DATETIME,
             {
                 ATTR_ENTITY_ID: climate_entity_livingroom,
                 ATTR_PRESET_MODE: PRESET_BOOST,
-                ATTR_END_DATETIME: (dt.now() + timedelta(days=10)).strftime(
+                ATTR_END_DATETIME: (dt_util.now() + timedelta(days=10)).strftime(
                     "%Y-%m-%d %H:%M:%S"
                 ),
             },
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_set_home_thermmode.assert_not_called()
 
-    assert "boost does not support end datetime" in caplog.text
+    # Test setting a valid preset mode (that allow an end datetime in Netatmo == THERM_MODES) without an end datetime
+    await hass.services.async_call(
+        "netatmo",
+        SERVICE_SET_PRESET_MODE_WITH_OPTIONAL_END_DATETIME,
+        {
+            ATTR_ENTITY_ID: climate_entity_livingroom,
+            ATTR_PRESET_MODE: PRESET_AWAY,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Fake webhook thermostat mode change to "Away"
+    response = {
+        "event_type": "therm_mode",
+        "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "away"},
+        "mode": "away",
+        "previous_mode": "schedule",
+        "push_type": "home_event_changed",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(climate_entity_livingroom).state == "auto"
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes["preset_mode"] == "away"
+    )
 
 
 async def test_service_preset_mode_already_boost_valves(
