@@ -85,9 +85,12 @@ async def test_form_network_issue(
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_reauth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
-    """Test reauth flow."""
+async def test_reauth_success(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test successful reauth flow."""
 
+    # Test success
     aioclient_mock.post(
         URL,
         text=RETURN_SUCCESS,
@@ -101,8 +104,10 @@ async def test_reauth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
             "entry_id": entry.entry_id,
             "unique_id": entry.unique_id,
         },
-        data=CONFIG,
+        data=entry.data,
     )
+
+    assert result1["type"] == FlowResultType.FORM
     assert result1["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -111,34 +116,41 @@ async def test_reauth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
             CONF_TOKEN: CONFIG[CONF_TOKEN],
         },
     )
-    await hass.async_block_till_done()
-
     assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
 
-    # Test failed reauth
+
+async def test_reauth_failure(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test failed reauth flow."""
+
+    # Test success
     aioclient_mock.post(
         URL,
         text=RETURN_BADAUTH,
         status=HTTPStatus.FORBIDDEN,
     )
+    entry = await setup_platform(hass)
 
-    result3 = await hass.config_entries.flow.async_init(
+    result1 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
             "entry_id": entry.entry_id,
             "unique_id": entry.unique_id,
         },
-        data=CONFIG,
+        data=entry.data,
     )
-    assert result3["step_id"] == "reauth_confirm"
+    assert result1["type"] == FlowResultType.FORM
+    assert result1["step_id"] == "reauth_confirm"
 
-    result4 = await hass.config_entries.flow.async_configure(
-        result3["flow_id"],
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
         {
-            CONF_TOKEN: CONFIG[CONF_TOKEN],
+            CONF_TOKEN: "bad?",
         },
     )
-    await hass.async_block_till_done()
 
-    assert result4["step_id"] == "reauth_confirm"
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
