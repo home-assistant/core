@@ -1,0 +1,10 @@
+{
+  "domain": "leviosa_shades",
+  "name": "Leviosa Motor Shades",
+  "codeowners": ["@greg-ha-1990"],
+  "config_flow": true,
+  "dependencies": ["cover"],
+  "documentation": "https://www.home-assistant.io/integrations/leviosa_shades",
+  "iot_class": "local_push",
+  "requirements": ["leviosapy==0.1.2"]
+}

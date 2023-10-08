@@ -1,0 +1,13 @@
+next_down_pos:
+  fields:
+    entity_id:
+      example: "cover.master"
+      default: "cover.master"
+      required: true
+
+next_up_pos:
+  fields:
+    entity_id:
+      example: "cover.master"
+      default: "cover.master"
+      required: true
