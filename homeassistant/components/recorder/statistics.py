@@ -1887,23 +1887,6 @@ def _latest_short_term_statistics_by_ids_stmt(
     )
 
 
-def get_latest_short_term_statistics(
-    hass: HomeAssistant,
-    statistic_ids: set[str],
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-    metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
-) -> dict[str, list[StatisticsRow]]:
-    """Return the latest short term statistics for a list of statistic_ids."""
-    _LOGGER.warning(
-        "Calling get_latest_short_term_statistics is deprecated; "
-        "use get_latest_short_term_statistics_with_session instead"
-    )
-    with session_scope(hass=hass, read_only=True) as session:
-        return get_latest_short_term_statistics_with_session(
-            hass, session, statistic_ids, types, metadata
-        )
-
-
 def get_latest_short_term_statistics_with_session(
     hass: HomeAssistant,
     session: Session,
