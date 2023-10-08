@@ -1187,3 +1187,55 @@ def _lookup_path(hass: HomeAssistant) -> list[str]:
 def is_component_module_loaded(hass: HomeAssistant, module: str) -> bool:
     """Test if a component module is loaded."""
     return module in hass.data[DATA_COMPONENTS]
+
+
+@callback
+def async_get_issue_tracker(
+    hass: HomeAssistant | None,
+    *,
+    integration_domain: str | None = None,
+    module: str | None = None,
+) -> str | None:
+    """Return a URL for an integration's issue tracker."""
+    issue_tracker = (
+        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+    )
+    if not integration_domain and not module:
+        # If we know nothing about the entity, suggest opening an issue on HA core
+        return issue_tracker
+
+    if hass and integration_domain:
+        with suppress(IntegrationNotLoaded):
+            integration = async_get_loaded_integration(hass, integration_domain)
+            if not integration.is_built_in:
+                return integration.issue_tracker
+
+    if module and "custom_components" in module:
+        return None
+
+    if integration_domain:
+        issue_tracker += f"+label%3A%22integration%3A+{integration_domain}%22"
+    return issue_tracker
+
+
+@callback
+def async_suggest_report_issue(
+    hass: HomeAssistant | None,
+    *,
+    integration_domain: str | None = None,
+    module: str | None = None,
+) -> str:
+    """Generate a blurb asking the user to file a bug report."""
+    issue_tracker = async_get_issue_tracker(
+        hass, integration_domain=integration_domain, module=module
+    )
+
+    if not issue_tracker:
+        if not integration_domain:
+            return "report it to the custom integration author"
+        return (
+            f"report it to the author of the '{integration_domain}' "
+            "custom integration"
+        )
+
+    return f"create a bug report at {issue_tracker}"

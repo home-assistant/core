@@ -541,12 +541,6 @@ omit =
     homeassistant/components/hvv_departures/__init__.py
     homeassistant/components/hvv_departures/binary_sensor.py
     homeassistant/components/hvv_departures/sensor.py
-    homeassistant/components/hydrawise/__init__.py
-    homeassistant/components/hydrawise/binary_sensor.py
-    homeassistant/components/hydrawise/const.py
-    homeassistant/components/hydrawise/coordinator.py
-    homeassistant/components/hydrawise/sensor.py
-    homeassistant/components/hydrawise/switch.py
     homeassistant/components/ialarm/alarm_control_panel.py
     homeassistant/components/iammeter/sensor.py
     homeassistant/components/iaqualink/binary_sensor.py
@@ -563,7 +557,6 @@ omit =
     homeassistant/components/ifttt/alarm_control_panel.py
     homeassistant/components/iglo/light.py
     homeassistant/components/ihc/*
-    homeassistant/components/imap_email_content/sensor.py
     homeassistant/components/incomfort/*
     homeassistant/components/insteon/binary_sensor.py
     homeassistant/components/insteon/climate.py
@@ -898,6 +891,7 @@ omit =
     homeassistant/components/opengarage/cover.py
     homeassistant/components/opengarage/entity.py
     homeassistant/components/opengarage/sensor.py
+    homeassistant/components/openhardwaremonitor/sensor.py
     homeassistant/components/openhome/__init__.py
     homeassistant/components/openhome/const.py
     homeassistant/components/openhome/media_player.py
@@ -1305,6 +1299,7 @@ omit =
     homeassistant/components/system_bridge/__init__.py
     homeassistant/components/system_bridge/binary_sensor.py
     homeassistant/components/system_bridge/coordinator.py
+    homeassistant/components/system_bridge/media_player.py
     homeassistant/components/system_bridge/notify.py
     homeassistant/components/system_bridge/sensor.py
     homeassistant/components/systemmonitor/sensor.py
