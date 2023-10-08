@@ -119,8 +119,8 @@ class TwitchSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update device state."""
-        if not (channel_data := self.coordinator.data.get(self._key)):
-            return
+        channel_data = self.coordinator.data.get(self._key)
+        assert channel_data is not None
 
         self._attr_extra_state_attributes = {
             ATTR_FOLLOWING: channel_data.followers,
@@ -157,5 +157,6 @@ class TwitchSensor(SensorEntity):
         self._attr_extra_state_attributes[ATTR_FOLLOW_SINCE] = (
             channel_data.following.data[0].followed_at
             if channel_data.following is not None
+            and len(channel_data.following.data) > 0
             else None
         )

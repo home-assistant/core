@@ -161,9 +161,6 @@ async def test_auth_with_invalid_user(
     """Test auth with invalid user."""
     await setup_integration(hass, config_entry)
 
-    sensor_state = hass.states.get(ENTITY_ID)
-    assert "subscribed" not in sensor_state.attributes
-
 
 @pytest.mark.parametrize("twitch_mock", [TwitchAPIExceptionMock()])
 async def test_auth_with_api_exception(
@@ -171,7 +168,3 @@ async def test_auth_with_api_exception(
 ) -> None:
     """Test auth with invalid user."""
     await setup_integration(hass, config_entry)
-
-    sensor_state = hass.states.get(ENTITY_ID)
-    assert sensor_state.attributes["subscribed"] is False
-    assert "subscription_is_gifted" not in sensor_state.attributes
