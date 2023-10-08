@@ -14,6 +14,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from .conftest import (
     DEVICES_API_URL,
@@ -424,6 +429,39 @@ async def test_heartrate_scope_config_entry(
     assert {s.entity_id for s in states} == {
         "sensor.resting_heart_rate",
     }
+
+
+@pytest.mark.parametrize(
+    ("scopes", "unit_system"),
+    [(["nutrition"], METRIC_SYSTEM), (["nutrition"], US_CUSTOMARY_SYSTEM)],
+)
+async def test_nutrition_scope_config_entry(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    register_timeseries: Callable[[str, dict[str, Any]], None],
+    unit_system: UnitSystem,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test nutrition sensors are enabled."""
+    hass.config.units = unit_system
+    register_timeseries(
+        "foods/log/water",
+        timeseries_response("foods-log-water", "99"),
+    )
+    register_timeseries(
+        "foods/log/caloriesIn",
+        timeseries_response("foods-log-caloriesIn", "1600"),
+    )
+    assert await integration_setup()
+
+    state = hass.states.get("sensor.water")
+    assert state
+    assert (state.state, state.attributes) == snapshot
+
+    state = hass.states.get("sensor.calories_in")
+    assert state
+    assert (state.state, state.attributes) == snapshot
 
 
 @pytest.mark.parametrize(
