@@ -42,7 +42,7 @@ class FibaroEventEntity(FibaroDevice, EventEntity):
         """Initialize the Fibaro device."""
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(
-            f"{self.ha_id}_button{scene_event.key_id}"
+            f"{self.ha_id}_button_{scene_event.key_id}"
         )
 
         self._button = scene_event.key_id
@@ -65,4 +65,4 @@ class FibaroEventEntity(FibaroDevice, EventEntity):
     def _event_callback(self, event: FibaroEvent) -> None:
         if event.key_id == self._button:
             self._trigger_event(event.key_event_type)
-            self.schedule_update_ha_state(True)
+            self.schedule_update_ha_state()
