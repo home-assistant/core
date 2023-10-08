@@ -183,3 +183,4 @@ NOT_CALIBRATED_ISSUE_ID = "not_calibrated_{unique}"
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
 
 UNEXPECTED_EXCEPTION = "Unexpected exception"
+NOT_INITIALISED = "not initialized"
