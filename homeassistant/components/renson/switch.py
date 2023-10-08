@@ -23,7 +23,9 @@ class RensonBreezeSwitch(RensonEntity, SwitchEntity):
     """Provide the breeze switch."""
 
     _attr_icon = "mdi:weather-dust"
-    _attr_name = "Breeze"
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_has_entity_name = True
+    _attr_translation_key = "breeze"
 
     def __init__(
         self,
@@ -33,20 +35,7 @@ class RensonBreezeSwitch(RensonEntity, SwitchEntity):
         """Initialize class."""
         super().__init__("breeze", api, coordinator)
 
-        self._state = None
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if switch is on."""
-        if self._state is None:
-            return False
-
-        return self._state
-
-    @property
-    def device_class(self) -> SwitchDeviceClass:
-        """Set renson switch device class."""
-        return SwitchDeviceClass.SWITCH
+        self._attr_is_on = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
@@ -71,7 +60,7 @@ class RensonBreezeSwitch(RensonEntity, SwitchEntity):
             DataType.LEVEL,
         )
 
-        self._state = level == Level.BREEZE.value
+        self._attr_is_on = level == Level.BREEZE.value
 
         self.async_write_ha_state()
 
