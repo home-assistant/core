@@ -63,7 +63,7 @@ from .const import (
     FitbitUnitSystem,
 )
 from .coordinator import FitbitData, FitbitDeviceCoordinator
-from .exceptions import FitbitApiException
+from .exceptions import FitbitApiException, FitbitAuthException
 from .model import FitbitDevice, config_from_entry_data
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -644,6 +644,7 @@ async def async_setup_entry(
 
     entities = [
         FitbitSensor(
+            entry,
             api,
             user_profile.encoded_id,
             description,
@@ -676,6 +677,7 @@ class FitbitSensor(SensorEntity):
 
     def __init__(
         self,
+        config_entry: ConfigEntry,
         api: FitbitApi,
         user_profile_id: str,
         description: FitbitSensorEntityDescription,
@@ -683,6 +685,7 @@ class FitbitSensor(SensorEntity):
         enable_default_override: bool,
     ) -> None:
         """Initialize the Fitbit sensor."""
+        self.config_entry = config_entry
         self.entity_description = description
         self.api = api
 
@@ -700,6 +703,9 @@ class FitbitSensor(SensorEntity):
             result = await self.api.async_get_latest_time_series(
                 self.entity_description.key
             )
+        except FitbitAuthException:
+            self._attr_available = False
+            self.config_entry.async_start_reauth(self.hass)
         except FitbitApiException:
             self._attr_available = False
         else:
