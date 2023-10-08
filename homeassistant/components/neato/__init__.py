@@ -53,39 +53,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Neato component."""
     hass.data[NEATO_DOMAIN] = {}
 
-    if NEATO_DOMAIN not in config:
-        return True
-
-    hass.data[NEATO_CONFIG] = config[NEATO_DOMAIN]
-    await async_import_client_credential(
-        hass,
-        NEATO_DOMAIN,
-        ClientCredential(
-            config[NEATO_DOMAIN][CONF_CLIENT_ID],
-            config[NEATO_DOMAIN][CONF_CLIENT_SECRET],
-        ),
-    )
-    _LOGGER.warning(
-        "Configuration of Neato integration in YAML is deprecated and "
-        "will be removed in a future release; Your existing OAuth "
-        "Application Credentials have been imported into the UI "
-        "automatically and can be safely removed from your "
-        "configuration.yaml file"
-    )
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{NEATO_DOMAIN}",
-        breaks_in_ha_version="2024.2.0",
-        is_fixable=False,
-        issue_domain=NEATO_DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": NEATO_DOMAIN,
-            "integration_title": "Neato Botvac",
-        },
-    )
+    if NEATO_DOMAIN in config:
+        hass.data[NEATO_CONFIG] = config[NEATO_DOMAIN]
+        await async_import_client_credential(
+            hass,
+            NEATO_DOMAIN,
+            ClientCredential(
+                config[NEATO_DOMAIN][CONF_CLIENT_ID],
+                config[NEATO_DOMAIN][CONF_CLIENT_SECRET],
+            ),
+        )
+        _LOGGER.warning(
+            "Configuration of Neato integration in YAML is deprecated and "
+            "will be removed in a future release; Your existing OAuth "
+            "Application Credentials have been imported into the UI "
+            "automatically and can be safely removed from your "
+            "configuration.yaml file"
+        )
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{NEATO_DOMAIN}",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=False,
+            issue_domain=NEATO_DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": NEATO_DOMAIN,
+                "integration_title": "Neato Botvac",
+            },
+        )
 
     return True
 

@@ -139,4 +139,3 @@ tmp_cache
 # SonarQube
 .scannerwork
 sonar-project.properties
-
