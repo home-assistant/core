@@ -30,7 +30,7 @@ from .models import Device
 from .network_servers.ttn import TTN
 
 _LOGGER = logging.getLogger(__name__)
-_RE_DEVICE_EUI = re.compile(r"[0-9a-fA-F]{16}")
+_RE_DEVICE_EUI = re.compile(r"^[0-9a-fA-F]{16}$")
 
 _MANUFACTURER_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -104,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidDeviceEui as e:
                 errors[
                     "base"
-                ] = f'Invalid device EUI "{str(e)}". It should match "[0-9a-fA-F]{{16}}"'
+                ] = f'Invalid device EUI "{str(e)}". It should match "^[0-9a-fA-F]{{16}}$"'
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
