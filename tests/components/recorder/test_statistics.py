@@ -158,26 +158,22 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     assert stats == {}
 
     # Test get_last_short_term_statistics and get_latest_short_term_statistics
-    with session_scope(hass=hass, read_only=True) as session:
-        stats = get_latest_short_term_statistics_with_session(
-            hass,
-            session,
-            0,
-            "sensor.test1",
-            True,
-            {"last_reset", "max", "mean", "min", "state", "sum"},
-        )
+    stats = get_last_short_term_statistics(
+        hass,
+        0,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {}
 
-    with session_scope(hass=hass, read_only=True) as session:
-        stats = get_latest_short_term_statistics_with_session(
-            hass,
-            session,
-            1,
-            "sensor.test1",
-            True,
-            {"last_reset", "max", "mean", "min", "state", "sum"},
-        )
+    stats = get_last_short_term_statistics(
+        hass,
+        1,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {"sensor.test1": [expected_2]}
 
     with session_scope(hass=hass, read_only=True) as session:
@@ -285,7 +281,7 @@ def mock_sensor_statistics():
             "stat": {"start": start},
         }
 
-    def get_fake_stats(_hass, start, _end):
+    def get_fake_stats(_hass, session, start, _end):
         return statistics.PlatformCompiledStatistics(
             [
                 sensor_stats("sensor.test1", start),
