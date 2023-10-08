@@ -57,8 +57,8 @@ FAKE_ZERO_CONF_INFO = ZeroconfServiceInfo(
 )
 
 FAKE_ZERO_CONF_INFO_LOCAL = ZeroconfServiceInfo(
-    host="192.168.0.51",
-    addresses=["192.168.0.51"],
+    ip_address=ip_address("192.168.0.51"),
+    ip_addresses=[ip_address("192.168.0.51")],
     port=8443,
     hostname=f"gateway-{TEST_GATEWAY_ID}.local.",
     type="_kizboxdev._tcp.local.",
