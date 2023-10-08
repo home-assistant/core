@@ -37,7 +37,7 @@ async def test_form(
     mock_list_device_euis: AsyncMock,
     mock_setup_entry: AsyncMock,
     hass: HomeAssistant,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test we get the form."""
     form_result = await hass.config_entries.flow.async_init(
@@ -60,7 +60,7 @@ async def test_form(
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
-    assert set_caplog_debug.record_tuples == []
+    assert caplog_debug.record_tuples == []
 
 
 @patch(
@@ -70,7 +70,7 @@ async def test_form(
 async def test_form_invalid_auth(
     mock_list_device_euis: AsyncMock,
     hass: HomeAssistant,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test we handle invalid auth."""
 
@@ -86,7 +86,7 @@ async def test_form_invalid_auth(
     assert validation_result["type"] == FlowResultType.FORM
     assert validation_result["errors"] == {"base": "invalid_auth"}
 
-    assert set_caplog_debug.record_tuples == []
+    assert caplog_debug.record_tuples == []
 
 
 @patch(
@@ -96,7 +96,7 @@ async def test_form_invalid_auth(
 async def test_form_cannot_connect(
     mock_list_device_euis: AsyncMock,
     hass: HomeAssistant,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test we handle cannot connect error."""
     form_result = await hass.config_entries.flow.async_init(
@@ -111,7 +111,7 @@ async def test_form_cannot_connect(
     assert validation_result["type"] == FlowResultType.FORM
     assert validation_result["errors"] == {"base": "cannot_connect: 500"}
 
-    assert set_caplog_debug.record_tuples == []
+    assert caplog_debug.record_tuples == []
 
 
 @patch(
@@ -121,7 +121,7 @@ async def test_form_cannot_connect(
 async def test_generic_exception(
     mock_list_device_euis: AsyncMock,
     hass: HomeAssistant,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test that we handle unexpected exceptions."""
     form_result = await hass.config_entries.flow.async_init(
@@ -136,7 +136,7 @@ async def test_generic_exception(
     assert validation_result["type"] == FlowResultType.FORM
     assert validation_result["errors"] == {"base": "unknown"}
 
-    assert set_caplog_debug.record_tuples == [
+    assert caplog_debug.record_tuples == [
         (
             "homeassistant.components.lorawan.config_flow",
             logging.ERROR,
@@ -152,7 +152,7 @@ async def test_generic_exception(
 async def test_device_not_found(
     mock_list_device_euis: AsyncMock,
     hass: HomeAssistant,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test the exception when a device is not found."""
     FORM_DATA["device_eui"] = "00112233445566ff"
@@ -171,7 +171,7 @@ async def test_device_not_found(
         "base": 'Device "00112233445566FF" is not in the application'
     }
 
-    assert set_caplog_debug.record_tuples == []
+    assert caplog_debug.record_tuples == []
 
 
 @pytest.mark.parametrize(
@@ -188,7 +188,7 @@ async def test_device_not_found(
     ],
 )
 async def test_invalid_device_eui(
-    hass: HomeAssistant, set_caplog_debug: pytest.LogCaptureFixture, device_eui: str
+    hass: HomeAssistant, caplog_debug: pytest.LogCaptureFixture, device_eui: str
 ) -> None:
     """Test a set of invalid device EUIs."""
     form_result = await hass.config_entries.flow.async_init(
@@ -207,4 +207,4 @@ async def test_invalid_device_eui(
         "base": f'Invalid device EUI "{device_eui}". It should match "^[0-9a-fA-F]{{16}}$"'
     }
 
-    assert set_caplog_debug.record_tuples == []
+    assert caplog_debug.record_tuples == []

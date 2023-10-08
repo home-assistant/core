@@ -34,7 +34,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def set_caplog_debug(
+def caplog_debug(
     caplog: pytest.LogCaptureFixture,
 ):
     """Disable all loggers except the DUT set to all messages."""

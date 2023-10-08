@@ -31,7 +31,7 @@ async def test_async_setup_entry(
     mock_subscribe: AsyncMock,
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test LoRaWAN sensor entity setup."""
     async_add_entities = Mock(autospec=True)
@@ -45,7 +45,7 @@ async def test_async_setup_entry(
     for entity in async_add_entities.call_args_list[0].args[0]:
         assert type(entity) == LorawanSensorEntity
 
-    assert set_caplog_debug.record_tuples == []
+    assert caplog_debug.record_tuples == []
 
 
 @patch(
@@ -83,7 +83,7 @@ async def test_async_setup_invalid_manufacturer_device(
     mock_subscribe: AsyncMock,
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
     config_data: dict,
     warning_message: str,
 ) -> None:
@@ -95,7 +95,7 @@ async def test_async_setup_invalid_manufacturer_device(
 
     mock_subscribe.assert_not_called()
 
-    assert set_caplog_debug.record_tuples == [
+    assert caplog_debug.record_tuples == [
         (
             "homeassistant.components.lorawan.sensor",
             logging.ERROR,
@@ -109,7 +109,7 @@ def test_lorawansensorcoordinator_constructor(
     mock_coordinator_constructor: AsyncMock,
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test LoRaWAN sensor entity coordinator constructor."""
     LorawanSensorCoordinator(hass, mock_config_entry, HassTBMS100.parse_uplink)
@@ -117,14 +117,14 @@ def test_lorawansensorcoordinator_constructor(
         hass, DUT_LOGGER, name="LorawanSensorCoordinator.TEST-ENTRY-TITLE"
     )
 
-    assert set_caplog_debug.record_tuples == []
+    assert caplog_debug.record_tuples == []
 
 
 @pytest.mark.asyncio
 async def test_lorawansensorcoordinator_subscribe(
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test LoRaWAN sensor entity coordinator subscription to MQTT."""
     coordinator = LorawanSensorCoordinator(
@@ -137,14 +137,14 @@ async def test_lorawansensorcoordinator_subscribe(
             "v3/+/devices/TEST-ENTRY-TITLE/up", ANY
         )
 
-    assert set_caplog_debug.record_tuples == []
+    assert caplog_debug.record_tuples == []
 
 
 @pytest.mark.asyncio
 async def test_lorawansensorcoordinator_subscribe_callback(
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
     ttn_uplink: dict,  # noqa: F811
 ) -> None:
     """Test LoRaWAN sensor entity coordinator MQTT callback."""
@@ -168,7 +168,7 @@ async def test_lorawansensorcoordinator_subscribe_callback(
             == 23
         )
 
-    assert set_caplog_debug.record_tuples == [
+    assert caplog_debug.record_tuples == [
         (
             "homeassistant.components.lorawan.sensor",
             logging.DEBUG,
@@ -180,7 +180,7 @@ async def test_lorawansensorcoordinator_subscribe_callback(
 def test_lorawan_sensor_entity_constructor(
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test LoRaWAN sensor entity constructor."""
     coordinator = LorawanSensorCoordinator(
@@ -205,7 +205,7 @@ def test_lorawan_sensor_entity_constructor(
 async def test_lorawan_sensor_entity_handle_update(
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
     ttn_uplink: dict,  # noqa: F811
 ) -> None:
     """Test LoRaWAN sensor entity update from coordinator."""
@@ -223,7 +223,7 @@ async def test_lorawan_sensor_entity_handle_update(
         assert entity._attr_native_value == coordinator.data.sensors.temperature
         assert mock_async_write_ha_state.call_count == 1
 
-    assert set_caplog_debug.record_tuples == [
+    assert caplog_debug.record_tuples == [
         (
             "homeassistant.components.lorawan.sensor",
             logging.DEBUG,
@@ -235,7 +235,7 @@ async def test_lorawan_sensor_entity_handle_update(
 async def test_device_info(
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test LoRaWAN sensor device info."""
     coordinator = LorawanSensorCoordinator(
@@ -266,4 +266,4 @@ async def test_device_info(
         _ = entity.device_info
     assert str(e3.value) == "config.unique_id should not be None"
 
-    assert set_caplog_debug.record_tuples == []
+    assert caplog_debug.record_tuples == []
