@@ -1173,6 +1173,9 @@ ld2410-ble==0.1.1
 # homeassistant.components.led_ble
 led-ble==1.0.1
 
+# homeassistant.components.leviosa_shades
+leviosapy==0.1.2
+
 # homeassistant.components.foscam
 libpyfoscam==1.0
 

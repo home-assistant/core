@@ -659,6 +659,7 @@ omit =
     homeassistant/components/ld2410_ble/sensor.py
     homeassistant/components/led_ble/__init__.py
     homeassistant/components/led_ble/light.py
+    homeassistant/components/leviosa_shades/cover.py
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/__init__.py
     homeassistant/components/lg_soundbar/media_player.py

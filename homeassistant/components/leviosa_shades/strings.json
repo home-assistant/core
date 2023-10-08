@@ -1,0 +1,71 @@
+{
+  "title": "Leviosa Motor Shades Zone",
+  "config": {
+    "step": {
+      "select": {
+        "data": {
+          "select_ip": "IP Address"
+        },
+        "description": "Run the setup again if you want to connect another Leviosa Zone",
+        "title": "Which Zone Hub would you like to configure?"
+      },
+      "user": {
+        "title": "Connect to Leviosa Motor Shades Zone HUB",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::ip%]"
+        }
+      },
+      "confirm": {
+        "description": "Ready to setup this device?"
+      },
+      "connect": {
+        "title": "Adding Leviosa Motor Shades Zone",
+        "description": "Details for Zone at: {ip_add}",
+        "data": {
+          "name": "Zone HUB Name",
+          "host": "Zone IP Address",
+          "grp1_name": "Group 1 name",
+          "grp2_name": "Group 2 name",
+          "grp3_name": "Group 3 name",
+          "grp4_name": "Group 4 name",
+          "grp5_name": "Group 5 name",
+          "grp6_name": "Group 6 name"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "The Leviosa Zone HUB does not appear to be online",
+      "unknown": "There was an unexpected error connecting to the Leviosa Zone HUB",
+      "no_new_devs": "No unconfigured Leviosa Zone HUBs found"
+    },
+    "abort": {
+      "no_devices_found": "No devices found on the network",
+      "single_instance_allowed": "Already configured. Only a single configuration possible.",
+      "device_already_configured": "This Leviosa Zone is already configured",
+      "no_new_devs": "No unconfigured Leviosa Zone HUBs found"
+    }
+  },
+  "services": {
+    "next_down_pos": {
+      "name": "Next Down Pos",
+      "description": "Moves a blind group down to the next defined intermediate position",
+      "fields": {
+        "entity_id": {
+          "name": "Enrty ID",
+          "description": "Name(s) of entities to move down to the next position."
+        }
+      }
+    },
+    "next_up_pos": {
+      "name": "Next Up Pos",
+      "description": "Moves a blind group up to the next defined intermediate position",
+      "fields": {
+        "entity_id": {
+          "name": "Enrty ID",
+          "description": "Name(s) of entities to move up to the next position."
+        }
+      }
+    }
+  }
+}

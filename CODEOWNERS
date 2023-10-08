@@ -701,6 +701,8 @@ build.json @home-assistant/supervisor
 /tests/components/ld2410_ble/ @930913
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
+/homeassistant/components/leviosa_shades/ @greg-ha-1990
+/tests/components/leviosa_shades/ @greg-ha-1990
 /homeassistant/components/lg_netcast/ @Drafteed
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
