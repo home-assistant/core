@@ -4,7 +4,6 @@
   "codeowners": ["@ashionky"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/refoss",
-  "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["refoss-ha==1.1.6"]
+  "requirements": ["refoss-ha==1.1.7"]
 }

@@ -1,10 +1,13 @@
 {
   "config": {
-    "abort": {
-      "socket_start_fail": "Socket server start fail,please try again.",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "discovering_device": "Discovering device, please ensure that the device's network is good."
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
     },
-    "step": {}
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
   }
 }

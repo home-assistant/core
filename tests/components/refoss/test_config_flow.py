@@ -1,20 +1,62 @@
-"""Tests for the Refoss config flow."""
-from __future__ import annotations
+"""Tests for the refoss Integration."""
+from unittest.mock import AsyncMock, patch
 
-from unittest.mock import Mock, patch
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.refoss.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
+from .common import FakeDiscovery
 
-async def test_async_step_user_socket_fail(hass: HomeAssistant):
-    """Test a  config flow."""
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-    with patch("socket.socket", return_value=Mock()):
+
+@patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
+async def test_creating_entry_sets_up_switch(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test setting up refoss creates the switch components."""
+    with patch("socket.socket", return_value=AsyncMock()), patch(
+        "homeassistant.components.refoss.config_flow.broadcast_msg",
+        return_value=FakeDiscovery(),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
+        # Confirmation form
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+        await hass.async_block_till_done()
+
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
+@patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
+async def test_creating_entry_has_no_devices(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test setting up refoss creates the switch components."""
+    with patch("socket.socket", return_value=AsyncMock()), patch(
+        "homeassistant.components.refoss.config_flow.broadcast_msg",
+        return_value=FakeDiscovery(),
+    ) as discovery:
+        discovery.return_value.mock_devices = []
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        # Confirmation form
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "socket_start_fail"
+
+        await hass.async_block_till_done()
+
+        assert len(mock_setup_entry.mock_calls) == 0

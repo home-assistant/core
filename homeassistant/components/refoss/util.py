@@ -1,36 +1,23 @@
 """Refoss helpers functions."""
 from __future__ import annotations
 
-from refoss_ha.socket_server import SocketServerProtocol
+from refoss_ha.discovery import Discovery
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import singleton
 
 
-@singleton.singleton("refoss_socket_server")
-async def get_refoss_socket_server(hass: HomeAssistant) -> SocketServerProtocol:
-    """Get refoss socket server."""
-    socket_server = SocketServerProtocol()
-    await socket_server.initialize()
-
-    hass.async_create_task(socket_server.broadcast_msg())
+@singleton.singleton("refoss_discovery_server")
+async def refoss_discovery_server(hass: HomeAssistant) -> Discovery:
+    """Get refoss Discovery server."""
+    discovery_server = Discovery()
+    await discovery_server.initialize()
 
     @callback
     def shutdown_listener(ev: Event) -> None:
-        """Shutdown socket_server."""
-        socket_server.close()
+        """Shutdown Discovery server."""
+        discovery_server.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
-    return socket_server
-
-
-def verify_msg(data: dict) -> str | None:
-    """Verify push msg."""
-    header = data.get("header", {})
-    namespace = header.get("namespace", None)
-    uuid = header.get("uuid", None)
-    payload = data.get("payload", None)
-    if namespace is None or uuid is None or payload is None:
-        return None
-    return uuid
+    return discovery_server

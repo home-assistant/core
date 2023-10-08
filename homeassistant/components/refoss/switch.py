@@ -8,42 +8,51 @@ from refoss_ha.controller.toggle import ToggleXMix
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeAssistantRefossData
-from .const import DOMAIN
-from .device import RefossEntity
+from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DISPATCHERS, DOMAIN
+from .entity import RefossEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up switches for device."""
-    hass_data: HomeAssistantRefossData = hass.data[DOMAIN][entry.entry_id]
-    device = hass_data.base_device
+    """Set up the Refoss device from a config entry."""
 
-    new_entities = []
-    if not isinstance(device, ToggleXMix):
-        return
+    @callback
+    def init_device(coordinator):
+        """Register the device."""
+        device = coordinator.device
+        if not isinstance(device, ToggleXMix):
+            return
 
-    for channel in device.channels:
-        w = RefossSwitchEntity(device=device, channel=channel)
-        new_entities.append(w)
-    async_add_entities(new_entities, True)
+        new_entities = []
+        for channel in device.channels:
+            entity = RefossSwitch(coordinator, device, channel=channel)
+            new_entities.append(entity)
+
+        async_add_entities(new_entities)
+
+    for coordinator in hass.data[DOMAIN][COORDINATORS]:
+        init_device(coordinator)
+
+    hass.data[DOMAIN][DISPATCHERS].append(
+        async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
+    )
 
 
-class RefossSwitchEntity(RefossEntity, SwitchEntity):
+class RefossSwitch(RefossEntity, SwitchEntity):
     """Entity that controls switch based refoss device."""
 
-    device: ToggleXMix
-
-    def __init__(self, device: ToggleXMix, channel: int) -> None:
+    def __init__(self, coordinator, device: ToggleXMix, channel: int) -> None:
         """Construct."""
-        super().__init__(device=device, channel=channel)
+        super().__init__(coordinator, channel=channel)
         self._channel_id = channel
+        self.device = device
 
     @property
     def is_on(self) -> bool | None:
