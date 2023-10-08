@@ -30,19 +30,14 @@ from homeassistant.const import (
     UnitOfSoundPressure,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from .const import (
-    ATTR_LAST_RESET,
-    ATTR_OPTIONS,
-    ATTR_STATE_CLASS,
-    DOMAIN,
-    SensorStateClass,
-)
+from .const import ATTR_LAST_RESET, ATTR_STATE_CLASS, DOMAIN, SensorStateClass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -263,20 +258,10 @@ def _normalize_states(
 def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
     """Suggest to report an issue."""
     entity_info = entity_sources(hass).get(entity_id)
-    domain = entity_info["domain"] if entity_info else None
-    custom_component = entity_info["custom_component"] if entity_info else None
-    report_issue = ""
-    if custom_component:
-        report_issue = "report it to the custom integration author."
-    else:
-        report_issue = (
-            "create a bug report at "
-            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-        )
-        if domain:
-            report_issue += f"+label%3A%22integration%3A+{domain}%22"
 
-    return report_issue
+    return async_suggest_report_issue(
+        hass, integration_domain=entity_info["domain"] if entity_info else None
+    )
 
 
 def warn_dip(
@@ -790,9 +775,3 @@ def validate_statistics(
         )
 
     return validation_result
-
-
-@callback
-def exclude_attributes(hass: HomeAssistant) -> set[str]:
-    """Exclude attributes from being recorded in the database."""
-    return {ATTR_OPTIONS}

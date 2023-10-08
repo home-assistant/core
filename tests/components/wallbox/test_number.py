@@ -5,7 +5,7 @@ import pytest
 import requests_mock
 
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
-from homeassistant.components.wallbox import CHARGER_MAX_CHARGING_CURRENT_KEY
+from homeassistant.components.wallbox.const import CHARGER_MAX_CHARGING_CURRENT_KEY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 

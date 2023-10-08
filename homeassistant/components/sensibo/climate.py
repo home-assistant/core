@@ -54,7 +54,15 @@ ATTR_HORIZONTAL_SWING_MODE = "horizontal_swing_mode"
 ATTR_LIGHT = "light"
 BOOST_INCLUSIVE = "boost_inclusive"
 
-AVAILABLE_FAN_MODES = {"quiet", "low", "medium", "medium_high", "high", "auto"}
+AVAILABLE_FAN_MODES = {
+    "quiet",
+    "low",
+    "medium",
+    "medium_high",
+    "high",
+    "strong",
+    "auto",
+}
 AVAILABLE_SWING_MODES = {
     "stopped",
     "fixedtop",

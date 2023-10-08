@@ -136,7 +136,7 @@ async def mock_pymodbus_exception_fixture(hass, do_exception, mock_modbus):
 @pytest.fixture(name="mock_pymodbus_return")
 async def mock_pymodbus_return_fixture(hass, register_words, mock_modbus):
     """Trigger update call with time_changed event."""
-    read_result = ReadResult(register_words)
+    read_result = ReadResult(register_words) if register_words else None
     mock_modbus.read_coils.return_value = read_result
     mock_modbus.read_discrete_inputs.return_value = read_result
     mock_modbus.read_input_registers.return_value = read_result

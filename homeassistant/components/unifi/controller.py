@@ -12,7 +12,6 @@ import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.configuration import Configuration
 from aiounifi.models.device import DeviceSetPoePortModeRequest
-from aiounifi.websocket import WebsocketState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -81,7 +80,7 @@ class UniFiController:
         self.config_entry = config_entry
         self.api = api
 
-        api.ws_state_callback = self.async_unifi_ws_state_callback
+        self.ws_task: asyncio.Task | None = None
 
         self.available = True
         self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
@@ -223,23 +222,6 @@ class UniFiController:
         for description in descriptions:
             async_load_entities(description)
 
-    @callback
-    def async_unifi_ws_state_callback(self, state: WebsocketState) -> None:
-        """Handle messages back from UniFi library."""
-        if state == WebsocketState.DISCONNECTED and self.available:
-            LOGGER.warning("Lost connection to UniFi Network")
-
-        if (state == WebsocketState.RUNNING and not self.available) or (
-            state == WebsocketState.DISCONNECTED and self.available
-        ):
-            self.available = state == WebsocketState.RUNNING
-            async_dispatcher_send(self.hass, self.signal_reachable)
-
-            if not self.available:
-                self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
-            else:
-                LOGGER.info("Connected to UniFi Network")
-
     @property
     def signal_reachable(self) -> str:
         """Integration specific event to signal a change in connection status."""
@@ -320,7 +302,7 @@ class UniFiController:
             self.poe_command_queue.clear()
             for device_id, device_commands in queue.items():
                 device = self.api.devices[device_id]
-                commands = [(idx, mode) for idx, mode in device_commands.items()]
+                commands = list(device_commands.items())
                 await self.api.request(
                     DeviceSetPoePortModeRequest.create(device, targets=commands)
                 )
@@ -368,6 +350,19 @@ class UniFiController:
         async_dispatcher_send(hass, controller.signal_options_update)
 
     @callback
+    def start_websocket(self) -> None:
+        """Start up connection to websocket."""
+
+        async def _websocket_runner() -> None:
+            """Start websocket."""
+            await self.api.start_websocket()
+            self.available = False
+            async_dispatcher_send(self.hass, self.signal_reachable)
+            self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
+
+        self.ws_task = self.hass.loop.create_task(_websocket_runner())
+
+    @callback
     def reconnect(self, log: bool = False) -> None:
         """Prepare to reconnect UniFi session."""
         if log:
@@ -379,7 +374,11 @@ class UniFiController:
         try:
             async with asyncio.timeout(5):
                 await self.api.login()
-                self.api.start_websocket()
+                self.start_websocket()
+
+            if not self.available:
+                self.available = True
+                async_dispatcher_send(self.hass, self.signal_reachable)
 
         except (
             asyncio.TimeoutError,
@@ -395,7 +394,8 @@ class UniFiController:
 
         Used as an argument to EventBus.async_listen_once.
         """
-        self.api.stop_websocket()
+        if self.ws_task is not None:
+            self.ws_task.cancel()
 
     async def async_reset(self) -> bool:
         """Reset this controller to default state.
@@ -403,7 +403,18 @@ class UniFiController:
         Will cancel any scheduled setup retry and will unload
         the config entry.
         """
-        self.api.stop_websocket()
+        if self.ws_task is not None:
+            self.ws_task.cancel()
+
+            _, pending = await asyncio.wait([self.ws_task], timeout=10)
+
+            if pending:
+                LOGGER.warning(
+                    "Unloading %s (%s) config entry. Task %s did not complete in time",
+                    self.config_entry.title,
+                    self.config_entry.domain,
+                    self.ws_task,
+                )
 
         unload_ok = await self.hass.config_entries.async_unload_platforms(
             self.config_entry, PLATFORMS
