@@ -92,11 +92,18 @@ async def test_reauth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
         URL,
         text=RETURN_SUCCESS,
     )
-    await setup_platform(hass)
+    entry = await setup_platform(hass)
 
     result1 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=CONFIG
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+        data=CONFIG,
     )
+    assert result1["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
         result1["flow_id"],
@@ -106,8 +113,7 @@ async def test_reauth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["data"] == CONFIG
+    assert result2["type"] == FlowResultType.ABORT
 
     # Test failed reauth
     aioclient_mock.post(
@@ -118,7 +124,11 @@ async def test_reauth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
 
     result3 = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
         data=CONFIG,
     )
     assert result3["step_id"] == "reauth_confirm"

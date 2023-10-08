@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 CONFIG = {
     CONF_TOKEN: "abc",
     CONF_HOST: "localhost",
-    CONF_PORT: "8089",
+    CONF_PORT: 8089,
     CONF_SSL: False,
     CONF_VERIFY_SSL: True,
     CONF_NAME: "Test",
