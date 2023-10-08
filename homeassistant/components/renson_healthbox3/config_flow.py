@@ -43,9 +43,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
+            api_key = None
+
+            if CONF_API_KEY in user_input:
+                api_key = user_input[CONF_API_KEY]
+
             client = Healthbox3(
                 host=user_input[CONF_HOST],
-                api_key=user_input[CONF_API_KEY],
+                api_key=api_key,
                 session=async_create_clientsession(self.hass),
             )
 
