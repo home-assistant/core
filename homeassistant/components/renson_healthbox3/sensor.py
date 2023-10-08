@@ -320,6 +320,7 @@ def generate_room_sensors_for_healthbox(
 class HealthboxGlobalSensor(RensonEntity, SensorEntity):
     """Representation of a Healthbox  Room Sensor."""
 
+    _attr_has_entity_name = True
     entity_description: HealthboxGlobalSensorEntityDescription
 
     def __init__(
