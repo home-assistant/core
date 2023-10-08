@@ -4,6 +4,9 @@ from __future__ import annotations
 import json
 import logging
 
+from pyliblorawan.models import Uplink
+from pyliblorawan.network_servers.ttn import TTN
+
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
@@ -15,8 +18,6 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from pyliblorawan.models import Uplink
-from pyliblorawan.network_servers.ttn import TTN
 
 from .const import DOMAIN, TTN_TOPIC
 from .devices.browan import HassTBMS100
@@ -38,9 +39,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT sensor through YAML and through MQTT discovery."""
-    _LOGGER.warning(config_entry)
-    _LOGGER.warning(config_entry.as_dict())
-    _LOGGER.warning(config_entry.data)
 
     await _async_setup_entity(hass, async_add_entities, config_entry)
 
@@ -50,7 +48,7 @@ async def _async_setup_entity(
     async_add_entities: AddEntitiesCallback,
     config_entry: ConfigEntry,
 ) -> None:
-    """Set up MQTT sensor."""
+    """Set up LoRaWAN sensor."""
     entities = []
     coordinator = LorawanSensorCoordinator(hass, config_entry)
     for sensor in HassTBMS100.supported_sensors():
@@ -75,19 +73,18 @@ class LorawanSensorCoordinator(DataUpdateCoordinator):
             name=f"LorawanSensorCoordinator.{config_entry.title}",
         )
 
+    async def _message_received(self, msg: ReceiveMessage) -> None:
+        """Handle uplink, parse and normalize it."""
+        uplink = json.loads(msg.payload)
+        uplink = TTN.normalize_uplink(uplink)
+        uplink = await HassTBMS100.parse_uplink(uplink)
+
+        self.async_set_updated_data(uplink)
+
     async def subscribe(self) -> None:
         """Subscribe to MQTT messages and handle them."""
-
-        async def _message_received(msg: ReceiveMessage) -> None:
-            """Handle uplink, parse and normalize it."""
-            uplink = json.loads(msg.payload)
-            uplink = TTN.normalize_uplink(uplink)
-            uplink = await HassTBMS100.parse_uplink(uplink)
-
-            self.async_set_updated_data(uplink)
-
         topic = TTN_TOPIC.replace("<DEVICE_ID>", self._config.title)
-        await self.hass.components.mqtt.async_subscribe(topic, _message_received)
+        await self.hass.components.mqtt.async_subscribe(topic, self._message_received)
 
 
 class LorawanSensorEntity(CoordinatorEntity, SensorEntity):

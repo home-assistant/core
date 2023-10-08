@@ -2,15 +2,12 @@
 import logging
 from unittest.mock import AsyncMock, patch
 
+from pyliblorawan.helpers.exceptions import CannotConnect, InvalidAuth
+from pyliblorawan.models import Device
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.lorawan.const import DOMAIN
-from homeassistant.components.lorawan.helpers.exceptions import (
-    CannotConnect,
-    InvalidAuth,
-)
-from homeassistant.components.lorawan.models import Device
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -32,20 +29,8 @@ FORM_DATA = {
 }
 
 
-@pytest.fixture(autouse=True)
-def set_caplog_debug(
-    caplog: pytest.LogCaptureFixture,
-):
-    """Disable all loggers except the DUT set to all."""
-    caplog.set_level(level=logging.CRITICAL + 1)
-    caplog.set_level(
-        level=logging.DEBUG, logger="homeassistant.components.lorawan.config_flow"
-    )
-    return caplog
-
-
 @patch(
-    "homeassistant.components.lorawan.network_servers.ttn.TTN.list_device_euis",
+    "pyliblorawan.network_servers.ttn.TTN.list_device_euis",
     return_value=LIST_DEVICE_EUIS_TWO_DEVICES,
 )
 async def test_form(
@@ -79,7 +64,7 @@ async def test_form(
 
 
 @patch(
-    "homeassistant.components.lorawan.network_servers.ttn.TTN.list_device_euis",
+    "pyliblorawan.network_servers.ttn.TTN.list_device_euis",
     side_effect=InvalidAuth,
 )
 async def test_form_invalid_auth(
@@ -105,7 +90,7 @@ async def test_form_invalid_auth(
 
 
 @patch(
-    "homeassistant.components.lorawan.network_servers.ttn.TTN.list_device_euis",
+    "pyliblorawan.network_servers.ttn.TTN.list_device_euis",
     side_effect=CannotConnect(500),
 )
 async def test_form_cannot_connect(
@@ -130,7 +115,7 @@ async def test_form_cannot_connect(
 
 
 @patch(
-    "homeassistant.components.lorawan.network_servers.ttn.TTN.list_device_euis",
+    "pyliblorawan.network_servers.ttn.TTN.list_device_euis",
     side_effect=ValueError,
 )
 async def test_generic_exception(
@@ -161,7 +146,7 @@ async def test_generic_exception(
 
 
 @patch(
-    "homeassistant.components.lorawan.network_servers.ttn.TTN.list_device_euis",
+    "pyliblorawan.network_servers.ttn.TTN.list_device_euis",
     return_value=LIST_DEVICE_EUIS_TWO_DEVICES,
 )
 async def test_device_not_found(
