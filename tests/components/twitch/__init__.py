@@ -183,7 +183,7 @@ class TwitchMock:
         return ChannelFollowersResultMock([ChannelFollowerMock(user_id="abc")])
 
     async def get_streams(
-        self, user_id: list[str], first: int
+        self, user_id: list[str], first: int = 100
     ) -> AsyncGenerator[StreamMock, None]:
         """Get streams for the user."""
         streams = []
