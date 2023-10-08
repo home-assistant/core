@@ -10,12 +10,12 @@ from switchbot_api import (
     SwitchBotAPI,
 )
 
+import homeassistant.components.climate as FanState
 from homeassistant.components.climate import (
     SWING_HORIZONTAL,
     SWING_ON,
     ClimateEntity,
     ClimateEntityFeature,
-    FanState,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -67,13 +67,13 @@ def convert_hvac_mode(hvac_mode: HVACMode | None) -> int | None:
 def convert_fan_mode(fan_mode: str | None) -> int | None:
     """Convert fan mode into SwitchBot fan mode."""
     match fan_mode:
-        case FanState.AUTO:
+        case FanState.FAN_AUTO:
             return 1
-        case FanState.LOW:
+        case FanState.FAN_LOW:
             return 2
-        case FanState.MEDIUM:
+        case FanState.FAN_MEDIUM:
             return 3
-        case FanState.HIGH:
+        case FanState.FAN_HIGH:
             return 4
         case _:
             _LOGGER.error("Unsupported fan mode: %s", fan_mode)
@@ -86,8 +86,13 @@ class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
-    _attr_fan_modes = [FanState.AUTO, FanState.LOW, FanState.MEDIUM, FanState.HIGH]
-    _attr_fan_mode = FanState.AUTO.value
+    _attr_fan_modes = [
+        FanState.FAN_AUTO,
+        FanState.FAN_LOW,
+        FanState.FAN_MEDIUM,
+        FanState.FAN_HIGH,
+    ]
+    _attr_fan_mode = FanState.FAN_AUTO
     _attr_hvac_modes = [
         HVACMode.HEAT_COOL,
         HVACMode.COOL,
@@ -140,8 +145,8 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.SWING_MODE
     )
-    _attr_fan_modes = [FanState.LOW, FanState.MEDIUM, FanState.HIGH]
-    _attr_fan_mode = FanState.LOW.value
+    _attr_fan_modes = [FanState.FAN_LOW, FanState.FAN_MEDIUM, FanState.FAN_HIGH]
+    _attr_fan_mode = FanState.FAN_LOW
     _attr_swing_modes = [
         SWING_ON,
         SWING_HORIZONTAL,
@@ -157,11 +162,11 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set target fan mode."""
         match fan_mode:
-            case FanState.LOW:
+            case FanState.FAN_LOW:
                 await self.send_command(FanCommands.LOW_SPEED)
-            case FanState.MEDIUM:
+            case FanState.FAN_MEDIUM:
                 await self.send_command(FanCommands.MIDDLE_SPEED)
-            case FanState.HIGH:
+            case FanState.FAN_HIGH:
                 await self.send_command(FanCommands.HIGH_SPEED)
             case _:
                 _LOGGER.error("Unsupported fan mode: %s", fan_mode)
