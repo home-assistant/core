@@ -11,10 +11,10 @@ from homeassistant.core import HomeAssistant
 async def test_async_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
-    set_caplog_debug: pytest.LogCaptureFixture,
+    caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test LoRaWAN platform setup."""
     assert await async_setup_entry(hass, mock_config_entry) is True
     assert hass.data[DOMAIN] == {}
 
-    assert set_caplog_debug.record_tuples == []
+    assert caplog_debug.record_tuples == []
