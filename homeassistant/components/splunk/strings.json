@@ -15,10 +15,17 @@
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "name": "Host"
+          "name": "Host field"
         },
         "description": "Add Splunk HTTP Event Collector.",
         "title": "[%key:common::action::connect%]"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Update HTTP Event Collector Token for {host}:{port}.",
+        "data": {
+          "token": "HTTP Event Collector Token"
+        }
       }
     }
   }

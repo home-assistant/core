@@ -98,7 +98,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await splunk.queue(json.dumps(payload, cls=JSONEncoder), send=True)
         except SplunkPayloadError as err:
-            if err.status == HTTPStatus.UNAUTHORIZED:
+            # Catch 403
+            if err.status == HTTPStatus.FORBIDDEN:
                 raise ConfigEntryAuthFailed() from err
             _LOGGER.warning(err)
         except ClientConnectionError as err:
