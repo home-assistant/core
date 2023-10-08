@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "{name}",
     "step": {
       "user": {
         "data": {
