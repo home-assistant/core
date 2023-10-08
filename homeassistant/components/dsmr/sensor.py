@@ -509,7 +509,7 @@ async def async_setup_entry(
                 if stop_listener and (
                     hass.state == CoreState.not_running or hass.is_running
                 ):
-                    stop_listener()  # pylint: disable=not-callable
+                    stop_listener()
 
                 if transport:
                     transport.close()

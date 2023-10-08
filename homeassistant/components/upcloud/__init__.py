@@ -122,10 +122,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await hass.async_add_executor_job(manager.authenticate)
     except upcloud_api.UpCloudAPIError:
-        _LOGGER.error("Authentication failed", exc_info=True)
+        _LOGGER.exception("Authentication failed")
         return False
     except requests.exceptions.RequestException as err:
-        _LOGGER.error("Failed to connect", exc_info=True)
+        _LOGGER.exception("Failed to connect")
         raise ConfigEntryNotReady from err
 
     if entry.options.get(CONF_SCAN_INTERVAL):
@@ -243,7 +243,7 @@ class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
         assert self.coordinator.config_entry is not None
         return DeviceInfo(
             configuration_url="https://hub.upcloud.com",
-            default_model="Control Panel",
+            model="Control Panel",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={
                 (DOMAIN, f"{self.coordinator.config_entry.data[CONF_USERNAME]}@hub")

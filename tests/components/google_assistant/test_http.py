@@ -1,8 +1,9 @@
 """Test Google http services."""
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import ANY, patch
+from uuid import uuid4
 
 import pytest
 
@@ -51,7 +52,7 @@ async def test_get_jwt(hass: HomeAssistant) -> None:
 
     jwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkdW1teUBkdW1teS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInNjb3BlIjoiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vYXV0aC9ob21lZ3JhcGgiLCJhdWQiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vby9vYXV0aDIvdG9rZW4iLCJpYXQiOjE1NzEwMTEyMDAsImV4cCI6MTU3MTAxNDgwMH0.akHbMhOflXdIDHVvUVwO0AoJONVOPUdCghN6hAdVz4gxjarrQeGYc_Qn2r84bEvCU7t6EvimKKr0fyupyzBAzfvKULs5mTHO3h2CwSgvOBMv8LnILboJmbO4JcgdnRV7d9G3ktQs7wWSCXJsI5i5jUr1Wfi9zWwxn2ebaAAgrp8"
     res = _get_homegraph_jwt(
-        datetime(2019, 10, 14, tzinfo=timezone.utc),
+        datetime(2019, 10, 14, tzinfo=UTC),
         DUMMY_CONFIG["service_account"]["client_email"],
         DUMMY_CONFIG["service_account"]["private_key"],
     )
@@ -85,7 +86,7 @@ async def test_update_access_token(hass: HomeAssistant) -> None:
     config = GoogleConfig(hass, DUMMY_CONFIG)
     await config.async_initialize()
 
-    base_time = datetime(2019, 10, 14, tzinfo=timezone.utc)
+    base_time = datetime(2019, 10, 14, tzinfo=UTC)
     with patch(
         "homeassistant.components.google_assistant.http._get_homegraph_token"
     ) as mock_get_token, patch(
@@ -192,6 +193,38 @@ async def test_report_state(
         mock_call.assert_called_once_with(
             REPORT_STATE_BASE_URL,
             {"requestId": ANY, "agentUserId": agent_user_id, "payload": message},
+        )
+
+
+async def test_report_event(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the report event function."""
+    agent_user_id = "user"
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+
+    await config.async_connect_agent_user(agent_user_id)
+    message = {"devices": {}}
+
+    with patch.object(config, "async_call_homegraph_api"):
+        # Wait for google_assistant.helpers.async_initialize.sync_google to be called
+        await hass.async_block_till_done()
+
+    event_id = uuid4().hex
+    with patch.object(config, "async_call_homegraph_api") as mock_call:
+        # Wait for google_assistant.helpers.async_initialize.sync_google to be called
+        await config.async_report_state(message, agent_user_id, event_id=event_id)
+        mock_call.assert_called_once_with(
+            REPORT_STATE_BASE_URL,
+            {
+                "requestId": ANY,
+                "agentUserId": agent_user_id,
+                "payload": message,
+                "eventId": event_id,
+            },
         )
 
 

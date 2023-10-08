@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
-HOP_SCAN_INTERVAL = timedelta(hours=2)
+HOP_SCAN_INTERVAL = timedelta(minutes=20)
 
 
 class ElectricKiwiHOPDataCoordinator(DataUpdateCoordinator[Hop]):

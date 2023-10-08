@@ -1,5 +1,4 @@
 """The tests for the logbook component."""
-# pylint: disable=invalid-name
 import asyncio
 import collections
 from collections.abc import Callable

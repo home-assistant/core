@@ -1,0 +1,22 @@
+# Describes the format for available lawn_mower services
+
+start_mowing:
+  target:
+    entity:
+      domain: lawn_mower
+      supported_features:
+        - lawn_mower.LawnMowerEntityFeature.START_MOWING
+
+dock:
+  target:
+    entity:
+      domain: lawn_mower
+      supported_features:
+        - lawn_mower.LawnMowerEntityFeature.DOCK
+
+pause:
+  target:
+    entity:
+      domain: lawn_mower
+      supported_features:
+        - lawn_mower.LawnMowerEntityFeature.PAUSE

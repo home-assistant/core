@@ -506,7 +506,7 @@ async def test_restore_number_save_state(
     assert state["entity_id"] == entity0.entity_id
     extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
     assert extra_data == RESTORE_DATA
-    assert type(extra_data["native_value"]) == float
+    assert isinstance(extra_data["native_value"], float)
 
 
 @pytest.mark.parametrize(
@@ -901,3 +901,13 @@ async def test_name(hass: HomeAssistant) -> None:
         "mode": NumberMode.AUTO,
         "step": 1.0,
     }
+
+
+def test_device_class_units(hass: HomeAssistant) -> None:
+    """Test all numeric device classes have unit."""
+    # DEVICE_CLASS_UNITS should include all device classes except:
+    # - NumberDeviceClass.MONETARY
+    # - Device classes enumerated in NON_NUMERIC_DEVICE_CLASSES
+    assert set(NUMBER_DEVICE_CLASS_UNITS) == set(
+        NumberDeviceClass
+    ) - NON_NUMERIC_DEVICE_CLASSES - {NumberDeviceClass.MONETARY}
