@@ -1,4 +1,5 @@
 """Test LoRaWAN sensor entity."""
+import datetime
 import json
 import logging
 from types import MappingProxyType
@@ -151,14 +152,28 @@ async def test_lorawansensorcoordinator_subscribe_callback(
     coordinator = LorawanSensorCoordinator(
         hass, mock_config_entry, HassTBMS100.parse_uplink
     )
-    msg = ReceiveMessage("TEST-TOPIC", json.dumps(ttn_uplink), 0, False)
+    msg = ReceiveMessage(
+        "TEST-TOPIC",
+        json.dumps(ttn_uplink),
+        0,
+        False,
+        "+",
+        datetime.datetime.fromtimestamp(0),
+    )
     await coordinator._message_received(msg)
     await hass.async_block_till_done()
 
     with patch.object(
         coordinator, "async_set_updated_data"
     ) as mock_async_set_updated_data:
-        msg = ReceiveMessage("TEST-TOPIC", json.dumps(ttn_uplink), 0, False)
+        msg = ReceiveMessage(
+            "TEST-TOPIC",
+            json.dumps(ttn_uplink),
+            0,
+            False,
+            "+",
+            datetime.datetime.fromtimestamp(0),
+        )
         await coordinator._message_received(msg)
         await hass.async_block_till_done()
         mock_async_set_updated_data.assert_called_once()
@@ -214,7 +229,14 @@ async def test_lorawan_sensor_entity_handle_update(
     )
     sensor = SensorTypes.Temperature
     entity = LorawanSensorEntity(hass, mock_config_entry, coordinator, sensor)
-    msg = ReceiveMessage("TEST-TOPIC", json.dumps(ttn_uplink), 0, False)
+    msg = ReceiveMessage(
+        "TEST-TOPIC",
+        json.dumps(ttn_uplink),
+        0,
+        False,
+        "+",
+        datetime.datetime.fromtimestamp(0),
+    )
     await coordinator._message_received(msg)
     await hass.async_block_till_done()
 
