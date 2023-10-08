@@ -60,7 +60,7 @@ def test_compile_missing_statistics(
     assert latest_stat["end"] == 1609545600.0 + 300
     count = 1
     past_time = two_days_ago
-    while past_time < start_time:
+    while past_time <= start_time:
         freezer.move_to(past_time)
         hass.states.set("sensor.test1", str(count), POWER_SENSOR_ATTRIBUTES)
         past_time += timedelta(minutes=5)
@@ -69,7 +69,7 @@ def test_compile_missing_statistics(
     wait_recording_done(hass)
 
     states = get_significant_states(hass, three_days_ago, past_time, ["sensor.test1"])
-    assert len(states["sensor.test1"]) == 576
+    assert len(states["sensor.test1"]) == 577
 
     hass.stop()
     freezer.move_to(start_time)
@@ -77,24 +77,28 @@ def test_compile_missing_statistics(
     hass.state = CoreState.not_running
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "sensor", {})
+    hass.states.set("sensor.test1", "0", POWER_SENSOR_ATTRIBUTES)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
     wait_recording_done(hass)
     wait_recording_done(hass)
 
-    latest = get_latest_short_term_statistics(hass, {"sensor.test1"}, {"state", "sum"})
+    latest = get_latest_short_term_statistics(
+        hass, {"sensor.test1"}, {"state", "sum", "max", "mean", "min"}
+    )
     latest_stat = latest["sensor.test1"][0]
-    assert latest_stat["start"] == 1609545600.0
-    assert latest_stat["end"] == 1609545600.0 + 300
+    assert latest_stat["start"] == 1609718100.0
+    assert latest_stat["end"] == 1609718100.0 + 300
 
     stats = statistics_during_period(
         hass,
         two_days_ago,
-        None,
+        start_time,
         units=None,
         statistic_ids={"sensor.test1"},
         period="5minute",
-        types={"state", "sum"},
+        types={"state", "sum", "max", "mean", "min"},
     )
+    # TODO: this looks wrong
     assert stats is not None
     hass.stop()
