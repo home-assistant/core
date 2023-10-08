@@ -1247,7 +1247,7 @@ pydeconz==113
 pydexcom==0.2.3
 
 # homeassistant.components.discovergy
-pydiscovergy==2.0.3
+pydiscovergy==2.0.4
 
 # homeassistant.components.hydrawise
 pydrawise==2023.10.0
@@ -1379,7 +1379,7 @@ pylitejet==0.5.0
 pylitterbot==2023.4.9
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.18.2
+pylutron-caseta==0.18.3
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1880,7 +1880,7 @@ surepy==0.8.0
 switchbot-api==1.1.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.8.2
+systembridgeconnector==3.8.4
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
