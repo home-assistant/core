@@ -4,8 +4,9 @@ from pathlib import Path
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from sqlalchemy import select
 
-from homeassistant.components.recorder import SQLITE_URL_PREFIX
+from homeassistant.components.recorder import SQLITE_URL_PREFIX, db_schema, get_instance
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.statistics import (
     get_latest_short_term_statistics,
@@ -20,9 +21,9 @@ from tests.common import get_test_home_assistant
 from tests.components.recorder.common import do_adhoc_statistics, wait_recording_done
 
 POWER_SENSOR_ATTRIBUTES = {
-    "device_class": "power",
+    "device_class": "energy",
     "state_class": "measurement",
-    "unit_of_measurement": "kW",
+    "unit_of_measurement": "kWh",
 }
 
 
@@ -90,15 +91,35 @@ def test_compile_missing_statistics(
     assert latest_stat["start"] == 1609718100.0
     assert latest_stat["end"] == 1609718100.0 + 300
 
+    import pprint
+
+    pprint.pprint(
+        [
+            "two_days_ago",
+            two_days_ago,
+            two_days_ago.timestamp(),
+            "start_time",
+            start_time,
+            start_time.timestamp(),
+        ]
+    )
     stats = statistics_during_period(
         hass,
         two_days_ago,
         start_time,
-        units=None,
+        units={"energy": "kWh"},
         statistic_ids={"sensor.test1"},
-        period="5minute",
-        types={"state", "sum", "max", "mean", "min"},
+        period="hour",
+        types={"change"},
     )
+    import pprint
+
+    pprint.pprint(["wrong?", stats])
+    instance = get_instance(hass)
+    session = instance.get_session()
+    result = session.execute(select("*").select_from(db_schema.Statistics))
+    pprint.pprint(["all", result.fetchall()])
+
     # TODO: this looks wrong
     assert stats is not None
     hass.stop()

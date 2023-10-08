@@ -1695,6 +1695,14 @@ def _statistics_during_period_with_session(
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
     )
+    _LOGGER.warning(
+        "_generate_statistics_during_period_stmt: start_time=%s, end_time=%s, metadata_ids=%s, table=%s, types=%s",
+        start_time,
+        end_time,
+        metadata_ids,
+        table,
+        types,
+    )
     stmt = _generate_statistics_during_period_stmt(
         start_time, end_time, metadata_ids, table, types
     )
