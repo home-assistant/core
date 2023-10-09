@@ -9,6 +9,11 @@ from .const import BLID, DOMAIN, ROOMBA_SESSION
 from .irobot_base import IRobotEntity
 
 
+def get_bin_status(roomba):
+    """Get the bin status from Roomba reported state."""
+    return roomba_reported_state(roomba).get("bin", {})
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -18,7 +23,7 @@ async def async_setup_entry(
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
     roomba = domain_data[ROOMBA_SESSION]
     blid = domain_data[BLID]
-    status = roomba_reported_state(roomba).get("bin", {})
+    status = get_bin_status(roomba)
     if "full" in status:
         roomba_vac = RoombaBinStatus(roomba, blid)
         async_add_entities([roomba_vac], True)
@@ -38,7 +43,7 @@ class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return the state of the sensor."""
-        return roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
+        return get_bin_status(self.vacuum).get("full", False)
 
     def new_state_filter(self, new_state):
         """Filter the new state."""
