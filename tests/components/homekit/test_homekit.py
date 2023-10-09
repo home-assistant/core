@@ -1102,7 +1102,7 @@ async def test_homekit_reset_accessories_not_supported(
         )
         await hass.async_block_till_done()
 
-        assert hk_driver_async_update_advertisement.call_count == 2
+        assert hk_driver_async_update_advertisement.call_count == 1
         assert not mock_add_accessory.called
         assert len(homekit.bridge.accessories) == 0
         homekit.status = STATUS_STOPPED
