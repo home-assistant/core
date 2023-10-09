@@ -423,13 +423,7 @@ def _add_columns(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(
-                    text(
-                        "ALTER TABLE {table} {column_def}".format(
-                            table=table_name, column_def=column_def
-                        )
-                    )
-                )
+                connection.execute(text(f"ALTER TABLE {table_name} {column_def}"))
             except (InternalError, OperationalError, ProgrammingError) as err:
                 raise_if_exception_missing_str(err, ["already exists", "duplicate"])
                 _LOGGER.warning(
@@ -498,13 +492,7 @@ def _modify_columns(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(
-                    text(
-                        "ALTER TABLE {table} {column_def}".format(
-                            table=table_name, column_def=column_def
-                        )
-                    )
-                )
+                connection.execute(text(f"ALTER TABLE {table_name} {column_def}"))
             except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not modify column %s in table %s", column_def, table_name
@@ -536,7 +524,7 @@ def _update_states_table_with_foreign_key_options(
         return
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
-    old_states_table = Table(  # noqa: F841 pylint: disable=unused-variable
+    old_states_table = Table(  # noqa: F841
         TABLE_STATES, MetaData(), *(alter["old_fk"] for alter in alters)  # type: ignore[arg-type]
     )
 
@@ -565,9 +553,7 @@ def _drop_foreign_key_constraints(
             drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))
 
     # Bind the ForeignKeyConstraints to the table
-    old_table = Table(  # noqa: F841 pylint: disable=unused-variable
-        table, MetaData(), *drops
-    )
+    old_table = Table(table, MetaData(), *drops)  # noqa: F841
 
     for drop in drops:
         with session_scope(session=session_maker()) as session:
@@ -784,8 +770,6 @@ def _apply_update(  # noqa: C901
         with session_scope(session=session_maker()) as session:
             if session.query(Statistics.id).count() and (
                 last_run_string := session.query(
-                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                    # pylint: disable-next=not-callable
                     func.max(StatisticsRuns.start)
                 ).scalar()
             ):
@@ -1158,23 +1142,23 @@ def _wipe_old_string_time_columns(
     elif engine.dialect.name == SupportedDialect.MYSQL:
         #
         # Since this is only to save space we limit the number of rows we update
-        # to 10,000,000 per table since we do not want to block the database for too long
+        # to 100,000 per table since we do not want to block the database for too long
         # or run out of innodb_buffer_pool_size on MySQL. The old data will eventually
         # be cleaned up by the recorder purge if we do not do it now.
         #
-        session.execute(text("UPDATE events set time_fired=NULL LIMIT 10000000;"))
+        session.execute(text("UPDATE events set time_fired=NULL LIMIT 100000;"))
         session.commit()
         session.execute(
             text(
                 "UPDATE states set last_updated=NULL, last_changed=NULL "
-                " LIMIT 10000000;"
+                " LIMIT 100000;"
             )
         )
         session.commit()
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
         #
         # Since this is only to save space we limit the number of rows we update
-        # to 250,000 per table since we do not want to block the database for too long
+        # to 100,000 per table since we do not want to block the database for too long
         # or run out ram with postgresql. The old data will eventually
         # be cleaned up by the recorder purge if we do not do it now.
         #
@@ -1182,7 +1166,7 @@ def _wipe_old_string_time_columns(
             text(
                 "UPDATE events set time_fired=NULL "
                 "where event_id in "
-                "(select event_id from events where time_fired_ts is NOT NULL LIMIT 250000);"
+                "(select event_id from events where time_fired_ts is NOT NULL LIMIT 100000);"
             )
         )
         session.commit()
@@ -1190,7 +1174,7 @@ def _wipe_old_string_time_columns(
             text(
                 "UPDATE states set last_updated=NULL, last_changed=NULL "
                 "where state_id in "
-                "(select state_id from states where last_updated_ts is NOT NULL LIMIT 250000);"
+                "(select state_id from states where last_updated_ts is NOT NULL LIMIT 100000);"
             )
         )
         session.commit()
@@ -1236,7 +1220,7 @@ def _migrate_columns_to_timestamp(
                         "UNIX_TIMESTAMP(time_fired)"
                         ") "
                         "where time_fired_ts is NULL "
-                        "LIMIT 250000;"
+                        "LIMIT 100000;"
                     )
                 )
         result = None
@@ -1251,7 +1235,7 @@ def _migrate_columns_to_timestamp(
                         "last_changed_ts="
                         "UNIX_TIMESTAMP(last_changed) "
                         "where last_updated_ts is NULL "
-                        "LIMIT 250000;"
+                        "LIMIT 100000;"
                     )
                 )
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
@@ -1266,7 +1250,7 @@ def _migrate_columns_to_timestamp(
                         "time_fired_ts= "
                         "(case when time_fired is NULL then 0 else EXTRACT(EPOCH FROM time_fired::timestamptz) end) "
                         "WHERE event_id IN ( "
-                        "SELECT event_id FROM events where time_fired_ts is NULL LIMIT 250000 "
+                        "SELECT event_id FROM events where time_fired_ts is NULL LIMIT 100000 "
                         " );"
                     )
                 )
@@ -1279,7 +1263,7 @@ def _migrate_columns_to_timestamp(
                         "(case when last_updated is NULL then 0 else EXTRACT(EPOCH FROM last_updated::timestamptz) end), "
                         "last_changed_ts=EXTRACT(EPOCH FROM last_changed::timestamptz) "
                         "where state_id IN ( "
-                        "SELECT state_id FROM states where last_updated_ts is NULL LIMIT 250000 "
+                        "SELECT state_id FROM states where last_updated_ts is NULL LIMIT 100000 "
                         " );"
                     )
                 )
@@ -1303,7 +1287,7 @@ def _migrate_statistics_columns_to_timestamp(
             with session_scope(session=session_maker()) as session:
                 session.connection().execute(
                     text(
-                        f"UPDATE {table} set start_ts=strftime('%s',start) + "
+                        f"UPDATE {table} set start_ts=strftime('%s',start) + "  # noqa: S608
                         "cast(substr(start,-7) AS FLOAT), "
                         f"created_ts=strftime('%s',created) + "
                         "cast(substr(created,-7) AS FLOAT), "
@@ -1321,7 +1305,7 @@ def _migrate_statistics_columns_to_timestamp(
                 with session_scope(session=session_maker()) as session:
                     result = session.connection().execute(
                         text(
-                            f"UPDATE {table} set start_ts="
+                            f"UPDATE {table} set start_ts="  # noqa: S608
                             "IF(start is NULL or UNIX_TIMESTAMP(start) is NULL,0,"
                             "UNIX_TIMESTAMP(start) "
                             "), "
@@ -1343,7 +1327,7 @@ def _migrate_statistics_columns_to_timestamp(
                 with session_scope(session=session_maker()) as session:
                     result = session.connection().execute(
                         text(
-                            f"UPDATE {table} set start_ts="  # nosec
+                            f"UPDATE {table} set start_ts="  # noqa: S608
                             "(case when start is NULL then 0 else EXTRACT(EPOCH FROM start::timestamptz) end), "
                             "created_ts=EXTRACT(EPOCH FROM created::timestamptz), "
                             "last_reset_ts=EXTRACT(EPOCH FROM last_reset::timestamptz) "
@@ -1382,7 +1366,9 @@ def migrate_states_context_ids(instance: Recorder) -> bool:
     session_maker = instance.get_session
     _LOGGER.debug("Migrating states context_ids to binary format")
     with session_scope(session=session_maker()) as session:
-        if states := session.execute(find_states_context_ids_to_migrate()).all():
+        if states := session.execute(
+            find_states_context_ids_to_migrate(instance.max_bind_vars)
+        ).all():
             session.execute(
                 update(States),
                 [
@@ -1417,7 +1403,9 @@ def migrate_events_context_ids(instance: Recorder) -> bool:
     session_maker = instance.get_session
     _LOGGER.debug("Migrating context_ids to binary format")
     with session_scope(session=session_maker()) as session:
-        if events := session.execute(find_events_context_ids_to_migrate()).all():
+        if events := session.execute(
+            find_events_context_ids_to_migrate(instance.max_bind_vars)
+        ).all():
             session.execute(
                 update(Events),
                 [
@@ -1452,7 +1440,9 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
     _LOGGER.debug("Migrating event_types")
     event_type_manager = instance.event_type_manager
     with session_scope(session=session_maker()) as session:
-        if events := session.execute(find_event_type_to_migrate()).all():
+        if events := session.execute(
+            find_event_type_to_migrate(instance.max_bind_vars)
+        ).all():
             event_types = {event_type for _, event_type in events}
             if None in event_types:
                 # event_type should never be None but we need to be defensive
@@ -1521,7 +1511,9 @@ def migrate_entity_ids(instance: Recorder) -> bool:
     _LOGGER.debug("Migrating entity_ids")
     states_meta_manager = instance.states_meta_manager
     with session_scope(session=instance.get_session()) as session:
-        if states := session.execute(find_entity_ids_to_migrate()).all():
+        if states := session.execute(
+            find_entity_ids_to_migrate(instance.max_bind_vars)
+        ).all():
             entity_ids = {entity_id for _, entity_id in states}
             if None in entity_ids:
                 # entity_id should never be None but we need to be defensive

@@ -1,0 +1,104 @@
+# serializer version: 1
+# name: test_forecast_service
+  dict({
+    'forecast': list([
+      dict({
+        'condition': 'rainy',
+        'datetime': datetime.datetime(2020, 1, 16, 0, 0),
+        'precipitation_probability': '100.0',
+        'temperature': 16.2,
+        'templow': 10.6,
+        'wind_bearing': 'S',
+        'wind_speed': 10.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_forecast_service.1
+  dict({
+    'forecast': list([
+      dict({
+        'condition': 'rainy',
+        'datetime': datetime.datetime(2020, 1, 15, 1, 0, tzinfo=datetime.timezone.utc),
+        'precipitation_probability': 80.0,
+        'temperature': 12.0,
+        'wind_bearing': 'S',
+        'wind_speed': 32.7,
+      }),
+      dict({
+        'condition': 'clear-night',
+        'datetime': datetime.datetime(2020, 1, 15, 2, 0, tzinfo=datetime.timezone.utc),
+        'precipitation_probability': 80.0,
+        'temperature': 12.0,
+        'wind_bearing': 'S',
+        'wind_speed': 32.7,
+      }),
+    ]),
+  })
+# ---
+# name: test_forecast_subscription[daily]
+  list([
+    dict({
+      'condition': 'rainy',
+      'datetime': '2020-01-16T00:00:00',
+      'precipitation_probability': '100.0',
+      'temperature': 16.2,
+      'templow': 10.6,
+      'wind_bearing': 'S',
+      'wind_speed': 10.0,
+    }),
+  ])
+# ---
+# name: test_forecast_subscription[daily].1
+  list([
+    dict({
+      'condition': 'rainy',
+      'datetime': '2020-01-16T00:00:00',
+      'precipitation_probability': '100.0',
+      'temperature': 16.2,
+      'templow': 10.6,
+      'wind_bearing': 'S',
+      'wind_speed': 10.0,
+    }),
+  ])
+# ---
+# name: test_forecast_subscription[hourly]
+  list([
+    dict({
+      'condition': 'rainy',
+      'datetime': '2020-01-15T01:00:00+00:00',
+      'precipitation_probability': 80.0,
+      'temperature': 12.0,
+      'wind_bearing': 'S',
+      'wind_speed': 32.7,
+    }),
+    dict({
+      'condition': 'clear-night',
+      'datetime': '2020-01-15T02:00:00+00:00',
+      'precipitation_probability': 80.0,
+      'temperature': 12.0,
+      'wind_bearing': 'S',
+      'wind_speed': 32.7,
+    }),
+  ])
+# ---
+# name: test_forecast_subscription[hourly].1
+  list([
+    dict({
+      'condition': 'rainy',
+      'datetime': '2020-01-15T01:00:00+00:00',
+      'precipitation_probability': 80.0,
+      'temperature': 12.0,
+      'wind_bearing': 'S',
+      'wind_speed': 32.7,
+    }),
+    dict({
+      'condition': 'clear-night',
+      'datetime': '2020-01-15T02:00:00+00:00',
+      'precipitation_probability': 80.0,
+      'temperature': 12.0,
+      'wind_bearing': 'S',
+      'wind_speed': 32.7,
+    }),
+  ])
+# ---

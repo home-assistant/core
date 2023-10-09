@@ -83,7 +83,7 @@ async def async_setup_entry(
 class ValloxFanEntity(ValloxEntity, FanEntity):
     """Representation of the fan."""
 
-    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = FanEntityFeature.PRESET_MODE | FanEntityFeature.SET_SPEED
 
     def __init__(

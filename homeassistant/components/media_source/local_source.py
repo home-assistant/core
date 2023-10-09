@@ -12,9 +12,9 @@ from aiohttp.web_request import FileField
 import voluptuous as vol
 
 from homeassistant.components import http, websocket_api
+from homeassistant.components.http import require_admin
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
@@ -38,7 +38,7 @@ def async_setup(hass: HomeAssistant) -> None:
 class LocalSource(MediaSource):
     """Provide local directories as media sources."""
 
-    name: str = "Local Media"
+    name: str = "My media"
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize local source."""
@@ -254,11 +254,9 @@ class UploadMediaView(http.HomeAssistantView):
             }
         )
 
+    @require_admin
     async def post(self, request: web.Request) -> web.Response:
         """Handle upload."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized()
-
         # Increase max payload
         request._client_max_size = MAX_UPLOAD_SIZE  # pylint: disable=protected-access
 

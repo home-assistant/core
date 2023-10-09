@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from roonapi import split_media_path
 import voluptuous as vol
@@ -19,11 +19,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
@@ -159,7 +159,10 @@ class RoonDevice(MediaPlayerEntity):
             dev_model = self.player_data["source_controls"][0].get("display_name")
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=self.name,
+            # Instead of setting the device name to the entity name, roon
+            # should be updated to set has_entity_name = True, and set the entity
+            # name to None
+            name=cast(str | None, self.name),
             manufacturer="RoonLabs",
             model=dev_model,
             via_device=(DOMAIN, self._server.roon_id),

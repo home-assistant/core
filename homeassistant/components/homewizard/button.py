@@ -1,6 +1,6 @@
 """Support for HomeWizard buttons."""
 
-from homeassistant.components.button import ButtonEntity
+from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -25,8 +25,7 @@ class HomeWizardIdentifyButton(HomeWizardEntity, ButtonEntity):
     """Representation of a identify button."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_icon = "mdi:magnify"
-    _attr_name = "Identify"
+    _attr_device_class = ButtonDeviceClass.IDENTIFY
 
     def __init__(
         self,

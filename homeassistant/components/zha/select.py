@@ -4,9 +4,8 @@ from __future__ import annotations
 from enum import Enum
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
@@ -20,15 +19,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
+    CLUSTER_HANDLER_HUE_OCCUPANCY,
     CLUSTER_HANDLER_IAS_WD,
     CLUSTER_HANDLER_INOVELLI,
-    CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
-    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     Strobe,
 )
+from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -49,7 +48,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation siren from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.SELECT]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.SELECT]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -176,6 +176,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         cluster_handler = cluster_handlers[0]
         if (
             cls._select_attr in cluster_handler.cluster.unsupported_attributes
+            or cls._select_attr not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._select_attr) is None
         ):
             _LOGGER.debug(
@@ -210,7 +211,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self._cluster_handler.cluster.write_attributes(
+        await self._cluster_handler.write_attributes_safe(
             {self._select_attr: self._enum[option.replace(" ", "_")]}
         )
         self.async_write_ha_state()
@@ -367,7 +368,7 @@ class HueV1MotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY,
+    cluster_handler_names=CLUSTER_HANDLER_HUE_OCCUPANCY,
     manufacturers={"Philips", "Signify Netherlands B.V."},
     models={"SML001"},
 )
@@ -390,7 +391,7 @@ class HueV2MotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY,
+    cluster_handler_names=CLUSTER_HANDLER_HUE_OCCUPANCY,
     manufacturers={"Philips", "Signify Netherlands B.V."},
     models={"SML002", "SML003", "SML004"},
 )

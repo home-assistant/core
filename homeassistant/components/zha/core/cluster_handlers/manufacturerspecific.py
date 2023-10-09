@@ -5,12 +5,10 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
-from zigpy.exceptions import ZigbeeException
 import zigpy.zcl
 
 from homeassistant.core import callback
 
-from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
 from .. import registries
 from ..const import (
     ATTR_ATTRIBUTE_ID,
@@ -24,6 +22,7 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
 )
+from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -92,7 +91,7 @@ class TuyaClusterHandler(ClusterHandler):
             "_TZE200_k6jhsr0q",
             "_TZE200_9mahtqtg",
         ):
-            self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+            self.ZCL_INIT_ATTRS = {
                 "backlight_mode": True,
                 "power_on_state": True,
             }
@@ -109,7 +108,7 @@ class OppleRemote(ClusterHandler):
         """Initialize Opple cluster handler."""
         super().__init__(cluster, endpoint)
         if self.cluster.endpoint.model == "lumi.motion.ac02":
-            self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+            self.ZCL_INIT_ATTRS = {
                 "detection_interval": True,
                 "motion_sensitivity": True,
                 "trigger_indicator": True,
@@ -198,7 +197,7 @@ class SmartThingsAcceleration(ClusterHandler):
         )
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
         try:
             attr_name = self._cluster.attributes[attrid].name
@@ -229,7 +228,7 @@ class InovelliNotificationClusterHandler(ClientClusterHandler):
     """Inovelli Notification cluster handler."""
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle an attribute updated on this cluster."""
 
     @callback
@@ -351,19 +350,14 @@ class IkeaAirPurifierClusterHandler(ClusterHandler):
 
     async def async_set_speed(self, value) -> None:
         """Set the speed of the fan."""
-
-        try:
-            await self.cluster.write_attributes({"fan_mode": value})
-        except ZigbeeException as ex:
-            self.error("Could not set speed: %s", ex)
-            return
+        await self.write_attributes_safe({"fan_mode": value})
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
         await self.get_attribute_value("fan_mode", from_cache=False)
 
     @callback
-    def attribute_updated(self, attrid: int, value: Any) -> None:
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute update from fan cluster."""
         attr_name = self._get_attribute_name(attrid)
         self.debug(

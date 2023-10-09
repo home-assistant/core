@@ -43,7 +43,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner
     fgt = FortiOSAPI()
 
     try:
-        fgt.tokenlogin(host, token, verify_ssl)
+        fgt.tokenlogin(host, token, verify_ssl, None, 12, "root")
     except ConnectionError as ex:
         _LOGGER.error("ConnectionError to FortiOS API: %s", ex)
         return None
@@ -77,7 +77,12 @@ class FortiOSDeviceScanner(DeviceScanner):
 
     def update(self):
         """Update clients from the device."""
-        clients_json = self._fgt.monitor("user/device/query", "")
+        clients_json = self._fgt.monitor(
+            "user/device/query",
+            "",
+            parameters={"filter": "format=master_mac|hostname|is_online"},
+        )
+
         self._clients_json = clients_json
 
         self._clients = []
@@ -85,8 +90,12 @@ class FortiOSDeviceScanner(DeviceScanner):
         if clients_json:
             try:
                 for client in clients_json["results"]:
-                    if client["is_online"]:
-                        self._clients.append(client["mac"].upper())
+                    if (
+                        "is_online" in client
+                        and "master_mac" in client
+                        and client["is_online"]
+                    ):
+                        self._clients.append(client["master_mac"].upper())
             except KeyError as kex:
                 _LOGGER.error("Key not found in clients: %s", kex)
 
@@ -106,17 +115,10 @@ class FortiOSDeviceScanner(DeviceScanner):
             return None
 
         for client in data["results"]:
-            if client["mac"] == device:
-                try:
+            if "master_mac" in client and client["master_mac"] == device:
+                if "hostname" in client:
                     name = client["hostname"]
-                    _LOGGER.debug("Getting device name=%s", name)
-                    return name
-                except KeyError as kex:
-                    _LOGGER.debug(
-                        "No hostname found for %s in client data: %s",
-                        device,
-                        kex,
-                    )
-                    return device.replace(":", "_")
-
+                else:
+                    name = client["master_mac"].replace(":", "_")
+                return name
         return None

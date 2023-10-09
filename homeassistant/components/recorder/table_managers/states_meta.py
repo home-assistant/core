@@ -8,11 +8,10 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
 
-from . import BaseLRUTableManager
-from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import StatesMeta
 from ..queries import find_all_states_metadata_ids, find_states_metadata_ids
 from ..util import chunked, execute_stmt_lambda_element
+from . import BaseLRUTableManager
 
 if TYPE_CHECKING:
     from ..core import Recorder
@@ -104,7 +103,7 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         update_cache = from_recorder or not self._did_first_load
 
         with session.no_autoflush:
-            for missing_chunk in chunked(missing, SQLITE_MAX_BIND_VARS):
+            for missing_chunk in chunked(missing, self.recorder.max_bind_vars):
                 for metadata_id, entity_id in execute_stmt_lambda_element(
                     session, find_states_metadata_ids(missing_chunk)
                 ):

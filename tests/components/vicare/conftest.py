@@ -4,8 +4,8 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, Mock, patch
 
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 import pytest
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 
 from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.core import HomeAssistant

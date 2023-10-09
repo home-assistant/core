@@ -1,7 +1,7 @@
 """Constants for the Transmission Bittorent Client component."""
 DOMAIN = "transmission"
 
-SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle Mode"}
+SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle mode"}
 
 ORDER_NEWEST_FIRST = "newest_first"
 ORDER_OLDEST_FIRST = "oldest_first"

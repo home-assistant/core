@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import UnitOfDataRate
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -24,12 +28,14 @@ async def async_setup_platform(
     async_add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN])])
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class SpeedtestSensor(RestoreEntity, SensorEntity):
     """Implementation of a FAst.com sensor."""
 
     _attr_name = "Fast.com Download"
     _attr_device_class = SensorDeviceClass.DATA_RATE
     _attr_native_unit_of_measurement = UnitOfDataRate.MEGABITS_PER_SECOND
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:speedometer"
     _attr_should_poll = False
 

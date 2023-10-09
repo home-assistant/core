@@ -9,7 +9,7 @@ from homeassistant.components.knx import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import ExposeSchema
 from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
@@ -192,7 +192,9 @@ async def test_expose_cooldown(hass: HomeAssistant, knx: KNXTestKit) -> None:
     hass.states.async_set(entity_id, "3", {})
     await knx.assert_no_telegram()
     # Wait for cooldown to pass
-    async_fire_time_changed_exact(hass, dt.utcnow() + timedelta(seconds=cooldown_time))
+    async_fire_time_changed_exact(
+        hass, dt_util.utcnow() + timedelta(seconds=cooldown_time)
+    )
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (3,))
 

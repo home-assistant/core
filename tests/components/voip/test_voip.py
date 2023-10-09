@@ -3,7 +3,7 @@ import asyncio
 import time
 from unittest.mock import AsyncMock, Mock, patch
 
-import async_timeout
+import pytest
 
 from homeassistant.components import assist_pipeline, voip
 from homeassistant.components.voip.devices import VoIPDevice
@@ -21,7 +21,7 @@ async def test_pipeline(
     """Test that pipeline function is called from RTP protocol."""
     assert await async_setup_component(hass, "voip", {})
 
-    def is_speech(self, chunk, sample_rate):
+    def is_speech(self, chunk):
         """Anything non-zero is speech."""
         return sum(chunk) > 0
 
@@ -30,7 +30,9 @@ async def test_pipeline(
     # Used to test that audio queue is cleared before pipeline starts
     bad_chunk = bytes([1, 2, 3, 4])
 
-    async def async_pipeline_from_audio_stream(*args, **kwargs):
+    async def async_pipeline_from_audio_stream(*args, device_id, **kwargs):
+        assert device_id == voip_device.device_id
+
         stt_stream = kwargs["stt_stream"]
         event_callback = kwargs["event_callback"]
         async for _chunk in stt_stream:
@@ -74,7 +76,7 @@ async def test_pipeline(
         return ("mp3", b"")
 
     with patch(
-        "webrtcvad.Vad.is_speech",
+        "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
         new=is_speech,
     ), patch(
         "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
@@ -88,8 +90,11 @@ async def test_pipeline(
             hass.config.language,
             voip_device,
             Context(),
+            opus_payload_type=123,
             listening_tone_enabled=False,
             processing_tone_enabled=False,
+            error_tone_enabled=False,
+            silence_seconds=assist_pipeline.vad.VadSensitivity.to_seconds("aggressive"),
         )
         rtp_protocol.transport = Mock()
 
@@ -108,11 +113,11 @@ async def test_pipeline(
         # "speech"
         rtp_protocol.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
-        # silence
+        # silence (assumes aggressive VAD sensitivity)
         rtp_protocol.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to exhaust the audio stream
-        async with async_timeout.timeout(1):
+        async with asyncio.timeout(1):
             await done.wait()
 
 
@@ -137,9 +142,11 @@ async def test_pipeline_timeout(hass: HomeAssistant, voip_device: VoIPDevice) ->
             hass.config.language,
             voip_device,
             Context(),
+            opus_payload_type=123,
             pipeline_timeout=0.001,
             listening_tone_enabled=False,
             processing_tone_enabled=False,
+            error_tone_enabled=False,
         )
         transport = Mock(spec=["close"])
         rtp_protocol.connection_made(transport)
@@ -151,7 +158,7 @@ async def test_pipeline_timeout(hass: HomeAssistant, voip_device: VoIPDevice) ->
         rtp_protocol.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to time out
-        async with async_timeout.timeout(1):
+        async with asyncio.timeout(1):
             await done.wait()
 
 
@@ -176,9 +183,11 @@ async def test_stt_stream_timeout(hass: HomeAssistant, voip_device: VoIPDevice) 
             hass.config.language,
             voip_device,
             Context(),
+            opus_payload_type=123,
             audio_timeout=0.001,
             listening_tone_enabled=False,
             processing_tone_enabled=False,
+            error_tone_enabled=False,
         )
         transport = Mock(spec=["close"])
         rtp_protocol.connection_made(transport)
@@ -190,7 +199,7 @@ async def test_stt_stream_timeout(hass: HomeAssistant, voip_device: VoIPDevice) 
         rtp_protocol.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to time out
-        async with async_timeout.timeout(1):
+        async with asyncio.timeout(1):
             await done.wait()
 
 
@@ -201,7 +210,7 @@ async def test_tts_timeout(
     """Test that TTS will time out based on its length."""
     assert await async_setup_component(hass, "voip", {})
 
-    def is_speech(self, chunk, sample_rate):
+    def is_speech(self, chunk):
         """Anything non-zero is speech."""
         return sum(chunk) > 0
 
@@ -234,9 +243,23 @@ async def test_tts_timeout(
             )
         )
 
-    def send_audio(*args, **kwargs):
+    tone_bytes = bytes([1, 2, 3, 4])
+
+    def send_audio(audio_bytes, **kwargs):
+        if audio_bytes == tone_bytes:
+            # Not TTS
+            return
+
         # Block here to force a timeout in _send_tts
-        time.sleep(1)
+        time.sleep(2)
+
+    async def async_send_audio(audio_bytes, **kwargs):
+        if audio_bytes == tone_bytes:
+            # Not TTS
+            return
+
+        # Block here to force a timeout in _send_tts
+        await asyncio.sleep(2)
 
     async def async_get_media_source_audio(
         hass: HomeAssistant,
@@ -246,7 +269,7 @@ async def test_tts_timeout(
         return ("raw", bytes(0))
 
     with patch(
-        "webrtcvad.Vad.is_speech",
+        "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
         new=is_speech,
     ), patch(
         "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
@@ -260,17 +283,29 @@ async def test_tts_timeout(
             hass.config.language,
             voip_device,
             Context(),
-            listening_tone_enabled=False,
-            processing_tone_enabled=False,
+            opus_payload_type=123,
+            tts_extra_timeout=0.001,
+            listening_tone_enabled=True,
+            processing_tone_enabled=True,
+            error_tone_enabled=True,
+            silence_seconds=assist_pipeline.vad.VadSensitivity.to_seconds("relaxed"),
         )
+        rtp_protocol._tone_bytes = tone_bytes
+        rtp_protocol._processing_bytes = tone_bytes
+        rtp_protocol._error_bytes = tone_bytes
         rtp_protocol.transport = Mock()
-        rtp_protocol.send_audio = Mock(side_effect=send_audio)
+        rtp_protocol.send_audio = Mock()
+
+        original_send_tts = rtp_protocol._send_tts
 
         async def send_tts(*args, **kwargs):
             # Call original then end test successfully
-            rtp_protocol._send_tts(*args, **kwargs)
+            with pytest.raises(asyncio.TimeoutError):
+                await original_send_tts(*args, **kwargs)
+
             done.set()
 
+        rtp_protocol._async_send_audio = AsyncMock(side_effect=async_send_audio)
         rtp_protocol._send_tts = AsyncMock(side_effect=send_tts)
 
         # silence
@@ -279,9 +314,9 @@ async def test_tts_timeout(
         # "speech"
         rtp_protocol.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
-        # silence
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
+        # silence (assumes relaxed VAD sensitivity)
+        rtp_protocol.on_chunk(bytes(_ONE_SECOND * 4))
 
         # Wait for mock pipeline to exhaust the audio stream
-        async with async_timeout.timeout(1):
+        async with asyncio.timeout(1):
             await done.wait()

@@ -6,6 +6,7 @@ from homeassistant.components import (
     camera,
     climate,
     cover,
+    event,
     fan,
     group,
     humidifier,
@@ -48,6 +49,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "binary_sensor",
     "climate",
     "cover",
+    "event",
     "fan",
     "group",
     "humidifier",
@@ -73,6 +75,7 @@ TYPE_CAMERA = f"{PREFIX_TYPES}CAMERA"
 TYPE_CURTAIN = f"{PREFIX_TYPES}CURTAIN"
 TYPE_DEHUMIDIFIER = f"{PREFIX_TYPES}DEHUMIDIFIER"
 TYPE_DOOR = f"{PREFIX_TYPES}DOOR"
+TYPE_DOORBELL = f"{PREFIX_TYPES}DOORBELL"
 TYPE_FAN = f"{PREFIX_TYPES}FAN"
 TYPE_GARAGE = f"{PREFIX_TYPES}GARAGE"
 TYPE_HUMIDIFIER = f"{PREFIX_TYPES}HUMIDIFIER"
@@ -162,6 +165,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GARAGE,
     (cover.DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
     (cover.DOMAIN, cover.CoverDeviceClass.WINDOW): TYPE_WINDOW,
+    (event.DOMAIN, event.EventDeviceClass.DOORBELL): TYPE_DOORBELL,
     (
         humidifier.DOMAIN,
         humidifier.HumidifierDeviceClass.DEHUMIDIFIER,
@@ -170,6 +174,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.RECEIVER): TYPE_RECEIVER,
     (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.SPEAKER): TYPE_SPEAKER,
     (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.TV): TYPE_TV,
+    (sensor.DOMAIN, sensor.SensorDeviceClass.AQI): TYPE_SENSOR,
     (sensor.DOMAIN, sensor.SensorDeviceClass.HUMIDITY): TYPE_SENSOR,
     (sensor.DOMAIN, sensor.SensorDeviceClass.TEMPERATURE): TYPE_SENSOR,
     (switch.DOMAIN, switch.SwitchDeviceClass.OUTLET): TYPE_OUTLET,
@@ -186,7 +191,7 @@ STORE_GOOGLE_LOCAL_WEBHOOK_ID = "local_webhook_id"
 SOURCE_CLOUD = "cloud"
 SOURCE_LOCAL = "local"
 
-NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK}
+NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK, TYPE_THERMOSTAT}
 
 FAN_SPEEDS = {
     "5/5": ["High", "Max", "Fast", "5"],

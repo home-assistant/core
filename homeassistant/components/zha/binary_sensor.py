@@ -22,13 +22,14 @@ from .core import discovery
 from .core.const import (
     CLUSTER_HANDLER_ACCELEROMETER,
     CLUSTER_HANDLER_BINARY_INPUT,
+    CLUSTER_HANDLER_HUE_OCCUPANCY,
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
     CLUSTER_HANDLER_ZONE,
-    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
+from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -64,7 +65,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation binary sensor from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.BINARY_SENSOR]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.BINARY_SENSOR]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -128,6 +130,11 @@ class Occupancy(BinarySensor):
     SENSOR_ATTR = "occupancy"
     _attr_name: str = "Occupancy"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OCCUPANCY
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_HUE_OCCUPANCY)
+class HueOccupancy(Occupancy):
+    """ZHA Hue occupancy."""
 
 
 @STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_ON_OFF)
@@ -230,6 +237,15 @@ class IASZone(BinarySensor):
         )
 
 
+@STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_ZONE, models={"WL4200", "WL4200S"})
+class SinopeLeakStatus(BinarySensor):
+    """Sinope water leak sensor."""
+
+    SENSOR_ATTR = "leak_status"
+    _attr_name = "Moisture"
+    _attr_device_class = BinarySensorDeviceClass.MOISTURE
+
+
 @MULTI_MATCH(
     cluster_handler_names="tuya_manufacturer",
     manufacturers={
@@ -250,6 +266,7 @@ class ReplaceFilter(BinarySensor, id_suffix="replace_filter"):
 
     SENSOR_ATTR = "replace_filter"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
     _attr_name: str = "Replace filter"
 
 

@@ -5,22 +5,19 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the demo switches."""
+    """Set up the demo switch platform."""
     async_add_entities(
         [
             DemoSwitch("switch1", "Decorative Lights", True, None, True),
@@ -36,24 +33,17 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
-
-
 class DemoSwitch(SwitchEntity):
     """Representation of a demo switch."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
         self,
         unique_id: str,
-        name: str,
+        device_name: str,
         state: bool,
         icon: str | None,
         assumed: bool,
@@ -64,11 +54,10 @@ class DemoSwitch(SwitchEntity):
         self._attr_device_class = device_class
         self._attr_icon = icon
         self._attr_is_on = state
-        self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
-            name=self.name,
+            name=device_name,
         )
 
     def turn_on(self, **kwargs: Any) -> None:

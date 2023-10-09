@@ -66,12 +66,11 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
@@ -253,45 +252,6 @@ def _async_get_system_for_service_call(
 
 
 @callback
-def _async_log_deprecated_service_call(
-    hass: HomeAssistant,
-    call: ServiceCall,
-    alternate_service: str,
-    alternate_target: str,
-    breaks_in_ha_version: str,
-) -> None:
-    """Log a warning about a deprecated service call."""
-    deprecated_service = f"{call.domain}.{call.service}"
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        f"deprecated_service_{deprecated_service}",
-        breaks_in_ha_version=breaks_in_ha_version,
-        is_fixable=True,
-        is_persistent=True,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_service",
-        translation_placeholders={
-            "alternate_service": alternate_service,
-            "alternate_target": alternate_target,
-            "deprecated_service": deprecated_service,
-        },
-    )
-
-    LOGGER.warning(
-        (
-            'The "%s" service is deprecated and will be removed in %s; use the "%s" '
-            'service and pass it a target entity ID of "%s"'
-        ),
-        deprecated_service,
-        breaks_in_ha_version,
-        alternate_service,
-        alternate_target,
-    )
-
-
-@callback
 def _async_register_base_station(
     hass: HomeAssistant, entry: ConfigEntry, system: SystemType
 ) -> None:
@@ -308,7 +268,7 @@ def _async_register_base_station(
 
     # Check for an old system ID format and remove it:
     if old_base_station := device_registry.async_get_device(
-        {(DOMAIN, system.system_id)}  # type: ignore[arg-type]
+        identifiers={(DOMAIN, system.system_id)}  # type: ignore[arg-type]
     ):
         # Update the new base station with any properties the user might have configured
         # on the old base station:

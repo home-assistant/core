@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from wyoming.info import Info
 
 from homeassistant import config_entries
 from homeassistant.components.hassio import HassioServiceInfo
@@ -131,10 +132,12 @@ async def test_no_supported_services(hass: HomeAssistant) -> None:
     assert result2["reason"] == "no_services"
 
 
+@pytest.mark.parametrize("info", [STT_INFO, TTS_INFO])
 async def test_hassio_addon_discovery(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     snapshot: SnapshotAssertion,
+    info: Info,
 ) -> None:
     """Test config flow initiated by Supervisor."""
     result = await hass.config_entries.flow.async_init(
@@ -149,7 +152,7 @@ async def test_hassio_addon_discovery(
 
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
-        return_value=STT_INFO,
+        return_value=info,
     ) as mock_wyoming:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 

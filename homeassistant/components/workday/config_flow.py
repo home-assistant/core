@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import holidays
-from holidays import HolidayBase
+from holidays import HolidayBase, country_holidays, list_supported_countries
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -25,7 +24,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
     TextSelector,
 )
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ALLOWED_DAYS,
@@ -41,6 +40,7 @@ from .const import (
     DEFAULT_OFFSET,
     DEFAULT_WORKDAYS,
     DOMAIN,
+    LOGGER,
 )
 
 NONE_SENTINEL = "none"
@@ -48,15 +48,14 @@ NONE_SENTINEL = "none"
 
 def add_province_to_schema(
     schema: vol.Schema,
-    options: dict[str, Any],
+    country: str,
 ) -> vol.Schema:
     """Update schema with province from country."""
-    year: int = dt.now().year
-    obj_holidays: HolidayBase = getattr(holidays, options[CONF_COUNTRY])(years=year)
-    if not obj_holidays.subdivisions:
+    all_countries = list_supported_countries()
+    if not all_countries.get(country):
         return schema
 
-    province_list = [NONE_SENTINEL, *obj_holidays.subdivisions]
+    province_list = [NONE_SENTINEL, *all_countries[country]]
     add_schema = {
         vol.Optional(CONF_PROVINCE, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
@@ -70,33 +69,55 @@ def add_province_to_schema(
     return vol.Schema({**DATA_SCHEMA_OPT.schema, **add_schema})
 
 
+def _is_valid_date_range(check_date: str, error: type[HomeAssistantError]) -> bool:
+    """Validate date range."""
+    if check_date.find(",") > 0:
+        dates = check_date.split(",", maxsplit=1)
+        for date in dates:
+            if dt_util.parse_date(date) is None:
+                raise error("Incorrect date in range")
+        return True
+    return False
+
+
 def validate_custom_dates(user_input: dict[str, Any]) -> None:
     """Validate custom dates for add/remove holidays."""
-
     for add_date in user_input[CONF_ADD_HOLIDAYS]:
-        if dt.parse_date(add_date) is None:
+        if (
+            not _is_valid_date_range(add_date, AddDateRangeError)
+            and dt_util.parse_date(add_date) is None
+        ):
             raise AddDatesError("Incorrect date")
 
-    year: int = dt.now().year
-    obj_holidays: HolidayBase = getattr(holidays, user_input[CONF_COUNTRY])(years=year)
-    if user_input.get(CONF_PROVINCE):
-        obj_holidays = getattr(holidays, user_input[CONF_COUNTRY])(
-            subdiv=user_input[CONF_PROVINCE], years=year
+    year: int = dt_util.now().year
+    if country := user_input[CONF_COUNTRY]:
+        cls = country_holidays(country)
+        obj_holidays = country_holidays(
+            country=country,
+            subdiv=user_input.get(CONF_PROVINCE),
+            years=year,
+            language=cls.default_language,
         )
+    else:
+        obj_holidays = HolidayBase(years=year)
 
     for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
-        if dt.parse_date(remove_date) is None:
-            if obj_holidays.get_named(remove_date) == []:
-                raise RemoveDatesError("Incorrect date or name")
+        if (
+            not _is_valid_date_range(remove_date, RemoveDateRangeError)
+            and dt_util.parse_date(remove_date) is None
+            and obj_holidays.get_named(remove_date) == []
+        ):
+            raise RemoveDatesError("Incorrect date or name")
 
 
 DATA_SCHEMA_SETUP = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Required(CONF_COUNTRY): SelectSelector(
+        vol.Optional(CONF_COUNTRY, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
-                options=list(holidays.list_supported_countries()),
+                options=[NONE_SENTINEL, *list(list_supported_countries())],
                 mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_COUNTRY,
             )
         ),
     }
@@ -158,24 +179,6 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return WorkdayOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a configuration from config.yaml."""
-
-        abort_match = {
-            CONF_COUNTRY: config[CONF_COUNTRY],
-            CONF_EXCLUDES: config[CONF_EXCLUDES],
-            CONF_OFFSET: config[CONF_OFFSET],
-            CONF_WORKDAYS: config[CONF_WORKDAYS],
-            CONF_ADD_HOLIDAYS: config[CONF_ADD_HOLIDAYS],
-            CONF_REMOVE_HOLIDAYS: config[CONF_REMOVE_HOLIDAYS],
-            CONF_PROVINCE: config.get(CONF_PROVINCE),
-        }
-        new_config = config.copy()
-        new_config[CONF_PROVINCE] = config.get(CONF_PROVINCE)
-
-        self._async_abort_entries_match(abort_match)
-        return await self.async_step_options(user_input=new_config)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -198,6 +201,9 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
+
+            if combined_input.get(CONF_COUNTRY, NONE_SENTINEL) == NONE_SENTINEL:
+                combined_input[CONF_COUNTRY] = None
             if combined_input.get(CONF_PROVINCE, NONE_SENTINEL) == NONE_SENTINEL:
                 combined_input[CONF_PROVINCE] = None
 
@@ -207,10 +213,12 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except AddDatesError:
                 errors["add_holidays"] = "add_holiday_error"
+            except AddDateRangeError:
+                errors["add_holidays"] = "add_holiday_range_error"
             except RemoveDatesError:
                 errors["remove_holidays"] = "remove_holiday_error"
-            except NotImplementedError:
-                self.async_abort(reason="incorrect_province")
+            except RemoveDateRangeError:
+                errors["remove_holidays"] = "remove_holiday_range_error"
 
             abort_match = {
                 CONF_COUNTRY: combined_input[CONF_COUNTRY],
@@ -221,9 +229,12 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
                 CONF_PROVINCE: combined_input[CONF_PROVINCE],
             }
-
+            LOGGER.debug("abort_check in options with %s", combined_input)
             self._async_abort_entries_match(abort_match)
+
+            LOGGER.debug("Errors have occurred %s", errors)
             if not errors:
+                LOGGER.debug("No duplicate, no errors, creating entry")
                 return self.async_create_entry(
                     title=combined_input[CONF_NAME],
                     data={},
@@ -231,13 +242,17 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.data
+            add_province_to_schema, DATA_SCHEMA_OPT, self.data[CONF_COUNTRY]
         )
         new_schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(
             step_id="options",
             data_schema=new_schema,
             errors=errors,
+            description_placeholders={
+                "name": self.data[CONF_NAME],
+                "country": self.data[CONF_COUNTRY],
+            },
         )
 
 
@@ -261,9 +276,14 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 )
             except AddDatesError:
                 errors["add_holidays"] = "add_holiday_error"
+            except AddDateRangeError:
+                errors["add_holidays"] = "add_holiday_range_error"
             except RemoveDatesError:
                 errors["remove_holidays"] = "remove_holiday_error"
+            except RemoveDateRangeError:
+                errors["remove_holidays"] = "remove_holiday_range_error"
             else:
+                LOGGER.debug("abort_check in options with %s", combined_input)
                 try:
                     self._async_abort_entries_match(
                         {
@@ -281,18 +301,22 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 else:
                     return self.async_create_entry(data=combined_input)
 
-        saved_options = self.options.copy()
-        if saved_options[CONF_PROVINCE] is None:
-            saved_options[CONF_PROVINCE] = NONE_SENTINEL
         schema: vol.Schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.options
+            add_province_to_schema, DATA_SCHEMA_OPT, self.options[CONF_COUNTRY]
         )
-        new_schema = self.add_suggested_values_to_schema(schema, user_input)
 
+        new_schema = self.add_suggested_values_to_schema(
+            schema, user_input or self.options
+        )
+        LOGGER.debug("Errors have occurred in options %s", errors)
         return self.async_show_form(
             step_id="init",
             data_schema=new_schema,
             errors=errors,
+            description_placeholders={
+                "name": self.options[CONF_NAME],
+                "country": self.options[CONF_COUNTRY],
+            },
         )
 
 
@@ -300,7 +324,15 @@ class AddDatesError(HomeAssistantError):
     """Exception for error adding dates."""
 
 
+class AddDateRangeError(HomeAssistantError):
+    """Exception for error adding dates."""
+
+
 class RemoveDatesError(HomeAssistantError):
+    """Exception for error removing dates."""
+
+
+class RemoveDateRangeError(HomeAssistantError):
     """Exception for error removing dates."""
 
 

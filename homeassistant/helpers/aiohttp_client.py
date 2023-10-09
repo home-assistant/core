@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
-from ssl import SSLContext
 import sys
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
@@ -13,7 +12,6 @@ import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
-import async_timeout
 
 from homeassistant import config_entries
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
@@ -37,6 +35,12 @@ SERVER_SOFTWARE = "{0}/{1} aiohttp/{2} Python/{3[0]}.{3[1]}".format(
     APPLICATION_NAME, __version__, aiohttp.__version__, sys.version_info
 )
 
+ENABLE_CLEANUP_CLOSED = not (3, 11, 1) <= sys.version_info < (3, 11, 4)
+# Enabling cleanup closed on python 3.11.1+ leaks memory relatively quickly
+# see https://github.com/aio-libs/aiohttp/issues/7252
+# aiohttp interacts poorly with https://github.com/python/cpython/pull/98540
+# The issue was fixed in 3.11.4 via https://github.com/python/cpython/pull/104485
+
 WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
 
 #
@@ -52,6 +56,17 @@ WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
 #
 MAXIMUM_CONNECTIONS = 4096
 MAXIMUM_CONNECTIONS_PER_HOST = 100
+
+
+# Overwrite base aiohttp _wait implementation
+# Homeassistant has a custom shutdown wait logic.
+async def _noop_wait(*args: Any, **kwargs: Any) -> None:
+    """Do nothing."""
+    return
+
+
+# pylint: disable-next=protected-access
+web.BaseSite._wait = _noop_wait  # type: ignore[method-assign]
 
 
 class HassClientResponse(aiohttp.ClientResponse):
@@ -164,7 +179,7 @@ async def async_aiohttp_proxy_web(
 ) -> web.StreamResponse | None:
     """Stream websession request to aiohttp web response."""
     try:
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             req = await web_coro
 
     except asyncio.CancelledError:
@@ -205,7 +220,7 @@ async def async_aiohttp_proxy_stream(
     # Suppressing something went wrong fetching data, closed connection
     with suppress(asyncio.TimeoutError, aiohttp.ClientError):
         while hass.is_running:
-            async with async_timeout.timeout(timeout):
+            async with asyncio.timeout(timeout):
                 data = await stream.read(buffer_size)
 
             if not data:
@@ -271,12 +286,12 @@ def _async_get_connector(
         return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
-        ssl_context: bool | SSLContext = ssl_util.get_default_context()
+        ssl_context = ssl_util.get_default_context()
     else:
         ssl_context = ssl_util.get_default_no_verify_context()
 
     connector = aiohttp.TCPConnector(
-        enable_cleanup_closed=True,
+        enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,

@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_subscription_repair_issues(
     hass: HomeAssistant, config_entry: MockConfigEntry, soco, zgs_discovery
-):
+) -> None:
     """Test repair issues handling for failed subscriptions."""
     issue_registry = async_get_issue_registry(hass)
 

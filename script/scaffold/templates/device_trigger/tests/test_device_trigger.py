@@ -1,9 +1,10 @@
 """The tests for NEW_NAME device triggers."""
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components import automation
-from homeassistant.components.NEW_DOMAIN import DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.NEW_DOMAIN import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -11,7 +12,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
@@ -57,7 +57,7 @@ async def test_get_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_if_fires_on_state_change(

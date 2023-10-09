@@ -391,6 +391,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class Person(collection.CollectionEntity, RestoreEntity):
     """Represent a tracked person."""
 
+    _entity_component_unrecorded_attributes = frozenset({ATTR_DEVICE_TRACKERS})
+
     _attr_should_poll = False
     editable: bool
 

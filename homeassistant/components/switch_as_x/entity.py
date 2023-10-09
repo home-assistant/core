@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -11,10 +12,15 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, ToggleEntity
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import EventType
 
 from .const import DOMAIN as SWITCH_AS_X_DOMAIN
 
@@ -62,7 +68,9 @@ class BaseEntity(Entity):
         )
 
     @callback
-    def async_state_changed_listener(self, event: Event | None = None) -> None:
+    def async_state_changed_listener(
+        self, event: EventType[EventStateChangedData] | None = None
+    ) -> None:
         """Handle child updates."""
         if (
             state := self.hass.states.get(self._switch_entity_id)
@@ -76,7 +84,9 @@ class BaseEntity(Entity):
         """Register callbacks and copy the wrapped entity's custom name if set."""
 
         @callback
-        def _async_state_changed_listener(event: Event | None = None) -> None:
+        def _async_state_changed_listener(
+            event: EventType[EventStateChangedData] | None = None,
+        ) -> None:
             """Handle child updates."""
             self.async_state_changed_listener(event)
             self.async_write_ha_state()
@@ -99,14 +109,37 @@ class BaseEntity(Entity):
                 {"entity_id": self._switch_entity_id},
             )
 
-        if not self._is_new_entity:
+        if not self._is_new_entity or not (
+            wrapped_switch := registry.async_get(self._switch_entity_id)
+        ):
             return
 
-        wrapped_switch = registry.async_get(self._switch_entity_id)
-        if not wrapped_switch or wrapped_switch.name is None:
-            return
+        def copy_custom_name(wrapped_switch: er.RegistryEntry) -> None:
+            """Copy the name set by user from the wrapped entity."""
+            if wrapped_switch.name is None:
+                return
+            registry.async_update_entity(self.entity_id, name=wrapped_switch.name)
 
-        registry.async_update_entity(self.entity_id, name=wrapped_switch.name)
+        def copy_expose_settings() -> None:
+            """Copy assistant expose settings from the wrapped entity.
+
+            Also unexpose the wrapped entity if exposed.
+            """
+            expose_settings = exposed_entities.async_get_entity_settings(
+                self.hass, self._switch_entity_id
+            )
+            for assistant, settings in expose_settings.items():
+                if (should_expose := settings.get("should_expose")) is None:
+                    continue
+                exposed_entities.async_expose_entity(
+                    self.hass, assistant, self.entity_id, should_expose
+                )
+                exposed_entities.async_expose_entity(
+                    self.hass, assistant, self._switch_entity_id, False
+                )
+
+        copy_custom_name(wrapped_switch)
+        copy_expose_settings()
 
 
 class BaseToggleEntity(BaseEntity, ToggleEntity):
@@ -133,7 +166,9 @@ class BaseToggleEntity(BaseEntity, ToggleEntity):
         )
 
     @callback
-    def async_state_changed_listener(self, event: Event | None = None) -> None:
+    def async_state_changed_listener(
+        self, event: EventType[EventStateChangedData] | None = None
+    ) -> None:
         """Handle child updates."""
         super().async_state_changed_listener(event)
         if (

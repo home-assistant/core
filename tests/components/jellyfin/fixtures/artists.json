@@ -1,0 +1,19 @@
+{
+  "Items": [
+    {
+      "AlbumCount": 1,
+      "Id": "ARTIST-UUID",
+      "ImageTags": {
+        "Logo": "string",
+        "Primary": "string"
+      },
+      "IsFolder": true,
+      "Name": "ARTIST",
+      "ParentId": "MUSIC-COLLECTION-FOLDER-UUID",
+      "Path": "/media/music/artist",
+      "PrimaryImageAspectRatio": 1,
+      "ServerId": "string",
+      "Type": "MusicArtist"
+    }
+  ]
+}

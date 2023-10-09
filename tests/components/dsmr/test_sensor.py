@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
@@ -119,6 +120,10 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
     assert active_tariff.state == "low"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert (
+        active_tariff.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Electricity Meter Active tariff"
+    )
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
@@ -127,6 +132,10 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
+    assert (
+        gas_consumption.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Gas Meter Gas consumption"
+    )
     assert (
         gas_consumption.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING

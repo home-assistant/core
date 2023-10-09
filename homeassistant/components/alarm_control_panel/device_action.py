@@ -5,6 +5,7 @@ from typing import Final
 
 import voluptuous as vol
 
+from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -44,13 +45,20 @@ ACTION_TYPES: Final[set[str]] = {
     "trigger",
 }
 
-ACTION_SCHEMA: Final = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+_ACTION_SCHEMA: Final = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Optional(CONF_CODE): cv.string,
     }
 )
+
+
+async def async_validate_action_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    return async_validate_entity_schema(hass, config, _ACTION_SCHEMA)
 
 
 async def async_get_actions(
@@ -70,7 +78,7 @@ async def async_get_actions(
         base_action: dict = {
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
+            CONF_ENTITY_ID: entry.id,
         }
 
         # Add actions for each entity that belongs to this integration
@@ -124,7 +132,9 @@ async def async_get_action_capabilities(
     """List action capabilities."""
     # We need to refer to the state directly because ATTR_CODE_ARM_REQUIRED is not a
     # capability attribute
-    state = hass.states.get(config[CONF_ENTITY_ID])
+    registry = er.async_get(hass)
+    entity_id = er.async_resolve_entity_id(registry, config[CONF_ENTITY_ID])
+    state = hass.states.get(entity_id) if entity_id else None
     code_required = state.attributes.get(ATTR_CODE_ARM_REQUIRED) if state else False
 
     if config[CONF_TYPE] == "trigger" or (

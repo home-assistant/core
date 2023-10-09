@@ -1,6 +1,7 @@
 """The Radio Browser integration."""
 from __future__ import annotations
 
+from aiodns.error import DNSError
 from radios import RadioBrowser, RadioBrowserError
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await radios.stats()
-    except RadioBrowserError as err:
+    except (DNSError, RadioBrowserError) as err:
         raise ConfigEntryNotReady("Could not connect to Radio Browser API") from err
 
     hass.data[DOMAIN] = radios

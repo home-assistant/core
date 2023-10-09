@@ -3,8 +3,9 @@ from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
-from aionotion.bridge.models import Bridge
-from aionotion.sensor.models import Listener, Sensor
+from aionotion.bridge.models import BridgeAllResponse
+from aionotion.sensor.models import ListenerAllResponse, SensorAllResponse
+from aionotion.user.models import UserPreferencesResponse
 import pytest
 
 from homeassistant.components.notion import DOMAIN
@@ -27,23 +28,22 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="client")
-def client_fixture(data_bridge, data_listener, data_sensor):
+def client_fixture(data_bridge, data_listener, data_sensor, data_user_preferences):
     """Define a fixture for an aionotion client."""
     return Mock(
         bridge=Mock(
-            async_all=AsyncMock(
-                return_value=[Bridge.parse_obj(bridge) for bridge in data_bridge]
-            )
+            async_all=AsyncMock(return_value=BridgeAllResponse.parse_obj(data_bridge))
         ),
         sensor=Mock(
-            async_all=AsyncMock(
-                return_value=[Sensor.parse_obj(sensor) for sensor in data_sensor]
-            ),
+            async_all=AsyncMock(return_value=SensorAllResponse.parse_obj(data_sensor)),
             async_listeners=AsyncMock(
-                return_value=[
-                    Listener.parse_obj(listener) for listener in data_listener
-                ]
+                return_value=ListenerAllResponse.parse_obj(data_listener)
             ),
+        ),
+        user=Mock(
+            async_preferences=AsyncMock(
+                return_value=UserPreferencesResponse.parse_obj(data_user_preferences)
+            )
         ),
     )
 
@@ -81,6 +81,12 @@ def data_listener_fixture():
 def data_sensor_fixture():
     """Define sensor data."""
     return json.loads(load_fixture("sensor_data.json", "notion"))
+
+
+@pytest.fixture(name="data_user_preferences", scope="package")
+def data_user_preferences_fixture():
+    """Define user preferences data."""
+    return json.loads(load_fixture("user_preferences_data.json", "notion"))
 
 
 @pytest.fixture(name="get_client")
