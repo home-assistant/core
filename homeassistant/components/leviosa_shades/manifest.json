@@ -6,5 +6,5 @@
   "dependencies": ["cover"],
   "documentation": "https://www.home-assistant.io/integrations/leviosa_shades",
   "iot_class": "local_push",
-  "requirements": ["leviosapy==0.1.2"]
+  "requirements": ["leviosapy==0.1.3"]
 }

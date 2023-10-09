@@ -96,6 +96,16 @@ async def test_config_flow_one_zone_success(hass):
         ],
     }
 
+    with patch(
+        "homeassistant.components.leviosa_shades.config_flow.discover_leviosa_zones",
+        return_value=TEST_DISCOVERY_1,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] == "abort"
+
 
 async def test_config_flow_two_zone_success(hass):
     """Successful flow initiated by the user, two Zones discovered, one selected."""
