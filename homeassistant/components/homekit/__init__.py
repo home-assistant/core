@@ -647,11 +647,16 @@ class HomeKit:
         self, entity_ids: Iterable[str]
     ) -> None:
         """Reset accessories in bridge mode."""
-        removed = self._async_remove_accessories_by_entity_id(entity_ids)
+        if not (removed := self._async_remove_accessories_by_entity_id(entity_ids)):
+            _LOGGER.debug("No accessories to reset in bridge mode for: %s", entity_ids)
+            return
         # With a reset, we need to remove the accessories,
         # and force config change so iCloud deletes them from
         # the database.
-        await self.async_config_changed()
+        assert self.driver is not None
+        self.driver.state.increment_config_version()
+        self.driver.async_persist()
+        self.driver.async_update_advertisement()
         await asyncio.sleep(_HOMEKIT_CONFIG_UPDATE_TIME)
         self._async_recreate_removed_accessories_in_bridge_mode(removed)
 
@@ -685,12 +690,15 @@ class HomeKit:
     def async_update_accessories_hash(self) -> None:
         """Update the accessories hash."""
         assert self.driver is not None
-        self.driver.state.set_accessories_hash(self.driver.accessories_hash)
-
-    async def async_config_changed(self) -> None:
-        """Call config changed which writes out the new config to disk."""
-        assert self.driver is not None
-        await self.hass.async_add_executor_job(self.driver.config_changed)
+        driver = self.driver
+        state = driver.state
+        _LOGGER.warning(
+            "Updating HomeKit accessories hash to %s", driver.accessories_hash
+        )
+        if state.accessories_hash != (new_hash := driver.accessories_hash):
+            driver.state.set_accessories_hash(new_hash)
+            driver.async_persist()
+            driver.async_update_advertisement()
 
     def add_bridge_accessory(self, state: State) -> HomeAccessory | None:
         """Try adding accessory to bridge if configured beforehand."""

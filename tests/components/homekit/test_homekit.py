@@ -1166,22 +1166,25 @@ async def test_homekit_reset_accessories_not_bridged(
     with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit), patch(
         "pyhap.accessory.Bridge.add_accessory"
     ) as mock_add_accessory, patch(
-        "pyhap.accessory_driver.AccessoryDriver.config_changed"
-    ) as hk_driver_config_changed, patch(
+        "pyhap.accessory_driver.AccessoryDriver.async_update_advertisement"
+    ) as hk_driver_async_update_advertisement, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
     ), patch.object(
         homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0
     ):
         await async_init_entry(hass, entry)
 
+        assert hk_driver_async_update_advertisement.call_count == 0
         acc_mock = MagicMock()
         acc_mock.entity_id = entity_id
         acc_mock.stop = AsyncMock()
+        acc_mock.to_HAP = lambda: {}
 
         aid = homekit.aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
         homekit.bridge.accessories = {aid: acc_mock}
         homekit.status = STATUS_RUNNING
         homekit.driver.aio_stop_event = MagicMock()
+        assert hk_driver_async_update_advertisement.call_count == 0
 
         await hass.services.async_call(
             DOMAIN,
@@ -1191,7 +1194,7 @@ async def test_homekit_reset_accessories_not_bridged(
         )
         await hass.async_block_till_done()
 
-        assert hk_driver_config_changed.call_count == 0
+        assert hk_driver_async_update_advertisement.call_count == 0
         assert not mock_add_accessory.called
         homekit.status = STATUS_STOPPED
 
