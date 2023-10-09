@@ -79,21 +79,22 @@ from tests.common import async_mock_service
 async def test_thermostat(hass: HomeAssistant, hk_driver, events) -> None:
     """Test if accessory and HA are updated accordingly."""
     entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [
+            HVACMode.HEAT,
+            HVACMode.HEAT_COOL,
+            HVACMode.FAN_ONLY,
+            HVACMode.COOL,
+            HVACMode.OFF,
+            HVACMode.AUTO,
+        ],
+    }
 
     hass.states.async_set(
         entity_id,
         HVACMode.OFF,
-        {
-            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
-            ATTR_HVAC_MODES: [
-                HVACMode.HEAT,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
-                HVACMode.COOL,
-                HVACMode.OFF,
-                HVACMode.AUTO,
-            ],
-        },
+        base_attrs,
     )
     await hass.async_block_till_done()
     acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
@@ -124,17 +125,10 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events) -> None:
         entity_id,
         HVACMode.HEAT,
         {
+            **base_attrs,
             ATTR_TEMPERATURE: 22.2,
             ATTR_CURRENT_TEMPERATURE: 17.8,
             ATTR_HVAC_ACTION: HVACAction.HEATING,
-            ATTR_HVAC_MODES: [
-                HVACMode.HEAT,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
-                HVACMode.COOL,
-                HVACMode.OFF,
-                HVACMode.AUTO,
-            ],
         },
     )
     await hass.async_block_till_done()
@@ -148,17 +142,10 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events) -> None:
         entity_id,
         HVACMode.HEAT,
         {
+            **base_attrs,
             ATTR_TEMPERATURE: 22.0,
             ATTR_CURRENT_TEMPERATURE: 23.0,
             ATTR_HVAC_ACTION: HVACAction.IDLE,
-            ATTR_HVAC_MODES: [
-                HVACMode.HEAT,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
-                HVACMode.COOL,
-                HVACMode.OFF,
-                HVACMode.AUTO,
-            ],
         },
     )
     await hass.async_block_till_done()
@@ -172,17 +159,10 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events) -> None:
         entity_id,
         HVACMode.FAN_ONLY,
         {
+            **base_attrs,
             ATTR_TEMPERATURE: 20.0,
             ATTR_CURRENT_TEMPERATURE: 25.0,
             ATTR_HVAC_ACTION: HVACAction.COOLING,
-            ATTR_HVAC_MODES: [
-                HVACMode.HEAT,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
-                HVACMode.COOL,
-                HVACMode.OFF,
-                HVACMode.AUTO,
-            ],
         },
     )
     await hass.async_block_till_done()
@@ -196,6 +176,7 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events) -> None:
         entity_id,
         HVACMode.COOL,
         {
+            **base_attrs,
             ATTR_TEMPERATURE: 20.0,
             ATTR_CURRENT_TEMPERATURE: 19.0,
             ATTR_HVAC_ACTION: HVACAction.IDLE,
@@ -211,7 +192,7 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events) -> None:
     hass.states.async_set(
         entity_id,
         HVACMode.OFF,
-        {ATTR_TEMPERATURE: 22.0, ATTR_CURRENT_TEMPERATURE: 18.0},
+        {**base_attrs, ATTR_TEMPERATURE: 22.0, ATTR_CURRENT_TEMPERATURE: 18.0},
     )
     await hass.async_block_till_done()
     assert acc.char_target_temp.value == 22.0
@@ -224,17 +205,10 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events) -> None:
         entity_id,
         HVACMode.AUTO,
         {
+            **base_attrs,
             ATTR_TEMPERATURE: 22.0,
             ATTR_CURRENT_TEMPERATURE: 18.0,
             ATTR_HVAC_ACTION: HVACAction.HEATING,
-            ATTR_HVAC_MODES: [
-                HVACMode.HEAT,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
-                HVACMode.COOL,
-                HVACMode.OFF,
-                HVACMode.AUTO,
-            ],
         },
     )
     await hass.async_block_till_done()
@@ -248,17 +222,10 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events) -> None:
         entity_id,
         HVACMode.HEAT_COOL,
         {
+            **base_attrs,
             ATTR_TEMPERATURE: 22.0,
             ATTR_CURRENT_TEMPERATURE: 25.0,
             ATTR_HVAC_ACTION: HVACAction.COOLING,
-            ATTR_HVAC_MODES: [
-                HVACMode.HEAT,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
-                HVACMode.COOL,
-                HVACMode.OFF,
-                HVACMode.AUTO,
-            ],
         },
     )
     await hass.async_block_till_done()
@@ -272,17 +239,10 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events) -> None:
         entity_id,
         HVACMode.AUTO,
         {
+            **base_attrs,
             ATTR_TEMPERATURE: 22.0,
             ATTR_CURRENT_TEMPERATURE: 22.0,
             ATTR_HVAC_ACTION: HVACAction.IDLE,
-            ATTR_HVAC_MODES: [
-                HVACMode.HEAT,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
-                HVACMode.COOL,
-                HVACMode.OFF,
-                HVACMode.AUTO,
-            ],
         },
     )
     await hass.async_block_till_done()
@@ -296,17 +256,10 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events) -> None:
         entity_id,
         HVACMode.FAN_ONLY,
         {
+            **base_attrs,
             ATTR_TEMPERATURE: 22.0,
             ATTR_CURRENT_TEMPERATURE: 22.0,
             ATTR_HVAC_ACTION: HVACAction.FAN,
-            ATTR_HVAC_MODES: [
-                HVACMode.HEAT,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
-                HVACMode.COOL,
-                HVACMode.OFF,
-                HVACMode.AUTO,
-            ],
         },
     )
     await hass.async_block_till_done()
@@ -320,7 +273,7 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events) -> None:
         entity_id,
         HVACMode.DRY,
         {
-            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+            **base_attrs,
             ATTR_TEMPERATURE: 22.0,
             ATTR_CURRENT_TEMPERATURE: 22.0,
             ATTR_HVAC_ACTION: HVACAction.DRYING,
@@ -419,23 +372,23 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events) -> None:
 async def test_thermostat_auto(hass: HomeAssistant, hk_driver, events) -> None:
     """Test if accessory and HA are updated accordingly."""
     entity_id = "climate.test"
-
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+        ATTR_HVAC_MODES: [
+            HVACMode.HEAT,
+            HVACMode.HEAT_COOL,
+            HVACMode.FAN_ONLY,
+            HVACMode.COOL,
+            HVACMode.OFF,
+            HVACMode.AUTO,
+        ],
+    }
     # support_auto = True
     hass.states.async_set(
         entity_id,
         HVACMode.OFF,
-        {
-            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
-            ATTR_HVAC_MODES: [
-                HVACMode.HEAT,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
-                HVACMode.COOL,
-                HVACMode.OFF,
-                HVACMode.AUTO,
-            ],
-        },
+        base_attrs,
     )
     await hass.async_block_till_done()
     acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
@@ -458,18 +411,11 @@ async def test_thermostat_auto(hass: HomeAssistant, hk_driver, events) -> None:
         entity_id,
         HVACMode.HEAT_COOL,
         {
+            **base_attrs,
             ATTR_TARGET_TEMP_HIGH: 22.0,
             ATTR_TARGET_TEMP_LOW: 20.0,
             ATTR_CURRENT_TEMPERATURE: 18.0,
             ATTR_HVAC_ACTION: HVACAction.HEATING,
-            ATTR_HVAC_MODES: [
-                HVACMode.HEAT,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
-                HVACMode.COOL,
-                HVACMode.OFF,
-                HVACMode.AUTO,
-            ],
         },
     )
     await hass.async_block_till_done()
@@ -484,18 +430,11 @@ async def test_thermostat_auto(hass: HomeAssistant, hk_driver, events) -> None:
         entity_id,
         HVACMode.COOL,
         {
+            **base_attrs,
             ATTR_TARGET_TEMP_HIGH: 23.0,
             ATTR_TARGET_TEMP_LOW: 19.0,
             ATTR_CURRENT_TEMPERATURE: 24.0,
             ATTR_HVAC_ACTION: HVACAction.COOLING,
-            ATTR_HVAC_MODES: [
-                HVACMode.HEAT,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
-                HVACMode.COOL,
-                HVACMode.OFF,
-                HVACMode.AUTO,
-            ],
         },
     )
     await hass.async_block_till_done()
@@ -510,18 +449,11 @@ async def test_thermostat_auto(hass: HomeAssistant, hk_driver, events) -> None:
         entity_id,
         HVACMode.AUTO,
         {
+            **base_attrs,
             ATTR_TARGET_TEMP_HIGH: 23.0,
             ATTR_TARGET_TEMP_LOW: 19.0,
             ATTR_CURRENT_TEMPERATURE: 21.0,
             ATTR_HVAC_ACTION: HVACAction.IDLE,
-            ATTR_HVAC_MODES: [
-                HVACMode.HEAT,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
-                HVACMode.COOL,
-                HVACMode.OFF,
-                HVACMode.AUTO,
-            ],
         },
     )
     await hass.async_block_till_done()
