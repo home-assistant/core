@@ -175,13 +175,13 @@ async def test_entity_registry_cleanup(
     mock_config_entry.add_to_hass(hass)
 
     entity_registry = er.async_get(hass)
-    entity_registry.async_get_or_create(
+    entity: entity_registry.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=mock_config_entry,
     )
-    assert len(entity_registry.entities) == 1
+    assert entity_registry.async_get(entity.entity_id)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(entity_registry.entities) == 24
+    assert not entity_registry.async_get(entity.entity_id)
