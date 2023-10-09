@@ -572,6 +572,7 @@ class HomeKit:
 
     async def async_reset_accessories(self, entity_ids: Iterable[str]) -> None:
         """Reset the accessory to load the latest configuration."""
+        _LOGGER.debug("Resetting accessories: %s", entity_ids)
         async with self._reset_lock:
             if not self.bridge:
                 # For accessory mode reset and reload are the same
@@ -581,6 +582,7 @@ class HomeKit:
 
     async def async_reload_accessories(self, entity_ids: Iterable[str]) -> None:
         """Reload the accessory to load the latest configuration."""
+        _LOGGER.debug("Reloading accessories: %s", entity_ids)
         async with self._reset_lock:
             if not self.bridge:
                 self.async_reload_accessories_in_accessory_mode(entity_ids)
@@ -1043,12 +1045,13 @@ class HomeKit:
         """Stop the accessory driver."""
         if self.status != STATUS_RUNNING:
             return
-        self.status = STATUS_STOPPED
-        assert self._cancel_reload_dispatcher is not None
-        self._cancel_reload_dispatcher()
-        _LOGGER.debug("Driver stop for %s", self._name)
-        if self.driver:
-            await self.driver.async_stop()
+        async with self._reset_lock:
+            self.status = STATUS_STOPPED
+            assert self._cancel_reload_dispatcher is not None
+            self._cancel_reload_dispatcher()
+            _LOGGER.debug("Driver stop for %s", self._name)
+            if self.driver:
+                await self.driver.async_stop()
 
     @callback
     def _async_configure_linked_sensors(
