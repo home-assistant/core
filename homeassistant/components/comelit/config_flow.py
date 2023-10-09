@@ -5,12 +5,11 @@ from collections.abc import Mapping
 from typing import Any
 
 from aiocomelit import ComeliteSerialBridgeApi, exceptions as aiocomelit_exceptions
-from aiocomelit.const import BRIDGE
 import voluptuous as vol
 
 from homeassistant import core, exceptions
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PIN, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
@@ -28,7 +27,6 @@ def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
             vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
             vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
-            vol.Required(CONF_DEVICE, default=BRIDGE): vol.All(BRIDGE),
         }
     )
 
@@ -63,7 +61,6 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
     _reauth_entry: ConfigEntry | None
     _reauth_host: str
     _reauth_port: int
-    _reauth_device: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -100,8 +97,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             self.context["entry_id"]
         )
         self._reauth_host = entry_data[CONF_HOST]
-        self._reauth_port = entry_data[CONF_PORT]
-        self._reauth_device = entry_data[CONF_DEVICE]
+        self._reauth_port = entry_data.get(CONF_PORT, DEFAULT_PORT)
 
         self.context["title_placeholders"] = {"host": self._reauth_host}
         return await self.async_step_reauth_confirm()
@@ -120,7 +116,6 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         CONF_HOST: self._reauth_host,
                         CONF_PORT: self._reauth_port,
-                        CONF_DEVICE: self._reauth_device,
                     }
                     | user_input,
                 )
@@ -135,7 +130,6 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry,
                     data={
-                        CONF_DEVICE: self._reauth_device,
                         CONF_HOST: self._reauth_host,
                         CONF_PORT: self._reauth_port,
                         CONF_PIN: user_input[CONF_PIN],
