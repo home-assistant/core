@@ -50,7 +50,6 @@ async def async_setup_entry(
     bpup_subs = data.bpup_subs
     platform = entity_platform.async_get_current_platform()
 
-    platform = entity_platform.async_get_current_platform()
     for service in ENTITY_SERVICES:
         platform.async_register_entity_service(
             service,

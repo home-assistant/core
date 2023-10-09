@@ -283,7 +283,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _get_hourly_forecast_from_weather_response(self, weather_response, now):
         if weather_response.hourly:
             parse = False
-            hour = now.hour
             forecast = []
             for day in weather_response.hourly[ATTR_DATA][0][AEMET_ATTR_FORECAST][
                 AEMET_ATTR_DAY

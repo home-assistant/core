@@ -35,7 +35,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize the integration."""
     coordinator: DataUpdateCoordinator[YoulessAPI] = hass.data[DOMAIN][entry.entry_id]
-    device = entry.data[CONF_DEVICE]
+    
     if (device := entry.data[CONF_DEVICE]) is None:
         device = entry.entry_id
 
