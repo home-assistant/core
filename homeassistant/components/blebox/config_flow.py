@@ -31,7 +31,6 @@ from .const import (
     UNKNOWN,
     UNSUPPORTED_VERSION,
 )
-from .helpers import get_non_empty_key
 
 _LOGGER = logging.getLogger(__name__)
 

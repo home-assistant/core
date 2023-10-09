@@ -21,7 +21,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
-from .helpers import get_maybe_authenticated_session, get_non_empty_key
+from .helpers import get_maybe_authenticated_session
 
 _LOGGER = logging.getLogger(__name__)
 
