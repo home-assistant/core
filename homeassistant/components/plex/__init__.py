@@ -15,7 +15,12 @@ import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, BrowseError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_URL,
+    CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -246,6 +251,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass_data[DISPATCHERS][server_id].append(unsub)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.UPDATE])
 
     for platform in PLATFORMS:
         start_websocket_session(platform)
