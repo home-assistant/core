@@ -170,6 +170,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID]
             )
 
+    async def get_webhook_url():
+        if cloud.async_active_subscription(hass):
+            return await async_cloudhook_generate_url(hass, entry)
+        return webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
+
     async def register_webhook(
         call_or_event_or_dt: ServiceCall | Event | datetime | None,
     ) -> None:
@@ -177,10 +182,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
             hass.config_entries.async_update_entry(entry, data=data)
 
-        if cloud.async_active_subscription(hass):
-            webhook_url = await async_cloudhook_generate_url(hass, entry)
-        else:
-            webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
+        webhook_url = await get_webhook_url()
 
         if entry.data[
             "auth_implementation"
