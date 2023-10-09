@@ -156,7 +156,7 @@ def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
     return "CHAR(1)"  # Uses 1 byte
 
 
-class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
+class FastPysqliteDatetime(sqlite.DATETIME):
     """Use ciso8601 to parse datetimes instead of sqlalchemy built-in regex."""
 
     def result_processor(self, dialect, coltype):  # type: ignore[no-untyped-def]
@@ -186,7 +186,7 @@ JSONB_VARIANT_CAST = Text().with_variant(
 DATETIME_TYPE = (
     DateTime(timezone=True)
     .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql", "mariadb")  # type: ignore[no-untyped-call]
-    .with_variant(FAST_PYSQLITE_DATETIME(), "sqlite")  # type: ignore[no-untyped-call]
+    .with_variant(FastPysqliteDatetime(), "sqlite")  # type: ignore[no-untyped-call]
 )
 DOUBLE_TYPE = (
     Float()
@@ -348,8 +348,6 @@ class EventData(Base):
         event: Event, dialect: SupportedDialect | None
     ) -> bytes:
         """Create shared_data from an event."""
-        if dialect == SupportedDialect.POSTGRESQL:
-            bytes_result = json_bytes_strip_null(event.data)
         bytes_result = json_bytes(event.data)
         if len(bytes_result) > MAX_EVENT_DATA_BYTES:
             _LOGGER.warning(
