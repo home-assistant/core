@@ -558,37 +558,39 @@ def _drop_foreign_key_constraints(
                     TABLE_STATES,
                     columns,
                 )
-
-def _apply_update_1(instance: Recorder,
+def _apply_update_1( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
-    # This used to create ix_events_time_fired, but it was removed in version 32
+    old_version: int,) -> None:
     pass
 
-def _apply_update_2(instance: Recorder,
+def _apply_update_2( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # Create compound start/end index for recorder_runs
     _create_index(session_maker, "recorder_runs", "ix_recorder_runs_start_end")
     # This used to create ix_states_last_updated bit it was removed in version 32
 
-def _apply_update_3(instance: Recorder,
+def _apply_update_3( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # There used to be a new index here, but it was removed in version 4.
     pass
 
-def _apply_update_4(instance: Recorder,
+def _apply_update_4( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # Queries were rewritten in this schema release. Most indexes from
     # earlier versions of the schema are no longer needed.
 
@@ -606,19 +608,21 @@ def _apply_update_4(instance: Recorder,
     # This used to create ix_states_entity_id_last_updated,
     # but it was removed in version 32
 
-def _apply_update_5(instance: Recorder,
+def _apply_update_5( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # Create supporting index for States.event_id foreign key
     _create_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
-
-def _apply_update_6(instance: Recorder,
+    
+def _apply_update_6( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     _add_columns(
         session_maker,
         "events",
@@ -636,30 +640,33 @@ def _apply_update_6(instance: Recorder,
     # This used to create ix_states_context_user_id,
     # but it was removed in version 28
 
-def _apply_update_7(instance: Recorder,
+def _apply_update_7( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # There used to be a ix_states_entity_id index here,
     # but it was removed in later schema
     pass
 
-def _apply_update_8(instance: Recorder,
+def _apply_update_8( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     _add_columns(session_maker, "events", ["context_parent_id CHARACTER(36)"])
     _add_columns(session_maker, "states", ["old_state_id INTEGER"])
     # This used to create ix_events_context_parent_id,
     # but it was removed in version 28
 
-def _apply_update_9(instance: Recorder,
+def _apply_update_9( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # We now get the context from events with a join
     # since its always there on state_changed events
     #
@@ -680,36 +687,40 @@ def _apply_update_9(instance: Recorder,
     # but it was removed in version 32
     _drop_index(session_maker, "events", "ix_events_event_type")
 
-def _apply_update_10(instance: Recorder,
+def _apply_update_10( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # Now done in step 11
     pass
 
-def _apply_update_11(instance: Recorder,
+def _apply_update_11( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     _create_index(session_maker, "states", "ix_states_old_state_id")
     _update_states_table_with_foreign_key_options(session_maker, engine)
 
-def _apply_update_12(instance: Recorder,
+def _apply_update_12( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     if engine.dialect.name == SupportedDialect.MYSQL:
         _modify_columns(session_maker, engine, "events", ["event_data LONGTEXT"])
         _modify_columns(session_maker, engine, "states", ["attributes LONGTEXT"])
 
-def _apply_update_13(instance: Recorder,
+def _apply_update_13( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     if engine.dialect.name == SupportedDialect.MYSQL:
         _modify_columns(
             session_maker,
@@ -728,43 +739,48 @@ def _apply_update_13(instance: Recorder,
             ],
         )
 
-def _apply_update_14(instance: Recorder,
+def _apply_update_14( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     _modify_columns(session_maker, engine, "events", ["event_type VARCHAR(64)"])
 
-def _apply_update_15(instance: Recorder,
+def _apply_update_15( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # This dropped the statistics table, done again in version 18.
     pass
 
-def _apply_update_16(instance: Recorder,
+def _apply_update_16( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     _drop_foreign_key_constraints(
         session_maker, engine, TABLE_STATES, ["old_state_id"]
     )
 
-def _apply_update_17(instance: Recorder,
+def _apply_update_17( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # This dropped the statistics table, done again in version 18.
     pass
 
-def _apply_update_18(instance: Recorder,
+def _apply_update_18( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # Recreate the statistics and statistics meta tables.
     #
     # Order matters! Statistics and StatisticsShortTerm have a relation with
@@ -786,21 +802,23 @@ def _apply_update_18(instance: Recorder,
     cast(Table, StatisticsShortTerm.__table__).create(engine)
     cast(Table, Statistics.__table__).create(engine)
 
-def _apply_update_19(instance: Recorder,
+def _apply_update_19( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # This adds the statistic runs table, insert a fake run to prevent duplicating
     # statistics.
     with session_scope(session=session_maker()) as session:
         session.add(StatisticsRuns(start=get_start_time()))
 
-def _apply_update_20(instance: Recorder,
+def _apply_update_20( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # This changed the precision of statistics from float to double
     if engine.dialect.name in [SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL]:
         _modify_columns(
@@ -813,21 +831,23 @@ def _apply_update_20(instance: Recorder,
             ],
         )
 
-def _apply_update_21(instance: Recorder,
+def _apply_update_21( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # Try to change the character set of the statistic_meta table
     if engine.dialect.name == SupportedDialect.MYSQL:
         for table in ("events", "states", "statistics_meta"):
             _correct_table_character_set_and_collation(table, session_maker)
 
-def _apply_update_22(instance: Recorder,
+def _apply_update_22( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # Recreate the all statistics tables for Oracle DB with Identity columns
     #
     # Order matters! Statistics has a relation with StatisticsMeta,
@@ -896,54 +916,40 @@ def _apply_update_22(instance: Recorder,
                     )
                 )
 
-def _apply_update_23(instance: Recorder,
+def _apply_update_23( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # Add name column to StatisticsMeta
     _add_columns(session_maker, "statistics_meta", ["name VARCHAR(255)"])
 
-def _apply_update_24(instance: Recorder,
+def _apply_update_24( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # This used to create the unique indices for start and statistic_id
     # but we changed the format in schema 34 which will now take care
     # of removing any duplicate if they still exist.
     pass
 
-def _apply_update_25(instance: Recorder,
+def _apply_update_26( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
-    _add_columns(
-        session_maker, "states", [f"attributes_id {_column_types.big_int_type}"]
-    )
-    _create_index(session_maker, "states", "ix_states_attributes_id")
-
-def _apply_update_26(instance: Recorder,
-    hass: HomeAssistant,
-    engine: Engine,
-    session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     _create_index(session_maker, "statistics_runs", "ix_statistics_runs_start")
 
-def _apply_update_27(instance: Recorder,
+def _apply_update_28( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
-    _add_columns(session_maker, "events", [f"data_id {_column_types.big_int_type}"])
-    _create_index(session_maker, "events", "ix_events_data_id")
-
-def _apply_update_28(instance: Recorder,
-    hass: HomeAssistant,
-    engine: Engine,
-    session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     _add_columns(session_maker, "events", ["origin_idx INTEGER"])
     # We never use the user_id or parent_id index
     _drop_index(session_maker, "events", "ix_events_context_user_id")
@@ -962,11 +968,12 @@ def _apply_update_28(instance: Recorder,
     # Once there are no longer any state_changed events
     # in the events table we can drop the index on states.event_id
 
-def _apply_update_29(instance: Recorder,
+def _apply_update_29( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # Recreate statistics_meta index to block duplicated statistic_id
     _drop_index(session_maker, "statistics_meta", "ix_statistics_meta_statistic_id")
     if engine.dialect.name == SupportedDialect.MYSQL:
@@ -994,11 +1001,12 @@ def _apply_update_29(instance: Recorder,
             session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"
         )
 
-def _apply_update_30(instance: Recorder,
+def _apply_update_30( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # This added a column to the statistics_meta table, removed again before
     # release of HA Core 2022.10.0
     # SQLite 3.31.0 does not support dropping columns.
@@ -1006,37 +1014,12 @@ def _apply_update_30(instance: Recorder,
     # ALTER TABLE statistics_meta DROP COLUMN state_unit_of_measurement
     pass
 
-def _apply_update_31(instance: Recorder,
+def _apply_update_32( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
-    # Once we require SQLite >= 3.35.5, we should drop the column:
-    # ALTER TABLE events DROP COLUMN time_fired
-    # ALTER TABLE states DROP COLUMN last_updated
-    # ALTER TABLE states DROP COLUMN last_changed
-    _add_columns(
-        session_maker, "events", [f"time_fired_ts {_column_types.timestamp_type}"]
-    )
-    _add_columns(
-        session_maker,
-        "states",
-        [
-            f"last_updated_ts {_column_types.timestamp_type}",
-            f"last_changed_ts {_column_types.timestamp_type}",
-        ],
-    )
-    _create_index(session_maker, "events", "ix_events_time_fired_ts")
-    _create_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
-    _create_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
-    _create_index(session_maker, "states", "ix_states_last_updated_ts")
-    _migrate_columns_to_timestamp(instance, session_maker, engine)
-
-def _apply_update_32(instance: Recorder,
-    hass: HomeAssistant,
-    engine: Engine,
-    session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # Migration is done in two steps to ensure we can start using
     # the new columns before we wipe the old ones.
     _drop_index(session_maker, "states", "ix_states_entity_id_last_updated")
@@ -1044,85 +1027,24 @@ def _apply_update_32(instance: Recorder,
     _drop_index(session_maker, "states", "ix_states_last_updated")
     _drop_index(session_maker, "events", "ix_events_time_fired")
 
-def _apply_update_33(instance: Recorder,
+def _apply_update_33( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # This index is no longer used and can cause MySQL to use the wrong index
     # when querying the states table.
     # https://github.com/home-assistant/core/issues/83787
     # There was an index cleanup here but its now done in schema 39
     pass
 
-def _apply_update_34(instance: Recorder,
+def _apply_update_35( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
-    # Once we require SQLite >= 3.35.5, we should drop the columns:
-    # ALTER TABLE statistics DROP COLUMN created
-    # ALTER TABLE statistics DROP COLUMN start
-    # ALTER TABLE statistics DROP COLUMN last_reset
-    # ALTER TABLE statistics_short_term DROP COLUMN created
-    # ALTER TABLE statistics_short_term DROP COLUMN start
-    # ALTER TABLE statistics_short_term DROP COLUMN last_reset
-    _add_columns(
-        session_maker,
-        "statistics",
-        [
-            f"created_ts {_column_types.timestamp_type}",
-            f"start_ts {_column_types.timestamp_type}",
-            f"last_reset_ts {_column_types.timestamp_type}",
-        ],
-    )
-    _add_columns(
-        session_maker,
-        "statistics_short_term",
-        [
-            f"created_ts {_column_types.timestamp_type}",
-            f"start_ts {_column_types.timestamp_type}",
-            f"last_reset_ts {_column_types.timestamp_type}",
-        ],
-    )
-    _create_index(session_maker, "statistics", "ix_statistics_start_ts")
-    _create_index(
-        session_maker, "statistics", "ix_statistics_statistic_id_start_ts"
-    )
-    _create_index(
-        session_maker, "statistics_short_term", "ix_statistics_short_term_start_ts"
-    )
-    _create_index(
-        session_maker,
-        "statistics_short_term",
-        "ix_statistics_short_term_statistic_id_start_ts",
-    )
-    try:
-        _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
-    except IntegrityError as ex:
-        _LOGGER.error(
-            "Statistics table contains duplicate entries: %s; "
-            "Cleaning up duplicates and trying again; "
-            "This will take a while; "
-            "Please be patient!",
-            ex,
-        )
-        # There may be duplicated statistics entries, delete duplicates
-        # and try again
-        with session_scope(session=session_maker()) as session:
-            delete_statistics_duplicates(instance, hass, session)
-        _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
-        # Log at error level to ensure the user sees this message in the log
-        # since we logged the error above.
-        _LOGGER.error(
-            "Statistics migration successfully recovered after statistics table duplicate cleanup"
-        )
-
-def _apply_update_35(instance: Recorder,
-    hass: HomeAssistant,
-    engine: Engine,
-    session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # Migration is done in two steps to ensure we can start using
     # the new columns before we wipe the old ones.
     _drop_index(
@@ -1137,52 +1059,12 @@ def _apply_update_35(instance: Recorder,
     # ix_statistics_start and ix_statistics_statistic_id_start are still used
     # for the post migration cleanup and can be removed in a future version.
 
-def _apply_update_36(instance: Recorder,
+def _apply_update_39( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
-    for table in ("states", "events"):
-        _add_columns(
-            session_maker,
-            table,
-            [
-                f"context_id_bin {_column_types.context_bin_type}",
-                f"context_user_id_bin {_column_types.context_bin_type}",
-                f"context_parent_id_bin {_column_types.context_bin_type}",
-            ],
-        )
-    _create_index(session_maker, "events", "ix_events_context_id_bin")
-    _create_index(session_maker, "states", "ix_states_context_id_bin")
-
-def _apply_update_37(instance: Recorder,
-    hass: HomeAssistant,
-    engine: Engine,
-    session_maker: Callable[[], Session],
-    old_version: int,):
-    _add_columns(
-        session_maker, "events", [f"event_type_id {_column_types.big_int_type}"]
-    )
-    _create_index(session_maker, "events", "ix_events_event_type_id")
-    _drop_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
-    _create_index(session_maker, "events", "ix_events_event_type_id_time_fired_ts")
-
-def _apply_update_38(instance: Recorder,
-    hass: HomeAssistant,
-    engine: Engine,
-    session_maker: Callable[[], Session],
-    old_version: int,):
-    _add_columns(
-        session_maker, "states", [f"metadata_id {_column_types.big_int_type}"]
-    )
-    _create_index(session_maker, "states", "ix_states_metadata_id")
-    _create_index(session_maker, "states", "ix_states_metadata_id_last_updated_ts")
-
-def _apply_update_39(instance: Recorder,
-    hass: HomeAssistant,
-    engine: Engine,
-    session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # Dropping indexes with PostgreSQL never worked correctly if there was a prefix
     # so we need to cleanup leftover indexes.
     _drop_index(
@@ -1217,11 +1099,12 @@ def _apply_update_39(instance: Recorder,
         quiet=True,
     )
 
-def _apply_update_40(instance: Recorder,
+def _apply_update_40( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     # ix_events_event_type_id is a left-prefix of ix_events_event_type_id_time_fired_ts
     _drop_index(session_maker, "events", "ix_events_event_type_id")
     # ix_states_metadata_id is a left-prefix of ix_states_metadata_id_last_updated_ts
@@ -1235,16 +1118,18 @@ def _apply_update_40(instance: Recorder,
         "ix_statistics_short_term_metadata_id",
     )
 
-def _apply_update_41(instance: Recorder,
+def _apply_update_41( # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    old_version: int,):
+    old_version: int,) -> None:
     _create_index(session_maker, "event_types", "ix_event_types_event_type")
     _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
 
-version_functions = {
-    1: _apply_update_1,
+
+dictAU = {
+    1: _apply_update_1, 
     2: _apply_update_2,
     3: _apply_update_3,
     4: _apply_update_4,
@@ -1268,24 +1153,17 @@ version_functions = {
     22: _apply_update_22,
     23: _apply_update_23,
     24: _apply_update_24,
-    25: _apply_update_25,
     26: _apply_update_26,
-    27: _apply_update_27,
     28: _apply_update_28,
     29: _apply_update_29,
     30: _apply_update_30,
-    31: _apply_update_31,
     32: _apply_update_32,
     33: _apply_update_33,
-    34: _apply_update_34,
     35: _apply_update_35,
-    36: _apply_update_36,
-    37: _apply_update_37,
-    38: _apply_update_38,
     39: _apply_update_39,
     40: _apply_update_40,
     41: _apply_update_41,
-}
+    }
 
 @database_job_retry_wrapper("Apply migration update", 10)
 def _apply_update(  # noqa: C901
@@ -1300,10 +1178,128 @@ def _apply_update(  # noqa: C901
     assert engine.dialect.name is not None, "Dialect name must be set"
     dialect = try_parse_enum(SupportedDialect, engine.dialect.name)
     _column_types = _COLUMN_TYPES_FOR_DIALECT.get(dialect, _SQLITE_COLUMN_TYPES)
-    if new_version > 41 or new_version < 1:
-        raise ValueError(f"No schema migration defined for version {new_version}")
+    if (new_version in range(1, 25) or 
+        new_version == 26 or 
+        new_version in range(28, 31) or 
+        new_version in range (32, 34) or 
+        new_version == 35 or
+        new_version in range(39, 42)):
+        dictAU[new_version](instance, hass, engine, session_maker, old_version)
+    elif new_version == 25:
+        _add_columns(
+        session_maker, "states", [f"attributes_id {_column_types.big_int_type}"]
+        )
+        _create_index(session_maker, "states", "ix_states_attributes_id")
+    elif new_version == 27:
+        _add_columns(session_maker, "events", [f"data_id {_column_types.big_int_type}"])
+        _create_index(session_maker, "events", "ix_events_data_id")
+    elif new_version == 31:
+        # Once we require SQLite >= 3.35.5, we should drop the column:
+        # ALTER TABLE events DROP COLUMN time_fired
+        # ALTER TABLE states DROP COLUMN last_updated
+        # ALTER TABLE states DROP COLUMN last_changed
+        _add_columns(
+            session_maker, "events", [f"time_fired_ts {_column_types.timestamp_type}"]
+        )
+        _add_columns(
+            session_maker,
+            "states",
+            [
+                f"last_updated_ts {_column_types.timestamp_type}",
+                f"last_changed_ts {_column_types.timestamp_type}",
+            ],
+        )
+        _create_index(session_maker, "events", "ix_events_time_fired_ts")
+        _create_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
+        _create_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
+        _create_index(session_maker, "states", "ix_states_last_updated_ts")
+        _migrate_columns_to_timestamp(instance, session_maker, engine)
+    elif new_version == 34:
+        # Once we require SQLite >= 3.35.5, we should drop the columns:
+        # ALTER TABLE statistics DROP COLUMN created
+        # ALTER TABLE statistics DROP COLUMN start
+        # ALTER TABLE statistics DROP COLUMN last_reset
+        # ALTER TABLE statistics_short_term DROP COLUMN created
+        # ALTER TABLE statistics_short_term DROP COLUMN start
+        # ALTER TABLE statistics_short_term DROP COLUMN last_reset
+        _add_columns(
+            session_maker,
+            "statistics",
+            [
+                f"created_ts {_column_types.timestamp_type}",
+                f"start_ts {_column_types.timestamp_type}",
+                f"last_reset_ts {_column_types.timestamp_type}",
+            ],
+        )
+        _add_columns(
+            session_maker,
+            "statistics_short_term",
+            [
+                f"created_ts {_column_types.timestamp_type}",
+                f"start_ts {_column_types.timestamp_type}",
+                f"last_reset_ts {_column_types.timestamp_type}",
+            ],
+        )
+        _create_index(session_maker, "statistics", "ix_statistics_start_ts")
+        _create_index(
+            session_maker, "statistics", "ix_statistics_statistic_id_start_ts"
+        )
+        _create_index(
+            session_maker, "statistics_short_term", "ix_statistics_short_term_start_ts"
+        )
+        _create_index(
+            session_maker,
+            "statistics_short_term",
+            "ix_statistics_short_term_statistic_id_start_ts",
+        )
+        try:
+            _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
+        except IntegrityError as ex:
+            _LOGGER.error(
+                "Statistics table contains duplicate entries: %s; "
+                "Cleaning up duplicates and trying again; "
+                "This will take a while; "
+                "Please be patient!",
+                ex,
+            )
+            # There may be duplicated statistics entries, delete duplicates
+            # and try again
+            with session_scope(session=session_maker()) as session:
+                delete_statistics_duplicates(instance, hass, session)
+            _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
+            # Log at error level to ensure the user sees this message in the log
+            # since we logged the error above.
+            _LOGGER.error(
+                "Statistics migration successfully recovered after statistics table duplicate cleanup"
+            )
+    elif new_version == 36:
+        for table in ("states", "events"):
+            _add_columns(
+                session_maker,
+                table,
+                [
+                    f"context_id_bin {_column_types.context_bin_type}",
+                    f"context_user_id_bin {_column_types.context_bin_type}",
+                    f"context_parent_id_bin {_column_types.context_bin_type}",
+                ],
+            )
+        _create_index(session_maker, "events", "ix_events_context_id_bin")
+        _create_index(session_maker, "states", "ix_states_context_id_bin")
+    elif new_version == 37:
+        _add_columns(
+            session_maker, "events", [f"event_type_id {_column_types.big_int_type}"]
+        )
+        _create_index(session_maker, "events", "ix_events_event_type_id")
+        _drop_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
+        _create_index(session_maker, "events", "ix_events_event_type_id_time_fired_ts")
+    elif new_version == 38:
+        _add_columns(
+            session_maker, "states", [f"metadata_id {_column_types.big_int_type}"]
+        )
+        _create_index(session_maker, "states", "ix_states_metadata_id")
+        _create_index(session_maker, "states", "ix_states_metadata_id_last_updated_ts")
     else:
-        version_functions[new_version](instance, hass, engine, session_maker, old_version)
+        raise ValueError(f"No schema migration defined for version {new_version}")
 
 def _correct_table_character_set_and_collation(
     table: str,
