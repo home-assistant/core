@@ -7,13 +7,9 @@ from dataclasses import dataclass
 from plugwise import Smile
 from plugwise.constants import SelectOptionsType, SelectType
 
-from homeassistant.components.select import (
-    DOMAIN as SELECT_DOMAIN,
-    SelectEntity,
-    SelectEntityDescription,
-)
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, EntityCategory
+from homeassistant.const import STATE_ON, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -103,7 +99,7 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         self.entity_description = entity_description
         self._attr_options = self.device[entity_description.options_key]
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        coordinator.current_entities.add((SELECT_DOMAIN, self._attr_unique_id))
+        coordinator.current_entities.add((Platform.SELECT, self._attr_unique_id))
 
     @property
     def current_option(self) -> str:

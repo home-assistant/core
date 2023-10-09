@@ -7,13 +7,12 @@ from typing import Any
 from plugwise.constants import SwitchType
 
 from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -92,7 +91,7 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
-        coordinator.current_entities.add((SWITCH_DOMAIN, self._attr_unique_id))
+        coordinator.current_entities.add((Platform.SWITCH, self._attr_unique_id))
 
     @property
     def is_on(self) -> bool:
