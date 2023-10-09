@@ -451,48 +451,47 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # If the requested entity is a light, set the brightness, hue,
         # saturation and color temp
-        if entity.domain == light.DOMAIN:
-            if parsed[STATE_ON]:
-                if (
-                    light.brightness_supported(color_modes)
-                    and parsed[STATE_BRIGHTNESS] is not None
-                ):
-                    data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
-                        parsed[STATE_BRIGHTNESS]
-                    )
+        if entity.domain == light.DOMAIN and parsed[STATE_ON]:
+            if (
+                light.brightness_supported(color_modes)
+                and parsed[STATE_BRIGHTNESS] is not None
+            ):
+                data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
+                    parsed[STATE_BRIGHTNESS]
+                )
 
-                if light.color_supported(color_modes):
-                    if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
-                        if parsed[STATE_HUE] is not None:
-                            hue = parsed[STATE_HUE]
-                        else:
-                            hue = 0
+            if light.color_supported(color_modes):
+                if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
+                    if parsed[STATE_HUE] is not None:
+                        hue = parsed[STATE_HUE]
+                    else:
+                        hue = 0
 
-                        if parsed[STATE_SATURATION] is not None:
-                            sat = parsed[STATE_SATURATION]
-                        else:
-                            sat = 0
+                    if parsed[STATE_SATURATION] is not None:
+                        sat = parsed[STATE_SATURATION]
+                    else:
+                        sat = 0
 
-                        # Convert hs values to hass hs values
-                        hue = int((hue / HUE_API_STATE_HUE_MAX) * 360)
-                        sat = int((sat / HUE_API_STATE_SAT_MAX) * 100)
+                    # Convert hs values to hass hs values
+                    hue = int((hue / HUE_API_STATE_HUE_MAX) * 360)
+                    sat = int((sat / HUE_API_STATE_SAT_MAX) * 100)
 
-                        data[ATTR_HS_COLOR] = (hue, sat)
+                    data[ATTR_HS_COLOR] = (hue, sat)
 
-                    if parsed[STATE_XY] is not None:
-                        data[ATTR_XY_COLOR] = parsed[STATE_XY]
+                if parsed[STATE_XY] is not None:
+                    data[ATTR_XY_COLOR] = parsed[STATE_XY]
 
-                if (
-                    light.color_temp_supported(color_modes)
-                    and parsed[STATE_COLOR_TEMP] is not None
-                ):
-                    data[ATTR_COLOR_TEMP] = parsed[STATE_COLOR_TEMP]
+            if (
+                light.color_temp_supported(color_modes)
+                and parsed[STATE_COLOR_TEMP] is not None
+            ):
+                data[ATTR_COLOR_TEMP] = parsed[STATE_COLOR_TEMP]
 
-                if (
-                    entity_features & LightEntityFeature.TRANSITION
-                    and parsed[STATE_TRANSITION] is not None
-                ):
-                    data[ATTR_TRANSITION] = parsed[STATE_TRANSITION] / 10
+            if (
+                entity_features & LightEntityFeature.TRANSITION
+                and parsed[STATE_TRANSITION] is not None
+            ):
+                data[ATTR_TRANSITION] = parsed[STATE_TRANSITION] / 10
 
         # If the requested entity is a script, add some variables
         elif entity.domain == script.DOMAIN:
