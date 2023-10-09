@@ -114,6 +114,7 @@ SENSOR_TYPES: tuple[SunSensorEntityDescription, ...] = (
         icon="mdi:sun-clock",
         value_fn=lambda data: data.rising,
         entity_registry_enabled_default=False,
+        signal=SIGNAL_EVENTS_CHANGED,
     ),
 )
 
