@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
+from monzopy import InvalidMonzoAPIResponseError
+
 from homeassistant.components import cloud
 from homeassistant.components.webhook import (
     async_generate_url as webhook_generate_url,
@@ -32,7 +34,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .api import AsyncConfigEntryAuth, InvalidMonzoAPIResponseError
+from .api import AsyncConfigEntryAuth
 from .const import (
     ACCOUNTS,
     ATTR_AMOUNT,
