@@ -170,7 +170,7 @@ async def test_import_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data={**CONFIG, CONF_FILTER: "something"},
+        data=CONFIG,
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == CONFIG
