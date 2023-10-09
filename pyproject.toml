@@ -469,10 +469,12 @@ filterwarnings = [
     "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:feedparser.encodings",
     # https://github.com/jaraco/jaraco.abode/commit/9e3e789efc96cddcaa15f920686bbeb79a7469e0 - update jaraco.abode to >=5.1.0
     "ignore:`jaraco.functools.call_aside` is deprecated, use `jaraco.functools.invoke` instead:DeprecationWarning:jaraco.abode.helpers.timeline",
-    # https://github.com/poljar/matrix-nio/pull/438 - >0.21.2
+    # https://github.com/poljar/matrix-nio/pull/438 - >=0.22.0
     "ignore:FormatChecker.cls_checks is deprecated:DeprecationWarning:nio.schemas",
-    # https://github.com/poljar/matrix-nio/pull/439 - >0.21.2
+    # https://github.com/poljar/matrix-nio/pull/439 - >=0.22.0
     "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:nio.client.http_client",
+    # https://github.com/nextcord/nextcord/pull/1095 - >2.6.1
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:nextcord.health_check",
     # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - >0.5.3
     "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
 
@@ -487,6 +489,8 @@ filterwarnings = [
     # Wrong stacklevel
     # https://bugs.launchpad.net/beautifulsoup/+bug/2034451
     "ignore:It looks like you're parsing an XML document using an HTML parser:UserWarning:bs4.builder",
+    # New in aiohttp - v3.9.0
+    "ignore:It is recommended to use web.AppKey instances for keys:UserWarning:(homeassistant|tests|aiohttp_cors)",
 
     # -- unmaintained projects, last release about 2+ years
     # https://pypi.org/project/agent-py/ - v0.0.23 - 2020-06-04
