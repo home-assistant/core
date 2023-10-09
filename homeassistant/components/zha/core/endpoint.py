@@ -120,6 +120,11 @@ class Endpoint:
                 cluster_id, ClusterHandler
             )
 
+            if hasattr(cluster.endpoint.device, "quirk_id"):
+                cluster_handler_class = registries.CUSTOM_CLUSTER_HANDLER_REGISTRY.get(
+                    cluster.endpoint.device.quirk_id, cluster_handler_class
+                )
+
             # Allow cluster handler to filter out bad matches
             if not cluster_handler_class.matches(cluster, self):
                 cluster_handler_class = ClusterHandler
@@ -129,15 +134,6 @@ class Endpoint:
                 cluster_id,
                 cluster_handler_class,
             )
-            # really ugly hack to deal with xiaomi using the door lock cluster
-            # incorrectly.
-            if (
-                hasattr(cluster, "ep_attribute")
-                and cluster_id == zigpy.zcl.clusters.closures.DoorLock.cluster_id
-                and cluster.ep_attribute == "multistate_input"
-            ):
-                cluster_handler_class = MultistateInput
-            # end of ugly hack
 
             try:
                 cluster_handler = cluster_handler_class(cluster, self)

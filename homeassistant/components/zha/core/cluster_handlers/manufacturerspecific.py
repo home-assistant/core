@@ -8,6 +8,7 @@ from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 import zigpy.zcl
 
 from homeassistant.core import callback
+from .general import MultistateInput
 
 from .. import registries
 from ..const import (
@@ -375,3 +376,8 @@ class IkeaRemote(ClusterHandler):
     """Ikea Matter remote cluster handler."""
 
     REPORT_CONFIG = ()
+
+
+@registries.CUSTOM_CLUSTER_HANDLER_REGISTRY.register("XiaomiVibrationAQ1")
+class XiaomiVibrationAQ1ClusterHandler(MultistateInput):
+    pass
