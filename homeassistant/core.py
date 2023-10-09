@@ -222,6 +222,20 @@ def async_get_hass() -> HomeAssistant:
     return _hass.hass
 
 
+@callback
+def get_channel(version: str | None = None) -> str:
+    """Find release channel based on version number."""
+    if version is None:
+        version = __version__
+    if "dev0" in version:
+        return "dev"
+    if "dev" in version:
+        return "nightly"
+    if "b" in version:
+        return "beta"
+    return "stable"
+
+
 @enum.unique
 class HassJobType(enum.Enum):
     """Represent a job type."""
