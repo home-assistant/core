@@ -27,6 +27,9 @@ UTF8_NAME = "𓆚𓃗"
 # This number can't be accurately represented as a 32-bit float
 PRECISE_NUMBER = 1.000000000000001
 
+# Error message
+ERROR_MESSAGE = "Error when validating DB schema: "
+
 
 def _get_precision_column_types(
     table_object: type[DeclarativeBase],
@@ -55,7 +58,7 @@ def validate_table_schema_supports_utf8(
             instance, table_object, columns
         )
     except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when validating DB schema: %s", exc)
+        _LOGGER.exception(ERROR_MESSAGE + "%s", exc)
 
     _log_schema_errors(table_object, schema_errors)
     return schema_errors
@@ -76,7 +79,7 @@ def validate_table_schema_has_correct_collation(
             instance, table_object
         )
     except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when validating DB schema: %s", exc)
+        _LOGGER.exception(ERROR_MESSAGE + "%s", exc)
 
     _log_schema_errors(table_object, schema_errors)
     return schema_errors
@@ -160,7 +163,7 @@ def validate_db_schema_precision(
     try:
         schema_errors = _validate_db_schema_precision(instance, table_object)
     except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when validating DB schema: %s", exc)
+        _LOGGER.exception(ERROR_MESSAGE + "%s", exc)
 
     _log_schema_errors(table_object, schema_errors)
     return schema_errors
