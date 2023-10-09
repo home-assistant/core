@@ -67,8 +67,8 @@ build.json @home-assistant/supervisor
 /tests/components/alert/ @home-assistant/core @frenck
 /homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
-/homeassistant/components/allpowers_ble/ @9madninjaskillz
-/tests/components/allpowers_ble/ @9madninjaskillz
+/homeassistant/components/allpowers/ @9madninjaskillz
+/tests/components/allpowers/ @9madninjaskillz
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
 /homeassistant/components/ambiclimate/ @danielhiversen

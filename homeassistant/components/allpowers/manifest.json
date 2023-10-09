@@ -1,5 +1,5 @@
 {
-  "domain": "allpowers_ble",
+  "domain": "allpowers",
   "name": "Allpowers BLE",
   "bluetooth": [
     {
@@ -9,7 +9,7 @@
   "codeowners": ["@9madninjaskillz"],
   "config_flow": true,
   "dependencies": ["bluetooth"],
-  "documentation": "https://www.home-assistant.io/integrations/allpowers_ble/",
+  "documentation": "https://www.home-assistant.io/integrations/allpowers/",
   "integration_type": "device",
   "iot_class": "local_push",
   "requirements": ["bluetooth-data-tools==1.12.0", "allpowers-ble==0.0.2"]

@@ -27,7 +27,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_uuid": "b42e3882-ade7-11e4-89d3-123b93f75cba",
     },
     {
-        "domain": "allpowers_ble",
+        "domain": "allpowers",
         "local_name": "AP S*",
     },
     {

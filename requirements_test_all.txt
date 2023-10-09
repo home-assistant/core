@@ -382,7 +382,7 @@ airthings-cloud==0.1.0
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
 
-# homeassistant.components.allpowers_ble
+# homeassistant.components.allpowers
 allpowers-ble==0.0.2
 
 # homeassistant.components.amberelectric
@@ -474,7 +474,7 @@ bluetooth-adapters==0.16.1
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.2.3
 
-# homeassistant.components.allpowers_ble
+# homeassistant.components.allpowers
 # homeassistant.components.bluetooth
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble

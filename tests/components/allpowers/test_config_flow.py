@@ -4,7 +4,7 @@ from unittest.mock import patch
 from bleak import BleakError
 
 from homeassistant import config_entries
-from homeassistant.components.allpowers_ble.const import DOMAIN
+from homeassistant.components.allpowers.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 async def test_user_step_success(hass: HomeAssistant) -> None:
     """Test user step success path."""
     with patch(
-        "homeassistant.components.allpowers_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.allpowers.config_flow.async_discovered_service_info",
         return_value=[NOT_ALLPOWERS_BLE_DISCOVERY_INFO, ALLPOWERS_BLE_DISCOVERY_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -28,9 +28,9 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.allpowers_ble.config_flow.AllpowersBLE.initialise",
+        "homeassistant.components.allpowers.config_flow.AllpowersBLE.initialise",
     ), patch(
-        "homeassistant.components.allpowers_ble.async_setup_entry",
+        "homeassistant.components.allpowers.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -53,7 +53,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
 async def test_user_step_no_devices_found(hass: HomeAssistant) -> None:
     """Test user step with no devices found."""
     with patch(
-        "homeassistant.components.allpowers_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.allpowers.config_flow.async_discovered_service_info",
         return_value=[NOT_ALLPOWERS_BLE_DISCOVERY_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -74,7 +74,7 @@ async def test_user_step_no_new_devices_found(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.allpowers_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.allpowers.config_flow.async_discovered_service_info",
         return_value=[ALLPOWERS_BLE_DISCOVERY_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -87,7 +87,7 @@ async def test_user_step_no_new_devices_found(hass: HomeAssistant) -> None:
 async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
     """Test user step and we cannot connect."""
     with patch(
-        "homeassistant.components.allpowers_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.allpowers.config_flow.async_discovered_service_info",
         return_value=[ALLPOWERS_BLE_DISCOVERY_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -98,7 +98,7 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.allpowers_ble.config_flow.AllpowersBLE.initialise",
+        "homeassistant.components.allpowers.config_flow.AllpowersBLE.initialise",
         side_effect=BleakError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -114,9 +114,9 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "homeassistant.components.allpowers_ble.config_flow.AllpowersBLE.initialise",
+        "homeassistant.components.allpowers.config_flow.AllpowersBLE.initialise",
     ), patch(
-        "homeassistant.components.allpowers_ble.async_setup_entry",
+        "homeassistant.components.allpowers.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -139,7 +139,7 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
 async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
     """Test user step with an unknown exception."""
     with patch(
-        "homeassistant.components.allpowers_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.allpowers.config_flow.async_discovered_service_info",
         return_value=[NOT_ALLPOWERS_BLE_DISCOVERY_INFO, ALLPOWERS_BLE_DISCOVERY_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -150,7 +150,7 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.allpowers_ble.config_flow.AllpowersBLE.initialise",
+        "homeassistant.components.allpowers.config_flow.AllpowersBLE.initialise",
         side_effect=RuntimeError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -166,9 +166,9 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
     with patch(
-        "homeassistant.components.allpowers_ble.config_flow.AllpowersBLE.initialise",
+        "homeassistant.components.allpowers.config_flow.AllpowersBLE.initialise",
     ), patch(
-        "homeassistant.components.allpowers_ble.async_setup_entry",
+        "homeassistant.components.allpowers.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -200,9 +200,9 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.allpowers_ble.config_flow.AllpowersBLE.initialise",
+        "homeassistant.components.allpowers.config_flow.AllpowersBLE.initialise",
     ), patch(
-        "homeassistant.components.allpowers_ble.async_setup_entry",
+        "homeassistant.components.allpowers.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(

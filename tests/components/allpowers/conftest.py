@@ -1,4 +1,4 @@
-"""allpowers_ble session fixtures."""
+"""allpowers session fixtures."""
 
 import pytest
 
