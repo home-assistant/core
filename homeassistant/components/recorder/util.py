@@ -104,6 +104,8 @@ FIRST_POSSIBLE_SUNDAY = 8
 SUNDAY_WEEKDAY = 6
 DAYS_IN_WEEK = 7
 
+ERROR_EXECUTING_QUERY_STRING = "Error executing query: %s"
+
 
 @contextmanager
 def session_scope(
@@ -132,7 +134,7 @@ def session_scope(
             need_rollback = True
             session.commit()
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("Error executing query: %s", err)
+        _LOGGER.exception(ERROR_EXECUTING_QUERY_STRING, err)
         if need_rollback:
             session.rollback()
         if not exception_filter or not exception_filter(err):
@@ -160,7 +162,7 @@ def execute(
 
             return result
         except SQLAlchemyError as err:
-            _LOGGER.error("Error executing query: %s", err)
+            _LOGGER.error(ERROR_EXECUTING_QUERY_STRING, err)
 
             if tryno == RETRIES - 1:
                 raise
@@ -240,7 +242,7 @@ def execute_stmt_lambda_element(
                 return executed.all()
             return executed.yield_per(yield_per)
         except SQLAlchemyError as err:
-            _LOGGER.error("Error executing query: %s", err)
+            _LOGGER.error(ERROR_EXECUTING_QUERY_STRING, err)
             if tryno == RETRIES - 1:
                 raise
             time.sleep(QUERY_RETRY_WAIT)
