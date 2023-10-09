@@ -202,13 +202,29 @@ async def test_supported_features(hass: HomeAssistant) -> None:
         | MediaPlayerEntityFeature.VOLUME_STEP
     )
 
+    all_features = (
+        pause_play_stop
+        | play_media
+        | volume
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.CLEAR_PLAYLIST
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+    )
     await async_setup_component(
         hass,
         MEDIA_DOMAIN,
         {
             MEDIA_DOMAIN: {
                 "platform": DOMAIN,
-                "entities": ["media_player.player_1", "media_player.player_2"],
+                "entities": [
+                    "media_player.player_1",
+                    "media_player.player_2",
+                    "media_player.player_3",
+                ],
             }
         },
     )
@@ -250,6 +266,22 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get("media_player.media_group")
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == pause_play_stop | play_media
+
+    hass.states.async_set(
+        "media_player.player_3", STATE_OFF, {ATTR_SUPPORTED_FEATURES: play_media}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("media_player.media_group")
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == pause_play_stop | play_media
+
+    hass.states.async_set(
+        "media_player.player_3",
+        STATE_OFF,
+        {ATTR_SUPPORTED_FEATURES: all_features},
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("media_player.media_group")
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == all_features
 
 
 async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None:
