@@ -690,14 +690,11 @@ class HomeKit:
         """Update the accessories hash."""
         assert self.driver is not None
         driver = self.driver
-        state = driver.state
-        _LOGGER.warning(
-            "Updating HomeKit accessories hash to %s", driver.accessories_hash
-        )
-        if state.accessories_hash != (new_hash := driver.accessories_hash):
-            driver.state.set_accessories_hash(new_hash)
-            driver.async_persist()
-            driver.async_update_advertisement()
+        if driver.state.accessories_hash == (new_hash := driver.accessories_hash):
+            return
+        driver.state.set_accessories_hash(new_hash)
+        driver.async_persist()
+        driver.async_update_advertisement()
 
     def add_bridge_accessory(self, state: State) -> HomeAccessory | None:
         """Try adding accessory to bridge if configured beforehand."""
