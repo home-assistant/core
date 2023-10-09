@@ -32,3 +32,67 @@ capture_image:
       required: false
       selector:
         text:
+get_classifications:
+  fields:
+    classifier_name:
+      required: true
+      selector:
+        text:
+    confidence:
+      required: false
+      default: 0.6
+      selector:
+        text:
+          type: number
+    count:
+      required: false
+      selector:
+        number:
+    robot_address:
+      required: false
+      selector:
+        text:
+    robot_secret:
+      required: false
+      selector:
+        text:
+    filepath:
+      required: false
+      selector:
+        text:
+    camera:
+      required: false
+      selector:
+        entity:
+          filter:
+            domain: camera
+get_detections:
+  fields:
+    detector_name:
+      required: true
+      selector:
+        text:
+    confidence:
+      required: false
+      default: 0.6
+      selector:
+        text:
+          type: number
+    robot_address:
+      required: false
+      selector:
+        text:
+    robot_secret:
+      required: false
+      selector:
+        text:
+    filepath:
+      required: false
+      selector:
+        text:
+    camera:
+      required: false
+      selector:
+        entity:
+          filter:
+            domain: camera
