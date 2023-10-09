@@ -12,9 +12,7 @@ from . import async_browse_media as async_browse_plex_media, is_plex_media_id
 from .services import process_plex_payload
 
 
-async def async_get_media_browser_root_object(
-    hass: HomeAssistant, cast_type: str
-) -> list[BrowseMedia]:
+async def async_get_media_browser_root_object(*_) -> list[BrowseMedia]:
     """Create a root object for media browsing."""
     return [
         BrowseMedia(
@@ -33,7 +31,7 @@ async def async_browse_media(
     hass: HomeAssistant,
     media_content_type: MediaType | str,
     media_content_id: str,
-    cast_type: str,
+    _: str,
 ) -> BrowseMedia | None:
     """Browse media."""
     if is_plex_media_id(media_content_id):
@@ -58,7 +56,7 @@ def _play_media(
 
 async def async_play_media(
     hass: HomeAssistant,
-    cast_entity_id: str,
+    _: str,
     chromecast: Chromecast,
     media_type: MediaType | str,
     media_id: str,
