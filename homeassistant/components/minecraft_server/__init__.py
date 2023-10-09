@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     except MinecraftServerAddressError as error:
         raise ConfigEntryError(
-            f"Address in configuration entry is invalid (error: {error}), please remove this device and add it again"
+            f"Server address in configuration entry is invalid (error: {error})"
         ) from error
 
     # Create coordinator instance.

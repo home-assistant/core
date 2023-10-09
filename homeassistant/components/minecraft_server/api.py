@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 
+from dns.resolver import LifetimeTimeout
 from mcstatus import BedrockServer, JavaServer
 from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
 
@@ -59,7 +60,7 @@ class MinecraftServer:
                 self._server = JavaServer.lookup(address)
             else:
                 self._server = BedrockServer.lookup(address)
-        except ValueError as error:
+        except (ValueError, LifetimeTimeout) as error:
             raise MinecraftServerAddressError(
                 f"{server_type} server address '{address}' is invalid (error: {error})"
             ) from error
