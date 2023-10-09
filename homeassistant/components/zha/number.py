@@ -380,7 +380,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
 class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     """Representation of a ZHA number configuration entity."""
 
-    _attr_entity_category: EntityCategory | None = EntityCategory.CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_native_step: float = 1.0
     _attr_multiplier: float = 1
     _zcl_attribute: str
