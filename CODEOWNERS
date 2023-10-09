@@ -479,6 +479,8 @@ build.json @home-assistant/supervisor
 /tests/components/google_mail/ @tkdrob
 /homeassistant/components/google_sheets/ @tkdrob
 /tests/components/google_sheets/ @tkdrob
+/homeassistant/components/google_tasks/ @allenporter
+/tests/components/google_tasks/ @allenporter
 /homeassistant/components/google_travel_time/ @eifinger
 /tests/components/google_travel_time/ @eifinger
 /homeassistant/components/govee_ble/ @bdraco @PierreAronnax
