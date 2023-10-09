@@ -37,11 +37,12 @@ def prepare_device(
     hass: HomeAssistant,
     api: SwitchBotAPI,
     device: Device | Remote,
-    coordinators: list[SwitchBotCoordinator],
+    coordinators_by_id: dict[str, SwitchBotCoordinator],
 ) -> tuple[Device | Remote, SwitchBotCoordinator]:
     """Instantiate coordinator and adds to list for gathering."""
-    coordinator = SwitchBotCoordinator(hass, api, device)
-    coordinators.append(coordinator)
+    coordinator = coordinators_by_id.setdefault(
+        device.device_id, SwitchBotCoordinator(hass, api, device)
+    )
     return (device, coordinator)
 
 
@@ -61,13 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     except CannotConnect as ex:
         raise ConfigEntryNotReady from ex
     _LOGGER.debug("Devices: %s", devices)
-    coordinators: list[SwitchBotCoordinator] = []
+    coordinators_by_id: dict[str, SwitchBotCoordinator] = {}
     hass.data.setdefault(DOMAIN, {})
     data = SwitchbotCloudData(
         api=api,
         devices=SwitchbotDevices(
             climates=[
-                prepare_device(hass, api, device, coordinators)
+                prepare_device(hass, api, device, coordinators_by_id)
                 for device in devices
                 if isinstance(device, Remote)
                 and (
@@ -76,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
                 )
             ],
             switches=[
-                prepare_device(hass, api, device, coordinators)
+                prepare_device(hass, api, device, coordinators_by_id)
                 for device in devices
                 if isinstance(device, Device)
                 and device.device_type.startswith("Plug")
@@ -88,7 +89,9 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     for device_type, devices in vars(data.devices).items():
         _LOGGER.debug("%s: %s", device_type, devices)
     await hass.config_entries.async_forward_entry_setups(config, PLATFORMS)
-    await gather(*[coordinator.async_refresh() for coordinator in coordinators])
+    await gather(
+        *[coordinator.async_refresh() for coordinator in coordinators_by_id.values()]
+    )
     return True
 
 
