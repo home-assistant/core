@@ -591,9 +591,7 @@ class HomeKit:
     def _async_shutdown_accessory(self, accessory: HomeAccessory) -> None:
         """Shutdown an accessory."""
         assert self.driver is not None
-        self.hass.async_create_background_task(
-            accessory.stop(), f"Stop HomeKit accessory for {accessory.entity_id}"
-        )
+        accessory.async_stop()
         # Deallocate the IIDs for the accessory
         iid_manager = accessory.iid_manager
         services: list[Service] = accessory.services

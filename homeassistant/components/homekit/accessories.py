@@ -614,6 +614,13 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         while self._subscriptions:
             self._subscriptions.pop(0)()
 
+    async def stop(self) -> None:
+        """Stop the accessory.
+
+        This is a wrapper for pyhap to call.
+        """
+        self.async_stop()
+
 
 class HomeBridge(Bridge):  # type: ignore[misc]
     """Adapter class for Bridge."""
