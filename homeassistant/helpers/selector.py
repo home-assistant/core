@@ -1,8 +1,9 @@
 """Selectors for Home Assistant."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from collections.abc import Callable, Mapping, Sequence
-from enum import IntFlag, StrEnum
+from enum import Enum, IntFlag, StrEnum
 from functools import cache
 from typing import Any, Generic, Literal, Required, TypedDict, TypeVar, cast
 from uuid import UUID
@@ -422,23 +423,34 @@ class ColorRGBSelector(Selector[ColorRGBSelectorConfig]):
         return value
 
 
-class ColorTempSelectorConfig(TypedDict, total=False):
+ColorTemperatureUnit = Enum("ColorTemperatureUnit", ["KELVIN", "MIRED"])
+
+
+class ColorTempSelectorWithoutUnitConfig(TypedDict, total=False):
+    """Class to represent a color temp selector config whatever unit is used."""
+
+    max: int
+    min: int
+
+
+class ColorTempSelectorConfig(ColorTempSelectorWithoutUnitConfig):
     """Class to represent a color temp selector config."""
 
-    max_mireds: int
-    min_mireds: int
+    unit: ColorTemperatureUnit
 
 
-@SELECTORS.register("color_temp")
 class ColorTempSelector(Selector[ColorTempSelectorConfig]):
-    """Selector of an color temperature."""
+    """Base class for a color temperature Selector."""
 
-    selector_type = "color_temp"
+    @property
+    @abstractmethod
+    def selector_type():
+        pass
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("max_mireds"): vol.Coerce(int),
-            vol.Optional("min_mireds"): vol.Coerce(int),
+            vol.Optional("max"): vol.Coerce(int),
+            vol.Optional("min"): vol.Coerce(int),
         }
     )
 
@@ -451,11 +463,71 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         value: int = vol.All(
             vol.Coerce(float),
             vol.Range(
-                min=self.config.get("min_mireds"),
-                max=self.config.get("max_mireds"),
+                min=self.config.get("min"),
+                max=self.config.get("max"),
             ),
         )(data)
         return value
+
+
+@SELECTORS.register("color_temp_mired")
+class ColorTempMiredSelector(ColorTempSelector):
+    """Selector of a color temperature."""
+
+    selector_type = "color_temp_mired"
+
+    def __init__(
+        self, config: ColorTempSelectorWithoutUnitConfig | None = None
+    ) -> None:
+        """Instantiate a selector."""
+        super().__init__(
+            ColorTempSelectorConfig(**config, unit=ColorTemperatureUnit.MIRED)
+        )
+
+
+@SELECTORS.register("color_temp_kelvin")
+class ColorTempKelvinSelector(ColorTempSelector):
+    """Selector of a color temperature."""
+
+    selector_type = "color_temp_kelvin"
+
+    def __init__(
+        self, config: ColorTempSelectorWithoutUnitConfig | None = None
+    ) -> None:
+        """Instantiate a selector."""
+        super().__init__(
+            ColorTempSelectorConfig(**config, unit=ColorTemperatureUnit.KELVIN)
+        )
+
+
+class OldColorTempSelectorConfig(TypedDict, total=False):
+    """Class to represent the old color temp selector config that only supports mired."""
+
+    max_mireds: int
+    min_mireds: int
+
+
+@SELECTORS.register("color_temp")
+class OldColorTempSelector(ColorTempMiredSelector):
+    """Selector of a color temperature."""
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("max_mireds"): vol.Coerce(int),
+            vol.Optional("min_mireds"): vol.Coerce(int),
+        }
+    )
+
+    def __init__(self, config: OldColorTempSelectorConfig | None = None) -> None:
+        """Map the old settings to the new ones."""
+
+        # TODO throw a deprecation warning here?
+        new_config = ColorTempSelectorWithoutUnitConfig()
+        if "min_mireds" in config:
+            new_config["min"] = config.min_mireds
+        if "max_mireds" in config:
+            new_config["max"] = config.max_mireds
+        super().__init__(new_config)
 
 
 class ConditionSelectorConfig(TypedDict):
