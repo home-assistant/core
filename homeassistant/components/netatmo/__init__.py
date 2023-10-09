@@ -145,40 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except aiohttp.ClientResponseError as ex:
-        _LOGGER.debug("API error: %s (%s)", ex.status, ex.message)
-        if ex.status in (
-            HTTPStatus.BAD_REQUEST,
-            HTTPStatus.UNAUTHORIZED,
-            HTTPStatus.FORBIDDEN,
-        ):
-            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
-        raise ConfigEntryNotReady from ex
-
-    if entry.data["auth_implementation"] == cloud.DOMAIN:
-        required_scopes = {
-            scope
-            for scope in NETATMO_SCOPES
-            if scope not in ("access_doorbell", "read_doorbell")
-        }
-    else:
-        required_scopes = set(NETATMO_SCOPES)
-
-    if not (set(session.token["scope"]) & required_scopes):
-        _LOGGER.debug(
-            "Session is missing scopes: %s",
-            required_scopes - set(session.token["scope"]),
-        )
-        raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        AUTH: api.AsyncConfigEntryNetatmoAuth(
-            aiohttp_client.async_get_clientsession(hass), session
-        )
-    }
+    await async_handle_entry_auth(hass, entry, implementation)
 
     data_handler = NetatmoDataHandler(hass, entry)
     hass.data[DOMAIN][entry.entry_id][DATA_HANDLER] = data_handler
@@ -250,15 +217,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await unregister_webhook(None)
             async_call_later(hass, 30, register_webhook)
 
-    if cloud.async_active_subscription(hass):
-        if cloud.async_is_connected(hass):
-            await register_webhook(None)
-        cloud.async_listen_connection_change(hass, manage_cloudhook)
-
-    elif hass.state == CoreState.running:
-        await register_webhook(None)
-    else:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, register_webhook)
+    await manage_register_webhook_subscription(hass, register_webhook, manage_cloudhook)
 
     hass.services.async_register(DOMAIN, "register_webhook", register_webhook)
     hass.services.async_register(DOMAIN, "unregister_webhook", unregister_webhook)
@@ -266,6 +225,54 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.add_update_listener(async_config_entry_updated)
 
     return True
+
+
+async def manage_register_webhook_subscription(hass, register_webhook, manage_cloudhook):
+    if cloud.async_active_subscription(hass):
+        if cloud.async_is_connected(hass):
+            await register_webhook(None)
+        cloud.async_listen_connection_change(hass, manage_cloudhook)
+    elif hass.state == CoreState.running:
+        await register_webhook(None)
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, register_webhook)
+
+
+async def async_handle_entry_auth(hass, entry, implementation):
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    try:
+        await session.async_ensure_token_valid()
+    except aiohttp.ClientResponseError as ex:
+        _LOGGER.debug("API error: %s (%s)", ex.status, ex.message)
+        if ex.status in (
+            HTTPStatus.BAD_REQUEST,
+            HTTPStatus.UNAUTHORIZED,
+            HTTPStatus.FORBIDDEN,
+        ):
+            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
+        raise ConfigEntryNotReady from ex
+
+    if entry.data["auth_implementation"] == cloud.DOMAIN:
+        required_scopes = {
+            scope
+            for scope in NETATMO_SCOPES
+            if scope not in ("access_doorbell", "read_doorbell")
+        }
+    else:
+        required_scopes = set(NETATMO_SCOPES)
+
+    if not (set(session.token["scope"]) & required_scopes):
+        _LOGGER.debug(
+            "Session is missing scopes: %s",
+            required_scopes - set(session.token["scope"]),
+        )
+        raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        AUTH: api.AsyncConfigEntryNetatmoAuth(
+            aiohttp_client.async_get_clientsession(hass), session
+        )
+    }
 
 
 async def async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
