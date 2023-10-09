@@ -21,6 +21,24 @@ class DictRegistry(dict[int | str, _TypeT]):
         return decorator
 
 
+class DictofDictRegistry(dict[int | str, dict[int | str, _TypeT]]):
+    """Dict Registry of multiple items."""
+
+    def register(
+        self, name: int | str, quirk_name: str = None
+    ) -> Callable[[_TypeT], _TypeT]:
+        """Return decorator to register item with a specific and a quirk name."""
+
+        def decorator(cluster_handler: _TypeT) -> _TypeT:
+            """Register decorated cluster handler or item."""
+            if name not in self:
+                self[name] = {}
+            self[name][quirk_name] = cluster_handler
+            return cluster_handler
+
+        return decorator
+
+
 class SetRegistry(set[int | str]):
     """Set Registry of items."""
 
