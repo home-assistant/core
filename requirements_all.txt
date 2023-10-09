@@ -1305,9 +1305,6 @@ mutagen==1.47.0
 # homeassistant.components.mutesync
 mutesync==0.0.1
 
-# homeassistant.components.mycroft
-mycroftapi==2.0
-
 # homeassistant.components.myuplink
 myuplink==0.0.6
 

@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     }
 
     # Update device registry
-    await update_all_devices(hass, config_entry, mu_coordinator)
+    await create_devices(hass, config_entry, mu_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -68,7 +68,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def update_all_devices(
+async def create_devices(
     hass: HomeAssistant, config_entry: ConfigEntry, coordinator: MyUplinkDataCoordinator
 ):
     """Update all devices."""
