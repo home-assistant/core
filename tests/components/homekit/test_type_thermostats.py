@@ -1821,16 +1821,17 @@ async def test_thermostat_with_no_modes_when_we_first_see(
 ) -> None:
     """Test if a thermostat that is not ready when we first see it."""
     entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+        ATTR_HVAC_MODES: [],
+    }
 
     # support_auto = True
     hass.states.async_set(
         entity_id,
         HVACMode.OFF,
-        {
-            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
-            ATTR_HVAC_MODES: [],
-        },
+        base_attrs,
     )
     await hass.async_block_till_done()
     acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
@@ -1851,24 +1852,22 @@ async def test_thermostat_with_no_modes_when_we_first_see(
 
     assert acc.char_target_heat_cool.value == 0
 
-    hass.states.async_set(
-        entity_id,
-        HVACMode.HEAT_COOL,
-        {
-            ATTR_TARGET_TEMP_HIGH: 22.0,
-            ATTR_TARGET_TEMP_LOW: 20.0,
-            ATTR_CURRENT_TEMPERATURE: 18.0,
-            ATTR_HVAC_ACTION: HVACAction.HEATING,
-            ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.OFF, HVACMode.AUTO],
-        },
-    )
-    await hass.async_block_till_done()
-    assert acc.char_heating_thresh_temp.value == 20.0
-    assert acc.char_cooling_thresh_temp.value == 22.0
-    assert acc.char_current_heat_cool.value == 1
-    assert acc.char_target_heat_cool.value == 3
-    assert acc.char_current_temp.value == 18.0
-    assert acc.char_display_units.value == 0
+    # Verify reload on modes changed out from under us
+    with patch.object(acc, "async_reload") as mock_reload:
+        hass.states.async_set(
+            entity_id,
+            HVACMode.HEAT_COOL,
+            {
+                **base_attrs,
+                ATTR_TARGET_TEMP_HIGH: 22.0,
+                ATTR_TARGET_TEMP_LOW: 20.0,
+                ATTR_CURRENT_TEMPERATURE: 18.0,
+                ATTR_HVAC_ACTION: HVACAction.HEATING,
+                ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.OFF, HVACMode.AUTO],
+            },
+        )
+        await hass.async_block_till_done()
+        assert mock_reload.called
 
 
 async def test_thermostat_with_no_off_after_recheck(
@@ -1877,15 +1876,16 @@ async def test_thermostat_with_no_off_after_recheck(
     """Test if a thermostat that is not ready when we first see it that actually does not have off."""
     entity_id = "climate.test"
 
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+        ATTR_HVAC_MODES: [],
+    }
     # support_auto = True
     hass.states.async_set(
         entity_id,
         HVACMode.COOL,
-        {
-            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
-            ATTR_HVAC_MODES: [],
-        },
+        base_attrs,
     )
     await hass.async_block_till_done()
     acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
@@ -1906,24 +1906,22 @@ async def test_thermostat_with_no_off_after_recheck(
 
     assert acc.char_target_heat_cool.value == 2
 
-    hass.states.async_set(
-        entity_id,
-        HVACMode.HEAT_COOL,
-        {
-            ATTR_TARGET_TEMP_HIGH: 22.0,
-            ATTR_TARGET_TEMP_LOW: 20.0,
-            ATTR_CURRENT_TEMPERATURE: 18.0,
-            ATTR_HVAC_ACTION: HVACAction.HEATING,
-            ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.AUTO],
-        },
-    )
-    await hass.async_block_till_done()
-    assert acc.char_heating_thresh_temp.value == 20.0
-    assert acc.char_cooling_thresh_temp.value == 22.0
-    assert acc.char_current_heat_cool.value == 1
-    assert acc.char_target_heat_cool.value == 3
-    assert acc.char_current_temp.value == 18.0
-    assert acc.char_display_units.value == 0
+    # Verify reload when modes change out from under us
+    with patch.object(acc, "async_reload") as mock_reload:
+        hass.states.async_set(
+            entity_id,
+            HVACMode.HEAT_COOL,
+            {
+                **base_attrs,
+                ATTR_TARGET_TEMP_HIGH: 22.0,
+                ATTR_TARGET_TEMP_LOW: 20.0,
+                ATTR_CURRENT_TEMPERATURE: 18.0,
+                ATTR_HVAC_ACTION: HVACAction.HEATING,
+                ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.AUTO],
+            },
+        )
+        await hass.async_block_till_done()
+        assert mock_reload.called
 
 
 async def test_thermostat_with_temp_clamps(
@@ -1931,17 +1929,17 @@ async def test_thermostat_with_temp_clamps(
 ) -> None:
     """Test that tempatures are clamped to valid values to prevent homekit crash."""
     entity_id = "climate.test"
-
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.AUTO],
+        ATTR_MAX_TEMP: 50,
+        ATTR_MIN_TEMP: 100,
+    }
     hass.states.async_set(
         entity_id,
         HVACMode.COOL,
-        {
-            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
-            ATTR_HVAC_MODES: [],
-            ATTR_MAX_TEMP: 50,
-            ATTR_MIN_TEMP: 100,
-        },
+        base_attrs,
     )
     await hass.async_block_till_done()
     acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
@@ -1960,17 +1958,17 @@ async def test_thermostat_with_temp_clamps(
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_VALUE] == 100
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_STEP] == 0.1
 
-    assert acc.char_target_heat_cool.value == 2
+    assert acc.char_target_heat_cool.value == 3
 
     hass.states.async_set(
         entity_id,
         HVACMode.HEAT_COOL,
         {
+            **base_attrs,
             ATTR_TARGET_TEMP_HIGH: 822.0,
             ATTR_TARGET_TEMP_LOW: 20.0,
             ATTR_CURRENT_TEMPERATURE: 9918.0,
             ATTR_HVAC_ACTION: HVACAction.HEATING,
-            ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.AUTO],
         },
     )
     await hass.async_block_till_done()
