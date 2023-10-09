@@ -7,6 +7,13 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Monzo integration needs to re-authenticate your account"
+      },
+      "await_approval_confirmation": {
+        "title": "Confirm in Monzo app",
+        "description": "Before proceeding, open your Monzo app and approve the request from Home Assistant.",
+        "data": {
+          "confirm": "I've approved"
+        }
       }
     },
     "abort": {
