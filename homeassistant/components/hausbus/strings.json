@@ -1,0 +1,26 @@
+{
+  "config": {
+    "flow_title": "{host}",
+    "step": {
+      "user": {
+        "description": "Create a Haus-Bus integration and perform auto-discovery of Haus-Bus devices."
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "light": {
+      "dimmer": {
+        "name": "Dimmer"
+      },
+      "led": {
+        "name": "LED"
+      },
+      "rgbdimmer": {
+        "name": "RGB Dimmer"
+      }
+    }
+  }
+}
