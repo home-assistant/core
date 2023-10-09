@@ -36,5 +36,111 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "services": {
+    "capture_data": {
+      "name": "Capture data",
+      "description": "Send arbitrary tabular data to Viam for analytics and model training.",
+      "fields": {
+        "values": {
+          "name": "Values",
+          "description": "List of tabular data to send to Viam."
+        },
+        "component_name": {
+          "name": "Component Name",
+          "description": "The name of the configured robot component to associate with the data."
+        },
+        "component_type": {
+          "name": "Component Type",
+          "description": "The type of the associated component."
+        }
+      }
+    },
+    "capture_image": {
+      "name": "Capture image",
+      "description": "Send images to Viam for analytics and model training.",
+      "fields": {
+        "filepath": {
+          "name": "Filepath",
+          "description": "Local file path to the image you wish to upload."
+        },
+        "camera": {
+          "name": "Camera Entity",
+          "description": "The camera entity from which an image is captured."
+        },
+        "file_name": {
+          "name": "File Name",
+          "description": "The name of the file that will be displayed in the metadata within Viam."
+        },
+        "component_name": {
+          "name": "Component Name",
+          "description": "The name of the configured robot component to associate with the data."
+        }
+      }
+    },
+    "get_classifications": {
+      "name": "Classify Images",
+      "description": "Get a list of classifications from an image.",
+      "fields": {
+        "classifier_name": {
+          "name": "Classifier Name",
+          "description": "Name of classifier vision service configured in Viam"
+        },
+        "confidence": {
+          "name": "Confidence",
+          "description": "Threshold for filtering results returned by the service"
+        },
+        "count": {
+          "name": "Classification count",
+          "description": "Number of classifications to return from the service"
+        },
+        "robot_address": {
+          "name": "Robot Address",
+          "description": "If authenticated using an Org API key, provide the robot address associated with the configured vision service."
+        },
+        "robot_secret": {
+          "name": "Robot Secret",
+          "description": "If authenticated using an Org API key, provide the robot location secret associated with the configured vision service."
+        },
+        "filepath": {
+          "name": "Filepath",
+          "description": "Local file path to the image you wish to upload."
+        },
+        "camera": {
+          "name": "Camera Entity",
+          "description": "The camera entity from which an image is captured."
+        }
+      }
+    },
+    "get_detections": {
+      "name": "Detect Objects in Images",
+      "description": "Get a list of detected objects from an image.",
+      "fields": {
+        "detector_name": {
+          "name": "Detector Name",
+          "description": "Name of detector vision service configured in Viam"
+        },
+        "confidence": {
+          "name": "Confidence",
+          "description": "Threshold for filtering results returned by the service"
+        },
+        "robot_address": {
+          "name": "Robot Address",
+          "description": "If authenticated using an Org API key, provide the robot address associated with the configured vision service."
+        },
+        "robot_secret": {
+          "name": "Robot Secret",
+          "description": "If authenticated using an Org API key, provide the robot location secret associated with the configured vision service."
+        },
+        "filepath": {
+          "name": "Filepath",
+          "description": "Local file path to the image you wish to upload."
+        },
+        "camera": {
+          "name": "Camera Entity",
+          "description": "The camera entity from which an image is captured."
+        }
+      }
+    }
   }
 }
