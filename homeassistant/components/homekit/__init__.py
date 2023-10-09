@@ -620,6 +620,8 @@ class HomeKit:
         self._async_shutdown_accessory(acc)
         if new_acc := self._async_create_single_accessory([state]):
             self.driver.accessory = new_acc
+            # Run must be awaited here since it may change
+            # the accessories hash
             await new_acc.run()
             self.async_update_accessories_hash()
 
@@ -680,6 +682,8 @@ class HomeKit:
                 )
                 continue
             if acc := self.add_bridge_accessory(state):
+                # Run must be awaited here since it may change
+                # the accessories hash
                 await acc.run()
 
     @callback
