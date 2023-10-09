@@ -13,12 +13,20 @@ from homeassistant.components.button import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import AvmWrapper
-from .const import DOMAIN
+from .common import (
+    AvmWrapper,
+    FritzData,
+    FritzDevice,
+    FritzDeviceBase,
+    device_filter_out_from_trackers,
+)
+from .const import BUTTON_TYPE_WOL, DATA_FRITZ, DOMAIN, MeshRoles
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,6 +74,21 @@ BUTTONS: Final = [
 ]
 
 
+async def async_all_entities_list(
+    avm_wrapper: AvmWrapper,
+    device_friendly_name: str,
+    data_fritz: FritzData,
+) -> list[Entity]:
+    """Get a list of all entities."""
+    if avm_wrapper.mesh_role == MeshRoles.SLAVE:
+        return []
+
+    return [
+        *[FritzButton(avm_wrapper, device_friendly_name, button) for button in BUTTONS],
+        *await _async_wol_buttons_list(avm_wrapper, data_fritz),
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -74,9 +97,25 @@ async def async_setup_entry(
     """Set buttons for device."""
     _LOGGER.debug("Setting up buttons")
     avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    data_fritz: FritzData = hass.data[DATA_FRITZ]
 
-    async_add_entities(
-        [FritzButton(avm_wrapper, entry.title, button) for button in BUTTONS]
+    entities_list = await async_all_entities_list(
+        avm_wrapper,
+        entry.title,
+        data_fritz,
+    )
+
+    async_add_entities(entities_list)
+
+    @callback
+    async def async_update_avm_device() -> None:
+        """Update the values of the AVM device."""
+        async_add_entities(await _async_wol_buttons_list(avm_wrapper, data_fritz))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, avm_wrapper.signal_device_new, async_update_avm_device
+        )
     )
 
 
@@ -106,3 +145,67 @@ class FritzButton(ButtonEntity):
     async def async_press(self) -> None:
         """Triggers Fritz!Box service."""
         await self.entity_description.press_action(self.avm_wrapper)
+
+
+async def _async_wol_buttons_list(
+    avm_wrapper: AvmWrapper,
+    data_fritz: FritzData,
+) -> list[FritzBoxWOLButton]:
+    """Add new WOL button entities from the AVM device."""
+    _LOGGER.debug("Setting up %s buttons", BUTTON_TYPE_WOL)
+
+    new_wols: list[FritzBoxWOLButton] = []
+
+    if "X_AVM-DE_HostFilter1" not in avm_wrapper.connection.services:
+        return new_wols
+
+    if avm_wrapper.unique_id not in data_fritz.wol_buttons:
+        data_fritz.wol_buttons[avm_wrapper.unique_id] = set()
+
+    for mac, device in avm_wrapper.devices.items():
+        if device_filter_out_from_trackers(
+            mac, device, data_fritz.wol_buttons.values()
+        ):
+            _LOGGER.debug("Skipping wol button creation for device %s", device.hostname)
+            continue
+
+        new_wols.append(FritzBoxWOLButton(avm_wrapper, device))
+        data_fritz.wol_buttons[avm_wrapper.unique_id].add(mac)
+
+    _LOGGER.debug("Creating %s wol buttons", len(new_wols))
+    return new_wols
+
+
+class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
+    """Defines a FRITZ!Box Tools Wake On LAN button."""
+
+    _attr_icon = "mdi:lan-pending"
+
+    def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
+        """Initialize Fritz!Box WOL button."""
+        super().__init__(avm_wrapper, device)
+        self._name = f"{device.hostname} Wake on LAN"
+        self._attr_unique_id = f"{self._mac}_wake_on_lan"
+        self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            default_manufacturer="AVM",
+            default_model="FRITZ!Box Tracked device",
+            default_name=device.hostname,
+            via_device=(
+                DOMAIN,
+                avm_wrapper.unique_id,
+            ),
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return availability of the button."""
+        if self._avm_wrapper.devices[self._mac].wan_access is None:
+            return False
+        return super().available
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        if self.mac_address:
+            await self._avm_wrapper.async_wake_on_lan(self.mac_address)
