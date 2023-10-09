@@ -1,7 +1,6 @@
 """Template platform that aggregates meteorological data."""
 from __future__ import annotations
 
-from functools import partial
 from typing import Any, Literal
 
 import voluptuous as vol
@@ -305,99 +304,155 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     def _async_setup_templates(self) -> None:
         """Set up templates."""
 
-        if self._condition_template:
-            self.add_template_attribute(
+        # """List of tuples containing the information necessairy to setup each template."""
+        templates_to_set = [
+            (
                 "_condition",
                 self._condition_template,
-                lambda condition: condition if condition in CONDITION_CLASSES else None,
-            )
-        if self._temperature_template:
-            self.add_template_attribute(
-                "_temperature",
-                self._temperature_template,
-            )
-        if self._humidity_template:
-            self.add_template_attribute(
-                "_humidity",
-                self._humidity_template,
-            )
-        if self._attribution_template:
-            self.add_template_attribute(
-                "_attribution",
-                self._attribution_template,
-            )
-        if self._pressure_template:
-            self.add_template_attribute(
-                "_pressure",
-                self._pressure_template,
-            )
-        if self._wind_speed_template:
-            self.add_template_attribute(
-                "_wind_speed",
-                self._wind_speed_template,
-            )
-        if self._wind_bearing_template:
-            self.add_template_attribute(
-                "_wind_bearing",
-                self._wind_bearing_template,
-            )
-        if self._ozone_template:
-            self.add_template_attribute(
-                "_ozone",
-                self._ozone_template,
-            )
-        if self._visibility_template:
-            self.add_template_attribute(
-                "_visibility",
-                self._visibility_template,
-            )
-        if self._wind_gust_speed_template:
-            self.add_template_attribute(
-                "_wind_gust_speed",
-                self._wind_gust_speed_template,
-            )
-        if self._cloud_coverage_template:
-            self.add_template_attribute(
-                "_cloud_coverage",
-                self._cloud_coverage_template,
-            )
-        if self._dew_point_template:
-            self.add_template_attribute(
-                "_dew_point",
-                self._dew_point_template,
-            )
-        if self._apparent_temperature_template:
-            self.add_template_attribute(
-                "_apparent_temperature",
-                self._apparent_temperature_template,
-            )
-        if self._forecast_template:
-            self.add_template_attribute(
-                "_forecast",
-                self._forecast_template,
-            )
-
-        if self._forecast_daily_template:
-            self.add_template_attribute(
+                {
+                    "validator": lambda condition: condition
+                    if condition in CONDITION_CLASSES
+                    else None
+                },
+            ),
+            ("_temperature", self._temperature_template, None),
+            ("_humidity", self._humidity_template, None),
+            ("_attribution", self._attribution_template, None),
+            ("_pressure", self._pressure_template, None),
+            ("_wind_speed", self._wind_speed_template, None),
+            ("_wind_bearing", self._wind_bearing_template, None),
+            ("_ozone", self._ozone_template, None),
+            ("_visibility", self._visibility_template, None),
+            ("_wind_gust_speed", self._wind_gust_speed_template, None),
+            ("_cloud_coverage", self._cloud_coverage_template, None),
+            ("_dew_point", self._dew_point_template, None),
+            ("_apparent_temperature", self._apparent_temperature_template, None),
+            ("_forecast", self._forecast_template, None),
+            (
                 "_forecast_daily",
                 self._forecast_daily_template,
-                on_update=partial(self._update_forecast, "daily"),
-                validator=partial(self._validate_forecast, "daily"),
-            )
-        if self._forecast_hourly_template:
-            self.add_template_attribute(
+                {
+                    "validator": "daily",
+                    "on_update": "daily",
+                },
+            ),
+            (
                 "_forecast_hourly",
                 self._forecast_hourly_template,
-                on_update=partial(self._update_forecast, "hourly"),
-                validator=partial(self._validate_forecast, "hourly"),
-            )
-        if self._forecast_twice_daily_template:
-            self.add_template_attribute(
+                {
+                    "validator": "hourly",
+                    "on_update": "hourly",
+                },
+            ),
+            (
                 "_forecast_twice_daily",
                 self._forecast_twice_daily_template,
-                on_update=partial(self._update_forecast, "twice_daily"),
-                validator=partial(self._validate_forecast, "twice_daily"),
-            )
+                {
+                    "validator": "twice_daily",
+                    "on_update": "twice_daily",
+                },
+            ),
+        ]
+
+        for attribute, template, optional_params in templates_to_set:
+            params = [attribute, template]
+            if optional_params:
+                params.append(optional_params)
+            self.add_template_attribute(*params)
+
+        # if self._condition_template:
+        #     self.add_template_attribute(
+        #         "_condition",
+        #         self._condition_template,
+        #         lambda condition: condition if condition in CONDITION_CLASSES else None,
+        #     )
+        # if self._temperature_template:
+        #     self.add_template_attribute(
+        #         "_temperature",
+        #         self._temperature_template,
+        #     )
+        # if self._humidity_template:
+        #     self.add_template_attribute(
+        #         "_humidity",
+        #         self._humidity_template,
+        #     )
+        # if self._attribution_template:
+        #     self.add_template_attribute(
+        #         "_attribution",
+        #         self._attribution_template,
+        #     )
+        # if self._pressure_template:
+        #     self.add_template_attribute(
+        #         "_pressure",
+        #         self._pressure_template,
+        #     )
+        # if self._wind_speed_template:
+        #     self.add_template_attribute(
+        #         "_wind_speed",
+        #         self._wind_speed_template,
+        #     )
+        # if self._wind_bearing_template:
+        #     self.add_template_attribute(
+        #         "_wind_bearing",
+        #         self._wind_bearing_template,
+        #     )
+        # if self._ozone_template:
+        #     self.add_template_attribute(
+        #         "_ozone",
+        #         self._ozone_template,
+        #     )
+        # if self._visibility_template:
+        #     self.add_template_attribute(
+        #         "_visibility",
+        #         self._visibility_template,
+        #     )
+        # if self._wind_gust_speed_template:
+        #     self.add_template_attribute(
+        #         "_wind_gust_speed",
+        #         self._wind_gust_speed_template,
+        #     )
+        # if self._cloud_coverage_template:
+        #     self.add_template_attribute(
+        #         "_cloud_coverage",
+        #         self._cloud_coverage_template,
+        #     )
+        # if self._dew_point_template:
+        #     self.add_template_attribute(
+        #         "_dew_point",
+        #         self._dew_point_template,
+        #     )
+        # if self._apparent_temperature_template:
+        #     self.add_template_attribute(
+        #         "_apparent_temperature",
+        #         self._apparent_temperature_template,
+        #     )
+        # if self._forecast_template:
+        #     self.add_template_attribute(
+        #         "_forecast",
+        #         self._forecast_template,
+        #     )
+
+        # if self._forecast_daily_template:
+        #     self.add_template_attribute(
+        #         "_forecast_daily",
+        #         self._forecast_daily_template,
+        #         on_update=partial(self._update_forecast, "daily"),
+        #         validator=partial(self._validate_forecast, "daily"),
+        #     )
+        # if self._forecast_hourly_template:
+        #     self.add_template_attribute(
+        #         "_forecast_hourly",
+        #         self._forecast_hourly_template,
+        #         on_update=partial(self._update_forecast, "hourly"),
+        #         validator=partial(self._validate_forecast, "hourly"),
+        #     )
+        # if self._forecast_twice_daily_template:
+        #     self.add_template_attribute(
+        #         "_forecast_twice_daily",
+        #         self._forecast_twice_daily_template,
+        #         on_update=partial(self._update_forecast, "twice_daily"),
+        #         validator=partial(self._validate_forecast, "twice_daily"),
+        #     )
 
         super()._async_setup_templates()
 
