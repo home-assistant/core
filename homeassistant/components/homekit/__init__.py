@@ -831,7 +831,7 @@ class HomeKit:
         self._cancel_reload_dispatcher = async_dispatcher_connect(
             self.hass,
             f"homekit_reload_entities_{self._entry_id}",
-            self.async_reset_accessories,
+            self.async_reload_accessories,
         )
         async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
         uuid = await instance_id.async_get(self.hass)
