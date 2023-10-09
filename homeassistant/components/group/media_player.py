@@ -53,6 +53,8 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
+from .util import no_op
+
 KEY_ANNOUNCE = "announce"
 KEY_CLEAR_PLAYLIST = "clear_playlist"
 KEY_ENQUEUE = "enqueue"
@@ -84,10 +86,7 @@ async def async_setup_platform(
     """Set up the MediaPlayer Group platform."""
 
     # No-Op for the unused variables
-    if hass:
-        pass
-    if discovery_info:
-        pass
+    no_op(hass, discovery_info)
 
     async_add_entities(
         [

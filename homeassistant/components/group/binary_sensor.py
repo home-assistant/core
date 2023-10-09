@@ -29,6 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
+from .util import no_op
 
 DEFAULT_NAME = "Binary Sensor Group"
 
@@ -55,10 +56,7 @@ async def async_setup_platform(
     """Set up the Binary Sensor Group platform."""
 
     # No-Op for the unused variables
-    if hass:
-        pass
-    if discovery_info:
-        pass
+    no_op(hass, discovery_info)
 
     async_add_entities(
         [

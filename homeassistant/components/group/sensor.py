@@ -40,6 +40,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateTyp
 
 from . import GroupEntity
 from .const import CONF_IGNORE_NON_NUMERIC
+from .util import no_op
 
 DEFAULT_NAME = "Sensor Group"
 
@@ -96,10 +97,7 @@ async def async_setup_platform(
     """Set up the Switch Group platform."""
 
     # No-Op for the unused variables
-    if hass:
-        pass
-    if discovery_info:
-        pass
+    no_op(hass, discovery_info)
 
     async_add_entities(
         [

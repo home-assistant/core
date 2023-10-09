@@ -43,7 +43,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
-from .util import reduce_attribute
+from .util import no_op, reduce_attribute
 
 KEY_OPEN_CLOSE = "open_close"
 KEY_STOP = "stop"
@@ -72,10 +72,7 @@ async def async_setup_platform(
     """Set up the Cover Group platform."""
 
     # No-Op for the unused variables
-    if hass:
-        pass
-    if discovery_info:
-        pass
+    no_op(hass, discovery_info)
 
     async_add_entities(
         [
