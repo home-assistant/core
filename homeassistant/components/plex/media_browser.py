@@ -33,7 +33,9 @@ ITEM_TYPE_MEDIA_CLASS = {
 
 
 # ######################3#3333###3#33##33#33#################################################################
-def item_payload(item, plex_server, server_id, is_internal, short_name=False, extra_params=None):
+def item_payload(
+    item, plex_server, server_id, is_internal, short_name=False, extra_params=None
+):
     """Create response payload for a single media item."""
     try:
         media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
@@ -60,7 +62,7 @@ def item_payload(item, plex_server, server_id, is_internal, short_name=False, ex
             )
         payload["thumbnail"] = thumbnail
 
-    return BrowseMedia(**payload) # TODO
+    return BrowseMedia(**payload)  # TODO
 
 
 def server_payload(platform, plex_server, server_id, is_internal):
@@ -77,16 +79,16 @@ def server_payload(platform, plex_server, server_id, is_internal):
         thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
     )
     if platform != "sonos":
-        server_info.children.append(
-            special_library_payload(server_info, "Recommended")
-        )
+        server_info.children.append(special_library_payload(server_info, "Recommended"))
     for library in plex_server.library.sections():
         if library.type == "photo":
             continue
         if library.type != "artist" and platform == "sonos":
             continue
         server_info.children.append(library_section_payload(library))
-    server_info.children.append(playlists_payload(platform, plex_server, server_id, is_internal))
+    server_info.children.append(
+        playlists_payload(platform, plex_server, server_id, is_internal)
+    )
     return server_info
 
 
@@ -96,7 +98,9 @@ def library_contents(library, plex_server, server_id, is_internal):
     library_info.children = [special_library_payload(library_info, "Recommended")]
     for item in library.all():
         try:
-            library_info.children.append(item_payload(item, plex_server, server_id, is_internal))
+            library_info.children.append(
+                item_payload(item, plex_server, server_id, is_internal)
+            )
         except UnknownMediaType:
             continue
     return library_info
@@ -117,12 +121,15 @@ def playlists_payload(platform, plex_server, server_id, is_internal):
         if playlist.playlistType != "audio" and platform == "sonos":
             continue
         try:
-            playlists_info["children"].append(item_payload(playlist, plex_server, server_id, is_internal))
+            playlists_info["children"].append(
+                item_payload(playlist, plex_server, server_id, is_internal)
+            )
         except UnknownMediaType:
             continue
     response = BrowseMedia(**playlists_info)
     response.children_media_class = MediaClass.PLAYLIST
     return response
+
 
 def build_item_response(payload, plex_server, server_id, is_internal, platform):
     """Create response payload for the provided media query."""
@@ -142,7 +149,11 @@ def build_item_response(payload, plex_server, server_id, is_internal, platform):
                 media_info.children.append(station_payload(station))
         for item in media:
             try:
-                media_info.children.append(item_payload(item, plex_server, server_id, is_internal, short_name=True))
+                media_info.children.append(
+                    item_payload(
+                        item, plex_server, server_id, is_internal, short_name=True
+                    )
+                )
             except UnknownMediaType:
                 continue
     return media_info
@@ -212,7 +223,13 @@ def browse_media(  # noqa: C901
                 if hub_context in ("continue", "inprogress", "ondeck"):
                     extra_params = {"resume": 1}
                 payload["children"].append(
-                    item_payload(item, plex_server, server_id, is_internal, extra_params=extra_params)
+                    item_payload(
+                        item,
+                        plex_server,
+                        server_id,
+                        is_internal,
+                        extra_params=extra_params,
+                    )
                 )
         return BrowseMedia(**payload)
 
@@ -277,10 +294,14 @@ def browse_media(  # noqa: C901
         "media_type": DOMAIN,
         "plex_key": int(media_content_id),
     }
-    response = build_item_response(payload, platform)
+    response = build_item_response(
+        payload, plex_server, server_id, is_internal, platform
+    )
     if response is None:
         raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
     return response
+
+
 # ######################3#3333###3#33##33#33#################################################################
 
 
