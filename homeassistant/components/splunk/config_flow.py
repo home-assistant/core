@@ -86,9 +86,7 @@ class SplunkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle a flow initiated by configuration file."""
         return await self.async_step_user(user_input)
 

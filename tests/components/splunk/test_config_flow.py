@@ -3,8 +3,8 @@ from http import HTTPStatus
 
 from aiohttp import ClientConnectionError
 
-from homeassistant import config_entries
 from homeassistant.components.splunk import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -12,6 +12,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import CONFIG, RETURN_BADAUTH, RETURN_SUCCESS, URL, setup_platform
 
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+CONF_FILTER = "filter"
 
 
 async def test_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
@@ -23,7 +25,7 @@ async def test_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
     )
 
     result1 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result1["type"] == FlowResultType.FORM
     assert result1["errors"] == {}
@@ -51,7 +53,7 @@ async def test_form_invalid_auth(
     )
 
     result1 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -73,7 +75,7 @@ async def test_form_network_issue(
     )
 
     result1 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -100,7 +102,7 @@ async def test_reauth_success(
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": config_entries.SOURCE_REAUTH,
+            "source": SOURCE_REAUTH,
             "entry_id": entry.entry_id,
             "unique_id": entry.unique_id,
         },
@@ -136,7 +138,7 @@ async def test_reauth_failure(
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": config_entries.SOURCE_REAUTH,
+            "source": SOURCE_REAUTH,
             "entry_id": entry.entry_id,
             "unique_id": entry.unique_id,
         },
@@ -154,3 +156,21 @@ async def test_reauth_failure(
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_import_flow(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test importing yaml config."""
+
+    aioclient_mock.post(
+        URL,
+        text=RETURN_SUCCESS,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={**CONFIG, CONF_FILTER: "something"},
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == CONFIG
