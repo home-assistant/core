@@ -7,7 +7,11 @@ import pytest
 
 from homeassistant.components import homeassistant_sky_connect, usb
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
-from homeassistant.components.zha.core.const import DOMAIN as ZHA_DOMAIN, RadioType
+from homeassistant.components.zha import (
+    CONF_DEVICE_PATH,
+    DOMAIN as ZHA_DOMAIN,
+    RadioType,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -242,7 +246,7 @@ def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
     async def detect(self):
         self.radio_type = radio_type
         self.device_settings = radio_type.controller.SCHEMA_DEVICE(
-            {"path": self.device_path}
+            {CONF_DEVICE_PATH: self.device_path}
         )
 
         return ret
