@@ -532,7 +532,7 @@ async def test_homekit_remove_accessory(
     acc_mock.stop = AsyncMock()
     homekit.bridge.accessories = {6: acc_mock}
 
-    acc = await homekit.async_remove_bridge_accessory(6)
+    acc = homekit.async_remove_bridge_accessory(6)
     assert acc is acc_mock
     assert len(homekit.bridge.accessories) == 0
 
