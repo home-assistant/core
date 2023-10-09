@@ -566,6 +566,18 @@ class AqaraBuzzerManualMute(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
+    models={"TS011F"},
+)
+class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+    """Representation of a child lock configuration entity."""
+
+    _zcl_attribute: str = "child_lock"
+    _attr_name = "Child lock"
+    _attr_icon: str = "mdi:account-lock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
 )
 class AqaraBuzzerManualAlarm(
@@ -576,18 +588,6 @@ class AqaraBuzzerManualAlarm(
     _zcl_attribute: str = "buzzer_manual_alarm"
     _attr_name = "Buzzer manual alarm"
     _attr_icon: str = "mdi:bullhorn"
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
-    models={"TS011F"},
-)
-class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
-    """Representation of a child lock configuration entity."""
-
-    _zcl_attribute: str = "child_lock"
-    _attr_name = "Child lock"
-    _attr_icon: str = "mdi:account-lock"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
