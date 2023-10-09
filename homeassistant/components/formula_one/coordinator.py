@@ -5,7 +5,6 @@ from datetime import UTC, datetime
 from json import JSONDecodeError
 import logging
 
-import async_timeout
 import ergast_py as ergast
 from requests import exceptions as RequestsExceptions
 
@@ -43,7 +42,7 @@ class F1UpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
-        async with async_timeout.timeout(60):
+        async with asyncio.timeout(60):
             await self.update()
 
     async def update(self):
