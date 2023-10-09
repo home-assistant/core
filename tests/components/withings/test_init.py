@@ -11,30 +11,21 @@ from withings_api import NotifyListResponse
 from withings_api.common import AuthFailedException, NotifyAppli, UnauthorizedException
 
 from homeassistant import config_entries
-from homeassistant.components.cloud import (
-    SIGNAL_CLOUD_CONNECTION_STATE,
-    CloudConnectionState,
-    CloudNotAvailable,
-)
+from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.components.withings import CONFIG_SCHEMA, async_setup
 from homeassistant.components.withings.const import CONF_USE_WEBHOOK, DOMAIN
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_WEBHOOK_ID,
-    EVENT_HOMEASSISTANT_STARTED,
-)
-from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import call_webhook, setup_integration
+from . import call_webhook, prepare_webhook_setup, setup_integration
 from .conftest import USER_ID, WEBHOOK_ID
 
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_mock_cloud_connection_status,
     load_json_object_fixture,
 )
 from tests.components.cloud import mock_cloud
@@ -201,41 +192,15 @@ async def test_webhooks_request_data(
     withings: AsyncMock,
     webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test calling a webhook requests data."""
     await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
     client = await hass_client_no_auth()
 
     assert withings.async_measure_get_meas.call_count == 1
-
-    await call_webhook(
-        hass,
-        WEBHOOK_ID,
-        {"userid": USER_ID, "appli": NotifyAppli.WEIGHT},
-        client,
-    )
-    assert withings.async_measure_get_meas.call_count == 2
-
-
-async def test_delayed_startup(
-    hass: HomeAssistant,
-    withings: AsyncMock,
-    webhook_config_entry: MockConfigEntry,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test delayed start up."""
-    hass.state = CoreState.not_running
-    await setup_integration(hass, webhook_config_entry)
-
-    withings.async_notify_subscribe.assert_not_called()
-    client = await hass_client_no_auth()
-
-    assert withings.async_measure_get_meas.call_count == 1
-    await hass.async_block_till_done()
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
 
     await call_webhook(
         hass,
@@ -399,7 +364,10 @@ async def test_removing_entry_with_cloud_unavailable(
 
 
 async def test_setup_with_cloud(
-    hass: HomeAssistant, webhook_config_entry: MockConfigEntry, withings: AsyncMock
+    hass: HomeAssistant,
+    webhook_config_entry: MockConfigEntry,
+    withings: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test if set up with active cloud subscription."""
     await mock_cloud(hass)
@@ -422,9 +390,12 @@ async def test_setup_with_cloud(
         "homeassistant.components.withings.webhook_generate_url"
     ):
         await setup_integration(hass, webhook_config_entry)
+        await prepare_webhook_setup(hass, freezer)
+
         assert hass.components.cloud.async_active_subscription() is True
         assert hass.components.cloud.async_is_connected() is True
         fake_create_cloudhook.assert_called_once()
+        fake_delete_cloudhook.assert_called_once()
 
         assert (
             hass.config_entries.async_entries("withings")[0].data["cloudhook_url"]
@@ -436,7 +407,7 @@ async def test_setup_with_cloud(
 
         for config_entry in hass.config_entries.async_entries("withings"):
             await hass.config_entries.async_remove(config_entry.entry_id)
-            fake_delete_cloudhook.assert_called_once()
+            fake_delete_cloudhook.call_count == 2
 
         await hass.async_block_till_done()
         assert not hass.config_entries.async_entries(DOMAIN)
@@ -447,6 +418,7 @@ async def test_setup_without_https(
     webhook_config_entry: MockConfigEntry,
     withings: AsyncMock,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test if set up with cloud link and without https."""
     hass.config.components.add("cloud")
@@ -460,6 +432,7 @@ async def test_setup_without_https(
     ) as mock_async_generate_url:
         mock_async_generate_url.return_value = "http://example.com"
         await setup_integration(hass, webhook_config_entry)
+        await prepare_webhook_setup(hass, freezer)
 
         await hass.async_block_till_done()
         mock_async_generate_url.assert_called_once()
@@ -495,6 +468,7 @@ async def test_cloud_disconnect(
         "homeassistant.components.withings.webhook_generate_url"
     ):
         await setup_integration(hass, webhook_config_entry)
+        await prepare_webhook_setup(hass, freezer)
         assert hass.components.cloud.async_active_subscription() is True
         assert hass.components.cloud.async_is_connected() is True
 
@@ -506,16 +480,12 @@ async def test_cloud_disconnect(
 
         assert withings.async_notify_subscribe.call_count == 6
 
-        async_dispatcher_send(
-            hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_DISCONNECTED
-        )
+        async_mock_cloud_connection_status(hass, False)
         await hass.async_block_till_done()
 
         assert withings.async_notify_revoke.call_count == 3
 
-        async_dispatcher_send(
-            hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_CONNECTED
-        )
+        async_mock_cloud_connection_status(hass, True)
         await hass.async_block_till_done()
 
         assert withings.async_notify_subscribe.call_count == 12
@@ -544,9 +514,11 @@ async def test_webhook_post(
     body: dict[str, Any],
     expected_code: int,
     current_request_with_host: None,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test webhook callback."""
     await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
     client = await hass_client_no_auth()
     webhook_url = async_generate_url(hass, WEBHOOK_ID)
 

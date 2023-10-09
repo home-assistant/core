@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NINADataUpdateCoordinator
 from .const import (
     ATTR_AFFECTED_AREAS,
     ATTR_DESCRIPTION,
@@ -28,6 +27,7 @@ from .const import (
     CONF_REGIONS,
     DOMAIN,
 )
+from .coordinator import NINADataUpdateCoordinator
 
 
 async def async_setup_entry(
