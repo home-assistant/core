@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from functools import reduce
-import logging
 from operator import ior
 from typing import Any
 
@@ -40,7 +39,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
-from .util import attribute_equal, most_frequent_attribute, reduce_attribute
+from .util import attribute_equal, most_frequent_attribute, no_op, reduce_attribute
 
 SUPPORTED_FLAGS = {
     FanEntityFeature.SET_SPEED,
@@ -61,8 +60,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -71,6 +68,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Fan Group platform."""
+
+    # No-Op for the unused variables
+    no_op(hass, discovery_info)
+
     async_add_entities(
         [FanGroup(config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES])]
     )

@@ -82,3 +82,7 @@ def reduce_attribute(
         return attrs[0]
 
     return reduce(*attrs)
+
+
+def no_op(*args: Any, **kwargs: Any) -> None:
+    """No-Op function to handle unused parameters."""

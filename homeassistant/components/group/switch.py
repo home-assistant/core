@@ -25,6 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
+from .util import no_op
 
 DEFAULT_NAME = "Switch Group"
 CONF_ALL = "all"
@@ -51,6 +52,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Switch Group platform."""
+
+    # No-Op for the unused variables
+    no_op(hass, discovery_info)
+
     async_add_entities(
         [
             SwitchGroup(

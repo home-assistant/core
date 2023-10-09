@@ -50,7 +50,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
-from .util import find_state_attributes, mean_tuple, reduce_attribute
+from .util import find_state_attributes, mean_tuple, no_op, reduce_attribute
 
 DEFAULT_NAME = "Light Group"
 CONF_ALL = "all"
@@ -81,6 +81,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Initialize light.group platform."""
+
+    # No-Op for the unused variables
+    no_op(hass, discovery_info)
+
     async_add_entities(
         [
             LightGroup(
