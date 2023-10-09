@@ -174,7 +174,7 @@ class Thermostat(HomeAccessory):
         self.hc_homekit_to_hass = None
         self.hc_hass_to_homekit = None
         hc_min_temp, hc_max_temp = self.get_temperature_range()
-        self._need_reset_attributes.extend(
+        self._reload_on_change_attrs.extend(
             (
                 ATTR_MIN_HUMIDITY,
                 ATTR_MAX_TEMP,
@@ -713,7 +713,7 @@ class WaterHeater(HomeAccessory):
     def __init__(self, *args):
         """Initialize a WaterHeater accessory object."""
         super().__init__(*args, category=CATEGORY_THERMOSTAT)
-        self._need_reset_attributes.extend(
+        self._reload_on_change_attrs.extend(
             (
                 ATTR_MAX_TEMP,
                 ATTR_MIN_TEMP,

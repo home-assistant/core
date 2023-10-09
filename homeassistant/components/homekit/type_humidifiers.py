@@ -76,7 +76,7 @@ class HumidifierDehumidifier(HomeAccessory):
     def __init__(self, *args):
         """Initialize a HumidifierDehumidifier accessory object."""
         super().__init__(*args, category=CATEGORY_HUMIDIFIER)
-        self._need_reset_attributes.extend(
+        self._reload_on_change_attrs.extend(
             (
                 ATTR_MAX_HUMIDITY,
                 ATTR_MIN_HUMIDITY,

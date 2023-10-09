@@ -36,7 +36,13 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
 from homeassistant.components.homekit.util import get_persist_fullpath_for_entry_id
+from homeassistant.components.light import (
+    ATTR_COLOR_MODE,
+    ATTR_SUPPORTED_COLOR_MODES,
+    ColorMode,
+)
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_ZEROCONF
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -917,6 +923,82 @@ async def test_homekit_reset_accessories(
 
         assert mock_run_accessory.called
         homekit.status = STATUS_READY
+        await homekit.async_stop()
+
+
+async def test_homekit_reload_accessory_can_change_class(
+    hass: HomeAssistant, mock_async_zeroconf: None, mock_hap
+) -> None:
+    """Test reloading a HomeKit Accessory when device class changes can change the class."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "switch.outlet"
+    hass.states.async_set(entity_id, "on", {ATTR_DEVICE_CLASS: None})
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit):
+        await async_init_entry(hass, entry)
+        bridge: HomeBridge = homekit.driver.accessory
+        await bridge.run()
+        switch_accessory = next(iter(bridge.accessories.values()))
+        assert type(switch_accessory).__name__ == "Switch"
+        await hass.async_block_till_done()
+        assert homekit.status == STATUS_RUNNING
+        homekit.driver.aio_stop_event = MagicMock()
+        hass.states.async_set(
+            entity_id, "off", {ATTR_DEVICE_CLASS: SwitchDeviceClass.OUTLET}
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        outlet_accessory = next(iter(bridge.accessories.values()))
+        assert type(outlet_accessory).__name__ == "Outlet"
+
+        await homekit.async_stop()
+
+
+async def test_homekit_reload_accessory_same_class(
+    hass: HomeAssistant, mock_async_zeroconf: None, mock_hap
+) -> None:
+    """Test reloading a HomeKit Accessory when supported color modes changes.
+
+    The class of the accessory remains the same.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "light.color"
+    hass.states.async_set(
+        entity_id,
+        "on",
+        {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS], ATTR_COLOR_MODE: ColorMode.HS},
+    )
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit):
+        await async_init_entry(hass, entry)
+        bridge: HomeBridge = homekit.driver.accessory
+        await bridge.run()
+        light_accessory_color = next(iter(bridge.accessories.values()))
+        assert not hasattr(light_accessory_color, "char_color_temp")
+        await hass.async_block_till_done()
+        assert homekit.status == STATUS_RUNNING
+        homekit.driver.aio_stop_event = MagicMock()
+        hass.states.async_set(
+            entity_id,
+            "on",
+            {
+                ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS, ColorMode.COLOR_TEMP],
+                ATTR_COLOR_MODE: ColorMode.COLOR_TEMP,
+            },
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        light_accessory_color_and_temp = next(iter(bridge.accessories.values()))
+        assert hasattr(light_accessory_color_and_temp, "char_color_temp")
+
         await homekit.async_stop()
 
 

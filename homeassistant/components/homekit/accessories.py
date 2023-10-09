@@ -17,6 +17,7 @@ from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.remote import RemoteEntityFeature
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -109,7 +110,7 @@ SWITCH_TYPES = {
 }
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
-NEED_RESET_ATTRS = (
+RELOAD_ON_CHANGE_ATTRS = (
     ATTR_SUPPORTED_FEATURES,
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -233,8 +234,12 @@ def get_accessory(  # noqa: C901
             a_type = "LightSensor"
 
     elif state.domain == "switch":
-        switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
-        a_type = SWITCH_TYPES[switch_type]
+        if switch_type := config.get(CONF_TYPE):
+            a_type = SWITCH_TYPES[switch_type]
+        elif state.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.OUTLET:
+            a_type = "Outlet"
+        else:
+            a_type = "Switch"
 
     elif state.domain == "vacuum":
         a_type = "Vacuum"
@@ -296,7 +301,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             *args,  # noqa: B026
             **kwargs,
         )
-        self._need_reset_attributes = list(NEED_RESET_ATTRS)
+        self._reload_on_change_attrs = list(RELOAD_ON_CHANGE_ATTRS)
         self.config = config or {}
         if device_id:
             self.device_id: str | None = device_id
@@ -476,7 +481,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         ):
             old_attributes = old_state.attributes
             new_attributes = new_state.attributes
-            for attr in self._need_reset_attributes:
+            for attr in self._reload_on_change_attrs:
                 if old_attributes.get(attr) != new_attributes.get(attr):
                     _LOGGER.debug(
                         "%s: Reloading HomeKit accessory since %s has changed from %s -> %s",

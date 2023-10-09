@@ -60,7 +60,7 @@ class Fan(HomeAccessory):
         self.chars = []
         state = self.hass.states.get(self.entity_id)
 
-        self._need_reset_attributes.extend(
+        self._reload_on_change_attrs.extend(
             (
                 ATTR_PERCENTAGE_STEP,
                 ATTR_PRESET_MODES,
