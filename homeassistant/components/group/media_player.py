@@ -455,39 +455,32 @@ class MediaPlayerGroup(MediaPlayerEntity):
             else:
                 self._attr_state = MediaPlayerState.OFF
 
-        supported_features = MediaPlayerEntityFeature(0)
-        if self._features[KEY_CLEAR_PLAYLIST]:
-            supported_features |= MediaPlayerEntityFeature.CLEAR_PLAYLIST
-        if self._features[KEY_TRACKS]:
-            supported_features |= (
-                MediaPlayerEntityFeature.NEXT_TRACK
-                | MediaPlayerEntityFeature.PREVIOUS_TRACK
-            )
-        if self._features[KEY_PAUSE_PLAY_STOP]:
-            supported_features |= (
+        feature_mapping = {
+            KEY_CLEAR_PLAYLIST: MediaPlayerEntityFeature.CLEAR_PLAYLIST,
+            KEY_TRACKS: MediaPlayerEntityFeature.NEXT_TRACK
+            | MediaPlayerEntityFeature.PREVIOUS_TRACK,
+            KEY_PAUSE_PLAY_STOP: (
                 MediaPlayerEntityFeature.PAUSE
                 | MediaPlayerEntityFeature.PLAY
                 | MediaPlayerEntityFeature.STOP
-            )
-        if self._features[KEY_PLAY_MEDIA]:
-            supported_features |= MediaPlayerEntityFeature.PLAY_MEDIA
-        if self._features[KEY_SEEK]:
-            supported_features |= MediaPlayerEntityFeature.SEEK
-        if self._features[KEY_SHUFFLE]:
-            supported_features |= MediaPlayerEntityFeature.SHUFFLE_SET
-        if self._features[KEY_ON_OFF]:
-            supported_features |= (
-                MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
-            )
-        if self._features[KEY_VOLUME]:
-            supported_features |= (
+            ),
+            KEY_PLAY_MEDIA: MediaPlayerEntityFeature.PLAY_MEDIA,
+            KEY_SEEK: MediaPlayerEntityFeature.SEEK,
+            KEY_SHUFFLE: MediaPlayerEntityFeature.SHUFFLE_SET,
+            KEY_ON_OFF: MediaPlayerEntityFeature.TURN_ON
+            | MediaPlayerEntityFeature.TURN_OFF,
+            KEY_VOLUME: (
                 MediaPlayerEntityFeature.VOLUME_MUTE
                 | MediaPlayerEntityFeature.VOLUME_SET
                 | MediaPlayerEntityFeature.VOLUME_STEP
-            )
-        if self._features[KEY_ANNOUNCE]:
-            supported_features |= MediaPlayerEntityFeature.MEDIA_ANNOUNCE
-        if self._features[KEY_ENQUEUE]:
-            supported_features |= MediaPlayerEntityFeature.MEDIA_ENQUEUE
+            ),
+            KEY_ANNOUNCE: MediaPlayerEntityFeature.MEDIA_ANNOUNCE,
+            KEY_ENQUEUE: MediaPlayerEntityFeature.MEDIA_ENQUEUE,
+        }
+        supported_features = MediaPlayerEntityFeature(0)
+
+        for key, feature in feature_mapping.items():
+            if self._features[key]:
+                supported_features |= feature
 
         self._attr_supported_features = supported_features
