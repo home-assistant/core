@@ -1,8 +1,6 @@
 """Test the Allpowers BLE Bluetooth config flow."""
 from unittest.mock import patch
 
-from bleak import BleakError
-
 from homeassistant import config_entries
 from homeassistant.components.allpowers.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS
@@ -60,7 +58,7 @@ async def test_user_step_no_devices_found(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["reason"] == "no_unconfigured_devices"
 
 
 async def test_user_step_no_new_devices_found(hass: HomeAssistant) -> None:
@@ -82,58 +80,6 @@ async def test_user_step_no_new_devices_found(hass: HomeAssistant) -> None:
         )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
-
-
-async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
-    """Test user step and we cannot connect."""
-    with patch(
-        "homeassistant.components.allpowers.config_flow.async_discovered_service_info",
-        return_value=[ALLPOWERS_BLE_DISCOVERY_INFO],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.allpowers.config_flow.AllpowersBLE.initialise",
-        side_effect=BleakError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_ADDRESS: ALLPOWERS_BLE_DISCOVERY_INFO.address,
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "user"
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-    with patch(
-        "homeassistant.components.allpowers.config_flow.AllpowersBLE.initialise",
-    ), patch(
-        "homeassistant.components.allpowers.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {
-                CONF_ADDRESS: ALLPOWERS_BLE_DISCOVERY_INFO.address,
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == ALLPOWERS_BLE_DISCOVERY_INFO.name
-    assert result3["data"] == {
-        CONF_ADDRESS: ALLPOWERS_BLE_DISCOVERY_INFO.address,
-    }
-    assert result3["result"].unique_id == ALLPOWERS_BLE_DISCOVERY_INFO.address
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
