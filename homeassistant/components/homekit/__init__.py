@@ -576,18 +576,18 @@ class HomeKit:
         async with self._reset_lock:
             if not self.bridge:
                 # For accessory mode reset and reload are the same
-                await self.async_reload_accessories_in_accessory_mode(entity_ids)
+                await self._async_reload_accessories_in_accessory_mode(entity_ids)
                 return
-            await self.async_reset_accessories_in_bridge_mode(entity_ids)
+            await self._async_reset_accessories_in_bridge_mode(entity_ids)
 
     async def async_reload_accessories(self, entity_ids: Iterable[str]) -> None:
         """Reload the accessory to load the latest configuration."""
         _LOGGER.debug("Reloading accessories: %s", entity_ids)
         async with self._reset_lock:
             if not self.bridge:
-                await self.async_reload_accessories_in_accessory_mode(entity_ids)
+                await self._async_reload_accessories_in_accessory_mode(entity_ids)
                 return
-            await self.async_reload_accessories_in_bridge_mode(entity_ids)
+            await self._async_reload_accessories_in_bridge_mode(entity_ids)
 
     @callback
     def _async_shutdown_accessory(self, accessory: HomeAccessory) -> None:
@@ -603,7 +603,7 @@ class HomeKit:
             for char in characteristics:
                 iid_manager.remove_obj(char)
 
-    async def async_reload_accessories_in_accessory_mode(
+    async def _async_reload_accessories_in_accessory_mode(
         self, entity_ids: Iterable[str]
     ) -> None:
         """Reset accessories in accessory mode."""
@@ -623,7 +623,7 @@ class HomeKit:
             # Run must be awaited here since it may change
             # the accessories hash
             await new_acc.run()
-            self.async_update_accessories_hash()
+            self._async_update_accessories_hash()
 
     def _async_remove_accessories_by_entity_id(
         self, entity_ids: Iterable[str]
@@ -642,7 +642,7 @@ class HomeKit:
                 removed.append(entity_id)
         return removed
 
-    async def async_reset_accessories_in_bridge_mode(
+    async def _async_reset_accessories_in_bridge_mode(
         self, entity_ids: Iterable[str]
     ) -> None:
         """Reset accessories in bridge mode."""
@@ -653,11 +653,11 @@ class HomeKit:
         # and force config change so iCloud deletes them from
         # the database.
         assert self.driver is not None
-        self.async_update_accessories_hash()
+        self._async_update_accessories_hash()
         await asyncio.sleep(_HOMEKIT_CONFIG_UPDATE_TIME)
         await self._async_recreate_removed_accessories_in_bridge_mode(removed)
 
-    async def async_reload_accessories_in_bridge_mode(
+    async def _async_reload_accessories_in_bridge_mode(
         self, entity_ids: Iterable[str]
     ) -> None:
         """Reload accessories in bridge mode."""
@@ -678,10 +678,10 @@ class HomeKit:
                 # Run must be awaited here since it may change
                 # the accessories hash
                 await acc.run()
-        self.async_update_accessories_hash()
+        self._async_update_accessories_hash()
 
     @callback
-    def async_update_accessories_hash(self) -> bool:
+    def _async_update_accessories_hash(self) -> bool:
         """Update the accessories hash."""
         assert self.driver is not None
         driver = self.driver

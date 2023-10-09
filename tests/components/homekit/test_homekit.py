@@ -929,7 +929,10 @@ async def test_homekit_reset_accessories(
 async def test_homekit_reload_accessory_can_change_class(
     hass: HomeAssistant, mock_async_zeroconf: None, mock_hap
 ) -> None:
-    """Test reloading a HomeKit Accessory when device class changes can change the class."""
+    """Test reloading a HomeKit Accessory in brdige mode.
+
+    This test ensure when device class changes the HomeKit class changes.
+    """
 
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
@@ -958,10 +961,45 @@ async def test_homekit_reload_accessory_can_change_class(
         await homekit.async_stop()
 
 
+async def test_homekit_reload_accessory_in_accessory_mode(
+    hass: HomeAssistant, mock_async_zeroconf: None, mock_hap
+) -> None:
+    """Test reloading a HomeKit Accessory in accessory mode.
+
+    This test ensure a device class changes can change the class of
+    the accessory.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "switch.outlet"
+    hass.states.async_set(entity_id, "on", {ATTR_DEVICE_CLASS: None})
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_ACCESSORY)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit):
+        await async_init_entry(hass, entry)
+        primary_accessory = homekit.driver.accessory
+        await primary_accessory.run()
+        assert type(primary_accessory).__name__ == "Switch"
+        await hass.async_block_till_done()
+        assert homekit.status == STATUS_RUNNING
+        homekit.driver.aio_stop_event = MagicMock()
+        hass.states.async_set(
+            entity_id, "off", {ATTR_DEVICE_CLASS: SwitchDeviceClass.OUTLET}
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        primary_accessory = homekit.driver.accessory
+        assert type(primary_accessory).__name__ == "Outlet"
+
+        await homekit.async_stop()
+
+
 async def test_homekit_reload_accessory_same_class(
     hass: HomeAssistant, mock_async_zeroconf: None, mock_hap
 ) -> None:
-    """Test reloading a HomeKit Accessory when supported color modes changes.
+    """Test reloading a HomeKit Accessory in bridge mode.
 
     The class of the accessory remains the same.
     """
