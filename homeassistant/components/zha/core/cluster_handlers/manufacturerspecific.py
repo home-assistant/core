@@ -8,7 +8,6 @@ from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 import zigpy.zcl
 
 from homeassistant.core import callback
-from .general import MultistateInput
 
 from .. import registries
 from ..const import (
@@ -24,6 +23,7 @@ from ..const import (
     UNKNOWN,
 )
 from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
+from .general import MultistateInput
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -380,4 +380,6 @@ class IkeaRemote(ClusterHandler):
 
 @registries.CUSTOM_CLUSTER_HANDLER_REGISTRY.register("XiaomiVibrationAQ1")
 class XiaomiVibrationAQ1ClusterHandler(MultistateInput):
+    """Xiaomi DoorLock Cluster is in fact a MultiStateInput Cluster."""
+
     pass

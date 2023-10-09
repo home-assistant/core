@@ -6,7 +6,6 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any, Final, TypeVar
 
-import zigpy
 from zigpy.typing import EndpointType as ZigpyEndpointType
 
 from homeassistant.const import Platform
@@ -15,7 +14,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import const, discovery, registries
 from .cluster_handlers import ClusterHandler
-from .cluster_handlers.general import MultistateInput
 from .helpers import get_zha_data
 
 if TYPE_CHECKING:
