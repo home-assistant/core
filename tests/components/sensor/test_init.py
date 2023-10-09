@@ -38,7 +38,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
@@ -2507,7 +2506,7 @@ async def test_entity_category_config_raises_error(
     """Test error is raised when entity category is set to config."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
-    platform.ENTITIES["0"] = sensor = platform.MockSensor(
+    platform.ENTITIES["0"] = platform.MockSensor(
         name="Test", entity_category=EntityCategory.CONFIG
     )
 
@@ -2515,9 +2514,8 @@ async def test_entity_category_config_raises_error(
     await hass.async_block_till_done()
 
     assert (
-        "Entity <class 'custom_components.test.sensor.MockSensor'> cannot be added as the entity category is set to config"
+        "Entity sensor.test cannot be added as the entity category is set to config"
         in caplog.text
     )
 
     assert not hass.states.get("sensor.test")
-    assert sensor._platform_state == EntityPlatformState.NOT_ADDED

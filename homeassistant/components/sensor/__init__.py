@@ -181,17 +181,13 @@ class SensorEntity(Entity):
     ) -> None:
         """Start adding an entity to a platform.
 
-        Raise HomeAssistantError if sensor has the entity category config as a sensor cannot change something.
-
         Allows integrations to remove legacy custom unit conversion which is no longer
         needed without breaking existing sensors. Only works for sensors which are in
         the entity registry.
-        """
-        if self.entity_category == EntityCategory.CONFIG:
-            raise HomeAssistantError(
-                f"Entity {type(self)} cannot be added as the entity category is set to config"
-            )
 
+        This can be removed once core integrations have dropped unneeded custom unit
+        conversion.
+        """
         super().add_to_platform_start(hass, platform, parallel_updates)
 
         # Bail out if the sensor doesn't have a unique_id or a device class
@@ -255,6 +251,11 @@ class SensorEntity(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
         await super().async_internal_added_to_hass()
+        if self.entity_category == EntityCategory.CONFIG:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} cannot be added as the entity category is set to config"
+            )
+
         if not self.registry_entry:
             return
         self._async_read_entity_options()
