@@ -32,7 +32,6 @@ ITEM_TYPE_MEDIA_CLASS = {
 }
 
 
-# ######################3#3333###3#33##33#33#################################################################
 def item_payload(
     item, plex_server, server_id, is_internal, short_name=False, extra_params=None
 ):
@@ -250,9 +249,6 @@ def _handle_hub_type(
     return BrowseMedia(**payload)
 
 
-###############################################################################################################
-#####################################   ORIGINAL   ############################################################
-###############################################################################################################
 def browse_media(  # noqa: C901
     hass, is_internal, media_content_type, media_content_id, *, platform=None
 ):
@@ -312,9 +308,6 @@ def browse_media(  # noqa: C901
     if response is None:
         raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
     return response
-
-
-# ######################3#3333###3#33##33#33#################################################################
 
 
 def generate_plex_uri(server_id, media_id, params=None):
