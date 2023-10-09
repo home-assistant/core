@@ -27,11 +27,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_API_CLIENT, DATA_INSTALLATION, DATA_LOG_SESSION, DOMAIN
-from .coordinator import (
-    CombinedEnergyLogSessionService,
-    CombinedEnergyReadingsDataService,
-)
+from .const import DATA_API_CLIENT, DATA_INSTALLATION, DOMAIN
+from .coordinator import CombinedEnergyReadingsCoordinator
 
 # Common sensors for all consumer devices
 SENSOR_DESCRIPTIONS_GENERIC_CONSUMER = [
@@ -333,58 +330,64 @@ async def async_setup_entry(
     api: CombinedEnergy = hass.data[DOMAIN][entry.entry_id][DATA_API_CLIENT]
     installation: Installation = hass.data[DOMAIN][entry.entry_id][DATA_INSTALLATION]
 
-    # Initialise services
-    log_session = CombinedEnergyLogSessionService(hass, api)
-    log_session.async_setup()
-    await log_session.coordinator.async_refresh()
+    # Initialise readings coordinator
+    readings = CombinedEnergyReadingsCoordinator(hass, api)
+    await readings.async_config_entry_first_refresh()
 
-    readings = CombinedEnergyReadingsDataService(hass, api)
-    readings.async_setup()
-    await readings.coordinator.async_refresh()
+    async_add_entities(_generate_sensors(installation, readings))
 
-    # Store log session into Data
-    hass.data[DOMAIN][entry.entry_id][DATA_LOG_SESSION] = log_session
 
-    # Build entity list
-    sensor_factory = CombinedEnergyReadingsSensorFactory(hass, installation, readings)
-    entities: list[CombinedEnergyReadingsSensor] = list(sensor_factory.entities())
-    async_add_entities(entities)
+def _generate_sensors(
+    installation: Installation,
+    readings: CombinedEnergyReadingsCoordinator,
+) -> Generator[CombinedEnergyReadingsSensor, None, None]:
+    """Generate sensor entities from installed devices."""
+
+    for device in installation.devices:
+        if descriptions := SENSOR_DESCRIPTIONS.get(device.device_type):
+            # Generate sensors from descriptions for the current device type
+            for description in descriptions:
+                if sensor_type := SENSOR_TYPE_MAP.get(
+                    description.device_class, GenericSensor
+                ):
+                    yield sensor_type(device, description, readings)
 
 
 class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Combined Energy API reading energy sensor."""
 
-    data_service: CombinedEnergyReadingsDataService
+    data_service: CombinedEnergyReadingsCoordinator
     entity_description: SensorEntityDescription
-
-    native_value_rounding: int = 2
 
     def __init__(
         self,
         device: Device,
-        device_info: DeviceInfo,
         description: SensorEntityDescription,
-        data_service: CombinedEnergyReadingsDataService,
+        coordinator: CombinedEnergyReadingsCoordinator,
     ) -> None:
         """Initialise Readings Sensor."""
-        super().__init__(data_service.coordinator)
+        super().__init__(coordinator)
 
         self.device_id = device.device_id
-        self.data_service = data_service
         self.entity_description = description
 
         self._attr_name = f"{device.display_name} {description.name}"
-        self._attr_device_info = device_info
-        self._attr_unique_id = (
-            f"install_{self.data_service.api.installation_id}-"
-            f"device_{device.device_id}-"
-            f"{description.key}"
+
+        identifier = (
+            f"install_{self.coordinator.api.installation_id}-device_{device.device_id}"
         )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            manufacturer=device.device_manufacturer,
+            model=device.device_model_name,
+            name=device.display_name,
+        )
+        self._attr_unique_id = f"{identifier}-{description.key}"
 
     @property
     def device_readings(self) -> DeviceReadings | None:
         """Get readings for specific device."""
-        if data := self.data_service.data:
+        if data := self.coordinator.data:
             return data.get(self.device_id, None)
         return None
 
@@ -415,15 +418,19 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
 class GenericSensor(CombinedEnergyReadingsSensor):
     """Sensor that returns the last value of a sequence of readings."""
 
+    _attr_suggested_display_precision = 2
+
     def _to_native_value(self, raw_value: Any) -> float:
         """Convert non-none raw value into usable sensor value."""
         if isinstance(raw_value, Sequence):
             raw_value = raw_value[-1]
-        return float(round(raw_value, self.native_value_rounding))
+        return float(round(raw_value, self.suggested_display_precision))
 
 
 class EnergySensor(CombinedEnergyReadingsSensor):
     """Sensor for energy readings."""
+
+    _attr_suggested_display_precision = 2
 
     @property
     def last_reset(self) -> datetime | None:
@@ -436,26 +443,28 @@ class EnergySensor(CombinedEnergyReadingsSensor):
     def _to_native_value(self, raw_value: Any) -> float:
         """Convert non-none raw value into usable sensor value."""
         value = sum(raw_value)
-        return float(round(value, self.native_value_rounding))
+        return float(round(value, self.suggested_display_precision))
 
 
 class PowerSensor(CombinedEnergyReadingsSensor):
     """Sensor for power readings."""
 
+    _attr_suggested_display_precision = 2
+
     def _to_native_value(self, raw_value: Any) -> float:
         """Convert non-none raw value into usable sensor value."""
-        return float(round(raw_value, self.native_value_rounding))
+        return float(round(raw_value, self.suggested_display_precision))
 
 
 class PowerFactorSensor(CombinedEnergyReadingsSensor):
     """Sensor for power factor readings."""
 
-    native_value_rounding = 1
+    _attr_suggested_display_precision = 1
 
     def _to_native_value(self, raw_value: Any) -> float:
         """Convert non-none raw value into usable sensor value."""
         # The API expresses the power factor as a fraction convert to %
-        return float(round(raw_value[-1] * 100, self.native_value_rounding))
+        return float(round(raw_value[-1] * 100, self.suggested_display_precision))
 
 
 class WaterVolumeSensor(CombinedEnergyReadingsSensor):
@@ -474,56 +483,4 @@ SENSOR_TYPE_MAP: dict[
     SensorDeviceClass.POWER: PowerSensor,
     SensorDeviceClass.WATER: WaterVolumeSensor,
     SensorDeviceClass.POWER_FACTOR: PowerFactorSensor,
-    None: GenericSensor,
 }
-
-
-class CombinedEnergyReadingsSensorFactory:
-    """Factory for generating devices/entities.
-
-    Entities/Devices are described in the installation model.
-    """
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        installation: Installation,
-        readings: CombinedEnergyReadingsDataService,
-    ) -> None:
-        """Initialise readings sensor factory."""
-        self.hass = hass
-        self.installation = installation
-        self.readings = readings
-
-    def _generate_device_info(self, device: Device) -> DeviceInfo:
-        """Generate device info from API device response."""
-        return DeviceInfo(
-            identifiers={
-                (
-                    DOMAIN,
-                    f"install_{self.installation.installation_id}-device_{device.device_id}",
-                )
-            },
-            manufacturer=device.device_manufacturer,
-            model=device.device_model_name,
-            name=device.display_name,
-        )
-
-    def entities(self) -> Generator[CombinedEnergyReadingsSensor, None, None]:
-        """Generate entities."""
-
-        for device in self.installation.devices:
-            if descriptions := SENSOR_DESCRIPTIONS.get(device.device_type):
-                device_info = self._generate_device_info(device)
-
-                # Generate sensors from descriptions for the current device type
-                for description in descriptions:
-                    if sensor_type := SENSOR_TYPE_MAP.get(
-                        description.device_class, GenericSensor
-                    ):
-                        yield sensor_type(
-                            device,
-                            device_info,
-                            description,
-                            self.readings,
-                        )
