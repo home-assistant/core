@@ -152,34 +152,11 @@ def execute(
     for tryno in range(0, RETRIES):
         try:
             if debug:
-                timer_start = time.perf_counter()
-
-            if to_native:
-                result = [
-                    row
-                    for row in (
-                        row.to_native(validate_entity_id=validate_entity_ids)
-                        for row in qry
-                    )
-                    if row is not None
-                ]
+                result = _exectute_with_debug(qry, to_native, validate_entity_ids)
+            elif to_native:
+                result = _convert_to_native(qry, validate_entity_ids)
             else:
                 result = qry.all()
-
-            if debug:
-                elapsed = time.perf_counter() - timer_start
-                if to_native:
-                    _LOGGER.debug(
-                        "converting %d rows to native objects took %fs",
-                        len(result),
-                        elapsed,
-                    )
-                else:
-                    _LOGGER.debug(
-                        "querying %d rows took %fs",
-                        len(result),
-                        elapsed,
-                    )
 
             return result
         except SQLAlchemyError as err:
@@ -191,6 +168,46 @@ def execute(
 
     # Unreachable
     raise RuntimeError  # pragma: no cover
+
+
+def _exectute_with_debug(
+    qry: Query, to_native: bool = False, validate_entity_ids: bool = True
+) -> list[Row]:
+    """Execute with debug statements."""
+    timer_start = time.perf_counter()
+
+    if to_native:
+        result = _convert_to_native(qry, validate_entity_ids)
+    else:
+        result = qry.all()
+
+    elapsed = time.perf_counter() - timer_start
+    if to_native:
+        _LOGGER.debug(
+            "converting %d rows to native objects took %fs",
+            len(result),
+            elapsed,
+        )
+    else:
+        _LOGGER.debug(
+            "querying %d rows took %fs",
+            len(result),
+            elapsed,
+        )
+
+    return result
+
+
+def _convert_to_native(qry: Query, validate_entity_ids: bool = True) -> list[Row]:
+    """Convert database objects to HA native form."""
+    result = [
+        row
+        for row in (
+            row.to_native(validate_entity_id=validate_entity_ids) for row in qry
+        )
+        if row is not None
+    ]
+    return result
 
 
 def execute_stmt_lambda_element(
