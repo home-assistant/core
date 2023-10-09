@@ -68,7 +68,6 @@ from .const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
-    DOMAIN,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
     HK_NOT_CHARGABLE,
@@ -80,7 +79,6 @@ from .const import (
     MAX_VERSION_LENGTH,
     SERV_ACCESSORY_INFO,
     SERV_BATTERY_SERVICE,
-    SERVICE_HOMEKIT_RESET_ACCESSORY,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -109,6 +107,12 @@ SWITCH_TYPES = {
     TYPE_VALVE: "Valve",
 }
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
+
+NEED_RESET_ATTRS = (
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+)
 
 
 def get_accessory(  # noqa: C901
@@ -267,6 +271,8 @@ def get_accessory(  # noqa: C901
 class HomeAccessory(Accessory):  # type: ignore[misc]
     """Adapter class for Accessory."""
 
+    driver: HomeDriver
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -289,6 +295,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             *args,  # noqa: B026
             **kwargs,
         )
+        self._need_reset_attributes = list(NEED_RESET_ATTRS)
         self.config = config or {}
         if device_id:
             self.device_id: str | None = device_id
@@ -459,7 +466,20 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self, event: EventType[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
-        self.async_update_state_callback(event.data["new_state"])
+        new_state = event.data["new_state"]
+        old_state = event.data["old_state"]
+        if (
+            new_state
+            and old_state
+            and STATE_UNAVAILABLE not in (old_state.state, new_state.state)
+        ):
+            old_attributes = old_state.attributes
+            new_attributes = new_state.attributes
+            for attr in self._need_reset_attributes:
+                if old_attributes.get(attr) != new_attributes.get(attr):
+                    self.async_reload()
+                    return
+        self.async_update_state_callback(new_state)
 
     @ha_callback
     def async_update_state_callback(self, new_state: State | None) -> None:
@@ -572,17 +592,12 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         )
 
     @ha_callback
-    def async_reset(self) -> None:
+    def async_reload(self) -> None:
         """Reset and recreate an accessory."""
-        self.hass.async_create_task(
-            self.hass.services.async_call(
-                DOMAIN,
-                SERVICE_HOMEKIT_RESET_ACCESSORY,
-                {ATTR_ENTITY_ID: self.entity_id},
-            )
-        )
+        self.driver.async_reset_accessory(self.entity_id)
 
-    async def stop(self) -> None:
+    @ha_callback
+    def async_stop(self) -> None:
         """Cancel any subscriptions when the bridge is stopped."""
         while self._subscriptions:
             self._subscriptions.pop(0)()
