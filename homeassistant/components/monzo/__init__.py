@@ -301,7 +301,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for webhook_id in hass.data[DOMAIN][entry.entry_id]["webhook_ids"]:
             webhook_unregister(hass, webhook_id)
             try:
-                await data[entry.entry_id][CONF_AUTHENTICATION].unregister_webhooks()
+                await data[entry.entry_id][
+                    CONF_AUTHENTICATION
+                ].user_account.unregister_webhooks()
             except InvalidMonzoAPIResponseError:
                 _LOGGER.debug("No webhook to be dropped")
             _LOGGER.info("Unregister Monzo webhook")

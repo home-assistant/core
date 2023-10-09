@@ -5,6 +5,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
@@ -21,6 +23,7 @@ class MonzoFlowHandler(
     DOMAIN = DOMAIN
 
     reauth_entry: ConfigEntry | None = None
+    oauth_data: dict[str, Any]
 
     @property
     def logger(self) -> logging.Logger:
@@ -42,16 +45,37 @@ class MonzoFlowHandler(
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
+    async def async_step_await_approval_confirmation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Wait for the user to confirm in-app approval."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=DOMAIN, data={**self.oauth_data, "webhook_ids": {}}
+            )
+
+        data_schema = vol.Schema({vol.Required("confirm"): bool})
+
+        return self.async_show_form(
+            step_id="await_approval_confirmation", data_schema=data_schema
+        )
+
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow, or update existing entry."""
-        user_id = str(data[CONF_TOKEN]["userid"])
+        user_id = str(data[CONF_TOKEN]["user_id"])
         if not self.reauth_entry:
             await self.async_set_unique_id(user_id)
             self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(
-                title=DOMAIN, data={**data, "webhook_ids": {}}
-            )
+            self.oauth_data = data
+
+            # return self.async_show_form(step_id="await_approval_confirmation", description_placeholders="banana")
+
+            return await self.async_step_await_approval_confirmation()
+
+            # return self.async_create_entry(
+            #     title=DOMAIN, data={**data, "webhook_ids": {}}
+            # )
 
         if self.reauth_entry.unique_id == user_id:
             self.hass.config_entries.async_update_entry(
