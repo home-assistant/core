@@ -105,7 +105,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     VolumeConverter: (UnitOfVolume.GALLONS, UnitOfVolume.LITERS, 0.264172),
 }
 
-# Dict containing a conversion test for every know unit.
+# Dict containing a conversion test for every known unit.
 _CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {

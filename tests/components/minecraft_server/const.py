@@ -7,6 +7,8 @@ from mcstatus.status_response import (
 )
 
 TEST_HOST = "mc.dummyserver.com"
+TEST_PORT = 25566
+TEST_ADDRESS = f"{TEST_HOST}:{TEST_PORT}"
 
 TEST_JAVA_STATUS_RESPONSE_RAW = {
     "description": {"text": "Dummy Description"},

@@ -5,7 +5,7 @@ import logging
 
 from wyoming.audio import AudioChunk, AudioStart
 from wyoming.client import AsyncTcpClient
-from wyoming.wake import Detection
+from wyoming.wake import Detect, Detection
 
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry
@@ -46,7 +46,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
         wake_service = service.info.wake[0]
 
         self._supported_wake_words = [
-            wake_word.WakeWord(ww_id=ww.name, name=ww.name)
+            wake_word.WakeWord(id=ww.name, name=ww.description or ww.name)
             for ww in wake_service.models
         ]
         self._attr_name = wake_service.name
@@ -58,7 +58,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
         return self._supported_wake_words
 
     async def _async_process_audio_stream(
-        self, stream: AsyncIterable[tuple[bytes, int]]
+        self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str | None
     ) -> wake_word.DetectionResult | None:
         """Try to detect one or more wake words in an audio stream.
 
@@ -72,6 +72,11 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
 
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
+                # Inform client which wake word we want to detect (None = default)
+                await client.write_event(
+                    Detect(names=[wake_word_id] if wake_word_id else None).event()
+                )
+
                 await client.write_event(
                     AudioStart(
                         rate=16000,
@@ -98,9 +103,19 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                                 break
 
                             if Detection.is_type(event.type):
-                                # Successful detection
+                                # Possible detection
                                 detection = Detection.from_event(event)
                                 _LOGGER.info(detection)
+
+                                if wake_word_id and (detection.name != wake_word_id):
+                                    _LOGGER.warning(
+                                        "Expected wake word %s but got %s, skipping",
+                                        wake_word_id,
+                                        detection.name,
+                                    )
+                                    wake_task = asyncio.create_task(client.read_event())
+                                    pending.add(wake_task)
+                                    continue
 
                                 # Retrieve queued audio
                                 queued_audio: list[tuple[bytes, int]] | None = None
@@ -111,7 +126,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                                     queued_audio = [audio_task.result()]
 
                                 return wake_word.DetectionResult(
-                                    ww_id=detection.name,
+                                    wake_word_id=detection.name,
                                     timestamp=detection.timestamp,
                                     queued_audio=queued_audio,
                                 )

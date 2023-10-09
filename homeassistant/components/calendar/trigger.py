@@ -75,15 +75,15 @@ class Timespan:
 
         This effectively gives us a cursor like interface for advancing through
         time using the interval as a hint. The returned span may have a
-        different interval than the one specified.  For example, time span may
+        different interval than the one specified. For example, time span may
         be longer during a daylight saving time transition, or may extend due to
-        drift if the current interval is old.  The returned time span is
+        drift if the current interval is old. The returned time span is
         adjacent and non-overlapping.
         """
         return Timespan(self.end, max(self.end, now) + interval)
 
     def __str__(self) -> str:
-        """Return a string representing the half open interval timespan."""
+        """Return a string representing the half open interval time span."""
         return f"[{self.start}, {self.end})"
 
 
@@ -118,7 +118,7 @@ def queued_event_fetcher(
         offset_timespan = timespan.with_offset(-1 * offset)
         active_events = await fetcher(offset_timespan)
 
-        # Determine the trigger eligibilty of events during this time span.
+        # Determine the trigger eligibility of events during this time span.
         # Example: For an EVENT_END trigger the event may start during this
         # time span, but need to be triggered later when the end happens.
         results = []
@@ -130,7 +130,7 @@ def queued_event_fetcher(
             results.append(QueuedCalendarEvent(trigger_time + offset, event))
 
         _LOGGER.debug(
-            "Scan events @ %s%s found %s eligble of %s active",
+            "Scan events @ %s%s found %s eligible of %s active",
             offset_timespan,
             f" (offset={offset})" if offset else "",
             len(results),

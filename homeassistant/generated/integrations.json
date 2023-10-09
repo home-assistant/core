@@ -68,7 +68,7 @@
     "aftership": {
       "name": "AfterShip",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "agent_dvr": {
@@ -876,7 +876,7 @@
     "color_extractor": {
       "name": "ColorExtractor",
       "integration_type": "hub",
-      "config_flow": false
+      "config_flow": true
     },
     "comed": {
       "name": "Commonwealth Edison (ComEd)",
@@ -945,6 +945,11 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "cribl": {
+      "name": "Cribl",
+      "integration_type": "virtual",
+      "supported_by": "splunk"
     },
     "crownstone": {
       "name": "Crownstone",
@@ -1281,6 +1286,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "eastron": {
+      "name": "Eastron",
+      "integration_type": "virtual",
+      "supported_by": "homewizard"
+    },
     "easyenergy": {
       "name": "easyEnergy",
       "integration_type": "hub",
@@ -1310,6 +1320,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "ecoforest": {
+      "name": "Ecoforest",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "econet": {
       "name": "Rheem EcoNet Products",
@@ -1480,6 +1496,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "enmax": {
+      "name": "Enmax Energy",
+      "integration_type": "virtual",
+      "supported_by": "opower"
     },
     "enocean": {
       "name": "EnOcean",
@@ -1722,7 +1743,7 @@
     "fitbit": {
       "name": "Fitbit",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "fivem": {
@@ -2496,7 +2517,7 @@
     "hydrawise": {
       "name": "Hunter Hydrawise",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "hyperion": {
@@ -2597,12 +2618,6 @@
       "name": "IMAP",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_push"
-    },
-    "imap_email_content": {
-      "name": "IMAP Email Content",
-      "integration_type": "hub",
-      "config_flow": false,
       "iot_class": "cloud_push"
     },
     "incomfort": {
@@ -3264,6 +3279,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "medcom_ble": {
+      "name": "Medcom Bluetooth",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "media_extractor": {
       "name": "Media Extractor",
@@ -6010,7 +6031,7 @@
     "twitch": {
       "name": "Twitch",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "twitter": {
@@ -6335,6 +6356,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "weatherflow": {
+      "name": "WeatherFlow",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "webhook": {
       "name": "Webhook",
