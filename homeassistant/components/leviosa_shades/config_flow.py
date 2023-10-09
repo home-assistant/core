@@ -86,11 +86,11 @@ class LeviosaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Looking for Leviosa Zone HUBs")
         self._devices = await discover_leviosa_zones()
         _LOGGER.debug("Found %d Zones advertising on the network ", len(self._devices))
-        devs_2b_removed = []
+        devs_to_be_removed = []
         for dev_key in self._devices:
             if self._host_already_configured(self._devices[dev_key]):
-                devs_2b_removed.append(dev_key)
-        for dev in devs_2b_removed:
+                devs_to_be_removed.append(dev_key)
+        for dev in devs_to_be_removed:
             self._devices.pop(dev)
         _LOGGER.debug("There are %d Zones can be included in Hass", len(self._devices))
         Zones = list(self._devices.keys())

@@ -4,7 +4,7 @@
     "step": {
       "select": {
         "data": {
-          "select_ip": "IP Address"
+          "select_ip": "[%key:common::config_flow::data::ip%]"
         },
         "description": "Run the setup again if you want to connect another Leviosa Zone",
         "title": "Which Zone Hub would you like to configure?"
@@ -17,7 +17,7 @@
         }
       },
       "confirm": {
-        "description": "Ready to setup this device?"
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
       "connect": {
         "title": "Adding Leviosa Motor Shades Zone",
@@ -35,12 +35,12 @@
       }
     },
     "error": {
-      "cannot_connect": "The Leviosa Zone HUB does not appear to be online",
-      "unknown": "There was an unexpected error connecting to the Leviosa Zone HUB",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "no_new_devs": "No unconfigured Leviosa Zone HUBs found"
     },
     "abort": {
-      "no_devices_found": "No devices found on the network",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "single_instance_allowed": "Already configured. Only a single configuration possible.",
       "device_already_configured": "This Leviosa Zone is already configured",
       "no_new_devs": "No unconfigured Leviosa Zone HUBs found"
@@ -48,7 +48,7 @@
   },
   "services": {
     "next_down_pos": {
-      "name": "Next Down Pos",
+      "name": "Next Down Position",
       "description": "Moves a blind group down to the next defined intermediate position",
       "fields": {
         "entity_id": {
@@ -58,7 +58,7 @@
       }
     },
     "next_up_pos": {
-      "name": "Next Up Pos",
+      "name": "Next Up Position",
       "description": "Moves a blind group up to the next defined intermediate position",
       "fields": {
         "entity_id": {
