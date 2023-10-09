@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.11.0"
 dependencies    = [
-    "aiohttp==3.8.5",
+    "aiohttp==3.9.0b0",
     "astral==2.2",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
@@ -33,7 +33,7 @@ dependencies    = [
     "ciso8601==2.3.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
-    "httpx==0.24.1",
+    "httpx==0.25.0",
     "home-assistant-bluetooth==1.10.3",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
@@ -437,7 +437,7 @@ filterwarnings = [
     # -- design choice 3rd party
     # https://github.com/gwww/elkm1/blob/2.2.5/elkm1_lib/util.py#L8-L19
     "ignore:ssl.TLSVersion.TLSv1 is deprecated:DeprecationWarning:elkm1_lib.util",
-    # https://github.com/michaeldavie/env_canada/blob/v0.5.36/env_canada/ec_cache.py
+    # https://github.com/michaeldavie/env_canada/blob/v0.5.37/env_canada/ec_cache.py
     "ignore:Inheritance class CacheClientSession from ClientSession is discouraged:DeprecationWarning:env_canada.ec_cache",
     # https://github.com/bachya/regenmaschine/blob/2023.08.0/regenmaschine/client.py#L51
     "ignore:ssl.TLSVersion.SSLv3 is deprecated:DeprecationWarning:regenmaschine.client",
@@ -594,7 +594,12 @@ ignore = [
     "D407",  # Section name underlining
     "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
-    "PLC1901", # Lots of false positives
+
+    # Ignore ignored, as the rule is now back in preview/nursery, which cannot
+    # be ignored anymore without warnings.
+    # https://github.com/astral-sh/ruff/issues/7491
+    # "PLC1901", # Lots of false positives
+
     # False positives https://github.com/astral-sh/ruff/issues/5386
     "PLC0208", # Use a sequence type instead of a `set` when iterating over values
     "PLR0911", # Too many return statements ({returns} > {max_returns})
@@ -623,6 +628,7 @@ voluptuous = "vol"
 fixture-parentheses = false
 
 [tool.ruff.flake8-tidy-imports.banned-api]
+"async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
 
 [tool.ruff.isort]
