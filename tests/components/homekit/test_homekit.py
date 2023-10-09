@@ -876,6 +876,7 @@ async def test_homekit_stop(hass: HomeAssistant) -> None:
 
     # Test if driver is started
     homekit.status = STATUS_RUNNING
+    homekit._cancel_reload_dispatcher = lambda: None
     await homekit.async_stop()
     await hass.async_block_till_done()
     assert homekit.driver.async_stop.called is True
