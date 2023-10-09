@@ -470,7 +470,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement="cal",
         icon="mdi:food-apple",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        scope="nutrition",
+        scope=FitbitScope.NUTRITION,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     FitbitSensorEntityDescription(
@@ -479,7 +479,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         icon="mdi:cup-water",
         unit_fn=_water_unit,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        scope="nutrition",
+        scope=FitbitScope.NUTRITION,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
