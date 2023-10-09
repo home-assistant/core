@@ -18,7 +18,7 @@ async def test_creating_entry_sets_up(
 ) -> None:
     """Test setting up refoss."""
     with patch(
-        "homeassistant.components.refoss.config_flow.refoss_discovery_server",
+        "homeassistant.components.refoss.util.Discovery",
         return_value=FakeDiscovery(),
     ), patch(
         "homeassistant.components.refoss.bridge.async_build_base_device",
@@ -46,7 +46,7 @@ async def test_creating_entry_has_no_devices(
 ) -> None:
     """Test setting up Refoss no devices."""
     with patch(
-        "homeassistant.components.refoss.config_flow.refoss_discovery_server",
+        "homeassistant.components.refoss.util.Discovery",
         return_value=FakeDiscovery(),
     ) as discovery:
         discovery.return_value.mock_devices = {}

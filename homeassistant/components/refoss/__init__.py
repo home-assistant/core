@@ -12,7 +12,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from .bridge import DiscoveryService
 from .const import (
     COORDINATORS,
-    DATA_DISCOVERY_INTERVAL,
     DATA_DISCOVERY_SERVICE,
     DISCOVERY_SCAN_INTERVAL,
     DISPATCHERS,
@@ -30,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     discover = await refoss_discovery_server(hass)
     refoss_discovery = DiscoveryService(hass, discover)
-    hass.data[DATA_DISCOVERY_SERVICE] = refoss_discovery
+    hass.data[DOMAIN][DATA_DISCOVERY_SERVICE] = refoss_discovery
 
     hass.data[DOMAIN].setdefault(DISPATCHERS, [])
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -40,8 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await _async_scan_update()
 
-    hass.data[DOMAIN][DATA_DISCOVERY_INTERVAL] = async_track_time_interval(
-        hass, _async_scan_update, timedelta(seconds=DISCOVERY_SCAN_INTERVAL)
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass, _async_scan_update, timedelta(seconds=DISCOVERY_SCAN_INTERVAL)
+        )
     )
 
     return True
@@ -53,11 +54,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for cleanup in hass.data[DOMAIN][DISPATCHERS]:
             cleanup()
 
-    if hass.data[DOMAIN].get(DATA_DISCOVERY_INTERVAL) is not None:
-        hass.data[DOMAIN].pop(DATA_DISCOVERY_INTERVAL)()
-
-    if hass.data.get(DATA_DISCOVERY_SERVICE) is not None:
-        hass.data.pop(DATA_DISCOVERY_SERVICE)
+    if hass.data[DOMAIN].get(DATA_DISCOVERY_SERVICE) is not None:
+        hass.data[DOMAIN].pop(DATA_DISCOVERY_SERVICE)
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

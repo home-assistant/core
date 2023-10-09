@@ -29,8 +29,3 @@ class RefossEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             manufacturer="Refoss",
             name=name,
         )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.device.online

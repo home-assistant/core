@@ -5,12 +5,6 @@ from unittest.mock import AsyncMock, Mock
 
 from refoss_ha.discovery import Listener
 
-from homeassistant.components.refoss.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -26,6 +20,14 @@ class FakeDiscovery:
     def add_listener(self, listener: Listener) -> None:
         """Add an event listener."""
         self._listeners.append(listener)
+
+    async def initialize(self) -> None:
+        """Initialize socket server."""
+        self.sock = Mock()
+
+    def close(self) -> None:
+        """Close."""
+        self.sock = None
 
     async def broadcast_msg(self, wait_for: int = 0):
         """Search for devices, return mocked data."""
@@ -91,12 +93,3 @@ def build_base_device_mock(name="device-1", ip="1.1.1.1", mac="aabbcc112233"):
         async_handle_update=AsyncMock(),
     )
     return mock
-
-
-async def async_setup_refoss(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up the refoss platform."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {"switch": {}}})
-    await hass.async_block_till_done()
-    return entry

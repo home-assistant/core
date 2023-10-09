@@ -50,7 +50,7 @@ class RefossSwitch(RefossEntity, SwitchEntity):
 
     def __init__(self, coordinator, channel: int) -> None:
         """Construct."""
-        super().__init__(coordinator, channel=channel)
+        super().__init__(coordinator, channel)
         self._channel_id = channel
 
     @property
