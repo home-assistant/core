@@ -342,6 +342,49 @@ class KNXCommonFlow(ABC, FlowHandler):
 
         return None
 
+    async def _get_default_type(
+        self, user_input: dict | None, _reconfiguring_existing_tunnel: bool
+    ) -> Any:
+        if (
+            (isinstance(self, ConfigFlow) or not _reconfiguring_existing_tunnel)
+            and not user_input
+            and self._selected_tunnel is not None
+        ):
+            return {
+                True: CONF_KNX_TUNNELING_TCP_SECURE,
+                self._selected_tunnel.supports_tunnelling_tcp: CONF_KNX_TUNNELING_TCP,
+            }.get(
+                True in [True, self._selected_tunnel.supports_tunnelling_tcp],
+                CONF_KNX_TUNNELING,
+            )
+        return (
+            user_input[CONF_KNX_TUNNELING_TYPE]
+            if user_input
+            else self.initial_data[CONF_KNX_CONNECTION_TYPE]
+            if _reconfiguring_existing_tunnel
+            else CONF_KNX_TUNNELING
+        )
+
+    async def _get_ip_address_and_port(
+        self, user_input: dict | None, _reconfiguring_existing_tunnel: bool
+    ) -> tuple[str, int]:
+        if (
+            (isinstance(self, ConfigFlow) or not _reconfiguring_existing_tunnel)
+            and not user_input
+            and self._selected_tunnel is not None
+        ):
+            return self._selected_tunnel.ip_addr, self._selected_tunnel.port
+
+        ip_address = (
+            user_input[CONF_HOST] if user_input else self.initial_data.get(CONF_HOST)
+        )
+        port = (
+            user_input[CONF_PORT]
+            if user_input
+            else self.initial_data.get(CONF_PORT, DEFAULT_MCAST_PORT)
+        )
+        return ip_address, port
+
     async def async_step_manual_tunnel(
         self, user_input: dict | None = None
     ) -> FlowResult:
@@ -363,40 +406,14 @@ class KNXCommonFlow(ABC, FlowHandler):
             self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
             in CONF_KNX_TUNNELING_TYPE_LABELS
         )
-        if (  # initial attempt on ConfigFlow or coming from automatic / routing
-            (isinstance(self, ConfigFlow) or not _reconfiguring_existing_tunnel)
-            and not user_input
-            and self._selected_tunnel is not None
-        ):  # default to first found tunnel
-            ip_address = self._selected_tunnel.ip_addr
-            port = self._selected_tunnel.port
 
-            # 🤢 what the heck does this do?? idk but reduces CC 😃
-            default_type = {
-                True: CONF_KNX_TUNNELING_TCP_SECURE,
-                self._selected_tunnel.supports_tunnelling_tcp: CONF_KNX_TUNNELING_TCP,
-            }.get(
-                True in [True, self._selected_tunnel.supports_tunnelling_tcp],
-                CONF_KNX_TUNNELING,
-            )
-        else:  # OptionFlow, no tunnel discovered or user input
-            ip_address = (
-                user_input[CONF_HOST]
-                if user_input
-                else self.initial_data.get(CONF_HOST)
-            )
-            port = (
-                user_input[CONF_PORT]
-                if user_input
-                else self.initial_data.get(CONF_PORT, DEFAULT_MCAST_PORT)
-            )
-            default_type = (
-                user_input[CONF_KNX_TUNNELING_TYPE]
-                if user_input
-                else self.initial_data[CONF_KNX_CONNECTION_TYPE]
-                if _reconfiguring_existing_tunnel
-                else CONF_KNX_TUNNELING
-            )
+        ip_address, port = await self._get_ip_address_and_port(
+            user_input, _reconfiguring_existing_tunnel
+        )
+        default_type = await self._get_default_type(
+            user_input, _reconfiguring_existing_tunnel
+        )
+
         _route_back: bool = self.initial_data.get(
             CONF_KNX_ROUTE_BACK, not bool(self._selected_tunnel)
         )
