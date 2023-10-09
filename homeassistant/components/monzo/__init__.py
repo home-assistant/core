@@ -250,7 +250,7 @@ async def _get_selected_or_current_account_ids(
     return (
         [
             acc["id"]
-            for acc in hass.data[DOMAIN][entry.entry_id + ACCOUNTS]
+            for acc in hass.data[DOMAIN][entry.entry_id][ACCOUNTS]
             if acc["type"] == "uk_retail"
         ]
         if TRANSFER_ACCOUNTS not in call.data
