@@ -23,7 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import WallboxCoordinator, WallboxEntity
 from .const import (
     CHARGER_ADDED_DISCHARGED_ENERGY_KEY,
     CHARGER_ADDED_ENERGY_KEY,
@@ -43,6 +42,8 @@ from .const import (
     CHARGER_STATUS_DESCRIPTION_KEY,
     DOMAIN,
 )
+from .coordinator import WallboxCoordinator
+from .entity import WallboxEntity
 
 CHARGER_STATION = "station"
 UPDATE_INTERVAL = 30
