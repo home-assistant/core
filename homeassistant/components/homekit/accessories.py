@@ -478,6 +478,13 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             new_attributes = new_state.attributes
             for attr in self._need_reset_attributes:
                 if old_attributes.get(attr) != new_attributes.get(attr):
+                    _LOGGER.debug(
+                        "%s: Reloading HomeKit accessory since %s has changed from %s -> %s",
+                        self.entity_id,
+                        attr,
+                        old_attributes.get(attr),
+                        new_attributes.get(attr),
+                    )
                     self.async_reload()
                     return
         self.async_update_state_callback(new_state)
