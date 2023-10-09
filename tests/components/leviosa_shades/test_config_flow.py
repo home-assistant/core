@@ -18,8 +18,10 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 
 TEST_HOST1 = "1.2.3.4"
 TEST_HOST2 = "5.6.7.8"
+TEST_HOST3 = "1.2.3.5"
 TEST_MAC1 = "40f5205b658c"
 TEST_MAC2 = "40f5205b6687"
+TEST_MAC3 = "40f5205b658d"
 
 TEST_ZONE_FW = "8.3"
 TEST_ZONE_FW_ALT = "0.0.0"
@@ -30,6 +32,7 @@ TEST_DISCOVERY_2 = {
     "uid:6bf25702-1d6a-4c7b-b949-40f5205b658c": TEST_HOST1,
     "uid:6bf25702-1d6a-4c7b-b949-40f5205b6687": TEST_HOST2,
 }
+TEST_DISCOVERY_3 = {"uid:6bf25702-1d6a-4c7b-b949-40f5205b658d": TEST_HOST3}
 
 TEST_USER_INPUT_1 = {
     CONF_NAME: "Zone 1",
@@ -44,6 +47,13 @@ TEST_USER_INPUT_2 = {
     GROUP2_NAME: "Z2 Group 2",
     GROUP3_NAME: "Z2 Group 3",
     GROUP4_NAME: "Z2 Group 4",
+}
+TEST_USER_INPUT_3 = {
+    CONF_NAME: "Zone 3",
+    GROUP1_NAME: "Z3 Group 1",
+    GROUP2_NAME: "Z3 Group 2",
+    GROUP3_NAME: "Z3 Group 3",
+    GROUP4_NAME: "Z3 Group 4",
 }
 
 
@@ -170,3 +180,53 @@ async def test_config_flow_no_zone_abort(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "no_new_devs"
+
+
+async def test_config_flow_one_zone_failed_can_not_connect(hass):
+    """Successful flow initiated by the user, one Zone discovered."""
+    with patch(
+        "homeassistant.components.leviosa_shades.config_flow.discover_leviosa_zones",
+        return_value=TEST_DISCOVERY_3,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "connect"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.leviosa_shades.config_flow.validate_zone",
+        return_value="invalid",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_USER_INPUT_3
+        )
+
+    assert result["errors"]["base"] == "cannot_connect"
+
+
+async def test_config_flow_one_zone_failed_unknown(hass):
+    """Successful flow initiated by the user, one Zone discovered."""
+    with patch(
+        "homeassistant.components.leviosa_shades.config_flow.discover_leviosa_zones",
+        return_value=TEST_DISCOVERY_3,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "connect"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.leviosa_shades.config_flow.validate_zone",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_USER_INPUT_3
+        )
+
+    assert result["errors"]["base"] == "unknown"
