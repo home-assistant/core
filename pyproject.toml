@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.11.0"
 dependencies    = [
-    "aiohttp==3.8.6",
+    "aiohttp==3.9.0b0",
     "astral==2.2",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
@@ -33,7 +33,7 @@ dependencies    = [
     "ciso8601==2.3.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
-    "httpx==0.24.1",
+    "httpx==0.25.0",
     "home-assistant-bluetooth==1.10.3",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",

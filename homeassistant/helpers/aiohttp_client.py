@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
-from ssl import SSLContext
 import sys
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
@@ -57,6 +56,17 @@ WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
 #
 MAXIMUM_CONNECTIONS = 4096
 MAXIMUM_CONNECTIONS_PER_HOST = 100
+
+
+# Overwrite base aiohttp _wait implementation
+# Homeassistant has a custom shutdown wait logic.
+async def _noop_wait(*args: Any, **kwargs: Any) -> None:
+    """Do nothing."""
+    return
+
+
+# pylint: disable-next=protected-access
+web.BaseSite._wait = _noop_wait  # type: ignore[method-assign]
 
 
 class HassClientResponse(aiohttp.ClientResponse):
@@ -276,7 +286,7 @@ def _async_get_connector(
         return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
-        ssl_context: bool | SSLContext = ssl_util.get_default_context()
+        ssl_context = ssl_util.get_default_context()
     else:
         ssl_context = ssl_util.get_default_no_verify_context()
 
