@@ -462,15 +462,9 @@ class HueOneLightChangeView(HomeAssistantView):
 
             if light.color_supported(color_modes):
                 if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
-                    if parsed[STATE_HUE] is not None:
-                        hue = parsed[STATE_HUE]
-                    else:
-                        hue = 0
 
-                    if parsed[STATE_SATURATION] is not None:
-                        sat = parsed[STATE_SATURATION]
-                    else:
-                        sat = 0
+                    hue = parsed[STATE_HUE] if parsed[STATE_HUE] is not None else 0
+                    sat = parsed[STATE_SATURATION] if parsed[STATE_SATURATION] is not None else 0
 
                     # Convert hs values to hass hs values
                     hue = int((hue / HUE_API_STATE_HUE_MAX) * 360)
@@ -539,10 +533,7 @@ class HueOneLightChangeView(HomeAssistantView):
         # If the requested entity is a cover, convert to open_cover/close_cover
         elif entity.domain == cover.DOMAIN:
             domain = entity.domain
-            if service == SERVICE_TURN_ON:
-                service = SERVICE_OPEN_COVER
-            else:
-                service = SERVICE_CLOSE_COVER
+            service = SERVICE_OPEN_COVER if service == SERVICE_TURN_ON else SERVICE_CLOSE_COVER
 
             if (
                 entity_features & CoverEntityFeature.SET_POSITION
