@@ -14,9 +14,6 @@ from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import Mo
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.RemoteObjects import (
     RemoteObjects,
 )
-from pyhausbus.de.hausbus.homeassistant.proxy.Dimmer import Dimmer
-from pyhausbus.de.hausbus.homeassistant.proxy.Led import Led
-from pyhausbus.de.hausbus.homeassistant.proxy.RGBDimmer import RGBDimmer
 from pyhausbus.HomeServer import HomeServer
 from pyhausbus.IBusDataListener import IBusDataListener
 from pyhausbus.ObjectId import ObjectId
@@ -85,12 +82,6 @@ class HausbusGateway(IBusDataListener, IEventHandler):
         channel_id = self.get_channel_id(object_id)
         return channels.get(channel_id, None)
 
-    def is_light_channel(self, class_id: int) -> bool:
-        """Check if a class_id is a light."""
-        if class_id in (Dimmer.CLASS_ID, RGBDimmer.CLASS_ID, Led.CLASS_ID):
-            return True
-        return False
-
     def add_light_channel(self, instance: ABusFeature, object_id: ObjectId):
         """Add a new Haus-Bus Light Channel to this gateways channel list."""
         light = HausbusLight(
@@ -107,7 +98,7 @@ class HausbusGateway(IBusDataListener, IEventHandler):
         """Add a new Haus-Bus Channel to this gateways channel list."""
         object_id = ObjectId(instance.getObjectId())
         if self.get_channel_id(object_id) not in self.get_channel_list(object_id):
-            if self.is_light_channel(object_id.getClassId()):
+            if HausbusLight.is_light_channel(object_id.getClassId()):
                 self.add_light_channel(instance, object_id)
 
     def busDataReceived(self, busDataMessage: BusDataMessage):

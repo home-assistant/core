@@ -93,6 +93,13 @@ class HausbusLight(HausbusChannel, LightEntity):
             self._attr_supported_color_modes.add(ColorMode.HS)
             cast(RGBDimmer, self._channel.getStatus())
 
+    @staticmethod
+    def is_light_channel(class_id: int) -> bool:
+        """Check if a class_id is a light."""
+        if class_id in (Dimmer.CLASS_ID, RGBDimmer.CLASS_ID, Led.CLASS_ID):
+            return True
+        return False
+
     def set_light_color(self, red: int, green: int, blue: int):
         """Set the brightness of a light channel."""
         hue, saturation, value = colorsys.rgb_to_hsv(
