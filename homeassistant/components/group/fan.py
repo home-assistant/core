@@ -71,6 +71,13 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Fan Group platform."""
+
+    # No-Op for the unused variables
+    if hass:
+        pass
+    if discovery_info:
+        pass
+
     async_add_entities(
         [FanGroup(config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES])]
     )

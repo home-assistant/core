@@ -81,6 +81,13 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Initialize light.group platform."""
+
+    # No-Op for the unused variables
+    if hass:
+        pass
+    if discovery_info:
+        pass
+
     async_add_entities(
         [
             LightGroup(

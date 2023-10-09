@@ -82,6 +82,13 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MediaPlayer Group platform."""
+
+    # No-Op for the unused variables
+    if hass:
+        pass
+    if discovery_info:
+        pass
+
     async_add_entities(
         [
             MediaPlayerGroup(
