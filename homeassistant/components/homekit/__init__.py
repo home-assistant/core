@@ -653,15 +653,9 @@ class HomeKit:
         # and force config change so iCloud deletes them from
         # the database.
         assert self.driver is not None
-        self.driver.state.increment_config_version()
-        self.driver.async_update_advertisement()
+        self.async_update_accessories_hash()
         await asyncio.sleep(_HOMEKIT_CONFIG_UPDATE_TIME)
         await self._async_recreate_removed_accessories_in_bridge_mode(removed)
-        if not self.async_update_accessories_hash():
-            # If the accessories hash did not change, we need to force
-            # a config change so iCloud re-adds the accessories.
-            self.driver.state.increment_config_version()
-            self.driver.async_update_advertisement()
 
     async def async_reload_accessories_in_bridge_mode(
         self, entity_ids: Iterable[str]
@@ -669,7 +663,6 @@ class HomeKit:
         """Reload accessories in bridge mode."""
         removed = self._async_remove_accessories_by_entity_id(entity_ids)
         await self._async_recreate_removed_accessories_in_bridge_mode(removed)
-        self.async_update_accessories_hash()
 
     async def _async_recreate_removed_accessories_in_bridge_mode(
         self, removed: list[str]
@@ -685,6 +678,7 @@ class HomeKit:
                 # Run must be awaited here since it may change
                 # the accessories hash
                 await acc.run()
+        self.async_update_accessories_hash()
 
     @callback
     def async_update_accessories_hash(self) -> bool:
