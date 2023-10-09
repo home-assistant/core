@@ -47,7 +47,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
-from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    CoreState,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import (
     config_validation as cv,
@@ -55,6 +62,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     instance_id,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
     BASE_FILTER_SCHEMA,
     FILTER_SCHEMA,
@@ -534,6 +542,7 @@ class HomeKit:
         self.driver: HomeDriver | None = None
         self.bridge: HomeBridge | None = None
         self._reset_lock = asyncio.Lock()
+        self._cancel_reload_dispatcher: CALLBACK_TYPE | None = None
 
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> None:
         """Set up bridge and accessory driver."""
@@ -565,6 +574,7 @@ class HomeKit:
         """Reset the accessory to load the latest configuration."""
         async with self._reset_lock:
             if not self.bridge:
+                # For accessory mode reset and reload are the same
                 self.async_reload_accessories_in_accessory_mode(entity_ids)
                 return
             await self.async_reset_accessories_in_bridge_mode(entity_ids)
@@ -814,6 +824,11 @@ class HomeKit:
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT
+        self._cancel_reload_dispatcher = async_dispatcher_connect(
+            self.hass,
+            f"homekit_reload_entities_{self._entry_id}",
+            self.async_reset_accessories,
+        )
         async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
         uuid = await instance_id.async_get(self.hass)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
@@ -1022,6 +1037,8 @@ class HomeKit:
         if self.status != STATUS_RUNNING:
             return
         self.status = STATUS_STOPPED
+        assert self._cancel_reload_dispatcher is not None
+        self._cancel_reload_dispatcher()
         _LOGGER.debug("Driver stop for %s", self._name)
         if self.driver:
             await self.driver.async_stop()

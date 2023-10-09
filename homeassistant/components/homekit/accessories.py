@@ -46,6 +46,7 @@ from homeassistant.core import (
     callback as ha_callback,
     split_entity_id,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
@@ -594,7 +595,11 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
     @ha_callback
     def async_reload(self) -> None:
         """Reset and recreate an accessory."""
-        self.driver.async_reset_accessory(self.entity_id)
+        async_dispatcher_send(
+            self.hass,
+            f"homekit_reload_entities_{self.driver.entry_id}",
+            (self.entity_id,),
+        )
 
     @ha_callback
     def async_stop(self) -> None:
@@ -647,7 +652,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         """Initialize a AccessoryDriver object."""
         super().__init__(**kwargs)
         self.hass = hass
-        self._entry_id = entry_id
+        self.entry_id = entry_id
         self._bridge_name = bridge_name
         self._entry_title = entry_title
         self.iid_storage = iid_storage
@@ -659,7 +664,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         """Override super function to dismiss setup message if paired."""
         success = super().pair(client_username_bytes, client_public, client_permissions)
         if success:
-            async_dismiss_setup_message(self.hass, self._entry_id)
+            async_dismiss_setup_message(self.hass, self.entry_id)
         return cast(bool, success)
 
     @pyhap_callback  # type: ignore[misc]
@@ -672,7 +677,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
 
         async_show_setup_message(
             self.hass,
-            self._entry_id,
+            self.entry_id,
             accessory_friendly_name(self._entry_title, self.accessory),
             self.state.pincode,
             self.accessory.xhm_uri(),
