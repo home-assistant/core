@@ -11,7 +11,13 @@ from plugwise.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import entity_registry as er
@@ -26,7 +32,7 @@ def _async_cleanup_registry_entries(
     hass: HomeAssistant,
     entry: ConfigEntry,
     entry_id: str,
-    current_entities: set[tuple[str, str]],
+    current_entities: set[tuple[Platform, str]],
 ) -> None:
     """Remove extra entities that are no longer part of the integration."""
     entity_registry = er.async_get(hass)
@@ -82,7 +88,9 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             timeout=30,
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
-        self.current_entities: set[tuple[str, str]] = {("dummy", "dummy_id")}
+        self.current_entities: set[tuple[Platform, str]] = {
+            (Platform.CLIMATE, "dummy_id-climate")
+        }
 
     async def _connect(self) -> None:
         """Connect to the Plugwise Smile."""
