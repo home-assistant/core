@@ -1261,6 +1261,25 @@ class Entity(ABC):
             self.hass, integration_domain=platform_name, module=type(self).__module__
         )
 
+    @final
+    @callback
+    def async_update_capabilities(self) -> None:
+        """Update capabilities and supported features stored in the entity registry.
+
+        Integrations should call this method when capability attributes or supported
+        features have changed.
+
+        The method does nothing if the entity is not in the entity registry.
+        """
+        if not self.registry_entry:
+            return
+        entity_registry = er.async_get(self.hass)
+        entity_registry.async_update_entity(
+            self.entity_id,
+            capabilities=self.capability_attributes,
+            supported_features=self.supported_features,
+        )
+
 
 @dataclass(slots=True)
 class ToggleEntityDescription(EntityDescription):

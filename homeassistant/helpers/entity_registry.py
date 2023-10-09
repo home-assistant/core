@@ -936,11 +936,13 @@ class EntityRegistry:
         original_device_class: str | None | UndefinedType = UNDEFINED,
         original_icon: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
-        supported_features: int | UndefinedType = UNDEFINED,
+        supported_features: int | None | UndefinedType = UNDEFINED,
         translation_key: str | None | UndefinedType = UNDEFINED,
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Update properties of an entity."""
+        supported_features = supported_features or 0
+
         return self._async_update_entity(
             entity_id,
             aliases=aliases,

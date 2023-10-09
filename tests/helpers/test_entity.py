@@ -1560,3 +1560,49 @@ async def test_suggest_report_issue_custom_component(
 
     suggestion = mock_entity._suggest_report_issue()
     assert suggestion == "create a bug report at https://some_url"
+
+
+async def test_update_capabilities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test calling async_update_capabilities."""
+    platform = MockEntityPlatform(hass)
+
+    entity = MockEntity(unique_id="qwer")
+    await platform.async_add_entities([entity])
+
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry.capabilities is None
+    assert entry.supported_features == 0
+
+    entity._values["capability_attributes"] = {"bla": "blu"}
+    entity._values["supported_features"] = 127
+    entity.async_write_ha_state()
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry.capabilities is None
+    assert entry.supported_features == 0
+
+    entity.async_update_capabilities()
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry.capabilities == {"bla": "blu"}
+    assert entry.supported_features == 127
+
+
+async def test_update_capabilities_no_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test calling async_update_capabilities."""
+    platform = MockEntityPlatform(hass)
+
+    entity = MockEntity()
+    await platform.async_add_entities([entity])
+
+    assert entity_registry.async_get(entity.entity_id) is None
+
+    entity._values["capability_attributes"] = {"bla": "blu"}
+    entity._values["supported_features"] = 127
+    entity.async_write_ha_state()
+    entity.async_update_capabilities()
+    assert entity_registry.async_get(entity.entity_id) is None
