@@ -33,6 +33,7 @@ from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_integration
 
 # Loading the config flow file will register the flow
 from . import debug_info, discovery
@@ -217,6 +218,28 @@ def _async_remove_mqtt_issues(hass: HomeAssistant, mqtt_data: MqttData) -> None:
         async_delete_issue(hass, DOMAIN, open_config_issues.pop())
 
 
+async def async_check_config_schema(
+    hass: HomeAssistant, config_yaml: ConfigType
+) -> None:
+    """Validate the manual configured mqtt items against the platform config."""
+    mqtt_data = get_mqtt_data(hass)
+    mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml[DOMAIN]
+    for mqtt_config_item in mqtt_config:
+        for domain, config_items in mqtt_config_item.items():
+            if (schema := mqtt_data.reload_schema.get(domain)) is None:
+                continue
+            for config in config_items:
+                try:
+                    schema(config)
+                except vol.Invalid as ex:
+                    integration = await async_get_integration(hass, DOMAIN)
+                    # pylint: disable-next=protected-access
+                    message, _ = conf_util._format_config_error(
+                        ex, domain, config, integration.documentation
+                    )
+                    raise HomeAssistantError(message) from ex
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     conf: dict[str, Any]
@@ -381,6 +404,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "Error reloading manually configured MQTT items, "
                     "check your configuration.yaml"
                 )
+            # Check the schema before continuing reload
+            await async_check_config_schema(hass, config_yaml)
+
             # Unregister open config issues
             _async_remove_mqtt_issues(hass, mqtt_data)
 

@@ -37,6 +37,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .test_common import (
     help_custom_config,
@@ -1332,3 +1333,32 @@ async def test_reload_after_invalid_config(
         assert hass.states.get("alarm_control_panel.test") is not None
         assert mock_async_create_issue.call_count == 1
         assert mock_async_remove_issue.call_count == 1
+
+        # Reload with an invalid config
+        invalid_config = {
+            "mqtt": [
+                {
+                    "alarm_control_panel": {
+                        "name": "test",
+                        "command_topic": "test-topic",
+                        "invalid_option": "should_fail",
+                    }
+                },
+            ]
+        }
+        with patch(
+            "homeassistant.config.load_yaml_config_file", return_value=invalid_config
+        ), pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "mqtt",
+                SERVICE_RELOAD,
+                {},
+                blocking=True,
+            )
+            await hass.async_block_till_done()
+
+        # Make sure the config is loaded now
+        assert hass.states.get("alarm_control_panel.test") is not None
+        # Existing items are not effected and
+        # no new issues are created at this time
+        assert mock_async_create_issue.call_count == 1

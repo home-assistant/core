@@ -443,6 +443,9 @@ async def async_mqtt_entry_helper(
 
         async_add_entities(entities)
 
+    # When reloading we check manual configured items against the schema
+    # before reloading
+    mqtt_data.reload_schema[domain] = platform_schema_modern
     # discover manual configured MQTT items
     mqtt_data.reload_handlers[domain] = _async_setup_entities
     await _async_setup_entities()
