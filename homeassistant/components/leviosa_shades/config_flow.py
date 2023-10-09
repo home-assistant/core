@@ -1,10 +1,10 @@
 """Config flow for Leviosa shades Zone."""
 import logging
 
-from leviosapy import LeviosaZoneHub, discover_leviosa_zones
+from leviosapy import discover_leviosa_zones, validate_zone
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -19,7 +19,6 @@ from .const import (
     GROUP4_NAME,
     GROUP5_NAME,
     GROUP6_NAME,
-    HUB_EXCEPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,24 +34,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(GROUP6_NAME): str,
     }
 )
-
-
-async def validate_zone(hass: core.HomeAssistant, hub_address):
-    """Ensure the Leviosa Zone is up and running and get the FW version."""
-    try:
-        _LOGGER.debug("Contacting Zone: %s", hub_address)
-        hub = LeviosaZoneHub(
-            hub_ip=hub_address,
-            hub_name="tempZone",
-            websession=async_get_clientsession(hass),
-        )
-        await hub.getHubInfo()
-        _LOGGER.debug("Zone firmware v: %s", hub.fwVer)
-    except HUB_EXCEPTIONS as err:
-        raise CannotConnect from err
-    if hub.fwVer == "invalid":
-        raise CannotConnect
-    return hub.fwVer
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -92,7 +73,7 @@ class LeviosaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 devs_to_be_removed.append(dev_key)
         for dev in devs_to_be_removed:
             self._devices.pop(dev)
-        _LOGGER.debug("There are %d Zones can be included in Hass", len(self._devices))
+        _LOGGER.info("There are %d Zones can be included in Hass", len(self._devices))
         Zones = list(self._devices.keys())
         if len(Zones) == 1:
             self._host = self._devices[Zones[0]]
@@ -131,16 +112,12 @@ class LeviosaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for i in user_input:
                 _LOGGER.debug("UI %s -> %s", i, user_input[i])
 
-            if self._host_already_configured(self._host):
-                return self.async_abort(reason="device_already_configured")
-            try:
-                fw_ver = await validate_zone(self.hass, self._host)
-            except CannotConnect:
+            fw_ver = await validate_zone(async_get_clientsession(self.hass), self._host)
+            if fw_ver == "invalid":
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+            elif fw_ver is None:
                 errors["base"] = "unknown"
-            if not errors:
+            else:
                 _LOGGER.debug("Saving Integration data")
                 await self.async_set_unique_id(self._host_uid)
                 bgs = []
@@ -177,7 +154,3 @@ class LeviosaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_HOST in entry.data
         }
         return host in existing_hosts
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
