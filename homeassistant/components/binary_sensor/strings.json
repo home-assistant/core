@@ -286,6 +286,13 @@
         "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
+    "tamper": {
+      "name": "Tamper",
+      "state": {
+        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "Tampering detected"
+      }
+    },
     "update": {
       "name": "Update",
       "state": {

@@ -172,7 +172,7 @@ COLORS = {
     "yellow": RGBColor(255, 255, 0),
     "yellowgreen": RGBColor(154, 205, 50),
     # And...
-    "homeassistant": RGBColor(3, 169, 244),
+    "homeassistant": RGBColor(24, 188, 242),
 }
 
 
