@@ -151,10 +151,24 @@ async def test_commands(
 
 
 @pytest.mark.parametrize(
-    ("service", "issue_id"),
+    ("service", "issue_id", "placeholders"),
     [
-        (SERVICE_TURN_OFF, "service_deprecation_turn_off"),
-        (SERVICE_TURN_ON, "service_deprecation_turn_on"),
+        (
+            SERVICE_TURN_OFF,
+            "service_deprecation_turn_off",
+            {
+                "old_service": "vacuum.turn_off",
+                "new_service": "vacuum.stop",
+            },
+        ),
+        (
+            SERVICE_TURN_ON,
+            "service_deprecation_turn_on",
+            {
+                "old_service": "vacuum.turn_on",
+                "new_service": "vacuum.start",
+            },
+        ),
     ],
 )
 async def test_issues(
@@ -163,6 +177,7 @@ async def test_issues(
     caplog: pytest.LogCaptureFixture,
     service: str,
     issue_id: str,
+    placeholders: dict[str, str],
 ) -> None:
     """Test issues raised by calling deprecated services."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
@@ -172,7 +187,7 @@ async def test_issues(
     assert vacuum.state == STATE_DOCKED
 
     await hass.services.async_call(
-        COMPONENT_SERVICE_DOMAIN.get(service, PLATFORM_DOMAIN),
+        PLATFORM_DOMAIN,
         service,
         {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
         blocking=True,
@@ -182,3 +197,4 @@ async def test_issues(
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue.is_fixable is True
     assert issue.is_persistent is True
+    assert issue.translation_placeholders == placeholders

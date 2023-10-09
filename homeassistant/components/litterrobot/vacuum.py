@@ -110,6 +110,10 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="service_deprecation_turn_on",
+            translation_placeholders={
+                "old_service": "vacuum.turn_on",
+                "new_service": "vacuum.start",
+            },
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -124,6 +128,10 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="service_deprecation_turn_off",
+            translation_placeholders={
+                "old_service": "vacuum.turn_off",
+                "new_service": "vacuum.stop",
+            },
         )
 
     async def async_start(self) -> None:
