@@ -655,7 +655,6 @@ class HomeKit:
         # the database.
         assert self.driver is not None
         self.driver.state.increment_config_version()
-        self.driver.async_persist()
         self.driver.async_update_advertisement()
         await asyncio.sleep(_HOMEKIT_CONFIG_UPDATE_TIME)
         self._async_recreate_removed_accessories_in_bridge_mode(removed)
