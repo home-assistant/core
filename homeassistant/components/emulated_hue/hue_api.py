@@ -368,8 +368,7 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # Get the entity's supported features
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if entity.domain == light.DOMAIN:
-            color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
+        color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, []) if entity.domain == light.DOMAIN else None
 
         # Parse the request
         parsed: dict[str, Any] = {
@@ -437,6 +436,72 @@ class HueOneLightChangeView(HomeAssistantView):
                 parsed[STATE_BRIGHTNESS] = round(level)
                 parsed[STATE_ON] = True
 
+        # Construct what we need to send to the service
+        data: dict[str, Any] = {ATTR_ENTITY_ID: entity_id}
+
+        [turn_on_needed, domain, service, data] = self.set_data_based_on_domain(entity, parsed, data, entity_features, color_modes)
+
+        # Map the off command to on
+        if entity.domain in config.off_maps_to_on_domains:
+            service = SERVICE_TURN_ON
+
+        # Separate call to turn on needed
+        if turn_on_needed:
+            hass.async_create_task(
+                hass.services.async_call(
+                    core.DOMAIN,
+                    SERVICE_TURN_ON,
+                    {ATTR_ENTITY_ID: entity_id},
+                    blocking=True,
+                )
+            )
+
+        if service is not None:
+            state_will_change = parsed[STATE_ON] != (entity.state != STATE_OFF)
+
+            hass.async_create_task(
+                hass.services.async_call(domain, service, data, blocking=True)
+            )
+
+            if state_will_change:
+                # Wait for the state to change.
+                await wait_for_state_change_or_timeout(
+                    hass, entity_id, STATE_CACHED_TIMEOUT
+                )
+
+        # Create success responses for all received keys
+        json_response = [
+            create_hue_success_response(
+                entity_number, HUE_API_STATE_ON, parsed[STATE_ON]
+            )
+        ]
+
+        for key, val in (
+            (STATE_BRIGHTNESS, HUE_API_STATE_BRI),
+            (STATE_HUE, HUE_API_STATE_HUE),
+            (STATE_SATURATION, HUE_API_STATE_SAT),
+            (STATE_COLOR_TEMP, HUE_API_STATE_CT),
+            (STATE_XY, HUE_API_STATE_XY),
+            (STATE_TRANSITION, HUE_API_STATE_TRANSITION),
+        ):
+            if parsed[key] is not None:
+                json_response.append(
+                    create_hue_success_response(entity_number, val, parsed[key])
+                )
+
+        if entity.domain in config.off_maps_to_on_domains:
+            # Caching is required because things like scripts and scenes won't
+            # report as "off" to Alexa if an "off" command is received, because
+            # they'll map to "on". Thus, instead of reporting its actual
+            # status, we report what Alexa will want to see, which is the same
+            # as the actual requested command.
+            config.cached_states[entity_id] = [parsed, None]
+        else:
+            config.cached_states[entity_id] = [parsed, time.time()]
+
+        return self.json(json_response)
+
+    def set_data_based_on_domain(self, entity, parsed, data, entity_features, color_modes):
         # Choose general HA domain
         domain = core.DOMAIN
 
@@ -446,46 +511,10 @@ class HueOneLightChangeView(HomeAssistantView):
         # Convert the resulting "on" status into the service we need to call
         service: str | None = SERVICE_TURN_ON if parsed[STATE_ON] else SERVICE_TURN_OFF
 
-        # Construct what we need to send to the service
-        data: dict[str, Any] = {ATTR_ENTITY_ID: entity_id}
-
         # If the requested entity is a light, set the brightness, hue,
         # saturation and color temp
         if entity.domain == light.DOMAIN and parsed[STATE_ON]:
-            if (
-                light.brightness_supported(color_modes)
-                and parsed[STATE_BRIGHTNESS] is not None
-            ):
-                data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
-                    parsed[STATE_BRIGHTNESS]
-                )
-
-            if light.color_supported(color_modes):
-                if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
-
-                    hue = parsed[STATE_HUE] if parsed[STATE_HUE] is not None else 0
-                    sat = parsed[STATE_SATURATION] if parsed[STATE_SATURATION] is not None else 0
-
-                    # Convert hs values to hass hs values
-                    hue = int((hue / HUE_API_STATE_HUE_MAX) * 360)
-                    sat = int((sat / HUE_API_STATE_SAT_MAX) * 100)
-
-                    data[ATTR_HS_COLOR] = (hue, sat)
-
-                if parsed[STATE_XY] is not None:
-                    data[ATTR_XY_COLOR] = parsed[STATE_XY]
-
-            if (
-                light.color_temp_supported(color_modes)
-                and parsed[STATE_COLOR_TEMP] is not None
-            ):
-                data[ATTR_COLOR_TEMP] = parsed[STATE_COLOR_TEMP]
-
-            if (
-                entity_features & LightEntityFeature.TRANSITION
-                and parsed[STATE_TRANSITION] is not None
-            ):
-                data[ATTR_TRANSITION] = parsed[STATE_TRANSITION] / 10
+            data = self.handle_light_entity(parsed, entity_features, data, color_modes)
 
         # If the requested entity is a script, add some variables
         elif entity.domain == script.DOMAIN:
@@ -552,67 +581,45 @@ class HueOneLightChangeView(HomeAssistantView):
             domain = entity.domain
             # Convert 0-100 to a fan speed
             data[ATTR_PERCENTAGE] = parsed[STATE_BRIGHTNESS]
+        return [turn_on_needed, domain, service, data]
 
-        # Map the off command to on
-        if entity.domain in config.off_maps_to_on_domains:
-            service = SERVICE_TURN_ON
-
-        # Separate call to turn on needed
-        if turn_on_needed:
-            hass.async_create_task(
-                hass.services.async_call(
-                    core.DOMAIN,
-                    SERVICE_TURN_ON,
-                    {ATTR_ENTITY_ID: entity_id},
-                    blocking=True,
-                )
-            )
-
-        if service is not None:
-            state_will_change = parsed[STATE_ON] != (entity.state != STATE_OFF)
-
-            hass.async_create_task(
-                hass.services.async_call(domain, service, data, blocking=True)
-            )
-
-            if state_will_change:
-                # Wait for the state to change.
-                await wait_for_state_change_or_timeout(
-                    hass, entity_id, STATE_CACHED_TIMEOUT
-                )
-
-        # Create success responses for all received keys
-        json_response = [
-            create_hue_success_response(
-                entity_number, HUE_API_STATE_ON, parsed[STATE_ON]
-            )
-        ]
-
-        for key, val in (
-            (STATE_BRIGHTNESS, HUE_API_STATE_BRI),
-            (STATE_HUE, HUE_API_STATE_HUE),
-            (STATE_SATURATION, HUE_API_STATE_SAT),
-            (STATE_COLOR_TEMP, HUE_API_STATE_CT),
-            (STATE_XY, HUE_API_STATE_XY),
-            (STATE_TRANSITION, HUE_API_STATE_TRANSITION),
+    def handle_light_entity(self, parsed, entity_features, data, color_modes):
+        if (
+            light.brightness_supported(color_modes)
+            and parsed[STATE_BRIGHTNESS] is not None
         ):
-            if parsed[key] is not None:
-                json_response.append(
-                    create_hue_success_response(entity_number, val, parsed[key])
-                )
+            data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
+                parsed[STATE_BRIGHTNESS]
+            )
 
-        if entity.domain in config.off_maps_to_on_domains:
-            # Caching is required because things like scripts and scenes won't
-            # report as "off" to Alexa if an "off" command is received, because
-            # they'll map to "on". Thus, instead of reporting its actual
-            # status, we report what Alexa will want to see, which is the same
-            # as the actual requested command.
-            config.cached_states[entity_id] = [parsed, None]
-        else:
-            config.cached_states[entity_id] = [parsed, time.time()]
+        if light.color_supported(color_modes):
+            if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
 
-        return self.json(json_response)
+                hue = parsed[STATE_HUE] if parsed[STATE_HUE] is not None else 0
+                sat = parsed[STATE_SATURATION] if parsed[STATE_SATURATION] is not None else 0
 
+                # Convert hs values to hass hs values
+                hue = int((hue / HUE_API_STATE_HUE_MAX) * 360)
+                sat = int((sat / HUE_API_STATE_SAT_MAX) * 100)
+
+                data[ATTR_HS_COLOR] = (hue, sat)
+
+            if parsed[STATE_XY] is not None:
+                data[ATTR_XY_COLOR] = parsed[STATE_XY]
+
+        if (
+            light.color_temp_supported(color_modes)
+            and parsed[STATE_COLOR_TEMP] is not None
+        ):
+            data[ATTR_COLOR_TEMP] = parsed[STATE_COLOR_TEMP]
+
+        if (
+            entity_features & LightEntityFeature.TRANSITION
+            and parsed[STATE_TRANSITION] is not None
+        ):
+            data[ATTR_TRANSITION] = parsed[STATE_TRANSITION] / 10
+
+        return data
 
 def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
     """Retrieve and convert state and brightness values for an entity."""
