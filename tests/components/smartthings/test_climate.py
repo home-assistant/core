@@ -629,7 +629,7 @@ async def test_set_windfree_off(hass: HomeAssistant, air_conditioner) -> None:
         blocking=True,
     )
     state = hass.states.get("climate.air_conditioner")
-    assert state.attributes[ATTR_PRESET_MODE] == ""
+    assert not state.attributes[ATTR_PRESET_MODE]
 
 
 async def test_set_swing_mode(hass: HomeAssistant, air_conditioner) -> None:
