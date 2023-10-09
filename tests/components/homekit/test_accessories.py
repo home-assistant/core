@@ -65,7 +65,7 @@ async def test_accessory_cancels_track_state_change_on_stop(
     ):
         await acc.run()
     assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]) == 1
-    await acc.stop()
+    acc.async_stop()
     assert entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]
 
 

@@ -73,7 +73,7 @@ async def _async_reconfigure_stream(hass, acc, session_info, stream_config):
 
 async def _async_stop_all_streams(hass, acc):
     """Stop all camera streams."""
-    await acc.stop()
+    acc.async_stop()
     await acc.run()
     await hass.async_block_till_done()
 
