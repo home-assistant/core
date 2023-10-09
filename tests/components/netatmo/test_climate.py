@@ -3,6 +3,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -505,7 +506,7 @@ async def test_service_preset_mode_with_end_time_thermostats(
     )
 
     # Test setting an in valid preset mode (not in THERM_MODES) and a valid end datetime
-    with pytest.raises(ValueError):
+    with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             "netatmo",
             SERVICE_SET_PRESET_MODE_WITH_OPTIONAL_END_DATETIME,

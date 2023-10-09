@@ -133,7 +133,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_PRESET_MODE_WITH_OPTIONAL_END_DATETIME,
         {
-            vol.Required(ATTR_PRESET_MODE): cv.string,
+            vol.Required(ATTR_PRESET_MODE): vol.In(THERM_MODES),
             vol.Optional(ATTR_END_DATETIME): cv.datetime,
         },
         "_async_service_set_preset_mode_with_optional_end_datetime",
@@ -427,16 +427,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     async def _async_service_set_preset_mode_with_optional_end_datetime(
         self, **kwargs: Any
     ) -> None:
-        preset_mode = kwargs.get(ATTR_PRESET_MODE)
+        preset_mode = kwargs[ATTR_PRESET_MODE]
         end_datetime = kwargs.get(ATTR_END_DATETIME)
         end_timestamp = None
-
-        if preset_mode not in THERM_MODES:
-            msg = (
-                f"{preset_mode} does not support end datetime. "
-                "Only 'away' and 'Frost Guard' are supported"
-            )
-            raise ValueError(msg)
 
         if end_datetime:
             end_timestamp = int(dt_util.as_timestamp(end_datetime))
@@ -445,11 +438,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             mode=PRESET_MAP_NETATMO[preset_mode], end_time=end_timestamp
         )
         _LOGGER.debug(
-            "Setting %s preset to %s (%s) with optional end datetime to %s (%s)",
+            "Setting %s preset to %s with optional end datetime to %s",
             self._room.home.entity_id,
-            kwargs.get(ATTR_PRESET_MODE),
             preset_mode,
-            kwargs.get(ATTR_END_DATETIME),
             end_timestamp,
         )
 
