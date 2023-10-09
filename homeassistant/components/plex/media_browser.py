@@ -159,6 +159,97 @@ def build_item_response(payload, plex_server, server_id, is_internal, platform):
     return media_info
 
 
+def _handle_special_folder(
+    media_content_type, plex_server, media_content_id, server_id, special_folder
+):
+    if media_content_type == "server":
+        library_or_section = plex_server.library
+        children_media_class = MediaClass.DIRECTORY
+        title = plex_server.friendly_name
+    elif media_content_type == "library":
+        library_or_section = plex_server.library.sectionByID(int(media_content_id))
+        title = library_or_section.title
+        try:
+            children_media_class = ITEM_TYPE_MEDIA_CLASS[library_or_section.TYPE]
+        except KeyError as err:
+            raise UnknownMediaType(
+                f"Unknown type received: {library_or_section.TYPE}"
+            ) from err
+    else:
+        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
+
+    payload = {
+        "title": title,
+        "media_class": MediaClass.DIRECTORY,
+        "media_content_id": generate_plex_uri(
+            server_id, f"{media_content_id}/{special_folder}"
+        ),
+        "media_content_type": media_content_type,
+        "can_play": False,
+        "can_expand": True,
+        "children": [],
+        "children_media_class": children_media_class,
+    }
+
+    if special_folder == "Recommended":
+        for item in library_or_section.hubs():
+            if item.type == "photo":
+                continue
+            payload["children"].append(hub_payload(item))
+
+    return BrowseMedia(**payload)
+
+
+def _handle_hub_type(
+    hub_location, plex_server, hub_identifier, server_id, platform, is_internal
+):
+    if hub_location == "server":
+        hub = next(
+            x for x in plex_server.library.hubs() if x.hubIdentifier == hub_identifier
+        )
+        media_content_id = f"server/{hub.hubIdentifier}"
+    else:
+        library_section = plex_server.library.sectionByID(int(hub_location))
+        hub = next(
+            x for x in library_section.hubs() if x.hubIdentifier == hub_identifier
+        )
+        media_content_id = f"{hub.librarySectionID}/{hub.hubIdentifier}"
+    try:
+        children_media_class = ITEM_TYPE_MEDIA_CLASS[hub.type]
+    except KeyError as err:
+        raise UnknownMediaType(f"Unknown type received: {hub.type}") from err
+    payload = {
+        "title": hub.title,
+        "media_class": MediaClass.DIRECTORY,
+        "media_content_id": generate_plex_uri(server_id, media_content_id),
+        "media_content_type": "hub",
+        "can_play": False,
+        "can_expand": True,
+        "children": [],
+        "children_media_class": children_media_class,
+    }
+    for item in hub.items:
+        if hub.type == "station":
+            if platform == "sonos":
+                continue
+            payload["children"].append(station_payload(item))
+        else:
+            extra_params = None
+            hub_context = hub.context.split(".")[-1]
+            if hub_context in ("continue", "inprogress", "ondeck"):
+                extra_params = {"resume": 1}
+            payload["children"].append(
+                item_payload(
+                    item,
+                    plex_server,
+                    server_id,
+                    is_internal,
+                    extra_params=extra_params,
+                )
+            )
+    return BrowseMedia(**payload)
+
+
 ###############################################################################################################
 #####################################   ORIGINAL   ############################################################
 ###############################################################################################################
@@ -185,93 +276,14 @@ def browse_media(  # noqa: C901
         return root_payload(hass, is_internal, platform=platform)
 
     if media_content_type == "hub":
-        if hub_location == "server":
-            hub = next(
-                x
-                for x in plex_server.library.hubs()
-                if x.hubIdentifier == hub_identifier
-            )
-            media_content_id = f"server/{hub.hubIdentifier}"
-        else:
-            library_section = plex_server.library.sectionByID(int(hub_location))
-            hub = next(
-                x for x in library_section.hubs() if x.hubIdentifier == hub_identifier
-            )
-            media_content_id = f"{hub.librarySectionID}/{hub.hubIdentifier}"
-        try:
-            children_media_class = ITEM_TYPE_MEDIA_CLASS[hub.type]
-        except KeyError as err:
-            raise UnknownMediaType(f"Unknown type received: {hub.type}") from err
-        payload = {
-            "title": hub.title,
-            "media_class": MediaClass.DIRECTORY,
-            "media_content_id": generate_plex_uri(server_id, media_content_id),
-            "media_content_type": "hub",
-            "can_play": False,
-            "can_expand": True,
-            "children": [],
-            "children_media_class": children_media_class,
-        }
-        for item in hub.items:
-            if hub.type == "station":
-                if platform == "sonos":
-                    continue
-                payload["children"].append(station_payload(item))
-            else:
-                extra_params = None
-                hub_context = hub.context.split(".")[-1]
-                if hub_context in ("continue", "inprogress", "ondeck"):
-                    extra_params = {"resume": 1}
-                payload["children"].append(
-                    item_payload(
-                        item,
-                        plex_server,
-                        server_id,
-                        is_internal,
-                        extra_params=extra_params,
-                    )
-                )
-        return BrowseMedia(**payload)
+        return _handle_hub_type(
+            hub_location, plex_server, hub_identifier, server_id, platform, is_internal
+        )
 
     if special_folder:
-        if media_content_type == "server":
-            library_or_section = plex_server.library
-            children_media_class = MediaClass.DIRECTORY
-            title = plex_server.friendly_name
-        elif media_content_type == "library":
-            library_or_section = plex_server.library.sectionByID(int(media_content_id))
-            title = library_or_section.title
-            try:
-                children_media_class = ITEM_TYPE_MEDIA_CLASS[library_or_section.TYPE]
-            except KeyError as err:
-                raise UnknownMediaType(
-                    f"Unknown type received: {library_or_section.TYPE}"
-                ) from err
-        else:
-            raise BrowseError(
-                f"Media not found: {media_content_type} / {media_content_id}"
-            )
-
-        payload = {
-            "title": title,
-            "media_class": MediaClass.DIRECTORY,
-            "media_content_id": generate_plex_uri(
-                server_id, f"{media_content_id}/{special_folder}"
-            ),
-            "media_content_type": media_content_type,
-            "can_play": False,
-            "can_expand": True,
-            "children": [],
-            "children_media_class": children_media_class,
-        }
-
-        if special_folder == "Recommended":
-            for item in library_or_section.hubs():
-                if item.type == "photo":
-                    continue
-                payload["children"].append(hub_payload(item))
-
-        return BrowseMedia(**payload)
+        return _handle_special_folder(
+            media_content_type, plex_server, media_content_id, server_id, special_folder
+        )
 
     try:
         if media_content_type == "server":
