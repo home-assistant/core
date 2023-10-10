@@ -58,10 +58,14 @@ ATTR_SUN_EXPOSURE = "sun_exposure"
 ATTR_VEGETATION_TYPE = "vegetation_type"
 ATTR_ZONES = "zones"
 
+STR_NOT_SET = "Not Set"
+STR_NOT_IMPL = "Service not implemented for this entity"
+
+
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 SOIL_TYPE_MAP = {
-    0: "Not Set",
+    0: STR_NOT_SET,
     1: "Clay Loam",
     2: "Silty Clay",
     3: "Clay",
@@ -76,7 +80,7 @@ SOIL_TYPE_MAP = {
 }
 
 SLOPE_TYPE_MAP = {
-    0: "Not Set",
+    0: STR_NOT_SET,
     1: "Flat",
     2: "Moderate",
     3: "High",
@@ -85,7 +89,7 @@ SLOPE_TYPE_MAP = {
 }
 
 SPRINKLER_TYPE_MAP = {
-    0: "Not Set",
+    0: STR_NOT_SET,
     1: "Popup Spray",
     2: "Rotors Low Rate",
     3: "Surface Drip",
@@ -94,11 +98,11 @@ SPRINKLER_TYPE_MAP = {
     99: "Other",
 }
 
-SUN_EXPOSURE_MAP = {0: "Not Set", 1: "Full Sun", 2: "Partial Shade", 3: "Full Shade"}
+SUN_EXPOSURE_MAP = {0: STR_NOT_SET, 1: "Full Sun", 2: "Partial Shade", 3: "Full Shade"}
 
 VEGETATION_MAP = {
-    0: "Not Set",
-    1: "Not Set",
+    0: STR_NOT_SET,
+    1: STR_NOT_SET,
     2: "Cool Season Grass",
     3: "Fruit Trees",
     4: "Flowers",
@@ -273,19 +277,19 @@ class RainMachineBaseSwitch(RainMachineEntity, SwitchEntity):
 
     async def async_start_program(self) -> None:
         """Execute the start_program entity service."""
-        raise NotImplementedError("Service not implemented for this entity")
+        raise NotImplementedError(STR_NOT_IMPL)
 
     async def async_start_zone(self, *, zone_run_time: int) -> None:
         """Execute the start_zone entity service."""
-        raise NotImplementedError("Service not implemented for this entity")
+        raise NotImplementedError(STR_NOT_IMPL)
 
     async def async_stop_program(self) -> None:
         """Execute the stop_program entity service."""
-        raise NotImplementedError("Service not implemented for this entity")
+        raise NotImplementedError(STR_NOT_IMPL)
 
     async def async_stop_zone(self) -> None:
         """Execute the stop_zone entity service."""
-        raise NotImplementedError("Service not implemented for this entity")
+        raise NotImplementedError(STR_NOT_IMPL)
 
 
 class RainMachineActivitySwitch(RainMachineBaseSwitch):
