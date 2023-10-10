@@ -1,10 +1,10 @@
 {
-  "domain": "lorawan",
-  "name": "LoRaWAN",
+  "domain": "browan",
+  "name": "Browan",
   "codeowners": ["@oliv4945"],
   "config_flow": true,
   "dependencies": ["mqtt"],
-  "documentation": "https://www.home-assistant.io/integrations/lorawan",
+  "documentation": "https://www.home-assistant.io/integrations/browan",
   "homekit": {},
   "iot_class": "cloud_push",
   "requirements": ["pyliblorawan==0.1.1"],

@@ -1,4 +1,4 @@
-"""Test the LoRaWAN config flow."""
+"""Test the Browan config flow."""
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -7,7 +7,7 @@ from pyliblorawan.models import Device
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.lorawan.const import DOMAIN
+from homeassistant.components.browan.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -24,7 +24,6 @@ FORM_DATA = {
     "api_key": "TEST API KEY",
     "url": "https://TEST-URL",
     "device_eui": "aa11223344556677",
-    "manufacturer": "browan",
     "model": "TBMS100",
 }
 
@@ -138,7 +137,7 @@ async def test_generic_exception(
 
     assert caplog_debug.record_tuples == [
         (
-            "homeassistant.components.lorawan.config_flow",
+            "homeassistant.components.browan.config_flow",
             logging.ERROR,
             "Unexpected exception",
         )

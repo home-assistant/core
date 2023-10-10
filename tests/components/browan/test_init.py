@@ -1,9 +1,9 @@
-"""Test LoRaWAN platform __init__ file."""
+"""Test Browan platform __init__ file."""
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.lorawan import async_setup_entry
-from homeassistant.components.lorawan.const import DOMAIN
+from homeassistant.components.browan import async_setup_entry
+from homeassistant.components.browan.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 
@@ -13,7 +13,7 @@ async def test_async_setup_entry(
     mock_config_entry: config_entries.ConfigEntry,
     caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
-    """Test LoRaWAN platform setup."""
+    """Test Browan platform setup."""
     assert await async_setup_entry(hass, mock_config_entry) is True
     assert hass.data[DOMAIN] == {}
 

@@ -1,4 +1,4 @@
-"""Common fixtures for the LoRaWAN tests."""
+"""Common fixtures for the Browan tests."""
 from collections.abc import Generator
 import logging
 from unittest.mock import AsyncMock, patch
@@ -10,9 +10,9 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def mock_config_entry():
-    """Mock LoRaWAN config entry."""
+    """Mock Browan config entry."""
     config_entry = MockConfigEntry(
-        domain="lorawan",
+        domain="browan",
         title="TEST-ENTRY-TITLE",
         data={
             "manufacturer": "browan",
@@ -28,7 +28,7 @@ def mock_config_entry():
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.lorawan.async_setup_entry", return_value=True
+        "homeassistant.components.browan.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -39,11 +39,11 @@ def caplog_debug(
 ):
     """Disable all loggers except the DUT set to all messages."""
     caplog.set_level(level=logging.CRITICAL + 1)
-    caplog.set_level(level=logging.DEBUG, logger="homeassistant.components.lorawan")
+    caplog.set_level(level=logging.DEBUG, logger="homeassistant.components.browan")
     caplog.set_level(
-        level=logging.DEBUG, logger="homeassistant.components.lorawan.config_flow"
+        level=logging.DEBUG, logger="homeassistant.components.browan.config_flow"
     )
     caplog.set_level(
-        level=logging.DEBUG, logger="homeassistant.components.lorawan.sensor"
+        level=logging.DEBUG, logger="homeassistant.components.browan.sensor"
     )
     return caplog

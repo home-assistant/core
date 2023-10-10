@@ -176,6 +176,8 @@ build.json @home-assistant/supervisor
 /tests/components/brother/ @bieniu
 /homeassistant/components/brottsplatskartan/ @gjohansson-ST
 /tests/components/brottsplatskartan/ @gjohansson-ST
+/homeassistant/components/browan/ @oliv4945
+/tests/components/browan/ @oliv4945
 /homeassistant/components/brunt/ @eavanvalkenburg
 /tests/components/brunt/ @eavanvalkenburg
 /homeassistant/components/bsblan/ @liudger
@@ -726,8 +728,6 @@ build.json @home-assistant/supervisor
 /tests/components/lookin/ @ANMalko @bdraco
 /homeassistant/components/loqed/ @mikewoudenberg
 /tests/components/loqed/ @mikewoudenberg
-/homeassistant/components/lorawan/ @oliv4945
-/tests/components/lorawan/ @oliv4945
 /homeassistant/components/lovelace/ @home-assistant/frontend
 /tests/components/lovelace/ @home-assistant/frontend
 /homeassistant/components/luci/ @mzdrale

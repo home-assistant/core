@@ -1,4 +1,4 @@
-"""Test LoRaWAN sensor entity."""
+"""Test Browan sensor entity."""
 import datetime
 import json
 import logging
@@ -8,9 +8,9 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.lorawan.devices.browan import HassTBMS100
-from homeassistant.components.lorawan.models import SensorTypes
-from homeassistant.components.lorawan.sensor import (
+from homeassistant.components.browan.devices import HassTBMS100
+from homeassistant.components.browan.models import SensorTypes
+from homeassistant.components.browan.sensor import (
     _LOGGER as DUT_LOGGER,
     LorawanSensorCoordinator,
     LorawanSensorEntity,
@@ -25,7 +25,7 @@ from .data import ttn_uplink  # noqa: F401
 
 
 @patch(
-    "homeassistant.components.lorawan.sensor.LorawanSensorCoordinator.subscribe",
+    "homeassistant.components.browan.sensor.LorawanSensorCoordinator.subscribe",
 )
 @pytest.mark.asyncio
 async def test_async_setup_entry(
@@ -34,7 +34,7 @@ async def test_async_setup_entry(
     mock_config_entry: config_entries.ConfigEntry,
     caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
-    """Test LoRaWAN sensor entity setup."""
+    """Test Browan sensor entity setup."""
     async_add_entities = Mock(autospec=True)
 
     await async_setup_entry(hass, mock_config_entry, async_add_entities)
@@ -50,37 +50,27 @@ async def test_async_setup_entry(
 
 
 @patch(
-    "homeassistant.components.lorawan.sensor.LorawanSensorCoordinator.subscribe",
+    "homeassistant.components.browan.sensor.LorawanSensorCoordinator.subscribe",
 )
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("config_data", "warning_message"),
     [
         (
-            {"manufacturer": "TEST-INVALID-MANUFACTURER"},
-            'Manufacturer name "TEST-INVALID-MANUFACTURER" is invalid',
-        ),
-        (
             {
-                "manufacturer": "browan",
                 "model": "TEST-INVALID-DEVICE",
             },
             'Device name "TEST-INVALID-DEVICE" from Browan is invalid',
         ),
         (
-            {"manufacturer": "testUnknownManufacturer"},
-            'Manufacturer "testUnknownManufacturer" is unknown',
-        ),
-        (
             {
-                "manufacturer": "browan",
                 "model": "testUnknownDevice",
             },
             'Device "testUnknownDevice" from Browan is unknown',
         ),
     ],
 )
-async def test_async_setup_invalid_manufacturer_device(
+async def test_async_setup_invalid_device_name(
     mock_subscribe: AsyncMock,
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
@@ -88,7 +78,7 @@ async def test_async_setup_invalid_manufacturer_device(
     config_data: dict,
     warning_message: str,
 ) -> None:
-    """Test LoRaWAN sensor entity setup."""
+    """Test Browan sensor entity setup."""
     async_add_entities = Mock(autospec=True)
     mock_config_entry.data = MappingProxyType(config_data)
 
@@ -98,7 +88,7 @@ async def test_async_setup_invalid_manufacturer_device(
 
     assert caplog_debug.record_tuples == [
         (
-            "homeassistant.components.lorawan.sensor",
+            "homeassistant.components.browan.sensor",
             logging.ERROR,
             warning_message,
         ),
@@ -185,7 +175,7 @@ async def test_lorawansensorcoordinator_subscribe_callback(
 
     assert caplog_debug.record_tuples == [
         (
-            "homeassistant.components.lorawan.sensor",
+            "homeassistant.components.browan.sensor",
             logging.DEBUG,
             "Manually updated LorawanSensorCoordinator.TEST-ENTRY-TITLE data",
         ),
@@ -247,7 +237,7 @@ async def test_lorawan_sensor_entity_handle_update(
 
     assert caplog_debug.record_tuples == [
         (
-            "homeassistant.components.lorawan.sensor",
+            "homeassistant.components.browan.sensor",
             logging.DEBUG,
             "Manually updated LorawanSensorCoordinator.TEST-ENTRY-TITLE data",
         ),
@@ -267,7 +257,7 @@ async def test_device_info(
     entity = LorawanSensorEntity(hass, mock_config_entry, coordinator, sensor)
 
     assert entity.device_info == {
-        "identifiers": {("lorawan", "0011223344556677")},
+        "identifiers": {("browan", "0011223344556677")},
         "manufacturer": "browan",
         "model": "TBMS100",
         "name": "TEST-ENTRY-TITLE",

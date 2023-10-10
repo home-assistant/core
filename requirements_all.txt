@@ -1842,7 +1842,7 @@ pylaunches==1.4.0
 # homeassistant.components.lg_netcast
 pylgnetcast==0.3.7
 
-# homeassistant.components.lorawan
+# homeassistant.components.browan
 pyliblorawan==0.1.1
 
 # homeassistant.components.forked_daapd

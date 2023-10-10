@@ -1,10 +1,10 @@
-"""Data for LoRaWAN component tests."""
+"""Data for Browan component tests."""
 import pytest
 
 
 @pytest.fixture
 def ttn_uplink():
-    """TTN uplink dict for LoRaWAN component tests."""
+    """TTN uplink dict for Browan component tests."""
     return {
         "@type": "type.googleapis.com/ttn.lorawan.v3.ApplicationUp",
         "end_device_ids": {

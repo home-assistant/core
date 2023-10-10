@@ -1,4 +1,4 @@
-"""Config flow for LoRaWAN integration."""
+"""Config flow for Browan integration."""
 from __future__ import annotations
 
 import logging
@@ -32,13 +32,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 _RE_DEVICE_EUI = re.compile(r"^[0-9a-fA-F]{16}$")
 
-_MANUFACTURER_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[SelectOptionDict(value="browan", label="Browan")],
-        mode=SelectSelectorMode.DROPDOWN,
-    )
-)
-
 _DEVICE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[SelectOptionDict(value="TBMS100", label="TBMS100")],
@@ -52,7 +45,6 @@ _STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required("application"): str,
         vol.Required("api_key"): str,
         vol.Required("device_eui"): str,
-        vol.Required("manufacturer"): _MANUFACTURER_SELECTOR,
         vol.Required(CONF_MODEL): _DEVICE_SELECTOR,
     }
 )
@@ -83,7 +75,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Device:
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for LoRaWAN."""
+    """Handle a config flow for Browan."""
 
     VERSION = 1
 

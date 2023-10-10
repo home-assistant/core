@@ -705,6 +705,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "browan": {
+      "name": "Browan",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "browser": {
       "name": "Browser",
       "integration_type": "hub",
@@ -3180,12 +3186,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "lorawan": {
-      "name": "LoRaWAN",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_push"
     },
     "luftdaten": {
       "name": "Sensor.Community",
