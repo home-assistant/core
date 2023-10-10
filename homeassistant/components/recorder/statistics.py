@@ -1958,38 +1958,32 @@ def _sorted_statistics_to_dict(  # noqa: C901
         seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
 
     # Set all statistic IDs to empty lists in result set to maintain the order
-    if statistic_ids is not None:
-        for stat_id in statistic_ids:
-            # Only set the statistic ID if it is in the data to
-            # avoid having to do a second loop to remove the
-            # statistic IDs that are not in the data at the end
-            if stat_id in seen_statistic_ids:
-                result[stat_id] = []
+    _sorted_statistics_to_dict_id_order(statistic_ids, seen_statistic_ids, result)
 
     # Figure out which fields we need to extract from the SQL result
     # and which indices they have in the result so we can avoid the overhead
     # of doing a dict lookup for each row
-    mean_idx = field_map["mean"] if "mean" in types else None
-    min_idx = field_map["min"] if "min" in types else None
-    max_idx = field_map["max"] if "max" in types else None
-    last_reset_ts_idx = field_map["last_reset_ts"] if "last_reset" in types else None
-    state_idx = field_map["state"] if "state" in types else None
-    sum_idx = field_map["sum"] if "sum" in types else None
+    (
+        mean_idx,
+        min_idx,
+        max_idx,
+        last_reset_ts_idx,
+        state_idx,
+        sum_idx,
+    ) = _sorted_statistics_to_dict_field_idxs(field_map, types)
     sum_only = len(types) == 1 and sum_idx is not None
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
     for meta_id, stats_list in stats_by_meta_id.items():
         metadata_by_id = metadata[meta_id]
         statistic_id = metadata_by_id["statistic_id"]
-        if convert_units:
-            state_unit = unit = metadata_by_id["unit_of_measurement"]
-            if state := hass.states.get(statistic_id):
-                state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
-            # Ensure that convert is not None
-            convert = convert or (lambda x: x)
-        else:
-            convert = lambda x: x
+        convert = _sorted_statistics_to_dict_convert(
+            hass,
+            convert_units,
+            metadata_by_id["unit_of_measurement"],
+            units,
+            statistic_id,
+        )
 
         if sum_only:
             # This function is extremely flexible and can handle all types of
@@ -2020,21 +2014,78 @@ def _sorted_statistics_to_dict(  # noqa: C901
                 "start": (start_ts := db_state[start_ts_idx]),
                 "end": start_ts + table_duration_seconds,
             }
-            if last_reset_ts_idx is not None:
-                row["last_reset"] = db_state[last_reset_ts_idx]
-            if mean_idx is not None:
-                row["mean"] = convert(db_state[mean_idx])
-            if min_idx is not None:
-                row["min"] = convert(db_state[min_idx])
-            if max_idx is not None:
-                row["max"] = convert(db_state[max_idx])
-            if state_idx is not None:
-                row["state"] = convert(db_state[state_idx])
-            if sum_idx is not None:
-                row["sum"] = convert(db_state[sum_idx])
+
+            fields = [
+                ("last_reset", last_reset_ts_idx),
+                ("mean", mean_idx),
+                ("min", min_idx),
+                ("max", max_idx),
+                ("state", state_idx),
+                ("sum", sum_idx),
+            ]
+            fields = [
+                (field, field_idx)
+                for (field, field_idx) in fields
+                if field_idx is not None
+            ]
+
+            for field, field_idx in fields:
+                row[field] = convert(db_state[field_idx])  # type: ignore[index, literal-required]
             ent_results_append(row)
 
     return result
+
+
+def _sorted_statistics_to_dict_id_order(
+    statistic_ids: set[str] | None,
+    seen_statistic_ids: set[str],
+    result: dict[str, list[StatisticsRow]],
+) -> None:
+    """Set all statistic IDs to empty lists in result set to maintain the order."""
+    if statistic_ids is not None:
+        for stat_id in statistic_ids:
+            # Only set the statistic ID if it is in the data to
+            # avoid having to do a second loop to remove the
+            # statistic IDs that are not in the data at the end
+            if stat_id in seen_statistic_ids:
+                result[stat_id] = []
+
+
+def _sorted_statistics_to_dict_field_idxs(
+    field_map: dict[str, int],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+) -> tuple[int | None, int | None, int | None, int | None, int | None, int | None]:
+    """Find the fields and their indices from the SQL result.
+
+    Figure out which fields we need to extract from the SQL result
+    and which indices they have in the result so we can avoid the overhead
+    of doing a dict lookup for each row.
+    """
+    mean_idx = field_map["mean"] if "mean" in types else None
+    min_idx = field_map["min"] if "min" in types else None
+    max_idx = field_map["max"] if "max" in types else None
+    last_reset_ts_idx = field_map["last_reset_ts"] if "last_reset" in types else None
+    state_idx = field_map["state"] if "state" in types else None
+    sum_idx = field_map["sum"] if "sum" in types else None
+    return mean_idx, min_idx, max_idx, last_reset_ts_idx, state_idx, sum_idx
+
+
+def _sorted_statistics_to_dict_convert(
+    hass: HomeAssistant,
+    convert_units: bool,
+    unit: str | None,
+    units: dict[str, str] | None,
+    statistic_id: str,
+) -> Callable[[float | None], float | None] | Callable[..., Any]:
+    """Prepare a converter from the statistics unit to display unit for the _sorted_statistics_to_dict method."""
+    if convert_units:
+        state_unit = unit
+        if state := hass.states.get(statistic_id):
+            state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
+    else:
+        convert = None
+    return convert or (lambda x: x)
 
 
 def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
