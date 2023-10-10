@@ -37,9 +37,4 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
             self._error_count += 1
 
             if self.last_update_success and self._error_count >= MAX_ERRORS:
-                _LOGGER.debug(
-                    "Device is unavailable: %s (%s)",
-                    self.name,
-                    self.device.device_info,
-                )
                 raise UpdateFailed(f"Device {self.name} is unavailable") from error
