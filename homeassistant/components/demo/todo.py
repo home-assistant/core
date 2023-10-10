@@ -20,7 +20,7 @@ async def async_setup_entry(
 
 
 class DemoTodoListEntity(TodoListEntity):
-    """Representation of a demo todo entity."""
+    """Representation of a demo todo list entity."""
 
     _attr_has_entity_name = True
     _attr_name = "Reminders"

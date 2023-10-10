@@ -229,7 +229,7 @@ class ShoppingData:
         """Remove a shopping list item."""
         return await self.async_remove_items(item_ids=set({item_id}), context=context)
 
-    async def async_remove_items(self, item_ids: set[str], context=None):
+    async def async_remove_items(self, item_ids: set[str], context=None) -> None:
         """Remove a shopping list item."""
         items_dict: dict[str, dict[str, JsonValueType]] = {}
         for itm in self.items:
@@ -330,7 +330,7 @@ class ShoppingData:
             context=context,
         )
 
-    async def async_move_item(self, uid: str, previous: str | None = None):
+    async def async_move_item(self, uid: str, previous: str | None = None) -> None:
         """Re-order a shopping list item."""
         if uid == previous:
             return
