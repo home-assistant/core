@@ -8,7 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import frontend, websocket_api
+from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
@@ -62,10 +62,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_handle_todo_item_delete)
     websocket_api.async_register_command(hass, websocket_handle_todo_item_update)
     websocket_api.async_register_command(hass, websocket_handle_todo_item_move)
-
-    frontend.async_register_built_in_panel(
-        hass, "shopping-list", DOMAIN, "mdi:cart-check"
-    )
 
     await component.async_setup(config)
     return True
