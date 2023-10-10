@@ -2023,11 +2023,7 @@ def _sorted_statistics_to_dict(  # noqa: C901
                 ("state", state_idx),
                 ("sum", sum_idx),
             ]
-            fields = [
-                (field, field_idx)
-                for (field, field_idx) in fields
-                if field_idx is not None
-            ]
+            fields = list(filter((lambda field: field[1] is not None), fields))
             for field, field_idx in fields:
                 row[field] = convert(db_state[field_idx])  # type: ignore[index, literal-required]
             ent_results_append(row)
