@@ -80,7 +80,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
         super().__init__(hass, LOGGER, name="Withings", update_interval=UPDATE_INTERVAL)
         self._client = client
 
-    async def webhook_subscription_listener(self, connected: bool) -> None:
+    def webhook_subscription_listener(self, connected: bool) -> None:
         """Call when webhook status changed."""
         if connected:
             self.update_interval = None

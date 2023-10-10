@@ -146,6 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.debug("Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID])
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         await async_unsubscribe_webhooks(client)
+        hass.data[DOMAIN][entry.entry_id].webhook_subscription_listener(False)
 
     async def register_webhook(
         _: Any,
@@ -175,6 +176,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         await async_subscribe_webhooks(client, webhook_url)
+        hass.data[DOMAIN][entry.entry_id].webhook_subscription_listener(True)
         LOGGER.debug("Register Withings webhook: %s", webhook_url)
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
