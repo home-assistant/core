@@ -51,4 +51,5 @@ create:
         - light.ceiling
         - light.kitchen
       selector:
-        object:
+        entity:
+          multiple: true
