@@ -4,8 +4,10 @@ For more details about this platform, please refer to the documentation at
 """
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 import contextlib
+from datetime import timedelta
 from typing import Any
 
 from aiohttp.hdrs import METH_HEAD, METH_POST
@@ -78,6 +80,8 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+SUBSCRIBE_DELAY = timedelta(seconds=5)
+UNSUBSCRIBE_DELAY = timedelta(seconds=1)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -141,7 +145,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> None:
         LOGGER.debug("Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID])
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        await hass.data[DOMAIN][entry.entry_id].async_unsubscribe_webhooks()
+        await async_unsubscribe_webhooks(client)
+        coordinator.webhook_subscription_listener(False)
 
     async def register_webhook(
         _: Any,
@@ -170,7 +175,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             get_webhook_handler(coordinator),
         )
 
-        await hass.data[DOMAIN][entry.entry_id].async_subscribe_webhooks(webhook_url)
+        await async_subscribe_webhooks(client, webhook_url)
+        coordinator.webhook_subscription_listener(True)
         LOGGER.debug("Register Withings webhook: %s", webhook_url)
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
@@ -211,6 +217,53 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_subscribe_webhooks(
+    client: ConfigEntryWithingsApi, webhook_url: str
+) -> None:
+    """Subscribe to Withings webhooks."""
+    await async_unsubscribe_webhooks(client)
+
+    notification_to_subscribe = {
+        NotifyAppli.WEIGHT,
+        NotifyAppli.CIRCULATORY,
+        NotifyAppli.ACTIVITY,
+        NotifyAppli.SLEEP,
+        NotifyAppli.BED_IN,
+        NotifyAppli.BED_OUT,
+    }
+
+    for notification in notification_to_subscribe:
+        LOGGER.debug(
+            "Subscribing %s for %s in %s seconds",
+            webhook_url,
+            notification,
+            SUBSCRIBE_DELAY.total_seconds(),
+        )
+        # Withings will HTTP HEAD the callback_url and needs some downtime
+        # between each call or there is a higher chance of failure.
+        await asyncio.sleep(SUBSCRIBE_DELAY.total_seconds())
+        await client.async_notify_subscribe(webhook_url, notification)
+
+
+async def async_unsubscribe_webhooks(client: ConfigEntryWithingsApi) -> None:
+    """Unsubscribe to all Withings webhooks."""
+    current_webhooks = await client.async_notify_list()
+
+    for webhook_configuration in current_webhooks.profiles:
+        LOGGER.debug(
+            "Unsubscribing %s for %s in %s seconds",
+            webhook_configuration.callbackurl,
+            webhook_configuration.appli,
+            UNSUBSCRIBE_DELAY.total_seconds(),
+        )
+        # Quick calls to Withings can result in the service returning errors.
+        # Give them some time to cool down.
+        await asyncio.sleep(UNSUBSCRIBE_DELAY.total_seconds())
+        await client.async_notify_revoke(
+            webhook_configuration.callbackurl, webhook_configuration.appli
+        )
 
 
 async def async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
