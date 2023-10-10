@@ -60,7 +60,7 @@ class FakeDiscovery:
         return new_infos
 
 
-def build_device_mock(name="device-1", ip="1.1.1.1", mac="aabbcc112233"):
+def build_device_mock(name="r10", ip="1.1.1.1", mac="aabbcc112233"):
     """Build mock device object."""
     mock = Mock(
         uuid="abc",
@@ -77,7 +77,7 @@ def build_device_mock(name="device-1", ip="1.1.1.1", mac="aabbcc112233"):
     return mock
 
 
-def build_base_device_mock(name="device-1", ip="1.1.1.1", mac="aabbcc112233"):
+def build_base_device_mock(name="r10", ip="1.1.1.1", mac="aabbcc112233"):
     """Build mock  base device object."""
     mock = Mock(
         device_info=build_device_mock(name=name, ip=ip, mac=mac),
@@ -92,6 +92,9 @@ def build_base_device_mock(name="device-1", ip="1.1.1.1", mac="aabbcc112233"):
         sub_type="eu",
         channels=[0],
         async_handle_update=AsyncMock(),
+        async_turn_on=AsyncMock(),
+        async_turn_off=AsyncMock(),
+        async_toggle=AsyncMock(),
     )
     mock.status = {0: True}
     return mock

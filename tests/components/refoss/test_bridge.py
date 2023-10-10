@@ -18,7 +18,7 @@ async def test_discovery_after_setup(hass: HomeAssistant) -> None:
         return_value=AsyncMock(),
     ) as mock_device:
         mock_device.return_value = build_base_device_mock(
-            name="device-1", ip="1.1.1.1", mac="aabbcc112233"
+            name="r10", ip="1.1.1.1", mac="aabbcc112233"
         )
 
         await async_setup_refoss(hass)
