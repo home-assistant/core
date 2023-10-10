@@ -32,25 +32,6 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
-WEBSOCKET_TODO_ITEM_CREATE_SCHEMA = vol.Schema(
-    {
-        vol.Required("summary"): cv.string,
-        vol.Optional("status", default=TodoItemStatus.NEEDS_ACTION): vol.In(
-            {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED}
-        ),
-    },
-)
-WEBSOCKET_TODO_ITEM_UPDATE_SCHEMA = vol.Schema(
-    {
-        vol.Required("uid"): cv.string,
-        vol.Required("summary"): cv.string,
-        vol.Optional("status"): vol.In(
-            {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED}
-        ),
-    },
-)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Todo entities."""
     component = hass.data[DOMAIN] = EntityComponent[TodoListEntity](
@@ -114,11 +95,11 @@ class TodoListEntity(Entity):
         raise NotImplementedError()
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Add an item to the To-do list."""
+        """Update an item in the To-do list."""
         raise NotImplementedError()
 
     async def async_delete_todo_items(self, uids: set[str]) -> None:
-        """Add an item to the To-do list."""
+        """Delete an item in the To-do list."""
         raise NotImplementedError()
 
     async def async_move_todo_item(self, uid: str, previous: str | None) -> None:
@@ -139,7 +120,7 @@ async def websocket_handle_todo_item_list(
     """Handle the list of To-do items in a To-do- list."""
     component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
     if (
-        not (entity_id := msg.get(CONF_ENTITY_ID))
+        not (entity_id := msg[CONF_ENTITY_ID])
         or not (entity := component.get_entity(entity_id))
         or not isinstance(entity, TodoListEntity)
     ):
@@ -158,7 +139,14 @@ async def websocket_handle_todo_item_list(
     {
         vol.Required("type"): "todo/item/create",
         vol.Required("entity_id"): cv.entity_id,
-        vol.Required("item"): WEBSOCKET_TODO_ITEM_CREATE_SCHEMA,
+        vol.Required("item"): vol.Schema(
+            {
+                vol.Required("summary"): cv.string,
+                vol.Optional("status", default=TodoItemStatus.NEEDS_ACTION): vol.In(
+                    {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED}
+                ),
+            },
+        ),
     }
 )
 @websocket_api.async_response
@@ -184,8 +172,11 @@ async def websocket_handle_todo_item_create(
         )
         return
 
+    item = msg["item"]
     try:
-        await entity.async_create_todo_item(item=TodoItem(**msg["item"]))
+        await entity.async_create_todo_item(
+            item=TodoItem(summary=item["summary"], status=item["status"])
+        )
     except HomeAssistantError as ex:
         connection.send_error(msg["id"], "failed", str(ex))
     else:
@@ -237,7 +228,15 @@ async def websocket_handle_todo_item_delete(
     {
         vol.Required("type"): "todo/item/update",
         vol.Required("entity_id"): cv.entity_id,
-        vol.Required("item"): WEBSOCKET_TODO_ITEM_UPDATE_SCHEMA,
+        vol.Required("item"): vol.Schema(
+            {
+                vol.Required("uid"): cv.string,
+                vol.Required("summary"): cv.string,
+                vol.Optional("status"): vol.In(
+                    {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED}
+                ),
+            },
+        ),
     }
 )
 @websocket_api.async_response
