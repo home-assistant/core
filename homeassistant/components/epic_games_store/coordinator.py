@@ -39,6 +39,8 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, list[dict[str, Any]]]
     async def _async_update_data(self) -> dict[str, list[dict[str, Any]]]:
         """Update data via library."""
         try:
+            # pylint: disable-next=protected-access
+            self._api._get_errors = not_handle_service_errors
             data = await self.hass.async_add_executor_job(self._api.get_free_games)
         except Exception as error:
             raise UpdateFailed(error) from error
@@ -80,3 +82,8 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, list[dict[str, Any]]]
 
         _LOGGER.debug(return_data)
         return return_data
+
+
+def not_handle_service_errors(resp: Any = None):
+    """Handle service error locally."""
+    pass  # pylint: disable=unnecessary-pass

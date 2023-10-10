@@ -1,4 +1,5 @@
 """Helper for Epic Games Store."""
+import contextlib
 from typing import Any
 
 from homeassistant.util import dt as dt_util
@@ -12,28 +13,6 @@ def get_country_from_locale(locale: str) -> str:
         if excepts.get(locale)
         else (locale[3:] if ("-" in locale) else locale)
     ).upper()
-
-
-def is_free_game(game: dict[str, Any]) -> bool:
-    """Return if the game is free or will be free."""
-    return (
-        # Current free game(s)
-        game["promotions"]["promotionalOffers"]
-        and game["promotions"]["promotionalOffers"][0]["promotionalOffers"][0][
-            "discountSetting"
-        ]["discountPercentage"]
-        == 0
-        and
-        # Checking current price, maybe not necessary
-        game["price"]["totalPrice"]["discountPrice"] == 0
-    ) or (
-        # Upcoming free game(s)
-        game["promotions"]["upcomingPromotionalOffers"]
-        and game["promotions"]["upcomingPromotionalOffers"][0]["promotionalOffers"][0][
-            "discountSetting"
-        ]["discountPercentage"]
-        == 0
-    )
 
 
 def format_game_data(raw_game_data: dict[str, Any], locale: str) -> dict[str, Any]:
@@ -69,7 +48,7 @@ def format_game_data(raw_game_data: dict[str, Any], locale: str) -> dict[str, An
             "originalPrice"
         ].replace("\xa0", " "),
         "publisher": raw_game_data["seller"]["name"],
-        "url": f"https://store.epicgames.com/{locale}/p/{raw_game_data['catalogNs']['mappings'][0]['pageSlug']}",
+        "url": get_game_url(raw_game_data, locale),
         "img_portrait": img_portrait,
         "img_landscape": img_landscape,
         "discount_type": ("free" if is_free_game(raw_game_data) else "discount")
@@ -82,3 +61,41 @@ def format_game_data(raw_game_data: dict[str, Any], locale: str) -> dict[str, An
         if promotion_data
         else None,
     }
+
+
+def get_game_url(raw_game_data: dict[str, Any], locale: str) -> str:
+    """Format raw API game data for Home Assistant users."""
+    url_bundle_or_product = "bundles" if raw_game_data["offerType"] == "BUNDLE" else "p"
+    url_slug: str | None = None
+    try:
+        url_slug = raw_game_data["offerMappings"][0]["pageSlug"]
+    except Exception:  # pylint: disable=broad-except
+        with contextlib.suppress(Exception):
+            url_slug = raw_game_data["catalogNs"]["mappings"][0]["pageSlug"]
+
+    if not url_slug:
+        url_slug = raw_game_data["urlSlug"]
+
+    return f"https://store.epicgames.com/{locale}/{url_bundle_or_product}/{url_slug}"
+
+
+def is_free_game(game: dict[str, Any]) -> bool:
+    """Return if the game is free or will be free."""
+    return (
+        # Current free game(s)
+        game["promotions"]["promotionalOffers"]
+        and game["promotions"]["promotionalOffers"][0]["promotionalOffers"][0][
+            "discountSetting"
+        ]["discountPercentage"]
+        == 0
+        and
+        # Checking current price, maybe not necessary
+        game["price"]["totalPrice"]["discountPrice"] == 0
+    ) or (
+        # Upcoming free game(s)
+        game["promotions"]["upcomingPromotionalOffers"]
+        and game["promotions"]["upcomingPromotionalOffers"][0]["promotionalOffers"][0][
+            "discountSetting"
+        ]["discountPercentage"]
+        == 0
+    )

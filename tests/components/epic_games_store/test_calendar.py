@@ -91,3 +91,19 @@ async def test_free_games(
         "Rising Storm 2: Vietnam",
         "Filament",
     ]
+
+
+async def test_attribute_not_found(
+    hass: HomeAssistant, service_attribute_not_found: Mock
+) -> None:
+    """Test setup component with calendars."""
+    await setup_platform(hass, CALENDAR_DOMAIN)
+
+    state = hass.states.get("calendar.epic_games_store_discount_games")
+    assert state.name == "Epic Games Store Discount Games"
+    state = hass.states.get("calendar.epic_games_store_free_games")
+    assert state.name == "Epic Games Store Free Games"
+    assert state.state == STATE_ON
+    cal_attrs = dict(state.attributes)
+    cal_games = cal_attrs.pop("games")
+    assert len(cal_games) == 3

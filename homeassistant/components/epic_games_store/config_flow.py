@@ -13,6 +13,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_LOCALE, CONF_SUPPORTED_LOCALES, DOMAIN
+from .coordinator import not_handle_service_errors
 from .helper import get_country_from_locale
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,10 +42,16 @@ async def validate_input(
     api = EpicGamesStoreAPI(
         user_input[CONF_LOCALE], get_country_from_locale(user_input[CONF_LOCALE])
     )
+    # pylint: disable-next=protected-access
+    api._get_errors = not_handle_service_errors
     data = await hass.async_add_executor_job(api.get_free_games)
 
     if data.get("errors"):
-        _LOGGER.error(data["errors"])
+        _LOGGER.warning(data["errors"])
+
+    try:
+        data["data"]["Catalog"]["searchStore"]["elements"]
+    except Exception:  # pylint: disable=broad-except
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
