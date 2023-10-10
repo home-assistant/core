@@ -290,6 +290,33 @@ async def test_events_during_migration_queue_exhausted(
     )
     assert len(db_states) == 2
 
+async def test_migration_apply_update_to_version_4(recorder_db_url: str, hass: HomeAssistant) -> None:
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "homeassistant.components.recorder.core.create_engine",
+        new=create_engine_test,
+    ), patch(
+        "homeassistant.components.recorder.migration._apply_update",
+        wraps=migration._apply_update,
+    ) as update:
+        recorder_helper.async_initialize_recorder(hass)
+        await async_setup_component(
+            hass, "recorder", {"recorder": {"db_url": recorder_db_url}}
+        )
+        await async_wait_recording_done(hass)
+
+        instance = recorder.get_instance(hass)
+        engine = instance.engine
+        session_maker = instance.get_session
+        
+        assert recorder.migration._apply_update(instance=instance, hass=hass, engine=engine, session_maker=session_maker, new_version=4, old_version=2) == None
+        assert recorder.migration._apply_update(instance=instance, hass=hass, engine=engine, session_maker=session_maker, new_version=4, old_version=3) == None
+
+    update.assert_has_calls(
+        [
+            call(instance, hass, engine, session_maker, version + 1, 0)
+            for version in range(0, db_schema.SCHEMA_VERSION)
+        ]
+    )
 
 @pytest.mark.parametrize(
     ("start_version", "live"),
