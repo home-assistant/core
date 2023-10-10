@@ -55,6 +55,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             cleanup()
 
     if hass.data[DOMAIN].get(DATA_DISCOVERY_SERVICE) is not None:
+        refoss_discovery: DiscoveryService = hass.data[DOMAIN][DATA_DISCOVERY_SERVICE]
+        refoss_discovery.discovery.clean_up()
         hass.data[DOMAIN].pop(DATA_DISCOVERY_SERVICE)
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
