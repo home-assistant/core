@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from refoss_ha.discovery import Discovery
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 
@@ -14,7 +12,7 @@ from .util import refoss_discovery_server
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""
 
-    refoss_discovery: Discovery = await refoss_discovery_server(hass)
+    refoss_discovery = await refoss_discovery_server(hass)
     devices = await refoss_discovery.broadcast_msg(wait_for=DISCOVERY_TIMEOUT)
     return len(devices) > 0
 
