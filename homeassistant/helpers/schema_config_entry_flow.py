@@ -180,7 +180,7 @@ class SchemaCommonFlowHandler:
 
         return await self._show_next_step(step_id)
 
-    def _update_and_remove_omitted_opional_keys(
+    def _update_and_remove_omitted_optional_keys(
         self,
         values: dict[str, Any],
         user_input: dict[str, Any],
