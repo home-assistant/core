@@ -343,50 +343,26 @@ class LightTemplate(TemplateEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
+
         optimistic_set = False
         # set optimistic states
         if self._template is None:
             self._state = True
             optimistic_set = True
 
-        if self._level_template is None and ATTR_BRIGHTNESS in kwargs:
-            _LOGGER.debug(
-                "Optimistically setting brightness to %s", kwargs[ATTR_BRIGHTNESS]
-            )
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
+        if self.checkAndSetBrightness(**kwargs):
             optimistic_set = True
 
-        if self._temperature_template is None and ATTR_COLOR_TEMP in kwargs:
-            _LOGGER.debug(
-                "Optimistically setting color temperature to %s",
-                kwargs[ATTR_COLOR_TEMP],
-            )
-            self._temperature = kwargs[ATTR_COLOR_TEMP]
-            if self._color_template is None:
-                self._color = None
+        if self.checkAndSetTemperature(**kwargs):
             optimistic_set = True
 
-        if self._color_template is None and ATTR_HS_COLOR in kwargs:
-            _LOGGER.debug(
-                "Optimistically setting color to %s",
-                kwargs[ATTR_HS_COLOR],
-            )
-            self._color = kwargs[ATTR_HS_COLOR]
-            if self._temperature_template is None:
-                self._temperature = None
+        if self.checkAndSetColor(**kwargs):
             optimistic_set = True
 
-        common_params = {}
-
-        if ATTR_BRIGHTNESS in kwargs:
-            common_params["brightness"] = kwargs[ATTR_BRIGHTNESS]
-
-        if ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            common_params["transition"] = kwargs[ATTR_TRANSITION]
+        common_params: dict[str, Any] = {}
+        self.addCommonParams(common_params, **kwargs)
 
         if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
-            common_params["color_temp"] = kwargs[ATTR_COLOR_TEMP]
-
             await self.async_run_script(
                 self._temperature_script,
                 run_variables=common_params,
@@ -394,6 +370,8 @@ class LightTemplate(TemplateEntity, LightEntity):
             )
         elif ATTR_EFFECT in kwargs and self._effect_script:
             effect = kwargs[ATTR_EFFECT]
+            # self.checkValidEffect(effect)
+
             if effect not in self._effect_list:
                 _LOGGER.error(
                     "Received invalid effect: %s for entity %s. Expected one of: %s",
@@ -428,6 +406,63 @@ class LightTemplate(TemplateEntity, LightEntity):
 
         if optimistic_set:
             self.async_write_ha_state()
+
+    def checkAndSetBrightness(self, **kwargs: Any):
+        """Prepare the brightness parameter, if existing, for script execution."""
+        if self._level_template is None and ATTR_BRIGHTNESS in kwargs:
+            _LOGGER.debug(
+                "Optimistically setting brightness to %s", kwargs[ATTR_BRIGHTNESS]
+            )
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
+            return True
+        return False
+
+    def checkAndSetTemperature(self, **kwargs: Any):
+        """Prepare the temperature parameter, if existing, for script execution."""
+        if self._temperature_template is None and ATTR_COLOR_TEMP in kwargs:
+            _LOGGER.debug(
+                "Optimistically setting color temperature to %s",
+                kwargs[ATTR_COLOR_TEMP],
+            )
+            self._temperature = kwargs[ATTR_COLOR_TEMP]
+            if self._color_template is None:
+                self._color = None
+                return True
+        return False
+
+    def checkAndSetColor(self, **kwargs: Any):
+        """Prepare the color parameter, if existing, for script execution."""
+        if self._color_template is None and ATTR_HS_COLOR in kwargs:
+            _LOGGER.debug(
+                "Optimistically setting color to %s",
+                kwargs[ATTR_HS_COLOR],
+            )
+            self._color = kwargs[ATTR_HS_COLOR]
+            if self._temperature_template is None:
+                self._temperature = None
+            return True
+        return False
+
+    def addCommonParams(self, common_params: dict[str, Any], **kwargs: Any):
+        """Collect parameters that are common into a dictionary, for future execution of scripts."""
+        if ATTR_BRIGHTNESS in kwargs:
+            common_params["brightness"] = kwargs[ATTR_BRIGHTNESS]
+
+        if ATTR_TRANSITION in kwargs and self._supports_transition is True:
+            common_params["transition"] = kwargs[ATTR_TRANSITION]
+
+        if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
+            common_params["color_temp"] = kwargs[ATTR_COLOR_TEMP]
+
+    # def checkValidEffect(self, effect: int) -> None:
+    #     if effect not in self._effect_list:
+    #         _LOGGER.error(
+    #             "Received invalid effect: %s for entity %s. Expected one of: %s",
+    #             effect,
+    #             self.entity_id,
+    #             self._effect_list,
+    #             exc_info=True,
+    #         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
