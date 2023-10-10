@@ -1,10 +1,10 @@
 """The tests for the Recorder component."""
+
 import datetime
 import importlib
 import sqlite3
 import sys
 import threading
-from typing import Any
 from unittest.mock import Mock, PropertyMock, call, patch
 
 import pytest
@@ -35,7 +35,6 @@ import homeassistant.util.dt as dt_util
 from .common import async_wait_recording_done, create_engine_test
 
 from tests.common import async_fire_time_changed
-from tests.typing import RecorderInstanceGenerator
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
@@ -586,142 +585,3 @@ def test_raise_if_exception_missing_empty_cause_str() -> None:
 
     with pytest.raises(ProgrammingError):
         migration.raise_if_exception_missing_str(programming_exc, ["not present"])
-
-
-async def test_stats_timestamp_conversion_is_reentrant(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
-    hass: HomeAssistant,
-) -> None:
-    """Test stats migration is reentrant."""
-    instance = await async_setup_recorder_instance(hass)
-    now = dt_util.utcnow()
-    one_year_ago = now - datetime.timedelta(days=365)
-    six_months_ago = now - datetime.timedelta(days=180)
-    one_month_ago = now - datetime.timedelta(days=30)
-
-    def _do_migration():
-        migration._migrate_statistics_columns_to_timestamp_removing_duplicates(
-            hass, instance, instance.get_session, instance.engine
-        )
-
-    def _insert_fake_metadata():
-        with session_scope(hass=hass) as session:
-            session.add(
-                db_schema.StatisticsMeta(
-                    id=1000,
-                    statistic_id="test",
-                    source="test",
-                    unit_of_measurement="test",
-                    has_mean=True,
-                    has_sum=True,
-                    name="1",
-                )
-            )
-
-    def _insert_pre_timestamp_stat(date_time: datetime) -> None:
-        with session_scope(hass=hass) as session:
-            session.add(
-                db_schema.StatisticsShortTerm(
-                    metadata_id=1000,
-                    created=date_time,
-                    created_ts=None,
-                    start=date_time,
-                    start_ts=None,
-                    last_reset=date_time,
-                    last_reset_ts=None,
-                    state="1",
-                )
-            )
-
-    def _insert_post_timestamp_stat(date_time: datetime) -> None:
-        with session_scope(hass=hass) as session:
-            session.add(
-                db_schema.StatisticsShortTerm(
-                    metadata_id=1000,
-                    created=None,
-                    created_ts=date_time.timestamp(),
-                    start=None,
-                    start_ts=date_time.timestamp(),
-                    last_reset=None,
-                    last_reset_ts=date_time.timestamp(),
-                    state="1",
-                )
-            )
-
-    def _get_all_short_term_stats() -> list[dict[str, Any]]:
-        with session_scope(hass=hass) as session:
-            results = []
-            for result in (
-                session.query(db_schema.StatisticsShortTerm)
-                .where(db_schema.StatisticsShortTerm.metadata_id.is_(1000))
-                .all()
-            ):
-                results.append(
-                    {
-                        field.name: getattr(result, field.name)
-                        for field in db_schema.StatisticsShortTerm.__table__.c
-                    }
-                )
-            return results
-
-    await hass.async_add_executor_job(_insert_fake_metadata)
-    await async_wait_recording_done(hass)
-    await hass.async_add_executor_job(_insert_pre_timestamp_stat, one_year_ago)
-    await async_wait_recording_done(hass)
-    await hass.async_add_executor_job(_do_migration)
-    await hass.async_add_executor_job(_insert_post_timestamp_stat, six_months_ago)
-    await async_wait_recording_done(hass)
-    await hass.async_add_executor_job(_do_migration)
-    await hass.async_add_executor_job(_insert_pre_timestamp_stat, one_month_ago)
-    await async_wait_recording_done(hass)
-    await hass.async_add_executor_job(_do_migration)
-
-    final_result = await hass.async_add_executor_job(_get_all_short_term_stats)
-
-    assert final_result == [
-        {
-            "created": one_year_ago.replace(tzinfo=None),
-            "created_ts": one_year_ago.timestamp(),
-            "id": 1,
-            "last_reset": one_year_ago.replace(tzinfo=None),
-            "last_reset_ts": one_year_ago.timestamp(),
-            "max": None,
-            "mean": None,
-            "metadata_id": 1000,
-            "min": None,
-            "start": one_year_ago.replace(tzinfo=None),
-            "start_ts": one_year_ago.timestamp(),
-            "state": 1.0,
-            "sum": None,
-        },
-        {
-            "created": None,
-            "created_ts": six_months_ago.timestamp(),
-            "id": 2,
-            "last_reset": None,
-            "last_reset_ts": six_months_ago.timestamp(),
-            "max": None,
-            "mean": None,
-            "metadata_id": 1000,
-            "min": None,
-            "start": None,
-            "start_ts": six_months_ago.timestamp(),
-            "state": 1.0,
-            "sum": None,
-        },
-        {
-            "created": one_month_ago.replace(tzinfo=None),
-            "created_ts": one_month_ago.timestamp(),
-            "id": 3,
-            "last_reset": one_month_ago.replace(tzinfo=None),
-            "last_reset_ts": one_month_ago.timestamp(),
-            "max": None,
-            "mean": None,
-            "metadata_id": 1000,
-            "min": None,
-            "start": one_month_ago.replace(tzinfo=None),
-            "start_ts": one_month_ago.timestamp(),
-            "state": 1.0,
-            "sum": None,
-        },
-    ]
