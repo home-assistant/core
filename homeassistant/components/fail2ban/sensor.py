@@ -92,24 +92,30 @@ class BanSensor(SensorEntity):
             for entry in self.log_parser.data:
                 _LOGGER.debug(entry)
                 current_ip = entry[1]
-                if entry[0] == "Ban":
-                    if current_ip not in self.ban_dict[STATE_CURRENT_BANS]:
-                        self.ban_dict[STATE_CURRENT_BANS].append(current_ip)
-                    if current_ip not in self.ban_dict[STATE_ALL_BANS]:
-                        self.ban_dict[STATE_ALL_BANS].append(current_ip)
-                    if len(self.ban_dict[STATE_ALL_BANS]) > 10:
-                        self.ban_dict[STATE_ALL_BANS].pop(0)
 
-                elif (
-                    entry[0] == "Unban"
-                    and current_ip in self.ban_dict[STATE_CURRENT_BANS]
-                ):
-                    self.ban_dict[STATE_CURRENT_BANS].remove(current_ip)
+                if entry[0] == "Ban":
+                    self.process_ban(current_ip)
+                elif entry[0] == "Unban":
+                    self.process_unban(current_ip)
 
         if self.ban_dict[STATE_CURRENT_BANS]:
             self.last_ban = self.ban_dict[STATE_CURRENT_BANS][-1]
         else:
             self.last_ban = "None"
+
+    def process_ban(self, current_ip):
+        """Process a ban entry."""
+        if current_ip not in self.ban_dict[STATE_CURRENT_BANS]:
+            self.ban_dict[STATE_CURRENT_BANS].append(current_ip)
+        if current_ip not in self.ban_dict[STATE_ALL_BANS]:
+            self.ban_dict[STATE_ALL_BANS].append(current_ip)
+        if len(self.ban_dict[STATE_ALL_BANS]) > 10:
+            self.ban_dict[STATE_ALL_BANS].pop(0)
+
+    def process_unban(self, current_ip):
+        """Process an unban entry."""
+        if current_ip in self.ban_dict[STATE_CURRENT_BANS]:
+            self.ban_dict[STATE_CURRENT_BANS].remove(current_ip)
 
 
 class BanLogParser:
