@@ -141,7 +141,7 @@ def row_to_compressed_state(
     row: Row,
     attr_cache: dict[str, dict[str, Any]],
     start_time_ts: float | None,
-    entity_id: str,
+    _: Any,
     state: str,
     last_updated_ts: float | None,
     no_attributes: bool,
