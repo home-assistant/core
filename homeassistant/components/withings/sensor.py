@@ -26,13 +26,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     DOMAIN,
     SCORE_POINTS,
+    SLEEP_COORDINATOR,
     UOM_BEATS_PER_MINUTE,
     UOM_BREATHS_PER_MINUTE,
     UOM_FREQUENCY,
     UOM_MMHG,
+    WEIGHT_COORDINATOR,
     Measurement,
 )
-from .coordinator import WithingsDataUpdateCoordinator
+from .coordinator import (
+    WithingsMeasurementDataUpdateCoordinator,
+    WithingsSleepDataUpdateCoordinator,
+)
 from .entity import WithingsEntity, WithingsEntityDescription
 
 
@@ -43,7 +48,7 @@ class WithingsSensorEntityDescription(
     """Immutable class for describing withings binary sensor data."""
 
 
-SENSORS = [
+MEASUREMENT_SENSORS = [
     WithingsSensorEntityDescription(
         key=Measurement.WEIGHT_KG.value,
         measurement=Measurement.WEIGHT_KG,
@@ -185,6 +190,8 @@ SENSORS = [
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+]
+SLEEP_SENSORS = [
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY.value,
         measurement=Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY,
@@ -361,15 +368,49 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    coordinator: WithingsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    measurement_coordinator: WithingsMeasurementDataUpdateCoordinator = hass.data[
+        DOMAIN
+    ][entry.entry_id][WEIGHT_COORDINATOR]
 
-    async_add_entities(WithingsSensor(coordinator, attribute) for attribute in SENSORS)
+    async_add_entities(
+        WithingsMeasurementSensor(measurement_coordinator, attribute)
+        for attribute in MEASUREMENT_SENSORS
+    )
+    sleep_coordinator: WithingsSleepDataUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ][SLEEP_COORDINATOR]
+
+    async_add_entities(
+        WithingsMeasurementSensor(sleep_coordinator, attribute)
+        for attribute in SLEEP_SENSORS
+    )
 
 
-class WithingsSensor(WithingsEntity, SensorEntity):
-    """Implementation of a Withings sensor."""
+class WithingsMeasurementSensor(WithingsEntity, SensorEntity):
+    """Implementation of a Withings measurement sensor."""
 
     entity_description: WithingsSensorEntityDescription
+    coordinator: WithingsMeasurementDataUpdateCoordinator
+
+    @property
+    def native_value(self) -> None | str | int | float:
+        """Return the state of the entity."""
+        return self.coordinator.data[self.entity_description.measurement]
+
+    @property
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        return (
+            super().available
+            and self.entity_description.measurement in self.coordinator.data
+        )
+
+
+class WithingsSleepSensor(WithingsEntity, SensorEntity):
+    """Implementation of a Withings sleep sensor."""
+
+    entity_description: WithingsSensorEntityDescription
+    coordinator: WithingsSleepDataUpdateCoordinator
 
     @property
     def native_value(self) -> None | str | int | float:

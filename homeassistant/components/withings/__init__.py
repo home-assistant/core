@@ -44,14 +44,22 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api import ConfigEntryWithingsApi
 from .const import (
+    BED_PRESENCE_COORDINATOR,
     CONF_CLOUDHOOK_URL,
     CONF_PROFILES,
     CONF_USE_WEBHOOK,
     DEFAULT_TITLE,
     DOMAIN,
     LOGGER,
+    SLEEP_COORDINATOR,
+    WEIGHT_COORDINATOR,
 )
-from .coordinator import WithingsDataUpdateCoordinator
+from .coordinator import (
+    WithingsBedPresenceDataUpdateCoordinator,
+    WithingsDataUpdateCoordinator,
+    WithingsMeasurementDataUpdateCoordinator,
+    WithingsSleepDataUpdateCoordinator,
+)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -134,11 +142,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, entry
         ),
     )
-    coordinator = WithingsDataUpdateCoordinator(hass, client)
+    coordinators: dict[str, WithingsDataUpdateCoordinator] = {
+        WEIGHT_COORDINATOR: WithingsMeasurementDataUpdateCoordinator(hass, client),
+        SLEEP_COORDINATOR: WithingsSleepDataUpdateCoordinator(hass, client),
+        BED_PRESENCE_COORDINATOR: WithingsBedPresenceDataUpdateCoordinator(
+            hass, client
+        ),
+    }
 
-    await coordinator.async_config_entry_first_refresh()
+    for coordinator in coordinators.values():
+        await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
 
     async def unregister_webhook(
         _: Any,
@@ -146,7 +161,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.debug("Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID])
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         await async_unsubscribe_webhooks(client)
-        hass.data[DOMAIN][entry.entry_id].webhook_subscription_listener(False)
+        for coordinator in hass.data[DOMAIN][entry.entry_id].values():
+            coordinator.webhook_subscription_listener(False)
 
     async def register_webhook(
         _: Any,
@@ -172,11 +188,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DOMAIN,
             webhook_name,
             entry.data[CONF_WEBHOOK_ID],
-            get_webhook_handler(coordinator),
+            get_webhook_handler(coordinators),
         )
 
         await async_subscribe_webhooks(client, webhook_url)
-        hass.data[DOMAIN][entry.entry_id].webhook_subscription_listener(True)
+        for coordinator in hass.data[DOMAIN][entry.entry_id].values():
+            coordinator.webhook_subscription_listener(True)
         LOGGER.debug("Register Withings webhook: %s", webhook_url)
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
@@ -299,7 +316,7 @@ def json_message_response(message: str, message_code: int) -> Response:
 
 
 def get_webhook_handler(
-    coordinator: WithingsDataUpdateCoordinator,
+    coordinators: dict[str, WithingsDataUpdateCoordinator],
 ) -> Callable[[HomeAssistant, str, Request], Awaitable[Response | None]]:
     """Return webhook handler."""
 
@@ -330,7 +347,9 @@ def get_webhook_handler(
         except ValueError:
             return json_message_response("Invalid appli provided", message_code=21)
 
-        await coordinator.async_webhook_data_updated(appli)
+        for coordinator in coordinators.values():
+            if appli in coordinator.notification_categories:
+                await coordinator.async_webhook_data_updated(appli)
 
         return json_message_response("Success", message_code=0)
 

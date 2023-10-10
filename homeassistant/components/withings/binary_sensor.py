@@ -14,8 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, Measurement
-from .coordinator import WithingsDataUpdateCoordinator
+from .const import BED_PRESENCE_COORDINATOR, DOMAIN, Measurement
+from .coordinator import WithingsBedPresenceDataUpdateCoordinator
 from .entity import WithingsEntity, WithingsEntityDescription
 
 
@@ -45,7 +45,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    coordinator: WithingsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WithingsBedPresenceDataUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ][BED_PRESENCE_COORDINATOR]
 
     entities = [
         WithingsBinarySensor(coordinator, attribute) for attribute in BINARY_SENSORS
@@ -58,6 +60,7 @@ class WithingsBinarySensor(WithingsEntity, BinarySensorEntity):
     """Implementation of a Withings sensor."""
 
     entity_description: WithingsBinarySensorEntityDescription
+    coordinator: WithingsBedPresenceDataUpdateCoordinator
 
     @property
     def is_on(self) -> bool | None:

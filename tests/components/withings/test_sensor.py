@@ -11,7 +11,7 @@ from withings_api.common import NotifyAppli
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.withings.const import DOMAIN, Measurement
 from homeassistant.components.withings.entity import WithingsEntityDescription
-from homeassistant.components.withings.sensor import SENSORS
+from homeassistant.components.withings.sensor import MEASUREMENT_SENSORS, SLEEP_SENSORS
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -24,7 +24,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsEntityDescription] = {
-    attr.measurement: attr for attr in SENSORS
+    attr.measurement: attr for attr in (MEASUREMENT_SENSORS + SLEEP_SENSORS)
 }
 
 
@@ -105,7 +105,7 @@ async def test_sensor_default_enabled_entities(
 
     client = await hass_client_no_auth()
     # Assert entities should exist.
-    for attribute in SENSORS:
+    for attribute in MEASUREMENT_SENSORS + SLEEP_SENSORS:
         entity_id = await async_get_entity_id(hass, attribute, USER_ID, SENSOR_DOMAIN)
         assert entity_id
         assert entity_registry.async_is_registered(entity_id)
@@ -142,7 +142,7 @@ async def test_all_entities(
     """Test all entities."""
     await setup_integration(hass, polling_config_entry)
 
-    for sensor in SENSORS:
+    for sensor in MEASUREMENT_SENSORS + SLEEP_SENSORS:
         entity_id = await async_get_entity_id(hass, sensor, USER_ID, SENSOR_DOMAIN)
         assert hass.states.get(entity_id) == snapshot
 
