@@ -1311,7 +1311,7 @@ def _migrate_statistics_columns_to_timestamp(
                         f"created_ts=strftime('%s',created) + "
                         "cast(substr(created,-7) AS FLOAT), "
                         f"last_reset_ts=strftime('%s',last_reset) + "
-                        "cast(substr(last_reset,-7) AS FLOAT);"
+                        "cast(substr(last_reset,-7) AS FLOAT) where start_ts is NULL;"
                     )
                 )
     elif engine.dialect.name == SupportedDialect.MYSQL:
