@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio import timeout
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
-import async_timeout
 from iammeter.client import IamMeter
 import voluptuous as vol
 
@@ -123,7 +123,7 @@ async def async_setup_platform(
 
     async def async_update_data():
         try:
-            async with async_timeout.timeout(PLATFORM_TIMEOUT):
+            async with timeout(PLATFORM_TIMEOUT):
                 return await hass.async_add_executor_job(api.client.get_data)
         except asyncio.TimeoutError as err:
             raise UpdateFailed from err
