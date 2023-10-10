@@ -60,7 +60,6 @@ class VariableSensorEntity(AsekoEntity, SensorEntity):
 
         self._attr_icon = {
             "clf": "mdi:flask",
-            "ph": "mdi:ph",
             "rx": "mdi:test-tube",
             "waterLevel": "mdi:waves",
             "waterTemp": "mdi:coolant-temperature",
@@ -69,6 +68,7 @@ class VariableSensorEntity(AsekoEntity, SensorEntity):
         self._attr_device_class = {
             "airTemp": SensorDeviceClass.TEMPERATURE,
             "waterTemp": SensorDeviceClass.TEMPERATURE,
+            "ph": SensorDeviceClass.PH,
         }.get(self._variable.type)
 
     @property

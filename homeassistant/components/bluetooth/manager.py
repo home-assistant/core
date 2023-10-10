@@ -18,7 +18,7 @@ from bluetooth_adapters import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.logger import EVENT_LOGGING_CHANGED
+from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,

@@ -51,16 +51,6 @@ from .const import DOMAIN
 from .coordinator import RensonCoordinator
 from .entity import RensonEntity
 
-OPTIONS_MAPPING = {
-    "Off": "off",
-    "Level1": "level1",
-    "Level2": "level2",
-    "Level3": "level3",
-    "Level4": "level4",
-    "Breeze": "breeze",
-    "Holiday": "holiday",
-}
-
 
 @dataclass
 class RensonSensorEntityDescriptionMixin:
@@ -294,9 +284,9 @@ class RensonSensor(RensonEntity, SensorEntity):
         if self.raw_format:
             self._attr_native_value = value
         elif self.entity_description.device_class == SensorDeviceClass.ENUM:
-            self._attr_native_value = OPTIONS_MAPPING.get(
-                self.api.parse_value(value, self.data_type), None
-            )
+            self._attr_native_value = self.api.parse_value(
+                value, self.data_type
+            ).lower()
         else:
             self._attr_native_value = self.api.parse_value(value, self.data_type)
 

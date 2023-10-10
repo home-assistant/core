@@ -35,6 +35,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Validate input from user input."""
         errors: dict[str, str] = {}
         camera_info: CameraInfo | None = None
+        camera_location: str | None = None
 
         web_session = async_get_clientsession(self.hass)
         camera_api = TrafikverketCamera(web_session, sensor_api)
@@ -49,7 +50,12 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except UnknownError:
             errors["base"] = "cannot_connect"
 
-        camera_location = camera_info.location if camera_info else None
+        if camera_info:
+            if _location := camera_info.location:
+                camera_location = _location
+            else:
+                camera_location = camera_info.camera_name
+
         return (errors, camera_location)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:

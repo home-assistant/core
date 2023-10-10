@@ -18,6 +18,7 @@ class DatabaseEngine:
 
     dialect: SupportedDialect
     optimizer: DatabaseOptimizer
+    max_bind_vars: int
     version: AwesomeVersion | None
 
 
