@@ -124,6 +124,9 @@ RachioPy==1.0.3
 # homeassistant.components.python_script
 RestrictedPython==6.2;python_version<'3.12'
 
+# homeassistant.components.python_script
+RestrictedPython==7.0a1.dev0;python_version>='3.12'
+
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 

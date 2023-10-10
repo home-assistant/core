@@ -3,9 +3,20 @@ import datetime
 import glob
 import logging
 import os
-import sys
 import time
 
+from RestrictedPython import (
+    compile_restricted_exec,
+    limited_builtins,
+    safe_builtins,
+    utility_builtins,
+)
+from RestrictedPython.Eval import default_guarded_getitem
+from RestrictedPython.Guards import (
+    full_write_guard,
+    guarded_iter_unpack_sequence,
+    guarded_unpack_sequence,
+)
 import voluptuous as vol
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, SERVICE_RELOAD
@@ -17,20 +28,6 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import raise_if_invalid_filename
 import homeassistant.util.dt as dt_util
 from homeassistant.util.yaml.loader import load_yaml
-
-if sys.version_info < (3, 12):
-    from RestrictedPython import (
-        compile_restricted_exec,
-        limited_builtins,
-        safe_builtins,
-        utility_builtins,
-    )
-    from RestrictedPython.Eval import default_guarded_getitem
-    from RestrictedPython.Guards import (
-        full_write_guard,
-        guarded_iter_unpack_sequence,
-        guarded_unpack_sequence,
-    )
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,10 +82,6 @@ class ScriptError(HomeAssistantError):
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Python script component."""
-    if sys.version_info >= (3, 12):
-        raise HomeAssistantError(
-            "Python Scripts is not supported on Python 3.12. Please use Python 3.11."
-        )
     path = hass.config.path(FOLDER)
 
     if not os.path.isdir(path):
