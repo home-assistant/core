@@ -4,9 +4,6 @@ from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_DEVICES
 
-if TYPE_CHECKING:
-    pass
-
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
 DEVICE_PRECISION_LEEWAY = 6
