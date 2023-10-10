@@ -2249,7 +2249,7 @@ pyvolumio==0.1.5
 pywaze==0.5.1
 
 # homeassistant.components.weatherflow
-pyweatherflowudp==1.4.3
+pyweatherflowudp==1.4.5
 
 # homeassistant.components.html5
 pywebpush==1.9.2
