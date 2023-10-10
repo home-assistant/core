@@ -492,7 +492,6 @@ def async_raise_exception(
     config: dict,
     hass: HomeAssistant,
     link: str | None = None,
-    omit_stack_trace: bool = False,
 ) -> None:
     """Raise an error for configuration validation.
 
@@ -500,7 +499,7 @@ def async_raise_exception(
     """
     async_notify_setup_error(hass, domain, link)
     message, _ = _format_config_error(ex, domain, config, link)
-    raise HomeAssistantError(message, omit_stack_trace=omit_stack_trace) from ex
+    raise HomeAssistantError(message) from ex
 
 
 @callback
@@ -862,9 +861,7 @@ async def async_process_component_config(  # noqa: C901
     def _raise_on_config_fail(ex: Exception, domain: str, config: ConfigType) -> None:
         """Raise an exception if the config fails instead of logging."""
         if raise_on_failure:
-            async_raise_exception(
-                ex, domain, config, hass, integration.documentation, True
-            )
+            async_raise_exception(ex, domain, config, hass, integration.documentation)
 
     def _raise_on_fail(ex: Exception, message: str) -> None:
         """Raise an exception instead of logging."""

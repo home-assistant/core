@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
+    __version__,
 )
 from homeassistant.core import Context, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import (
@@ -56,6 +57,18 @@ from .connection import ActiveConnection
 from .messages import construct_event_message, construct_result_message
 
 ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
+CURRENT_VERSION = __version__
+
+
+def get_channel() -> str:
+    """Find channel based on version number."""
+    if "dev0" in CURRENT_VERSION:
+        return "dev"
+    if "dev" in CURRENT_VERSION:
+        return "nightly"
+    if "b" in CURRENT_VERSION:
+        return "beta"
+    return "stable"
 
 
 @callback
@@ -237,9 +250,9 @@ async def handle_call_service(
     except vol.Invalid as err:
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
     except HomeAssistantError as err:
-        if err.omit_stack_trace:
+        if get_channel() == "stable":
             connection.logger.error(err)
-            connection.logger.debug("", exc_info=err)
+            connection.logger.debug("Stack trace for last exception", exc_info=err)
         else:
             connection.logger.exception(err)
         connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))

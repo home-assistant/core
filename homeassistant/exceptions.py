@@ -12,20 +12,6 @@ if TYPE_CHECKING:
 class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
 
-    def __init__(self, *args: object, omit_stack_trace: bool = False) -> None:
-        """Initialize Home Assistant Error.
-
-        The optional omit_stack_trace can be set to indicate the error is expected,
-        and a stack trace can be omitted if the exception is logged.
-        """
-        super().__init__(*args)
-        self._omit_stack_trace = omit_stack_trace
-
-    @property
-    def omit_stack_trace(self) -> bool:
-        """Returns True if the logging of the stack trace is limited."""
-        return self._omit_stack_trace
-
 
 class InvalidEntityFormatError(HomeAssistantError):
     """When an invalid formatted entity is encountered."""
