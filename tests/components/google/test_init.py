@@ -603,7 +603,7 @@ async def test_unsupported_create_event(
     mock_events_list: ApiResult,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test service call that adds an event with a date time range."""
+    """Test create event service call is unsupported for virtual calendars."""
 
     mock_calendars_list({"items": [test_api_calendar]})
     mock_events_list({})
