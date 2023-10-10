@@ -63,7 +63,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": [],
         "remove_holidays": [],
-        "province": None,
     }
 
 
@@ -98,13 +97,11 @@ async def test_form_no_country(hass: HomeAssistant) -> None:
     assert result3["title"] == "Workday Sensor"
     assert result3["options"] == {
         "name": "Workday Sensor",
-        "country": None,
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": [],
         "remove_holidays": [],
-        "province": None,
     }
 
 
@@ -146,7 +143,6 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": [],
         "remove_holidays": [],
-        "province": None,
     }
 
 
@@ -163,7 +159,6 @@ async def test_options_form(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
-            "province": None,
         },
     )
 
@@ -259,7 +254,6 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": ["2022-12-12"],
         "remove_holidays": ["Weihnachtstag"],
-        "province": None,
     }
 
 
@@ -276,7 +270,6 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
-            "province": None,
         },
     )
 
@@ -449,7 +442,6 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": ["2022-12-12", "2022-12-01,2022-12-10"],
         "remove_holidays": ["2022-12-25", "2022-12-30,2022-12-31"],
-        "province": None,
     }
 
 
@@ -466,7 +458,6 @@ async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
-            "province": None,
         },
     )
 

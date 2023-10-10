@@ -90,7 +90,7 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
             raise AddDatesError("Incorrect date")
 
     year: int = dt_util.now().year
-    if country := user_input[CONF_COUNTRY]:
+    if country := user_input.get(CONF_COUNTRY):
         cls = country_holidays(country)
         obj_holidays = country_holidays(
             country=country,
@@ -202,9 +202,6 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
 
-            combined_input.setdefault(CONF_COUNTRY, None)
-            combined_input.setdefault(CONF_PROVINCE, None)
-
             try:
                 await self.hass.async_add_executor_job(
                     validate_custom_dates, combined_input
@@ -219,13 +216,13 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["remove_holidays"] = "remove_holiday_range_error"
 
             abort_match = {
-                CONF_COUNTRY: combined_input[CONF_COUNTRY],
+                CONF_COUNTRY: combined_input.get(CONF_COUNTRY),
                 CONF_EXCLUDES: combined_input[CONF_EXCLUDES],
                 CONF_OFFSET: combined_input[CONF_OFFSET],
                 CONF_WORKDAYS: combined_input[CONF_WORKDAYS],
                 CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
                 CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
-                CONF_PROVINCE: combined_input[CONF_PROVINCE],
+                CONF_PROVINCE: combined_input.get(CONF_PROVINCE),
             }
             LOGGER.debug("abort_check in options with %s", combined_input)
             self._async_abort_entries_match(abort_match)
@@ -265,7 +262,6 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.options, **user_input}
-            combined_input.setdefault(CONF_PROVINCE, None)
 
             try:
                 await self.hass.async_add_executor_job(
@@ -284,13 +280,13 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 try:
                     self._async_abort_entries_match(
                         {
-                            CONF_COUNTRY: self._config_entry.options[CONF_COUNTRY],
+                            CONF_COUNTRY: self._config_entry.options.get(CONF_COUNTRY),
                             CONF_EXCLUDES: combined_input[CONF_EXCLUDES],
                             CONF_OFFSET: combined_input[CONF_OFFSET],
                             CONF_WORKDAYS: combined_input[CONF_WORKDAYS],
                             CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
                             CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
-                            CONF_PROVINCE: combined_input[CONF_PROVINCE],
+                            CONF_PROVINCE: combined_input.get(CONF_PROVINCE),
                         }
                     )
                 except AbortFlow as err:
