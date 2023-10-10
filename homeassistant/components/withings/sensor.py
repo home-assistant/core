@@ -386,41 +386,32 @@ async def async_setup_entry(
     )
 
 
-class WithingsMeasurementSensor(WithingsEntity, SensorEntity):
+class WithingsSensor(WithingsEntity, SensorEntity):
+    """Implementation of a Withings sensor."""
+
+    entity_description: WithingsSensorEntityDescription
+
+    @property
+    def native_value(self) -> None | str | int | float:
+        """Return the state of the entity."""
+        return self.coordinator.data[self.entity_description.measurement]
+
+    @property
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        return (
+            super().available
+            and self.entity_description.measurement in self.coordinator.data
+        )
+
+
+class WithingsMeasurementSensor(WithingsSensor):
     """Implementation of a Withings measurement sensor."""
 
-    entity_description: WithingsSensorEntityDescription
     coordinator: WithingsMeasurementDataUpdateCoordinator
 
-    @property
-    def native_value(self) -> None | str | int | float:
-        """Return the state of the entity."""
-        return self.coordinator.data[self.entity_description.measurement]
 
-    @property
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        return (
-            super().available
-            and self.entity_description.measurement in self.coordinator.data
-        )
-
-
-class WithingsSleepSensor(WithingsEntity, SensorEntity):
+class WithingsSleepSensor(WithingsSensor):
     """Implementation of a Withings sleep sensor."""
 
-    entity_description: WithingsSensorEntityDescription
     coordinator: WithingsSleepDataUpdateCoordinator
-
-    @property
-    def native_value(self) -> None | str | int | float:
-        """Return the state of the entity."""
-        return self.coordinator.data[self.entity_description.measurement]
-
-    @property
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        return (
-            super().available
-            and self.entity_description.measurement in self.coordinator.data
-        )
