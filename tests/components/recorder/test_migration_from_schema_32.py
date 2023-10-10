@@ -19,6 +19,7 @@ from homeassistant.components.recorder.db_schema import (
     States,
     StatesMeta,
 )
+from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.tasks import (
     EntityIDMigrationTask,
@@ -916,7 +917,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
             results = []
             for result in (
                 session.query(old_db_schema.StatisticsShortTerm)
-                .where(old_db_schema.StatisticsShortTerm.metadata_id.is_(1000))
+                .where(old_db_schema.StatisticsShortTerm.metadata_id == 1000)
                 .all()
             ):
                 results.append(
@@ -942,16 +943,16 @@ async def test_stats_timestamp_conversion_is_reentrant(
     final_result = await hass.async_add_executor_job(_get_all_short_term_stats)
     assert final_result == [
         {
-            "created": one_year_ago.replace(tzinfo=None),
+            "created": process_timestamp(one_year_ago),
             "created_ts": one_year_ago.timestamp(),
             "id": 1,
-            "last_reset": one_year_ago.replace(tzinfo=None),
+            "last_reset": process_timestamp(one_year_ago),
             "last_reset_ts": one_year_ago.timestamp(),
             "max": None,
             "mean": None,
             "metadata_id": 1000,
             "min": None,
-            "start": one_year_ago.replace(tzinfo=None),
+            "start": process_timestamp(one_year_ago),
             "start_ts": one_year_ago.timestamp(),
             "state": 1.0,
             "sum": None,
@@ -972,16 +973,16 @@ async def test_stats_timestamp_conversion_is_reentrant(
             "sum": None,
         },
         {
-            "created": one_month_ago.replace(tzinfo=None),
+            "created": process_timestamp(one_month_ago),
             "created_ts": one_month_ago.timestamp(),
             "id": 3,
-            "last_reset": one_month_ago.replace(tzinfo=None),
+            "last_reset": process_timestamp(one_month_ago),
             "last_reset_ts": one_month_ago.timestamp(),
             "max": None,
             "mean": None,
             "metadata_id": 1000,
             "min": None,
-            "start": one_month_ago.replace(tzinfo=None),
+            "start": process_timestamp(one_month_ago),
             "start_ts": one_month_ago.timestamp(),
             "state": 1.0,
             "sum": None,
