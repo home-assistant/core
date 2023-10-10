@@ -201,7 +201,8 @@ async def validate_sensor_edit(
     user_input[CONF_INDEX] = int(user_input[CONF_INDEX])
 
     # Standard behavior is to merge the result with the options.
-    # In this case, we want to add a sub-item so we update the options directly.
+    # In this case, we want to add a sub-item so we update the options directly,
+    # including popping omitted optional schema items.
     idx: int = handler.flow_state["_idx"]
     handler.options[SENSOR_DOMAIN][idx].update(user_input)
     for key in DATA_SCHEMA_EDIT_SENSOR.schema:
