@@ -59,7 +59,6 @@ async def test_logging_with_queue_handler() -> None:
         ("2023.10.0b0", KeyError, False),
     ],
 )
-@pytest.mark.xfail(reason="Test exception")
 async def test_suppressed_logging_stack_trace(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -73,12 +72,15 @@ async def test_suppressed_logging_stack_trace(
     """
     logger = logging.getLogger("")
     with patch("homeassistant.core.__version__", version):
-        logging_util.async_activate_log_queue_handler(hass)
+        filter = logging_util.SuppressHomeAssistantErrorStackTrace()
+        logger.addFilter(filter)
 
     try:
         raise exc("Test exception")
     except exc:
         logger.exception(exc)
+
+    logger.removeFilter(filter)
 
     if should_filter:
         assert 'raise exc("Test exception")' not in caplog.text
@@ -96,6 +98,10 @@ async def test_migrate_log_handler(hass: HomeAssistant) -> None:
 
     # Test that the close hook shuts down the queue handler's thread
     listener_thread = logging.root.handlers[0].listener._thread
+    assert isinstance(
+        logging.root.handlers[0].filters[0],
+        logging_util.SuppressHomeAssistantErrorStackTrace,
+    )
     assert listener_thread.is_alive()
     logging.root.handlers[0].close()
     assert not listener_thread.is_alive()
