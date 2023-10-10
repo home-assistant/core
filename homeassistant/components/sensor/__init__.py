@@ -11,6 +11,8 @@ import logging
 from math import ceil, floor, isfinite, log10
 from typing import Any, Final, Self, cast, final
 
+from typing_extensions import override
+
 from homeassistant.config_entries import ConfigEntry
 
 # pylint: disable-next=hass-deprecated-import
@@ -45,9 +47,11 @@ from homeassistant.const import (  # noqa: F401
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     DEVICE_CLASS_VOLTAGE,
+    EntityCategory,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
@@ -149,6 +153,8 @@ class SensorEntityDescription(EntityDescription):
 class SensorEntity(Entity):
     """Base class for sensor entities."""
 
+    _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
+
     entity_description: SensorEntityDescription
     _attr_device_class: SensorDeviceClass | None
     _attr_last_reset: datetime | None
@@ -247,6 +253,11 @@ class SensorEntity(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
         await super().async_internal_added_to_hass()
+        if self.entity_category == EntityCategory.CONFIG:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} cannot be added as the entity category is set to config"
+            )
+
         if not self.registry_entry:
             return
         self._async_read_entity_options()
@@ -260,6 +271,7 @@ class SensorEntity(Entity):
         return self.device_class not in (None, SensorDeviceClass.ENUM)
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -315,6 +327,7 @@ class SensorEntity(Entity):
         return None
 
     @property
+    @override
     def capability_attributes(self) -> Mapping[str, Any] | None:
         """Return the capability attributes."""
         if state_class := self.state_class:
@@ -345,7 +358,7 @@ class SensorEntity(Entity):
         """Return initial entity options.
 
         These will be stored in the entity registry the first time the entity is seen,
-        and then never updated.
+        and then only updated if the unit system is changed.
         """
         suggested_unit_of_measurement = self._get_initial_suggested_unit()
 
@@ -360,6 +373,7 @@ class SensorEntity(Entity):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if last_reset := self.last_reset:
@@ -437,6 +451,7 @@ class SensorEntity(Entity):
 
     @final
     @property
+    @override
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
         # Highest priority, for registered entities: unit set by user,with fallback to
@@ -466,6 +481,7 @@ class SensorEntity(Entity):
 
     @final
     @property
+    @override
     def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
         native_unit_of_measurement = self.native_unit_of_measurement
@@ -783,7 +799,7 @@ class SensorEntity(Entity):
             registry = er.async_get(self.hass)
             initial_options = self.get_initial_entity_options() or {}
             registry.async_update_entity_options(
-                self.entity_id,
+                self.registry_entry.entity_id,
                 f"{DOMAIN}.private",
                 initial_options.get(f"{DOMAIN}.private"),
             )

@@ -1,24 +1,26 @@
 """Tests for the Withings component."""
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 from withings_api.common import NotifyAppli
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.withings.const import Measurement
+from homeassistant.components.withings.const import DOMAIN, Measurement
 from homeassistant.components.withings.entity import WithingsEntityDescription
 from homeassistant.components.withings.sensor import SENSORS
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import call_webhook, setup_integration
-from .common import async_get_entity_id
+from . import call_webhook, prepare_webhook_setup, setup_integration
 from .conftest import USER_ID, WEBHOOK_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsEntityDescription] = {
@@ -60,6 +62,19 @@ EXPECTED_DATA = (
 )
 
 
+async def async_get_entity_id(
+    hass: HomeAssistant,
+    description: WithingsEntityDescription,
+    user_id: int,
+    platform: str,
+) -> str | None:
+    """Get an entity id for a user's attribute."""
+    entity_registry = er.async_get(hass)
+    unique_id = f"withings_{user_id}_{description.measurement.value}"
+
+    return entity_registry.async_get_entity_id(platform, DOMAIN, unique_id)
+
+
 def async_assert_state_equals(
     entity_id: str,
     state_obj: State,
@@ -79,12 +94,13 @@ def async_assert_state_equals(
 async def test_sensor_default_enabled_entities(
     hass: HomeAssistant,
     withings: AsyncMock,
-    config_entry: MockConfigEntry,
-    disable_webhook_delay,
+    webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entities enabled by default."""
-    await setup_integration(hass, config_entry)
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
     entity_registry: EntityRegistry = er.async_get(hass)
 
     client = await hass_client_no_auth()
@@ -121,12 +137,31 @@ async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     withings: AsyncMock,
-    disable_webhook_delay,
-    config_entry: MockConfigEntry,
+    polling_config_entry: MockConfigEntry,
 ) -> None:
     """Test all entities."""
-    await setup_integration(hass, config_entry)
+    await setup_integration(hass, polling_config_entry)
 
     for sensor in SENSORS:
         entity_id = await async_get_entity_id(hass, sensor, USER_ID, SENSOR_DOMAIN)
         assert hass.states.get(entity_id) == snapshot
+
+
+async def test_update_failed(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test all entities."""
+    await setup_integration(hass, polling_config_entry, False)
+
+    withings.async_measure_get_meas.side_effect = Exception
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.henk_weight")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

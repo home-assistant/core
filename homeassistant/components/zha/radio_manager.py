@@ -14,7 +14,12 @@ from bellows.config import CONF_USE_THREAD
 import voluptuous as vol
 from zigpy.application import ControllerApplication
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, CONF_NWK_BACKUP_ENABLED
+from zigpy.config import (
+    CONF_DATABASE,
+    CONF_DEVICE,
+    CONF_DEVICE_PATH,
+    CONF_NWK_BACKUP_ENABLED,
+)
 from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
@@ -23,7 +28,6 @@ from homeassistant.core import HomeAssistant
 
 from . import repairs
 from .core.const import (
-    CONF_DATABASE,
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
     DEFAULT_DATABASE_NAME,
@@ -218,8 +222,10 @@ class ZhaRadioManager:
             repairs.async_delete_blocking_issues(self.hass)
             return ProbeResult.RADIO_TYPE_DETECTED
 
-        with suppress(repairs.AlreadyRunningEZSP):
-            if await repairs.warn_on_wrong_silabs_firmware(self.hass, self.device_path):
+        with suppress(repairs.wrong_silabs_firmware.AlreadyRunningEZSP):
+            if await repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware(
+                self.hass, self.device_path
+            ):
                 return ProbeResult.WRONG_FIRMWARE_INSTALLED
 
         return ProbeResult.PROBING_FAILED

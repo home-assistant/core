@@ -52,6 +52,8 @@ async def test_user(hass: HomeAssistant) -> None:
     [
         (aiovodafone_exceptions.CannotConnect, "cannot_connect"),
         (aiovodafone_exceptions.CannotAuthenticate, "invalid_auth"),
+        (aiovodafone_exceptions.AlreadyLogged, "already_logged"),
+        (aiovodafone_exceptions.ModelNotSupported, "model_not_supported"),
         (ConnectionResetError, "unknown"),
     ],
 )
@@ -152,6 +154,7 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
     [
         (aiovodafone_exceptions.CannotConnect, "cannot_connect"),
         (aiovodafone_exceptions.CannotAuthenticate, "invalid_auth"),
+        (aiovodafone_exceptions.AlreadyLogged, "already_logged"),
         (ConnectionResetError, "unknown"),
     ],
 )
