@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant
 
 from . import HomeKit
 from .accessories import HomeAccessory, HomeBridge
-from .const import DOMAIN, HOMEKIT
+from .const import DOMAIN
+from .models import HomeKitEntryData
 
 TO_REDACT = {"access_token", "entity_picture"}
 
@@ -21,7 +22,8 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    homekit: HomeKit = hass.data[DOMAIN][entry.entry_id][HOMEKIT]
+    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry.entry_id]
+    homekit: HomeKit = entry_data.homekit
     data: dict[str, Any] = {
         "status": homekit.status,
         "config-entry": {
