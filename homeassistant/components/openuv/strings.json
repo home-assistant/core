@@ -85,8 +85,8 @@
   },
   "issues": {
     "protection_window_automation": {
-      "title": "Deprecated protection window automation",
-      "description": "OpenUV can now automatically update the protection window binary sensor; automations that manually update this entity with the `homeassistant.update_entity` are deprecated. Please remove the `{automation_entity_id}` automation."
+      "title": "Protection window automation no longer required",
+      "description": "OpenUV can now automatically update the protection window binary sensor; you are no longer required to call the `homeassistant.update_entity` service with `{protection_window_entity_id}` as a target and may remove the `{automation_entity_id}` automation."
     }
   }
 }
