@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Connect to the Powerwall",
-        "description": "The default password is printed inside the Backup Gateway for newer models. For older models, the default password is the last five characters of the serial number for Backup Gateway and can be found in the Tesla app.",
+        "description": "The default password is the last 5 characters of the password printed inside the Backup Gateway for newer models. For older models, the default password is the last five characters of the serial number for Backup Gateway and can be found in the Tesla app.",
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "password": "[%key:common::config_flow::data::password%]"

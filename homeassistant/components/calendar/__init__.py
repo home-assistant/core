@@ -528,19 +528,24 @@ class CalendarEntity(Entity):
         the current or upcoming event.
         """
         super().async_write_ha_state()
-
+        _LOGGER.debug(
+            "Clearing %s alarms (%s)", self.entity_id, len(self._alarm_unsubs)
+        )
         for unsub in self._alarm_unsubs:
             unsub()
+        self._alarm_unsubs.clear()
 
         now = dt_util.now()
         event = self.event
         if event is None or now >= event.end_datetime_local:
+            _LOGGER.debug("No alarms needed for %s (event=%s)", self.entity_id, event)
             return
 
         @callback
         def update(_: datetime.datetime) -> None:
-            """Run when the active or upcoming event starts or ends."""
-            self._async_write_ha_state()
+            """Update state and reschedule next alarms."""
+            _LOGGER.debug("Running %s update", self.entity_id)
+            self.async_write_ha_state()
 
         if now < event.start_datetime_local:
             self._alarm_unsubs.append(
@@ -553,6 +558,13 @@ class CalendarEntity(Entity):
         self._alarm_unsubs.append(
             async_track_point_in_time(self.hass, update, event.end_datetime_local)
         )
+        _LOGGER.debug(
+            "Scheduled %d updates for %s (%s, %s)",
+            len(self._alarm_unsubs),
+            self.entity_id,
+            event.start_datetime_local,
+            event.end_datetime_local,
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
@@ -561,6 +573,7 @@ class CalendarEntity(Entity):
         """
         for unsub in self._alarm_unsubs:
             unsub()
+        self._alarm_unsubs.clear()
 
     async def async_get_events(
         self,
@@ -800,7 +813,7 @@ def _validate_timespan(
 
     This converts the input service arguments into a `start` and `end` date or date time. This
     exists because service calls use `start_date` and `start_date_time` whereas the
-    normal entity methods can take either a `datetim` or `date` as a single `start` argument.
+    normal entity methods can take either a `datetime` or `date` as a single `start` argument.
     It also handles the other service call variations like "in days" as well.
     """
 
@@ -836,7 +849,7 @@ async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
 async def async_list_events_service(
     calendar: CalendarEntity, service_call: ServiceCall
 ) -> ServiceResponse:
-    """List events on a calendar during a time drange."""
+    """List events on a calendar during a time range."""
     start = service_call.data.get(EVENT_START_DATETIME, dt_util.now())
     if EVENT_DURATION in service_call.data:
         end = start + service_call.data[EVENT_DURATION]
