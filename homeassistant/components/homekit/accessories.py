@@ -606,7 +606,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
     @ha_callback
     def async_reload(self) -> None:
-        """Reset and recreate an accessory."""
+        """Reload and recreate an accessory and update the c# value in the mDNS record."""
         async_dispatcher_send(
             self.hass,
             f"homekit_reload_entities_{self.driver.entry_id}",
