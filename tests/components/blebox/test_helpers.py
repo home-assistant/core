@@ -5,11 +5,6 @@ from aiohttp.helpers import BasicAuth
 from homeassistant.components.blebox.helpers import get_maybe_authenticated_session
 from homeassistant.core import HomeAssistant
 
-DICT_SAMPLE = {"a": "", "b": "value"}
-DICT_TEST_PARAMETERS = [("a", None), ("b", "value")]
-
-USERNAME = "user"
-PASSWORD = "password"
 
 SESSION_TEST_PARAMS = [
     ("", "", None),
