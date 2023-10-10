@@ -1,7 +1,5 @@
 """Constants used be the HomeKit component."""
 
-from typing import TYPE_CHECKING
-
 from homeassistant.const import CONF_DEVICES
 
 # #### Misc ####
