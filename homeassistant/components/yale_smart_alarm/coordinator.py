@@ -36,76 +36,22 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         updates = await self.hass.async_add_executor_job(self.get_updates)
 
-        locks = []
-        door_windows = []
+        locks: list[dict[str, Any]] = []
+        door_windows: list[dict[str, Any]] = []
+
+        STATUS_LOCK = "device_status.lock"
+        STATUS_UNLOCK = "device_status.unlock"
+        STATUS_CLOSE = "device_status.dc_close"
+        STATUS_OPEN = "device_status.dc_open"
 
         for device in updates["cycle"]["device_status"]:
             state = device["status1"]
             if device["type"] == "device_type.door_lock":
-                lock_status_str = device["minigw_lock_status"]
-                lock_status = int(str(lock_status_str or 0), 16)
-                closed = (lock_status & 16) == 16
-                locked = (lock_status & 1) == 1
-                if not lock_status and "device_status.lock" in state:
-                    device["_state"] = "locked"
-                    device["_state2"] = "unknown"
-                    locks.append(device)
-                    continue
-                if not lock_status and "device_status.unlock" in state:
-                    device["_state"] = "unlocked"
-                    device["_state2"] = "unknown"
-                    locks.append(device)
-                    continue
-                if (
-                    lock_status
-                    and (
-                        "device_status.lock" in state or "device_status.unlock" in state
-                    )
-                    and closed
-                    and locked
-                ):
-                    device["_state"] = "locked"
-                    device["_state2"] = "closed"
-                    locks.append(device)
-                    continue
-                if (
-                    lock_status
-                    and (
-                        "device_status.lock" in state or "device_status.unlock" in state
-                    )
-                    and closed
-                    and not locked
-                ):
-                    device["_state"] = "unlocked"
-                    device["_state2"] = "closed"
-                    locks.append(device)
-                    continue
-                if (
-                    lock_status
-                    and (
-                        "device_status.lock" in state or "device_status.unlock" in state
-                    )
-                    and not closed
-                ):
-                    device["_state"] = "unlocked"
-                    device["_state2"] = "open"
-                    locks.append(device)
-                    continue
-                device["_state"] = "unavailable"
-                locks.append(device)
-                continue
-            if device["type"] == "device_type.door_contact":
-                if "device_status.dc_close" in state:
-                    device["_state"] = "closed"
-                    door_windows.append(device)
-                    continue
-                if "device_status.dc_open" in state:
-                    device["_state"] = "open"
-                    door_windows.append(device)
-                    continue
-                device["_state"] = "unavailable"
-                door_windows.append(device)
-                continue
+                self.process_door_lock(device, locks, STATUS_LOCK, STATUS_UNLOCK, state)
+            elif device["type"] == "device_type.door_contact":
+                self.process_door_contact(
+                    device, door_windows, STATUS_CLOSE, STATUS_OPEN, state
+                )
 
         _sensor_map = {
             contact["address"]: contact["_state"] for contact in door_windows
@@ -122,6 +68,80 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "lock_map": _lock_map,
             "panel_info": updates["panel_info"],
         }
+
+    def process_door_lock(
+        self,
+        device: dict[str, Any],
+        locks: list[dict[str, Any]],
+        STATUS_LOCK: str,
+        STATUS_UNLOCK: str,
+        state: str,
+    ) -> None:
+        """Process the data for a door lock device."""
+
+        lock_status_str = device["minigw_lock_status"]
+        lock_status = int(str(lock_status_str or 0), 16)
+        closed = (lock_status & 16) == 16
+        locked = (lock_status & 1) == 1
+
+        if not lock_status and STATUS_LOCK in state:
+            device["_state"] = "locked"
+            device["_state2"] = "unknown"
+
+        elif not lock_status and STATUS_UNLOCK in state:
+            device["_state"] = "unlocked"
+            device["_state2"] = "unknown"
+
+        elif (
+            lock_status
+            and (STATUS_LOCK in state or STATUS_UNLOCK in state)
+            and closed
+            and locked
+        ):
+            device["_state"] = "locked"
+            device["_state2"] = "closed"
+
+        elif (
+            lock_status
+            and (STATUS_LOCK in state or STATUS_UNLOCK in state)
+            and closed
+            and not locked
+        ):
+            device["_state"] = "unlocked"
+            device["_state2"] = "closed"
+
+        elif (
+            lock_status
+            and (STATUS_LOCK in state or STATUS_UNLOCK in state)
+            and not closed
+        ):
+            device["_state"] = "unlocked"
+            device["_state2"] = "open"
+        else:
+            device["_state"] = "unavailable"
+
+        locks.append(device)
+
+    def process_door_contact(
+        self,
+        device: dict[str, Any],
+        door_windows: list[dict[str, Any]],
+        STATUS_CLOSE: str,
+        STATUS_OPEN: str,
+        state: str,
+    ) -> None:
+        """Process the data for a door contact device."""
+
+        if STATUS_CLOSE in state:
+            device["_state"] = "closed"
+
+        elif STATUS_OPEN in state:
+            device["_state"] = "open"
+
+        else:
+            device["_state"] = "unavailable"
+
+        door_windows.append(device)
 
     def get_updates(self) -> dict[str, Any]:
         """Fetch data from Yale."""
