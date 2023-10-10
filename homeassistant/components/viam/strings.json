@@ -104,11 +104,11 @@
         },
         "filepath": {
           "name": "Filepath",
-          "description": "Local file path to the image you wish to upload."
+          "description": "Local file path to the image you wish to analyze."
         },
         "camera": {
           "name": "Camera Entity",
-          "description": "The camera entity from which an image is captured."
+          "description": "The camera entity from which an image is captured and analyzed."
         }
       }
     },
@@ -134,11 +134,11 @@
         },
         "filepath": {
           "name": "Filepath",
-          "description": "Local file path to the image you wish to upload."
+          "description": "Local file path to the image you wish to analyze."
         },
         "camera": {
           "name": "Camera Entity",
-          "description": "The camera entity from which an image is captured."
+          "description": "The camera entity from which an image is captured and analyzed."
         }
       }
     }
