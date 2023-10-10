@@ -51,6 +51,11 @@ async def test_list_todo_items(
         ]
     }
 
+    state = hass.states.get("todo.reminders")
+    assert state
+    assert state.state == "1"
+    assert state.attributes == {"friendly_name": "Reminders"}
+
 
 @pytest.mark.parametrize(
     ("payload", "expected_error"),
