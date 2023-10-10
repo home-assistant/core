@@ -172,6 +172,11 @@ class SchemaCommonFlowHandler:
         if user_input is not None:
             # User input was validated successfully, update options
             self._options.update(user_input)
+            if data_schema and data_schema.schema:
+                for key in data_schema.schema:
+                    if isinstance(key, vol.Optional) and key not in user_input:
+                        # Key not present, delete keys old value (if present) too
+                        self._options.pop(key, None)
 
         if user_input is not None or form_step.schema is None:
             return await self._show_next_step_or_create_entry(form_step)
@@ -222,6 +227,13 @@ class SchemaCommonFlowHandler:
             # We don't want to mutate the existing options
             suggested_values = copy.deepcopy(suggested_values)
             suggested_values.update(user_input)
+            if (
+                data_schema := await self._get_schema(form_step)
+            ) and data_schema.schema:
+                for key in data_schema.schema:
+                    if isinstance(key, vol.Optional) and key not in user_input:
+                        # Key not present, delete keys old value (if present) too
+                        suggested_values.pop(key, None)
 
         if data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
