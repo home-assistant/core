@@ -1,0 +1,31 @@
+{
+  "domain": "lamarzocco",
+  "name": "La Marzocco",
+  "bluetooth": [
+    {
+      "local_name": "MICRA_*"
+    },
+    {
+      "local_name": "MINI_*"
+    },
+    {
+      "local_name": "GS3_*"
+    },
+    {
+      "local_name": "GS3AV_*"
+    }
+  ],
+  "codeowners": ["@rccoleman", "@zweckj"],
+  "config_flow": true,
+  "dependencies": [
+    "bluetooth_adapters"
+  ],
+  "documentation": "https://github.com/zweckj/lamarzocco",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/zweckj/lamarzocco/issues",
+  "loggers": ["lmcloud"],
+  "requirements": ["lmcloud==0.3.35"],
+  "ssdp": [],
+  "version": "0.12.3"
+}
