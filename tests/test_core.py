@@ -43,7 +43,7 @@ from homeassistant.core import (
     State,
     SupportsResponse,
     callback,
-    get_channel,
+    get_release_channel,
 )
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -2485,7 +2485,7 @@ async def test_validate_state(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("version", "channel"),
+    ("version", "release_channel"),
     [
         ("0.115.0.dev20200815", "nightly"),
         ("0.115.0", "stable"),
@@ -2493,9 +2493,7 @@ async def test_validate_state(hass: HomeAssistant) -> None:
         ("0.115.0dev0", "dev"),
     ],
 )
-async def test_get_channel(version: str, channel: str) -> None:
-    """Test if channel detection works from Home Assistant version number."""
-    assert get_channel(version) == channel
-
+async def test_get_release_channel(version: str, release_channel: str) -> None:
+    """Test if release channel detection works from Home Assistant version number."""
     with patch("homeassistant.core.__version__", f"{version}"):
-        assert get_channel() == channel
+        assert get_release_channel() == release_channel
