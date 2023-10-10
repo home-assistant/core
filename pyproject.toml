@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.11.0"
 dependencies    = [
-    "aiohttp==3.8.5",
+    "aiohttp==3.9.0b0",
     "astral==2.2",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
@@ -33,7 +33,7 @@ dependencies    = [
     "ciso8601==2.3.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
-    "httpx==0.24.1",
+    "httpx==0.25.0",
     "home-assistant-bluetooth==1.10.3",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
@@ -437,7 +437,7 @@ filterwarnings = [
     # -- design choice 3rd party
     # https://github.com/gwww/elkm1/blob/2.2.5/elkm1_lib/util.py#L8-L19
     "ignore:ssl.TLSVersion.TLSv1 is deprecated:DeprecationWarning:elkm1_lib.util",
-    # https://github.com/michaeldavie/env_canada/blob/v0.5.36/env_canada/ec_cache.py
+    # https://github.com/michaeldavie/env_canada/blob/v0.5.37/env_canada/ec_cache.py
     "ignore:Inheritance class CacheClientSession from ClientSession is discouraged:DeprecationWarning:env_canada.ec_cache",
     # https://github.com/bachya/regenmaschine/blob/2023.08.0/regenmaschine/client.py#L51
     "ignore:ssl.TLSVersion.SSLv3 is deprecated:DeprecationWarning:regenmaschine.client",
@@ -469,10 +469,8 @@ filterwarnings = [
     "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:feedparser.encodings",
     # https://github.com/jaraco/jaraco.abode/commit/9e3e789efc96cddcaa15f920686bbeb79a7469e0 - update jaraco.abode to >=5.1.0
     "ignore:`jaraco.functools.call_aside` is deprecated, use `jaraco.functools.invoke` instead:DeprecationWarning:jaraco.abode.helpers.timeline",
-    # https://github.com/poljar/matrix-nio/pull/438 - >0.21.2
-    "ignore:FormatChecker.cls_checks is deprecated:DeprecationWarning:nio.schemas",
-    # https://github.com/poljar/matrix-nio/pull/439 - >0.21.2
-    "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:nio.client.http_client",
+    # https://github.com/nextcord/nextcord/pull/1095 - >2.6.1
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:nextcord.health_check",
     # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - >0.5.3
     "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
 
@@ -487,6 +485,8 @@ filterwarnings = [
     # Wrong stacklevel
     # https://bugs.launchpad.net/beautifulsoup/+bug/2034451
     "ignore:It looks like you're parsing an XML document using an HTML parser:UserWarning:bs4.builder",
+    # New in aiohttp - v3.9.0
+    "ignore:It is recommended to use web.AppKey instances for keys:UserWarning:(homeassistant|tests|aiohttp_cors)",
 
     # -- unmaintained projects, last release about 2+ years
     # https://pypi.org/project/agent-py/ - v0.0.23 - 2020-06-04
@@ -628,6 +628,7 @@ voluptuous = "vol"
 fixture-parentheses = false
 
 [tool.ruff.flake8-tidy-imports.banned-api]
+"async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
 
 [tool.ruff.isort]

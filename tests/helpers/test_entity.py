@@ -1500,7 +1500,7 @@ async def test_invalid_state(
     assert (
         "homeassistant.helpers.entity",
         logging.ERROR,
-        f"Failed to set state, fall back to {STATE_UNKNOWN}",
+        f"Failed to set state for test.test, fall back to {STATE_UNKNOWN}",
     ) in caplog.record_tuples
 
     ent._attr_state = "x" * 255
@@ -1551,7 +1551,7 @@ async def test_suggest_report_issue_custom_component(
     mock_integration(
         hass,
         MockModule(
-            domain="test", partial_manifest={"issue_tracker": "httpts://some_url"}
+            domain="test", partial_manifest={"issue_tracker": "https://some_url"}
         ),
         built_in=False,
     )
@@ -1559,4 +1559,4 @@ async def test_suggest_report_issue_custom_component(
     await platform.async_add_entities([mock_entity])
 
     suggestion = mock_entity._suggest_report_issue()
-    assert suggestion == "create a bug report at httpts://some_url"
+    assert suggestion == "create a bug report at https://some_url"
