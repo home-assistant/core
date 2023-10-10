@@ -29,6 +29,10 @@ DEFAULT_NAME = "Netgear router"
 MODE_ROUTER = "0"
 MODE_AP = "1"
 
+STR_MDI_CELLPHONE = "mdi:cellphone"
+STR_MDI_TABLET = "mdi:tablet"
+STR_MDI_PLAY_NETWORK = "mdi:play-network"
+
 # models using port 80 instead of 5000
 MODELS_PORT_80 = [
     "Orbi",
@@ -77,40 +81,40 @@ DEVICE_ICONS = {
     0: "mdi:access-point-network",  # Router (Orbi ...)
     1: "mdi:book-open-variant",  # Amazon Kindle
     2: "mdi:android",  # Android Device
-    3: "mdi:cellphone",  # Android Phone
-    4: "mdi:tablet",  # Android Tablet
+    3: STR_MDI_CELLPHONE,  # Android Phone
+    4: STR_MDI_TABLET,  # Android Tablet
     5: "mdi:router-wireless",  # Apple Airport Express
     6: "mdi:disc-player",  # Blu-ray Player
     7: "mdi:router-network",  # Bridge
-    8: "mdi:play-network",  # Cable STB
+    8: STR_MDI_PLAY_NETWORK,  # Cable STB
     9: "mdi:camera",  # Camera
     10: "mdi:router-network",  # Router
-    11: "mdi:play-network",  # DVR
+    11: STR_MDI_PLAY_NETWORK,  # DVR
     12: "mdi:gamepad-variant",  # Gaming Console
     13: "mdi:monitor",  # iMac
-    14: "mdi:tablet",  # iPad
-    15: "mdi:tablet",  # iPad Mini
-    16: "mdi:cellphone",  # iPhone 5/5S/5C
-    17: "mdi:cellphone",  # iPhone
+    14: STR_MDI_TABLET,  # iPad
+    15: STR_MDI_TABLET,  # iPad Mini
+    16: STR_MDI_CELLPHONE,  # iPhone 5/5S/5C
+    17: STR_MDI_CELLPHONE,  # iPhone
     18: "mdi:ipod",  # iPod Touch
     19: "mdi:linux",  # Linux PC
     20: "mdi:apple-finder",  # Mac Mini
     21: "mdi:desktop-tower",  # Mac Pro
     22: "mdi:laptop",  # MacBook
-    23: "mdi:play-network",  # Media Device
+    23: STR_MDI_PLAY_NETWORK,  # Media Device
     24: "mdi:network",  # Network Device
-    25: "mdi:play-network",  # Other STB
+    25: STR_MDI_PLAY_NETWORK,  # Other STB
     26: "mdi:power-plug",  # Powerline
     27: "mdi:printer",  # Printer
     28: "mdi:access-point",  # Repeater
-    29: "mdi:play-network",  # Satellite STB
+    29: STR_MDI_PLAY_NETWORK,  # Satellite STB
     30: "mdi:scanner",  # Scanner
-    31: "mdi:play-network",  # SlingBox
-    32: "mdi:cellphone",  # Smart Phone
+    31: STR_MDI_PLAY_NETWORK,  # SlingBox
+    32: STR_MDI_CELLPHONE,  # Smart Phone
     33: "mdi:nas",  # Storage (NAS)
     34: "mdi:switch",  # Switch
     35: "mdi:television",  # TV
-    36: "mdi:tablet",  # Tablet
+    36: STR_MDI_TABLET,  # Tablet
     37: "mdi:desktop-classic",  # UNIX PC
     38: "mdi:desktop-tower-monitor",  # Windows PC
     39: "mdi:laptop",  # Surface
