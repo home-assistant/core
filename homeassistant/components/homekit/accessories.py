@@ -17,6 +17,7 @@ from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.remote import RemoteEntityFeature
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -228,8 +229,12 @@ def get_accessory(  # noqa: C901
             a_type = "LightSensor"
 
     elif state.domain == "switch":
-        switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
-        a_type = SWITCH_TYPES[switch_type]
+        if switch_type := config.get(CONF_TYPE):
+            a_type = SWITCH_TYPES[switch_type]
+        elif state.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.OUTLET:
+            a_type = "Outlet"
+        else:
+            a_type = "Switch"
 
     elif state.domain == "vacuum":
         a_type = "Vacuum"
