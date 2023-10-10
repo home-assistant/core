@@ -574,7 +574,7 @@ class CountrySelectorConfig(TypedDict, total=False):
 
 @SELECTORS.register("country")
 class CountrySelector(Selector[CountrySelectorConfig]):
-    """Selector for an single-choice country select."""
+    """Selector for a single-choice country select."""
 
     selector_type = "country"
 
