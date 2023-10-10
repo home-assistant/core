@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/viam",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["viam-sdk==0.6.1"]
+  "requirements": ["viam-sdk==0.7.0"]
 }

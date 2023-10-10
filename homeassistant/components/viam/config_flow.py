@@ -9,7 +9,7 @@ from viam.rpc.dial import Credentials, DialOptions
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import selector
@@ -89,39 +89,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # InvalidAuth
     if hub.client:
         locations = await hub.client.app_client.list_locations()
-        location = await hub.client.app_client.get_location(locations.pop().id)
+        location = await hub.client.app_client.get_location(next(iter(locations)).id)
 
+        # breakpoint()
         # Return info that you want to store in the config entry.
         return {"title": location.name, "hub": hub}
 
     raise CannotConnect
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Viam Options flow handler."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        super().__init__()
-        self.config_entry: config_entries.ConfigEntry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Initialize form."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        "test",
-                        default=self.config_entry.options.get("test"),
-                    ): bool
-                }
-            ),
-        )
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -129,13 +103,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Create the options flow."""
-        return OptionsFlowHandler(config_entry)
+    def __init__(self):
+        """Initialize."""
+        self.credential_type = None
+        self.info = {}
+        self.data = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -188,9 +160,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Select robot from location."""
 
+        # breakpoint()
         locations = await self.info["hub"].client.app_client.list_locations()
         robots = await self.info["hub"].client.app_client.list_robots(
-            locations.pop().id
+            next(iter(locations)).id
         )
         if user_input is not None:
             robot_id = next(

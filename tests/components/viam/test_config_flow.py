@@ -1,4 +1,6 @@
 """Test the viam config flow."""
+import asyncio
+from dataclasses import dataclass
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -12,35 +14,93 @@ from homeassistant.data_entry_flow import FlowResultType
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+@dataclass
+class MockLocation:
+    """Fake location for testing."""
+
+    id: int = 13
+    name: str = "home"
+
+
+@dataclass
+class MockRobot:
+    """Fake robot for testing."""
+
+    id: int = 1234
+    name: str = "test"
+
+
+def async_return(result):
+    """Allow async return value with MagicMock."""
+
+    future = asyncio.Future()
+    future.set_result(result)
+    return future
+
+
+async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
+    assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.viam.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
+        "homeassistant.components.viam.config_flow.ViamHub",
+    ) as MockHub:
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                "credential_type": "Org API Key",
+            },
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "auth"
+        assert result["errors"] == {}
+
+        instance = MockHub.return_value
+        instance.authenticate.return_value = async_return(True)
+        instance.client.app_client.list_locations.return_value = async_return(
+            [MockLocation()]
+        )
+        instance.client.app_client.get_location.return_value = async_return(
+            MockLocation()
+        )
+        instance.client.app_client.list_robots.return_value = async_return(
+            [MockRobot()]
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "api_id": "someTestId",
+                "api_key": "randomSecureAPIKey",
+            },
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] is None
+        assert result["step_id"] == "robot"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "robot": "test",
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
-    }
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "home"
+        assert result["data"] == {
+            "api_id": "someTestId",
+            "api_key": "randomSecureAPIKey",
+            "robot_id": 1234,
+            "credential_type": "api-key",
+        }
+
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -51,20 +111,43 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.viam.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.viam.config_flow.ViamHub.authenticate",
         side_effect=InvalidAuth,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                "credential_type": "Org API Key",
             },
         )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "auth"
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "api_id": "someTestId",
+                "api_key": "randomSecureAPIKey",
+            },
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "auth"
+        assert result["errors"] == {"base": "invalid_auth"}
+
+    with patch(
+        "homeassistant.components.viam.config_flow.ViamHub.authenticate",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "api_id": "someTestId",
+                "api_key": "randomSecureAPIKey",
+            },
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "auth"
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -74,17 +157,71 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.viam.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.viam.config_flow.ViamHub.authenticate",
         side_effect=CannotConnect,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                "credential_type": "Org API Key",
             },
         )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "auth"
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "api_id": "someTestId",
+                "api_key": "randomSecureAPIKey",
+            },
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "auth"
+        assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.viam.config_flow.ViamHub.authenticate",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "api_id": "someTestId",
+                "api_key": "randomSecureAPIKey",
+            },
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "auth"
+        assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_exception(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.viam.config_flow.ViamHub.authenticate",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "credential_type": "Org API Key",
+            },
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "auth"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "api_id": "someTestId",
+                "api_key": "randomSecureAPIKey",
+            },
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "auth"
+        assert result["errors"] == {"base": "unknown"}
