@@ -19,6 +19,7 @@ from homeassistant.components.light import (
     FLASH_SHORT,
     ColorMode,
     LightEntity,
+    LightEntityDescription,
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -69,6 +70,10 @@ async def async_setup_entry(
 class HueLight(HueBaseEntity, LightEntity):
     """Representation of a Hue light."""
 
+    entity_description = LightEntityDescription(
+        key="hue_light", has_entity_name=True, name=None
+    )
+
     def __init__(
         self, bridge: HueBridge, controller: LightsController, resource: Light
     ) -> None:
@@ -89,6 +94,7 @@ class HueLight(HueBaseEntity, LightEntity):
                 self._supported_color_modes.add(ColorMode.BRIGHTNESS)
             # support transition if brightness control
             self._attr_supported_features |= LightEntityFeature.TRANSITION
+        self._color_temp_active: bool = False
         # get list of supported effects (combine effects and timed_effects)
         self._attr_effect_list = []
         if effects := resource.effects:
@@ -121,16 +127,26 @@ class HueLight(HueBaseEntity, LightEntity):
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if color_temp := self.resource.color_temperature:
-            # Hue lights return `mired_valid` to indicate CT is active
-            if color_temp.mirek is not None:
-                return ColorMode.COLOR_TEMP
+        if self.color_temp_active:
+            return ColorMode.COLOR_TEMP
         if self.resource.supports_color:
             return ColorMode.XY
         if self.resource.supports_dimming:
             return ColorMode.BRIGHTNESS
         # fallback to on_off
         return ColorMode.ONOFF
+
+    @property
+    def color_temp_active(self) -> bool:
+        """Return if the light is in Color Temperature mode."""
+        color_temp = self.resource.color_temperature
+        if color_temp is None or color_temp.mirek is None:
+            return False
+        # Official Hue lights return `mirek_valid` to indicate CT is active
+        # while non-official lights do not.
+        if self.device.product_data.certified:
+            return self.resource.color_temperature.mirek_valid
+        return self._color_temp_active
 
     @property
     def xy_color(self) -> tuple[float, float] | None:
@@ -193,6 +209,7 @@ class HueLight(HueBaseEntity, LightEntity):
         xy_color = kwargs.get(ATTR_XY_COLOR)
         color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
+        self._color_temp_active = color_temp is not None
         flash = kwargs.get(ATTR_FLASH)
         effect = effect_str = kwargs.get(ATTR_EFFECT)
         if effect_str in (EFFECT_NONE, EFFECT_NONE.lower()):

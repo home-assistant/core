@@ -15,7 +15,7 @@ publish:
       advanced: true
       example: "{{ states('sensor.temperature') }}"
       selector:
-        object:
+        template:
     qos:
       advanced: true
       default: 0

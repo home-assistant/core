@@ -5,19 +5,19 @@
         "title": "Connect to the QNAP device",
         "description": "This qnap sensor allows getting various statistics from your QNAP NAS.",
         "data": {
-          "host": "Hostname",
+          "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "ssl": "Enable SSL",
-          "verify_ssl": "Verify SSL"
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
     },
     "error": {
-      "cannot_connect": "Cannot connect to host",
-      "invalid_auth": "Bad authentication",
-      "unknown": "Unknown error"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

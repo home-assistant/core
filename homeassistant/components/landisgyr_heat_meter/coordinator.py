@@ -1,8 +1,8 @@
 """Data update coordinator for the ultraheat api."""
 
+import asyncio
 import logging
 
-import async_timeout
 import serial
 from ultraheat_api.response import HeatMeterResponse
 from ultraheat_api.service import HeatMeterService
@@ -31,7 +31,7 @@ class UltraheatCoordinator(DataUpdateCoordinator[HeatMeterResponse]):
     async def _async_update_data(self) -> HeatMeterResponse:
         """Fetch data from API endpoint."""
         try:
-            async with async_timeout.timeout(ULTRAHEAT_TIMEOUT):
+            async with asyncio.timeout(ULTRAHEAT_TIMEOUT):
                 return await self.hass.async_add_executor_job(self.api.read)
         except (FileNotFoundError, serial.serialutil.SerialException) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

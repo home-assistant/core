@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 import logging
 from typing import final
 
@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
-    ENTITY_SERVICE_FIELDS,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -53,7 +52,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SET_VALUE,
         {
             vol.Required(ATTR_DATETIME): cv.datetime,
-            **ENTITY_SERVICE_FIELDS,
         },
         _async_set_value,
     )
@@ -110,7 +108,7 @@ class DateTimeEntity(Entity):
                 "which is missing timezone information"
             )
 
-        return value.astimezone(timezone.utc).isoformat(timespec="seconds")
+        return value.astimezone(UTC).isoformat(timespec="seconds")
 
     @property
     def native_value(self) -> datetime | None:

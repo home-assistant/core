@@ -44,7 +44,7 @@ async def async_setup_entry(
 class PowerWallRunningSensor(PowerWallEntity, BinarySensorEntity):
     """Representation of an Powerwall running sensor."""
 
-    _attr_name = "Powerwall Status"
+    _attr_translation_key = "status"
     _attr_device_class = BinarySensorDeviceClass.POWER
 
     @property
@@ -61,7 +61,7 @@ class PowerWallRunningSensor(PowerWallEntity, BinarySensorEntity):
 class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
     """Representation of an Powerwall connected sensor."""
 
-    _attr_name = "Powerwall Connected to Tesla"
+    _attr_translation_key = "connected_to_tesla"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     @property
@@ -78,7 +78,7 @@ class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
 class PowerWallGridServicesActiveSensor(PowerWallEntity, BinarySensorEntity):
     """Representation of a Powerwall grid services active sensor."""
 
-    _attr_name = "Grid Services Active"
+    _attr_translation_key = "grid_services_active"
     _attr_device_class = BinarySensorDeviceClass.POWER
 
     @property
@@ -95,7 +95,7 @@ class PowerWallGridServicesActiveSensor(PowerWallEntity, BinarySensorEntity):
 class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
     """Representation of an Powerwall grid status sensor."""
 
-    _attr_name = "Grid Status"
+    _attr_translation_key = "grid_status"
     _attr_device_class = BinarySensorDeviceClass.POWER
 
     @property
@@ -112,7 +112,6 @@ class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
 class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     """Representation of an Powerwall charging status sensor."""
 
-    _attr_name = "Powerwall Charging"
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
     @property

@@ -18,11 +18,7 @@ from aioesphomeapi import (
 )
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
-from homeassistant.const import (
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -101,7 +97,7 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
             key=1,
             name="my sensor",
             unique_id="my_sensor",
-            entity_category=ESPHomeEntityCategory.CONFIG,
+            entity_category=ESPHomeEntityCategory.DIAGNOSTIC,
             icon="mdi:leaf",
         )
     ]
@@ -121,7 +117,7 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
     entry = entity_reg.async_get("sensor.test_mysensor")
     assert entry is not None
     assert entry.unique_id == "my_sensor"
-    assert entry.entity_category is EntityCategory.CONFIG
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
 async def test_generic_numeric_sensor_state_class_measurement(

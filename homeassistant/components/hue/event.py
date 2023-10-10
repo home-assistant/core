@@ -6,10 +6,7 @@ from typing import Any
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.models.button import Button
-from aiohue.v2.models.relative_rotary import (
-    RelativeRotary,
-    RelativeRotaryDirection,
-)
+from aiohue.v2.models.relative_rotary import RelativeRotary, RelativeRotaryDirection
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -74,6 +71,7 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
         key="button",
         device_class=EventDeviceClass.BUTTON,
         translation_key="button",
+        has_entity_name=True,
     )
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -92,7 +90,8 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
     @property
     def name(self) -> str:
         """Return name for the entity."""
-        return f"{super().name} {self.resource.metadata.control_id}"
+        # this can be translated too as soon as we support arguments into translations ?
+        return f"Button {self.resource.metadata.control_id}"
 
     @callback
     def _handle_event(self, event_type: EventType, resource: Button) -> None:
@@ -115,6 +114,7 @@ class HueRotaryEventEntity(HueBaseEntity, EventEntity):
             RelativeRotaryDirection.CLOCK_WISE.value,
             RelativeRotaryDirection.COUNTER_CLOCK_WISE.value,
         ],
+        has_entity_name=True,
     )
 
     @callback

@@ -259,8 +259,10 @@ async def test_service_device_id_not_mazda_vehicle(hass: HomeAssistant) -> None:
     device_registry = dr.async_get(hass)
     # Create another device and pass its device ID.
     # Service should fail because device is from wrong domain.
+    other_config_entry = MockConfigEntry()
+    other_config_entry.add_to_hass(hass)
     other_device = device_registry.async_get_or_create(
-        config_entry_id="test_config_entry_id",
+        config_entry_id=other_config_entry.entry_id,
         identifiers={("OTHER_INTEGRATION", "ID_FROM_OTHER_INTEGRATION")},
     )
 

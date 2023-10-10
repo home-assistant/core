@@ -1,4 +1,5 @@
 """Test the homewizard config flow."""
+from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
@@ -58,8 +59,8 @@ async def test_discovery_flow_works(
     """Test discovery setup flow works."""
 
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         port=80,
         hostname="p1meter-ddeeff.local.",
         type="",
@@ -131,8 +132,8 @@ async def test_discovery_flow_during_onboarding(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.43.183",
-                addresses=["192.168.43.183"],
+                ip_address=ip_address("192.168.43.183"),
+                ip_addresses=[ip_address("192.168.43.183")],
                 port=80,
                 hostname="p1meter-ddeeff.local.",
                 type="mock_type",
@@ -177,8 +178,8 @@ async def test_discovery_flow_during_onboarding_disabled_api(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.43.183",
-                addresses=["192.168.43.183"],
+                ip_address=ip_address("192.168.43.183"),
+                ip_addresses=[ip_address("192.168.43.183")],
                 port=80,
                 hostname="p1meter-ddeeff.local.",
                 type="mock_type",
@@ -229,8 +230,8 @@ async def test_discovery_disabled_api(
     """Test discovery detecting disabled api."""
 
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         port=80,
         hostname="p1meter-ddeeff.local.",
         type="",
@@ -279,8 +280,8 @@ async def test_discovery_missing_data_in_service_info(
     """Test discovery detecting missing discovery info."""
 
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         port=80,
         hostname="p1meter-ddeeff.local.",
         type="",
@@ -310,8 +311,8 @@ async def test_discovery_invalid_api(
     """Test discovery detecting invalid_api."""
 
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.43.183",
-        addresses=["192.168.43.183"],
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
         port=80,
         hostname="p1meter-ddeeff.local.",
         type="",

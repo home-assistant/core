@@ -10,10 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_STATION,
-    DOMAIN,
-)
+from .const import CONF_STATION, DOMAIN
 from .coordinator import PegelOnlineDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)

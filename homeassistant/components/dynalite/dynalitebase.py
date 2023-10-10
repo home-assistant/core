@@ -7,8 +7,8 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -70,7 +70,7 @@ class DynaliteBase(RestoreEntity, ABC):
         )
 
     async def async_added_to_hass(self) -> None:
-        """Added to hass so need to restore state and register to dispatch."""
+        """Handle addition to hass: restore state and register to dispatch."""
         # register for device specific update
         await super().async_added_to_hass()
 
