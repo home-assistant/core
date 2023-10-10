@@ -1,0 +1,25 @@
+{
+  "config_entry": {
+    "version": 3,
+    "unique_id": null,
+    "entry_id": "01234567890123456789012345678901"
+  },
+  "config_entry_data": {
+    "name": "**REDACTED**",
+    "address": "**REDACTED**",
+    "type": "Java Edition"
+  },
+  "config_entry_options": {},
+  "server_data": {
+    "latency": 5.0,
+    "motd": "Dummy MOTD",
+    "players_max": 10,
+    "players_online": 3,
+    "protocol_version": 123,
+    "version": "Dummy Version",
+    "players_list": "**REDACTED**",
+    "edition": null,
+    "game_mode": null,
+    "map_name": null
+  }
+}
