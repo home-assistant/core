@@ -2014,9 +2014,9 @@ def _sorted_statistics_to_dict(  # noqa: C901
                 "start": (start_ts := db_state[start_ts_idx]),
                 "end": start_ts + table_duration_seconds,
             }
-
+            if last_reset_ts_idx is not None:
+                row["last_reset"] = db_state[last_reset_ts_idx]
             fields = [
-                ("last_reset", last_reset_ts_idx),
                 ("mean", mean_idx),
                 ("min", min_idx),
                 ("max", max_idx),
@@ -2028,7 +2028,6 @@ def _sorted_statistics_to_dict(  # noqa: C901
                 for (field, field_idx) in fields
                 if field_idx is not None
             ]
-
             for field, field_idx in fields:
                 row[field] = convert(db_state[field_idx])  # type: ignore[index, literal-required]
             ent_results_append(row)
