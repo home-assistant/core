@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.config_entries import ConfigError
 from homeassistant.core import HomeAssistant, callback, is_callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.logging as logging_util
@@ -55,6 +56,8 @@ async def test_logging_with_queue_handler() -> None:
     [
         ("2023.10.0", HomeAssistantError, True),
         ("2023.10.0b0", HomeAssistantError, False),
+        ("2023.10.0", ConfigError, True),
+        ("2023.10.0b0", ConfigError, False),
         ("2023.10.0", KeyError, False),
         ("2023.10.0b0", KeyError, False),
     ],
