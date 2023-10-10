@@ -55,6 +55,8 @@ BLE_SCANNER_OPTIONS = [
 
 INTERNAL_WIFI_AP_IP = "192.168.33.1"
 
+UNEXPECTED_EXCEPTION = "Unexpected exception"
+
 
 async def validate_input(
     hass: HomeAssistant,
@@ -128,7 +130,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             except FirmwareUnsupported:
                 return self.async_abort(reason="unsupported_firmware")
             except Exception:  # pylint: disable=broad-except
-                LOGGER.exception("Unexpected exception")
+                LOGGER.exception(UNEXPECTED_EXCEPTION)
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(self.info["mac"])
@@ -144,7 +146,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 except DeviceConnectionError:
                     errors["base"] = "cannot_connect"
                 except Exception:  # pylint: disable=broad-except
-                    LOGGER.exception("Unexpected exception")
+                    LOGGER.exception(UNEXPECTED_EXCEPTION)
                     errors["base"] = "unknown"
                 else:
                     if device_info["model"]:
@@ -180,7 +182,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                LOGGER.exception("Unexpected exception")
+                LOGGER.exception(UNEXPECTED_EXCEPTION)
                 errors["base"] = "unknown"
             else:
                 if device_info["model"]:

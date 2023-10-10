@@ -53,7 +53,7 @@ async def async_get_triggers(
 
 
 async def async_get_trigger_capabilities(
-    hass: HomeAssistant, config: ConfigType
+    hass: HomeAssistant, _: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     project: KNXProject = hass.data[DOMAIN].project

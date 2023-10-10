@@ -713,7 +713,10 @@ class LightSchema(KNXPlatformSchema):
             vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): ga_list_validator,
         }
     )
-
+    MESSAGE = (
+        "'red', 'green' and 'blue' are required for individual\n"
+        " colors configuration"
+    )
     ENTITY_SCHEMA = vol.All(
         vol.Schema(
             {
@@ -724,28 +727,13 @@ class LightSchema(KNXPlatformSchema):
                 vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): ga_list_validator,
                 vol.Exclusive(CONF_INDIVIDUAL_COLORS, "color"): {
                     vol.Inclusive(
-                        CONF_RED,
-                        "individual_colors",
-                        msg=(
-                            "'red', 'green' and 'blue' are required for individual"
-                            " colors configuration"
-                        ),
+                        CONF_RED, "individual_colors", msg=MESSAGE
                     ): INDIVIDUAL_COLOR_SCHEMA,
                     vol.Inclusive(
-                        CONF_GREEN,
-                        "individual_colors",
-                        msg=(
-                            "'red', 'green' and 'blue' are required for individual"
-                            " colors configuration"
-                        ),
+                        CONF_GREEN, "individual_colors", msg=MESSAGE
                     ): INDIVIDUAL_COLOR_SCHEMA,
                     vol.Inclusive(
-                        CONF_BLUE,
-                        "individual_colors",
-                        msg=(
-                            "'red', 'green' and 'blue' are required for individual"
-                            " colors configuration"
-                        ),
+                        CONF_BLUE, "individual_colors", msg=MESSAGE
                     ): INDIVIDUAL_COLOR_SCHEMA,
                     vol.Optional(CONF_WHITE): INDIVIDUAL_COLOR_SCHEMA,
                 },

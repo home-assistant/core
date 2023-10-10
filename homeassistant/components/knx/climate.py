@@ -43,7 +43,7 @@ PRESET_MODES_INV = {value: key for key, value in PRESET_MODES.items()}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    _: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate(s) for KNX platform."""

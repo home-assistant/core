@@ -20,10 +20,10 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     shelly_entry_data = get_entry_data(hass)[entry.entry_id]
-
-    device_settings: str | dict = "not initialized"
-    device_status: str | dict = "not initialized"
-    bluetooth: str | dict = "not initialized"
+    NOT_INITIALIZED = "not initialized"
+    device_settings: str | dict = NOT_INITIALIZED
+    device_status: str | dict = NOT_INITIALIZED
+    bluetooth: str | dict = NOT_INITIALIZED
     if shelly_entry_data.block:
         block_coordinator = shelly_entry_data.block
         assert block_coordinator

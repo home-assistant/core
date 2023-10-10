@@ -116,7 +116,7 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    _: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor(s) for KNX platform."""
