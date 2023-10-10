@@ -171,27 +171,49 @@ class Analytics:
                 self.hass, self.preferences.get(ATTR_DIAGNOSTICS, False)
             )
 
-    async def send_analytics(self, _: datetime | None = None) -> None:
-        """Send analytics."""
-        supervisor_info = None
-        operating_system_info: dict[str, Any] = {}
-
+    def should_send_analytics(self) -> bool:
         if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
             LOGGER.debug("Nothing to submit")
-            return
+            return False
+        return True
 
-        if self._data.uuid is None:
-            self._data.uuid = uuid.uuid4().hex
-            await self._store.async_save(dataclass_asdict(self._data))
+    async def gather_analytics_info(self):
+        supervisor_info = None
+        operating_system_info: dict[str, Any] = {}
 
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(self.hass)
             operating_system_info = hassio.get_os_info(self.hass) or {}
 
         system_info = await async_get_system_info(self.hass)
-        integrations = []
-        custom_integrations = []
-        addons = []
+        return system_info, supervisor_info, operating_system_info
+
+    async def send_payload(self, payload):
+        try:
+            async with timeout(30):
+                response = await self.session.post(self.endpoint, json=payload)
+                if response.status == 200:
+                    LOGGER.info(
+                        (
+                            "Submitted analytics to Home Assistant servers. "
+                            "Information submitted includes %s"
+                        ),
+                        payload,
+                    )
+                else:
+                    LOGGER.warning(
+                        "Sending analytics failed with statuscode %s from %s",
+                        response.status,
+                        self.endpoint,
+                    )
+        except asyncio.TimeoutError:
+            LOGGER.error("Timeout sending analytics to %s", ANALYTICS_ENDPOINT_URL)
+        except aiohttp.ClientError as err:
+            LOGGER.error(
+                "Error sending analytics to %s: %r", ANALYTICS_ENDPOINT_URL, err
+            )
+
+    def prepare_payload(self, system_info, supervisor_info, operating_system_info):
         payload: dict = {
             ATTR_UUID: self.uuid,
             ATTR_VERSION: HA_VERSION,
@@ -199,17 +221,48 @@ class Analytics:
         }
 
         if supervisor_info is not None:
-            payload[ATTR_SUPERVISOR] = {
-                ATTR_HEALTHY: supervisor_info[ATTR_HEALTHY],
-                ATTR_SUPPORTED: supervisor_info[ATTR_SUPPORTED],
-                ATTR_ARCH: supervisor_info[ATTR_ARCH],
-            }
+            payload.update(self._get_supervisor_payload(supervisor_info))
 
         if operating_system_info.get(ATTR_BOARD) is not None:
             payload[ATTR_OPERATING_SYSTEM] = {
                 ATTR_BOARD: operating_system_info[ATTR_BOARD],
                 ATTR_VERSION: operating_system_info[ATTR_VERSION],
             }
+
+        return payload
+
+    def _get_supervisor_payload(self, supervisor_info):
+        return {
+            ATTR_SUPERVISOR: {
+                ATTR_HEALTHY: supervisor_info[ATTR_HEALTHY],
+                ATTR_SUPPORTED: supervisor_info[ATTR_SUPPORTED],
+                ATTR_ARCH: supervisor_info[ATTR_ARCH],
+            }
+        }
+
+    async def send_analytics(self, _: datetime | None = None) -> None:
+        """Send analytics."""
+
+        if not self.should_send_analytics():
+            return
+
+        if self._data.uuid is None:
+            self._data.uuid = uuid.uuid4().hex
+            await self._store.async_save(dataclass_asdict(self._data))
+
+        (
+            system_info,
+            supervisor_info,
+            operating_system_info,
+        ) = await self.gather_analytics_info()
+
+        integrations = []
+        custom_integrations = []
+        addons = []
+
+        payload = self.prepare_payload(
+            system_info, supervisor_info, operating_system_info
+        )
 
         if self.preferences.get(ATTR_USAGE, False) or self.preferences.get(
             ATTR_STATISTICS, False
@@ -312,29 +365,7 @@ class Analytics:
                 ]
             )
 
-        try:
-            async with timeout(30):
-                response = await self.session.post(self.endpoint, json=payload)
-                if response.status == 200:
-                    LOGGER.info(
-                        (
-                            "Submitted analytics to Home Assistant servers. "
-                            "Information submitted includes %s"
-                        ),
-                        payload,
-                    )
-                else:
-                    LOGGER.warning(
-                        "Sending analytics failed with statuscode %s from %s",
-                        response.status,
-                        self.endpoint,
-                    )
-        except asyncio.TimeoutError:
-            LOGGER.error("Timeout sending analytics to %s", ANALYTICS_ENDPOINT_URL)
-        except aiohttp.ClientError as err:
-            LOGGER.error(
-                "Error sending analytics to %s: %r", ANALYTICS_ENDPOINT_URL, err
-            )
+        await self.send_payload(payload)
 
     @callback
     def _async_should_report_integration(
