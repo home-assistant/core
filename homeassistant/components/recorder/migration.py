@@ -950,26 +950,9 @@ def _apply_update(  # noqa: C901
             "statistics_short_term",
             "ix_statistics_short_term_statistic_id_start_ts",
         )
-        try:
-            _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
-        except IntegrityError as ex:
-            _LOGGER.error(
-                "Statistics table contains duplicate entries: %s; "
-                "Cleaning up duplicates and trying again; "
-                "This will take a while; "
-                "Please be patient!",
-                ex,
-            )
-            # There may be duplicated statistics entries, delete duplicates
-            # and try again
-            with session_scope(session=session_maker()) as session:
-                delete_statistics_duplicates(instance, hass, session)
-            _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
-            # Log at error level to ensure the user sees this message in the log
-            # since we logged the error above.
-            _LOGGER.error(
-                "Statistics migration successfully recovered after statistics table duplicate cleanup"
-            )
+        _migrate_statistics_columns_to_timestamp_removing_duplicates(
+            hass, instance, session_maker, engine
+        )
     elif new_version == 35:
         # Migration is done in two steps to ensure we can start using
         # the new columns before we wipe the old ones.
@@ -1060,8 +1043,44 @@ def _apply_update(  # noqa: C901
     elif new_version == 41:
         _create_index(session_maker, "event_types", "ix_event_types_event_type")
         _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
+    elif new_version == 42:
+        # If the user downgraded from 2023.3.x to an older version
+        # we will have unmigrated statistics columns so we want to
+        # clean this up one last time.
+        _migrate_statistics_columns_to_timestamp_removing_duplicates(
+            hass, instance, session_maker, engine
+        )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
+
+
+def _migrate_statistics_columns_to_timestamp_removing_duplicates(
+    hass: HomeAssistant,
+    instance: Recorder,
+    session_maker: Callable[[], Session],
+    engine: Engine,
+) -> None:
+    """Migrate statistics columns to timestamp or cleanup duplicates."""
+    try:
+        _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
+    except IntegrityError as ex:
+        _LOGGER.error(
+            "Statistics table contains duplicate entries: %s; "
+            "Cleaning up duplicates and trying again; "
+            "This will take a while; "
+            "Please be patient!",
+            ex,
+        )
+        # There may be duplicated statistics entries, delete duplicates
+        # and try again
+        with session_scope(session=session_maker()) as session:
+            delete_statistics_duplicates(instance, hass, session)
+        _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
+        # Log at error level to ensure the user sees this message in the log
+        # since we logged the error above.
+        _LOGGER.error(
+            "Statistics migration successfully recovered after statistics table duplicate cleanup"
+        )
 
 
 def _correct_table_character_set_and_collation(
