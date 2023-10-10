@@ -23,6 +23,9 @@ async def test_creating_entry_sets_up(
     ), patch(
         "homeassistant.components.refoss.bridge.async_build_base_device",
         return_value=build_base_device_mock(),
+    ), patch(
+        "homeassistant.components.refoss.switch.isinstance",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
