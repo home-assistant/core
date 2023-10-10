@@ -10,6 +10,26 @@ from homeassistant.helpers.state import async_reproduce_state
 from . import get_entity_ids
 
 
+def create_new_state(member: str, state: State) -> State:
+    """Create a new State object based on the provided member and state.
+
+    Args:
+        member (str): The entity ID for the new State object.
+        state (State): The original State object to copy attributes from.
+
+    Returns:
+        State: A new State object with attributes copied from the original state.
+    """
+    return State(
+        member,
+        state.state,
+        state.attributes,
+        last_changed=state.last_changed,
+        last_updated=state.last_updated,
+        context=state.context,
+    )
+
+
 async def async_reproduce_states(
     hass: HomeAssistant,
     states: Iterable[State],
@@ -22,16 +42,8 @@ async def async_reproduce_states(
     for state in states:
         members = get_entity_ids(hass, state.entity_id)
         for member in members:
-            states_copy.append(
-                State(
-                    member,
-                    state.state,
-                    state.attributes,
-                    last_changed=state.last_changed,
-                    last_updated=state.last_updated,
-                    context=state.context,
-                )
-            )
+            new_state = create_new_state(member, state)
+            states_copy.append(new_state)
     await async_reproduce_state(
         hass, states_copy, context=context, reproduce_options=reproduce_options
     )
