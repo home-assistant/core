@@ -11,6 +11,10 @@ from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
 
 _LOGGER = logging.getLogger(__name__)
 
+LOOKUP_TIMEOUT: float = 10
+DATA_UPDATE_TIMEOUT: float = 3.33
+DATA_UPDATE_RETRIES: int = 3
+
 
 @dataclass
 class MinecraftServerData:
@@ -57,13 +61,16 @@ class MinecraftServer:
         """Initialize server instance."""
         try:
             if server_type == MinecraftServerType.JAVA_EDITION:
-                self._server = JavaServer.lookup(address)
+                self._server = JavaServer.lookup(address, timeout=LOOKUP_TIMEOUT)
             else:
-                self._server = BedrockServer.lookup(address)
+                self._server = BedrockServer.lookup(address, timeout=LOOKUP_TIMEOUT)
         except (ValueError, LifetimeTimeout) as error:
             raise MinecraftServerAddressError(
-                f"{server_type} server address '{address}' is invalid (error: {error})"
+                f"{server_type} server address '{address}' is invalid ({repr(error)}: {error})"
             ) from error
+
+        self._server.timeout = DATA_UPDATE_TIMEOUT
+        self._address = address
 
         _LOGGER.debug(
             "%s server instance created with address '%s'", server_type, address
@@ -82,12 +89,22 @@ class MinecraftServer:
         """Get updated data from the server, supporting both Java and Bedrock Edition servers."""
         status_response: BedrockStatusResponse | JavaStatusResponse
 
-        try:
-            status_response = await self._server.async_status()
-        except OSError as error:
-            raise MinecraftServerConnectionError(
-                f"Fetching data from the server failed (error: {error})"
-            ) from error
+        for trial in range(DATA_UPDATE_RETRIES):
+            try:
+                status_response = await self._server.async_status(tries=1)
+                break
+            except OSError as error:
+                _LOGGER.debug(
+                    "Fetching data from '%s' failed, trial %s/%s (%s: %s)",
+                    self._address,
+                    (trial + 1),
+                    DATA_UPDATE_RETRIES,
+                    repr(error),
+                    error,
+                )
+
+        if trial >= (DATA_UPDATE_RETRIES - 1):
+            raise MinecraftServerConnectionError("Fetching data from the server failed")
 
         if isinstance(status_response, JavaStatusResponse):
             data = self._extract_java_data(status_response)
