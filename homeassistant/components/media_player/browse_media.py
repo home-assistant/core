@@ -25,6 +25,30 @@ from .const import CONTENT_AUTH_EXPIRY_TIME, MediaClass, MediaType
 PATHS_WITHOUT_AUTH = ("/api/tts_proxy/",)
 
 
+# convert relative URL to absolute URL
+def convert_relative_url(
+    hass: HomeAssistant, for_supervisor_network: bool = False
+) -> str:
+    base_url = None
+    if for_supervisor_network:
+        base_url = get_supervisor_network_url(hass)
+
+    if not base_url:
+        try:
+            base_url = get_url(hass)
+        except NoURLAvailableError as err:
+            msg = "Unable to determine Home Assistant URL to send to device"
+            if (
+                hass.config.api
+                and hass.config.api.use_ssl
+                and (not hass.config.external_url or not hass.config.internal_url)
+            ):
+                msg += ". Configure internal and external URL in general settings."
+            raise HomeAssistantError(msg) from err
+
+    return base_url
+
+
 @callback
 def async_process_play_media_url(
     hass: HomeAssistant,
@@ -64,27 +88,11 @@ def async_process_play_media_url(
 
     # convert relative URL to absolute URL
     if not parsed.is_absolute() and not allow_relative_url:
-        base_url = None
-        if for_supervisor_network:
-            base_url = get_supervisor_network_url(hass)
-
-        if not base_url:
-            try:
-                base_url = get_url(hass)
-            except NoURLAvailableError as err:
-                msg = "Unable to determine Home Assistant URL to send to device"
-                if (
-                    hass.config.api
-                    and hass.config.api.use_ssl
-                    and (not hass.config.external_url or not hass.config.internal_url)
-                ):
-                    msg += ". Configure internal and external URL in general settings."
-                raise HomeAssistantError(msg) from err
+        base_url = convert_relative_url(hass, for_supervisor_network)
 
         media_content_id = f"{base_url}{media_content_id}"
 
     return media_content_id
-
 
 class BrowseMedia:
     """Represent a browsable media file."""
