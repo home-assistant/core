@@ -19,7 +19,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    diagnostics_data = {
+    return {
         "config_entry": {
             "version": config_entry.version,
             "unique_id": config_entry.unique_id,
@@ -29,5 +29,3 @@ async def async_get_config_entry_diagnostics(
         "config_entry_options": async_redact_data(config_entry.options, TO_REDACT),
         "server_data": async_redact_data(asdict(coordinator.data), TO_REDACT),
     }
-
-    return diagnostics_data
