@@ -369,7 +369,7 @@ async def test_two_weather_sites_running(
 
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
-async def test_new_config_entry(hass: HomeAssistant, wavertree_data) -> None:
+async def test_new_config_entry(hass: HomeAssistant, no_sensor, wavertree_data) -> None:
     """Test the expected entities are created."""
     registry = er.async_get(hass)
 
@@ -383,11 +383,13 @@ async def test_new_config_entry(hass: HomeAssistant, wavertree_data) -> None:
 
     assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 1
     entry = hass.config_entries.async_entries()[0]
-    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 25
+    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 1
 
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
-async def test_legacy_config_entry(hass: HomeAssistant, wavertree_data) -> None:
+async def test_legacy_config_entry(
+    hass: HomeAssistant, no_sensor, wavertree_data
+) -> None:
     """Test the expected entities are created."""
     registry = er.async_get(hass)
     # Pre-create the hourly entity
@@ -409,7 +411,7 @@ async def test_legacy_config_entry(hass: HomeAssistant, wavertree_data) -> None:
 
     assert len(hass.states.async_entity_ids("weather")) == 2
     entry = hass.config_entries.async_entries()[0]
-    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 26
+    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 2
 
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
