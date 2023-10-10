@@ -673,7 +673,7 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
     }
 
 
-async def test_options_flow_omit_optional_key(
+async def test_options_flow_omit_optional_keys(
     hass: HomeAssistant, manager: data_entry_flow.FlowManager
 ) -> None:
     """Test handling of advanced options in options flow."""
