@@ -46,6 +46,7 @@ class NetgearSwitchEntityDescription(
 ):
     """Class describing Netgear Switch entities."""
 
+STR_MDI_WIFI = "mdi:wifi"
 
 ROUTER_SWITCH_TYPES = [
     NetgearSwitchEntityDescription(
@@ -83,7 +84,7 @@ ROUTER_SWITCH_TYPES = [
     NetgearSwitchEntityDescription(
         key="2g_guest_wifi",
         translation_key="2g_guest_wifi",
-        icon="mdi:wifi",
+        icon=STR_MDI_WIFI,
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_2g_guest_access_enabled,
         action=lambda router: router.api.set_2g_guest_access_enabled,
@@ -91,7 +92,7 @@ ROUTER_SWITCH_TYPES = [
     NetgearSwitchEntityDescription(
         key="5g_guest_wifi",
         translation_key="5g_guest_wifi",
-        icon="mdi:wifi",
+        icon=STR_MDI_WIFI,
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_5g_guest_access_enabled,
         action=lambda router: router.api.set_5g_guest_access_enabled,
@@ -99,7 +100,7 @@ ROUTER_SWITCH_TYPES = [
     NetgearSwitchEntityDescription(
         key="smart_connect",
         translation_key="smart_connect",
-        icon="mdi:wifi",
+        icon=STR_MDI_WIFI,
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_smart_connect_enabled,
         action=lambda router: router.api.set_smart_connect_enabled,
