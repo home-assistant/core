@@ -67,7 +67,7 @@ class MySensorsCover(mysensors.device.MySensorsChildEntity, CoverEntity):
         # If a V_DIMMER or V_PERCENTAGE is available, that is the amount
         # the cover is open. Otherwise, use 0 or 100 based on the V_LIGHT
         # or V_STATUS.
-        amount = 100
+        
         if set_req.V_DIMMER in self._values:
             amount = self._values[set_req.V_DIMMER]
         else:
