@@ -443,13 +443,10 @@ async def test_call_service_schema_validation_error(
     assert len(calls) == 0
 
 
-@patch("homeassistant.components.websocket_api.commands.CURRENT_VERSION", "2023.10.0")
-async def test_call_service_error_stable(
-    hass: HomeAssistant,
-    websocket_client: MockHAClientWebSocket,
-    caplog: pytest.LogCaptureFixture,
+async def test_call_service_error(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
-    """Test call service command with error using a HA core stable build."""
+    """Test call service command with error."""
 
     @callback
     def ha_error_call(_):
@@ -462,74 +459,16 @@ async def test_call_service_error_stable(
 
     hass.services.async_register("domain_test", "unknown_error", unknown_error_call)
 
-    with caplog.at_level(logging.DEBUG):
-        await websocket_client.send_json(
-            {
-                "id": 5,
-                "type": "call_service",
-                "domain": "domain_test",
-                "service": "ha_error",
-            }
-        )
-
-        msg = await websocket_client.receive_json()
-        assert "Stack trace for last exception" in caplog.text
-
-    assert msg["id"] == 5
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"] is False
-    assert msg["error"]["code"] == "home_assistant_error"
-    assert msg["error"]["message"] == "error_message"
-
     await websocket_client.send_json(
         {
-            "id": 6,
+            "id": 5,
             "type": "call_service",
             "domain": "domain_test",
-            "service": "unknown_error",
+            "service": "ha_error",
         }
     )
 
     msg = await websocket_client.receive_json()
-    assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"] is False
-    assert msg["error"]["code"] == "unknown_error"
-    assert msg["error"]["message"] == "value_error"
-
-
-@patch("homeassistant.components.websocket_api.commands.CURRENT_VERSION", "2023.10.0b0")
-async def test_call_service_error_unstable(
-    hass: HomeAssistant,
-    websocket_client: MockHAClientWebSocket,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test call service command with error using an HA core unstable build."""
-
-    @callback
-    def ha_error_call(_):
-        raise HomeAssistantError("error_message")
-
-    hass.services.async_register("domain_test", "ha_error", ha_error_call)
-
-    async def unknown_error_call(_):
-        raise ValueError("value_error")
-
-    hass.services.async_register("domain_test", "unknown_error", unknown_error_call)
-
-    with caplog.at_level(logging.DEBUG):
-        await websocket_client.send_json(
-            {
-                "id": 5,
-                "type": "call_service",
-                "domain": "domain_test",
-                "service": "ha_error",
-            }
-        )
-
-        msg = await websocket_client.receive_json()
-        assert "Stack trace for last exception" not in caplog.text
-
     assert msg["id"] == 5
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"] is False
