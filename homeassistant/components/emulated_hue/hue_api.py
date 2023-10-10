@@ -336,6 +336,21 @@ class HueOneLightChangeView(HomeAssistantView):
         """Initialize the instance of the view."""
         self.config = config
 
+    def is_valid_request(
+        self, config, hass: core.HomeAssistant, entity_id, entity_number
+    ):
+        """Validate request."""
+        if entity_id is None:
+            _LOGGER.error("Unknown entity number: %s", entity_number)
+            return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
+        if (entity := hass.states.get(entity_id)) is None:
+            _LOGGER.error("Entity not found: %s", entity_id)
+            return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
+        if not config.is_state_exposed(entity):
+            _LOGGER.error("Entity not exposed: %s", entity_id)
+            return self.json_message("Entity not exposed", HTTPStatus.UNAUTHORIZED)
+        return True
+
     async def put(  # noqa: C901
         self, request: web.Request, username: str, entity_number: str
     ) -> web.Response:
@@ -348,17 +363,9 @@ class HueOneLightChangeView(HomeAssistantView):
         hass: core.HomeAssistant = request.app["hass"]
         entity_id = config.number_to_entity_id(entity_number)
 
-        if entity_id is None:
-            _LOGGER.error("Unknown entity number: %s", entity_number)
-            return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
-
-        if (entity := hass.states.get(entity_id)) is None:
-            _LOGGER.error("Entity not found: %s", entity_id)
-            return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
-
-        if not config.is_state_exposed(entity):
-            _LOGGER.error("Entity not exposed: %s", entity_id)
-            return self.json_message("Entity not exposed", HTTPStatus.UNAUTHORIZED)
+        json_message = self.is_valid_request(config, hass, entity_id, entity_number)
+        if json_message != True:
+            return json_message
 
         try:
             request_json = await request.json()
@@ -367,8 +374,13 @@ class HueOneLightChangeView(HomeAssistantView):
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         # Get the entity's supported features
+        entity = hass.states.get(entity_id)
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, []) if entity.domain == light.DOMAIN else None
+        color_modes = (
+            entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
+            if entity.domain == light.DOMAIN
+            else None
+        )
 
         # Parse the request
         parsed: dict[str, Any] = {
@@ -439,7 +451,9 @@ class HueOneLightChangeView(HomeAssistantView):
         # Construct what we need to send to the service
         data: dict[str, Any] = {ATTR_ENTITY_ID: entity_id}
 
-        [turn_on_needed, domain, service, data] = self.set_data_based_on_domain(entity, parsed, data, entity_features, color_modes)
+        [turn_on_needed, domain, service, data] = self.set_data_based_on_domain(
+            entity, parsed, data, entity_features, color_modes
+        )
 
         # Map the off command to on
         if entity.domain in config.off_maps_to_on_domains:
@@ -501,7 +515,9 @@ class HueOneLightChangeView(HomeAssistantView):
 
         return self.json(json_response)
 
-    def set_data_based_on_domain(self, entity, parsed, data, entity_features, color_modes):
+    def set_data_based_on_domain(
+        self, entity, parsed, data, entity_features, color_modes
+    ):
         # Choose general HA domain
         domain = core.DOMAIN
 
@@ -562,7 +578,11 @@ class HueOneLightChangeView(HomeAssistantView):
         # If the requested entity is a cover, convert to open_cover/close_cover
         elif entity.domain == cover.DOMAIN:
             domain = entity.domain
-            service = SERVICE_OPEN_COVER if service == SERVICE_TURN_ON else SERVICE_CLOSE_COVER
+            service = (
+                SERVICE_OPEN_COVER
+                if service == SERVICE_TURN_ON
+                else SERVICE_CLOSE_COVER
+            )
 
             if (
                 entity_features & CoverEntityFeature.SET_POSITION
@@ -588,15 +608,16 @@ class HueOneLightChangeView(HomeAssistantView):
             light.brightness_supported(color_modes)
             and parsed[STATE_BRIGHTNESS] is not None
         ):
-            data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
-                parsed[STATE_BRIGHTNESS]
-            )
+            data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(parsed[STATE_BRIGHTNESS])
 
         if light.color_supported(color_modes):
             if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
-
                 hue = parsed[STATE_HUE] if parsed[STATE_HUE] is not None else 0
-                sat = parsed[STATE_SATURATION] if parsed[STATE_SATURATION] is not None else 0
+                sat = (
+                    parsed[STATE_SATURATION]
+                    if parsed[STATE_SATURATION] is not None
+                    else 0
+                )
 
                 # Convert hs values to hass hs values
                 hue = int((hue / HUE_API_STATE_HUE_MAX) * 360)
@@ -620,6 +641,7 @@ class HueOneLightChangeView(HomeAssistantView):
             data[ATTR_TRANSITION] = parsed[STATE_TRANSITION] / 10
 
         return data
+
 
 def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
     """Retrieve and convert state and brightness values for an entity."""
