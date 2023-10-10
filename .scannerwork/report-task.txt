@@ -1,6 +1,0 @@
-projectKey=home-assistant-core
-serverUrl=http://localhost:9000
-serverVersion=10.2.1.78527
-dashboardUrl=http://localhost:9000/dashboard?id=home-assistant-core
-ceTaskId=AYr7Klk408EHyxLbiecx
-ceTaskUrl=http://localhost:9000/api/ce/task?id=AYr7Klk408EHyxLbiecx

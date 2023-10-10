@@ -615,7 +615,6 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
     async def _async_play_known_cast_app(
         self,
-        media_type: MediaType | str,
         media_id: str,
         extra: Any,
         chromecast: pychromecast.Chromecast,
@@ -667,9 +666,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         # Handle media supported by a known cast app
         if media_type == CAST_DOMAIN:
-            await self._async_play_known_cast_app(
-                media_type, media_id, extra, chromecast
-            )
+            await self._async_play_known_cast_app(media_id, extra, chromecast)
             return
 
         # Try the cast platforms
@@ -684,7 +681,9 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         media_id = async_process_play_media_url(self.hass, media_id)
 
         # Configure play command for when playing a HLS stream
-        if is_hass_url(self.hass, media_id) and yarl.URL(media_id).path.startswith("/api/hls/"):
+        if is_hass_url(self.hass, media_id) and yarl.URL(media_id).path.startswith(
+            "/api/hls/"
+        ):
             extra = {
                 **extra,
                 "stream_type": "LIVE",
