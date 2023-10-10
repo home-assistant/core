@@ -188,17 +188,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
-        hass.data.pop(DOMAIN)
-
-    return unload_ok
-
-
 class NoMatchingShoppingListItem(Exception):
     """No matching item could be found in the shopping list."""
 
@@ -225,11 +214,18 @@ class ShoppingData:
         )
         return item
 
-    async def async_remove(self, item_id, context=None):
+    async def async_remove(
+        self, item_id: str, context=None
+    ) -> dict[str, JsonValueType] | None:
         """Remove a shopping list item."""
-        return await self.async_remove_items(item_ids=set({item_id}), context=context)
+        removed = await self.async_remove_items(
+            item_ids=set({item_id}), context=context
+        )
+        return next(iter(removed), None)
 
-    async def async_remove_items(self, item_ids: set[str], context=None) -> None:
+    async def async_remove_items(
+        self, item_ids: set[str], context=None
+    ) -> list[dict[str, JsonValueType]]:
         """Remove a shopping list item."""
         items_dict: dict[str, dict[str, JsonValueType]] = {}
         for itm in self.items:
@@ -254,7 +250,7 @@ class ShoppingData:
                 {"action": "remove", "item": item},
                 context=context,
             )
-        return item
+        return removed
 
     async def async_update(self, item_id, info, context=None):
         """Update a shopping list item."""
