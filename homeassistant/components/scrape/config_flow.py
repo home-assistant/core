@@ -204,10 +204,10 @@ async def validate_sensor_edit(
     # In this case, we want to add a sub-item so we update the options directly.
     idx: int = handler.flow_state["_idx"]
     handler.options[SENSOR_DOMAIN][idx].update(user_input)
-    for key in DATA_SCHEMA_EDIT_SENSOR.schema.keys() - user_input.keys():
-        # Not selecting any option for a optional select results that the key is not
-        # present in user_input. As dict.update does not delete them, we do it manually here
-        handler.options[SENSOR_DOMAIN][idx].pop(key, None)
+    for key in DATA_SCHEMA_EDIT_SENSOR.schema:
+        if isinstance(key, vol.Optional) and key not in user_input:
+            # Key not present, delete keys old value (if present) too
+            handler.options[SENSOR_DOMAIN][idx].pop(key, None)
     return {}
 
 
