@@ -79,7 +79,7 @@ async def test_user_step_no_new_devices_found(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["reason"] == "no_unconfigured_devices"
 
 
 async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
