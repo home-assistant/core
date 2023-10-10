@@ -1,10 +1,12 @@
 """Test fixtures for brother."""
 from collections.abc import Generator
+import sys
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-collect_ignore_glob = ["test_*.py"]
+if sys.version_info >= (3, 12):
+    collect_ignore_glob = ["test_*.py"]
 
 
 @pytest.fixture

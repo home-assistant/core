@@ -1,13 +1,15 @@
 """Tests for Brother Printer integration."""
-# ruff: noqa: F821
 import json
+import sys
 from unittest.mock import patch
 
-# from homeassistant.components.brother.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
+
+if sys.version_info < (3, 12):
+    from homeassistant.components.brother.const import DOMAIN
 
 
 async def init_integration(
