@@ -93,7 +93,7 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         state = self.hass.states.get(self.entity_id)
         assert state
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-
+        self._reload_on_change_attrs.extend((source_list_key,))
         self._mapped_sources_list: list[str] = []
         self._mapped_sources: dict[str, str] = {}
         self.source_key = source_key
@@ -204,8 +204,6 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
                     "%s: Sources out of sync. Rebuilding Accessory",
                     self.entity_id,
                 )
-                # Sources are out of sync, recreate the accessory
-                self.async_reset()
                 return
 
         _LOGGER.debug(
