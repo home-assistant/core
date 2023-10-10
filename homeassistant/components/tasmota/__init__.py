@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if "msg_callback" in topic and "event_loop_safe" in topic:
                 topic["msg_callback"] = callback(topic["msg_callback"])
         sub_state = async_prepare_subscribe_topics(hass, sub_state, topics)
-        await async_subscribe_topics(hass, sub_state)
+        await async_subscribe_topics(sub_state)
         return sub_state
 
     async def _unsubscribe_topics(sub_state: dict | None) -> dict:

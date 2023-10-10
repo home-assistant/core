@@ -169,7 +169,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        await subscription.async_subscribe_topics(self._sub_state)
 
         if self._optimistic and (last_state := await self.async_get_last_state()):
             self._attr_current_option = last_state.state

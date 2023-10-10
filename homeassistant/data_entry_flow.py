@@ -391,7 +391,11 @@ class FlowManager(abc.ABC):
             )
 
         try:
-            result: FlowResult = await getattr(flow, method)(user_input)
+            result: FlowResult
+            if step_id == "init":
+                result = await getattr(flow, method)()
+            else:
+                result = await getattr(flow, method)(user_input)
         except AbortFlow as err:
             result = _create_abort_data(
                 flow.flow_id, flow.handler, err.reason, err.description_placeholders

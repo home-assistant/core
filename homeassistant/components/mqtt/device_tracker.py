@@ -172,7 +172,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        await subscription.async_subscribe_topics(self._sub_state)
 
     @property
     def latitude(self) -> float | None:

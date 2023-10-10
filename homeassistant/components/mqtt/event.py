@@ -210,4 +210,4 @@ class MqttEvent(MqttEntity, EventEntity):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        await subscription.async_subscribe_topics(self._sub_state)

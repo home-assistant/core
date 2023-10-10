@@ -308,7 +308,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        await subscription.async_subscribe_topics(self._sub_state)
 
     @callback
     def _value_is_expired(self, *_: datetime) -> None:

@@ -367,7 +367,7 @@ class MqttAttributes(Entity):
         self._attributes_config = config
         self._attributes_prepare_subscribe_topics()
 
-    async def attributes_discovery_update(self, config: DiscoveryInfoType) -> None:
+    async def attributes_discovery_update(self) -> None:
         """Handle updated discovery message."""
         await self._attributes_subscribe_topics()
 
@@ -414,7 +414,7 @@ class MqttAttributes(Entity):
 
     async def _attributes_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await async_subscribe_topics(self.hass, self._attributes_sub_state)
+        await async_subscribe_topics(self._attributes_sub_state)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
@@ -452,7 +452,7 @@ class MqttAvailability(Entity):
         self._availability_setup_from_config(config)
         self._availability_prepare_subscribe_topics()
 
-    async def availability_discovery_update(self, config: DiscoveryInfoType) -> None:
+    async def availability_discovery_update(self) -> None:
         """Handle updated discovery message."""
         await self._availability_subscribe_topics()
 
@@ -524,7 +524,7 @@ class MqttAvailability(Entity):
 
     async def _availability_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await async_subscribe_topics(self.hass, self._availability_sub_state)
+        await async_subscribe_topics(self._availability_sub_state)
 
     @callback
     def async_mqtt_connect(self) -> None:
@@ -828,7 +828,7 @@ class MqttDiscoveryUpdate(Entity):
                 send_discovery_done(self.hass, discovery_data)
 
         async def _async_process_discovery_update_and_remove(
-            payload: MQTTDiscoveryPayload, discovery_data: DiscoveryInfoType
+            discovery_data: DiscoveryInfoType,
         ) -> None:
             """Process discovery update and remove entity."""
             self._cleanup_discovery_on_remove()
@@ -858,9 +858,7 @@ class MqttDiscoveryUpdate(Entity):
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self.hass.async_create_task(
-                    _async_process_discovery_update_and_remove(
-                        payload, self._discovery_data
-                    )
+                    _async_process_discovery_update_and_remove(self._discovery_data)
                 )
             elif self._discovery_update:
                 if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
@@ -1086,8 +1084,8 @@ class MqttEntity(
         self._prepare_subscribe_topics()
 
         # Finalize MQTT subscriptions
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
+        await self.attributes_discovery_update()
+        await self.availability_discovery_update()
         await self._subscribe_topics()
         self.async_write_ha_state()
 

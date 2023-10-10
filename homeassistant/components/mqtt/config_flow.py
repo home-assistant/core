@@ -264,7 +264,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         self.broker_config: dict[str, str | int] = {}
         self.options = config_entry.options
 
-    async def async_step_init(self, user_input: None = None) -> FlowResult:
+    async def async_step_init(self) -> FlowResult:
         """Manage the MQTT options."""
         return await self.async_step_broker()
 

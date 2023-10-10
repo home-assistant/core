@@ -154,7 +154,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
                 }
             },
         )
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        await subscription.async_subscribe_topics(self._sub_state)
 
     async def async_tear_down(self) -> None:
         """Cleanup tag scanner."""
