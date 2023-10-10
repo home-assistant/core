@@ -112,18 +112,16 @@ from .const import (
     DEFAULT_HOMEKIT_MODE,
     DEFAULT_PORT,
     DOMAIN,
-    HOMEKIT,
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODES,
-    HOMEKIT_PAIRING_QR,
-    HOMEKIT_PAIRING_QR_SECRET,
     MANUFACTURER,
-    PERSIST_LOCK,
+    PERSIST_LOCK_DATA,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_UNPAIR,
     SHUTDOWN_TIMEOUT,
 )
 from .iidmanager import AccessoryIIDStorage
+from .models import HomeKitEntryData
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
     accessory_friendly_name,
@@ -205,11 +203,8 @@ UNPAIR_SERVICE_SCHEMA = vol.All(
 
 def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
     """All active HomeKit instances."""
-    return [
-        data[HOMEKIT]
-        for data in hass.data[DOMAIN].values()
-        if isinstance(data, dict) and HOMEKIT in data
-    ]
+    domain_data: dict[str, HomeKitEntryData] = hass.data[DOMAIN]
+    return [data.homekit for data in domain_data.values()]
 
 
 def _async_get_imported_entries_indices(
@@ -231,7 +226,8 @@ def _async_get_imported_entries_indices(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomeKit from yaml."""
-    hass.data.setdefault(DOMAIN, {})[PERSIST_LOCK] = asyncio.Lock()
+    hass.data[DOMAIN] = {}
+    hass.data[PERSIST_LOCK_DATA] = asyncio.Lock()
 
     # Initialize the loader before loading entries to ensure
     # there is no race where multiple entries try to load it
@@ -352,7 +348,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
     )
 
-    hass.data[DOMAIN][entry.entry_id] = {HOMEKIT: homekit}
+    entry_data = HomeKitEntryData(
+        homekit=homekit, pairing_qr=None, pairing_qr_secret=None
+    )
+    hass.data[DOMAIN][entry.entry_id] = entry_data
 
     if hass.state == CoreState.running:
         await homekit.async_start()
@@ -372,7 +371,8 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     async_dismiss_setup_message(hass, entry.entry_id)
-    homekit = hass.data[DOMAIN][entry.entry_id][HOMEKIT]
+    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry.entry_id]
+    homekit = entry_data.homekit
 
     if homekit.status == STATUS_RUNNING:
         await homekit.async_stop()
@@ -849,7 +849,7 @@ class HomeKit:
         self._async_register_bridge()
         _LOGGER.debug("Driver start for %s", self._name)
         await self.driver.async_start()
-        async with self.hass.data[DOMAIN][PERSIST_LOCK]:
+        async with self.hass.data[PERSIST_LOCK_DATA]:
             await self.hass.async_add_executor_job(self.driver.persist)
         self.status = STATUS_RUNNING
 
@@ -1162,14 +1162,16 @@ class HomeKitPairingQRView(HomeAssistantView):
         if not request.query_string:
             raise Unauthorized()
         entry_id, secret = request.query_string.split("-")
-
+        hass: HomeAssistant = request.app["hass"]
+        domain_data: dict[str, HomeKitEntryData] = hass.data[DOMAIN]
         if (
-            entry_id not in request.app["hass"].data[DOMAIN]
-            or secret
-            != request.app["hass"].data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR_SECRET]
+            not (entry_data := domain_data.get(entry_id))
+            or not secret
+            or not entry_data.pairing_qr_secret
+            or secret != entry_data.pairing_qr_secret
         ):
             raise Unauthorized()
         return web.Response(
-            body=request.app["hass"].data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR],
+            body=entry_data.pairing_qr,
             content_type="image/svg+xml",
         )

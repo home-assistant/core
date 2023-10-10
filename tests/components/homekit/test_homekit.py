@@ -28,12 +28,12 @@ from homeassistant.components.homekit.const import (
     CONF_ADVERTISE_IP,
     DEFAULT_PORT,
     DOMAIN,
-    HOMEKIT,
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODE_BRIDGE,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_UNPAIR,
 )
+from homeassistant.components.homekit.models import HomeKitEntryData
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
 from homeassistant.components.homekit.util import get_persist_fullpath_for_entry_id
 from homeassistant.components.light import (
@@ -1799,10 +1799,8 @@ async def test_homekit_uses_system_zeroconf(
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert (
-            hass.data[DOMAIN][entry.entry_id][HOMEKIT].driver.advertiser
-            == system_async_zc
-        )
+        entry_data: HomeKitEntryData = hass.data[DOMAIN][entry.entry_id]
+        assert entry_data.homekit.driver.advertiser == system_async_zc
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
