@@ -298,39 +298,10 @@ class Recorder(threading.Thread):
     @callback
     def async_initialize(self) -> None:
         """Initialize the recorder."""
-        entity_filter = self.entity_filter
-        exclude_event_types = self.exclude_event_types
-        queue_put = self._queue.put_nowait
-        event_task = EventTask
-
-        @callback
-        def _event_listener(event: Event) -> None:
-            """Listen for new events and put them in the process queue."""
-            if event.event_type in exclude_event_types:
-                return
-
-            if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
-                queue_put(event_task(event))
-                return
-
-            if isinstance(entity_id, str):
-                if entity_filter(entity_id):
-                    queue_put(event_task(event))
-                return
-
-            if isinstance(entity_id, list):
-                for eid in entity_id:
-                    if entity_filter(eid):
-                        queue_put(event_task(event))
-                        return
-                return
-
-            # Unknown what it is.
-            queue_put(event_task(event))
 
         self._event_listener = self.hass.bus.async_listen(
             MATCH_ALL,
-            _event_listener,
+            self._event_handler,
             run_immediately=True,
         )
         self._queue_watcher = async_track_time_interval(
@@ -339,6 +310,36 @@ class Recorder(threading.Thread):
             timedelta(minutes=10),
             name="Recorder queue watcher",
         )
+
+    @callback
+    def _event_handler(self, event: Event) -> None:
+        """Listen for new events and put them in the process queue."""
+        entity_filter = self.entity_filter
+        exclude_event_types = self.exclude_event_types
+        queue_put = self._queue.put_nowait
+        event_task = EventTask
+
+        if event.event_type in exclude_event_types:
+            return
+
+        if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
+            queue_put(event_task(event))
+            return
+
+        if isinstance(entity_id, str):
+            if entity_filter(entity_id):
+                queue_put(event_task(event))
+            return
+
+        if isinstance(entity_id, list):
+            for eid in entity_id:
+                if entity_filter(eid):
+                    queue_put(event_task(event))
+                    return
+            return
+
+        # Unknown what it is.
+        queue_put(event_task(event))
 
     @callback
     def _async_keep_alive(self, now: datetime) -> None:
