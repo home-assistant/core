@@ -1,7 +1,10 @@
 """Representation of Plex updates."""
+import logging
 from typing import Any
 
+from plexapi.exceptions import PlexApiException
 import plexapi.server
+import requests.exceptions
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -12,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_SERVER_IDENTIFIER
 from .helpers import get_plex_server
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -45,15 +50,20 @@ class PlexUpdate(UpdateEntity):
     def update(self) -> None:
         """Update sync attributes."""
         self._attr_installed_version = self.plex_server.version
-        if release := self.plex_server.checkForUpdate():
+        try:
+            if (release := self.plex_server.checkForUpdate()) is None:
+                return
             self.can_update = self.plex_server.canInstallUpdate()
-            self._attr_latest_version = release.version
-            if release.fixed:
-                self._release_notes = "\n".join(
-                    f"* {line}" for line in release.fixed.split("\n")
-                )
-            else:
-                self._release_notes = None
+        except (requests.exceptions.RequestException, PlexApiException):
+            _LOGGER.warning("Polling update sensor failed, will try again")
+            return
+        self._attr_latest_version = release.version
+        if release.fixed:
+            self._release_notes = "\n".join(
+                f"* {line}" for line in release.fixed.split("\n")
+            )
+        else:
+            self._release_notes = None
 
     def release_notes(self) -> str | None:
         """Return release notes for the available upgrade."""
@@ -65,4 +75,7 @@ class PlexUpdate(UpdateEntity):
             raise HomeAssistantError(
                 "Automatic updates cannot be performed on this Plex installation"
             )
-        self.plex_server.installUpdate()
+        try:
+            self.plex_server.installUpdate()
+        except (requests.exceptions.RequestException, PlexApiException) as exc:
+            raise HomeAssistantError(str(exc)) from exc

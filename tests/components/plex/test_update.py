@@ -23,6 +23,7 @@ async def test_plex_update(
     hass_ws_client: WebSocketGenerator,
     mock_plex_server,
     requests_mock: requests_mock.Mocker,
+    empty_payload: str,
     update_check_new: str,
     update_check_new_not_updatable: str,
 ) -> None:
@@ -41,6 +42,15 @@ async def test_plex_update(
     assert result["result"] is None
 
     apply_mock = requests_mock.put("/updater/apply")
+
+    # Failed updates
+    requests_mock.get("/updater/status", status_code=500)
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATER_SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    requests_mock.get("/updater/status", text=empty_payload)
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATER_SCAN_INTERVAL)
+    await hass.async_block_till_done()
 
     # New release (not updatable)
     requests_mock.get("/updater/status", text=update_check_new_not_updatable)
@@ -77,6 +87,7 @@ async def test_plex_update(
     result = await ws_client.receive_json()
     assert result["result"] == "* Summary of\n* release notes"
 
+    # Successful upgrade request
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
@@ -86,3 +97,15 @@ async def test_plex_update(
         blocking=True,
     )
     assert apply_mock.called_once
+
+    # Failed upgrade request
+    requests_mock.put("/updater/apply", status_code=500)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {
+                ATTR_ENTITY_ID: UPDATE_ENTITY,
+            },
+            blocking=True,
+        )
