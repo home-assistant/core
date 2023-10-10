@@ -617,7 +617,7 @@ epson-projector==0.5.1
 esphome-dashboard-api==1.2.3
 
 # homeassistant.components.eufylife_ble
-eufylife-ble-client==0.1.7
+eufylife-ble-client==0.1.8
 
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
