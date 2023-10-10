@@ -86,7 +86,7 @@
   "issues": {
     "protection_window_automation": {
       "title": "Protection window automation no longer required",
-      "description": "OpenUV can now automatically update the protection window binary sensor; you are no longer required to call the `homeassistant.update_entity` service with `{protection_window_entity_id}` as a target and may remove the `{automation_entity_id}` automation."
+      "description": "OpenUV can now automatically update `{protection_window_entity_id}`; you are no longer required to call the `homeassistant.update_entity` service on it and may remove the `{automation_entity_id}` automation."
     }
   }
 }
