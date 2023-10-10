@@ -609,24 +609,24 @@ class MoesThermostat(Thermostat):
         """Return only the heat mode, because the device can't be turned off."""
         return [HVACMode.HEAT]
 
-    async def async_attribute_updated(self, record):
+    async def async_attribute_updated(self, attr_id, attr_name, value):
         """Handle attribute update from device."""
-        if record.attr_name == "operation_preset":
-            if record.value == 0:
+        if attr_name == "operation_preset":
+            if value == 0:
                 self._preset = PRESET_AWAY
-            if record.value == 1:
+            if value == 1:
                 self._preset = PRESET_SCHEDULE
-            if record.value == 2:
+            if value == 2:
                 self._preset = PRESET_NONE
-            if record.value == 3:
+            if value == 3:
                 self._preset = PRESET_COMFORT
-            if record.value == 4:
+            if value == 4:
                 self._preset = PRESET_ECO
-            if record.value == 5:
+            if value == 5:
                 self._preset = PRESET_BOOST
-            if record.value == 6:
+            if value == 6:
                 self._preset = PRESET_COMPLEX
-        await super().async_attribute_updated(record)
+        await super().async_attribute_updated(attr_id, attr_name, value)
 
     async def async_preset_handler(self, preset: str, enable: bool = False) -> None:
         """Set the preset mode."""
@@ -688,22 +688,22 @@ class BecaThermostat(Thermostat):
         """Return only the heat mode, because the device can't be turned off."""
         return [HVACMode.HEAT]
 
-    async def async_attribute_updated(self, record):
+    async def async_attribute_updated(self, attr_id, attr_name, value):
         """Handle attribute update from device."""
-        if record.attr_name == "operation_preset":
-            if record.value == 0:
+        if attr_name == "operation_preset":
+            if value == 0:
                 self._preset = PRESET_AWAY
-            if record.value == 1:
+            if value == 1:
                 self._preset = PRESET_SCHEDULE
-            if record.value == 2:
+            if value == 2:
                 self._preset = PRESET_NONE
-            if record.value == 4:
+            if value == 4:
                 self._preset = PRESET_ECO
-            if record.value == 5:
+            if value == 5:
                 self._preset = PRESET_BOOST
-            if record.value == 7:
+            if value == 7:
                 self._preset = PRESET_TEMP_MANUAL
-        await super().async_attribute_updated(record)
+        await super().async_attribute_updated(attr_id, attr_name, value)
 
     async def async_preset_handler(self, preset: str, enable: bool = False) -> None:
         """Set the preset mode."""
@@ -783,20 +783,20 @@ class ZONNSMARTThermostat(Thermostat):
         ]
         self._supported_flags |= ClimateEntityFeature.PRESET_MODE
 
-    async def async_attribute_updated(self, record):
+    async def async_attribute_updated(self, attr_id, attr_name, value):
         """Handle attribute update from device."""
-        if record.attr_name == "operation_preset":
-            if record.value == 0:
+        if attr_name == "operation_preset":
+            if value == 0:
                 self._preset = PRESET_SCHEDULE
-            if record.value == 1:
+            if value == 1:
                 self._preset = PRESET_NONE
-            if record.value == 2:
+            if value == 2:
                 self._preset = self.PRESET_HOLIDAY
-            if record.value == 3:
+            if value == 3:
                 self._preset = self.PRESET_HOLIDAY
-            if record.value == 4:
+            if value == 4:
                 self._preset = self.PRESET_FROST
-        await super().async_attribute_updated(record)
+        await super().async_attribute_updated(attr_id, attr_name, value)
 
     async def async_preset_handler(self, preset: str, enable: bool = False) -> None:
         """Set the preset mode."""

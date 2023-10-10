@@ -76,6 +76,13 @@ class HumidifierDehumidifier(HomeAccessory):
     def __init__(self, *args):
         """Initialize a HumidifierDehumidifier accessory object."""
         super().__init__(*args, category=CATEGORY_HUMIDIFIER)
+        self._reload_on_change_attrs.extend(
+            (
+                ATTR_MAX_HUMIDITY,
+                ATTR_MIN_HUMIDITY,
+            )
+        )
+
         self.chars = []
         state = self.hass.states.get(self.entity_id)
         device_class = state.attributes.get(
