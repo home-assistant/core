@@ -384,5 +384,3 @@ class IkeaRemote(ClusterHandler):
 )
 class XiaomiVibrationAQ1ClusterHandler(MultistateInput):
     """Xiaomi DoorLock Cluster is in fact a MultiStateInput Cluster."""
-
-    pass

@@ -112,7 +112,9 @@ CLIENT_CLUSTER_HANDLER_REGISTRY: DictRegistry[
 ] = DictRegistry()
 ZIGBEE_CLUSTER_HANDLER_REGISTRY: DictRegistry[type[ClusterHandler]] = DictRegistry()
 
-CUSTOM_CLUSTER_HANDLER_REGISTRY = DictofDictRegistry()
+CUSTOM_CLUSTER_HANDLER_REGISTRY: DictofDictRegistry[
+    type[ClusterHandler]
+] = DictofDictRegistry()
 
 WEIGHT_ATTR = attrgetter("weight")
 

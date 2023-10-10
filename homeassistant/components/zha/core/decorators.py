@@ -25,7 +25,7 @@ class DictofDictRegistry(dict[int | str, dict[int | str, _TypeT]]):
     """Dict Registry of multiple items."""
 
     def register(
-        self, name: int | str, quirk_name: str = None
+        self, name: int | str, quirk_name: str | None = None
     ) -> Callable[[_TypeT], _TypeT]:
         """Return decorator to register item with a specific and a quirk name."""
 

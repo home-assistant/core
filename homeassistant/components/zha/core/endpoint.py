@@ -119,9 +119,13 @@ class Endpoint:
             )
 
             if hasattr(cluster.endpoint.device, "quirk_id"):
-                cluster_handler_class = registries.CUSTOM_CLUSTER_HANDLER_REGISTRY.get(
-                    cluster_id
-                ).get(cluster.endpoint.device.quirk_id, cluster_handler_class)
+                cluster_handler_classes = (
+                    registries.CUSTOM_CLUSTER_HANDLER_REGISTRY.get(cluster_id)
+                )
+                if cluster_handler_classes is not None:
+                    cluster_handler_class = cluster_handler_classes.get(
+                        cluster.endpoint.device.quirk_id, cluster_handler_class
+                    )
 
             # Allow cluster handler to filter out bad matches
             if not cluster_handler_class.matches(cluster, self):
