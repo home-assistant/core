@@ -3,7 +3,7 @@ import datetime
 import importlib
 import sys
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 import uuid
 
 from freezegun import freeze_time
@@ -849,6 +849,19 @@ async def test_migrate_null_event_type_ids(
     assert len(events_by_type[migration._EMPTY_EVENT_TYPE]) == 1000
 
 
+async def _async_attach_db_engine(hass: HomeAssistant) -> None:
+    """Attach a database engine to the recorder."""
+    instance = recorder.get_instance(hass)
+
+    def _mock_setup_recorder_connection():
+        with instance.engine.connect() as connection:
+            instance._setup_recorder_connection(
+                connection._dbapi_connection, MagicMock()
+            )
+
+    await instance.async_add_executor_job(_mock_setup_recorder_connection)
+
+
 async def test_stats_timestamp_conversion_is_reentrant(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -856,6 +869,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
     """Test stats migration is reentrant."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    await _async_attach_db_engine(hass)
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
     now = dt_util.utcnow()
@@ -941,18 +955,29 @@ async def test_stats_timestamp_conversion_is_reentrant(
     await hass.async_add_executor_job(_do_migration)
 
     final_result = await hass.async_add_executor_job(_get_all_short_term_stats)
+    # Normalize timestamps since each engine returns them differently
+    for row in final_result:
+        if row["created"] is not None:
+            row["created"] = process_timestamp(row["created"]).replace(tzinfo=None)
+        if row["start"] is not None:
+            row["start"] = process_timestamp(row["start"]).replace(tzinfo=None)
+        if row["last_reset"] is not None:
+            row["last_reset"] = process_timestamp(row["last_reset"]).replace(
+                tzinfo=None
+            )
+
     assert final_result == [
         {
-            "created": process_timestamp(one_year_ago),
+            "created": process_timestamp(one_year_ago).replace(tzinfo=None),
             "created_ts": one_year_ago.timestamp(),
             "id": 1,
-            "last_reset": process_timestamp(one_year_ago),
+            "last_reset": process_timestamp(one_year_ago).replace(tzinfo=None),
             "last_reset_ts": one_year_ago.timestamp(),
             "max": None,
             "mean": None,
             "metadata_id": 1000,
             "min": None,
-            "start": process_timestamp(one_year_ago),
+            "start": process_timestamp(one_year_ago).replace(tzinfo=None),
             "start_ts": one_year_ago.timestamp(),
             "state": 1.0,
             "sum": None,
@@ -973,16 +998,16 @@ async def test_stats_timestamp_conversion_is_reentrant(
             "sum": None,
         },
         {
-            "created": process_timestamp(one_month_ago),
+            "created": process_timestamp(one_month_ago).replace(tzinfo=None),
             "created_ts": one_month_ago.timestamp(),
             "id": 3,
-            "last_reset": process_timestamp(one_month_ago),
+            "last_reset": process_timestamp(one_month_ago).replace(tzinfo=None),
             "last_reset_ts": one_month_ago.timestamp(),
             "max": None,
             "mean": None,
             "metadata_id": 1000,
             "min": None,
-            "start": process_timestamp(one_month_ago),
+            "start": process_timestamp(one_month_ago).replace(tzinfo=None),
             "start_ts": one_month_ago.timestamp(),
             "state": 1.0,
             "sum": None,
