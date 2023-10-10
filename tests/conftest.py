@@ -559,6 +559,9 @@ async def hass(
     # Restore timezone, it is set when creating the hass object
     dt_util.DEFAULT_TIME_ZONE = orig_tz
 
+    # Reset the _Hass threading.local object
+    ha._hass.__dict__.clear()
+
     for ex in exceptions:
         if (
             request.module.__name__,
