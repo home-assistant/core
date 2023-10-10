@@ -47,6 +47,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+def create_binary_sensor_group(
+    unique_id: str | None,
+    name: str,
+    device_class: BinarySensorDeviceClass | None,
+    entity_ids: list[str],
+    mode: bool | None,
+) -> BinarySensorGroup:
+    """Create a BinarySensorGroup instance."""
+    return BinarySensorGroup(unique_id, name, device_class, entity_ids, mode)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -60,7 +71,7 @@ async def async_setup_platform(
 
     async_add_entities(
         [
-            BinarySensorGroup(
+            create_binary_sensor_group(
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
                 config.get(CONF_DEVICE_CLASS),
@@ -85,7 +96,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            BinarySensorGroup(
+            create_binary_sensor_group(
                 config_entry.entry_id, config_entry.title, None, entities, mode
             )
         ]
