@@ -1505,6 +1505,67 @@ def _migrate_columns_to_timestamp(
                     )
                 )
 
+def _get_dialect_sqlite(session_maker: Callable[[], Session]) -> None:
+    for table in STATISTICS_TABLES:
+        with session_scope(session=session_maker()) as session:
+            session.connection().execute(
+                text(
+                    f"UPDATE {table} set start_ts=strftime('%s',start) + "  # noqa: S608
+                    "cast(substr(start,-7) AS FLOAT), "
+                    f"created_ts=strftime('%s',created) + "
+                    "cast(substr(created,-7) AS FLOAT), "
+                    f"last_reset_ts=strftime('%s',last_reset) + "
+                    "cast(substr(last_reset,-7) AS FLOAT);"
+                )
+            )
+
+
+def _get_dialect_mysql(session_maker: Callable[[], Session], result: CursorResult) -> CursorResult:
+     # With MySQL we do this in chunks to avoid hitting the `innodb_buffer_pool_size` limit
+    # We also need to do this in a loop since we can't be sure that we have
+    # updated all rows in the table until the rowcount is 0
+    for table in STATISTICS_TABLES:
+        result = None
+        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+            with session_scope(session=session_maker()) as session:
+                result = session.connection().execute(
+                    text(
+                        f"UPDATE {table} set start_ts="  # noqa: S608
+                        "IF(start is NULL or UNIX_TIMESTAMP(start) is NULL,0,"
+                        "UNIX_TIMESTAMP(start) "
+                        "), "
+                        "created_ts="
+                        "UNIX_TIMESTAMP(created), "
+                        "last_reset_ts="
+                        "UNIX_TIMESTAMP(last_reset) "
+                        "where start_ts is NULL "
+                        "LIMIT 100000;"
+                    )
+                )
+    return result
+
+
+def _get_dialect_postgresql(session_maker: Callable[[], Session], result: CursorResult) -> CursorResult:
+    # With Postgresql we do this in chunks to avoid using too much memory
+    # We also need to do this in a loop since we can't be sure that we have
+    # updated all rows in the table until the rowcount is 0
+    for table in STATISTICS_TABLES:
+        result = None
+        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+            with session_scope(session=session_maker()) as session:
+                result = session.connection().execute(
+                    text(
+                        f"UPDATE {table} set start_ts="  # noqa: S608
+                        "(case when start is NULL then 0 else EXTRACT(EPOCH FROM start::timestamptz) end), "
+                        "created_ts=EXTRACT(EPOCH FROM created::timestamptz), "
+                        "last_reset_ts=EXTRACT(EPOCH FROM last_reset::timestamptz) "
+                        "where id IN ("
+                        f"SELECT id FROM {table} where start_ts is NULL LIMIT 100000"
+                        ");"
+                    )
+                )
+    return result   
+
 
 @database_job_retry_wrapper("Migrate statistics columns to timestamp", 3)
 def _migrate_statistics_columns_to_timestamp(
@@ -1519,62 +1580,11 @@ def _migrate_statistics_columns_to_timestamp(
     # Migrate all data in statistics_short_term.last_reset to statistics_short_term.last_reset_ts
     result: CursorResult | None = None
     if engine.dialect.name == SupportedDialect.SQLITE:
-        # With SQLite we do this in one go since it is faster
-        for table in STATISTICS_TABLES:
-            with session_scope(session=session_maker()) as session:
-                session.connection().execute(
-                    text(
-                        f"UPDATE {table} set start_ts=strftime('%s',start) + "  # noqa: S608
-                        "cast(substr(start,-7) AS FLOAT), "
-                        f"created_ts=strftime('%s',created) + "
-                        "cast(substr(created,-7) AS FLOAT), "
-                        f"last_reset_ts=strftime('%s',last_reset) + "
-                        "cast(substr(last_reset,-7) AS FLOAT);"
-                    )
-                )
+        _get_dialect_sqlite(session_maker)
     elif engine.dialect.name == SupportedDialect.MYSQL:
-        # With MySQL we do this in chunks to avoid hitting the `innodb_buffer_pool_size` limit
-        # We also need to do this in a loop since we can't be sure that we have
-        # updated all rows in the table until the rowcount is 0
-        for table in STATISTICS_TABLES:
-            result = None
-            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
-                with session_scope(session=session_maker()) as session:
-                    result = session.connection().execute(
-                        text(
-                            f"UPDATE {table} set start_ts="  # noqa: S608
-                            "IF(start is NULL or UNIX_TIMESTAMP(start) is NULL,0,"
-                            "UNIX_TIMESTAMP(start) "
-                            "), "
-                            "created_ts="
-                            "UNIX_TIMESTAMP(created), "
-                            "last_reset_ts="
-                            "UNIX_TIMESTAMP(last_reset) "
-                            "where start_ts is NULL "
-                            "LIMIT 100000;"
-                        )
-                    )
+        result = _get_dialect_mysql(session_maker, result)
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
-        # With Postgresql we do this in chunks to avoid using too much memory
-        # We also need to do this in a loop since we can't be sure that we have
-        # updated all rows in the table until the rowcount is 0
-        for table in STATISTICS_TABLES:
-            result = None
-            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
-                with session_scope(session=session_maker()) as session:
-                    result = session.connection().execute(
-                        text(
-                            f"UPDATE {table} set start_ts="  # noqa: S608
-                            "(case when start is NULL then 0 else EXTRACT(EPOCH FROM start::timestamptz) end), "
-                            "created_ts=EXTRACT(EPOCH FROM created::timestamptz), "
-                            "last_reset_ts=EXTRACT(EPOCH FROM last_reset::timestamptz) "
-                            "where id IN ("
-                            f"SELECT id FROM {table} where start_ts is NULL LIMIT 100000"
-                            ");"
-                        )
-                    )
-
-
+        result = _get_dialect_postgresql(session_maker, result)
 def _context_id_to_bytes(context_id: str | None) -> bytes | None:
     """Convert a context_id to bytes."""
     if context_id is None:
