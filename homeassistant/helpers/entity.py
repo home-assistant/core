@@ -775,12 +775,14 @@ class Entity(ABC):
         return f"{device_name} {name}" if device_name else name
 
     @callback
-    def _async_generate_attributes(self) -> tuple[str, dict[str, Any]]:
+    def _async_generate_attributes(
+        self,
+    ) -> tuple[str, Mapping[str, Any] | None, dict[str, Any]]:
         """Calculate state string and attribute mapping."""
         entry = self.registry_entry
 
-        attr = self.capability_attributes
-        attr = dict(attr) if attr else {}
+        capability_attr = self.capability_attributes
+        attr = dict(capability_attr) if capability_attr else {}
 
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
@@ -816,7 +818,7 @@ class Entity(ABC):
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        return (state, attr)
+        return (state, capability_attr, attr)
 
     @callback
     def _async_write_ha_state(self) -> None:
@@ -842,8 +844,26 @@ class Entity(ABC):
             return
 
         start = timer()
-        state, attr = self._async_generate_attributes()
+        state, capabilities, attr = self._async_generate_attributes()
         end = timer()
+
+        if entry:
+            # Make sure capabilities in the entity registry is up to date. Capabilities
+            # include capability attributes, device class and supported features
+            device_class: str | None = attr.get(ATTR_DEVICE_CLASS)
+            supported_features: int = attr.get(ATTR_SUPPORTED_FEATURES) or 0
+            if (
+                capabilities != entry.capabilities
+                or device_class != entry.original_device_class
+                or supported_features != entry.supported_features
+            ):
+                entity_registry = er.async_get(self.hass)
+                self.registry_entry = entity_registry.async_update_entity(
+                    self.entity_id,
+                    capabilities=capabilities,
+                    original_device_class=device_class,
+                    supported_features=supported_features,
+                )
 
         if end - start > 0.4 and not self._slow_reported:
             self._slow_reported = True
