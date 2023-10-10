@@ -210,7 +210,7 @@ aiobafi6==0.9.0
 aiobotocore==2.6.0
 
 # homeassistant.components.comelit
-aiocomelit==0.0.9
+aiocomelit==0.2.0
 
 # homeassistant.components.dhcp
 aiodiscover==1.5.1
@@ -767,7 +767,7 @@ esphome-dashboard-api==1.2.3
 eternalegypt==0.0.16
 
 # homeassistant.components.eufylife_ble
-eufylife-ble-client==0.1.7
+eufylife-ble-client==0.1.8
 
 # homeassistant.components.keyboard_remote
 # evdev==1.6.1
@@ -1183,7 +1183,7 @@ lxml==4.9.3
 mac-vendor-lookup==0.1.12
 
 # homeassistant.components.matrix
-matrix-nio==0.21.2
+matrix-nio==0.22.1
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -2520,7 +2520,7 @@ surepy==0.8.0
 swisshydrodata==0.1.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==1.1.0
+switchbot-api==1.2.1
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
