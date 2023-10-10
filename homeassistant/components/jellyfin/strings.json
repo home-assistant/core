@@ -9,8 +9,6 @@
         }
       },
       "user": {
-        "title": "Login",
-        "description": "Enter your Jellyfin URL, username and password to login",
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
           "username": "[%key:common::config_flow::data::username%]",
