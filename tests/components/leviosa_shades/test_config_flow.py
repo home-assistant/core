@@ -18,7 +18,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 
 TEST_HOST1 = "1.2.3.4"
 TEST_HOST2 = "5.6.7.8"
-TEST_HOST3 = "1.2.3.6"
+TEST_HOST3 = "1.2.3.5"
 TEST_MAC1 = "40f5205b658c"
 TEST_MAC2 = "40f5205b6687"
 TEST_MAC3 = "40f5205b658d"
