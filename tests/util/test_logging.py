@@ -55,8 +55,8 @@ async def test_logging_with_queue_handler() -> None:
     [
         ("2023.10.0", HomeAssistantError, True),
         ("2023.10.0b0", HomeAssistantError, False),
-        ("2023.10.0", KeyError, True),
-        ("2023.10.0b0", KeyError, True),
+        ("2023.10.0", KeyError, False),
+        ("2023.10.0b0", KeyError, False),
     ],
 )
 @pytest.mark.xfail(reason="Test exception")
@@ -71,11 +71,14 @@ async def test_suppressed_logging_stack_trace(
 
     Stack traces for HomeAssistantError should be suppressed for stable builds.
     """
+    logger = logging.getLogger("")
     with patch("homeassistant.core.__version__", version):
         logging_util.async_activate_log_queue_handler(hass)
 
-    with pytest.raises(exc):
+    try:
         raise exc("Test exception")
+    except exc:
+        logger.exception(exc)
 
     if should_filter:
         assert 'raise exc("Test exception")' not in caplog.text
