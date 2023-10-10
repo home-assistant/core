@@ -171,7 +171,7 @@ class SchemaCommonFlowHandler:
 
         if user_input is not None:
             # User input was validated successfully, update options
-            self._update_and_remove_omitted_opional_keys(
+            self._update_and_remove_omitted_optional_keys(
                 self._options, user_input, data_schema
             )
 
@@ -245,7 +245,7 @@ class SchemaCommonFlowHandler:
         if user_input:
             # We don't want to mutate the existing options
             suggested_values = copy.deepcopy(suggested_values)
-            self._update_and_remove_omitted_opional_keys(
+            self._update_and_remove_omitted_optional_keys(
                 suggested_values, user_input, await self._get_schema(form_step)
             )
 
