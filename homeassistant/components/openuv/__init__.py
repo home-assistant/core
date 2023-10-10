@@ -6,6 +6,8 @@ from typing import Any
 
 from pyopenuv import Client
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
@@ -17,9 +19,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -31,6 +34,7 @@ from .const import (
     DEFAULT_TO_WINDOW,
     DOMAIN,
     LOGGER,
+    TYPE_PROTECTION_WINDOW,
 )
 from .coordinator import OpenUvCoordinator
 
@@ -39,11 +43,14 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenUV as config entry."""
+    latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
+
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(
         entry.data[CONF_API_KEY],
-        entry.data.get(CONF_LATITUDE, hass.config.latitude),
-        entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+        latitude,
+        longitude,
         altitude=entry.data.get(CONF_ELEVATION, hass.config.elevation),
         session=websession,
         check_status_before_request=True,
@@ -80,6 +87,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Automations to update the protection window binary sensor are deprecated (in favor
+    # of an automatic update); create issue registry entries for every such automation
+    # we find:
+    ent_reg = er.async_get(hass)
+    protection_window_registry_entry = ent_reg.async_get_or_create(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{latitude}_{longitude}_{TYPE_PROTECTION_WINDOW}"
+    )
+    for automation_entity_id in automations_with_entity(
+        hass, protection_window_registry_entry.entity_id
+    ):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"protection_window_automation_{automation_entity_id}",
+            breaks_in_ha_version="2024.1.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="protection_window_automation",
+            translation_placeholders={"automation_entity_id": automation_entity_id},
+        )
 
     return True
 

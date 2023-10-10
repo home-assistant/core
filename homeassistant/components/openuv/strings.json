@@ -82,5 +82,11 @@
         "name": "Skin type 6 safe exposure time"
       }
     }
+  },
+  "issues": {
+    "protection_window_automation": {
+      "title": "Deprecated protection window automation",
+      "description": "OpenUV can now automatically update the protection window binary sensor; automations that manually update this entity with the `homeassistant.update_entity` are deprecated. Please remove the `{automation_entity_id}` automation."
+    }
   }
 }
