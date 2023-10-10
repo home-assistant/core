@@ -51,5 +51,12 @@
         }
       }
     }
+  },
+  "entity": {
+    "calendar": {
+      "calendar": {
+        "name": "[%key:component::calendar::title%]"
+      }
+    }
   }
 }

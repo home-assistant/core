@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any
 
@@ -10,6 +10,7 @@ from pyfibaro.fibaro_client import FibaroClient
 from pyfibaro.fibaro_device import DeviceModel
 from pyfibaro.fibaro_room import RoomModel
 from pyfibaro.fibaro_scene import SceneModel
+from pyfibaro.fibaro_state_resolver import FibaroEvent, FibaroStateResolver
 from requests.exceptions import HTTPError
 
 from homeassistant.config_entries import ConfigEntry
@@ -46,6 +47,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.LOCK,
     Platform.SWITCH,
+    Platform.EVENT,
 ]
 
 FIBARO_TYPEMAP = {
@@ -95,6 +97,8 @@ class FibaroController:
         # All scenes
         self._scenes: list[SceneModel] = []
         self._callbacks: dict[int, list[Any]] = {}  # Update value callbacks by deviceId
+        # Event callbacks by device id
+        self._event_callbacks: dict[int, list[Callable[[FibaroEvent], None]]] = {}
         self.hub_serial: str  # Unique serial number of the hub
         self.hub_name: str  # The friendly name of the hub
         self.hub_software_version: str
@@ -178,10 +182,30 @@ class FibaroController:
             for callback in self._callbacks[item]:
                 callback()
 
+        resolver = FibaroStateResolver(state)
+        for event in resolver.get_events():
+            fibaro_id = event.fibaro_id
+            if (
+                event.event_type.lower() == "centralsceneevent"
+                and fibaro_id in self._event_callbacks
+            ):
+                for callback in self._event_callbacks[fibaro_id]:
+                    callback(event)
+
     def register(self, device_id: int, callback: Any) -> None:
         """Register device with a callback for updates."""
-        self._callbacks.setdefault(device_id, [])
-        self._callbacks[device_id].append(callback)
+        device_callbacks = self._callbacks.setdefault(device_id, [])
+        device_callbacks.append(callback)
+
+    def register_event(
+        self, device_id: int, callback: Callable[[FibaroEvent], None]
+    ) -> None:
+        """Register device with a callback for central scene events.
+
+        The callback receives one parameter with the event.
+        """
+        device_callbacks = self._event_callbacks.setdefault(device_id, [])
+        device_callbacks.append(callback)
 
     def get_children(self, device_id: int) -> list[DeviceModel]:
         """Get a list of child devices."""
@@ -229,6 +253,8 @@ class FibaroController:
                 platform = Platform.COVER
             elif "secure" in device.actions:
                 platform = Platform.LOCK
+            elif device.has_central_scene_event:
+                platform = Platform.EVENT
             elif device.value.has_value:
                 if device.value.is_bool_value:
                     platform = Platform.BINARY_SENSOR

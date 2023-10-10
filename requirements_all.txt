@@ -64,7 +64,7 @@ PyFlick==0.0.2
 PyFlume==0.6.5
 
 # homeassistant.components.fronius
-PyFronius==0.7.1
+PyFronius==0.7.2
 
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4
@@ -210,7 +210,7 @@ aiobafi6==0.9.0
 aiobotocore==2.6.0
 
 # homeassistant.components.comelit
-aiocomelit==0.0.9
+aiocomelit==0.2.0
 
 # homeassistant.components.dhcp
 aiodiscover==1.5.1
@@ -752,7 +752,7 @@ enturclient==0.2.4
 env-canada==0.5.37
 
 # homeassistant.components.season
-ephem==4.1.2
+ephem==4.1.5
 
 # homeassistant.components.epson
 epson-projector==0.5.1
@@ -767,7 +767,7 @@ esphome-dashboard-api==1.2.3
 eternalegypt==0.0.16
 
 # homeassistant.components.eufylife_ble
-eufylife-ble-client==0.1.7
+eufylife-ble-client==0.1.8
 
 # homeassistant.components.keyboard_remote
 # evdev==1.6.1
@@ -955,7 +955,7 @@ ha-ffmpeg==3.1.0
 ha-iotawattpy==0.1.1
 
 # homeassistant.components.philips_js
-ha-philipsjs==3.1.0
+ha-philipsjs==3.1.1
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -1042,7 +1042,7 @@ ical==5.0.1
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==1.4
+idasen-ha==1.4.1
 
 # homeassistant.components.network
 ifaddr==0.2.0
@@ -1183,7 +1183,7 @@ lxml==4.9.3
 mac-vendor-lookup==0.1.12
 
 # homeassistant.components.matrix
-matrix-nio==0.21.2
+matrix-nio==0.22.1
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -1444,7 +1444,7 @@ pizzapi==0.0.3
 plexauth==0.0.6
 
 # homeassistant.components.plex
-plexwebsocket==0.0.13
+plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
 plugwise==0.33.0
@@ -1656,7 +1656,7 @@ pydelijn==1.1.0
 pydexcom==0.2.3
 
 # homeassistant.components.discovergy
-pydiscovergy==2.0.3
+pydiscovergy==2.0.4
 
 # homeassistant.components.doods
 pydoods==1.0.2
@@ -1833,7 +1833,7 @@ pylitejet==0.5.0
 pylitterbot==2023.4.9
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.18.2
+pylutron-caseta==0.18.3
 
 # homeassistant.components.lutron
 pylutron==0.2.8
@@ -2189,7 +2189,7 @@ python-tado==0.15.0
 python-telegram-bot==13.1
 
 # homeassistant.components.vlc
-python-vlc==1.1.2
+python-vlc==3.0.18122
 
 # homeassistant.components.egardia
 pythonegardia==1.0.52
@@ -2517,19 +2517,19 @@ surepy==0.8.0
 swisshydrodata==0.1.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==1.1.0
+switchbot-api==1.2.1
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.8.2
+systembridgeconnector==3.8.4
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
 
 # homeassistant.components.tank_utility
-tank-utility==1.4.1
+tank-utility==1.5.0
 
 # homeassistant.components.tapsaff
 tapsaff==0.2.1

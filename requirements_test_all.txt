@@ -57,7 +57,7 @@ PyFlick==0.0.2
 PyFlume==0.6.5
 
 # homeassistant.components.fronius
-PyFronius==0.7.1
+PyFronius==0.7.2
 
 # homeassistant.components.met_eireann
 PyMetEireann==2021.8.0
@@ -191,7 +191,7 @@ aiobafi6==0.9.0
 aiobotocore==2.6.0
 
 # homeassistant.components.comelit
-aiocomelit==0.0.9
+aiocomelit==0.2.0
 
 # homeassistant.components.dhcp
 aiodiscover==1.5.1
@@ -608,7 +608,7 @@ enocean==0.50
 env-canada==0.5.37
 
 # homeassistant.components.season
-ephem==4.1.2
+ephem==4.1.5
 
 # homeassistant.components.epson
 epson-projector==0.5.1
@@ -617,7 +617,7 @@ epson-projector==0.5.1
 esphome-dashboard-api==1.2.3
 
 # homeassistant.components.eufylife_ble
-eufylife-ble-client==0.1.7
+eufylife-ble-client==0.1.8
 
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
@@ -756,7 +756,7 @@ ha-ffmpeg==3.1.0
 ha-iotawattpy==0.1.1
 
 # homeassistant.components.philips_js
-ha-philipsjs==3.1.0
+ha-philipsjs==3.1.1
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -822,7 +822,7 @@ ical==5.0.1
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==1.4
+idasen-ha==1.4.1
 
 # homeassistant.components.network
 ifaddr==0.2.0
@@ -915,7 +915,7 @@ lxml==4.9.3
 mac-vendor-lookup==0.1.12
 
 # homeassistant.components.matrix
-matrix-nio==0.21.2
+matrix-nio==0.22.1
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -1104,7 +1104,7 @@ pilight==0.1.1
 plexauth==0.0.6
 
 # homeassistant.components.plex
-plexwebsocket==0.0.13
+plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
 plugwise==0.33.0
@@ -1247,7 +1247,7 @@ pydeconz==113
 pydexcom==0.2.3
 
 # homeassistant.components.discovergy
-pydiscovergy==2.0.3
+pydiscovergy==2.0.4
 
 # homeassistant.components.hydrawise
 pydrawise==2023.10.0
@@ -1379,7 +1379,7 @@ pylitejet==0.5.0
 pylitterbot==2023.4.9
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.18.2
+pylutron-caseta==0.18.3
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1874,10 +1874,10 @@ sunwatcher==0.2.1
 surepy==0.8.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==1.1.0
+switchbot-api==1.2.1
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.8.2
+systembridgeconnector==3.8.4
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
