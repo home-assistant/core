@@ -11,9 +11,32 @@ import queue
 import traceback
 from typing import Any, TypeVar, cast, overload
 
-from homeassistant.core import HomeAssistant, callback, is_callback
+from homeassistant.core import HomeAssistant, callback, get_release_channel, is_callback
+from homeassistant.exceptions import HomeAssistantError
 
 _T = TypeVar("_T")
+
+
+class SuppressHomeAssistantErrorStackTrace(logging.Filter):
+    """Filter API password calls."""
+
+    def __init__(self) -> None:
+        """Initialize sensitive data filter."""
+        super().__init__()
+        self.stable_channel = get_release_channel() == "stable"
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """Conditionally suppress stack trace for HomeAssistantError."""
+        if (
+            not self.stable_channel
+            or not record.exc_info
+            or not record.exc_info[0]
+            or not issubclass(record.exc_info[0], HomeAssistantError)
+        ):
+            return True
+
+        record.exc_info = None
+        return True
 
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
@@ -68,6 +91,7 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
     """
     simple_queue: queue.SimpleQueue[logging.Handler] = queue.SimpleQueue()
     queue_handler = HomeAssistantQueueHandler(simple_queue)
+    queue_handler.addFilter(SuppressHomeAssistantErrorStackTrace())
     logging.root.addHandler(queue_handler)
 
     migrated_handlers: list[logging.Handler] = []

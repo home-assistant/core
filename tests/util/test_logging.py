@@ -8,6 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.core import HomeAssistant, callback, is_callback
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.logging as logging_util
 
 
@@ -47,6 +48,39 @@ async def test_logging_with_queue_handler() -> None:
 
     assert simple_queue.get_nowait().msg == "Test Log Record"
     assert simple_queue.empty()
+
+
+@pytest.mark.parametrize(
+    ("version", "exc", "should_filter"),
+    [
+        ("2023.10.0", HomeAssistantError, True),
+        ("2023.10.0b0", HomeAssistantError, False),
+        ("2023.10.0", KeyError, True),
+        ("2023.10.0b0", KeyError, True),
+    ],
+)
+@pytest.mark.xfail(reason="Test exception")
+async def test_suppressed_logging_stack_trace(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    version: str,
+    exc: Exception,
+    should_filter: bool,
+) -> None:
+    """Test logging stack trace on stable builds.
+
+    Stack traces for HomeAssistantError should be suppressed for stable builds.
+    """
+    with patch("homeassistant.core.__version__", version):
+        logging_util.async_activate_log_queue_handler(hass)
+
+    with pytest.raises(exc):
+        raise exc("Test exception")
+
+    if should_filter:
+        assert 'raise exc("Test exception")' not in caplog.text
+    else:
+        assert 'raise exc("Test exception")' in caplog.text
 
 
 async def test_migrate_log_handler(hass: HomeAssistant) -> None:
