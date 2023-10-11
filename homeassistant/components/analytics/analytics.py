@@ -327,45 +327,76 @@ class Analytics:
                             ATTR_AUTO_UPDATE: addon[ATTR_AUTO_UPDATE],
                         }
                     )
-
         if self.preferences.get(ATTR_USAGE, False):
-            payload[ATTR_CERTIFICATE] = self.hass.http.ssl_certificate is not None
-            payload[ATTR_INTEGRATIONS] = integrations
-            payload[ATTR_CUSTOM_INTEGRATIONS] = custom_integrations
-            if supervisor_info is not None:
-                payload[ATTR_ADDONS] = addons
-
-            if ENERGY_DOMAIN in enabled_domains:
-                payload[ATTR_ENERGY] = {
-                    ATTR_CONFIGURED: await energy_is_configured(self.hass)
-                }
-
-            if RECORDER_DOMAIN in enabled_domains:
-                instance = get_recorder_instance(self.hass)
-                engine = instance.database_engine
-                if engine and engine.version is not None:
-                    payload[ATTR_RECORDER] = {
-                        ATTR_ENGINE: engine.dialect.value,
-                        ATTR_VERSION: engine.version,
-                    }
+            payload = await self.get_usage_payload(
+                supervisor_info,
+                integrations,
+                custom_integrations,
+                addons,
+                enabled_domains,
+                payload,
+            )
 
         if self.preferences.get(ATTR_STATISTICS, False):
-            payload[ATTR_STATE_COUNT] = len(self.hass.states.async_all())
-            payload[ATTR_AUTOMATION_COUNT] = len(
-                self.hass.states.async_all(AUTOMATION_DOMAIN)
-            )
-            payload[ATTR_INTEGRATION_COUNT] = len(integrations)
-            if supervisor_info is not None:
-                payload[ATTR_ADDON_COUNT] = len(addons)
-            payload[ATTR_USER_COUNT] = len(
-                [
-                    user
-                    for user in await self.hass.auth.async_get_users()
-                    if not user.system_generated
-                ]
+            payload = await self.get_statistics_payload(
+                supervisor_info, integrations, addons, payload
             )
 
         await self.send_payload(payload)
+
+    async def get_usage_payload(
+        self,
+        supervisor_info,
+        integrations,
+        custom_integrations,
+        addons,
+        enabled_domains,
+        payload,
+    ):
+        payload[ATTR_CERTIFICATE] = self.hass.http.ssl_certificate is not None
+        payload[ATTR_INTEGRATIONS] = integrations
+        payload[ATTR_CUSTOM_INTEGRATIONS] = custom_integrations
+
+        if supervisor_info is not None:
+            payload[ATTR_ADDONS] = addons
+
+        if ENERGY_DOMAIN in enabled_domains:
+            payload[ATTR_ENERGY] = {
+                ATTR_CONFIGURED: await energy_is_configured(self.hass)
+            }
+
+        if RECORDER_DOMAIN in enabled_domains:
+            instance = get_recorder_instance(self.hass)
+            engine = instance.database_engine
+            if engine and engine.version is not None:
+                payload[ATTR_RECORDER] = {
+                    ATTR_ENGINE: engine.dialect.value,
+                    ATTR_VERSION: engine.version,
+                }
+
+        return payload
+
+    async def get_statistics_payload(
+        self, supervisor_info, integrations, addons, payload
+    ):
+        payload[ATTR_STATE_COUNT] = len(self.hass.states.async_all())
+        payload[ATTR_AUTOMATION_COUNT] = len(
+            self.hass.states.async_all(AUTOMATION_DOMAIN)
+        )
+        payload[ATTR_INTEGRATION_COUNT] = len(integrations)
+
+        if supervisor_info is not None:
+            payload[ATTR_ADDON_COUNT] = len(addons)
+
+        payload[ATTR_USER_COUNT] = len(
+            [
+                user
+                for user in await self.hass.auth.async_get_users()
+                if not user.system_generated
+            ]
+        )
+
+        return payload
 
     @callback
     def _async_should_report_integration(
