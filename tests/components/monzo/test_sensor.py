@@ -1,7 +1,7 @@
 """Tests for the Monzo component."""
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -10,6 +10,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.components.monzo.sensor import (
     ACC_SENSORS,
+    POT_SENSORS,
     MonzoSensorEntityDescription,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -19,7 +20,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import setup_integration
-from .conftest import TEST_ACCOUNTS
+from .conftest import TEST_ACCOUNTS, TEST_POTS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
@@ -79,6 +80,28 @@ async def test_sensor_default_enabled_entities(
             assert state.state == str(
                 EXPECTED_VALUE_GETTERS[sensor_description.key](acc)
             )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_failure(
+    hass: HomeAssistant,
+    basic_monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test entities enabled by default."""
+    with patch(
+        "homeassistant.components.monzo.sensor.MonzoBaseEntity.data",
+        new_callable=PropertyMock,
+    ) as data:
+        data.return_value = {
+            "id": "pot_savings",
+            "name": "Savings",
+        }
+        await setup_integration(hass, polling_config_entry)
+        entity_id = await async_get_entity_id(hass, TEST_POTS[0]["id"], POT_SENSORS[0])
+        state = hass.states.get(entity_id)
+        assert state.state == "unknown"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
