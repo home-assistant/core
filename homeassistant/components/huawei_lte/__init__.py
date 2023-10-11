@@ -495,70 +495,66 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Huawei LTE component."""
-
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = HuaweiLteData(hass_config=config, routers={})
 
-    def service_handler(service: ServiceCall) -> None:
-        """Apply a service.
-
-        We key this using the router URL instead of its unique id / serial number,
-        because the latter is not available anywhere in the UI.
-        """
+    async def service_handler(service: ServiceCall) -> None:
+        """Apply a service."""
         routers = hass.data[DOMAIN].routers
-        if url := service.data.get(CONF_URL):
-            router = next(
-                (router for router in routers.values() if router.url == url), None
-            )
+        url = service.data.get(CONF_URL)
+        router = None
+
+        if url:
+            router = next((r for r in routers.values() if r.url == url), None)
         elif not routers:
             _LOGGER.error("%s: no routers configured", service.service)
-            return
         elif len(routers) == 1:
             router = next(iter(routers.values()))
         else:
             _LOGGER.error(
                 "%s: more than one router configured, must specify one of URLs %s",
                 service.service,
-                sorted(router.url for router in routers.values()),
+                sorted(r.url for r in routers.values()),
             )
-            return
+
         if not router:
             _LOGGER.error("%s: router %s unavailable", service.service, url)
             return
 
-        if service.service == SERVICE_CLEAR_TRAFFIC_STATISTICS:
-            if router.suspended:
-                _LOGGER.debug("%s: ignored, integration suspended", service.service)
-                return
-            result = router.client.monitoring.set_clear_traffic()
-            _LOGGER.debug("%s: %s", service.service, result)
-        elif service.service == SERVICE_REBOOT:
-            if router.suspended:
-                _LOGGER.debug("%s: ignored, integration suspended", service.service)
-                return
-            result = router.client.device.set_control(ControlModeEnum.REBOOT)
-            _LOGGER.debug("%s: %s", service.service, result)
-        elif service.service == SERVICE_RESUME_INTEGRATION:
-            # Login will be handled automatically on demand
-            router.suspended = False
-            _LOGGER.debug("%s: %s", service.service, "done")
-        elif service.service == SERVICE_SUSPEND_INTEGRATION:
-            router.logout()
-            router.suspended = True
-            _LOGGER.debug("%s: %s", service.service, "done")
-        else:
-            _LOGGER.error("%s: unsupported service", service.service)
+        if router.suspended:
+            _LOGGER.debug("%s: ignored, integration suspended", service.service)
+            return
+
+        result = async_provide_results(service, router)
+
+        _LOGGER.debug("%s: %s", service.service, result)
 
     for service in ADMIN_SERVICES:
         async_register_admin_service(
-            hass,
-            DOMAIN,
-            service,
-            service_handler,
-            schema=SERVICE_SCHEMA,
+            hass, DOMAIN, service, service_handler, schema=SERVICE_SCHEMA
         )
 
     return True
+
+
+async def async_provide_results(service: ServiceCall, router: Router) -> Any:
+    """Build result of the service call."""
+    result = None
+    if service.service == SERVICE_CLEAR_TRAFFIC_STATISTICS:
+        result = router.client.monitoring.set_clear_traffic()
+    elif service.service == SERVICE_REBOOT:
+        result = router.client.device.set_control(ControlModeEnum.REBOOT)
+    elif service.service == SERVICE_RESUME_INTEGRATION:
+        router.suspended = False
+        result = "done"
+    elif service.service == SERVICE_SUSPEND_INTEGRATION:
+        router.logout()
+        router.suspended = True
+        result = "done"
+    else:
+        _LOGGER.error("%s: unsupported service", service.service)
+        return
+    return result
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
