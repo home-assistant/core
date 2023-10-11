@@ -1,4 +1,6 @@
 """The tests for the Pilight sensor platform."""
+from __future__ import annotations
+
 import logging
 
 import pytest
@@ -6,6 +8,7 @@ import pytest
 from homeassistant.components import pilight
 import homeassistant.components.sensor as sensor
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, mock_component
@@ -131,3 +134,52 @@ async def test_variable_missing(
         logs = caplog.text
 
         assert "No variable test in received code" in logs
+
+
+async def test_unique_id(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test the setting of value via pilight."""
+    caplog.set_level(logging.ERROR)
+    with assert_setup_component(3):
+        assert await async_setup_component(
+            hass,
+            sensor.DOMAIN,
+            {
+                sensor.DOMAIN: [
+                    {
+                        "platform": "pilight",
+                        "name": "test",
+                        "variable": "test",
+                        "payload": {"protocol": "test-protocol"},
+                        "unit_of_measurement": "fav unit",
+                        "unique_id": "unique",
+                    },
+                    {
+                        "platform": "pilight",
+                        "name": "test",
+                        "variable": "test",
+                        "payload": {"protocol": "test-protocol"},
+                        "unit_of_measurement": "fav unit",
+                        "unique_id": "not-so-unique",
+                    },
+                    {
+                        "platform": "pilight",
+                        "name": "test",
+                        "variable": "test",
+                        "payload": {"protocol": "test-protocol"},
+                        "unit_of_measurement": "fav unit",
+                        "unique_id": "not-so-unique",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert len(hass.states.async_all()) == 2
+
+        ent_reg = er.async_get(hass)
+        assert len(ent_reg.entities) == 2
+        assert ent_reg.async_get_entity_id("sensor", "pilight", "unique") is not None
+        assert (
+            ent_reg.async_get_entity_id("sensor", "pilight", "not-so-unique")
+            is not None
+        )

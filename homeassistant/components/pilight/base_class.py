@@ -6,6 +6,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PROTOCOL,
     CONF_STATE,
+    CONF_UNIQUE_ID,
     STATE_OFF,
     STATE_ON,
 )
@@ -49,6 +50,7 @@ SWITCHES_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_OFF_CODE_RECEIVE): vol.All(cv.ensure_list, [COMMAND_SCHEMA]),
         vol.Optional(CONF_ON_CODE_RECEIVE): vol.All(cv.ensure_list, [COMMAND_SCHEMA]),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -65,6 +67,7 @@ class PilightBaseDevice(RestoreEntity):
         self._is_on = False
         self._code_on = config.get(CONF_ON_CODE)
         self._code_off = config.get(CONF_OFF_CODE)
+        self._attr_unique_id = config.get(CONF_UNIQUE_ID)
 
         code_on_receive = config.get(CONF_ON_CODE_RECEIVE, [])
         code_off_receive = config.get(CONF_OFF_CODE_RECEIVE, [])

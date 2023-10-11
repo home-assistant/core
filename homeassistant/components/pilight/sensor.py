@@ -6,7 +6,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, CONF_PAYLOAD, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PAYLOAD,
+    CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,6 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_PAYLOAD): vol.Schema(dict),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -44,6 +50,7 @@ def setup_platform(
                 variable=config.get(CONF_VARIABLE),
                 payload=config.get(CONF_PAYLOAD),
                 unit_of_measurement=config.get(CONF_UNIT_OF_MEASUREMENT),
+                unique_id=config.get(CONF_UNIQUE_ID),
             )
         ]
     )
@@ -54,7 +61,7 @@ class PilightSensor(SensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, hass, name, variable, payload, unit_of_measurement):
+    def __init__(self, hass, name, variable, payload, unit_of_measurement, unique_id):
         """Initialize the sensor."""
         self._state = None
         self._hass = hass
@@ -62,6 +69,7 @@ class PilightSensor(SensorEntity):
         self._variable = variable
         self._payload = payload
         self._unit_of_measurement = unit_of_measurement
+        self._attr_unique_id = unique_id
 
         hass.bus.listen(pilight.EVENT, self._handle_code)
 

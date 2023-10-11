@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_PAYLOAD,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
+    CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -39,6 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_DISARM_AFTER_TRIGGER, default=False): cv.boolean,
         vol.Optional(CONF_RESET_DELAY_SEC, default=30): cv.positive_int,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -60,6 +62,7 @@ def setup_platform(
                     payload=config.get(CONF_PAYLOAD),
                     on_value=config.get(CONF_PAYLOAD_ON),
                     off_value=config.get(CONF_PAYLOAD_OFF),
+                    unique_id=config.get(CONF_UNIQUE_ID),
                     rst_dly_sec=config.get(CONF_RESET_DELAY_SEC),
                 )
             ]
@@ -74,6 +77,7 @@ def setup_platform(
                     payload=config.get(CONF_PAYLOAD),
                     on_value=config.get(CONF_PAYLOAD_ON),
                     off_value=config.get(CONF_PAYLOAD_OFF),
+                    unique_id=config.get(CONF_UNIQUE_ID),
                 )
             ]
         )
@@ -82,7 +86,7 @@ def setup_platform(
 class PilightBinarySensor(BinarySensorEntity):
     """Representation of a binary sensor that can be updated using Pilight."""
 
-    def __init__(self, hass, name, variable, payload, on_value, off_value):
+    def __init__(self, hass, name, variable, payload, on_value, off_value, unique_id):
         """Initialize the sensor."""
         self._state = False
         self._hass = hass
@@ -91,6 +95,7 @@ class PilightBinarySensor(BinarySensorEntity):
         self._payload = payload
         self._on_value = on_value
         self._off_value = off_value
+        self._attr_unique_id = unique_id
 
         hass.bus.listen(pilight.EVENT, self._handle_code)
 
@@ -132,7 +137,15 @@ class PilightTriggerSensor(BinarySensorEntity):
     """Representation of a binary sensor that can be updated using Pilight."""
 
     def __init__(
-        self, hass, name, variable, payload, on_value, off_value, rst_dly_sec=30
+        self,
+        hass,
+        name,
+        variable,
+        payload,
+        on_value,
+        off_value,
+        unique_id,
+        rst_dly_sec=30,
     ):
         """Initialize the sensor."""
         self._state = False
@@ -145,6 +158,7 @@ class PilightTriggerSensor(BinarySensorEntity):
         self._reset_delay_sec = rst_dly_sec
         self._delay_after = None
         self._hass = hass
+        self._attr_unique_id = unique_id
 
         hass.bus.listen(pilight.EVENT, self._handle_code)
 
