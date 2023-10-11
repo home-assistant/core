@@ -328,6 +328,41 @@ class HuaweiLteData(NamedTuple):
     routers: dict[str, Router]
 
 
+async def async_setup_unique_entries(
+    router_info: Any, hass: HomeAssistant, entry: ConfigEntry, router: Router, url: Any
+) -> Any:
+    """Set up unique entries."""
+    if not entry.unique_id:
+        # Transitional from < 2021.8: update None config entry and entity unique ids
+        if router_info and (serial_number := router_info.get("SerialNumber")):
+            hass.config_entries.async_update_entry(entry, unique_id=serial_number)
+            ent_reg = er.async_get(hass)
+            for entity_entry in er.async_entries_for_config_entry(
+                ent_reg, entry.entry_id
+            ):
+                if not entity_entry.unique_id.startswith("None-"):
+                    continue
+                new_unique_id = entity_entry.unique_id.removeprefix("None-")
+                new_unique_id = f"{serial_number}-{new_unique_id}"
+                ent_reg.async_update_entity(
+                    entity_entry.entity_id, new_unique_id=new_unique_id
+                )
+        else:
+            await hass.async_add_executor_job(router.cleanup)
+            msg = (
+                "Could not resolve serial number to use as unique id for router at %s"
+                ", setup failed"
+            )
+            if not entry.data.get(CONF_PASSWORD):
+                msg += (
+                    ". Try setting up credentials for the router for one startup, "
+                    "unauthenticated mode can be enabled after that in integration "
+                    "settings"
+                )
+            _LOGGER.error(msg, url)
+            return False
+
+
 async def async_setup_device_entry(
     router: Router, entry: ConfigEntry, router_info: Any, hass: HomeAssistant
 ) -> Any:
@@ -395,35 +430,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Check that we found required information
     router_info = router.data.get(KEY_DEVICE_INFORMATION)
-    if not entry.unique_id:
-        # Transitional from < 2021.8: update None config entry and entity unique ids
-        if router_info and (serial_number := router_info.get("SerialNumber")):
-            hass.config_entries.async_update_entry(entry, unique_id=serial_number)
-            ent_reg = er.async_get(hass)
-            for entity_entry in er.async_entries_for_config_entry(
-                ent_reg, entry.entry_id
-            ):
-                if not entity_entry.unique_id.startswith("None-"):
-                    continue
-                new_unique_id = entity_entry.unique_id.removeprefix("None-")
-                new_unique_id = f"{serial_number}-{new_unique_id}"
-                ent_reg.async_update_entity(
-                    entity_entry.entity_id, new_unique_id=new_unique_id
-                )
-        else:
-            await hass.async_add_executor_job(router.cleanup)
-            msg = (
-                "Could not resolve serial number to use as unique id for router at %s"
-                ", setup failed"
-            )
-            if not entry.data.get(CONF_PASSWORD):
-                msg += (
-                    ". Try setting up credentials for the router for one startup, "
-                    "unauthenticated mode can be enabled after that in integration "
-                    "settings"
-                )
-            _LOGGER.error(msg, url)
-            return False
+
+    await async_setup_unique_entries(router_info, hass, entry, router, url)
 
     # Store reference to router
     hass.data[DOMAIN].routers[entry.entry_id] = router
