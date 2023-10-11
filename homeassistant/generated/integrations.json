@@ -4352,6 +4352,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "portlandgeneral": {
+      "name": "Portland General Electric (PGE)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "private_ble_device": {
       "name": "Private BLE Device",
       "integration_type": "hub",
