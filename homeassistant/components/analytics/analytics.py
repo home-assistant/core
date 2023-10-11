@@ -146,17 +146,17 @@ class Analytics:
         if (
             self.supervisor
             and (supervisor_info := hassio.get_supervisor_info(self.hass)) is not None
+            and not self.onboarded
         ):
-            if not self.onboarded:
-                # User have not configured analytics, get this setting from the supervisor
-                if supervisor_info[ATTR_DIAGNOSTICS] and not self.preferences.get(
-                    ATTR_DIAGNOSTICS, False
-                ):
-                    self._data.preferences[ATTR_DIAGNOSTICS] = True
-                elif not supervisor_info[ATTR_DIAGNOSTICS] and self.preferences.get(
-                    ATTR_DIAGNOSTICS, False
-                ):
-                    self._data.preferences[ATTR_DIAGNOSTICS] = False
+            # User have not configured analytics, get this setting from the supervisor
+            if supervisor_info[ATTR_DIAGNOSTICS] and not self.preferences.get(
+                ATTR_DIAGNOSTICS, False
+            ):
+                self._data.preferences[ATTR_DIAGNOSTICS] = True
+            elif not supervisor_info[ATTR_DIAGNOSTICS] and self.preferences.get(
+                ATTR_DIAGNOSTICS, False
+            ):
+                self._data.preferences[ATTR_DIAGNOSTICS] = False
 
     async def save_preferences(self, preferences: dict) -> None:
         """Save preferences."""
