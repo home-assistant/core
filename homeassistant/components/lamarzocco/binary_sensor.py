@@ -8,6 +8,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     BREW_ACTIVE,
@@ -20,12 +23,12 @@ from .const import (
 )
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 from .lm_client import LaMarzoccoClient
-from .services import async_setup_entity_services
 
 
 @dataclass
 class LaMarzoccoBinarySensorEntityDescriptionMixin:
-    """Description of an La Marzocco Binary Sensor"""
+    """Description of an La Marzocco Binary Sensor."""
+
     is_on_fn: Callable[[LaMarzoccoClient], bool]
     is_available_fn: Callable[[LaMarzoccoClient], bool]
 
@@ -34,9 +37,9 @@ class LaMarzoccoBinarySensorEntityDescriptionMixin:
 class LaMarzoccoBinarySensorEntityDescription(
     LaMarzoccoEntityDescription,
     BinarySensorEntityDescription,
-    LaMarzoccoBinarySensorEntityDescriptionMixin
+    LaMarzoccoBinarySensorEntityDescriptionMixin,
 ):
-    """Description of an La Marzocco Binary Sensor"""
+    """Description of an La Marzocco Binary Sensor."""
 
 
 ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
@@ -45,14 +48,19 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         translation_key="water_reservoir",
         device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:water-well",
-        is_on_fn=lambda client: not client.current_status.get("water_reservoir_contact"),
-        is_available_fn=lambda client: client.current_status.get("water_reservoir_contact") is not None,
+        is_on_fn=lambda client: not client.current_status.get(
+            "water_reservoir_contact"
+        ),
+        is_available_fn=lambda client: client.current_status.get(
+            "water_reservoir_contact"
+        )
+        is not None,
         extra_attributes={
             MODEL_GS3_AV: None,
             MODEL_GS3_MP: None,
             MODEL_LM: None,
-            MODEL_LMU: None
-        }
+            MODEL_LMU: None,
+        },
     ),
     LaMarzoccoBinarySensorEntityDescription(
         key=BREW_ACTIVE,
@@ -60,18 +68,23 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.RUNNING,
         icon="mdi:cup-water",
         is_on_fn=lambda client: client.current_status.get(BREW_ACTIVE),
-        is_available_fn=lambda client: client.current_status.get(BREW_ACTIVE) is not None,
+        is_available_fn=lambda client: client.current_status.get(BREW_ACTIVE)
+        is not None,
         extra_attributes={
             MODEL_GS3_AV: None,
             MODEL_GS3_MP: None,
             MODEL_LM: None,
-            MODEL_LMU: None
-        }
+            MODEL_LMU: None,
+        },
     ),
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up binary sensor entities."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -79,7 +92,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
     for description in ENTITIES:
-        if coordinator.lm.model_name in description.extra_attributes.keys():
+        if coordinator.lm.model_name in description.extra_attributes:
             if description.key == BREW_ACTIVE and not use_websocket:
                 continue
             entities.append(
@@ -88,18 +101,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(entities)
 
-    await async_setup_entity_services(coordinator.lm)
-
 
 class LaMarzoccoBinarySensorEntity(LaMarzoccoEntity, BinarySensorEntity):
     """Binary Sensor representing espresso machine water reservoir status."""
 
-    def __init__(self, coordinator, hass, entity_description):
-        """Initialize binary sensors"""
-        super().__init__(coordinator, hass, entity_description)
+    entity_description: LaMarzoccoBinarySensorEntityDescription
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if binary sensor is available."""
         return self.entity_description.is_available_fn(self._lm_client)
 

@@ -12,8 +12,8 @@ UPDATE_DELAY = 3
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
 CONF_USE_WEBSOCKET = "use_websocket"
-CONF_DEFAULT_CLIENT_ID = "7_1xwei9rtkuckso44ks4o8s0c0oc4swowo00wgw0ogsok84kosg"
-CONF_DEFAULT_CLIENT_SECRET = "2mgjqpikbfuok8g4s44oo4gsw0ks44okk4kc4kkkko0c8soc8s"
+DEFAULT_CLIENT_ID = "7_1xwei9rtkuckso44ks4o8s0c0oc4swowo00wgw0ogsok84kosg"
+DEFAULT_CLIENT_SECRET = "2mgjqpikbfuok8g4s44oo4gsw0ks44okk4kc4kkkko0c8soc8s"
 
 DEFAULT_PORT_CLOUD = 8081
 

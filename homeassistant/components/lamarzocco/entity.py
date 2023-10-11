@@ -3,7 +3,7 @@
 import asyncio
 from dataclasses import dataclass
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -12,16 +12,14 @@ from .const import DOMAIN, UPDATE_DELAY
 
 @dataclass
 class LaMarzoccoEntityDescriptionMixin:
-    """Mixin for all LM entities"""
+    """Mixin for all LM entities."""
+
     extra_attributes: dict
 
 
 @dataclass
-class LaMarzoccoEntityDescription(
-    EntityDescription,
-    LaMarzoccoEntityDescriptionMixin
-):
-    """Description for all LM entities"""
+class LaMarzoccoEntityDescription(EntityDescription, LaMarzoccoEntityDescriptionMixin):
+    """Description for all LM entities."""
 
 
 @dataclass
@@ -30,7 +28,8 @@ class LaMarzoccoEntity(CoordinatorEntity):
 
     entity_description: LaMarzoccoEntityDescription
 
-    def __init__(self, coordinator, hass, entity_description):
+    def __init__(self, coordinator, hass: HomeAssistant, entity_description) -> None:
+        """Initialize the entity."""
         super().__init__(coordinator)
         self._hass = hass
         self.entity_description = entity_description
@@ -40,9 +39,7 @@ class LaMarzoccoEntity(CoordinatorEntity):
     @property
     def name(self):
         """Return the name of the switch."""
-        return (
-            f"{self._lm_client.machine_name} " + self.entity_description.name
-        )
+        return f"{self._lm_client.machine_name} " + self.entity_description.name
 
     @property
     def unique_id(self):
@@ -65,11 +62,11 @@ class LaMarzoccoEntity(CoordinatorEntity):
         """Return the extra state attributes."""
 
         def bool_to_str(value):
-            """ Convert boolean values to strings to improve display in Lovelace. """
+            """Convert boolean values to strings to improve display in Lovelace."""
             return str(value) if isinstance(value, bool) else value
 
         def tuple_to_str(key):
-            """ Convert tuple keys to strings  """
+            """Convert tuple keys to strings."""
             if isinstance(key, tuple):
                 key = "_".join(key)
             return key
@@ -79,9 +76,7 @@ class LaMarzoccoEntity(CoordinatorEntity):
         if attr is None:
             return {}
 
-        keys = [
-            tuple_to_str(key) for key in attr
-        ]
+        keys = [tuple_to_str(key) for key in attr]
         return {key: bool_to_str(data[key]) for key in keys if key in data}
 
     @callback
@@ -91,7 +86,7 @@ class LaMarzoccoEntity(CoordinatorEntity):
         self.async_write_ha_state()
 
     async def _update_ha_state(self):
-        """ Write the intermediate value returned from the action to HA state before actually refreshing"""
+        """Write the intermediate value returned from the action to HA state before actually refreshing."""
         self.async_write_ha_state()
         # wait for a bit before getting a new state, to let the machine settle in to any state changes
         await asyncio.sleep(UPDATE_DELAY)

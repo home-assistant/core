@@ -3,10 +3,10 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.switch import (
-    SwitchEntity,
-    SwitchEntityDescription,
-)
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DATE_RECEIVED,
@@ -25,7 +25,6 @@ from .const import (
 )
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 from .lm_client import LaMarzoccoClient
-from .services import async_setup_entity_services
 
 DOSE = "dose"
 ATTR_MAP_MAIN_GS3_AV = [
@@ -105,7 +104,8 @@ ATTR_MAP_PREBREW_LM = [
 
 @dataclass
 class LaMarzoccoSwitchEntityDescriptionMixin:
-    """Description of an La Marzocco Switch"""
+    """Description of an La Marzocco Switch."""
+
     control_fn: Callable[[LaMarzoccoClient, bool], Coroutine[Any, Any, None]]
     is_on_fn: Callable[[LaMarzoccoClient], bool]
 
@@ -114,9 +114,9 @@ class LaMarzoccoSwitchEntityDescriptionMixin:
 class LaMarzoccoSwitchEntityDescription(
     SwitchEntityDescription,
     LaMarzoccoEntityDescription,
-    LaMarzoccoSwitchEntityDescriptionMixin
+    LaMarzoccoSwitchEntityDescriptionMixin,
 ):
-    """Description of an La Marzocco Switch"""
+    """Description of an La Marzocco Switch."""
 
 
 ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
@@ -131,7 +131,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
             MODEL_GS3_MP: None,
             MODEL_LM: None,
             MODEL_LMU: None,
-        }
+        },
     ),
     LaMarzoccoSwitchEntityDescription(
         key="auto_on_off",
@@ -143,8 +143,8 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
             MODEL_GS3_AV: ATTR_MAP_AUTO_ON_OFF,
             MODEL_GS3_MP: ATTR_MAP_AUTO_ON_OFF,
             MODEL_LM: ATTR_MAP_AUTO_ON_OFF,
-            MODEL_LMU: ATTR_MAP_AUTO_ON_OFF
-        }
+            MODEL_LMU: ATTR_MAP_AUTO_ON_OFF,
+        },
     ),
     LaMarzoccoSwitchEntityDescription(
         key="prebrew",
@@ -156,7 +156,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
             MODEL_GS3_AV: ATTR_MAP_PREBREW_GS3_AV,
             MODEL_LM: ATTR_MAP_PREBREW_LM,
             MODEL_LMU: ATTR_MAP_PREBREW_LM,
-        }
+        },
     ),
     LaMarzoccoSwitchEntityDescription(
         key="preinfusion",
@@ -168,7 +168,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
             MODEL_GS3_AV: ATTR_MAP_PREINFUSION_GS3_AV,
             MODEL_LM: ATTR_MAP_PREINFUSION_LM,
             MODEL_LMU: ATTR_MAP_PREINFUSION_LM,
-        }
+        },
     ),
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
@@ -181,37 +181,37 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
             MODEL_GS3_MP: None,
             MODEL_LM: None,
             MODEL_LMU: None,
-        }
-    )
+        },
+    ),
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up switch entities and services."""
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         LaMarzoccoSwitchEntity(coordinator, hass, description)
         for description in ENTITIES
-        if coordinator.lm.model_name in description.extra_attributes.keys()
+        if coordinator.lm.model_name in description.extra_attributes
     )
-
-    await async_setup_entity_services(coordinator.lm)
 
 
 class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
     """Switches representing espresso machine power, prebrew, and auto on/off."""
 
-    def __init__(self, coordinator, hass, entity_description):
-        """Initialise switches."""
-        super().__init__(coordinator, hass, entity_description)
+    entity_description: LaMarzoccoSwitchEntityDescription
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         await self.entity_description.control_fn(self._lm_client, True)
         await self._update_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         await self.entity_description.control_fn(self._lm_client, False)
         await self._update_ha_state()
