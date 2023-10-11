@@ -39,18 +39,20 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         locks: list[dict[str, Any]] = []
         door_windows: list[dict[str, Any]] = []
 
-        STATUS_LOCK = "device_status.lock"
-        STATUS_UNLOCK = "device_status.unlock"
-        STATUS_CLOSE = "device_status.dc_close"
-        STATUS_OPEN = "device_status.dc_open"
+        device_status_lock = "device_status.lock"
+        device_status_unlock = "device_status.unlock"
+        device_status_close = "device_status.dc_close"
+        device_status_open = "device_status.dc_open"
 
         for device in updates["cycle"]["device_status"]:
             state = device["status1"]
             if device["type"] == "device_type.door_lock":
-                self.process_door_lock(device, locks, STATUS_LOCK, STATUS_UNLOCK, state)
+                self.process_door_lock(
+                    device, locks, device_status_lock, device_status_unlock, state
+                )
             elif device["type"] == "device_type.door_contact":
                 self.process_door_contact(
-                    device, door_windows, STATUS_CLOSE, STATUS_OPEN, state
+                    device, door_windows, device_status_close, device_status_open, state
                 )
 
         _sensor_map = {
@@ -73,8 +75,8 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         device: dict[str, Any],
         locks: list[dict[str, Any]],
-        STATUS_LOCK: str,
-        STATUS_UNLOCK: str,
+        device_status_lock: str,
+        device_status_unlock: str,
         state: str,
     ) -> None:
         """Process the data for a door lock device."""
@@ -84,17 +86,17 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         closed = (lock_status & 16) == 16
         locked = (lock_status & 1) == 1
 
-        if not lock_status and STATUS_LOCK in state:
+        if not lock_status and device_status_lock in state:
             device["_state"] = "locked"
             device["_state2"] = "unknown"
 
-        elif not lock_status and STATUS_UNLOCK in state:
+        elif not lock_status and device_status_unlock in state:
             device["_state"] = "unlocked"
             device["_state2"] = "unknown"
 
         elif (
             lock_status
-            and (STATUS_LOCK in state or STATUS_UNLOCK in state)
+            and (device_status_lock in state or device_status_unlock in state)
             and closed
             and locked
         ):
@@ -103,7 +105,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         elif (
             lock_status
-            and (STATUS_LOCK in state or STATUS_UNLOCK in state)
+            and (device_status_lock in state or device_status_unlock in state)
             and closed
             and not locked
         ):
@@ -112,7 +114,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         elif (
             lock_status
-            and (STATUS_LOCK in state or STATUS_UNLOCK in state)
+            and (device_status_lock in state or device_status_unlock in state)
             and not closed
         ):
             device["_state"] = "unlocked"
@@ -126,16 +128,16 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         device: dict[str, Any],
         door_windows: list[dict[str, Any]],
-        STATUS_CLOSE: str,
-        STATUS_OPEN: str,
+        device_status_close: str,
+        device_status_open: str,
         state: str,
     ) -> None:
         """Process the data for a door contact device."""
 
-        if STATUS_CLOSE in state:
+        if device_status_close in state:
             device["_state"] = "closed"
 
-        elif STATUS_OPEN in state:
+        elif device_status_open in state:
             device["_state"] = "open"
 
         else:
