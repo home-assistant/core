@@ -108,16 +108,7 @@ class AzureDataExplorer:
         self._entry = entry
         self._entities_filter = hass.data[DOMAIN][DATA_FILTER]
 
-        self._client = AzureDataExplorerClient(
-            conf_adx_cluster_ingest_uri=self._entry.data["cluster_ingest_uri"],
-            conf_adx_database_name=self._entry.data["database"],
-            conf_adx_table_name=self._entry.data["table"],
-            conf_app_reg_id=self._entry.data["client_id"],
-            conf_app_reg_secret=self._entry.data["client_secret"],
-            conf_authority_id=self._entry.data["authority_id"],
-            conf_usee_free_cluster=self._entry.data["use_free_cluster"],
-        )
-        # self._client = AzureDataExplorerClient(**entry.data)
+        self._client = AzureDataExplorerClient(**entry.data)
 
         self._send_interval = entry.options[CONF_SEND_INTERVAL]
         self._max_delay = DEFAULT_MAX_DELAY
@@ -147,10 +138,8 @@ class AzureDataExplorer:
             self._next_send_remover()
         if self._listener_remover:
             self._listener_remover()
-        # await self._queue.put((3, (utcnow(), None)))
         self._shutdown = True
         await self.async_send(None)
-        # await self._queue.join()
 
     def update_options(self, new_options: dict[str, Any]) -> None:
         """Update options."""
@@ -214,9 +203,6 @@ class AzureDataExplorer:
     ) -> tuple[str | None, int]:
         """Parse event by checking if it needs to be sent, and format it."""
 
-        # if state is None:
-        #     self._shutdown = True
-        #     return None, dropped
         if state.state in FILTER_STATES or not self._entities_filter(state.entity_id):  # type: ignore[union-attr]
             return None, dropped
         if (utcnow() - time_fired).seconds > DEFAULT_MAX_DELAY + self._send_interval:

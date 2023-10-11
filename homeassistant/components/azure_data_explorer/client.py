@@ -23,26 +23,16 @@ logger.setLevel(logging.WARNING)
 class AzureDataExplorerClient:
     """Class for Azure Data Explorer Client."""
 
-    def __init__(
-        self,
-        **data
-        # conf_adx_cluster_ingest_uri: str,
-        # conf_adx_database_name: str,
-        # conf_adx_table_name: str,
-        # conf_app_reg_id: str,
-        # conf_app_reg_secret: str,
-        # conf_authority_id: str,
-        # conf_usee_free_cluster: bool,
-    ) -> None:
+    def __init__(self, **data) -> None:
         """Create the right class."""
 
-        self.cluster_ingest_uri = data["conf_adx_cluster_ingest_uri"]
-        self.database = data["conf_adx_database_name"]
-        self.table = data["conf_adx_table_name"]
-        self.client_id = data["conf_app_reg_id"]
-        self.client_secret = data["conf_app_reg_secret"]
-        self.authority_id = data["conf_authority_id"]
-        self.use_queued_ingestion = data["conf_usee_free_cluster"]
+        self.cluster_ingest_uri = data["cluster_ingest_uri"]
+        self.database = data["database"]
+        self.table = data["table"]
+        self.client_id = data["client_id"]
+        self.client_secret = data["client_secret"]
+        self.authority_id = data["authority_id"]
+        self.use_queued_ingestion = data["use_queued_ingestion"]
 
         self.cluster_query_uri = self.cluster_ingest_uri.replace(
             "https://ingest-", "https://"
@@ -70,10 +60,6 @@ class AzureDataExplorerClient:
             self.write_client = ManagedStreamingIngestClient.from_dm_kcsb(kcsb)
 
         self.query_client = KustoClient(kcsb)
-
-        # # Suppress very verbose logging from client
-        # logger = logging.getLogger("azure")
-        # logger.setLevel(logging.WARNING)
 
     def test_connection(self) -> None:
         """Test connection, will throw Exception when it cannot connect."""
