@@ -8,6 +8,7 @@ from typing import Any
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -44,8 +45,14 @@ class EGSCalendar(CalendarEntity):
         """Initialize EGSCalendar."""
         self._coordinator = coordinator
         self._event: CalendarEvent | None = None
-        self._attr_name = f"Epic Games Store {self._cal_type.title()} Games"
+        self._attr_translation_key = f"{self._cal_type}_games"
         self._attr_unique_id = f"{unique_id}-{self._cal_type}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Epic Games Store",
+            name="Epic Games Store",
+        )
 
     @property
     def event(self) -> CalendarEvent | None:

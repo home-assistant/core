@@ -18,9 +18,9 @@ async def test_setup_component(hass: HomeAssistant, service_multiple: Mock) -> N
     await setup_platform(hass, CALENDAR_DOMAIN)
 
     state = hass.states.get("calendar.epic_games_store_discount_games")
-    assert state.name == "Epic Games Store Discount Games"
+    assert state.name == "Epic Games Store Discount games"
     state = hass.states.get("calendar.epic_games_store_free_games")
-    assert state.name == "Epic Games Store Free Games"
+    assert state.name == "Epic Games Store Free games"
 
 
 async def test_discount_games(
@@ -45,7 +45,7 @@ async def test_discount_games(
     cal_attrs = dict(state.attributes)
     cal_games = cal_attrs.pop("games")
     assert cal_attrs == {
-        "friendly_name": "Epic Games Store Discount Games",
+        "friendly_name": "Epic Games Store Discount games",
         "message": "Shadow of the Tomb Raider: Definitive Edition",
         "all_day": False,
         "start_time": "2022-10-18 08:00:00",
@@ -77,7 +77,7 @@ async def test_free_games(
     cal_attrs = dict(state.attributes)
     cal_games = cal_attrs.pop("games")
     assert cal_attrs == {
-        "friendly_name": "Epic Games Store Free Games",
+        "friendly_name": "Epic Games Store Free games",
         "message": "Warhammer 40,000: Mechanicus - Standard Edition",
         "all_day": False,
         "start_time": "2022-10-27 08:00:00",
@@ -100,9 +100,9 @@ async def test_attribute_not_found(
     await setup_platform(hass, CALENDAR_DOMAIN)
 
     state = hass.states.get("calendar.epic_games_store_discount_games")
-    assert state.name == "Epic Games Store Discount Games"
+    assert state.name == "Epic Games Store Discount games"
     state = hass.states.get("calendar.epic_games_store_free_games")
-    assert state.name == "Epic Games Store Free Games"
+    assert state.name == "Epic Games Store Free games"
     assert state.state == STATE_ON
     cal_attrs = dict(state.attributes)
     cal_games = cal_attrs.pop("games")
