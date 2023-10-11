@@ -387,20 +387,21 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
 
     def resolve_data(self, value: ZwaveValue) -> NumericSensorDataTemplateData:
         """Resolve helper class data for a discovered value."""
+        result = NumericSensorDataTemplateData()  # default return value
 
         if value.command_class == CommandClass.BATTERY:
-            return NumericSensorDataTemplateData(ENTITY_DESC_KEY_BATTERY, PERCENTAGE)
+            result = NumericSensorDataTemplateData(ENTITY_DESC_KEY_BATTERY, PERCENTAGE)
 
         if value.command_class == CommandClass.METER:
-            return self._resolve_meter_data(value)
+            result = self._resolve_meter_data(value)
 
         if value.command_class == CommandClass.SENSOR_MULTILEVEL:
-            return self._resolve_multilevel_sensor_data(value)
+            result = self._resolve_multilevel_sensor_data(value)
 
         if value.command_class == CommandClass.ENERGY_PRODUCTION:
-            return self._resolve_energy_production_data(value)
+            result = self._resolve_energy_production_data(value)
 
-        return NumericSensorDataTemplateData()
+        return result
 
     def _resolve_meter_data(self, value: ZwaveValue) -> NumericSensorDataTemplateData:
         try:
@@ -430,25 +431,27 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     def _resolve_multilevel_sensor_data(
         self, value: ZwaveValue
     ) -> NumericSensorDataTemplateData:
+        result = NumericSensorDataTemplateData()  # default return value
+
         try:
             sensor_type = get_multilevel_sensor_type(value)
             multilevel_sensor_scale_type = get_multilevel_sensor_scale_type(value)
         except UnknownValueData:
-            return NumericSensorDataTemplateData()
+            return result
         unit = self.find_key_from_matching_set(
             multilevel_sensor_scale_type, MULTILEVEL_SENSOR_UNIT_MAP
         )
         if sensor_type == MultilevelSensorType.TARGET_TEMPERATURE:
-            return NumericSensorDataTemplateData(
+            result = NumericSensorDataTemplateData(
                 ENTITY_DESC_KEY_TARGET_TEMPERATURE, unit
             )
         key = self.find_key_from_matching_set(
             sensor_type, MULTILEVEL_SENSOR_DEVICE_CLASS_MAP
         )
         if key:
-            return NumericSensorDataTemplateData(key, unit)
+            result = NumericSensorDataTemplateData(key, unit)
 
-        return NumericSensorDataTemplateData()
+        return result
 
     def _resolve_energy_production_data(
         self, value: ZwaveValue
