@@ -117,7 +117,7 @@ class NetatmoSource(MediaSource):
 
         return media
 
-    def _build_media_children(self, media, source, camera_id):
+    def _build_media_children(self, media, source, camera_id) -> None:
         media.children = []
         # Append first level children
         if not camera_id:

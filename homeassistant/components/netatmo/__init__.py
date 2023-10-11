@@ -230,7 +230,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def manage_register_webhook_subscription(hass, register_webhook, manage_cloudhook):
+async def manage_register_webhook_subscription(hass, register_webhook, manage_cloudhook) -> None:
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):
             await register_webhook(None)
@@ -241,7 +241,7 @@ async def manage_register_webhook_subscription(hass, register_webhook, manage_cl
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, register_webhook)
 
 
-async def async_handle_entry_auth(hass, entry, implementation):
+async def async_handle_entry_auth(hass, entry, implementation) -> None:
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()

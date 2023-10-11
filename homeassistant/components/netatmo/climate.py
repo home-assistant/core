@@ -237,7 +237,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._handle_rooms(home, data)
 
 
-    def _handle_rooms(self, home, data):
+    def _handle_rooms(self, home, data) -> None:
         for room in home.get("rooms", []):
             if (
                 data["event_type"] == EVENT_TYPE_SET_POINT
@@ -252,7 +252,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 self._handle_cancel_set_point(room)
 
 
-    def _handle_set_point(self, room: dict):
+    def _handle_set_point(self, room: dict) -> None:
         if room["therm_setpoint_mode"] == STATE_NETATMO_OFF:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_preset_mode = STATE_NETATMO_OFF
