@@ -350,17 +350,17 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._state = True
             optimistic_set = True
 
-        if self.checkAndSetBrightness(**kwargs):
+        if self.set_brightness(**kwargs):
             optimistic_set = True
 
-        if self.checkAndSetTemperature(**kwargs):
+        if self.set_temperature(**kwargs):
             optimistic_set = True
 
-        if self.checkAndSetColor(**kwargs):
+        if self.set_color(**kwargs):
             optimistic_set = True
 
         common_params: dict[str, Any] = {}
-        self.addCommonParams(common_params, **kwargs)
+        self.add_common_params(common_params, **kwargs)
 
         if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
             await self.async_run_script(
@@ -407,7 +407,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if optimistic_set:
             self.async_write_ha_state()
 
-    def checkAndSetBrightness(self, **kwargs: Any):
+    def set_brightness(self, **kwargs: Any):
         """Prepare the brightness parameter, if existing, for script execution."""
         if self._level_template is None and ATTR_BRIGHTNESS in kwargs:
             _LOGGER.debug(
@@ -417,7 +417,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             return True
         return False
 
-    def checkAndSetTemperature(self, **kwargs: Any):
+    def set_temperature(self, **kwargs: Any):
         """Prepare the temperature parameter, if existing, for script execution."""
         if self._temperature_template is None and ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
@@ -430,7 +430,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 return True
         return False
 
-    def checkAndSetColor(self, **kwargs: Any):
+    def set_color(self, **kwargs: Any):
         """Prepare the color parameter, if existing, for script execution."""
         if self._color_template is None and ATTR_HS_COLOR in kwargs:
             _LOGGER.debug(
@@ -443,7 +443,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             return True
         return False
 
-    def addCommonParams(self, common_params: dict[str, Any], **kwargs: Any):
+    def add_common_params(self, common_params: dict[str, Any], **kwargs: Any):
         """Collect parameters that are common into a dictionary, for future execution of scripts."""
         if ATTR_BRIGHTNESS in kwargs:
             common_params["brightness"] = kwargs[ATTR_BRIGHTNESS]
