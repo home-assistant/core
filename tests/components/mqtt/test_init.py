@@ -959,6 +959,17 @@ async def test_subscribe_topic(
         unsub()
 
 
+async def test_subscribe_topic_not_initialize(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the subscription of a topic when MQTT was not initialized."""
+    with pytest.raises(
+        HomeAssistantError, match=r".*make sure MQTT is set up correctly"
+    ):
+        await mqtt.async_subscribe(hass, "test-topic", record_calls)
+
+
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.2)
 async def test_subscribe_and_resubscribe(
