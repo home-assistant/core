@@ -1,6 +1,5 @@
 """The todo integration."""
 
-from abc import abstractmethod
 import dataclasses
 import datetime
 import logging
@@ -77,6 +76,8 @@ class TodoItem:
 class TodoListEntity(Entity):
     """An entity that represents a To-do list."""
 
+    _attr_todo_items: list[TodoItem] | None = None
+
     @property
     def state(self) -> int | None:
         """Return the entity state as the count of incomplete items."""
@@ -86,9 +87,11 @@ class TodoListEntity(Entity):
         return sum([item.status == TodoItemStatus.NEEDS_ACTION for item in items])
 
     @property
-    @abstractmethod
     def todo_items(self) -> list[TodoItem] | None:
         """Return the To-do items in the To-do list."""
+        if hasattr(self, "_attr_todo_items"):
+            return self._attr_todo_items
+        return None
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
