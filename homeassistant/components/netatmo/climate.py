@@ -249,7 +249,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 data["event_type"] == EVENT_TYPE_CANCEL_SET_POINT
                 and self._room.entity_id == room["id"]
             ):
-                self._handle_cancel_set_point(room)
+                self._handle_cancel_set_point()
 
 
     def _handle_set_point(self, room: dict) -> None:
@@ -269,16 +269,14 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             if self._attr_target_temperature == DEFAULT_MAX_TEMP:
                 self._attr_hvac_mode = HVACMode.HEAT
         self.async_write_ha_state()
-        return
 
-    def _handle_cancel_set_point(self, room: dict):
+    def _handle_cancel_set_point(self) -> None:
         if self._attr_hvac_mode == HVACMode.OFF:
             self._attr_hvac_mode = HVACMode.AUTO
             self._attr_preset_mode = PRESET_MAP_NETATMO[PRESET_SCHEDULE]
 
         self.async_update_callback()
         self.async_write_ha_state()
-        return
 
     @property
     def hvac_action(self) -> HVACAction:
