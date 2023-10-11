@@ -84,6 +84,9 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self._attr_unique_id = str(combine_hex(dev_id))
         self._attr_name = dev_name
         self._command_type = command_type
+        if command_type == CentralCommandType.SWITCHING:
+            self._attr_color_mode = ColorMode.ONOFF
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __dimming_command_on(self, kwargs: Any) -> list[int]:
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
