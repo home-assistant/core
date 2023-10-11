@@ -71,6 +71,10 @@ from homeassistant.util.json import json_loads
 from homeassistant.util.network import is_local
 
 from .config import Config
+from .const import (
+    ONLY_LOCAL_IPS_ALLOWED,
+    ENTITY_NOT_FOUND,
+    BAD_REQUEST)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -146,7 +150,7 @@ class HueUsernameView(HomeAssistantView):
         """Handle a POST request."""
         assert request.remote is not None
         if not is_local(ip_address(request.remote)):
-            return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
+            return self.json_message(ONLY_LOCAL_IPS_ALLOWED, HTTPStatus.UNAUTHORIZED)
 
         try:
             data = await request.json(loads=json_loads)
@@ -175,7 +179,7 @@ class HueAllGroupsStateView(HomeAssistantView):
         """Process a request to make the Brilliant Lightpad work."""
         assert request.remote is not None
         if not is_local(ip_address(request.remote)):
-            return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
+            return self.json_message(ONLY_LOCAL_IPS_ALLOWED, HTTPStatus.UNAUTHORIZED)
 
         return self.json({})
 
@@ -196,7 +200,7 @@ class HueGroupView(HomeAssistantView):
         """Process a request to make the Logitech Pop working."""
         assert request.remote is not None
         if not is_local(ip_address(request.remote)):
-            return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
+            return self.json_message(ONLY_LOCAL_IPS_ALLOWED, HTTPStatus.UNAUTHORIZED)
 
         return self.json(
             [
@@ -227,7 +231,7 @@ class HueAllLightsStateView(HomeAssistantView):
         """Process a request to get the list of available lights."""
         assert request.remote is not None
         if not is_local(ip_address(request.remote)):
-            return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
+            return self.json_message(ONLY_LOCAL_IPS_ALLOWED, HTTPStatus.UNAUTHORIZED)
 
         return self.json(create_list_of_entities(self.config, request))
 
@@ -300,7 +304,7 @@ class HueOneLightStateView(HomeAssistantView):
         """Process a request to get the state of an individual light."""
         assert request.remote is not None
         if not is_local(ip_address(request.remote)):
-            return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
+            return self.json_message(ONLY_LOCAL_IPS_ALLOWED, HTTPStatus.UNAUTHORIZED)
 
         hass: core.HomeAssistant = request.app["hass"]
         hass_entity_id = self.config.number_to_entity_id(entity_id)
@@ -310,11 +314,11 @@ class HueOneLightStateView(HomeAssistantView):
                 "Unknown entity number: %s not found in emulated_hue_ids.json",
                 entity_id,
             )
-            return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
+            return self.json_message(ENTITY_NOT_FOUND, HTTPStatus.NOT_FOUND)
 
         if (state := hass.states.get(hass_entity_id)) is None:
-            _LOGGER.error("Entity not found: %s", hass_entity_id)
-            return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
+            _LOGGER.error(ENTITY_NOT_FOUND+": %s", hass_entity_id)
+            return self.json_message(ENTITY_NOT_FOUND, HTTPStatus.NOT_FOUND)
 
         if not self.config.is_state_exposed(state):
             _LOGGER.error("Entity not exposed: %s", entity_id)
@@ -336,29 +340,36 @@ class HueOneLightChangeView(HomeAssistantView):
         """Initialize the instance of the view."""
         self.config = config
 
+    def is_valid_request(
+        self, config, hass: core.HomeAssistant, entity_id, entity_number
+    ):
+        """Validate request."""
+        if entity_id is None:
+            _LOGGER.error("Unknown entity number: %s", entity_number)
+            return self.json_message(ENTITY_NOT_FOUND, HTTPStatus.NOT_FOUND)
+        if (entity := hass.states.get(entity_id)) is None:
+            _LOGGER.error(ENTITY_NOT_FOUND+": %s", entity_id)
+            return self.json_message(ENTITY_NOT_FOUND, HTTPStatus.NOT_FOUND)
+        if not config.is_state_exposed(entity):
+            _LOGGER.error("Entity not exposed: %s", entity_id)
+            return self.json_message("Entity not exposed", HTTPStatus.UNAUTHORIZED)
+        return True
+
     async def put(  # noqa: C901
         self, request: web.Request, username: str, entity_number: str
     ) -> web.Response:
         """Process a request to set the state of an individual light."""
         assert request.remote is not None
         if not is_local(ip_address(request.remote)):
-            return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
+            return self.json_message(ONLY_LOCAL_IPS_ALLOWED, HTTPStatus.UNAUTHORIZED)
 
         config = self.config
         hass: core.HomeAssistant = request.app["hass"]
         entity_id = config.number_to_entity_id(entity_number)
 
-        if entity_id is None:
-            _LOGGER.error("Unknown entity number: %s", entity_number)
-            return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
-
-        if (entity := hass.states.get(entity_id)) is None:
-            _LOGGER.error("Entity not found: %s", entity_id)
-            return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
-
-        if not config.is_state_exposed(entity):
-            _LOGGER.error("Entity not exposed: %s", entity_id)
-            return self.json_message("Entity not exposed", HTTPStatus.UNAUTHORIZED)
+        json_message = self.is_valid_request(config, hass, entity_id, entity_number)
+        if json_message != True:
+            return json_message
 
         try:
             request_json = await request.json()
@@ -367,9 +378,13 @@ class HueOneLightChangeView(HomeAssistantView):
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         # Get the entity's supported features
+        entity = hass.states.get(entity_id)
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if entity.domain == light.DOMAIN:
-            color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
+        color_modes = (
+            entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
+            if entity.domain == light.DOMAIN
+            else None
+        )
 
         # Parse the request
         parsed: dict[str, Any] = {
@@ -385,7 +400,7 @@ class HueOneLightChangeView(HomeAssistantView):
         if HUE_API_STATE_ON in request_json:
             if not isinstance(request_json[HUE_API_STATE_ON], bool):
                 _LOGGER.error("Unable to parse data: %s", request_json)
-                return self.json_message("Bad request", HTTPStatus.BAD_REQUEST)
+                return self.json_message(BAD_REQUEST, HTTPStatus.BAD_REQUEST)
             parsed[STATE_ON] = request_json[HUE_API_STATE_ON]
         else:
             parsed[STATE_ON] = entity.state != STATE_OFF
@@ -402,7 +417,7 @@ class HueOneLightChangeView(HomeAssistantView):
                     parsed[attr] = int(request_json[key])
                 except ValueError:
                     _LOGGER.error("Unable to parse data (2): %s", request_json)
-                    return self.json_message("Bad request", HTTPStatus.BAD_REQUEST)
+                    return self.json_message(BAD_REQUEST, HTTPStatus.BAD_REQUEST)
         if HUE_API_STATE_XY in request_json:
             try:
                 parsed[STATE_XY] = (
@@ -411,7 +426,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 )
             except ValueError:
                 _LOGGER.error("Unable to parse data (2): %s", request_json)
-                return self.json_message("Bad request", HTTPStatus.BAD_REQUEST)
+                return self.json_message(BAD_REQUEST, HTTPStatus.BAD_REQUEST)
 
         if HUE_API_STATE_BRI in request_json:
             if entity.domain == light.DOMAIN:
@@ -437,131 +452,12 @@ class HueOneLightChangeView(HomeAssistantView):
                 parsed[STATE_BRIGHTNESS] = round(level)
                 parsed[STATE_ON] = True
 
-        # Choose general HA domain
-        domain = core.DOMAIN
-
-        # Entity needs separate call to turn on
-        turn_on_needed = False
-
-        # Convert the resulting "on" status into the service we need to call
-        service: str | None = SERVICE_TURN_ON if parsed[STATE_ON] else SERVICE_TURN_OFF
-
         # Construct what we need to send to the service
         data: dict[str, Any] = {ATTR_ENTITY_ID: entity_id}
 
-        # If the requested entity is a light, set the brightness, hue,
-        # saturation and color temp
-        if entity.domain == light.DOMAIN:
-            if parsed[STATE_ON]:
-                if (
-                    light.brightness_supported(color_modes)
-                    and parsed[STATE_BRIGHTNESS] is not None
-                ):
-                    data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
-                        parsed[STATE_BRIGHTNESS]
-                    )
-
-                if light.color_supported(color_modes):
-                    if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
-                        if parsed[STATE_HUE] is not None:
-                            hue = parsed[STATE_HUE]
-                        else:
-                            hue = 0
-
-                        if parsed[STATE_SATURATION] is not None:
-                            sat = parsed[STATE_SATURATION]
-                        else:
-                            sat = 0
-
-                        # Convert hs values to hass hs values
-                        hue = int((hue / HUE_API_STATE_HUE_MAX) * 360)
-                        sat = int((sat / HUE_API_STATE_SAT_MAX) * 100)
-
-                        data[ATTR_HS_COLOR] = (hue, sat)
-
-                    if parsed[STATE_XY] is not None:
-                        data[ATTR_XY_COLOR] = parsed[STATE_XY]
-
-                if (
-                    light.color_temp_supported(color_modes)
-                    and parsed[STATE_COLOR_TEMP] is not None
-                ):
-                    data[ATTR_COLOR_TEMP] = parsed[STATE_COLOR_TEMP]
-
-                if (
-                    entity_features & LightEntityFeature.TRANSITION
-                    and parsed[STATE_TRANSITION] is not None
-                ):
-                    data[ATTR_TRANSITION] = parsed[STATE_TRANSITION] / 10
-
-        # If the requested entity is a script, add some variables
-        elif entity.domain == script.DOMAIN:
-            data["variables"] = {
-                "requested_state": STATE_ON if parsed[STATE_ON] else STATE_OFF
-            }
-
-            if parsed[STATE_BRIGHTNESS] is not None:
-                data["variables"]["requested_level"] = parsed[STATE_BRIGHTNESS]
-
-        # If the requested entity is a climate, set the temperature
-        elif entity.domain == climate.DOMAIN:
-            # We don't support turning climate devices on or off,
-            # only setting the temperature
-            service = None
-
-            if (
-                entity_features & ClimateEntityFeature.TARGET_TEMPERATURE
-                and parsed[STATE_BRIGHTNESS] is not None
-            ):
-                domain = entity.domain
-                service = SERVICE_SET_TEMPERATURE
-                data[ATTR_TEMPERATURE] = parsed[STATE_BRIGHTNESS]
-
-        # If the requested entity is a humidifier, set the humidity
-        elif entity.domain == humidifier.DOMAIN:
-            if parsed[STATE_BRIGHTNESS] is not None:
-                turn_on_needed = True
-                domain = entity.domain
-                service = SERVICE_SET_HUMIDITY
-                data[ATTR_HUMIDITY] = parsed[STATE_BRIGHTNESS]
-
-        # If the requested entity is a media player, convert to volume
-        elif entity.domain == media_player.DOMAIN:
-            if (
-                entity_features & MediaPlayerEntityFeature.VOLUME_SET
-                and parsed[STATE_BRIGHTNESS] is not None
-            ):
-                turn_on_needed = True
-                domain = entity.domain
-                service = SERVICE_VOLUME_SET
-                # Convert 0-100 to 0.0-1.0
-                data[ATTR_MEDIA_VOLUME_LEVEL] = parsed[STATE_BRIGHTNESS] / 100.0
-
-        # If the requested entity is a cover, convert to open_cover/close_cover
-        elif entity.domain == cover.DOMAIN:
-            domain = entity.domain
-            if service == SERVICE_TURN_ON:
-                service = SERVICE_OPEN_COVER
-            else:
-                service = SERVICE_CLOSE_COVER
-
-            if (
-                entity_features & CoverEntityFeature.SET_POSITION
-                and parsed[STATE_BRIGHTNESS] is not None
-            ):
-                domain = entity.domain
-                service = SERVICE_SET_COVER_POSITION
-                data[ATTR_POSITION] = parsed[STATE_BRIGHTNESS]
-
-        # If the requested entity is a fan, convert to speed
-        elif (
-            entity.domain == fan.DOMAIN
-            and entity_features & FanEntityFeature.SET_SPEED
-            and parsed[STATE_BRIGHTNESS] is not None
-        ):
-            domain = entity.domain
-            # Convert 0-100 to a fan speed
-            data[ATTR_PERCENTAGE] = parsed[STATE_BRIGHTNESS]
+        [turn_on_needed, domain, service, data] = self.set_data_based_on_domain(
+            entity, parsed, data, entity_features, color_modes
+        )
 
         # Map the off command to on
         if entity.domain in config.off_maps_to_on_domains:
@@ -622,6 +518,133 @@ class HueOneLightChangeView(HomeAssistantView):
             config.cached_states[entity_id] = [parsed, time.time()]
 
         return self.json(json_response)
+
+    def set_data_based_on_domain(
+        self, entity, parsed, data, entity_features, color_modes
+    ):
+        # Choose general HA domain
+        domain = core.DOMAIN
+
+        # Entity needs separate call to turn on
+        turn_on_needed = False
+
+        # Convert the resulting "on" status into the service we need to call
+        service: str | None = SERVICE_TURN_ON if parsed[STATE_ON] else SERVICE_TURN_OFF
+
+        # If the requested entity is a light, set the brightness, hue,
+        # saturation and color temp
+        if entity.domain == light.DOMAIN and parsed[STATE_ON]:
+            data = self.handle_light_entity(parsed, entity_features, data, color_modes)
+
+        # If the requested entity is a script, add some variables
+        elif entity.domain == script.DOMAIN:
+            data["variables"] = {
+                "requested_state": STATE_ON if parsed[STATE_ON] else STATE_OFF
+            }
+
+            if parsed[STATE_BRIGHTNESS] is not None:
+                data["variables"]["requested_level"] = parsed[STATE_BRIGHTNESS]
+
+        # If the requested entity is a climate, set the temperature
+        elif entity.domain == climate.DOMAIN:
+            # We don't support turning climate devices on or off,
+            # only setting the temperature
+            service = None
+
+            if (
+                entity_features & ClimateEntityFeature.TARGET_TEMPERATURE
+                and parsed[STATE_BRIGHTNESS] is not None
+            ):
+                domain = entity.domain
+                service = SERVICE_SET_TEMPERATURE
+                data[ATTR_TEMPERATURE] = parsed[STATE_BRIGHTNESS]
+
+        # If the requested entity is a humidifier, set the humidity
+        elif entity.domain == humidifier.DOMAIN:
+            if parsed[STATE_BRIGHTNESS] is not None:
+                turn_on_needed = True
+                domain = entity.domain
+                service = SERVICE_SET_HUMIDITY
+                data[ATTR_HUMIDITY] = parsed[STATE_BRIGHTNESS]
+
+        # If the requested entity is a media player, convert to volume
+        elif entity.domain == media_player.DOMAIN:
+            if (
+                entity_features & MediaPlayerEntityFeature.VOLUME_SET
+                and parsed[STATE_BRIGHTNESS] is not None
+            ):
+                turn_on_needed = True
+                domain = entity.domain
+                service = SERVICE_VOLUME_SET
+                # Convert 0-100 to 0.0-1.0
+                data[ATTR_MEDIA_VOLUME_LEVEL] = parsed[STATE_BRIGHTNESS] / 100.0
+
+        # If the requested entity is a cover, convert to open_cover/close_cover
+        elif entity.domain == cover.DOMAIN:
+            domain = entity.domain
+            service = (
+                SERVICE_OPEN_COVER
+                if service == SERVICE_TURN_ON
+                else SERVICE_CLOSE_COVER
+            )
+
+            if (
+                entity_features & CoverEntityFeature.SET_POSITION
+                and parsed[STATE_BRIGHTNESS] is not None
+            ):
+                domain = entity.domain
+                service = SERVICE_SET_COVER_POSITION
+                data[ATTR_POSITION] = parsed[STATE_BRIGHTNESS]
+
+        # If the requested entity is a fan, convert to speed
+        elif (
+            entity.domain == fan.DOMAIN
+            and entity_features & FanEntityFeature.SET_SPEED
+            and parsed[STATE_BRIGHTNESS] is not None
+        ):
+            domain = entity.domain
+            # Convert 0-100 to a fan speed
+            data[ATTR_PERCENTAGE] = parsed[STATE_BRIGHTNESS]
+        return [turn_on_needed, domain, service, data]
+
+    def handle_light_entity(self, parsed, entity_features, data, color_modes):
+        if (
+            light.brightness_supported(color_modes)
+            and parsed[STATE_BRIGHTNESS] is not None
+        ):
+            data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(parsed[STATE_BRIGHTNESS])
+
+        if light.color_supported(color_modes):
+            if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
+                hue = parsed[STATE_HUE] if parsed[STATE_HUE] is not None else 0
+                sat = (
+                    parsed[STATE_SATURATION]
+                    if parsed[STATE_SATURATION] is not None
+                    else 0
+                )
+
+                # Convert hs values to hass hs values
+                hue = int((hue / HUE_API_STATE_HUE_MAX) * 360)
+                sat = int((sat / HUE_API_STATE_SAT_MAX) * 100)
+
+                data[ATTR_HS_COLOR] = (hue, sat)
+
+            if parsed[STATE_XY] is not None:
+                data[ATTR_XY_COLOR] = parsed[STATE_XY]
+
+        if (
+            light.color_temp_supported(color_modes)
+            and parsed[STATE_COLOR_TEMP] is not None
+        ):
+            data[ATTR_COLOR_TEMP] = parsed[STATE_COLOR_TEMP]
+
+        if (
+            entity_features & LightEntityFeature.TRANSITION
+            and parsed[STATE_TRANSITION] is not None
+        ):
+            data[ATTR_TRANSITION] = parsed[STATE_TRANSITION] / 10
+
+        return data
 
 
 def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
