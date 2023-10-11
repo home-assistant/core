@@ -681,7 +681,7 @@ class PipelineRun:
             wake_word_output: dict[str, Any] = {}
         else:
             # Avoid duplicate detections by checking cooldown
-            last_wake_up = self.hass.data.get(DATA_LAST_WAKE_UP)
+            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(result.wake_word_id)
             if last_wake_up is not None:
                 sec_since_last_wake_up = time.monotonic() - last_wake_up
                 if sec_since_last_wake_up < wake_word_settings.cooldown_seconds:
@@ -689,7 +689,7 @@ class PipelineRun:
                     raise WakeWordDetectionAborted
 
             # Record last wake up time to block duplicate detections
-            self.hass.data[DATA_LAST_WAKE_UP] = time.monotonic()
+            self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_id] = time.monotonic()
 
             if result.queued_audio:
                 # Add audio that was pending at detection.
