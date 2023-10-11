@@ -360,7 +360,15 @@ class LightTemplate(TemplateEntity, LightEntity):
             optimistic_set = True
 
         common_params: dict[str, Any] = {}
-        self.add_common_params(common_params, **kwargs)
+        self.add_common_parameter(
+            "brightness", ATTR_BRIGHTNESS, common_params, **kwargs
+        )
+        self.add_common_parameter(
+            "transition", ATTR_TRANSITION, common_params, **kwargs
+        )
+        self.add_common_parameter(
+            "color_temp", ATTR_COLOR_TEMP, common_params, **kwargs
+        )
 
         if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
             await self.async_run_script(
@@ -368,29 +376,18 @@ class LightTemplate(TemplateEntity, LightEntity):
                 run_variables=common_params,
                 context=self._context,
             )
+
         elif ATTR_EFFECT in kwargs and self._effect_script:
-            effect = kwargs[ATTR_EFFECT]
-            # self.checkValidEffect(effect)
+            await self.check_valid_effect(kwargs[ATTR_EFFECT])
 
-            if effect not in self._effect_list:
-                _LOGGER.error(
-                    "Received invalid effect: %s for entity %s. Expected one of: %s",
-                    effect,
-                    self.entity_id,
-                    self._effect_list,
-                    exc_info=True,
-                )
-
-            common_params["effect"] = effect
+            self.add_common_parameter("effect", ATTR_EFFECT, common_params, **kwargs)
 
             await self.async_run_script(
                 self._effect_script, run_variables=common_params, context=self._context
             )
+
         elif ATTR_HS_COLOR in kwargs and self._color_script:
-            hs_value = kwargs[ATTR_HS_COLOR]
-            common_params["hs"] = hs_value
-            common_params["h"] = int(hs_value[0])
-            common_params["s"] = int(hs_value[1])
+            self.set_hs_color_params(ATTR_HS_COLOR, common_params, **kwargs)
 
             await self.async_run_script(
                 self._color_script, run_variables=common_params, context=self._context
@@ -443,26 +440,36 @@ class LightTemplate(TemplateEntity, LightEntity):
             return True
         return False
 
-    def add_common_params(self, common_params: dict[str, Any], **kwargs: Any):
-        """Collect parameters that are common into a dictionary, for future execution of scripts."""
-        if ATTR_BRIGHTNESS in kwargs:
-            common_params["brightness"] = kwargs[ATTR_BRIGHTNESS]
+    def add_common_parameter(
+        self,
+        attribute_name: str,
+        kwarg_name: str,
+        common_params: dict[str, Any],
+        **kwargs: Any,
+    ):
+        """Gather parameters that are common in future script executions."""
+        if kwarg_name in kwargs:
+            common_params[attribute_name] = kwargs[kwarg_name]
 
-        if ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            common_params["transition"] = kwargs[ATTR_TRANSITION]
+    def set_hs_color_params(
+        self, kwarg_name, common_params: dict[str, Any], **kwargs: Any
+    ):
+        """Extract HS Color values, including the derived ones for hue (h) and saturation (s). These are all added to common params."""
+        hs_value = kwargs[kwarg_name]
+        common_params["hs"] = hs_value
+        common_params["h"] = int(hs_value[0])
+        common_params["s"] = int(hs_value[1])
 
-        if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
-            common_params["color_temp"] = kwargs[ATTR_COLOR_TEMP]
-
-    # def checkValidEffect(self, effect: int) -> None:
-    #     if effect not in self._effect_list:
-    #         _LOGGER.error(
-    #             "Received invalid effect: %s for entity %s. Expected one of: %s",
-    #             effect,
-    #             self.entity_id,
-    #             self._effect_list,
-    #             exc_info=True,
-    #         )
+    async def check_valid_effect(self, effect):
+        """Check whether the input given for the effect exists in stored list of possible effects."""
+        if effect not in self._effect_list:
+            _LOGGER.error(
+                "Received invalid effect: %s for entity %s. Expected one of: %s",
+                effect,
+                self.entity_id,
+                self._effect_list,
+                exc_info=True,
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
