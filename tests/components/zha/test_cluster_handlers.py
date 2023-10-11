@@ -266,12 +266,7 @@ async def test_in_cluster_handler_config(
     assert cluster.bind.call_count == bind_count
     assert cluster.configure_reporting.call_count == 0
     assert cluster.configure_reporting_multiple.call_count == math.ceil(len(attrs) / 3)
-    reported_attrs = {
-        a
-        for a in attrs
-        for attr in cluster.configure_reporting_multiple.call_args_list
-        for attrs in attr[0][0]
-    }
+    reported_attrs = set(attrs)
     assert set(attrs) == reported_attrs
 
 
