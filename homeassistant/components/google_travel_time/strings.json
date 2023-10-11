@@ -70,7 +70,6 @@
     },
     "traffic_model": {
       "options": {
-        "none": "No traffic model",
         "best_guess": "Best Guess",
         "pessimistic": "Pessimistic",
         "optimistic": "Optimistic"
