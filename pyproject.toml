@@ -437,7 +437,7 @@ filterwarnings = [
     # -- design choice 3rd party
     # https://github.com/gwww/elkm1/blob/2.2.5/elkm1_lib/util.py#L8-L19
     "ignore:ssl.TLSVersion.TLSv1 is deprecated:DeprecationWarning:elkm1_lib.util",
-    # https://github.com/michaeldavie/env_canada/blob/v0.5.37/env_canada/ec_cache.py
+    # https://github.com/michaeldavie/env_canada/blob/v0.6.0/env_canada/ec_cache.py
     "ignore:Inheritance class CacheClientSession from ClientSession is discouraged:DeprecationWarning:env_canada.ec_cache",
     # https://github.com/allenporter/ical/pull/215 - v5.0.0
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:ical.util",
