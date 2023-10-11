@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from withings_api import GetSleepSummaryField, MeasureType
+from withings_api.common import GetSleepSummaryField, MeasureType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -384,7 +384,7 @@ class WithingsSensor(WithingsEntity, SensorEntity):
         coordinator: WithingsDataUpdateCoordinator,
         entity_description: WithingsSensorEntityDescription,
     ) -> None:
-        """Initialize sensor."""
+
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
 
