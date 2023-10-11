@@ -8,7 +8,6 @@ import requests.exceptions
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -35,8 +34,8 @@ async def async_setup_entry(
 class PlexUpdate(UpdateEntity):
     """Representation of a Plex server update entity."""
 
-    _attr_entity_category = EntityCategory.CONFIG
     _attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
+    _release_notes: str | None = None
 
     def __init__(
         self, plex_server: plexapi.server.PlexServer, can_update: bool
@@ -45,7 +44,6 @@ class PlexUpdate(UpdateEntity):
         self.plex_server = plex_server
         self._attr_name = f"Plex Media Server ({plex_server.friendlyName})"
         self._attr_unique_id = plex_server.machineIdentifier
-        self._release_notes: str | None = None
         if can_update:
             self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
@@ -56,7 +54,7 @@ class PlexUpdate(UpdateEntity):
             if (release := self.plex_server.checkForUpdate()) is None:
                 return
         except (requests.exceptions.RequestException, PlexApiException):
-            _LOGGER.warning("Polling update sensor failed, will try again")
+            _LOGGER.debug("Polling update sensor failed, will try again")
             return
         self._attr_latest_version = release.version
         if release.fixed:
