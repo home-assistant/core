@@ -262,6 +262,9 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.options, **user_input}
+            if CONF_PROVINCE not in user_input:
+                # Province not present, delete old value (if present) too
+                combined_input.pop(CONF_PROVINCE, None)
 
             try:
                 await self.hass.async_add_executor_job(
