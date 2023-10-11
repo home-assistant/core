@@ -185,6 +185,43 @@ class Router:
             (dr.CONNECTION_NETWORK_MAC, x) for x in self.config_entry.data[CONF_MAC]
         }
 
+    def _handle_login_required_exception(self, key: str) -> None:
+        if not self.config_entry.options.get(CONF_UNAUTHENTICATED_MODE):
+            _LOGGER.debug("Trying to authorize again")
+            if self.client.user.login(
+                self.config_entry.data.get(CONF_USERNAME, ""),
+                self.config_entry.data.get(CONF_PASSWORD, ""),
+            ):
+                _LOGGER.debug(
+                    "success, %s will be updated by a future periodic run",
+                    key,
+                )
+            else:
+                _LOGGER.debug("failed")
+            return
+        _LOGGER.info("%s requires authorization, excluding from future updates", key)
+        self.subscriptions.pop(key)
+
+    def _handle_unsupported_exception(self, key: str, exc: Exception) -> None:
+        if not isinstance(exc, (ResponseErrorNotSupportedException, ExpatError)):
+            raise exc  # Raise the exception here
+        _LOGGER.info(
+            "%s apparently not supported by the device, excluding from future updates",
+            key,
+        )
+        self.subscriptions.pop(key)
+
+    def _handle_timeout_exception(self, key: str, grace_left: float) -> None:
+        if grace_left > 0:
+            _LOGGER.debug(
+                "%s timed out, %.1fs notify timeout suppress grace remaining",
+                key,
+                grace_left,
+                exc_info=True,
+            )
+        else:
+            raise Timeout(f"Timeout occurred for {key}")
+
     def _get_data(self, key: str, func: Callable[[], Any]) -> None:
         if not self.subscriptions.get(key):
             return
@@ -196,50 +233,14 @@ class Router:
         try:
             self.data[key] = func()
         except ResponseErrorLoginRequiredException:
-            if not self.config_entry.options.get(CONF_UNAUTHENTICATED_MODE):
-                _LOGGER.debug("Trying to authorize again")
-                if self.client.user.login(
-                    self.config_entry.data.get(CONF_USERNAME, ""),
-                    self.config_entry.data.get(CONF_PASSWORD, ""),
-                ):
-                    _LOGGER.debug(
-                        "success, %s will be updated by a future periodic run",
-                        key,
-                    )
-                else:
-                    _LOGGER.debug("failed")
-                return
-            _LOGGER.info(
-                "%s requires authorization, excluding from future updates", key
-            )
-            self.subscriptions.pop(key)
-
+            self._handle_login_required_exception(key)
         except (ResponseErrorException, ExpatError) as exc:
-            # Take ResponseErrorNotSupportedException, ExpatError, and generic
-            # ResponseErrorException with a few select codes to mean the endpoint is
-            # not supported.
-            if not isinstance(exc, (ResponseErrorNotSupportedException, ExpatError)):
-                pass  # Do nothing if conditions are met
-            else:
-                _LOGGER.info(
-                    "%s apparently not supported by the device, excluding from future updates",
-                    key,
-                )
-                self.subscriptions.pop(key)
-
+            self._handle_unsupported_exception(key, exc)
         except Timeout:
             grace_left = (
                 self.notify_last_attempt - time.monotonic() + NOTIFY_SUPPRESS_TIMEOUT
             )
-            if grace_left > 0:
-                _LOGGER.debug(
-                    "%s timed out, %.1fs notify timeout suppress grace remaining",
-                    key,
-                    grace_left,
-                    exc_info=True,
-                )
-            else:
-                raise
+            self._handle_timeout_exception(key, grace_left)
         finally:
             self.inflight_gets.discard(key)
             _LOGGER.debug("%s=%s", key, self.data.get(key))
