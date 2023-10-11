@@ -103,6 +103,7 @@ NOTIFY_SCHEMA = vol.Any(
         }
     ),
 )
+# Test comment
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -212,19 +213,20 @@ class Router:
                 "%s requires authorization, excluding from future updates", key
             )
             self.subscriptions.pop(key)
+
         except (ResponseErrorException, ExpatError) as exc:
             # Take ResponseErrorNotSupportedException, ExpatError, and generic
             # ResponseErrorException with a few select codes to mean the endpoint is
             # not supported.
-            if not isinstance(
-                exc, (ResponseErrorNotSupportedException, ExpatError)
-            ) and exc.code not in (-1, 100006):
-                raise
-            _LOGGER.info(
-                "%s apparently not supported by device, excluding from future updates",
-                key,
-            )
-            self.subscriptions.pop(key)
+            if not isinstance(exc, (ResponseErrorNotSupportedException, ExpatError)):
+                pass  # Do nothing if conditions are met
+            else:
+                _LOGGER.info(
+                    "%s apparently not supported by the device, excluding from future updates",
+                    key,
+                )
+                self.subscriptions.pop(key)
+
         except Timeout:
             grace_left = (
                 self.notify_last_attempt - time.monotonic() + NOTIFY_SUPPRESS_TIMEOUT
