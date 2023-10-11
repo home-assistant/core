@@ -268,11 +268,8 @@ class Analytics:
             ATTR_STATISTICS, False
         ):
             ent_reg = er.async_get(self.hass)
-
-            try:
-                yaml_configuration = await conf_util.async_hass_config_yaml(self.hass)
-            except HomeAssistantError as err:
-                LOGGER.error(err)
+            yaml_configuration = await self.get_yaml_configuration()
+            if yaml_configuration is None:
                 return
 
             configuration_set = set(yaml_configuration)
@@ -343,6 +340,13 @@ class Analytics:
             )
 
         await self.send_payload(payload)
+
+    async def get_yaml_configuration(self):
+        try:
+            return await conf_util.async_hass_config_yaml(self.hass)
+        except HomeAssistantError as err:
+            LOGGER.error(err)
+            return None
 
     async def get_usage_payload(
         self,
