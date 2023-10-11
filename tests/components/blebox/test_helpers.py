@@ -6,27 +6,15 @@ from homeassistant.components.blebox.helpers import get_maybe_authenticated_sess
 from homeassistant.core import HomeAssistant
 
 
-SESSION_TEST_PARAMS = [
-    ("", "", None),
-    ("user", "password", BasicAuth),
-]
-
-
-async def test_get_maybe_authenticated_session_none(
-    hass: HomeAssistant, param=SESSION_TEST_PARAMS[0]
-):
+async def test_get_maybe_authenticated_session_none(hass: HomeAssistant):
     """Tests if session auth is None."""
-    session = get_maybe_authenticated_session(
-        hass=hass, username=param[0], password=param[1]
-    )
-    assert session.auth is param[2]
+    session = get_maybe_authenticated_session(hass=hass, username="", password="")
+    assert session.auth is None
 
 
-async def test_get_maybe_authenticated_session_auth(
-    hass: HomeAssistant, param=SESSION_TEST_PARAMS[1]
-):
+async def test_get_maybe_authenticated_session_auth(hass: HomeAssistant):
     """Tests if session have BasicAuth."""
     session = get_maybe_authenticated_session(
-        hass=hass, username=param[0], password=param[1]
+        hass=hass, username="user", password="password"
     )
-    assert isinstance(session.auth, param[2])
+    assert isinstance(session.auth, BasicAuth)
