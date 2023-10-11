@@ -381,7 +381,7 @@ async def async_setup_entry(
     ][SLEEP_COORDINATOR]
 
     async_add_entities(
-        WithingsMeasurementSensor(sleep_coordinator, attribute)
+        WithingsSleepSensor(sleep_coordinator, attribute)
         for attribute in SLEEP_SENSORS
     )
 
