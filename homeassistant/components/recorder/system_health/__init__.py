@@ -8,18 +8,9 @@ from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
 from .. import get_instance
-from ..const import SupportedDialect
 from ..core import Recorder
 from ..util import session_scope
-from .mysql import db_size_bytes as mysql_db_size_bytes
-from .postgresql import db_size_bytes as postgresql_db_size_bytes
-from .sqlite import db_size_bytes as sqlite_db_size_bytes
-
-DIALECT_TO_GET_SIZE = {
-    SupportedDialect.SQLITE: sqlite_db_size_bytes,
-    SupportedDialect.MYSQL: mysql_db_size_bytes,
-    SupportedDialect.POSTGRESQL: postgresql_db_size_bytes,
-}
+from .size_bytes import db_size_bytes
 
 
 @callback
@@ -34,10 +25,8 @@ def _get_db_stats(instance: Recorder, database_name: str) -> dict[str, Any]:
     """Get the stats about the database."""
     db_stats: dict[str, Any] = {}
     with session_scope(session=instance.get_session(), read_only=True) as session:
-        if (
-            (dialect_name := instance.dialect_name)
-            and (get_size := DIALECT_TO_GET_SIZE.get(dialect_name))
-            and (db_bytes := get_size(session, database_name))
+        if (dialect_name := instance.dialect_name) and (
+            db_bytes := db_size_bytes(session, database_name, dialect_name)
         ):
             db_stats["estimated_db_size"] = f"{db_bytes/1024/1024:.2f} MiB"
     return db_stats
