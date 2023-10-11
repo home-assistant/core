@@ -53,6 +53,21 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         """
         return self.get_many((event_type,), session)[event_type]
 
+    def update_non_existent_event_types(
+        self, non_existent: list[str], from_recorder: bool = False
+    ) -> None:
+        """Update non-existent event types."""
+        if from_recorder:
+            # We are already in the recorder thread so we can update the
+            # non-existent event types directly.
+            for event_type in non_existent:
+                self._non_existent_event_types[event_type] = None
+        else:
+            # Queue a task to refresh the event types since its not
+            # thread-safe to do it here since we are not in the recorder
+            # thread.
+            self.recorder.queue_task(RefreshEventTypesTask(non_existent))
+
     def get_many(
         self, event_types: Iterable[str], session: Session, from_recorder: bool = False
     ) -> dict[str, int | None]:
@@ -89,16 +104,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         if non_existent := [
             event_type for event_type in missing if results[event_type] is None
         ]:
-            if from_recorder:
-                # We are already in the recorder thread so we can update the
-                # non-existent event types directly.
-                for event_type in non_existent:
-                    self._non_existent_event_types[event_type] = None
-            else:
-                # Queue a task to refresh the event types since its not
-                # thread-safe to do it here since we are not in the recorder
-                # thread.
-                self.recorder.queue_task(RefreshEventTypesTask(non_existent))
+            self.update_non_existent_event_types(non_existent, from_recorder)
 
         return results
 
