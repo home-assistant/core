@@ -220,7 +220,7 @@ class ZHAGateway:
                         exc_info=exc,
                     )
 
-                    if attempt >= STARTUP_RETRIES - 1:
+                    if attempt == STARTUP_RETRIES - 1:
                         raise exc
 
                     await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
