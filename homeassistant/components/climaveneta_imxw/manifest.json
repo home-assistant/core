@@ -2,6 +2,7 @@
   "domain": "climaveneta_imxw",
   "name": "climaveneta_imxw",
   "codeowners": ["@tadiern"],
+  "config_flow": true,
   "dependencies": ["modbus"],
   "documentation": "https://www.home-assistant.io/integrations/climaveneta_imxw",
   "homekit": {},
