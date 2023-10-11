@@ -1,32 +1,34 @@
-
+"""Bases for Tedee entities."""
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from pytedee_async import Lock as TedeeLock
+
+from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
 
 @dataclass
-class TedeeEntityDescriptionMixin():
+class TedeeEntityDescriptionMixin:
     """Describes Tedee entity."""
+
     unique_id_fn: Callable[[TedeeLock], str]
 
 
 @dataclass
-class TedeeEntityDescription(
-        EntityDescription,
-        TedeeEntityDescriptionMixin
-    ):
+class TedeeEntityDescription(EntityDescription, TedeeEntityDescriptionMixin):
     """Describes Tedee entity."""
 
 
 class TedeeEntity(CoordinatorEntity):
+    """Base class for Tedee entities."""
 
     def __init__(self, lock, coordinator, entity_description):
+        """Initialize Tedee entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._lock = lock
@@ -37,7 +39,7 @@ class TedeeEntity(CoordinatorEntity):
             identifiers={(DOMAIN, self._lock.id)},
             name=self._lock.name,
             manufacturer="tedee",
-            model=self._lock.type
+            model=self._lock.type,
         )
 
     @callback

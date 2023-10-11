@@ -1,3 +1,4 @@
+"""Constants for the Tedee integration."""
 from datetime import timedelta
 
 DOMAIN = "tedee"

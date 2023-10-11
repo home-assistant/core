@@ -1,33 +1,36 @@
-import logging
+"""Config flow for Tedee integration."""
 from collections.abc import Mapping
+import logging
 from typing import Any
 
+from pytedee_async import TedeeAuthException, TedeeClient, TedeeLocalAuthException
 import voluptuous as vol
+
 from homeassistant import config_entries, exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from pytedee_async import TedeeClient, TedeeAuthException, TedeeLocalAuthException
-
 from .const import (
-    DOMAIN,
     CONF_HOME_ASSISTANT_ACCESS_TOKEN,
     CONF_LOCAL_ACCESS_TOKEN,
-    NAME,
     CONF_UNLOCK_PULLS_LATCH,
     CONF_USE_CLOUD,
+    DOMAIN,
+    NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(user_input: dict[str, Any] = None) -> bool:
+async def validate_input(user_input: dict[str, Any]) -> bool:
+    """Validate the user input allows us to connect."""
     pak = user_input.get(CONF_ACCESS_TOKEN, "")
     host = user_input.get(CONF_HOST, "")
     local_access_token = user_input.get(CONF_LOCAL_ACCESS_TOKEN, "")
     tedee_client = TedeeClient(pak, local_access_token, host)
+
     try:
         await tedee_client.get_locks()
     except (TedeeAuthException, TedeeLocalAuthException) as ex:
@@ -38,16 +41,22 @@ async def validate_input(user_input: dict[str, Any] = None) -> bool:
 
 
 class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Tedee."""
+
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
+        """Initialize the config flow."""
         self._errors: dict = {}
         self._reload: dict = False
         self._previous_step_data: dict = {}
         self._config: dict = {}
 
-    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
         errors: dict = {}
 
         if user_input is not None:
@@ -93,8 +102,9 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_configure_cloud(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
+        """Extra step for cloud configuration."""
         errors = {}
         if user_input is not None:
             try:
@@ -108,12 +118,12 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=NAME, data=user_input | self._previous_step_data
                 )
-        else:
-            return self.async_show_form(
-                step_id="configure_cloud",
-                data_schema=vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str}),
-                errors=errors,
-            )
+
+        return self.async_show_form(
+            step_id="configure_cloud",
+            data_schema=vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str}),
+            errors=errors,
+        )
 
     @staticmethod
     @callback
@@ -129,7 +139,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         errors = {}
@@ -149,9 +159,8 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 entry = self.hass.config_entries.async_get_entry(
                     self.context["entry_id"]
                 )
-                self.hass.config_entries.async_update_entry(
-                    entry, data=self._config | user_input
-                )
+                self._config |= user_input
+                self.hass.config_entries.async_update_entry(entry, data=self._config)  # type: ignore[arg-type]
                 await self.hass.config_entries.async_reload(self.context["entry_id"])
                 return self.async_abort(reason="reauth_successful")
 
@@ -174,7 +183,8 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 errors=errors,
             )
-        elif self._config.get(CONF_ACCESS_TOKEN):
+
+        if self._config.get(CONF_ACCESS_TOKEN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=vol.Schema(
@@ -187,30 +197,31 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 errors=errors,
             )
-        elif self._config.get(CONF_LOCAL_ACCESS_TOKEN):
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(
-                            CONF_LOCAL_ACCESS_TOKEN,
-                            default=self._config.get(CONF_LOCAL_ACCESS_TOKEN),
-                        ): str
-                    }
-                ),
-                errors=errors,
-            )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_LOCAL_ACCESS_TOKEN,
+                        default=self._config.get(CONF_LOCAL_ACCESS_TOKEN),
+                    ): str
+                }
+            ),
+            errors=errors,
+        )
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handles options flow for the component."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
-        self, user_input: dict[str, Any] = None
-    ) -> dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options for the custom component."""
         errors: dict[str, str] = {}
 
