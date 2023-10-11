@@ -58,7 +58,7 @@ def _get_stop_tags(
     # Append directions for stops with shared titles
     for tag, title in tags.items():
         if title_counts[title] > 1:
-            tags[tag] = f"{title} ({stop_directions[tag]})"
+            tags[tag] = f"{title} ({stop_directions.get(tag, tag)})"
 
     return tags
 

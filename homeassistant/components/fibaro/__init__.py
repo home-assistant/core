@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any
 
 from pyfibaro.fibaro_client import FibaroClient
 from pyfibaro.fibaro_device import DeviceModel
+from pyfibaro.fibaro_room import RoomModel
 from pyfibaro.fibaro_scene import SceneModel
+from pyfibaro.fibaro_state_resolver import FibaroEvent, FibaroStateResolver
 from requests.exceptions import HTTPError
 
 from homeassistant.config_entries import ConfigEntry
@@ -45,6 +47,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.LOCK,
     Platform.SWITCH,
+    Platform.EVENT,
 ]
 
 FIBARO_TYPEMAP = {
@@ -86,14 +89,16 @@ class FibaroController:
 
         # Whether to import devices from plugins
         self._import_plugins = config[CONF_IMPORT_PLUGINS]
-        self._room_map = None  # Mapping roomId to room object
-        self._device_map = None  # Mapping deviceId to device object
+        self._room_map: dict[int, RoomModel]  # Mapping roomId to room object
+        self._device_map: dict[int, DeviceModel]  # Mapping deviceId to device object
         self.fibaro_devices: dict[Platform, list[DeviceModel]] = defaultdict(
             list
         )  # List of devices by entity platform
         # All scenes
         self._scenes: list[SceneModel] = []
-        self._callbacks: dict[Any, Any] = {}  # Update value callbacks by deviceId
+        self._callbacks: dict[int, list[Any]] = {}  # Update value callbacks by deviceId
+        # Event callbacks by device id
+        self._event_callbacks: dict[int, list[Callable[[FibaroEvent], None]]] = {}
         self.hub_serial: str  # Unique serial number of the hub
         self.hub_name: str  # The friendly name of the hub
         self.hub_software_version: str
@@ -101,7 +106,7 @@ class FibaroController:
         # Device infos by fibaro device id
         self._device_infos: dict[int, DeviceInfo] = {}
 
-    def connect(self):
+    def connect(self) -> bool:
         """Start the communication with the Fibaro controller."""
 
         connected = self._client.connect()
@@ -138,15 +143,15 @@ class FibaroController:
         except Exception as ex:
             raise FibaroConnectFailed from ex
 
-    def enable_state_handler(self):
+    def enable_state_handler(self) -> None:
         """Start StateHandler thread for monitoring updates."""
         self._client.register_update_handler(self._on_state_change)
 
-    def disable_state_handler(self):
+    def disable_state_handler(self) -> None:
         """Stop StateHandler thread used for monitoring updates."""
         self._client.unregister_update_handler()
 
-    def _on_state_change(self, state):
+    def _on_state_change(self, state: Any) -> None:
         """Handle change report received from the HomeCenter."""
         callback_set = set()
         for change in state.get("changes", []):
@@ -177,12 +182,32 @@ class FibaroController:
             for callback in self._callbacks[item]:
                 callback()
 
-    def register(self, device_id, callback):
-        """Register device with a callback for updates."""
-        self._callbacks.setdefault(device_id, [])
-        self._callbacks[device_id].append(callback)
+        resolver = FibaroStateResolver(state)
+        for event in resolver.get_events():
+            fibaro_id = event.fibaro_id
+            if (
+                event.event_type.lower() == "centralsceneevent"
+                and fibaro_id in self._event_callbacks
+            ):
+                for callback in self._event_callbacks[fibaro_id]:
+                    callback(event)
 
-    def get_children(self, device_id):
+    def register(self, device_id: int, callback: Any) -> None:
+        """Register device with a callback for updates."""
+        device_callbacks = self._callbacks.setdefault(device_id, [])
+        device_callbacks.append(callback)
+
+    def register_event(
+        self, device_id: int, callback: Callable[[FibaroEvent], None]
+    ) -> None:
+        """Register device with a callback for central scene events.
+
+        The callback receives one parameter with the event.
+        """
+        device_callbacks = self._event_callbacks.setdefault(device_id, [])
+        device_callbacks.append(callback)
+
+    def get_children(self, device_id: int) -> list[DeviceModel]:
         """Get a list of child devices."""
         return [
             device
@@ -190,7 +215,7 @@ class FibaroController:
             if device.parent_fibaro_id == device_id
         ]
 
-    def get_children2(self, device_id, endpoint_id):
+    def get_children2(self, device_id: int, endpoint_id: int) -> list[DeviceModel]:
         """Get a list of child devices for the same endpoint."""
         return [
             device
@@ -199,7 +224,7 @@ class FibaroController:
             and (not device.has_endpoint_id or device.endpoint_id == endpoint_id)
         ]
 
-    def get_siblings(self, device):
+    def get_siblings(self, device: DeviceModel) -> list[DeviceModel]:
         """Get the siblings of a device."""
         if device.has_endpoint_id:
             return self.get_children2(
@@ -209,7 +234,7 @@ class FibaroController:
         return self.get_children(self._device_map[device.fibaro_id].parent_fibaro_id)
 
     @staticmethod
-    def _map_device_to_platform(device: Any) -> Platform | None:
+    def _map_device_to_platform(device: DeviceModel) -> Platform | None:
         """Map device to HA device type."""
         # Use our lookup table to identify device type
         platform: Platform | None = None
@@ -228,6 +253,8 @@ class FibaroController:
                 platform = Platform.COVER
             elif "secure" in device.actions:
                 platform = Platform.LOCK
+            elif device.has_central_scene_event:
+                platform = Platform.EVENT
             elif device.value.has_value:
                 if device.value.is_bool_value:
                     platform = Platform.BINARY_SENSOR
@@ -248,7 +275,7 @@ class FibaroController:
         if device.parent_fibaro_id <= 1:
             return
 
-        master_entity: Any | None = None
+        master_entity: DeviceModel | None = None
         if device.parent_fibaro_id == 1:
             master_entity = device
         else:
@@ -271,7 +298,7 @@ class FibaroController:
             via_device=(DOMAIN, self.hub_serial),
         )
 
-    def get_device_info(self, device: Any) -> DeviceInfo:
+    def get_device_info(self, device: DeviceModel) -> DeviceInfo:
         """Get the device info by fibaro device id."""
         if device.fibaro_id in self._device_infos:
             return self._device_infos[device.fibaro_id]
@@ -289,7 +316,7 @@ class FibaroController:
         """Return list of scenes."""
         return self._scenes
 
-    def _read_devices(self):
+    def _read_devices(self) -> None:
         """Read and process the device list."""
         devices = self._client.read_devices()
         self._device_map = {}

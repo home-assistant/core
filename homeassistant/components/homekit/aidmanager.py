@@ -140,6 +140,6 @@ class AccessoryAidStorage:
         return await self.store.async_save(self._data_to_save())
 
     @callback
-    def _data_to_save(self) -> dict:
+    def _data_to_save(self) -> dict[str, dict[str, int]]:
         """Return data of entity map to store in a file."""
         return {ALLOCATIONS_KEY: self.allocations}

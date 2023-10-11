@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import ABC
 import asyncio
 from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum, auto
@@ -50,11 +49,7 @@ from homeassistant.exceptions import (
     InvalidStateError,
     NoEntitySpecifiedError,
 )
-from homeassistant.loader import (
-    IntegrationNotLoaded,
-    async_get_loaded_integration,
-    bind_hass,
-)
+from homeassistant.loader import async_suggest_report_issue, bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
@@ -166,7 +161,7 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
     First try the statemachine, then entity registry.
     """
     if state := hass.states.get(entity_id):
-        return state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        return state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)  # type: ignore[no-any-return]
 
     entity_registry = er.async_get(hass)
     if not (entry := entity_registry.async_get(entity_id)):
@@ -912,7 +907,9 @@ class Entity(ABC):
                 self._state_info,
             )
         except InvalidStateError:
-            _LOGGER.exception("Failed to set state, fall back to %s", STATE_UNKNOWN)
+            _LOGGER.exception(
+                "Failed to set state for %s, fall back to %s", entity_id, STATE_UNKNOWN
+            )
             hass.states.async_set(
                 entity_id, STATE_UNKNOWN, {}, self.force_update, self._context
             )
@@ -1257,35 +1254,12 @@ class Entity(ABC):
 
     def _suggest_report_issue(self) -> str:
         """Suggest to report an issue."""
-        report_issue = ""
-
-        integration = None
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2024.1
-        if self.platform:
-            with suppress(IntegrationNotLoaded):
-                integration = async_get_loaded_integration(
-                    self.hass, self.platform.platform_name
-                )
-
-        if "custom_components" in type(self).__module__:
-            if integration and integration.issue_tracker:
-                report_issue = f"create a bug report at {integration.issue_tracker}"
-            else:
-                report_issue = "report it to the custom integration author"
-        else:
-            report_issue = (
-                "create a bug report at "
-                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-            )
-            # The check for self.platform guards against integrations not using an
-            # EntityComponent and can be removed in HA Core 2024.1
-            if self.platform:
-                report_issue += (
-                    f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
-                )
-
-        return report_issue
+        platform_name = self.platform.platform_name if self.platform else None
+        return async_suggest_report_issue(
+            self.hass, integration_domain=platform_name, module=type(self).__module__
+        )
 
 
 @dataclass(slots=True)

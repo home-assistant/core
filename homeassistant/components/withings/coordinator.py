@@ -1,5 +1,4 @@
 """Withings coordinator."""
-import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
@@ -23,9 +22,6 @@ from homeassistant.util import dt as dt_util
 
 from .api import ConfigEntryWithingsApi
 from .const import LOGGER, Measurement
-
-SUBSCRIBE_DELAY = timedelta(seconds=5)
-UNSUBSCRIBE_DELAY = timedelta(seconds=1)
 
 WITHINGS_MEASURE_TYPE_MAP: dict[
     NotifyAppli | GetSleepSummaryField | MeasureType, Measurement
@@ -84,55 +80,12 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
         super().__init__(hass, LOGGER, name="Withings", update_interval=UPDATE_INTERVAL)
         self._client = client
 
-    async def async_subscribe_webhooks(self, webhook_url: str) -> None:
-        """Subscribe to webhooks."""
-        await self.async_unsubscribe_webhooks()
-
-        current_webhooks = await self._client.async_notify_list()
-
-        subscribed_notifications = frozenset(
-            profile.appli
-            for profile in current_webhooks.profiles
-            if profile.callbackurl == webhook_url
-        )
-
-        notification_to_subscribe = (
-            set(NotifyAppli)
-            - subscribed_notifications
-            - {NotifyAppli.USER, NotifyAppli.UNKNOWN}
-        )
-
-        for notification in notification_to_subscribe:
-            LOGGER.debug(
-                "Subscribing %s for %s in %s seconds",
-                webhook_url,
-                notification,
-                SUBSCRIBE_DELAY.total_seconds(),
-            )
-            # Withings will HTTP HEAD the callback_url and needs some downtime
-            # between each call or there is a higher chance of failure.
-            await asyncio.sleep(SUBSCRIBE_DELAY.total_seconds())
-            await self._client.async_notify_subscribe(webhook_url, notification)
-        self.update_interval = None
-
-    async def async_unsubscribe_webhooks(self) -> None:
-        """Unsubscribe to webhooks."""
-        current_webhooks = await self._client.async_notify_list()
-
-        for webhook_configuration in current_webhooks.profiles:
-            LOGGER.debug(
-                "Unsubscribing %s for %s in %s seconds",
-                webhook_configuration.callbackurl,
-                webhook_configuration.appli,
-                UNSUBSCRIBE_DELAY.total_seconds(),
-            )
-            # Quick calls to Withings can result in the service returning errors.
-            # Give them some time to cool down.
-            await asyncio.sleep(UNSUBSCRIBE_DELAY.total_seconds())
-            await self._client.async_notify_revoke(
-                webhook_configuration.callbackurl, webhook_configuration.appli
-            )
-        self.update_interval = UPDATE_INTERVAL
+    def webhook_subscription_listener(self, connected: bool) -> None:
+        """Call when webhook status changed."""
+        if connected:
+            self.update_interval = None
+        else:
+            self.update_interval = UPDATE_INTERVAL
 
     async def _async_update_data(self) -> dict[Measurement, Any]:
         try:

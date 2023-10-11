@@ -100,8 +100,8 @@ build.json @home-assistant/supervisor
 /tests/components/apprise/ @caronc
 /homeassistant/components/aprs/ @PhilRW
 /tests/components/aprs/ @PhilRW
-/homeassistant/components/aranet/ @aschmitz
-/tests/components/aranet/ @aschmitz
+/homeassistant/components/aranet/ @aschmitz @thecode
+/tests/components/aranet/ @aschmitz @thecode
 /homeassistant/components/arcam_fmj/ @elupus
 /tests/components/arcam_fmj/ @elupus
 /homeassistant/components/arris_tg2492lg/ @vanbalken
@@ -660,8 +660,8 @@ build.json @home-assistant/supervisor
 /tests/components/kmtronic/ @dgomes
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w
 /tests/components/knx/ @Julius2342 @farmio @marvin-w
-/homeassistant/components/kodi/ @OnFreund @cgtobi
-/tests/components/kodi/ @OnFreund @cgtobi
+/homeassistant/components/kodi/ @OnFreund
+/tests/components/kodi/ @OnFreund
 /homeassistant/components/konnected/ @heythisisnate
 /tests/components/konnected/ @heythisisnate
 /homeassistant/components/kostal_plenticore/ @stegm
@@ -757,8 +757,8 @@ build.json @home-assistant/supervisor
 /tests/components/melissa/ @kennedyshead
 /homeassistant/components/melnor/ @vanstinator
 /tests/components/melnor/ @vanstinator
-/homeassistant/components/met/ @danielhiversen @thimic
-/tests/components/met/ @danielhiversen @thimic
+/homeassistant/components/met/ @danielhiversen
+/tests/components/met/ @danielhiversen
 /homeassistant/components/met_eireann/ @DylanGore
 /tests/components/met_eireann/ @DylanGore
 /homeassistant/components/meteo_france/ @hacf-fr @oncleben31 @Quentame
@@ -1191,8 +1191,8 @@ build.json @home-assistant/supervisor
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn
 /tests/components/songpal/ @rytilahti @shenxn
-/homeassistant/components/sonos/ @cgtobi @jjlawren
-/tests/components/sonos/ @cgtobi @jjlawren
+/homeassistant/components/sonos/ @jjlawren
+/tests/components/sonos/ @jjlawren
 /homeassistant/components/soundtouch/ @kroimon
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff

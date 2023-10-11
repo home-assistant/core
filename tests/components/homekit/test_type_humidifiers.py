@@ -48,7 +48,9 @@ async def test_humidifier(hass: HomeAssistant, hk_driver, events) -> None:
     """Test if humidifier accessory and HA are updated accordingly."""
     entity_id = "humidifier.test"
 
-    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set(
+        entity_id, STATE_OFF, {ATTR_DEVICE_CLASS: HumidifierDeviceClass.HUMIDIFIER}
+    )
     await hass.async_block_till_done()
     acc = HumidifierDehumidifier(
         hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None
@@ -77,7 +79,7 @@ async def test_humidifier(hass: HomeAssistant, hk_driver, events) -> None:
     hass.states.async_set(
         entity_id,
         STATE_ON,
-        {ATTR_HUMIDITY: 47},
+        {ATTR_HUMIDITY: 47, ATTR_DEVICE_CLASS: HumidifierDeviceClass.HUMIDIFIER},
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 47.0
@@ -158,7 +160,7 @@ async def test_dehumidifier(hass: HomeAssistant, hk_driver, events) -> None:
     hass.states.async_set(
         entity_id,
         STATE_ON,
-        {ATTR_HUMIDITY: 30},
+        {ATTR_HUMIDITY: 30, ATTR_DEVICE_CLASS: HumidifierDeviceClass.DEHUMIDIFIER},
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 30.0
@@ -169,7 +171,7 @@ async def test_dehumidifier(hass: HomeAssistant, hk_driver, events) -> None:
     hass.states.async_set(
         entity_id,
         STATE_OFF,
-        {ATTR_HUMIDITY: 42},
+        {ATTR_HUMIDITY: 42, ATTR_DEVICE_CLASS: HumidifierDeviceClass.DEHUMIDIFIER},
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 42.0
