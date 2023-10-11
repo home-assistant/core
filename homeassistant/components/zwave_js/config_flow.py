@@ -792,46 +792,92 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
         addon_config = addon_info.options
 
         if user_input is not None:
-            self.s0_legacy_key = user_input[CONF_S0_LEGACY_KEY]
-            self.s2_access_control_key = user_input[CONF_S2_ACCESS_CONTROL_KEY]
-            self.s2_authenticated_key = user_input[CONF_S2_AUTHENTICATED_KEY]
-            self.s2_unauthenticated_key = user_input[CONF_S2_UNAUTHENTICATED_KEY]
-            self.usb_path = user_input[CONF_USB_PATH]
+            return await self._handle_user_input(user_input, addon_info, addon_config)
 
-            new_addon_config = {
-                **addon_config,
-                CONF_ADDON_DEVICE: self.usb_path,
-                CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_ADDON_LOG_LEVEL: user_input[CONF_LOG_LEVEL],
-                CONF_ADDON_EMULATE_HARDWARE: user_input.get(
-                    CONF_EMULATE_HARDWARE, False
-                ),
-            }
+        return await self._show_configure_addon_form(addon_config)
 
-            if new_addon_config != addon_config:
-                if addon_info.state == AddonState.RUNNING:
-                    self.restart_addon = True
-                # Copy the add-on config to keep the objects separate.
-                self.original_addon_config = dict(addon_config)
-                # Remove legacy network_key
-                new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
-                await self._async_set_addon_config(new_addon_config)
+    async def _handle_user_input(
+        self, user_input: dict[str, Any], addon_info: Any, addon_config: dict[str, Any]
+    ) -> FlowResult:
+        self._set_user_input_keys(user_input)
+        new_addon_config = self._generate_new_addon_config(user_input, addon_config)
 
-            if addon_info.state == AddonState.RUNNING and not self.restart_addon:
-                return await self.async_step_finish_addon_setup()
+        if new_addon_config != addon_config:
+            await self._update_addon_config(addon_info, addon_config, new_addon_config)
 
-            if (
-                self.config_entry.data.get(CONF_USE_ADDON)
-                and self.config_entry.state == config_entries.ConfigEntryState.LOADED
-            ):
-                # Disconnect integration before restarting add-on.
-                await disconnect_client(self.hass, self.config_entry)
+        if addon_info.state == AddonState.RUNNING and not self.restart_addon:
+            return await self.async_step_finish_addon_setup()
 
-            return await self.async_step_start_addon()
+        if (
+            self.config_entry.data.get(CONF_USE_ADDON)
+            and self.config_entry.state == config_entries.ConfigEntryState.LOADED
+        ):
+            # Disconnect integration before restarting add-on.
+            await disconnect_client(self.hass, self.config_entry)
 
+        return await self.async_step_start_addon()
+
+    async def _update_addon_config(
+        self,
+        addon_info: Any,
+        addon_config: dict[str, Any],
+        new_addon_config: dict[str, Any],
+    ) -> None:
+        if addon_info.state == AddonState.RUNNING:
+            self.restart_addon = True
+        # Copy the add-on config to keep the objects separate.
+        self.original_addon_config = dict(addon_config)
+        # Remove legacy network_key
+        new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
+        await self._async_set_addon_config(new_addon_config)
+
+    def _set_user_input_keys(self, user_input: dict[str, Any]) -> None:
+        self.s0_legacy_key = user_input[CONF_S0_LEGACY_KEY]
+        self.s2_access_control_key = user_input[CONF_S2_ACCESS_CONTROL_KEY]
+        self.s2_authenticated_key = user_input[CONF_S2_AUTHENTICATED_KEY]
+        self.s2_unauthenticated_key = user_input[CONF_S2_UNAUTHENTICATED_KEY]
+        self.usb_path = user_input[CONF_USB_PATH]
+
+    def _generate_new_addon_config(
+        self, user_input: dict[str, Any], addon_config: dict[str, Any]
+    ) -> dict[str, Any]:
+        return {
+            **addon_config,
+            CONF_ADDON_DEVICE: self.usb_path,
+            CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
+            CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
+            CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
+            CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
+            CONF_ADDON_LOG_LEVEL: user_input[CONF_LOG_LEVEL],
+            CONF_ADDON_EMULATE_HARDWARE: user_input.get(CONF_EMULATE_HARDWARE, False),
+        }
+
+    async def _show_configure_addon_form(
+        self, addon_config: dict[str, Any]
+    ) -> FlowResult:
+        (
+            usb_path,
+            s0_legacy_key,
+            s2_access_control_key,
+            s2_authenticated_key,
+            s2_unauthenticated_key,
+            log_level,
+            emulate_hardware,
+        ) = self._extract_addon_config_values(addon_config)
+        ports = await async_get_usb_ports(self.hass)
+        data_schema = self._get_data_schema(
+            usb_path,
+            s0_legacy_key,
+            s2_access_control_key,
+            s2_authenticated_key,
+            s2_unauthenticated_key,
+            log_level,
+            emulate_hardware,
+            ports,
+        )
+        return self.async_show_form(step_id="configure_addon", data_schema=data_schema)
+
+    def _extract_addon_config_values(self, addon_config: dict[str, Any]) -> tuple:
         usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
         s0_legacy_key = addon_config.get(
             CONF_ADDON_S0_LEGACY_KEY, self.s0_legacy_key or ""
@@ -847,10 +893,28 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
         )
         log_level = addon_config.get(CONF_ADDON_LOG_LEVEL, "info")
         emulate_hardware = addon_config.get(CONF_ADDON_EMULATE_HARDWARE, False)
+        return (
+            usb_path,
+            s0_legacy_key,
+            s2_access_control_key,
+            s2_authenticated_key,
+            s2_unauthenticated_key,
+            log_level,
+            emulate_hardware,
+        )
 
-        ports = await async_get_usb_ports(self.hass)
-
-        data_schema = vol.Schema(
+    def _get_data_schema(
+        self,
+        usb_path: str,
+        s0_legacy_key: str,
+        s2_access_control_key: str,
+        s2_authenticated_key: str,
+        s2_unauthenticated_key: str,
+        log_level: str,
+        emulate_hardware: bool,
+        ports: Any,
+    ) -> vol.Schema:
+        return vol.Schema(
             {
                 vol.Required(CONF_USB_PATH, default=usb_path): vol.In(ports),
                 vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
@@ -869,8 +933,6 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
                 vol.Optional(CONF_EMULATE_HARDWARE, default=emulate_hardware): bool,
             }
         )
-
-        return self.async_show_form(step_id="configure_addon", data_schema=data_schema)
 
     async def async_step_start_failed(
         self, user_input: dict[str, Any] | None = None
