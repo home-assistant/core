@@ -1,16 +1,15 @@
 """Tests for the Minecraft Server integration."""
 from unittest.mock import patch
 
-from mcstatus import JavaServer
-
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.minecraft_server.api import MinecraftServerAddressError
 from homeassistant.components.minecraft_server.const import DEFAULT_NAME, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import TEST_ADDRESS, TEST_HOST, TEST_JAVA_STATUS_RESPONSE, TEST_PORT
+from .const import TEST_ADDRESS, TEST_HOST, TEST_JAVA_DATA, TEST_PORT
 
 from tests.common import MockConfigEntry
 
@@ -122,15 +121,16 @@ async def test_entry_migration(hass: HomeAssistant) -> None:
 
     # Trigger migration.
     with patch(
-        "mcstatus.server.JavaServer.lookup",
+        "homeassistant.components.minecraft_server.api.MinecraftServer.__init__",
         side_effect=[
-            ValueError,
-            JavaServer(host=TEST_HOST, port=TEST_PORT),
-            JavaServer(host=TEST_HOST, port=TEST_PORT),
+            MinecraftServerAddressError,  # async_migrate_entry
+            None,  # async_migrate_entry
+            None,  # async_setup_entry
         ],
+        return_value=None,
     ), patch(
-        "mcstatus.server.JavaServer.async_status",
-        return_value=TEST_JAVA_STATUS_RESPONSE,
+        "homeassistant.components.minecraft_server.api.MinecraftServer.async_get_data",
+        return_value=TEST_JAVA_DATA,
     ):
         assert await hass.config_entries.async_setup(config_entry_id)
         await hass.async_block_till_done()
@@ -142,6 +142,7 @@ async def test_entry_migration(hass: HomeAssistant) -> None:
         CONF_NAME: DEFAULT_NAME,
         CONF_ADDRESS: TEST_ADDRESS,
     }
+
     assert config_entry.version == 3
 
     # Test migrated device entry.
@@ -174,14 +175,15 @@ async def test_entry_migration_host_only(hass: HomeAssistant) -> None:
 
     # Trigger migration.
     with patch(
-        "mcstatus.server.JavaServer.lookup",
+        "homeassistant.components.minecraft_server.api.MinecraftServer.__init__",
         side_effect=[
-            JavaServer(host=TEST_HOST, port=TEST_PORT),
-            JavaServer(host=TEST_HOST, port=TEST_PORT),
+            None,  # async_migrate_entry
+            None,  # async_setup_entry
         ],
+        return_value=None,
     ), patch(
-        "mcstatus.server.JavaServer.async_status",
-        return_value=TEST_JAVA_STATUS_RESPONSE,
+        "homeassistant.components.minecraft_server.api.MinecraftServer.async_get_data",
+        return_value=TEST_JAVA_DATA,
     ):
         assert await hass.config_entries.async_setup(config_entry_id)
         await hass.async_block_till_done()
@@ -205,11 +207,12 @@ async def test_entry_migration_v3_failure(hass: HomeAssistant) -> None:
 
     # Trigger migration.
     with patch(
-        "mcstatus.server.JavaServer.lookup",
+        "homeassistant.components.minecraft_server.api.MinecraftServer.__init__",
         side_effect=[
-            ValueError,
-            ValueError,
+            MinecraftServerAddressError,  # async_migrate_entry
+            MinecraftServerAddressError,  # async_migrate_entry
         ],
+        return_value=None,
     ):
         assert not await hass.config_entries.async_setup(config_entry_id)
         await hass.async_block_till_done()
