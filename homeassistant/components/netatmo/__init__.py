@@ -173,6 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def get_webhook_url():
         if cloud.async_active_subscription(hass):
             return await async_cloudhook_generate_url(hass, entry)
+
         return webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
 
     async def register_webhook(
