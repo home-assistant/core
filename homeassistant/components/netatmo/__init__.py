@@ -1,10 +1,12 @@
 """The Netatmo integration."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from datetime import datetime
 from http import HTTPStatus
 import logging
 import secrets
+from typing import Any
 
 import aiohttp
 import pyatmo
@@ -42,6 +44,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
+from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2Implementation
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -170,7 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID]
             )
 
-    async def get_webhook_url():
+    async def get_webhook_url() -> str:
         if cloud.async_active_subscription(hass):
             return await async_cloudhook_generate_url(hass, entry)
 
@@ -230,7 +233,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def manage_register_webhook_subscription(hass, register_webhook, manage_cloudhook) -> None:
+async def manage_register_webhook_subscription(
+    hass: HomeAssistant,
+    register_webhook: Callable[
+        [ServiceCall | Event | datetime | None], Coroutine[Any, Any, None]
+    ],
+    manage_cloudhook: Callable[[cloud.CloudConnectionState], Coroutine[Any, Any, None]],
+) -> None:
+    """Manage the registration of a webhook subscription."""
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):
             await register_webhook(None)
@@ -241,7 +251,12 @@ async def manage_register_webhook_subscription(hass, register_webhook, manage_cl
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, register_webhook)
 
 
-async def async_handle_entry_auth(hass, entry, implementation) -> None:
+async def async_handle_entry_auth(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    implementation: AbstractOAuth2Implementation,
+) -> None:
+    """Handle authentication for a config entry."""
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()
