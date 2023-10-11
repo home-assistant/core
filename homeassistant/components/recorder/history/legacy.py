@@ -226,6 +226,38 @@ def get_significant_states(
         )
 
 
+def _significant_states_only(
+    schema_version: int, stmt: StatementLambdaElement
+) -> StatementLambdaElement:
+    if schema_version >= 31:
+        stmt += lambda q: q.filter(
+            or_(
+                *[
+                    States.entity_id.like(entity_domain)
+                    for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE
+                ],
+                (
+                    (States.last_changed_ts == States.last_updated_ts)
+                    | States.last_changed_ts.is_(None)
+                ),
+            )
+        )
+    else:
+        stmt += lambda q: q.filter(
+            or_(
+                *[
+                    States.entity_id.like(entity_domain)
+                    for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE
+                ],
+                (
+                    (States.last_changed == States.last_updated)
+                    | States.last_changed.is_(None)
+                ),
+            )
+        )
+    return stmt
+
+
 def _significant_states_stmt(
     schema_version: int,
     start_time: datetime,
@@ -254,32 +286,8 @@ def _significant_states_stmt(
                 | States.last_changed.is_(None)
             )
     elif significant_changes_only:
-        if schema_version >= 31:
-            stmt += lambda q: q.filter(
-                or_(
-                    *[
-                        States.entity_id.like(entity_domain)
-                        for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE
-                    ],
-                    (
-                        (States.last_changed_ts == States.last_updated_ts)
-                        | States.last_changed_ts.is_(None)
-                    ),
-                )
-            )
-        else:
-            stmt += lambda q: q.filter(
-                or_(
-                    *[
-                        States.entity_id.like(entity_domain)
-                        for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE
-                    ],
-                    (
-                        (States.last_changed == States.last_updated)
-                        | States.last_changed.is_(None)
-                    ),
-                )
-            )
+        stmt = _significant_states_only(schema_version, stmt)
+
     stmt += lambda q: q.filter(States.entity_id.in_(entity_ids))
 
     if schema_version >= 31:
