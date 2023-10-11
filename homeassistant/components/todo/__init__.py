@@ -89,9 +89,7 @@ class TodoListEntity(Entity):
     @property
     def todo_items(self) -> list[TodoItem] | None:
         """Return the To-do items in the To-do list."""
-        if hasattr(self, "_attr_todo_items"):
-            return self._attr_todo_items
-        return None
+        return self._attr_todo_items
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
