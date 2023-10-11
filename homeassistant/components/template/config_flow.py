@@ -58,12 +58,14 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
         schema = {
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
                 selector.SelectSelectorConfig(
-                    options=[
-                        str(unit)
-                        for units in DEVICE_CLASS_UNITS.values()
-                        for unit in units
-                        if unit is not None
-                    ],
+                    options=list(
+                        {
+                            str(unit)
+                            for units in DEVICE_CLASS_UNITS.values()
+                            for unit in units
+                            if unit is not None
+                        }
+                    ),
                     mode=selector.SelectSelectorMode.DROPDOWN,
                     translation_key="sensor_unit_of_measurement",
                     custom_value=True,
