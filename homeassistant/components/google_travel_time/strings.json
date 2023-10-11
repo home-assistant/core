@@ -77,7 +77,6 @@
     },
     "transit_mode": {
       "options": {
-        "none": "No transit mode",
         "bus": "Bus",
         "subway": "Subway",
         "train": "Train",
