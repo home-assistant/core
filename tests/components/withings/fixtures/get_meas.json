@@ -5,12 +5,14 @@
   "offset": 0,
   "measuregrps": [
     {
+      "grpid": 4815757309,
       "attrib": 0,
-      "category": 1,
-      "created": 1564660800,
       "date": 1564660800,
-      "deviceid": "DEV_ID",
-      "grpid": 1,
+      "created": 1564660800,
+      "modified": 1564660800,
+      "category": 1,
+      "deviceid": "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d",
+      "hash_deviceid": "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d",
       "measures": [
         {
           "type": 1,
@@ -92,15 +94,20 @@
           "unit": 0,
           "value": 100
         }
-      ]
+      ],
+      "modelid": 5,
+      "model": "Body+",
+      "comment": null
     },
     {
+      "grpid": 4815757309,
       "attrib": 0,
-      "category": 1,
-      "created": 1564657200,
       "date": 1564657200,
-      "deviceid": "DEV_ID",
-      "grpid": 1,
+      "created": 1564657200,
+      "modified": 1564657200,
+      "category": 1,
+      "deviceid": "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d",
+      "hash_deviceid": "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d",
       "measures": [
         {
           "type": 1,
@@ -182,15 +189,20 @@
           "unit": 0,
           "value": 101
         }
-      ]
+      ],
+      "modelid": 5,
+      "model": "Body+",
+      "comment": null
     },
     {
-      "attrib": 1,
-      "category": 1,
-      "created": 1564664400,
+      "grpid": 4815757309,
+      "attrib": 8,
       "date": 1564664400,
-      "deviceid": "DEV_ID",
-      "grpid": 1,
+      "created": 1564664400,
+      "modified": 1564664400,
+      "category": 1,
+      "deviceid": "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d",
+      "hash_deviceid": "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d",
       "measures": [
         {
           "type": 1,
@@ -272,7 +284,10 @@
           "unit": 0,
           "value": 102
         }
-      ]
+      ],
+      "modelid": 5,
+      "model": "Body+",
+      "comment": null
     }
   ]
 }

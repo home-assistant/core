@@ -12,8 +12,8 @@ from typing import Any
 
 from aiohttp.hdrs import METH_HEAD, METH_POST
 from aiohttp.web import Request, Response
+from aiowithings import NotificationCategory, WebhookCall, WithingsClient
 import voluptuous as vol
-from withings_api.common import NotifyAppli
 
 from homeassistant.components import cloud
 from homeassistant.components.application_credentials import (
@@ -29,6 +29,7 @@ from homeassistant.components.webhook import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_TOKEN,
@@ -37,12 +38,16 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .api import ConfigEntryWithingsApi
 from .const import (
     BED_PRESENCE_COORDINATOR,
     CONF_CLOUDHOOK_URL,
@@ -134,14 +139,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, data=new_data, unique_id=unique_id
         )
+    session = async_get_clientsession(hass)
+    client = WithingsClient(session=session)
+    implementation = await async_get_config_entry_implementation(hass, entry)
+    oauth_session = OAuth2Session(hass, entry, implementation)
 
-    client = ConfigEntryWithingsApi(
-        hass=hass,
-        config_entry=entry,
-        implementation=await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        ),
-    )
+    async def _refresh_token() -> str:
+        await oauth_session.async_ensure_token_valid()
+        return oauth_session.token[CONF_ACCESS_TOKEN]
+
+    client.refresh_token_function = _refresh_token
     coordinators: dict[str, WithingsDataUpdateCoordinator] = {
         WEIGHT_COORDINATOR: WithingsMeasurementDataUpdateCoordinator(hass, client),
         SLEEP_COORDINATOR: WithingsSleepDataUpdateCoordinator(hass, client),
@@ -236,19 +243,17 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_subscribe_webhooks(
-    client: ConfigEntryWithingsApi, webhook_url: str
-) -> None:
+async def async_subscribe_webhooks(client: WithingsClient, webhook_url: str) -> None:
     """Subscribe to Withings webhooks."""
     await async_unsubscribe_webhooks(client)
 
     notification_to_subscribe = {
-        NotifyAppli.WEIGHT,
-        NotifyAppli.CIRCULATORY,
-        NotifyAppli.ACTIVITY,
-        NotifyAppli.SLEEP,
-        NotifyAppli.BED_IN,
-        NotifyAppli.BED_OUT,
+        NotificationCategory.WEIGHT,
+        NotificationCategory.PRESSURE,
+        NotificationCategory.ACTIVITY,
+        NotificationCategory.SLEEP,
+        NotificationCategory.IN_BED,
+        NotificationCategory.OUT_BED,
     }
 
     for notification in notification_to_subscribe:
@@ -261,25 +266,26 @@ async def async_subscribe_webhooks(
         # Withings will HTTP HEAD the callback_url and needs some downtime
         # between each call or there is a higher chance of failure.
         await asyncio.sleep(SUBSCRIBE_DELAY.total_seconds())
-        await client.async_notify_subscribe(webhook_url, notification)
+        await client.subscribe_notification(webhook_url, notification)
 
 
-async def async_unsubscribe_webhooks(client: ConfigEntryWithingsApi) -> None:
+async def async_unsubscribe_webhooks(client: WithingsClient) -> None:
     """Unsubscribe to all Withings webhooks."""
-    current_webhooks = await client.async_notify_list()
+    current_webhooks = await client.list_notification_configurations()
 
-    for webhook_configuration in current_webhooks.profiles:
+    for webhook_configuration in current_webhooks:
         LOGGER.debug(
             "Unsubscribing %s for %s in %s seconds",
-            webhook_configuration.callbackurl,
-            webhook_configuration.appli,
+            webhook_configuration.callback_url,
+            webhook_configuration.notification_category,
             UNSUBSCRIBE_DELAY.total_seconds(),
         )
         # Quick calls to Withings can result in the service returning errors.
         # Give them some time to cool down.
         await asyncio.sleep(UNSUBSCRIBE_DELAY.total_seconds())
-        await client.async_notify_revoke(
-            webhook_configuration.callbackurl, webhook_configuration.appli
+        await client.revoke_notification_configurations(
+            webhook_configuration.callback_url,
+            webhook_configuration.notification_category,
         )
 
 
@@ -337,19 +343,28 @@ def get_webhook_handler(
 
         params = await request.post()
 
-        if "appli" not in params:
-            return json_message_response(
-                "Parameter appli not provided", message_code=20
-            )
+        call = WebhookCall.from_api(
+            {
+                "userid": params.getone("userid"),
+                "appli": int(params.getone("appli")),  # type: ignore[arg-type]
+                "startdate": int(params.getone("startdate")),  # type: ignore[arg-type]
+                "enddate": int(params.getone("enddate")),  # type: ignore[arg-type]
+            }
+        )
 
-        try:
-            appli = NotifyAppli(int(params.getone("appli")))  # type: ignore[arg-type]
-        except ValueError:
-            return json_message_response("Invalid appli provided", message_code=21)
+        # if "appli" not in params:
+        #     return json_message_response(
+        #         "Parameter appli not provided", message_code=20
+        #     )
+        #
+        # try:
+        #     appli = NotifyAppli(int(params.getone("appli")))  # type: ignore[arg-type]
+        # except ValueError:
+        #     return json_message_response("Invalid appli provided", message_code=21)
 
         for coordinator in coordinators.values():
-            if appli in coordinator.notification_categories:
-                await coordinator.async_webhook_data_updated(appli)
+            if call.notification_category in coordinator.notification_categories:
+                await coordinator.async_webhook_data_updated(call.notification_category)
 
         return json_message_response("Success", message_code=0)
 
