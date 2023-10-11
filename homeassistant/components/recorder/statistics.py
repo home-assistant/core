@@ -2450,6 +2450,51 @@ def async_change_statistics_unit(
     )
 
 
+def cleanup_statistics_sqlite(instance: Recorder) -> None:
+    for table in STATISTICS_TABLES:
+        with session_scope(session=instance.get_session()) as session:
+            session.connection().execute(
+                text(
+                    f"update {table} set start = NULL, created = NULL, last_reset = NULL;"  # noqa: S608
+                )
+            )
+
+
+def cleanup_statistics_mysql(instance: Recorder) -> bool:
+    for table in STATISTICS_TABLES:
+        with session_scope(session=instance.get_session()) as session:
+            if (
+                session.connection()
+                .execute(
+                    text(
+                        f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL where start is not NULL LIMIT 100000;"  # noqa: S608
+                    )
+                )
+                .rowcount
+            ):
+                # We have more rows to update so return False
+                # to indicate we need to run again
+                return False
+
+
+def cleanup_statistics_postgresql(instance: Recorder) -> bool:
+    for table in STATISTICS_TABLES:
+        with session_scope(session=instance.get_session()) as session:
+            if (
+                session.connection()
+                .execute(
+                    text(
+                        f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL "  # noqa: S608
+                        f"where id in (select id from {table} where start is not NULL LIMIT 100000)"
+                    )
+                )
+                .rowcount
+            ):
+                # We have more rows to update so return False
+                # to indicate we need to run again
+                return False
+
+
 def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
     """Clean up the statistics migration from timestamp to datetime.
 
@@ -2459,44 +2504,17 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
     engine = instance.engine
     assert engine is not None
     if engine.dialect.name == SupportedDialect.SQLITE:
-        for table in STATISTICS_TABLES:
-            with session_scope(session=instance.get_session()) as session:
-                session.connection().execute(
-                    text(
-                        f"update {table} set start = NULL, created = NULL, last_reset = NULL;"  # noqa: S608
-                    )
-                )
+        cleanup_statistics_sqlite(instance)
     elif engine.dialect.name == SupportedDialect.MYSQL:
-        for table in STATISTICS_TABLES:
-            with session_scope(session=instance.get_session()) as session:
-                if (
-                    session.connection()
-                    .execute(
-                        text(
-                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL where start is not NULL LIMIT 100000;"  # noqa: S608
-                        )
-                    )
-                    .rowcount
-                ):
-                    # We have more rows to update so return False
-                    # to indicate we need to run again
-                    return False
+        if not cleanup_statistics_mysql(instance):
+            # We have more rows to update so return False
+            # to indicate we need to run again
+            return False
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
-        for table in STATISTICS_TABLES:
-            with session_scope(session=instance.get_session()) as session:
-                if (
-                    session.connection()
-                    .execute(
-                        text(
-                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL "  # noqa: S608
-                            f"where id in (select id from {table} where start is not NULL LIMIT 100000)"
-                        )
-                    )
-                    .rowcount
-                ):
-                    # We have more rows to update so return False
-                    # to indicate we need to run again
-                    return False
+        if not cleanup_statistics_postgresql(instance):
+            # We have more rows to update so return False
+            # to indicate we need to run again
+            return False
 
     from .migration import _drop_index  # pylint: disable=import-outside-toplevel
 
