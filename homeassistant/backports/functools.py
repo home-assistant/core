@@ -78,4 +78,4 @@ class cached_property(Generic[_T]):
             raise TypeError(msg) from None
         return val
 
-    __class_getitem__ = classmethod(GenericAlias)
+    __class_getitem__ = classmethod(GenericAlias)  # type: ignore[var-annotated]
