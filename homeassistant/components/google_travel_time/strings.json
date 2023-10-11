@@ -47,11 +47,6 @@
         "transit": "Transit"
       }
     },
-    "language": {
-      "options": {
-        "none": "No language"
-      }
-    },
     "avoid": {
       "options": {
         "none": "Avoid nothing",
