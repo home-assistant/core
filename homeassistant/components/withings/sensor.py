@@ -384,7 +384,7 @@ class WithingsSensor(WithingsEntity, SensorEntity):
         coordinator: WithingsDataUpdateCoordinator,
         entity_description: WithingsSensorEntityDescription,
     ) -> None:
-
+        """Initialize sensor."""
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
 
