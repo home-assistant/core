@@ -9,7 +9,7 @@ from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
 from pathlib import Path
-from queue import Queue
+import queue
 from threading import Thread
 import time
 from typing import Any, Final, cast
@@ -492,7 +492,7 @@ class PipelineRun:
     debug_recording_thread: Thread | None = None
     """Thread that records audio to debug_recording_dir"""
 
-    debug_recording_queue: Queue[str | bytes | None] | None = None
+    debug_recording_queue: queue.Queue[str | bytes | None] | None = None
     """Queue to communicate with debug recording thread"""
 
     audio_processor: AudioProcessor | None = None
@@ -543,6 +543,18 @@ class PipelineRun:
             # This run has been evicted from the logged pipeline runs already
             return
         pipeline_data.pipeline_debug[self.pipeline.id][self.id].events.append(event)
+
+        # Avoid filling up pipeline debugger with runs that have timeout out
+        if (
+            (event.type == PipelineEventType.ERROR)
+            and event.data
+            and (event.data["code"] == "wake-word-timeout")
+        ):
+            # Timed-out runs will be excluded from the websocket list.
+            #
+            # We still keep the run so that the events are available to be
+            # viewed in the frontend without triggering an error.
+            pipeline_data.pipeline_debug[self.pipeline.id][self.id].timed_out = True
 
     def start(self, device_id: str | None) -> None:
         """Emit run start event."""
@@ -1071,7 +1083,7 @@ class PipelineRun:
                     / str(time.monotonic_ns())
                 )
 
-            self.debug_recording_queue = Queue()
+            self.debug_recording_queue = queue.Queue()
             self.debug_recording_thread = Thread(
                 target=_pipeline_debug_recording_thread_proc,
                 args=(run_recording_dir, self.debug_recording_queue),
@@ -1180,7 +1192,7 @@ def _multiply_volume(chunk: bytes, volume_multiplier: float) -> bytes:
 
 def _pipeline_debug_recording_thread_proc(
     run_recording_dir: Path,
-    queue: Queue[str | bytes | None],
+    message_queue: queue.Queue[str | bytes | None],
     message_timeout: float = 5,
 ) -> None:
     wav_writer: wave.Wave_write | None = None
@@ -1190,7 +1202,7 @@ def _pipeline_debug_recording_thread_proc(
         run_recording_dir.mkdir(parents=True, exist_ok=True)
 
         while True:
-            message = queue.get(timeout=message_timeout)
+            message = message_queue.get(timeout=message_timeout)
             if message is None:
                 # Stop signal
                 break
@@ -1209,6 +1221,8 @@ def _pipeline_debug_recording_thread_proc(
                 # Chunk of 16-bit mono audio at 16Khz
                 if wav_writer is not None:
                     wav_writer.writeframes(message)
+    except queue.Empty:
+        pass  # Expected when message queue times out
     except Exception:  # pylint: disable=broad-exception-caught
         _LOGGER.exception("Unexpected error in debug recording thread")
     finally:
@@ -1639,6 +1653,7 @@ class PipelineRunDebug:
         default_factory=lambda: dt_util.utcnow().isoformat(),
         init=False,
     )
+    timed_out: bool = False
 
 
 class PipelineStore(Store[SerializedPipelineStorageCollection]):

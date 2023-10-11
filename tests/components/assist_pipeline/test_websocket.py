@@ -224,6 +224,37 @@ async def test_audio_pipeline_with_wake_word_timeout(
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
+    # Run should be timed out
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_id = list(pipeline_data.pipeline_debug)[0]
+    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
+
+    pipeline_run = pipeline_data.pipeline_debug[pipeline_id][pipeline_run_id]
+    assert pipeline_run.timed_out
+
+    # Verify that run is not listed due to timeout
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline_debug/list",
+            "pipeline_id": pipeline_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"pipeline_runs": []}
+
+    # Verify events are still available though for the frontend
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline_debug/get",
+            "pipeline_id": pipeline_id,
+            "pipeline_run_id": pipeline_run_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"events": events}
+
 
 async def test_audio_pipeline_with_wake_word_no_timeout(
     hass: HomeAssistant,
@@ -317,10 +348,30 @@ async def test_audio_pipeline_with_wake_word_no_timeout(
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
+    # Run should *not* be timed out
     pipeline_data: PipelineData = hass.data[DOMAIN]
     pipeline_id = list(pipeline_data.pipeline_debug)[0]
     pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
 
+    pipeline_run = pipeline_data.pipeline_debug[pipeline_id][pipeline_run_id]
+    assert not pipeline_run.timed_out
+
+    # Verify that run is listed
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline_debug/list",
+            "pipeline_id": pipeline_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "pipeline_runs": [
+            {"pipeline_run_id": pipeline_run_id, "timestamp": pipeline_run.timestamp}
+        ]
+    }
+
+    # Verify events
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline_debug/get",

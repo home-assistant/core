@@ -261,12 +261,14 @@ def websocket_list_runs(
 
     pipeline_debug = pipeline_data.pipeline_debug[pipeline_id]
 
+    # Exclude runs that timed out during wake word detection
     connection.send_result(
         msg["id"],
         {
             "pipeline_runs": [
                 {"pipeline_run_id": id, "timestamp": pipeline_run.timestamp}
                 for id, pipeline_run in pipeline_debug.items()
+                if not pipeline_run.timed_out
             ]
         },
     )
