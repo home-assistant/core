@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import cast
+from typing import Any, cast
 
 import pyatmo
 
@@ -779,7 +779,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         self._attr_available = self.state is not None
         self.async_write_ha_state()
 
-    def _get_entity_data(self, name: str):
+    def _get_entity_data(self, name: str) -> None | dict[str, Any]:
         if name == "temperature":
             return self._station.get_latest_temperatures()
         if name == "pressure":
