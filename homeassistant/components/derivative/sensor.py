@@ -123,7 +123,7 @@ async def async_setup_entry(
         time_window=cv.time_period_dict(config_entry.options[CONF_TIME_WINDOW]),
         unique_id=config_entry.entry_id,
         unit_of_measurement=None,
-        unit_prefix=config_entry.options[CONF_UNIT_PREFIX],
+        unit_prefix=config_entry.options.get(CONF_UNIT_PREFIX),
         unit_time=config_entry.options[CONF_UNIT_TIME],
         device_info=device_info,
     )
