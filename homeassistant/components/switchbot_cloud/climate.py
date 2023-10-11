@@ -31,6 +31,21 @@ from .entity import SwitchBotCloudEntity
 
 _LOGGER = getLogger(__name__)
 
+_SWITCHBOT_HVAC_MODES: dict[HVACMode, int] = {
+    HVACMode.HEAT_COOL: 1,
+    HVACMode.COOL: 2,
+    HVACMode.DRY: 3,
+    HVACMode.FAN_ONLY: 4,
+    HVACMode.HEAT: 5,
+}
+
+_SWITCHBOT_FAN_MODES: dict[str, int] = {
+    FanState.FAN_AUTO: 1,
+    FanState.FAN_LOW: 2,
+    FanState.FAN_MEDIUM: 3,
+    FanState.FAN_HIGH: 4,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -44,40 +59,6 @@ async def async_setup_entry(
         _async_make_entity(data.api, device, coordinator)
         for device, coordinator in data.devices.climates
     )
-
-
-def convert_hvac_mode(hvac_mode: HVACMode | None) -> int | None:
-    """Convert HVAC mode into SwitchBot mode."""
-    match hvac_mode:
-        case HVACMode.HEAT_COOL:
-            return 1
-        case HVACMode.COOL:
-            return 2
-        case HVACMode.DRY:
-            return 3
-        case HVACMode.FAN_ONLY:
-            return 4
-        case HVACMode.HEAT:
-            return 5
-        case _:
-            _LOGGER.error("Unsupported HVAC mode: %s", hvac_mode)
-    return 4
-
-
-def convert_fan_mode(fan_mode: str | None) -> int | None:
-    """Convert fan mode into SwitchBot fan mode."""
-    match fan_mode:
-        case FanState.FAN_AUTO:
-            return 1
-        case FanState.FAN_LOW:
-            return 2
-        case FanState.FAN_MEDIUM:
-            return 3
-        case FanState.FAN_HIGH:
-            return 4
-        case _:
-            _LOGGER.error("Unsupported fan mode: %s", fan_mode)
-    return 1
 
 
 class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
@@ -112,8 +93,8 @@ class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
         temperature: float | None = None,
     ) -> None:
         new_temperature = temperature or self._attr_target_temperature
-        new_mode = convert_hvac_mode(hvac_mode or self._attr_hvac_mode)
-        new_fan_speed = convert_fan_mode(fan_mode or self._attr_fan_mode)
+        new_mode = _SWITCHBOT_HVAC_MODES.get(hvac_mode or self._attr_hvac_mode, 4)
+        new_fan_speed = _SWITCHBOT_FAN_MODES.get(fan_mode or self._attr_fan_mode, 1)
         await self.send_command(
             AirConditionerCommands.SET_ALL,
             parameters=f"{new_temperature},{new_mode},{new_fan_speed},on",
