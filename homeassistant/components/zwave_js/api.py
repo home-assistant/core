@@ -2342,9 +2342,7 @@ async def websocket_subscribe_controller_statistics(
 
     controller = driver.controller
 
-    msg[DATA_UNSUBSCRIBE] = unsubs = [
-        controller.on("statistics updated", forward_stats)
-    ]
+    msg[DATA_UNSUBSCRIBE] = unsubs = [controller.on(STATISTICS_UPDATED, forward_stats)]
     connection.subscriptions[msg["id"]] = async_cleanup
 
     connection.send_result(msg[ID])
@@ -2436,7 +2434,7 @@ async def websocket_subscribe_node_statistics(
             )
         )
 
-    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on("statistics updated", forward_stats)]
+    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on(STATISTICS_UPDATED, forward_stats)]
     connection.subscriptions[msg["id"]] = async_cleanup
 
     connection.send_result(msg[ID])
