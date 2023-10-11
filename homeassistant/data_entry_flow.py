@@ -320,10 +320,17 @@ class FlowManager(abc.ABC):
                 )
 
             # If the result has changed from last result, fire event to update
-            # the frontend.
-            if (
-                cur_step["step_id"] != result.get("step_id")
-                or result["type"] == FlowResultType.SHOW_PROGRESS
+            # the frontend. The result is considered to have changed if:
+            # - The step has changed
+            # - The step is same but result type is SHOW_PROGRESS and progress_action
+            #   or description_placeholders has changed
+            if cur_step["step_id"] != result.get("step_id") or (
+                result["type"] == FlowResultType.SHOW_PROGRESS
+                and (
+                    cur_step["progress_action"] != result.get("progress_action")
+                    or cur_step["description_placeholders"]
+                    != result.get("description_placeholders")
+                )
             ):
                 # Tell frontend to reload the flow state.
                 self.hass.bus.async_fire(
@@ -461,12 +468,12 @@ class FlowHandler:
     @property
     def source(self) -> str | None:
         """Source that initialized the flow."""
-        return self.context.get("source", None)
+        return self.context.get("source", None)  # type: ignore[no-any-return]
 
     @property
     def show_advanced_options(self) -> bool:
         """If we should show advanced options."""
-        return self.context.get("show_advanced_options", False)
+        return self.context.get("show_advanced_options", False)  # type: ignore[no-any-return]
 
     def add_suggested_values_to_schema(
         self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None

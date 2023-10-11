@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from aranet4.client import Aranet4Advertisement
 from bleak.backends.device import BLEDevice
@@ -32,6 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -121,22 +123,22 @@ def sensor_update_to_bluetooth_data_update(
     adv: Aranet4Advertisement,
 ) -> PassiveBluetoothDataUpdate:
     """Convert a sensor update to a Bluetooth data update."""
+    data: dict[PassiveBluetoothEntityKey, Any] = {}
+    names: dict[PassiveBluetoothEntityKey, str | None] = {}
+    descs: dict[PassiveBluetoothEntityKey, EntityDescription] = {}
+    for key, desc in SENSOR_DESCRIPTIONS.items():
+        tag = _device_key_to_bluetooth_entity_key(adv.device, key)
+        val = getattr(adv.readings, key)
+        if val == -1:
+            continue
+        data[tag] = val
+        names[tag] = desc.name
+        descs[tag] = desc
     return PassiveBluetoothDataUpdate(
         devices={adv.device.address: _sensor_device_info_to_hass(adv)},
-        entity_descriptions={
-            _device_key_to_bluetooth_entity_key(adv.device, key): desc
-            for key, desc in SENSOR_DESCRIPTIONS.items()
-        },
-        entity_data={
-            _device_key_to_bluetooth_entity_key(adv.device, key): getattr(
-                adv.readings, key, None
-            )
-            for key in SENSOR_DESCRIPTIONS
-        },
-        entity_names={
-            _device_key_to_bluetooth_entity_key(adv.device, key): desc.name
-            for key, desc in SENSOR_DESCRIPTIONS.items()
-        },
+        entity_descriptions=descs,
+        entity_data=data,
+        entity_names=names,
     )
 
 

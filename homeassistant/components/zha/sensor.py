@@ -854,11 +854,6 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
             return HVACAction.IDLE
         return HVACAction.OFF
 
-    @callback
-    def async_set_state(self, *args, **kwargs) -> None:
-        """Handle state update from cluster handler."""
-        self.async_write_ha_state()
-
 
 @MULTI_MATCH(
     cluster_handler_names={CLUSTER_HANDLER_THERMOSTAT},
