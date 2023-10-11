@@ -376,85 +376,119 @@ async def async_attach_trigger(
     # Take input data from automation trigger UI and add it to the trigger we are
     # attaching to
     if trigger_platform == "event":
-        event_data = {CONF_DEVICE_ID: config[CONF_DEVICE_ID]}
-        event_config = {
-            event.CONF_PLATFORM: "event",
-            event.CONF_EVENT_DATA: event_data,
-        }
-
-        if ATTR_COMMAND_CLASS in config:
-            event_data[ATTR_COMMAND_CLASS] = config[ATTR_COMMAND_CLASS]
-
-        if trigger_type == ENTRY_CONTROL_NOTIFICATION:
-            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
-            copy_available_params(config, event_data, [ATTR_EVENT_TYPE, ATTR_DATA_TYPE])
-        elif trigger_type == NOTIFICATION_NOTIFICATION:
-            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
-            copy_available_params(
-                config, event_data, [ATTR_LABEL, ATTR_EVENT_LABEL, ATTR_EVENT]
-            )
-            if (val := config.get(f"{ATTR_TYPE}.")) not in ("", None):
-                event_data[ATTR_TYPE] = val
-        elif trigger_type in (
-            BASIC_VALUE_NOTIFICATION,
-            CENTRAL_SCENE_VALUE_NOTIFICATION,
-            SCENE_ACTIVATION_VALUE_NOTIFICATION,
-        ):
-            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_VALUE_NOTIFICATION_EVENT
-            copy_available_params(
-                config, event_data, [ATTR_PROPERTY, ATTR_PROPERTY_KEY, ATTR_ENDPOINT]
-            )
-            if ATTR_VALUE in config:
-                event_data[ATTR_VALUE_RAW] = config[ATTR_VALUE]
-        else:
-            raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
-
-        event_config = event.TRIGGER_SCHEMA(event_config)
-        return await event.async_attach_trigger(
-            hass, event_config, action, trigger_info, platform_type="device"
+        return await _attach_event_trigger(
+            hass, config, action, trigger_info, trigger_type
         )
 
     if trigger_platform == "state":
-        if trigger_type == NODE_STATUS:
-            state_config = {state.CONF_PLATFORM: "state"}
-
-            state_config[state.CONF_ENTITY_ID] = config[CONF_ENTITY_ID]
-            copy_available_params(
-                config, state_config, [state.CONF_FOR, state.CONF_FROM, state.CONF_TO]
-            )
-        else:
-            raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
-
-        state_config = await state.async_validate_trigger_config(hass, state_config)
-        return await state.async_attach_trigger(
-            hass, state_config, action, trigger_info, platform_type="device"
+        return await _attach_state_trigger(
+            hass, config, action, trigger_info, trigger_type
         )
 
     if trigger_platform == VALUE_UPDATED_PLATFORM_TYPE:
-        zwave_js_config = {
-            state.CONF_PLATFORM: trigger_platform,
-            CONF_DEVICE_ID: config[CONF_DEVICE_ID],
-        }
-        copy_available_params(
-            config,
-            zwave_js_config,
-            [
-                ATTR_COMMAND_CLASS,
-                ATTR_PROPERTY,
-                ATTR_PROPERTY_KEY,
-                ATTR_ENDPOINT,
-                ATTR_FROM,
-                ATTR_TO,
-            ],
-        )
-        zwave_js_config = await trigger.async_validate_trigger_config(
-            hass, zwave_js_config
-        )
-        return await trigger.async_attach_trigger(
-            hass, zwave_js_config, action, trigger_info
-        )
+        return await _attach_value_updated_trigger(hass, config, action, trigger_info)
 
     raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
+
+
+async def _attach_event_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+    trigger_type: str,
+) -> CALLBACK_TYPE:
+    """Attach an event trigger."""
+    event_data = {CONF_DEVICE_ID: config[CONF_DEVICE_ID]}
+    event_config = {
+        event.CONF_PLATFORM: "event",
+        event.CONF_EVENT_DATA: event_data,
+    }
+
+    if ATTR_COMMAND_CLASS in config:
+        event_data[ATTR_COMMAND_CLASS] = config[ATTR_COMMAND_CLASS]
+
+    if trigger_type == ENTRY_CONTROL_NOTIFICATION:
+        event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
+        copy_available_params(config, event_data, [ATTR_EVENT_TYPE, ATTR_DATA_TYPE])
+    elif trigger_type == NOTIFICATION_NOTIFICATION:
+        event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
+        copy_available_params(
+            config, event_data, [ATTR_LABEL, ATTR_EVENT_LABEL, ATTR_EVENT]
+        )
+        if (val := config.get(f"{ATTR_TYPE}.")) not in ("", None):
+            event_data[ATTR_TYPE] = val
+    elif trigger_type in (
+        BASIC_VALUE_NOTIFICATION,
+        CENTRAL_SCENE_VALUE_NOTIFICATION,
+        SCENE_ACTIVATION_VALUE_NOTIFICATION,
+    ):
+        event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_VALUE_NOTIFICATION_EVENT
+        copy_available_params(
+            config, event_data, [ATTR_PROPERTY, ATTR_PROPERTY_KEY, ATTR_ENDPOINT]
+        )
+        if ATTR_VALUE in config:
+            event_data[ATTR_VALUE_RAW] = config[ATTR_VALUE]
+    else:
+        raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
+
+    event_config = event.TRIGGER_SCHEMA(event_config)
+    return await event.async_attach_trigger(
+        hass, event_config, action, trigger_info, platform_type="device"
+    )
+
+
+async def _attach_state_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+    trigger_type: str,
+) -> CALLBACK_TYPE:
+    """Attach a state trigger."""
+    if trigger_type == NODE_STATUS:
+        state_config = {state.CONF_PLATFORM: "state"}
+
+        state_config[state.CONF_ENTITY_ID] = config[CONF_ENTITY_ID]
+        copy_available_params(
+            config, state_config, [state.CONF_FOR, state.CONF_FROM, state.CONF_TO]
+        )
+    else:
+        raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
+
+    state_config = await state.async_validate_trigger_config(hass, state_config)
+    return await state.async_attach_trigger(
+        hass, state_config, action, trigger_info, platform_type="device"
+    )
+
+
+async def _attach_value_updated_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Attach a value updated trigger."""
+    zwave_js_config = {
+        state.CONF_PLATFORM: VALUE_UPDATED_PLATFORM_TYPE,
+        CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+    }
+    copy_available_params(
+        config,
+        zwave_js_config,
+        [
+            ATTR_COMMAND_CLASS,
+            ATTR_PROPERTY,
+            ATTR_PROPERTY_KEY,
+            ATTR_ENDPOINT,
+            ATTR_FROM,
+            ATTR_TO,
+        ],
+    )
+    zwave_js_config = await trigger.async_validate_trigger_config(hass, zwave_js_config)
+    return await trigger.async_attach_trigger(
+        hass, zwave_js_config, action, trigger_info
+    )
 
 
 async def async_get_trigger_capabilities(
