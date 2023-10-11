@@ -279,19 +279,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         registry.async_update_entity(entity_id, hidden_by=None)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up all groups found defined in the configuration."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = EntityComponent[Group](_LOGGER, DOMAIN, hass)
-
-    component: EntityComponent[Group] = hass.data[DOMAIN]
-
-    hass.data[REG_KEY] = GroupIntegrationRegistry()
-
-    await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
-
-    await _async_process_config(hass, config)
-
+async def __register_reload_service(
+    component: EntityComponent, hass: HomeAssistant
+) -> None:
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
         auto = [e for e in component.entities if not e.user_defined]
@@ -308,6 +298,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
     )
 
+
+async def __update_entity_ids(service: ServiceCall, group: Any) -> None:
+    if ATTR_ADD_ENTITIES in service.data:
+        delta = service.data[ATTR_ADD_ENTITIES]
+        entity_ids = set(group.tracking) | set(delta)
+        await group.async_update_tracked_entity_ids(entity_ids)
+
+    if ATTR_REMOVE_ENTITIES in service.data:
+        delta = service.data[ATTR_REMOVE_ENTITIES]
+        entity_ids = set(group.tracking) - set(delta)
+        await group.async_update_tracked_entity_ids(entity_ids)
+
+    if ATTR_ENTITIES in service.data:
+        entity_ids = service.data[ATTR_ENTITIES]
+        await group.async_update_tracked_entity_ids(entity_ids)
+
+
+async def __update_group_attributes(service: ServiceCall, group: Any) -> None:
+    need_update = False
+
+    if ATTR_NAME in service.data:
+        group.name = service.data[ATTR_NAME]
+        need_update = True
+
+    if ATTR_ICON in service.data:
+        group.icon = service.data[ATTR_ICON]
+        need_update = True
+
+    if ATTR_ALL in service.data:
+        group.mode = all if service.data[ATTR_ALL] else any
+        need_update = True
+
+    if need_update:
+        group.async_write_ha_state()
+
+
+async def __register_dynamic_services(
+    component: EntityComponent, hass: HomeAssistant
+) -> None:
     service_lock = asyncio.Lock()
 
     async def locked_service_handler(service: ServiceCall) -> None:
@@ -323,10 +352,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         # new group
         if service.service == SERVICE_SET and group is None:
-            entity_ids = (
-                service.data.get(ATTR_ENTITIES)
-                or service.data.get(ATTR_ADD_ENTITIES)
-                or None
+            entity_ids = service.data.get(ATTR_ENTITIES) or service.data.get(
+                ATTR_ADD_ENTITIES
             )
 
             extra_arg = {
@@ -350,44 +377,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.warning("%s:Group '%s' doesn't exist!", service.service, object_id)
             return
 
-        # update group
-        if service.service == SERVICE_SET:
-            need_update = False
-
-            if ATTR_ADD_ENTITIES in service.data:
-                delta = service.data[ATTR_ADD_ENTITIES]
-                entity_ids = set(group.tracking) | set(delta)
-                await group.async_update_tracked_entity_ids(entity_ids)
-
-            if ATTR_REMOVE_ENTITIES in service.data:
-                delta = service.data[ATTR_REMOVE_ENTITIES]
-                entity_ids = set(group.tracking) - set(delta)
-                await group.async_update_tracked_entity_ids(entity_ids)
-
-            if ATTR_ENTITIES in service.data:
-                entity_ids = service.data[ATTR_ENTITIES]
-                await group.async_update_tracked_entity_ids(entity_ids)
-
-            if ATTR_NAME in service.data:
-                group.name = service.data[ATTR_NAME]
-                need_update = True
-
-            if ATTR_ICON in service.data:
-                group.icon = service.data[ATTR_ICON]
-                need_update = True
-
-            if ATTR_ALL in service.data:
-                group.mode = all if service.data[ATTR_ALL] else any
-                need_update = True
-
-            if need_update:
-                group.async_write_ha_state()
-
-            return
-
         # remove group
         if service.service == SERVICE_REMOVE:
             await component.async_remove_entity(entity_id)
+
+        if service.service != SERVICE_SET:
+            return
+
+        await __update_entity_ids(service, group)
+
+        await __update_group_attributes(service, group)
 
     hass.services.async_register(
         DOMAIN,
@@ -414,6 +413,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         groups_service_handler,
         schema=vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug}),
     )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up all groups found defined in the configuration."""
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = EntityComponent[Group](_LOGGER, DOMAIN, hass)
+
+    component: EntityComponent[Group] = hass.data[DOMAIN]
+
+    hass.data[REG_KEY] = GroupIntegrationRegistry()
+
+    await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
+
+    await _async_process_config(hass, config)
+
+    await __register_reload_service(component, hass)
+
+    await __register_dynamic_services(component, hass)
 
     return True
 
