@@ -73,7 +73,7 @@ async def async_setup_entry(
         available_data_ids = {
             setting.id for setting in available_settings_data[description.module_id]
         }
-        if not needed_data_ids <= available_data_ids:
+        if needed_data_ids > available_data_ids:
             continue
         entities.append(
             PlenticoreDataSelect(
