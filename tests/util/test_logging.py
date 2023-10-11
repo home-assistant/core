@@ -89,7 +89,7 @@ async def test_suppressed_logging_stack_trace(
     assert len(caplog.records) == 1
     record = caplog.records[0]
     assert "Test exception" in record.message
-    assert type(record.exc_info) is exc_info
+    assert isinstance(record.exc_info, exc_info)
 
 
 async def test_migrate_log_handler(hass: HomeAssistant) -> None:
