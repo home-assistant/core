@@ -1,10 +1,6 @@
 set_auto_on_off_enable:
-  # Description of the service
-  description: Enable or disable auto on/off for a specific day of the week
-  # Different fields that your service accepts
   fields:
     day_of_week:
-      description: "The day of the week to enable (mon, tue, wed, thu, fri, sat, sun)"
       example: mon
       selector:
         select:
@@ -17,7 +13,6 @@ set_auto_on_off_enable:
             - sat
             - sun
     enable:
-      description: "Boolean value indicating whether to enable or disable auto on/off"
       example: "on"
       selector:
         select:
@@ -26,12 +21,8 @@ set_auto_on_off_enable:
             - "off"
 
 set_auto_on_off_times:
-  # Description of the service
-  description: Set the auto on and off times for each day of the week
-  # Different fields that your service accepts
   fields:
     day_of_week:
-      description: "The day of the week to change (mon, tue, wed, thu, fri, sat, sun)"
       example: mon
       selector:
         select:
@@ -44,7 +35,6 @@ set_auto_on_off_times:
             - sat
             - sun
     hour_on:
-      description: The hour to turn the machine on (0..23)
       example: 6
       selector:
         number:
@@ -53,7 +43,6 @@ set_auto_on_off_times:
           step: 1
           mode: slider
     minute_on:
-      description: The minute to turn the machine on (0..59)
       example: 6
       selector:
         number:
@@ -62,7 +51,6 @@ set_auto_on_off_times:
           step: 1
           mode: slider
     hour_off:
-      description: The hour to turn the machine off (0..23)
       example: 5
       selector:
         number:
@@ -71,7 +59,6 @@ set_auto_on_off_times:
           step: 1
           mode: slider
     minute_off:
-      description: The minute to turn the machine off (0..59)
       example: 10
       selector:
         number:
@@ -81,12 +68,8 @@ set_auto_on_off_times:
           mode: slider
 
 set_dose:
-  # Description of the service
-  description: Sets the dose for a specific key
-  # Different fields that your service accepts
   fields:
     key:
-      description: "The key to program (1-4)"
       example: 1
       selector:
         number:
@@ -95,7 +78,6 @@ set_dose:
           step: 1
           mode: slider
     pulses:
-      description: "The dose in pulses (roughly ~0.5ml per pulse)"
       example: 122
       selector:
         number:
@@ -105,12 +87,8 @@ set_dose:
           mode: slider
 
 set_dose_hot_water:
-  # Description of the service
-  description: Sets the dose for hot water
-  # Different fields that your service accepts
   fields:
     seconds:
-      description: "The number of seconds to stream hot water"
       example: 8
       selector:
         number:
@@ -120,12 +98,8 @@ set_dose_hot_water:
           mode: slider
 
 set_prebrew_times:
-  # Description of the service
-  description: Set the prebrewing "on" and "off" times for a specific key
-  # Different fields that your service accepts
   fields:
     key:
-      description: "The key to program (1-4)"
       example: 1
       selector:
         number:
@@ -134,7 +108,6 @@ set_prebrew_times:
           step: 1
           mode: slider
     seconds_on:
-      description: The time in seconds for the pump to run during prebrewing (0-5.9s)
       example: 1.1
       selector:
         number:
@@ -143,7 +116,6 @@ set_prebrew_times:
           step: 0.1
           mode: slider
     seconds_off:
-      description: The time in seconds for the pump to stop during prebrewing (0-5.9s)
       example: 1.1
       selector:
         number:
@@ -153,12 +125,8 @@ set_prebrew_times:
           mode: slider
 
 set_preinfusion_time:
-  # Description of the service
-  description: Set the preinfusion time for a specific key
-  # Different fields that your service accepts
   fields:
     key:
-      description: "The key to program (1-4)"
       example: 1
       selector:
         number:
@@ -167,7 +135,6 @@ set_preinfusion_time:
           step: 1
           mode: slider
     seconds:
-      description: The time in seconds for preinfusion (0-24.9s)
       example: 1.1
       selector:
         number:
