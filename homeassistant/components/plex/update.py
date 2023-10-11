@@ -28,24 +28,26 @@ async def async_setup_entry(
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     server = get_plex_server(hass, server_id)
     plex_server = server.plex_server
-    async_add_entities([PlexUpdate(plex_server)], update_before_add=True)
+    can_update = await hass.async_add_executor_job(plex_server.canInstallUpdate)
+    async_add_entities([PlexUpdate(plex_server, can_update)], update_before_add=True)
 
 
 class PlexUpdate(UpdateEntity):
     """Representation of a Plex server update entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
-    )
+    _attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
 
-    def __init__(self, plex_server: plexapi.server.PlexServer) -> None:
+    def __init__(
+        self, plex_server: plexapi.server.PlexServer, can_update: bool
+    ) -> None:
         """Initialize the Update entity."""
         self.plex_server = plex_server
-        self.can_update: bool = False
         self._attr_name = f"Plex Media Server ({plex_server.friendlyName})"
         self._attr_unique_id = plex_server.machineIdentifier
         self._release_notes: str | None = None
+        if can_update:
+            self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
     def update(self) -> None:
         """Update sync attributes."""
@@ -53,7 +55,6 @@ class PlexUpdate(UpdateEntity):
         try:
             if (release := self.plex_server.checkForUpdate()) is None:
                 return
-            self.can_update = self.plex_server.canInstallUpdate()
         except (requests.exceptions.RequestException, PlexApiException):
             _LOGGER.warning("Polling update sensor failed, will try again")
             return
@@ -71,10 +72,6 @@ class PlexUpdate(UpdateEntity):
 
     def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install an update."""
-        if not self.can_update:
-            raise HomeAssistantError(
-                "Automatic updates cannot be performed on this Plex installation"
-            )
         try:
             self.plex_server.installUpdate()
         except (requests.exceptions.RequestException, PlexApiException) as exc:

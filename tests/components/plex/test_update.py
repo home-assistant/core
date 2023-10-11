@@ -71,7 +71,7 @@ async def test_plex_update(
 
     # New release (updatable)
     requests_mock.get("/updater/status", text=update_check_new)
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATER_SCAN_INTERVAL)
+    await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.states.get(UPDATE_ENTITY).state == STATE_ON
