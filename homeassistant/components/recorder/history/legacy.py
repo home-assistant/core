@@ -690,6 +690,121 @@ def _get_single_entity_states_stmt(
     return stmt
 
 
+def _minimal_response(
+    schema_version: int,
+    field_map: dict[str, int],
+    attr_state: literal["s", "state"],
+    attr_time: literal["lu", "last_changed"],
+    _process_timestamp: Callable[[datetime], float | str],
+    compressed_state_format: bool,
+    group: Any,
+    state_idx: int,
+    ent_results: list[State | dict[str, Any]],
+    prev_state: Column | str,
+) -> Column | str:
+    if schema_version < 31:
+        last_updated_idx = field_map["last_updated"]
+        for row in group:
+            if (state := row[state_idx]) != prev_state:
+                ent_results.append(
+                    {
+                        attr_state: state,
+                        attr_time: _process_timestamp(row[last_updated_idx]),
+                    }
+                )
+                prev_state = state
+        return prev_state
+
+    last_updated_ts_idx = field_map["last_updated_ts"]
+    if compressed_state_format:
+        for row in group:
+            if (state := row[state_idx]) != prev_state:
+                ent_results.append(
+                    {
+                        attr_state: state,
+                        attr_time: row[last_updated_ts_idx],
+                    }
+                )
+                prev_state = state
+
+    for row in group:
+        if (state := row[state_idx]) != prev_state:
+            ent_results.append(
+                {
+                    attr_state: state,
+                    attr_time: process_timestamp_to_utc_isoformat(
+                        dt_util.utc_from_timestamp(row[last_updated_ts_idx])
+                    ),
+                }
+            )
+            prev_state = state
+    return prev_state
+
+
+def _append_all_changes(
+    states_iter: dict,
+    result: defaultdict[str, list[State | dict[str, Any]]],
+    initial_states: dict[str, Row],
+    state_class: Callable[
+        [Row, dict[str, dict[str, Any]], datetime | None], State | dict[str, Any]
+    ],
+    start_time: datetime,
+    minimal_response: bool,
+    schema_version: int,
+    field_map: dict[str, int],
+    attr_state: literal["s", "state"],
+    attr_time: literal["lu", "last_changed"],
+    _process_timestamp: Callable[[datetime], float | str],
+    compressed_state_format: bool,
+) -> (dict[str, Row], defaultdict[str, list[State | dict[str, Any]]]):
+    for ent_id, group in states_iter:
+        attr_cache: dict[str, dict[str, Any]] = {}
+        prev_state: Column | str
+        ent_results = result[ent_id]
+        if row := initial_states.pop(ent_id, None):
+            prev_state = row.state
+            ent_results.append(state_class(row, attr_cache, start_time))
+
+        if not minimal_response or split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS:
+            ent_results.extend(
+                state_class(db_state, attr_cache, None) for db_state in group
+            )
+            continue
+
+        # With minimal response we only provide a native
+        # State for the first and last response. All the states
+        # in-between only provide the "state" and the
+        # "last_changed".
+        if not ent_results:
+            if (first_state := next(group, None)) is None:
+                continue
+            prev_state = first_state.state
+            ent_results.append(state_class(first_state, attr_cache, None))
+
+        state_idx = field_map["state"]
+
+        #
+        # minimal_response only makes sense with last_updated == last_updated
+        #
+        # We use last_updated for for last_changed since its the same
+        #
+        # With minimal response we do not care about attribute
+        # changes so we can filter out duplicate states
+        prev_state = _minimal_response(
+            schema_version,
+            field_map,
+            attr_state,
+            attr_time,
+            _process_timestamp,
+            compressed_state_format,
+            group,
+            state_idx,
+            ent_results,
+            prev_state,
+        )
+    return initial_states, result
+
+
 def _sorted_states_to_dict(
     hass: HomeAssistant,
     session: Session,
@@ -764,75 +879,20 @@ def _sorted_states_to_dict(
         states_iter = groupby(states, key_func)
 
     # Append all changes to it
-    for ent_id, group in states_iter:
-        attr_cache: dict[str, dict[str, Any]] = {}
-        prev_state: Column | str
-        ent_results = result[ent_id]
-        if row := initial_states.pop(ent_id, None):
-            prev_state = row.state
-            ent_results.append(state_class(row, attr_cache, start_time))
-
-        if not minimal_response or split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS:
-            ent_results.extend(
-                state_class(db_state, attr_cache, None) for db_state in group
-            )
-            continue
-
-        # With minimal response we only provide a native
-        # State for the first and last response. All the states
-        # in-between only provide the "state" and the
-        # "last_changed".
-        if not ent_results:
-            if (first_state := next(group, None)) is None:
-                continue
-            prev_state = first_state.state
-            ent_results.append(state_class(first_state, attr_cache, None))
-
-        state_idx = field_map["state"]
-
-        #
-        # minimal_response only makes sense with last_updated == last_updated
-        #
-        # We use last_updated for for last_changed since its the same
-        #
-        # With minimal response we do not care about attribute
-        # changes so we can filter out duplicate states
-        if schema_version < 31:
-            last_updated_idx = field_map["last_updated"]
-            for row in group:
-                if (state := row[state_idx]) != prev_state:
-                    ent_results.append(
-                        {
-                            attr_state: state,
-                            attr_time: _process_timestamp(row[last_updated_idx]),
-                        }
-                    )
-                    prev_state = state
-            continue
-
-        last_updated_ts_idx = field_map["last_updated_ts"]
-        if compressed_state_format:
-            for row in group:
-                if (state := row[state_idx]) != prev_state:
-                    ent_results.append(
-                        {
-                            attr_state: state,
-                            attr_time: row[last_updated_ts_idx],
-                        }
-                    )
-                    prev_state = state
-
-        for row in group:
-            if (state := row[state_idx]) != prev_state:
-                ent_results.append(
-                    {
-                        attr_state: state,
-                        attr_time: process_timestamp_to_utc_isoformat(
-                            dt_util.utc_from_timestamp(row[last_updated_ts_idx])
-                        ),
-                    }
-                )
-                prev_state = state
+    initial_states, result = _append_all_changes(
+        states_iter,
+        result,
+        initial_states,
+        state_class,
+        start_time,
+        minimal_response,
+        schema_version,
+        field_map,
+        attr_state,
+        attr_time,
+        _process_timestamp,
+        compressed_state_format,
+    )
 
     # If there are no states beyond the initial state,
     # the state a was never popped from initial_states
