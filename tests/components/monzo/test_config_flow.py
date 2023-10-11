@@ -54,13 +54,22 @@ async def test_full_flow(
             "access_token": "mock-access-token",
             "type": "Bearer",
             "expires_in": 60,
-            "userid": 600,
+            "user_id": 600,
         },
     )
     with patch(
         "homeassistant.components.monzo.async_setup_entry", return_value=True
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+        assert len(mock_setup.mock_calls) == 0
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "await_approval_confirmation"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"confirm": True}
+        )
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
@@ -116,7 +125,7 @@ async def test_config_non_unique_profile(
             "access_token": "mock-access-token",
             "type": "Bearer",
             "expires_in": 60,
-            "userid": str(USER_ID),
+            "user_id": str(USER_ID),
         },
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -173,7 +182,7 @@ async def test_config_reauth_profile(
             "access_token": "mock-access-token",
             "type": "Bearer",
             "expires_in": 60,
-            "userid": str(USER_ID),
+            "user_id": str(USER_ID),
         },
     )
 
@@ -232,7 +241,7 @@ async def test_config_reauth_wrong_account(
             "access_token": "mock-access-token",
             "type": "Bearer",
             "expires_in": 60,
-            "userid": 12346,
+            "user_id": 12346,
         },
     )
 

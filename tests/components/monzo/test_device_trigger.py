@@ -1,11 +1,20 @@
 """The tests for Monzo device triggers."""
+
 import pytest
 from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.monzo import DOMAIN as MONZO_DOMAIN
-from homeassistant.components.monzo.const import MONZO_EVENT
+from homeassistant.components.monzo.const import (
+    MODEL_CURRENT_ACCOUNT,
+    MODEL_POT,
+    MONZO_EVENT,
+)
+from homeassistant.components.monzo.device_trigger import async_validate_trigger_config
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -131,48 +140,55 @@ async def test_if_fires_on_event(
     assert calls[0].data["some"] == f"transaction.created - device - {device.id}"
 
 
-async def test_if_invalid_device(
+async def test_validation_fails_if_invalid_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test for event triggers firing."""
-    mac_address = "12:34:56:AB:CD:EF"
-    connection = (dr.CONNECTION_NETWORK_MAC, mac_address)
+    """Test validation of device triggers."""
     config_entry = MockConfigEntry(domain=MONZO_DOMAIN, data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
+    pot_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={connection},
-        identifiers={(MONZO_DOMAIN, mac_address)},
-        model="Current Account",
+        model=MODEL_POT,
+        identifiers={(MONZO_DOMAIN, 123)},
     )
-    entity_entry = entity_registry.async_get_or_create(
-        "sensor", MONZO_DOMAIN, "5678", device_id=device_entry.id
+    account_device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        model=MODEL_CURRENT_ACCOUNT,
+        identifiers={(MONZO_DOMAIN, 321)},
     )
 
-    assert await async_setup_component(
+    with pytest.raises(InvalidDeviceAutomationConfig, match=".*not found.*"):
+        await async_validate_trigger_config(
+            hass,
+            {
+                "device_id": "incorrect",
+                "domain": MONZO_DOMAIN,
+                "platform": "device",
+                "account_id": 42,
+                "type": "transaction.created",
+            },
+        )
+
+    with pytest.raises(InvalidDeviceAutomationConfig, match=".*pot.*"):
+        await async_validate_trigger_config(
+            hass,
+            {
+                "device_id": pot_device_entry.id,
+                "domain": MONZO_DOMAIN,
+                "platform": "device",
+                "account_id": 42,
+                "type": "transaction.created",
+            },
+        )
+
+    assert await async_validate_trigger_config(
         hass,
-        automation.DOMAIN,
         {
-            automation.DOMAIN: [
-                {
-                    "trigger": {
-                        "platform": "device",
-                        "domain": MONZO_DOMAIN,
-                        "device_id": device_entry.id,
-                        "entity_id": entity_entry.id,
-                        "type": "transaction.created",
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": (
-                                "{{trigger.event.data.type}} - {{trigger.platform}} - {{trigger.event.data.device_id}}"
-                            )
-                        },
-                    },
-                },
-            ]
+            "device_id": account_device_entry.id,
+            "domain": MONZO_DOMAIN,
+            "platform": "device",
+            "account_id": 42,
+            "type": "transaction.created",
         },
     )
