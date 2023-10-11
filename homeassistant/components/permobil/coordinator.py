@@ -1,10 +1,10 @@
 """DataUpdateCoordinator for permobil integration."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-import async_timeout
 from mypermobil import (
     ENDPOINT_BATTERY_INFO,
     ENDPOINT_DAILY_USAGE,
@@ -44,7 +44,7 @@ class MyPermobilCoordinator(DataUpdateCoordinator[MyPermobilData]):
     async def _async_update_data(self) -> MyPermobilData:
         """Fetch data from the 3 API endpoints."""
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 battery = await self.p_api.request_endpoint(ENDPOINT_BATTERY_INFO)
                 daily_usage = await self.p_api.request_endpoint(ENDPOINT_DAILY_USAGE)
                 records = await self.p_api.request_endpoint(ENDPOINT_VA_USAGE_RECORDS)
