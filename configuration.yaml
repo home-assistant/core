@@ -1,0 +1,19 @@
+# Example configuration.yaml
+homeassistant:
+  name: Home
+  latitude: 32.87336
+  longitude: 117.22743
+  elevation: 430
+  unit_system: imperial
+  currency: USD
+  external_url: "https://www.example.com"
+  allowlist_external_dirs:
+    - "/usr/var/dump"
+  media_dirs:
+    media: "/media"
+  legacy_templates: false
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+
+# Add more integrations and custom components here
