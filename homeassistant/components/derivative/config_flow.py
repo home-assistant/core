@@ -51,7 +51,7 @@ OPTIONS_SCHEMA = vol.Schema(
             ),
         ),
         vol.Required(CONF_TIME_WINDOW): selector.DurationSelector(),
-        vol.Optional(CONF_UNIT_PREFIX, default=None): selector.SelectSelector(
+        vol.Optional(CONF_UNIT_PREFIX): selector.SelectSelector(
             selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
         vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(
