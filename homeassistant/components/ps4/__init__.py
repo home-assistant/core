@@ -102,51 +102,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Migrate Version 1 -> Version 2: New region codes.
     if version == 1:
-        loc = await location.async_detect_location_info(async_get_clientsession(hass))
-        if loc:
-            country = COUNTRYCODE_NAMES.get(loc.country_code)
-            if country in COUNTRIES:
-                for device in data["devices"]:
-                    device[CONF_REGION] = country
-                version = entry.version = 2
-                config_entries.async_update_entry(entry, data=data)
-                _LOGGER.info(
-                    "PlayStation 4 Config Updated: Region changed to: %s",
-                    country,
-                )
+        version = await migrate_from_version1_to_version2(hass, config_entries, entry, data)
 
     # Migrate Version 2 -> Version 3: Update identifier format.
     if version == 2:
         # Prevent changing entity_id. Updates entity registry.
-        registry = er.async_get(hass)
-
-        for entity_id, e_entry in registry.entities.items():
-            if e_entry.config_entry_id == entry.entry_id:
-                unique_id = e_entry.unique_id
-
-                # Remove old entity entry.
-                registry.async_remove(entity_id)
-
-                # Format old unique_id.
-                unique_id = format_unique_id(entry.data[CONF_TOKEN], unique_id)
-
-                # Create new entry with old entity_id.
-                new_id = split_entity_id(entity_id)[1]
-                registry.async_get_or_create(
-                    "media_player",
-                    DOMAIN,
-                    unique_id,
-                    suggested_object_id=new_id,
-                    config_entry=entry,
-                    device_id=e_entry.device_id,
-                )
-                entry.version = 3
-                _LOGGER.info(
-                    "PlayStation 4 identifier for entity: %s has changed",
-                    entity_id,
-                )
-                config_entries.async_update_entry(entry)
-                return True
+        return migrate_from_version2_to_version3(hass, entry, config_entries)
 
     msg = f"""{reason[version]} for the PlayStation 4 Integration.
             Please remove the PS4 Integration and re-configure
@@ -160,6 +121,51 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     return False
 
+async def migrate_from_version1_to_version2(hass, config_entries, entry, data):
+    loc = await location.async_detect_location_info(async_get_clientsession(hass))
+    if loc:
+        country = COUNTRYCODE_NAMES.get(loc.country_code)
+        if country in COUNTRIES:
+            for device in data["devices"]:
+                device[CONF_REGION] = country
+            version = entry.version = 2
+            config_entries.async_update_entry(entry, data=data)
+            _LOGGER.info(
+                "PlayStation 4 Config Updated: Region changed to: %s",
+                country,
+            )
+    return version
+
+def migrate_from_version2_to_version3(hass, entry, config_entries):
+    registry = er.async_get(hass)
+
+    for entity_id, e_entry in registry.entities.items():
+        if e_entry.config_entry_id == entry.entry_id:
+            unique_id = e_entry.unique_id
+
+            # Remove old entity entry.
+            registry.async_remove(entity_id)
+
+            # Format old unique_id.
+            unique_id = format_unique_id(entry.data[CONF_TOKEN], unique_id)
+
+            # Create new entry with old entity_id.
+            new_id = split_entity_id(entity_id)[1]
+            registry.async_get_or_create(
+                "media_player",
+                DOMAIN,
+                unique_id,
+                suggested_object_id=new_id,
+                config_entry=entry,
+                device_id=e_entry.device_id,
+            )
+            entry.version = 3
+            _LOGGER.info(
+                "PlayStation 4 identifier for entity: %s has changed",
+                entity_id,
+            )
+            config_entries.async_update_entry(entry)
+            return True
 
 def format_unique_id(creds, mac_address):
     """Use last 4 Chars of credential as suffix. Unique ID per PSN user."""
