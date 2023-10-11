@@ -3,6 +3,7 @@ import asyncio
 from functools import partial
 import logging
 import queue
+from types import TracebackType
 from unittest.mock import patch
 
 import pytest
@@ -52,14 +53,14 @@ async def test_logging_with_queue_handler() -> None:
 
 
 @pytest.mark.parametrize(
-    ("version", "exc", "should_filter"),
+    ("version", "exc", "exc_info"),
     [
-        ("2023.10.0", HomeAssistantError, True),
-        ("2023.10.0b0", HomeAssistantError, False),
-        ("2023.10.0", ConfigError, True),
-        ("2023.10.0b0", ConfigError, False),
-        ("2023.10.0", KeyError, False),
-        ("2023.10.0b0", KeyError, False),
+        ("2023.10.0", HomeAssistantError, None),
+        ("2023.10.0b0", HomeAssistantError, tuple),
+        ("2023.10.0", ConfigError, None),
+        ("2023.10.0b0", ConfigError, tuple),
+        ("2023.10.0", KeyError, tuple),
+        ("2023.10.0b0", KeyError, tuple),
     ],
 )
 async def test_suppressed_logging_stack_trace(
@@ -67,7 +68,7 @@ async def test_suppressed_logging_stack_trace(
     caplog: pytest.LogCaptureFixture,
     version: str,
     exc: Exception,
-    should_filter: bool,
+    exc_info: type[tuple] | None,
 ) -> None:
     """Test logging stack trace on stable builds.
 
@@ -75,20 +76,24 @@ async def test_suppressed_logging_stack_trace(
     """
     logger = logging.getLogger("")
     with patch("homeassistant.core.__version__", version):
-        filter = logging_util.SuppressHomeAssistantErrorStackTrace()
-        logger.addFilter(filter)
+        log_filter = logging_util.SuppressHomeAssistantErrorStackTrace()
+        logger.addFilter(log_filter)
 
     try:
         raise exc("Test exception")
-    except exc:
-        logger.exception(exc)
+    except exc as ex:
+        logger.exception(ex)
 
-    logger.removeFilter(filter)
+    logger.removeFilter(log_filter)
 
-    if should_filter:
-        assert 'raise exc("Test exception")' not in caplog.text
-    else:
-        assert 'raise exc("Test exception")' in caplog.text
+    assert len(caplog.records) == 1
+    record = caplog.records[0]
+    assert "Test exception" in record.message
+    assert (
+        record.exc_info is exc_info
+        or isinstance(record.exc_info, tuple)
+        and any(isinstance(attribute, TracebackType) for attribute in record.exc_info)
+    )
 
 
 async def test_migrate_log_handler(hass: HomeAssistant) -> None:
