@@ -23,7 +23,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Plex media_player from a config entry."""
+    """Set up Plex update entities from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     server = get_plex_server(hass, server_id)
     plex_server = server.plex_server
