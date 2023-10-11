@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     BIDIRECTIONAL_MODEL_PREFIXES,
     CHARGER_DATA_KEY,
+    CHARGER_ENERGY_PRICE_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     CHARGER_PART_NUMBER_KEY,
@@ -35,6 +36,16 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CHARGER_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CHARGER_MAX_CHARGING_CURRENT_KEY,
         translation_key="maximum_charging_current",
+        native_min_value=0,
+        native_max_value=6,
+        native_step=1,
+    ),
+    CHARGER_ENERGY_PRICE_KEY: WallboxNumberEntityDescription(
+        key=CHARGER_ENERGY_PRICE_KEY,
+        translation_key="energy_price",
+        native_min_value=-5,
+        native_max_value=5,
+        native_step=0.1,
     ),
 }
 
@@ -44,7 +55,7 @@ async def async_setup_entry(
 ) -> None:
     """Create wallbox number entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
-    # Check if the user is authorized to change current, if so, add number component:
+    # Check if the user has sufficient rights to change values, if so, add number component:
     try:
         await coordinator.async_set_charging_current(
             coordinator.data[CHARGER_MAX_CHARGING_CURRENT_KEY]
@@ -87,20 +98,36 @@ class WallboxNumber(WallboxEntity, NumberEntity):
     @property
     def native_max_value(self) -> float:
         """Return the maximum available current."""
-        return cast(float, self._coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY])
+        return cast(
+            float,
+            (
+                self._coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY]
+                if self.entity_description.key == CHARGER_MAX_CHARGING_CURRENT_KEY
+                else self.entity_description.native_max_value
+            ),
+        )
 
     @property
     def native_min_value(self) -> float:
         """Return the minimum available current based on charger type - some chargers can discharge."""
-        return (self.max_value * -1) if self._is_bidirectional else 6
+        return cast(
+            float,
+            (
+                (self.max_value * -1)
+                if self._is_bidirectional
+                and self.entity_description.key == CHARGER_MAX_CHARGING_CURRENT_KEY
+                else self.entity_description.native_min_value
+            ),
+        )
 
     @property
     def native_value(self) -> float | None:
         """Return the value of the entity."""
-        return cast(
-            float | None, self._coordinator.data[CHARGER_MAX_CHARGING_CURRENT_KEY]
-        )
+        return cast(float | None, self._coordinator.data[self.entity_description.key])
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the entity."""
-        await self._coordinator.async_set_charging_current(value)
+        if self.entity_description.key == CHARGER_MAX_CHARGING_CURRENT_KEY:
+            await self._coordinator.async_set_charging_current(value)
+        if self.entity_description.key == CHARGER_ENERGY_PRICE_KEY:
+            await self._coordinator.async_set_energy_cost(value)

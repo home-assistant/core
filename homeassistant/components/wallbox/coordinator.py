@@ -150,6 +150,21 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         await self.async_request_refresh()
 
+    def _set_energy_cost(self, energy_cost: float) -> None:
+        """Set energy cost for Wallbox."""
+        try:
+            self._authenticate()
+            self._wallbox.setEnergyCost(self._station, energy_cost)
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 403:
+                raise InvalidAuth from wallbox_connection_error
+            raise ConnectionError from wallbox_connection_error
+
+    async def async_set_energy_cost(self, energy_cost: float) -> None:
+        """Set energy cost for Wallbox."""
+        await self.hass.async_add_executor_job(self._set_energy_cost, energy_cost)
+        await self.async_request_refresh()
+
     def _set_lock_unlock(self, lock: bool) -> None:
         """Set wallbox to locked or unlocked."""
         try:
