@@ -1,31 +1,28 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Home Assistant",
+      "name": "Debug Home Assistant",
       "type": "python",
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
       "args": ["--debug", "-c", "config"],
-      "preLaunchTask": "Compile English translations"
+      "preLaunchTask": "Compile English translations",
+      "description": "Debug Home Assistant locally with English translations compilation."
     },
     {
-      "name": "Home Assistant (skip pip)",
+      "name": "Debug Home Assistant (Skip pip)",
       "type": "python",
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
       "args": ["--debug", "-c", "config", "--skip-pip"],
-      "preLaunchTask": "Compile English translations"
+      "preLaunchTask": "Compile English translations",
+      "description": "Debug Home Assistant without pip installation, with English translations compilation."
     },
     {
-      // Debug by attaching to local Home Assistant server using Remote Python Debugger.
-      // See https://www.home-assistant.io/integrations/debugpy/
-      "name": "Home Assistant: Attach Local",
+      "name": "Attach to Local Home Assistant",
       "type": "python",
       "request": "attach",
       "port": 5678,
@@ -34,13 +31,12 @@
         {
           "localRoot": "${workspaceFolder}",
           "remoteRoot": "."
-        }
-      ]
+        },
+      ],
+      "description": "Attach debugger to a locally running Home Assistant instance."
     },
     {
-      // Debug by attaching to remote Home Assistant server using Remote Python Debugger.
-      // See https://www.home-assistant.io/integrations/debugpy/
-      "name": "Home Assistant: Attach Remote",
+      "name": "Attach to Remote Home Assistant",
       "type": "python",
       "request": "attach",
       "port": 5678,
@@ -49,8 +45,9 @@
         {
           "localRoot": "${workspaceFolder}",
           "remoteRoot": "/usr/src/homeassistant"
-        }
-      ]
+        },
+      ],
+      "description": "Attach debugger to a remote Home Assistant instance on 'homeassistant.local'."
     }
   ]
 }
