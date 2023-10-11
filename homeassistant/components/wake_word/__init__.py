@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+import asyncio
 from collections.abc import AsyncIterable
 import logging
 from typing import final
@@ -33,6 +34,8 @@ __all__ = [
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+TIMEOUT_FETCH_WAKE_WORDS = 10
 
 
 @callback
@@ -147,7 +150,16 @@ async def websocket_entity_info(
         )
         return
 
+    try:
+        async with asyncio.timeout(TIMEOUT_FETCH_WAKE_WORDS):
+            wake_words = await entity.get_supported_wake_words()
+    except asyncio.TimeoutError:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_TIMEOUT, "Timeout fetching wake words"
+        )
+        return
+
     connection.send_result(
         msg["id"],
-        {"wake_words": (await entity.get_supported_wake_words())},
+        {"wake_words": wake_words},
     )
