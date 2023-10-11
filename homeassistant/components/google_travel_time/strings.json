@@ -86,7 +86,6 @@
     },
     "transit_routing_preference": {
       "options": {
-        "none": "No Transit Routing Preference",
         "less_walking": "Less Walking",
         "fewer_transfers": "Fewer Transfers"
       }
