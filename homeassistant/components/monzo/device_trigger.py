@@ -89,12 +89,6 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get(config[CONF_DEVICE_ID])
-
-    if not device:
-        return lambda: None
-
     event_config = {
         event_trigger.CONF_PLATFORM: Platform.EVENT,
         event_trigger.CONF_EVENT_TYPE: MONZO_EVENT,
