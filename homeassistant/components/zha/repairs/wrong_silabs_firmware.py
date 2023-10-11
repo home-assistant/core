@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
-from .core.const import DOMAIN
+from ..core.const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,8 +119,3 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
     )
 
     return True
-
-
-def async_delete_blocking_issues(hass: HomeAssistant) -> None:
-    """Delete repair issues that should disappear on a successful startup."""
-    ir.async_delete_issue(hass, DOMAIN, ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED)

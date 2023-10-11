@@ -44,11 +44,7 @@ async def test_async_get_channel_missing(
     zigpy_app_controller.state.network_info = zigpy.state.NetworkInfo()
     zigpy_app_controller.state.node_info = zigpy.state.NodeInfo()
 
-    with patch(
-        "bellows.zigbee.application.ControllerApplication.__new__",
-        return_value=zigpy_app_controller,
-    ):
-        assert await silabs_multiprotocol.async_get_channel(hass) is None
+    assert await silabs_multiprotocol.async_get_channel(hass) is None
 
 
 async def test_async_get_channel_no_zha(hass: HomeAssistant) -> None:
@@ -74,26 +70,20 @@ async def test_change_channel(
     """Test changing the channel."""
     await setup_zha()
 
-    with patch.object(
-        zigpy_app_controller, "move_network_to_channel", autospec=True
-    ) as mock_move_network_to_channel:
-        task = await silabs_multiprotocol.async_change_channel(hass, 20)
-        await task
+    task = await silabs_multiprotocol.async_change_channel(hass, 20)
+    await task
 
-    assert mock_move_network_to_channel.mock_calls == [call(20)]
+    assert zigpy_app_controller.move_network_to_channel.mock_calls == [call(20)]
 
 
 async def test_change_channel_no_zha(
     hass: HomeAssistant, zigpy_app_controller: ControllerApplication
 ) -> None:
     """Test changing the channel with no ZHA config entries and no database."""
-    with patch.object(
-        zigpy_app_controller, "move_network_to_channel", autospec=True
-    ) as mock_move_network_to_channel:
-        task = await silabs_multiprotocol.async_change_channel(hass, 20)
+    task = await silabs_multiprotocol.async_change_channel(hass, 20)
     assert task is None
 
-    assert mock_move_network_to_channel.mock_calls == []
+    assert zigpy_app_controller.mock_calls == []
 
 
 @pytest.mark.parametrize(("delay", "sleep"), [(0, 0), (5, 0), (15, 15 - 10.27)])
@@ -107,13 +97,11 @@ async def test_change_channel_delay(
     """Test changing the channel with a delay."""
     await setup_zha()
 
-    with patch.object(
-        zigpy_app_controller, "move_network_to_channel", autospec=True
-    ) as mock_move_network_to_channel, patch(
+    with patch(
         "homeassistant.components.zha.silabs_multiprotocol.asyncio.sleep", autospec=True
     ) as mock_sleep:
         task = await silabs_multiprotocol.async_change_channel(hass, 20, delay=delay)
         await task
 
-    assert mock_move_network_to_channel.mock_calls == [call(20)]
+    assert zigpy_app_controller.move_network_to_channel.mock_calls == [call(20)]
     assert mock_sleep.mock_calls == [call(sleep)]

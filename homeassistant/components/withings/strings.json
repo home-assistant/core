@@ -16,7 +16,8 @@
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "already_configured": "Configuration updated for profile.",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]"
     },
     "create_entry": {
       "default": "Successfully authenticated with Withings."

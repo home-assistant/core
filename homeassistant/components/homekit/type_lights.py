@@ -71,7 +71,13 @@ class Light(HomeAccessory):
     def __init__(self, *args):
         """Initialize a new Light accessory object."""
         super().__init__(*args, category=CATEGORY_LIGHTBULB)
-
+        self._reload_on_change_attrs.extend(
+            (
+                ATTR_SUPPORTED_COLOR_MODES,
+                ATTR_MAX_COLOR_TEMP_KELVIN,
+                ATTR_MIN_COLOR_TEMP_KELVIN,
+            )
+        )
         self.chars = []
         self._event_timer = None
         self._pending_events = {}
