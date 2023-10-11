@@ -23,15 +23,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_HOST): str,
-        vol.Optional(CONF_LOCAL_ACCESS_TOKEN): str,
-        vol.Optional(CONF_HOME_ASSISTANT_ACCESS_TOKEN): str,
-        vol.Optional(CONF_USE_CLOUD, False): bool,
-    }
-)
-
 
 async def validate_input(user_input: dict[str, Any]) -> bool:
     """Validate the user input allows us to connect."""
@@ -99,7 +90,14 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=CONFIG_SCHEMA,
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_HOST): str,
+                    vol.Optional(CONF_LOCAL_ACCESS_TOKEN): str,
+                    vol.Optional(CONF_HOME_ASSISTANT_ACCESS_TOKEN): str,
+                    vol.Optional(CONF_USE_CLOUD, False): bool,
+                }
+            ),
             errors=errors,
         )
 
