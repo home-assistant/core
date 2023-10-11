@@ -50,16 +50,7 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
         """
-        client = AzureDataExplorerClient(
-            CONF_ADX_CLUSTER_INGEST_URI=data["clusteringesturi"],
-            CONF_ADX_DATABASE_NAME=data["database"],
-            CONF_ADX_TABLE_NAME=data["table"],
-            CONF_APP_REG_ID=data["client_id"],
-            CONF_APP_REG_SECRET=data["client_secret"],
-            CONF_AUTHORITY_ID=data["authority_id"],
-            CONF_USE_FREE=data["use_free_cluster"],
-        )
-        # client = AzureDataExplorerClient(**data)
+        client = AzureDataExplorerClient(**data)
 
         try:
             await self.hass.async_add_executor_job(client.test_connection)

@@ -25,23 +25,24 @@ class AzureDataExplorerClient:
 
     def __init__(
         self,
-        CONF_ADX_CLUSTER_INGEST_URI: str,
-        CONF_ADX_DATABASE_NAME: str,
-        CONF_ADX_TABLE_NAME: str,
-        CONF_APP_REG_ID: str,
-        CONF_APP_REG_SECRET: str,
-        CONF_AUTHORITY_ID: str,
-        CONF_USE_FREE: bool,
+        **data
+        # conf_adx_cluster_ingest_uri: str,
+        # conf_adx_database_name: str,
+        # conf_adx_table_name: str,
+        # conf_app_reg_id: str,
+        # conf_app_reg_secret: str,
+        # conf_authority_id: str,
+        # conf_usee_free_cluster: bool,
     ) -> None:
         """Create the right class."""
 
-        self.cluster_ingest_uri = CONF_ADX_CLUSTER_INGEST_URI
-        self.database = CONF_ADX_DATABASE_NAME
-        self.table = CONF_ADX_TABLE_NAME
-        self.client_id = CONF_APP_REG_ID
-        self.client_secret = CONF_APP_REG_SECRET
-        self.authority_id = CONF_AUTHORITY_ID
-        self.use_queued_ingestion = CONF_USE_FREE
+        self.cluster_ingest_uri = data["conf_adx_cluster_ingest_uri"]
+        self.database = data["conf_adx_database_name"]
+        self.table = data["conf_adx_table_name"]
+        self.client_id = data["conf_app_reg_id"]
+        self.client_secret = data["conf_app_reg_secret"]
+        self.authority_id = data["conf_authority_id"]
+        self.use_queued_ingestion = data["conf_usee_free_cluster"]
 
         self.cluster_query_uri = self.cluster_ingest_uri.replace(
             "https://ingest-", "https://"
@@ -57,9 +58,9 @@ class AzureDataExplorerClient:
         # Create cLients for ingesting and querying data
         kcsb = KustoConnectionStringBuilder.with_aad_application_key_authentication(
             self.cluster_ingest_uri,
-            CONF_APP_REG_ID,
-            CONF_APP_REG_SECRET,
-            CONF_AUTHORITY_ID,
+            self.client_id,
+            self.client_secret,
+            self.authority_id,
         )
 
         if self.use_queued_ingestion is True:

@@ -109,13 +109,13 @@ class AzureDataExplorer:
         self._entities_filter = hass.data[DOMAIN][DATA_FILTER]
 
         self._client = AzureDataExplorerClient(
-            CONF_ADX_CLUSTER_INGEST_URI=self._entry.data["clusteringesturi"],
-            CONF_ADX_DATABASE_NAME=self._entry.data["database"],
-            CONF_ADX_TABLE_NAME=self._entry.data["table"],
-            CONF_APP_REG_ID=self._entry.data["client_id"],
-            CONF_APP_REG_SECRET=self._entry.data["client_secret"],
-            CONF_AUTHORITY_ID=self._entry.data["authority_id"],
-            CONF_USE_FREE=self._entry.data["use_free_cluster"],
+            conf_adx_cluster_ingest_uri=self._entry.data["cluster_ingest_uri"],
+            conf_adx_database_name=self._entry.data["database"],
+            conf_adx_table_name=self._entry.data["table"],
+            conf_app_reg_id=self._entry.data["client_id"],
+            conf_app_reg_secret=self._entry.data["client_secret"],
+            conf_authority_id=self._entry.data["authority_id"],
+            conf_usee_free_cluster=self._entry.data["use_free_cluster"],
         )
         # self._client = AzureDataExplorerClient(**entry.data)
 

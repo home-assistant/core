@@ -8,7 +8,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 
 DOMAIN = "azure_data_explorer"
 
-CONF_ADX_CLUSTER_INGEST_URI = "clusteringesturi"
+CONF_ADX_CLUSTER_INGEST_URI = "cluster_ingest_uri"
 CONF_ADX_DATABASE_NAME = "database"
 CONF_ADX_TABLE_NAME = "table"
 CONF_APP_REG_ID = "client_id"
