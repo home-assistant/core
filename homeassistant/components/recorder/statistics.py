@@ -828,37 +828,88 @@ def _reduce_statistics(
         # Loop over the hourly statistics + a fake entry to end the period
         for statistic in chain(stat_list, (fake_entry,)):
             if not same_period(prev_stat["start"], statistic["start"]):
-                start, end = period_start_end(prev_stat["start"])
-                # The previous statistic was the last entry of the period
-                row: StatisticsRow = {
-                    "start": start,
-                    "end": end,
-                }
-                if _want_mean:
-                    row["mean"] = mean(mean_values) if mean_values else None
-                    mean_values.clear()
-                if _want_min:
-                    row["min"] = min(min_values) if min_values else None
-                    min_values.clear()
-                if _want_max:
-                    row["max"] = max(max_values) if max_values else None
-                    max_values.clear()
-                if _want_last_reset:
-                    row["last_reset"] = prev_stat.get("last_reset")
-                if _want_state:
-                    row["state"] = prev_stat.get("state")
-                if _want_sum:
-                    row["sum"] = prev_stat["sum"]
+                row = _reduce_statistics_row(
+                    prev_stat,
+                    period_start_end,
+                    _want_mean,
+                    _want_min,
+                    _want_max,
+                    _want_last_reset,
+                    _want_state,
+                    _want_sum,
+                    mean_values,
+                    min_values,
+                    max_values,
+                )
                 result[statistic_id].append(row)
-            if _want_max and (_max := statistic.get("max")) is not None:
-                max_values.append(_max)
-            if _want_mean and (_mean := statistic.get("mean")) is not None:
-                mean_values.append(_mean)
-            if _want_min and (_min := statistic.get("min")) is not None:
-                min_values.append(_min)
+            _reduce_statistics_append_new_values(
+                statistic,
+                _want_max,
+                _want_mean,
+                _want_min,
+                mean_values,
+                min_values,
+                max_values,
+            )
             prev_stat = statistic
 
     return result
+
+
+def _reduce_statistics_row(
+    prev_stat: StatisticsRow,
+    period_start_end: Callable[[float], tuple[float, float]],
+    _want_mean: bool,
+    _want_min: bool,
+    _want_max: bool,
+    _want_last_reset: bool,
+    _want_state: bool,
+    _want_sum: bool,
+    mean_values: list[float],
+    min_values: list[float],
+    max_values: list[float],
+) -> StatisticsRow:
+    """Create one row for _reduce_statistics."""
+    start, end = period_start_end(prev_stat["start"])
+    # The previous statistic was the last entry of the period
+    row: StatisticsRow = {
+        "start": start,
+        "end": end,
+    }
+    if _want_mean:
+        row["mean"] = mean(mean_values) if mean_values else None
+        mean_values.clear()
+    if _want_min:
+        row["min"] = min(min_values) if min_values else None
+        min_values.clear()
+    if _want_max:
+        row["max"] = max(max_values) if max_values else None
+        max_values.clear()
+    if _want_last_reset:
+        row["last_reset"] = prev_stat.get("last_reset")
+    if _want_state:
+        row["state"] = prev_stat.get("state")
+    if _want_sum:
+        row["sum"] = prev_stat["sum"]
+    return row
+
+
+def _reduce_statistics_append_new_values(
+    statistic: StatisticsRow,
+    _want_max: bool,
+    _want_mean: bool,
+    _want_min: bool,
+    mean_values: list[float],
+    min_values: list[float],
+    max_values: list[float],
+) -> None:
+    """Append new values to the StatisticsRow if they exist."""
+    if _want_max and (_max := statistic.get("max")) is not None:
+        max_values.append(_max)
+    if _want_mean and (_mean := statistic.get("mean")) is not None:
+        mean_values.append(_mean)
+    if _want_min and (_min := statistic.get("min")) is not None:
+        min_values.append(_min)
 
 
 def reduce_day_ts_factory() -> (
