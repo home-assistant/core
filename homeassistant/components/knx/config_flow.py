@@ -114,6 +114,11 @@ class KNXCommonFlow(ABC, FlowHandler):
         self._gatewayscanner: GatewayScanner | None = None
         self._async_scan_gen: AsyncGenerator[GatewayDescriptor, None] | None = None
 
+        # This is a python workaround. Optimally we would use the constants directly in the
+        # switch statement.
+        self._tunneling_constant: str = str(CONF_KNX_TUNNELING.lower())
+        self._routing_constant: str = str(CONF_KNX_ROUTING.lower())
+
     @abstractmethod
     def finish_flow(self) -> FlowResult:
         """Finish the flow."""
@@ -146,22 +151,24 @@ class KNXCommonFlow(ABC, FlowHandler):
                 self._found_gateways = list(
                     self._gatewayscanner.found_gateways.values()
                 )
-            connection_type = user_input[CONF_KNX_CONNECTION_TYPE]
-            if connection_type == CONF_KNX_ROUTING:
-                return await self.async_step_routing()
 
-            if connection_type == CONF_KNX_TUNNELING:
-                self._found_tunnels = [
-                    gateway
-                    for gateway in self._found_gateways
-                    if gateway.supports_tunnelling
-                ]
-                self._found_tunnels.sort(
-                    key=lambda tunnel: tunnel.individual_address.raw
-                    if tunnel.individual_address
-                    else 0
-                )
-                return await self.async_step_tunnel()
+            connection_type = user_input[CONF_KNX_CONNECTION_TYPE]
+
+            match connection_type:
+                case self._routing_constant:
+                    return await self.async_step_routing()
+                case self._tunneling_constant:
+                    self._found_tunnels = [
+                        gateway
+                        for gateway in self._found_gateways
+                        if gateway.supports_tunnelling
+                    ]
+                    self._found_tunnels.sort(
+                        key=lambda tunnel: tunnel.individual_address.raw
+                        if tunnel.individual_address
+                        else 0
+                    )
+                    return await self.async_step_tunnel()
 
             # Automatic connection type
             self.new_entry_data = KNXConfigEntryData(
@@ -521,8 +528,8 @@ class KNXCommonFlow(ABC, FlowHandler):
                     str(_if.individual_address) for _if in self._keyring.interfaces
                 ]:
                     return self.finish_flow()
-                if not errors:
-                    return await self.async_step_knxkeys_tunnel_select()
+
+                return await self.async_step_knxkeys_tunnel_select()
 
         fields = {
             vol.Required(CONF_KEYRING_FILE): selector.FileSelector(
@@ -539,42 +546,50 @@ class KNXCommonFlow(ABC, FlowHandler):
             errors=errors,
         )
 
+    async def __handle_has_user_input(self, user_input: dict) -> None:
+        """Handle async_step_knxkeys_tunnel_select when the user input is available.
+
+        Args:
+            user_input (dict | None): The user input data.
+
+        Returns:
+            None
+        """
+        selected_tunnel_ia: str | None = None
+        _if_user_id: int | None = None
+        if user_input[CONF_KNX_TUNNEL_ENDPOINT_IA] == CONF_KNX_AUTOMATIC:
+            self.new_entry_data |= KNXConfigEntryData(
+                tunnel_endpoint_ia=None,
+            )
+        else:
+            selected_tunnel_ia = user_input[CONF_KNX_TUNNEL_ENDPOINT_IA]
+            self.new_entry_data |= KNXConfigEntryData(
+                tunnel_endpoint_ia=selected_tunnel_ia,
+                user_id=None,
+                user_password=None,
+                device_authentication=None,
+            )
+            _if_user_id = next(
+                (
+                    _if.user_id
+                    for _if in self._tunnel_endpoints
+                    if str(_if.individual_address) == selected_tunnel_ia
+                ),
+                None,
+            )
+        _tunnel_identifier = selected_tunnel_ia or self.new_entry_data.get(CONF_HOST)
+        _tunnel_suffix = f" @ {_tunnel_identifier}" if _tunnel_identifier else ""
+        self.new_title = f"{'Secure ' if _if_user_id else ''}Tunneling{_tunnel_suffix}"
+
     async def async_step_knxkeys_tunnel_select(
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Select if a specific tunnel should be used from knxkeys file."""
         errors = {}
         description_placeholders = {}
+
         if user_input is not None:
-            selected_tunnel_ia: str | None = None
-            _if_user_id: int | None = None
-            if user_input[CONF_KNX_TUNNEL_ENDPOINT_IA] == CONF_KNX_AUTOMATIC:
-                self.new_entry_data |= KNXConfigEntryData(
-                    tunnel_endpoint_ia=None,
-                )
-            else:
-                selected_tunnel_ia = user_input[CONF_KNX_TUNNEL_ENDPOINT_IA]
-                self.new_entry_data |= KNXConfigEntryData(
-                    tunnel_endpoint_ia=selected_tunnel_ia,
-                    user_id=None,
-                    user_password=None,
-                    device_authentication=None,
-                )
-                _if_user_id = next(
-                    (
-                        _if.user_id
-                        for _if in self._tunnel_endpoints
-                        if str(_if.individual_address) == selected_tunnel_ia
-                    ),
-                    None,
-                )
-            _tunnel_identifier = selected_tunnel_ia or self.new_entry_data.get(
-                CONF_HOST
-            )
-            _tunnel_suffix = f" @ {_tunnel_identifier}" if _tunnel_identifier else ""
-            self.new_title = (
-                f"{'Secure ' if _if_user_id else ''}Tunneling{_tunnel_suffix}"
-            )
+            await self.__handle_has_user_input(user_input)
             return self.finish_flow()
 
         # this step is only called from async_step_secure_knxkeys so self._keyring is always set
@@ -626,6 +641,32 @@ class KNXCommonFlow(ABC, FlowHandler):
             description_placeholders=description_placeholders,
         )
 
+    async def _validate_user(
+        self,
+        user_input: dict | None,
+        individual_address: str,
+        multicast_group: str,
+        local: Any,
+    ) -> dict:
+        errors: dict = {}
+
+        try:
+            ia_validator(individual_address)
+        except vol.Invalid:
+            errors[CONF_KNX_INDIVIDUAL_ADDRESS] = "invalid_individual_address"
+        try:
+            ip_v4_validator(multicast_group, multicast=True)
+        except vol.Invalid:
+            errors[CONF_KNX_MCAST_GRP] = "invalid_ip_address"
+        if local:
+            try:
+                _local_ip = await xknx_validate_ip(local)
+                ip_v4_validator(_local_ip, multicast=False)
+            except (vol.Invalid, XKNXException):
+                errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
+
+        return errors
+
     async def async_step_routing(self, user_input: dict | None = None) -> FlowResult:
         """Routing setup."""
         errors: dict = {}
@@ -646,20 +687,12 @@ class KNXCommonFlow(ABC, FlowHandler):
         )
 
         if user_input is not None:
-            try:
-                ia_validator(_individual_address)
-            except vol.Invalid:
-                errors[CONF_KNX_INDIVIDUAL_ADDRESS] = "invalid_individual_address"
-            try:
-                ip_v4_validator(_multicast_group, multicast=True)
-            except vol.Invalid:
-                errors[CONF_KNX_MCAST_GRP] = "invalid_ip_address"
-            if _local := user_input.get(CONF_KNX_LOCAL_IP):
-                try:
-                    _local_ip = await xknx_validate_ip(_local)
-                    ip_v4_validator(_local_ip, multicast=False)
-                except (vol.Invalid, XKNXException):
-                    errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
+            _local = user_input.get(CONF_KNX_LOCAL_IP)
+
+            _user_errors = await self._validate_user(
+                user_input, _individual_address, _multicast_group, _local
+            )
+            errors.update(_user_errors)
 
             if not errors:
                 connection_type = (
