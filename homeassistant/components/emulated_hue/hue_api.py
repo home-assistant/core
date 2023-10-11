@@ -71,6 +71,10 @@ from homeassistant.util.json import json_loads
 from homeassistant.util.network import is_local
 
 from .config import Config
+from .const import (
+    ONLY_LOCAL_IPS_ALLOWED,
+    ENTITY_NOT_FOUND,
+    BAD_REQUEST)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -146,7 +150,7 @@ class HueUsernameView(HomeAssistantView):
         """Handle a POST request."""
         assert request.remote is not None
         if not is_local(ip_address(request.remote)):
-            return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
+            return self.json_message(ONLY_LOCAL_IPS_ALLOWED, HTTPStatus.UNAUTHORIZED)
 
         try:
             data = await request.json(loads=json_loads)
@@ -175,7 +179,7 @@ class HueAllGroupsStateView(HomeAssistantView):
         """Process a request to make the Brilliant Lightpad work."""
         assert request.remote is not None
         if not is_local(ip_address(request.remote)):
-            return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
+            return self.json_message(ONLY_LOCAL_IPS_ALLOWED, HTTPStatus.UNAUTHORIZED)
 
         return self.json({})
 
@@ -196,7 +200,7 @@ class HueGroupView(HomeAssistantView):
         """Process a request to make the Logitech Pop working."""
         assert request.remote is not None
         if not is_local(ip_address(request.remote)):
-            return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
+            return self.json_message(ONLY_LOCAL_IPS_ALLOWED, HTTPStatus.UNAUTHORIZED)
 
         return self.json(
             [
@@ -227,7 +231,7 @@ class HueAllLightsStateView(HomeAssistantView):
         """Process a request to get the list of available lights."""
         assert request.remote is not None
         if not is_local(ip_address(request.remote)):
-            return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
+            return self.json_message(ONLY_LOCAL_IPS_ALLOWED, HTTPStatus.UNAUTHORIZED)
 
         return self.json(create_list_of_entities(self.config, request))
 
@@ -300,7 +304,7 @@ class HueOneLightStateView(HomeAssistantView):
         """Process a request to get the state of an individual light."""
         assert request.remote is not None
         if not is_local(ip_address(request.remote)):
-            return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
+            return self.json_message(ONLY_LOCAL_IPS_ALLOWED, HTTPStatus.UNAUTHORIZED)
 
         hass: core.HomeAssistant = request.app["hass"]
         hass_entity_id = self.config.number_to_entity_id(entity_id)
@@ -310,11 +314,11 @@ class HueOneLightStateView(HomeAssistantView):
                 "Unknown entity number: %s not found in emulated_hue_ids.json",
                 entity_id,
             )
-            return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
+            return self.json_message(ENTITY_NOT_FOUND, HTTPStatus.NOT_FOUND)
 
         if (state := hass.states.get(hass_entity_id)) is None:
-            _LOGGER.error("Entity not found: %s", hass_entity_id)
-            return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
+            _LOGGER.error(ENTITY_NOT_FOUND+": %s", hass_entity_id)
+            return self.json_message(ENTITY_NOT_FOUND, HTTPStatus.NOT_FOUND)
 
         if not self.config.is_state_exposed(state):
             _LOGGER.error("Entity not exposed: %s", entity_id)
@@ -342,10 +346,10 @@ class HueOneLightChangeView(HomeAssistantView):
         """Validate request."""
         if entity_id is None:
             _LOGGER.error("Unknown entity number: %s", entity_number)
-            return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
+            return self.json_message(ENTITY_NOT_FOUND, HTTPStatus.NOT_FOUND)
         if (entity := hass.states.get(entity_id)) is None:
-            _LOGGER.error("Entity not found: %s", entity_id)
-            return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
+            _LOGGER.error(ENTITY_NOT_FOUND+": %s", entity_id)
+            return self.json_message(ENTITY_NOT_FOUND, HTTPStatus.NOT_FOUND)
         if not config.is_state_exposed(entity):
             _LOGGER.error("Entity not exposed: %s", entity_id)
             return self.json_message("Entity not exposed", HTTPStatus.UNAUTHORIZED)
@@ -357,7 +361,7 @@ class HueOneLightChangeView(HomeAssistantView):
         """Process a request to set the state of an individual light."""
         assert request.remote is not None
         if not is_local(ip_address(request.remote)):
-            return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
+            return self.json_message(ONLY_LOCAL_IPS_ALLOWED, HTTPStatus.UNAUTHORIZED)
 
         config = self.config
         hass: core.HomeAssistant = request.app["hass"]
@@ -396,7 +400,7 @@ class HueOneLightChangeView(HomeAssistantView):
         if HUE_API_STATE_ON in request_json:
             if not isinstance(request_json[HUE_API_STATE_ON], bool):
                 _LOGGER.error("Unable to parse data: %s", request_json)
-                return self.json_message("Bad request", HTTPStatus.BAD_REQUEST)
+                return self.json_message(BAD_REQUEST, HTTPStatus.BAD_REQUEST)
             parsed[STATE_ON] = request_json[HUE_API_STATE_ON]
         else:
             parsed[STATE_ON] = entity.state != STATE_OFF
@@ -413,7 +417,7 @@ class HueOneLightChangeView(HomeAssistantView):
                     parsed[attr] = int(request_json[key])
                 except ValueError:
                     _LOGGER.error("Unable to parse data (2): %s", request_json)
-                    return self.json_message("Bad request", HTTPStatus.BAD_REQUEST)
+                    return self.json_message(BAD_REQUEST, HTTPStatus.BAD_REQUEST)
         if HUE_API_STATE_XY in request_json:
             try:
                 parsed[STATE_XY] = (
@@ -422,7 +426,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 )
             except ValueError:
                 _LOGGER.error("Unable to parse data (2): %s", request_json)
-                return self.json_message("Bad request", HTTPStatus.BAD_REQUEST)
+                return self.json_message(BAD_REQUEST, HTTPStatus.BAD_REQUEST)
 
         if HUE_API_STATE_BRI in request_json:
             if entity.domain == light.DOMAIN:
