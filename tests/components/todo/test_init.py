@@ -15,6 +15,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import (
@@ -154,6 +155,24 @@ async def test_create_todo_item(
     assert item.summary == "New item"
     assert item.status == TodoItemStatus.NEEDS_ACTION
 
+    args = entity1.async_create_todo_item.side_effect = HomeAssistantError("Ooops")
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "todo/item/create",
+            "entity_id": "todo.entity1",
+            "item": {"summary": "New item"},
+        }
+    )
+    resp = await client.receive_json()
+    assert resp.get("id") == 2
+    assert not resp.get("success")
+    assert resp.get("error") == {
+        "code": "failed",
+        "message": "Ooops",
+    }
+
 
 async def test_update_todo_item(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -187,6 +206,24 @@ async def test_update_todo_item(
     assert item.summary == "Updated item"
     assert item.status == TodoItemStatus.COMPLETED
 
+    args = entity1.async_update_todo_item.side_effect = HomeAssistantError("Ooops")
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "todo/item/update",
+            "entity_id": "todo.entity1",
+            "item": {"uid": "item-1", "summary": "Updated item", "status": "COMPLETED"},
+        }
+    )
+    resp = await client.receive_json()
+    assert resp.get("id") == 2
+    assert not resp.get("success")
+    assert resp.get("error") == {
+        "code": "failed",
+        "message": "Ooops",
+    }
+
 
 async def test_delete_todo_item(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -215,6 +252,24 @@ async def test_delete_todo_item(
     args = entity1.async_delete_todo_items.call_args
     assert args
     assert args.kwargs.get("uids") == set({"item-1", "item-2"})
+
+    args = entity1.async_delete_todo_items.side_effect = HomeAssistantError("Ooops")
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "todo/item/delete",
+            "entity_id": "todo.entity1",
+            "uids": ["item-1", "item-2"],
+        }
+    )
+    resp = await client.receive_json()
+    assert resp.get("id") == 2
+    assert not resp.get("success")
+    assert resp.get("error") == {
+        "code": "failed",
+        "message": "Ooops",
+    }
 
 
 async def test_move_todo_item(
@@ -246,6 +301,25 @@ async def test_move_todo_item(
     assert args
     assert args.kwargs.get("uid") == "item-1"
     assert args.kwargs.get("previous") == "item-2"
+
+    args = entity1.async_move_todo_item.side_effect = HomeAssistantError("Ooops")
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "todo/item/move",
+            "entity_id": "todo.entity1",
+            "uid": "item-1",
+            "previous": "item-2",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp.get("id") == 2
+    assert not resp.get("success")
+    assert resp.get("error") == {
+        "code": "failed",
+        "message": "Ooops",
+    }
 
 
 @pytest.mark.parametrize(
