@@ -212,7 +212,7 @@ class ZHAGateway:
                 except NetworkSettingsInconsistent:
                     raise
                 except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.warning(
+                    _LOGGER.debug(
                         "Couldn't start %s coordinator (attempt %s of %s)",
                         self.radio_description,
                         attempt + 1,
