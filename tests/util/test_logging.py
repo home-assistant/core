@@ -3,7 +3,7 @@ import asyncio
 from functools import partial
 import logging
 import queue
-from types import TracebackType
+from types import NoneType
 from unittest.mock import patch
 
 import pytest
@@ -55,9 +55,9 @@ async def test_logging_with_queue_handler() -> None:
 @pytest.mark.parametrize(
     ("version", "exc", "exc_info"),
     [
-        ("2023.10.0", HomeAssistantError, None),
+        ("2023.10.0", HomeAssistantError, NoneType),
         ("2023.10.0b0", HomeAssistantError, tuple),
-        ("2023.10.0", ConfigError, None),
+        ("2023.10.0", ConfigError, NoneType),
         ("2023.10.0b0", ConfigError, tuple),
         ("2023.10.0", KeyError, tuple),
         ("2023.10.0b0", KeyError, tuple),
@@ -68,7 +68,7 @@ async def test_suppressed_logging_stack_trace(
     caplog: pytest.LogCaptureFixture,
     version: str,
     exc: Exception,
-    exc_info: type[tuple] | None,
+    exc_info: type[tuple] | NoneType,
 ) -> None:
     """Test logging stack trace on stable builds.
 
@@ -89,11 +89,7 @@ async def test_suppressed_logging_stack_trace(
     assert len(caplog.records) == 1
     record = caplog.records[0]
     assert "Test exception" in record.message
-    assert (
-        record.exc_info is exc_info
-        or isinstance(record.exc_info, tuple)
-        and any(isinstance(attribute, TracebackType) for attribute in record.exc_info)
-    )
+    assert type(record.exc_info) is exc_info
 
 
 async def test_migrate_log_handler(hass: HomeAssistant) -> None:
