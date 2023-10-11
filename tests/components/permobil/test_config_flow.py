@@ -34,19 +34,6 @@ async def test_flow_init(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
 
-async def test_form_empty_email(hass: HomeAssistant) -> None:
-    """Test we handle empty email."""
-    _result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        _result["flow_id"],
-        user_input={CONF_EMAIL: EMPTY},
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"].get("reason") == "empty_email"
-
-
 async def test_form_empty_code(hass: HomeAssistant) -> None:
     """Test we handle empty code."""
     _result = await hass.config_entries.flow.async_init(
@@ -58,19 +45,6 @@ async def test_form_empty_code(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"].get("reason") == "empty_code"
-
-
-async def test_form_invalid_email(hass: HomeAssistant) -> None:
-    """Test we handle invalid email."""
-    _result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        _result["flow_id"],
-        user_input={CONF_EMAIL: INVALID_EMAIL},
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"].get("reason") == "invalid_email"
 
 
 async def test_form_invalid_region_no_match(hass: HomeAssistant) -> None:

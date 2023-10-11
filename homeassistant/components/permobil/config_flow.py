@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 GET_EMAIL_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_EMAIL): cv.string,
+        vol.Required(CONF_EMAIL): vol.Email(),
     }
 )
 
@@ -33,14 +33,11 @@ class InvalidAuth(exceptions.HomeAssistantError):
 
 async def validate_input(p_api: MyPermobil, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
-    email = data.get(CONF_EMAIL)
-    code = data.get(CONF_CODE)
-    token = data.get(CONF_TOKEN)
-    if email:
+    if email := data.get(CONF_EMAIL):
         p_api.set_email(email)
-    if code:
+    if code := data.get(CONF_CODE):
         p_api.set_code(code)
-    if token:
+    if token := data.get(CONF_TOKEN):
         p_api.set_token(token)
 
 
@@ -70,28 +67,15 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             session = async_get_clientsession(self.hass)
             self.p_api = MyPermobil(APPLICATION, session=session)
 
-        try:
-            if user_input is not None:
-                if not user_input.get(CONF_EMAIL):
-                    raise InvalidAuth("empty email")
+        if user_input is not None:
+            # the user has entered their email in the first prompt
+            user_input[CONF_EMAIL] = user_input[CONF_EMAIL].replace(" ", "")
+            await validate_input(self.p_api, user_input)  # ClientException
+            self.data[CONF_EMAIL] = user_input[CONF_EMAIL]
+            _LOGGER.debug("Permobil: email %s", self.p_api.email)
 
-                # the user has entered their email in the first prompt
-                user_input[CONF_EMAIL] = user_input[CONF_EMAIL].replace(" ", "")
-                await validate_input(self.p_api, user_input)  # ClientException
-                self.data[CONF_EMAIL] = user_input[CONF_EMAIL]
-                _LOGGER.debug("Permobil: email %s", self.p_api.email)
-
-                await self.async_set_unique_id(self.data[CONF_EMAIL])
-                self._abort_if_unique_id_configured()
-        except MyPermobilClientException as err:
-            # the email did not pass validation by the api client
-            _LOGGER.error("Permobil: %s", err)
-            errors["base"] = f"Pemobil: {err}"
-            errors["reason"] = "invalid_email"
-        except InvalidAuth as err:
-            _LOGGER.error("Permobil: %s", err)
-            errors["base"] = "Empty Email"
-            errors["reason"] = "empty_email"
+            await self.async_set_unique_id(self.data[CONF_EMAIL])
+            self._abort_if_unique_id_configured()
 
         if errors or user_input is None:
             # There was an error when the user entered their email
@@ -113,15 +97,9 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             if user_input is None:
                 # The user has opened the 2nd prompt for the first time
-                # if the email ends with @permobil,
-                # include internal regions for debugging purposes
-                include_internal = self.data[CONF_EMAIL].endswith("@permobil.com")
-                _LOGGER.debug("Permobil: include internals %s", include_internal)
                 # fetch the list of regions names and urls from the api
                 # for the user to select from. [("name","url"),("name","url"),...]
-                self.region_names = await self.p_api.request_region_names(
-                    include_internal
-                )
+                self.region_names = await self.p_api.request_region_names()
                 _LOGGER.debug(
                     "Permobil: region names %s",
                     ",".join(list(self.region_names.keys())),
