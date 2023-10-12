@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Generator
+from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
 import pytest
@@ -25,8 +26,8 @@ TEST_UNIQUE_ID = TEST_MAC
 TEST_TITLE = "Rabbit Air"
 
 ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
-    host=TEST_HOST,
-    addresses=[TEST_HOST],
+    ip_address=ip_address(TEST_HOST),
+    ip_addresses=[ip_address(TEST_HOST)],
     port=9009,
     hostname=f"{TEST_NAME}.local.",
     type="_rabbitair._udp.local.",
