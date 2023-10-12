@@ -227,11 +227,8 @@ class FibaroController:
     def get_siblings(self, device: DeviceModel) -> list[DeviceModel]:
         """Get the siblings of a device."""
         if device.has_endpoint_id:
-            return self.get_children2(
-                self._device_map[device.fibaro_id].parent_fibaro_id,
-                self._device_map[device.fibaro_id].endpoint_id,
-            )
-        return self.get_children(self._device_map[device.fibaro_id].parent_fibaro_id)
+            return self.get_children2(device.parent_fibaro_id, device.endpoint_id)
+        return self.get_children(device.parent_fibaro_id)
 
     @staticmethod
     def _map_device_to_platform(device: DeviceModel) -> Platform | None:
