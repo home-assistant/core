@@ -702,6 +702,7 @@ def _minimal_response(
     ent_results: list[State | dict[str, Any]],
     prev_state: Column | str,
 ) -> Column | str:
+    """Generates a minimal response"""
     if schema_version < 31:
         last_updated_idx = field_map["last_updated"]
         for row in group:
@@ -757,6 +758,7 @@ def _append_all_changes(
     _process_timestamp: Callable[[datetime], float | str],
     compressed_state_format: bool,
 ) -> (dict[str, Row], defaultdict[str, list[State | dict[str, Any]]]):
+    """Appends SQL results to JSON friendly data structure"""
     for ent_id, group in states_iter:
         attr_cache: dict[str, dict[str, Any]] = {}
         prev_state: Column | str
