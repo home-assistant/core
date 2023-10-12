@@ -1866,7 +1866,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.5.2
+pymodbus==3.5.4
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2315,7 +2315,7 @@ renault-api==0.2.0
 renson-endura-delta==1.6.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.10
+reolink-aio==0.7.11
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1

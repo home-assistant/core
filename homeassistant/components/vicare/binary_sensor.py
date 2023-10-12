@@ -160,7 +160,7 @@ async def async_setup_entry(
         for description in GLOBAL_SENSORS:
             entity = await hass.async_add_executor_job(
                 _build_entity,
-                f"{description.name}",
+                description.name,
                 api,
                 device,
                 description,
