@@ -271,7 +271,6 @@ FLOWS = {
         "lyric",
         "mailgun",
         "matter",
-        "mazda",
         "meater",
         "medcom_ble",
         "melcloud",
