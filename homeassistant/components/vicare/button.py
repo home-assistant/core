@@ -80,7 +80,7 @@ async def async_setup_entry(
     for description in BUTTON_DESCRIPTIONS:
         entity = await hass.async_add_executor_job(
             _build_entity,
-            f"{description.name}",
+            description.name,
             api,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             description,
