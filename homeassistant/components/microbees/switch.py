@@ -28,7 +28,7 @@ async def async_setup_entry(
 
 
 class MBSwitch(ToggleEntity):
-    def __init__(self, act, token):
+    def __init__(self, act, token) -> None:
         self.act = act
         self.token = token
         self._state = self.act.get("value")
@@ -47,7 +47,6 @@ class MBSwitch(ToggleEntity):
         return self.act.get("value")
 
     async def async_turn_on(self, **kwargs):
-        _LOGGER.info("switch turn_on")
         data = {
             "actuatorID": self.act.get("id"),
             "command_type": 6,
@@ -61,7 +60,6 @@ class MBSwitch(ToggleEntity):
         self.act["value"] = 1
 
     async def async_turn_off(self, **kwargs):
-        _LOGGER.info("switch turn_off")
         data = {
             "actuatorID": self.act.get("id"),
             "command_type": 6,
