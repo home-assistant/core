@@ -37,7 +37,7 @@ _TIME_TRANSLATION_FORMAT: Final = "%H:%M:%S"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    _: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for KNX platform."""

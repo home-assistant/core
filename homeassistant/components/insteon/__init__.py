@@ -37,34 +37,26 @@ OPTIONS = "options"
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_get_device_config(hass, config_entry):
+async def async_get_device_config(hass):
     """Initiate the connection and services."""
     # Make a copy of addresses due to edge case where the list of devices could
     # change during status update
     # Cannot be done concurrently due to issues with the underlying protocol.
-    for address in list(devices):
-        if devices[address].is_battery:
-            continue
-        with suppress(AttributeError):
-            await devices[address].async_status()
-
     load_aldb = 2 if devices.modem.aldb.read_write_mode == ReadWriteMode.UNKNOWN else 1
     await devices.async_load(id_devices=1, load_modem_aldb=load_aldb)
-    for addr in list(devices):
-        device = devices[addr]
-        flags = True
-        for name in device.operating_flags:
-            if not device.operating_flags[name].is_loaded:
-                flags = False
-                break
-        if flags:
-            for name in device.properties:
-                if not device.properties[name].is_loaded:
-                    flags = False
-                    break
 
-        # Cannot be done concurrently due to issues with the underlying protocol.
-        if not device.aldb.is_loaded or not flags:
+    for address in list(devices):
+        device = devices[address]
+        if device.is_battery:
+            continue
+
+        with suppress(AttributeError):
+            await device.async_status()
+
+        flags = all(flag.is_loaded for flag in device.operating_flags.values())
+        properties = all(prop.is_loaded for prop in device.properties.values())
+
+        if not device.aldb.is_loaded or not (flags and properties):
             await device.async_read_config()
 
     await devices.async_save(workdir=hass.config.config_dir)
@@ -75,7 +67,7 @@ async def close_insteon_connection(*args):
     await async_close()
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(_hass: HomeAssistant, _config: ConfigType) -> bool:
     """Set up the Insteon platform."""
     return True
 
@@ -152,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await api.async_register_insteon_frontend(hass)
 
     entry.async_create_background_task(
-        hass, async_get_device_config(hass, entry), "insteon-get-device-config"
+        hass, async_get_device_config(hass), "insteon-get-device-config"
     )
 
     return True

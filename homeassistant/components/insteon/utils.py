@@ -52,10 +52,6 @@ from .const import (
     CONF_UNITCODE,
     DOMAIN,
     EVENT_CONF_BUTTON,
-    EVENT_GROUP_OFF,
-    EVENT_GROUP_OFF_FAST,
-    EVENT_GROUP_ON,
-    EVENT_GROUP_ON_FAST,
     SIGNAL_ADD_DEFAULT_LINKS,
     SIGNAL_ADD_DEVICE_OVERRIDE,
     SIGNAL_ADD_ENTITIES,
@@ -119,24 +115,14 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
         name: str, address: Address, group: int, button: str | None = None
     ):
         # Firing an event when a button is pressed.
-        if button and button[-2] == "_":
-            button_id = button[-1].lower()
-        else:
-            button_id = None
+        button_id = button[-1].lower() if button and button[-2] == "_" else None
 
         schema = {CONF_ADDRESS: address, "group": group}
         if button_id:
             schema[EVENT_CONF_BUTTON] = button_id
-        if name == ON_EVENT:
-            event = EVENT_GROUP_ON
-        elif name == OFF_EVENT:
-            event = EVENT_GROUP_OFF
-        elif name == ON_FAST_EVENT:
-            event = EVENT_GROUP_ON_FAST
-        elif name == OFF_FAST_EVENT:
-            event = EVENT_GROUP_OFF_FAST
-        else:
-            event = f"insteon.{name}"
+
+        event = get_event(name)
+
         _LOGGER.debug("Firing event %s with %s", event, schema)
         hass.bus.async_fire(event, schema)
 
@@ -149,6 +135,21 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
                 _register_event(event, async_fire_insteon_event)
         else:
             _register_event(event, async_fire_insteon_event)
+
+
+def get_event(name):
+    """Name (str): The name of the event."""
+
+    if name == ON_EVENT:
+        pass
+    elif name == OFF_EVENT:
+        pass
+    elif name == ON_FAST_EVENT:
+        pass
+    elif name == OFF_FAST_EVENT:
+        pass
+    else:
+        pass
 
 
 def register_new_device_callback(hass):

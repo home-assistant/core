@@ -149,7 +149,6 @@ def build_device_override_schema(
     address=vol.UNDEFINED,
     cat=vol.UNDEFINED,
     subcat=vol.UNDEFINED,
-    firmware=vol.UNDEFINED,
 ):
     """Build the device override schema for config flow."""
     return vol.Schema(
