@@ -1,7 +1,7 @@
 {
   "domain": "trafikverket_weatherstation",
   "name": "Trafikverket Weather Station",
-  "codeowners": ["@endor-force", "@gjohansson-ST"],
+  "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/trafikverket_weatherstation",
   "iot_class": "cloud_polling",
