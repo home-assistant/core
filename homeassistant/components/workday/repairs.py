@@ -18,7 +18,6 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .config_flow import NONE_SENTINEL
 from .const import CONF_PROVINCE
 
 
@@ -75,9 +74,8 @@ class CountryFixFlow(RepairsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the province step of a fix flow."""
-        if user_input and user_input.get(CONF_PROVINCE):
-            if user_input.get(CONF_PROVINCE, NONE_SENTINEL) == NONE_SENTINEL:
-                user_input[CONF_PROVINCE] = None
+        if user_input is not None:
+            user_input.setdefault(CONF_PROVINCE, None)
             options = dict(self.entry.options)
             new_options = {**options, **user_input, CONF_COUNTRY: self.country}
             self.hass.config_entries.async_update_entry(self.entry, options=new_options)
@@ -90,9 +88,9 @@ class CountryFixFlow(RepairsFlow):
             step_id="province",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_PROVINCE, default=NONE_SENTINEL): SelectSelector(
+                    vol.Optional(CONF_PROVINCE): SelectSelector(
                         SelectSelectorConfig(
-                            options=[NONE_SENTINEL, *country_provinces],
+                            options=country_provinces,
                             mode=SelectSelectorMode.DROPDOWN,
                             translation_key=CONF_PROVINCE,
                         )
