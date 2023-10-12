@@ -12,6 +12,7 @@ class ViCareEntity(Entity):
 
     def __init__(self, device_config) -> None:
         """Initialize the entity."""
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_config.getConfig().serial)},
             name=f"{device_config.getModel()}-{device_config.getConfig().serial}",
