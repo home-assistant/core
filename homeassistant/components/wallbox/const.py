@@ -3,7 +3,7 @@ from enum import StrEnum
 
 DOMAIN = "wallbox"
 
-BIDIRECTIONAL_MODEL_PREFIXES = ["QSX"]
+BIDIRECTIONAL_MODEL_PREFIXES = ["QS"]
 
 CODE_KEY = "code"
 CONF_STATION = "station"

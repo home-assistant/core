@@ -57,7 +57,7 @@ PyFlick==0.0.2
 PyFlume==0.6.5
 
 # homeassistant.components.fronius
-PyFronius==0.7.1
+PyFronius==0.7.2
 
 # homeassistant.components.met_eireann
 PyMetEireann==2021.8.0
@@ -299,7 +299,7 @@ aiopvpc==4.2.2
 aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.3.4
+aioqsw==0.3.5
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -439,7 +439,7 @@ beautifulsoup4==4.12.2
 bellows==0.36.5
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected==0.14.0
+bimmer-connected==0.14.1
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.2.1
@@ -605,7 +605,7 @@ energyzero==0.5.0
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.5.37
+env-canada==0.6.0
 
 # homeassistant.components.season
 ephem==4.1.2
@@ -617,7 +617,7 @@ epson-projector==0.5.1
 esphome-dashboard-api==1.2.3
 
 # homeassistant.components.eufylife_ble
-eufylife-ble-client==0.1.7
+eufylife-ble-client==0.1.8
 
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
@@ -756,7 +756,7 @@ ha-ffmpeg==3.1.0
 ha-iotawattpy==0.1.1
 
 # homeassistant.components.philips_js
-ha-philipsjs==3.1.0
+ha-philipsjs==3.1.1
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -822,7 +822,7 @@ ical==5.0.1
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==1.4
+idasen-ha==1.4.1
 
 # homeassistant.components.network
 ifaddr==0.2.0
@@ -1171,7 +1171,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2023.9.0
+pyDuotecno==2023.10.0
 
 # homeassistant.components.eight_sleep
 pyEight==0.3.2
@@ -1379,16 +1379,13 @@ pylitejet==0.5.0
 pylitterbot==2023.4.9
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.18.2
+pylutron-caseta==0.18.3
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
 
 # homeassistant.components.firmata
 pymata-express==1.19
-
-# homeassistant.components.mazda
-pymazda==0.3.11
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.8
@@ -1599,7 +1596,7 @@ python-matter-server==3.7.0
 python-miio==0.5.12
 
 # homeassistant.components.myq
-python-myq==3.1.11
+python-myq==3.1.13
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
@@ -1675,7 +1672,7 @@ pyvolumio==0.1.5
 pywaze==0.5.1
 
 # homeassistant.components.weatherflow
-pyweatherflowudp==1.4.3
+pyweatherflowudp==1.4.5
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -1762,7 +1759,7 @@ samsungtvws[async,encrypted]==2.6.0
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.9.1
+screenlogicpy==0.9.2
 
 # homeassistant.components.backup
 securetar==2023.3.0
@@ -1877,7 +1874,7 @@ surepy==0.8.0
 switchbot-api==1.1.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.8.2
+systembridgeconnector==3.8.4
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
