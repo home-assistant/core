@@ -372,6 +372,10 @@ async def test_cannot_retrieve_expired_access_token(hass: HomeAssistant) -> None
     access_token = manager.async_create_access_token(refresh_token)
     assert await manager.async_validate_access_token(access_token) is refresh_token
 
+    # We patch time directly here because we want the access token to be created with
+    # an expired time, but we do not want to freeze time so that jwt will compare it
+    # to the patched time. If we freeze time for the test it will be frozen for jwt
+    # as well and the token will not be expired.
     with patch(
         "homeassistant.auth.time.time",
         return_value=time.time()
