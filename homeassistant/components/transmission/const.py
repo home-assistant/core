@@ -1,4 +1,10 @@
 """Constants for the Transmission Bittorent Client component."""
+from __future__ import annotations
+
+from collections.abc import Callable
+
+from transmission_rpc import Torrent
+
 DOMAIN = "transmission"
 
 SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle mode"}
@@ -8,7 +14,7 @@ ORDER_OLDEST_FIRST = "oldest_first"
 ORDER_BEST_RATIO_FIRST = "best_ratio_first"
 ORDER_WORST_RATIO_FIRST = "worst_ratio_first"
 
-SUPPORTED_ORDER_MODES = {
+SUPPORTED_ORDER_MODES: dict[str, Callable[[list[Torrent]], list[Torrent]]] = {
     ORDER_NEWEST_FIRST: lambda torrents: sorted(
         torrents, key=lambda t: t.date_added, reverse=True
     ),
