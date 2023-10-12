@@ -15,6 +15,7 @@ from .const import (
     DATA_KEY_HOST,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
+    KEY_TO_UPDATE_TYPES,
 )
 
 
@@ -44,6 +45,16 @@ class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
             and DATA_KEY_ADDONS in self.coordinator.data
             and self.entity_description.key
             in self.coordinator.data[DATA_KEY_ADDONS].get(self._addon_slug, {})
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        await super().async_added_to_hass()
+        update_types = KEY_TO_UPDATE_TYPES[self.entity_description.key]
+        self.async_on_remove(
+            self.coordinator.async_enable_addon_updates(
+                self._addon_slug, self.entity_id, update_types
+            )
         )
 
 

@@ -378,7 +378,9 @@ def _write_default_config(config_dir: str) -> bool:
         return True
 
     except OSError:
-        print("Unable to create default configuration file", config_path)  # noqa: T201
+        print(  # noqa: T201
+            f"Unable to create default configuration file {config_path}"
+        )
         return False
 
 
