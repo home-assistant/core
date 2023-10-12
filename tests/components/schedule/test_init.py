@@ -6,26 +6,32 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.schedule import STORAGE_VERSION, STORAGE_VERSION_MINOR
 from homeassistant.components.schedule.const import (
     ATTR_NEXT_EVENT,
+    CONF_ALL_DAYS,
     CONF_FRIDAY,
     CONF_FROM,
     CONF_MONDAY,
     CONF_SATURDAY,
+    CONF_SCHEDULE,
     CONF_SUNDAY,
     CONF_THURSDAY,
     CONF_TO,
     CONF_TUESDAY,
     CONF_WEDNESDAY,
     DOMAIN,
+    SERVICE_GET,
+    SERVICE_SET,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_NAME,
+    CONF_ENTITY_ID,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -34,6 +40,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import EVENT_STATE_CHANGED, Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -600,7 +607,7 @@ async def test_ws_delete(
         ("24:00:00", "2022-08-11T00:00:00-07:00", "24:00:00"),
     ),
 )
-async def test_update(
+async def test_ws_update(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
@@ -729,3 +736,275 @@ async def test_ws_create(
     assert result["party_mode"][CONF_MONDAY] == [
         {CONF_FROM: "12:00:00", CONF_TO: saved_to}
     ]
+
+
+async def test_service_get(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
+) -> None:
+    """Test getting a single schedule via service."""
+    assert await schedule_setup()
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET,
+        {
+            CONF_ENTITY_ID: "schedule.from_storage",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert set(result) == CONF_ALL_DAYS
+    assert result[CONF_FRIDAY] == [{CONF_FROM: "17:00:00", CONF_TO: "23:59:59"}]
+    assert result[CONF_SATURDAY] == [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}]
+    assert result[CONF_SUNDAY] == [{CONF_FROM: "00:00:00", CONF_TO: "24:00:00"}]
+    for day in CONF_ALL_DAYS.difference({CONF_FRIDAY, CONF_SATURDAY, CONF_SUNDAY}):
+        assert result[day] == []
+
+
+@pytest.mark.freeze_time("2022-08-10 20:10:00-07:00")
+@pytest.mark.parametrize(
+    ("to", "next_event", "saved_to"),
+    (
+        ("23:59:59", "2022-08-10T23:59:59-07:00", "23:59:59"),
+        ("24:00", "2022-08-11T00:00:00-07:00", "24:00:00"),
+        ("24:00:00", "2022-08-11T00:00:00-07:00", "24:00:00"),
+    ),
+)
+async def test_service_set(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
+    to: str,
+    next_event: str,
+    saved_to: str,
+) -> None:
+    """Test updating the schedule via service call."""
+    ent_reg = er.async_get(hass)
+
+    assert await schedule_setup()
+
+    state = hass.states.get("schedule.from_storage")
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "from storage"
+    assert state.attributes[ATTR_ICON] == "mdi:party-popper"
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-12T17:00:00-07:00"
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is not None
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET,
+        {
+            CONF_ENTITY_ID: "schedule.from_storage",
+            CONF_SCHEDULE: {
+                CONF_MONDAY: [],
+                CONF_TUESDAY: [],
+                CONF_WEDNESDAY: [{CONF_FROM: "17:00:00", CONF_TO: to}],
+                CONF_THURSDAY: [],
+                CONF_FRIDAY: [],
+                CONF_SATURDAY: [],
+                CONF_SUNDAY: [],
+            },
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("schedule.from_storage")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == next_event
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 1, "type": f"{DOMAIN}/list"})
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    result = {item["id"]: item for item in resp["result"]}
+
+    assert len(result) == 1
+    assert result["from_storage"][CONF_WEDNESDAY] == [
+        {CONF_FROM: "17:00:00", CONF_TO: saved_to}
+    ]
+
+
+async def test_service_get_exceptions(
+    hass: HomeAssistant,
+    schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
+) -> None:
+    """Test exceptions while executing the get service."""
+    assert await schedule_setup()
+
+    # Test call with extra key
+    with pytest.raises(vol.Invalid, match="extra keys not allowed"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET,
+            {
+                CONF_ENTITY_ID: "schedule.does_not_exist",
+                "extra_key": {},
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # Test call missing required keys
+    with pytest.raises(vol.Invalid, match="required key not provided"):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_GET, {}, blocking=True, return_response=True
+        )
+
+    # Test call with wrong data type
+    with pytest.raises(
+        vol.Invalid, match="value should be a string for dictionary value"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET,
+            {
+                CONF_ENTITY_ID: ["schedule.from_storage"],
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # Test call with entity_id that does not exist
+    with pytest.raises(
+        HomeAssistantError, match="Entity 'schedule.does_not_exist' not found"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET,
+            {
+                CONF_ENTITY_ID: "schedule.does_not_exist",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # Test call with entity_id that is not a schedule
+    with patch(
+        "homeassistant.components.random.binary_sensor.getrandbits",
+        return_value=1,
+    ):
+        assert await async_setup_component(
+            hass,
+            "binary_sensor",
+            {"binary_sensor": {"platform": "random", "name": "test"}},
+        )
+        await hass.async_block_till_done()
+
+    with pytest.raises(
+        HomeAssistantError, match="No schedule for entity 'binary_sensor.test' found"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET,
+            {
+                CONF_ENTITY_ID: "binary_sensor.test",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_service_set_exceptions(
+    hass: HomeAssistant,
+    schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
+) -> None:
+    """Test exceptions while executing the set service."""
+    assert await schedule_setup()
+
+    # Test call with entity_id that does not exist
+    with pytest.raises(
+        HomeAssistantError, match="Entity 'schedule.does_not_exist' not found"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET,
+            {
+                CONF_ENTITY_ID: "schedule.does_not_exist",
+                CONF_SCHEDULE: {},
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # Test call with extra key
+    with pytest.raises(vol.Invalid, match="extra keys not allowed"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET,
+            {
+                CONF_ENTITY_ID: "schedule.does_not_exist",
+                CONF_SCHEDULE: {},
+                "extra_key": {},
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # Test call missing required keys
+    with pytest.raises(vol.Invalid, match="required key not provided"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET,
+            {
+                CONF_ENTITY_ID: "schedule.does_not_exist",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # Test call with wrong data type
+    with pytest.raises(vol.Invalid, match="expected a dictionary for dictionary value"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET,
+            {
+                CONF_ENTITY_ID: "schedule.does_not_exist",
+                CONF_SCHEDULE: "should_be_a_dict",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # Test call with entity_id that does not exist
+    with pytest.raises(
+        HomeAssistantError, match="Entity 'schedule.does_not_exist' not found"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET,
+            {
+                CONF_ENTITY_ID: "schedule.does_not_exist",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # Test call with entity_id that is not a schedule
+    with patch(
+        "homeassistant.components.random.binary_sensor.getrandbits",
+        return_value=1,
+    ):
+        assert await async_setup_component(
+            hass,
+            "binary_sensor",
+            {"binary_sensor": {"platform": "random", "name": "test"}},
+        )
+        await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError, match="Unable to find test"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET,
+            {
+                CONF_ENTITY_ID: "binary_sensor.test",
+                CONF_SCHEDULE: {},
+            },
+            blocking=True,
+            return_response=True,
+        )
