@@ -32,7 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareEntity, ViCareRequiredKeysMixin
+from . import ViCareRequiredKeysMixin
 from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
