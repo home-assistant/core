@@ -9,6 +9,7 @@ CONF_FRIDAY: Final = "friday"
 CONF_FROM: Final = "from"
 CONF_MONDAY: Final = "monday"
 CONF_SATURDAY: Final = "saturday"
+CONF_SCHEDULE: Final = "schedule"
 CONF_SUNDAY: Final = "sunday"
 CONF_THURSDAY: Final = "thursday"
 CONF_TO: Final = "to"
@@ -35,3 +36,6 @@ WEEKDAY_TO_CONF: Final = {
     5: CONF_SATURDAY,
     6: CONF_SUNDAY,
 }
+
+SERVICE_GET: Final = "get"
+SERVICE_SET: Final = "set"

@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_EDITABLE,
+    CONF_ENTITY_ID,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -17,12 +18,14 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.collection import (
     CollectionEntity,
     DictStorageCollection,
     DictStorageCollectionWebsocket,
     IDManager,
+    ItemNotFound,
     SerializedStorageCollection,
     YamlCollection,
     sync_entity_lifecycle,
@@ -39,9 +42,12 @@ from .const import (
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
     CONF_FROM,
+    CONF_SCHEDULE,
     CONF_TO,
     DOMAIN,
     LOGGER,
+    SERVICE_GET,
+    SERVICE_SET,
     WEEKDAY_TO_CONF,
 )
 
@@ -134,6 +140,11 @@ STORAGE_SCHEDULE_SCHEMA = {
     for day in CONF_ALL_DAYS
 }
 
+SERVICE_BASE_SCHEMA = {vol.Required(CONF_ENTITY_ID): cv.entity_id}
+
+SERVICE_SCHEDULE_SCHEMA = {
+    vol.Required(CONF_SCHEDULE): STORAGE_SCHEDULE_SCHEMA,
+}
 
 # Validate YAML config
 CONFIG_SCHEMA = vol.Schema(
@@ -175,13 +186,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    DictStorageCollectionWebsocket(
+    collection = DictStorageCollectionWebsocket(
         storage_collection,
         DOMAIN,
         DOMAIN,
         BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA,
         BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA,
-    ).async_setup(hass)
+    )
+    collection.async_setup(hass)
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml entities."""
@@ -197,6 +209,70 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_RELOAD,
         reload_service_handler,
+    )
+
+    async def async_get_schedule(service_call: ServiceCall) -> dict:
+        """Get schedule."""
+        schedule_entity = hass.states.get(service_call.data[CONF_ENTITY_ID])
+        if not schedule_entity:
+            raise HomeAssistantError(
+                f"Entity '{service_call.data[CONF_ENTITY_ID]}' not found"
+            )
+
+        schedule = next(
+            (
+                s
+                for s in collection.storage_collection.async_items()
+                if s["id"] == schedule_entity.object_id
+            ),
+            None,
+        )
+        if not schedule:
+            raise HomeAssistantError(
+                f"No schedule for entity '{schedule_entity.entity_id}' found"
+            )
+
+        return {d: schedule[d] for d in WEEKDAY_TO_CONF.values()}
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET,
+        async_get_schedule,
+        schema=vol.Schema(SERVICE_BASE_SCHEMA),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async def async_update_schedule(service_call: ServiceCall) -> dict:
+        """Set schedule and overwrite existing."""
+
+        schedule_entity = hass.states.get(service_call.data[CONF_ENTITY_ID])
+        if not schedule_entity:
+            raise HomeAssistantError(
+                f"Entity '{service_call.data[CONF_ENTITY_ID]}' not found"
+            )
+
+        schedule_data = {
+            **service_call.data[CONF_SCHEDULE],
+            CONF_NAME: schedule_entity.name,
+        }
+
+        try:
+            item = await collection.storage_collection.async_update_item(
+                schedule_entity.object_id, schedule_data
+            )
+        except ItemNotFound as err:
+            raise HomeAssistantError(
+                f"Unable to find {schedule_data[CONF_NAME]}"
+            ) from err
+
+        return item
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET,
+        async_update_schedule,
+        schema=vol.Schema(SERVICE_BASE_SCHEMA | SERVICE_SCHEDULE_SCHEMA),
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     return True

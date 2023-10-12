@@ -1,1 +1,45 @@
 reload:
+
+get:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          filter:
+            - domain: schedule
+
+set:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          filter:
+            - domain: schedule
+    schedule:
+      example: |
+        monday:
+          - from: "09:00:00"
+            to: "12:00:00"
+          - from: "17:00:00"
+            to: "19:00:00"
+        tuesday:
+          - from: "12:00:00"
+            to: "15:00:00"
+        wednesday:
+          - from: "09:00:00"
+            to: "11:00:00"
+        thursday:
+          - from: "09:00:00"
+            to: "15:00:00"
+        friday:
+          - from: "09:00:00"
+            to: "11:00:00"
+        saturday: []
+        sunday:
+          - from: "09:00:00"
+            to: "11:00:00"
+      required: true
+      selector:
+        object:
