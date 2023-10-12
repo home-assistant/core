@@ -18,20 +18,16 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the EnOcean component."""
     # support for text-based configuration (legacy)
-    if DOMAIN not in config:
-        return True
-
-    if hass.config_entries.async_entries(DOMAIN):
-        # We can only have one dongle. If there is already one in the config,
-        # there is no need to import the yaml based config.
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
-        )
-    )
-
+    if DOMAIN in config:
+        if not hass.config_entries.async_entries(DOMAIN):
+            # We can only have one dongle. If there is already one in the config,
+            # there is no need to import the yaml based config.
+            # Your code for this case
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+                )
+            )
     return True
 
 
