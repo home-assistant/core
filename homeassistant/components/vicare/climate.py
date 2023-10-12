@@ -35,8 +35,8 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareEntity
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
+from .entity import ViCareEntity
 
 _LOGGER = logging.getLogger(__name__)
 

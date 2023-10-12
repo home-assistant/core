@@ -18,8 +18,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareEntity, ViCareRequiredKeysMixinWithSet
+from . import ViCareRequiredKeysMixinWithSet
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
+from .entity import ViCareEntity
 
 _LOGGER = logging.getLogger(__name__)
 
