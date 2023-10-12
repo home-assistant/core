@@ -7,7 +7,12 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from haphilipsjs import AutenticationFailure, ConnectionFailure, PhilipsTV
+from haphilipsjs import (
+    AutenticationFailure,
+    ConnectionFailure,
+    GeneralFailure,
+    PhilipsTV,
+)
 from haphilipsjs.typing import SystemType
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,8 +26,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
 
@@ -187,3 +192,5 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             pass
         except AutenticationFailure as exception:
             raise ConfigEntryAuthFailed(str(exception)) from exception
+        except GeneralFailure as exception:
+            raise UpdateFailed(str(exception)) from exception

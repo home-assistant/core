@@ -51,6 +51,8 @@ from .const import (
     CONF_MODE_LIST,
     CONF_MODE_STATE_TEMPLATE,
     CONF_MODE_STATE_TOPIC,
+    CONF_POWER_COMMAND_TEMPLATE,
+    CONF_POWER_COMMAND_TOPIC,
     CONF_PRECISION,
     CONF_RETAIN,
     CONF_TEMP_COMMAND_TEMPLATE,
@@ -63,9 +65,13 @@ from .const import (
     DEFAULT_OPTIMISTIC,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
-from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,6 +97,7 @@ VALUE_TEMPLATE_KEYS = (
 COMMAND_TEMPLATE_KEYS = {
     CONF_MODE_COMMAND_TEMPLATE,
     CONF_TEMP_COMMAND_TEMPLATE,
+    CONF_POWER_COMMAND_TEMPLATE,
 }
 
 
@@ -98,6 +105,7 @@ TOPIC_KEYS = (
     CONF_CURRENT_TEMP_TOPIC,
     CONF_MODE_COMMAND_TOPIC,
     CONF_MODE_STATE_TOPIC,
+    CONF_POWER_COMMAND_TOPIC,
     CONF_TEMP_COMMAND_TOPIC,
     CONF_TEMP_STATE_TOPIC,
 )
@@ -123,10 +131,12 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         ): cv.ensure_list,
         vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
         vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
+        vol.Optional(CONF_POWER_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_POWER_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_PRECISION): vol.In(
             [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
         ),
@@ -180,20 +190,9 @@ async def _async_setup_entity(
 class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
     """Representation of an MQTT water heater device."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = water_heater.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the water heater device."""
-        MqttTemperatureControlEntity.__init__(
-            self, hass, config, config_entry, discovery_data
-        )
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -265,6 +264,9 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         ):
             support |= WaterHeaterEntityFeature.OPERATION_MODE
 
+        if self._topic[CONF_POWER_COMMAND_TOPIC] is not None:
+            support |= WaterHeaterEntityFeature.ON_OFF
+
         self._attr_supported_features = support
 
     def _prepare_subscribe_topics(self) -> None:
@@ -282,10 +284,10 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
                 _LOGGER.error("Invalid %s mode: %s", mode_list, payload)
             else:
                 setattr(self, attr, payload)
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_current_operation"})
         def handle_current_mode_received(msg: ReceiveMessage) -> None:
             """Handle receiving operation mode via MQTT."""
             handle_mode_received(
@@ -316,3 +318,19 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         if self._optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._attr_current_operation = operation_mode
             self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        if CONF_POWER_COMMAND_TOPIC in self._config:
+            mqtt_payload = self._command_templates[CONF_POWER_COMMAND_TEMPLATE](
+                self._config[CONF_PAYLOAD_ON]
+            )
+            await self._publish(CONF_POWER_COMMAND_TOPIC, mqtt_payload)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        if CONF_POWER_COMMAND_TOPIC in self._config:
+            mqtt_payload = self._command_templates[CONF_POWER_COMMAND_TEMPLATE](
+                self._config[CONF_PAYLOAD_OFF]
+            )
+            await self._publish(CONF_POWER_COMMAND_TOPIC, mqtt_payload)

@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
-from datetime import datetime
+from datetime import timedelta
 import functools
+import hashlib
 import logging
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
@@ -31,10 +32,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import Throttle
 
 from . import ADB_PYTHON_EXCEPTIONS, ADB_TCP_EXCEPTIONS, get_androidtv_mac
 from .const import (
@@ -64,6 +65,8 @@ ATTR_ADB_RESPONSE = "adb_response"
 ATTR_DEVICE_PATH = "device_path"
 ATTR_HDMI_INPUT = "hdmi_input"
 ATTR_LOCAL_PATH = "local_path"
+
+MIN_TIME_BETWEEN_SCREENCAPS = timedelta(seconds=60)
 
 SERVICE_ADB_COMMAND = "adb_command"
 SERVICE_DOWNLOAD = "download"
@@ -228,6 +231,9 @@ class ADBDevice(MediaPlayerEntity):
         self._entry_id = entry_id
         self._entry_data = entry_data
 
+        self._media_image: tuple[bytes | None, str | None] = None, None
+        self._attr_media_image_hash = None
+
         info = aftv.device_properties
         model = info.get(ATTR_MODEL)
         self._attr_device_info = DeviceInfo(
@@ -304,34 +310,39 @@ class ADBDevice(MediaPlayerEntity):
             )
         )
 
-    @property
-    def media_image_hash(self) -> str | None:
-        """Hash value for media image."""
-        return f"{datetime.now().timestamp()}" if self._screencap else None
-
     @adb_decorator()
     async def _adb_screencap(self) -> bytes | None:
         """Take a screen capture from the device."""
         return await self.aftv.adb_screencap()
 
-    async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
-        """Fetch current playing image."""
+    async def _async_get_screencap(self, prev_app_id: str | None = None) -> None:
+        """Take a screen capture from the device when enabled."""
         if (
             not self._screencap
             or self.state in {MediaPlayerState.OFF, None}
             or not self.available
         ):
-            return None, None
+            self._media_image = None, None
+            self._attr_media_image_hash = None
+        else:
+            force: bool = prev_app_id is not None
+            if force:
+                force = prev_app_id != self._attr_app_id
+            await self._adb_get_screencap(no_throttle=force)
 
-        media_data = await self._adb_screencap()
-        if media_data:
-            return media_data, "image/png"
+    @Throttle(MIN_TIME_BETWEEN_SCREENCAPS)
+    async def _adb_get_screencap(self, **kwargs) -> None:
+        """Take a screen capture from the device every 60 seconds."""
+        if media_data := await self._adb_screencap():
+            self._media_image = media_data, "image/png"
+            self._attr_media_image_hash = hashlib.sha256(media_data).hexdigest()[:16]
+        else:
+            self._media_image = None, None
+            self._attr_media_image_hash = None
 
-        # If an exception occurred and the device is no longer available, write the state
-        if not self.available:
-            self.async_write_ha_state()
-
-        return None, None
+    async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
+        """Fetch current playing image."""
+        return self._media_image
 
     @adb_decorator()
     async def async_media_play(self) -> None:
@@ -485,6 +496,7 @@ class AndroidTVDevice(ADBDevice):
         if not self.available:
             return
 
+        prev_app_id = self._attr_app_id
         # Get the updated state and attributes.
         (
             state,
@@ -513,6 +525,8 @@ class AndroidTVDevice(ADBDevice):
             self._attr_source_list = [source for source in sources if source]
         else:
             self._attr_source_list = None
+
+        await self._async_get_screencap(prev_app_id)
 
     @adb_decorator()
     async def async_media_stop(self) -> None:
@@ -575,6 +589,7 @@ class FireTVDevice(ADBDevice):
         if not self.available:
             return
 
+        prev_app_id = self._attr_app_id
         # Get the `state`, `current_app`, `running_apps` and `hdmi_input`.
         (
             state,
@@ -600,6 +615,8 @@ class FireTVDevice(ADBDevice):
             self._attr_source_list = [source for source in sources if source]
         else:
             self._attr_source_list = None
+
+        await self._async_get_screencap(prev_app_id)
 
     @adb_decorator()
     async def async_media_stop(self) -> None:

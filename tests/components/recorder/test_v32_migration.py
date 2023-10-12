@@ -1,5 +1,4 @@
 """The tests for recorder platform migrating data from v30."""
-# pylint: disable=invalid-name
 import asyncio
 from datetime import timedelta
 import importlib

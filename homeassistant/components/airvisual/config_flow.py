@@ -109,19 +109,21 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "airvisual_checked_api_keys_lock", asyncio.Lock()
         )
 
-        if integration_type == INTEGRATION_TYPE_GEOGRAPHY_COORDS:
-            coro = cloud_api.air_quality.nearest_city()
-            error_schema = self.geography_coords_schema
-            error_step = "geography_by_coords"
-        else:
-            coro = cloud_api.air_quality.city(
-                user_input[CONF_CITY], user_input[CONF_STATE], user_input[CONF_COUNTRY]
-            )
-            error_schema = GEOGRAPHY_NAME_SCHEMA
-            error_step = "geography_by_name"
-
         async with valid_keys_lock:
             if user_input[CONF_API_KEY] not in valid_keys:
+                if integration_type == INTEGRATION_TYPE_GEOGRAPHY_COORDS:
+                    coro = cloud_api.air_quality.nearest_city()
+                    error_schema = self.geography_coords_schema
+                    error_step = "geography_by_coords"
+                else:
+                    coro = cloud_api.air_quality.city(
+                        user_input[CONF_CITY],
+                        user_input[CONF_STATE],
+                        user_input[CONF_COUNTRY],
+                    )
+                    error_schema = GEOGRAPHY_NAME_SCHEMA
+                    error_step = "geography_by_name"
+
                 try:
                     await coro
                 except (InvalidKeyError, KeyExpiredError, UnauthorizedError):

@@ -655,6 +655,11 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections) -> N
             (["red"], ["green", "blue"], []),
             (0, None, "red"),
         ),
+        (
+            {"options": ["red", "green", "blue"], "sort": True},
+            ("red", "blue"),
+            (0, None, ["red"]),
+        ),
     ),
 )
 def test_select_selector_schema(schema, valid_selections, invalid_selections) -> None:

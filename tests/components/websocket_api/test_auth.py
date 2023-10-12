@@ -23,7 +23,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
 from tests.typing import ClientSessionGenerator
 
 
@@ -72,7 +71,6 @@ async def test_auth_via_msg_incorrect_pass(no_auth_websocket_client) -> None:
     """Test authenticating."""
     with patch(
         "homeassistant.components.websocket_api.auth.process_wrong_login",
-        return_value=mock_coro(),
     ) as mock_process_wrong_login:
         await no_auth_websocket_client.send_json(
             {"type": TYPE_AUTH, "api_password": "wrong"}
@@ -296,7 +294,6 @@ async def test_auth_sending_unknown_type_disconnects(
         auth_msg = await ws.receive_json()
         assert auth_msg["type"] == TYPE_AUTH_REQUIRED
 
-        # pylint: disable-next=protected-access
         await ws._writer._send_frame(b"1" * 130, 0x30)
         auth_msg = await ws.receive()
         assert auth_msg.type == WSMsgType.close

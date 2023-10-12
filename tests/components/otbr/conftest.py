@@ -6,7 +6,12 @@ import pytest
 from homeassistant.components import otbr
 from homeassistant.core import HomeAssistant
 
-from . import CONFIG_ENTRY_DATA_MULTIPAN, CONFIG_ENTRY_DATA_THREAD, DATASET_CH16
+from . import (
+    CONFIG_ENTRY_DATA_MULTIPAN,
+    CONFIG_ENTRY_DATA_THREAD,
+    DATASET_CH16,
+    TEST_BORDER_AGENT_ID,
+)
 
 from tests.common import MockConfigEntry
 
@@ -23,6 +28,8 @@ async def otbr_config_entry_multipan_fixture(hass):
     config_entry.add_to_hass(hass)
     with patch(
         "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+    ), patch(
+        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
     ), patch(
         "homeassistant.components.otbr.util.compute_pskc"
     ):  # Patch to speed up tests
@@ -41,6 +48,8 @@ async def otbr_config_entry_thread_fixture(hass):
     config_entry.add_to_hass(hass)
     with patch(
         "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+    ), patch(
+        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
     ), patch(
         "homeassistant.components.otbr.util.compute_pskc"
     ):  # Patch to speed up tests

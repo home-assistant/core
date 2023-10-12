@@ -1,5 +1,5 @@
 """Hass.io const variables."""
-from homeassistant.backports.enum import StrEnum
+from enum import StrEnum
 
 DOMAIN = "hassio"
 
@@ -9,6 +9,7 @@ ATTR_ADMIN = "admin"
 ATTR_COMPRESSED = "compressed"
 ATTR_CONFIG = "config"
 ATTR_DATA = "data"
+ATTR_SESSION_DATA_USER_ID = "user_id"
 ATTR_DISCOVERY = "discovery"
 ATTR_ENABLE = "enable"
 ATTR_ENDPOINT = "endpoint"
@@ -80,6 +81,21 @@ PLACEHOLDER_KEY_REFERENCE = "reference"
 PLACEHOLDER_KEY_COMPONENTS = "components"
 
 ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
+
+ADDON_UPDATE_STATS = "stats"
+ADDON_UPDATE_CHANGELOG = "changelog"
+ADDON_UPDATE_INFO = "info"
+
+# This is a mapping of which endpoint the key in the addon data
+# is obtained from so we know which endpoint to update when the
+# coordinator polls for updates.
+KEY_TO_UPDATE_TYPES: dict[str, set[str]] = {
+    ATTR_VERSION_LATEST: {ADDON_UPDATE_INFO, ADDON_UPDATE_CHANGELOG},
+    ATTR_MEMORY_PERCENT: {ADDON_UPDATE_STATS},
+    ATTR_CPU_PERCENT: {ADDON_UPDATE_STATS},
+    ATTR_VERSION: {ADDON_UPDATE_INFO},
+    ATTR_STATE: {ADDON_UPDATE_INFO},
+}
 
 
 class SupervisorEntityModel(StrEnum):

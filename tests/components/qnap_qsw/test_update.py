@@ -34,7 +34,7 @@ async def test_qnap_qsw_update(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
-    update = hass.states.get("update.qsw_m408_4c_firmware_update")
+    update = hass.states.get("update.qsw_m408_4c_firmware")
     assert update is not None
     assert update.state == STATE_ON
     assert (
@@ -62,7 +62,7 @@ async def test_qnap_qsw_update(hass: HomeAssistant) -> None:
             SERVICE_INSTALL,
             {
                 ATTR_BACKUP: False,
-                ATTR_ENTITY_ID: "update.qsw_m408_4c_firmware_update",
+                ATTR_ENTITY_ID: "update.qsw_m408_4c_firmware",
             },
             blocking=True,
         )
@@ -71,7 +71,7 @@ async def test_qnap_qsw_update(hass: HomeAssistant) -> None:
         mock_firmware_update_live.assert_called_once()
         mock_users_verification.assert_called()
 
-    update = hass.states.get("update.qsw_m408_4c_firmware_update")
+    update = hass.states.get("update.qsw_m408_4c_firmware")
     assert update is not None
     assert update.state == STATE_OFF
     assert (

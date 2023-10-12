@@ -185,6 +185,10 @@ def isfile(filepath):
     return filepath.endswith("adbkey")
 
 
+PATCH_SCREENCAP = patch(
+    "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap",
+    return_value=b"image",
+)
 PATCH_SETUP_ENTRY = patch(
     "homeassistant.components.androidtv.async_setup_entry",
     return_value=True,

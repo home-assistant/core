@@ -5,30 +5,36 @@ import asyncio
 import contextlib
 from contextlib import suppress
 import copy
+import enum
 import logging
 import os
-from typing import Any
+from typing import Any, Self
 
+from bellows.config import CONF_USE_THREAD
 import voluptuous as vol
 from zigpy.application import ControllerApplication
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, CONF_NWK_BACKUP_ENABLED
+from zigpy.config import (
+    CONF_DATABASE,
+    CONF_DEVICE,
+    CONF_DEVICE_PATH,
+    CONF_NWK_BACKUP_ENABLED,
+)
 from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
 from homeassistant.components import usb
 from homeassistant.core import HomeAssistant
 
+from . import repairs
 from .core.const import (
-    CONF_DATABASE,
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
-    DATA_ZHA,
-    DATA_ZHA_CONFIG,
     DEFAULT_DATABASE_NAME,
     EZSP_OVERWRITE_EUI64,
     RadioType,
 )
+from .core.helpers import get_zha_data
 
 # Only the common radio types will be autoprobed, ordered by new device popularity.
 # XBee takes too long to probe since it scans through all possible bauds and likely has
@@ -47,7 +53,9 @@ RECOMMENDED_RADIOS = (
 )
 
 CONNECT_DELAY_S = 1.0
+RETRY_DELAY_S = 1.0
 
+BACKUP_RETRIES = 5
 MIGRATION_RETRIES = 100
 
 HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
@@ -71,6 +79,14 @@ HARDWARE_MIGRATION_SCHEMA = vol.Schema(
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class ProbeResult(enum.StrEnum):
+    """Radio firmware probing result."""
+
+    RADIO_TYPE_DETECTED = "radio_type_detected"
+    WRONG_FIRMWARE_INSTALLED = "wrong_firmware_installed"
+    PROBING_FAILED = "probing_failed"
 
 
 def _allow_overwrite_ezsp_ieee(
@@ -114,12 +130,25 @@ class ZhaRadioManager:
         self.backups: list[zigpy.backups.NetworkBackup] = []
         self.chosen_backup: zigpy.backups.NetworkBackup | None = None
 
+    @classmethod
+    def from_config_entry(
+        cls, hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+    ) -> Self:
+        """Create an instance from a config entry."""
+        mgr = cls()
+        mgr.hass = hass
+        mgr.device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+        mgr.device_settings = config_entry.data[CONF_DEVICE]
+        mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
+
+        return mgr
+
     @contextlib.asynccontextmanager
-    async def _connect_zigpy_app(self) -> ControllerApplication:
+    async def connect_zigpy_app(self) -> ControllerApplication:
         """Connect to the radio with the current config and then clean up."""
         assert self.radio_type is not None
 
-        config = self.hass.data.get(DATA_ZHA, {}).get(DATA_ZHA_CONFIG, {})
+        config = get_zha_data(self.hass).yaml_config
         app_config = config.get(CONF_ZIGPY, {}).copy()
 
         database_path = config.get(
@@ -134,6 +163,7 @@ class ZhaRadioManager:
         app_config[CONF_DATABASE] = database_path
         app_config[CONF_DEVICE] = self.device_settings
         app_config[CONF_NWK_BACKUP_ENABLED] = False
+        app_config[CONF_USE_THREAD] = False
         app_config = self.radio_type.controller.SCHEMA(app_config)
 
         app = await self.radio_type.controller.new(
@@ -141,10 +171,9 @@ class ZhaRadioManager:
         )
 
         try:
-            await app.connect()
             yield app
         finally:
-            await app.disconnect()
+            await app.shutdown()
             await asyncio.sleep(CONNECT_DELAY_S)
 
     async def restore_backup(
@@ -156,7 +185,8 @@ class ZhaRadioManager:
         ):
             return
 
-        async with self._connect_zigpy_app() as app:
+        async with self.connect_zigpy_app() as app:
+            await app.connect()
             await app.backups.restore_backup(backup, **kwargs)
 
     @staticmethod
@@ -167,8 +197,10 @@ class ZhaRadioManager:
 
         return RadioType[radio_type]
 
-    async def detect_radio_type(self) -> bool:
+    async def detect_radio_type(self) -> ProbeResult:
         """Probe all radio types on the current port."""
+        assert self.device_path is not None
+
         for radio in AUTOPROBE_RADIOS:
             _LOGGER.debug("Attempting to probe radio type %s", radio)
 
@@ -187,9 +219,16 @@ class ZhaRadioManager:
             self.radio_type = radio
             self.device_settings = dev_config
 
-            return True
+            repairs.async_delete_blocking_issues(self.hass)
+            return ProbeResult.RADIO_TYPE_DETECTED
 
-        return False
+        with suppress(repairs.wrong_silabs_firmware.AlreadyRunningEZSP):
+            if await repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware(
+                self.hass, self.device_path
+            ):
+                return ProbeResult.WRONG_FIRMWARE_INSTALLED
+
+        return ProbeResult.PROBING_FAILED
 
     async def async_load_network_settings(
         self, *, create_backup: bool = False
@@ -197,7 +236,9 @@ class ZhaRadioManager:
         """Connect to the radio and load its current network settings."""
         backup = None
 
-        async with self._connect_zigpy_app() as app:
+        async with self.connect_zigpy_app() as app:
+            await app.connect()
+
             # Check if the stick has any settings and load them
             try:
                 await app.load_network_info()
@@ -220,12 +261,14 @@ class ZhaRadioManager:
 
     async def async_form_network(self) -> None:
         """Form a brand-new network."""
-        async with self._connect_zigpy_app() as app:
+        async with self.connect_zigpy_app() as app:
+            await app.connect()
             await app.form_network()
 
     async def async_reset_adapter(self) -> None:
         """Reset the current adapter."""
-        async with self._connect_zigpy_app() as app:
+        async with self.connect_zigpy_app() as app:
+            await app.connect()
             await app.reset_network_info()
 
     async def async_restore_backup_step_1(self) -> bool:
@@ -341,7 +384,24 @@ class ZhaMultiPANMigrationHelper:
         old_radio_mgr.device_path = config_entry_data[CONF_DEVICE][CONF_DEVICE_PATH]
         old_radio_mgr.device_settings = config_entry_data[CONF_DEVICE]
         old_radio_mgr.radio_type = RadioType[config_entry_data[CONF_RADIO_TYPE]]
-        backup = await old_radio_mgr.async_load_network_settings(create_backup=True)
+
+        for retry in range(BACKUP_RETRIES):
+            try:
+                backup = await old_radio_mgr.async_load_network_settings(
+                    create_backup=True
+                )
+                break
+            except OSError as err:
+                if retry >= BACKUP_RETRIES - 1:
+                    raise
+
+                _LOGGER.debug(
+                    "Failed to create backup %r, retrying in %s seconds",
+                    err,
+                    RETRY_DELAY_S,
+                )
+
+            await asyncio.sleep(RETRY_DELAY_S)
 
         # Then configure the radio manager for the new radio to use the new settings
         self._radio_mgr.chosen_backup = backup
@@ -381,10 +441,10 @@ class ZhaMultiPANMigrationHelper:
                 _LOGGER.debug(
                     "Failed to restore backup %r, retrying in %s seconds",
                     err,
-                    CONNECT_DELAY_S,
+                    RETRY_DELAY_S,
                 )
 
-            await asyncio.sleep(CONNECT_DELAY_S)
+            await asyncio.sleep(RETRY_DELAY_S)
 
         _LOGGER.debug("Restored backup after %s retries", retry)
 

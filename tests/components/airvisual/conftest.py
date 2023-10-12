@@ -69,6 +69,7 @@ def config_entry_fixture(hass, config, config_entry_version, integration_type):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        entry_id="3bd2acb0e4f0476d40865546d0d91921",
         unique_id=async_get_geography_id(config),
         data={**config, CONF_INTEGRATION_TYPE: integration_type},
         options={CONF_SHOW_ON_MAP: True},

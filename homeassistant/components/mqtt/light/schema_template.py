@@ -46,7 +46,7 @@ from ..const import (
     PAYLOAD_NONE,
 )
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
 from ..models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -54,7 +54,6 @@ from ..models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from ..util import get_mqtt_data
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
@@ -100,7 +99,7 @@ PLATFORM_SCHEMA_MODERN_TEMPLATE = (
             vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_RED_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_TEMPLATE): cv.template,
         }
@@ -128,6 +127,7 @@ async def async_setup_entity_template(
 class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT Template light."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
     _optimistic: bool
@@ -137,16 +137,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
     _fixed_color_mode: ColorMode | str | None
     _topics: dict[str, str | None]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize a MQTT Template light."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -178,6 +168,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             or self._topics[CONF_STATE_TOPIC] is None
             or CONF_STATE_TEMPLATE not in self._config
         )
+        self._attr_assumed_state = bool(self._optimistic)
 
         color_modes = {ColorMode.ONOFF}
         if CONF_BRIGHTNESS_TEMPLATE in config:
@@ -213,6 +204,17 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(
+            self,
+            {
+                "_attr_brightness",
+                "_attr_color_mode",
+                "_attr_color_temp",
+                "_attr_effect",
+                "_attr_hs_color",
+                "_attr_is_on",
+            },
+        )
         def state_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             state = self._value_templates[CONF_STATE_TEMPLATE](msg.payload)
@@ -281,8 +283,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 else:
                     _LOGGER.warning("Unsupported effect value received")
 
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-
         if self._topics[CONF_STATE_TOPIC] is not None:
             self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
@@ -313,11 +313,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
             if last_state.attributes.get(ATTR_EFFECT):
                 self._attr_effect = last_state.attributes.get(ATTR_EFFECT)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return self._optimistic
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on.

@@ -16,11 +16,11 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareRequiredKeysMixinWithSet
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
+from .entity import ViCareEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViCareButton(ButtonEntity):
+class ViCareButton(ViCareEntity, ButtonEntity):
     """Representation of a ViCare button."""
 
     entity_description: ViCareButtonEntityDescription
@@ -101,6 +101,7 @@ class ViCareButton(ButtonEntity):
         self, name, api, device_config, description: ViCareButtonEntityDescription
     ) -> None:
         """Initialize the button."""
+        super().__init__(device_config)
         self.entity_description = description
         self._device_config = device_config
         self._api = api
@@ -118,17 +119,6 @@ class ViCareButton(ButtonEntity):
             _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_config.getConfig().serial)},
-            name=self._device_config.getModel(),
-            manufacturer="Viessmann",
-            model=self._device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
 
     @property
     def unique_id(self) -> str:

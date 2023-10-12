@@ -2,16 +2,12 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.gardena_bluetooth.const import DOMAIN
-from homeassistant.components.gardena_bluetooth.coordinator import Coordinator
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-)
+from tests.components.bluetooth import inject_bluetooth_service_info
 
 WATER_TIMER_SERVICE_INFO = BluetoothServiceInfo(
     name="Timer",
@@ -74,7 +70,7 @@ UNSUPPORTED_GROUP_SERVICE_INFO = BluetoothServiceInfo(
 
 async def setup_entry(
     hass: HomeAssistant, mock_entry: MockConfigEntry, platforms: list[Platform]
-) -> Coordinator:
+) -> None:
     """Make sure the device is available."""
 
     inject_bluetooth_service_info(hass, WATER_TIMER_SERVICE_INFO)
@@ -83,5 +79,3 @@ async def setup_entry(
         mock_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
-
-    return hass.data[DOMAIN][mock_entry.entry_id]
