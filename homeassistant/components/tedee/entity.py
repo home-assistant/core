@@ -27,6 +27,8 @@ class TedeeEntityDescription(EntityDescription, TedeeEntityDescriptionMixin):
 class TedeeEntity(CoordinatorEntity):
     """Base class for Tedee entities."""
 
+    entity_description: TedeeEntityDescription
+
     def __init__(self, lock, coordinator, entity_description):
         """Initialize Tedee entity."""
         super().__init__(coordinator)

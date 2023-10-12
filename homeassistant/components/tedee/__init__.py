@@ -8,6 +8,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_HOME_ASSISTANT_ACCESS_TOKEN, CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 from .coordinator import TedeeApiCoordinator
@@ -20,7 +21,7 @@ PLATFORMS = ["lock", "sensor", "button"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tedee component."""
     logging.debug("Setting up Tedee integration...")
     hass.data.setdefault(DOMAIN, {})

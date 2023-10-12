@@ -70,6 +70,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class TedeeLockEntity(TedeeEntity, LockEntity):
     """A tedee lock that doesn't have pullspring enabled."""
 
+    entity_description: TedeeLockEntityDescription
+
     def __init__(self, lock, coordinator, entity_description, entry):
         """Initialize the lock."""
         _LOGGER.debug("Setting up LockEntity for %s", lock.name)

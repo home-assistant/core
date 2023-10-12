@@ -61,6 +61,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class TedeeSensorEntity(TedeeEntity, SensorEntity):
     """Tedee sensor entity."""
 
+    entity_description: TedeeSensorEntityDescription
+
     def __init__(self, lock, coordinator, entity_description):
         """Initialize Tedee sensor entity."""
         _LOGGER.debug("Setting up SensorEntity for %s", lock.name)

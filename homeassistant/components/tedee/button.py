@@ -64,6 +64,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class TedeeButtonEntity(TedeeEntity, ButtonEntity):
     """Button to only pull the spring (does not unlock if locked)."""
 
+    entity_description: TedeeButtonEntityDescription
+
     def __init__(self, lock, coordinator, entity_description):
         """Initialize the button."""
         _LOGGER.debug("Setting up ButtonEntity for %s", lock.name)
@@ -74,7 +76,7 @@ class TedeeButtonEntity(TedeeEntity, ButtonEntity):
         try:
             self._lock.state = 4
             self.async_write_ha_state()
-            await self.entity_description.press_fn(  # type: ignore[attr-defined]
+            await self.entity_description.press_fn(
                 self.coordinator.tedee_client, self._lock.id
             )
             await self.coordinator.async_request_refresh()
