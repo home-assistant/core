@@ -3,8 +3,6 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
-from transmission_rpc.session import SessionStats
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
@@ -38,7 +36,9 @@ async def async_setup_entry(
     async_add_entities(dev, True)
 
 
-class TransmissionSwitch(CoordinatorEntity[SessionStats], SwitchEntity):
+class TransmissionSwitch(
+    CoordinatorEntity[TransmissionDataUpdateCoordinator], SwitchEntity
+):
     """Representation of a Transmission switch."""
 
     _attr_has_entity_name = True

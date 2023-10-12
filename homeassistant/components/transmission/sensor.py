@@ -4,7 +4,6 @@ from __future__ import annotations
 from contextlib import suppress
 from typing import Any
 
-from transmission_rpc.session import SessionStats
 from transmission_rpc.torrent import Torrent
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -92,7 +91,9 @@ async def async_setup_entry(
     async_add_entities(dev, True)
 
 
-class TransmissionSensor(CoordinatorEntity[SessionStats], SensorEntity):
+class TransmissionSensor(
+    CoordinatorEntity[TransmissionDataUpdateCoordinator], SensorEntity
+):
     """A base class for all Transmission sensors."""
 
     _attr_has_entity_name = True
