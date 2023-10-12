@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from . import (
     authorisation_response,
     setup_integration,
+    setup_integration_bidir,
     setup_integration_platform_not_ready,
 )
 from .const import MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID, MOCK_NUMBER_ENTITY_ID
@@ -41,6 +42,9 @@ async def test_wallbox_number_class(
             json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
             status_code=200,
         )
+        state = hass.states.get(MOCK_NUMBER_ENTITY_ID)
+        assert state.attributes["min"] == 0
+        assert state.attributes["max"] == 25
 
         await hass.services.async_call(
             "number",
@@ -51,6 +55,19 @@ async def test_wallbox_number_class(
             },
             blocking=True,
         )
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_wallbox_number_class_bidir(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox sensor class."""
+
+    await setup_integration_bidir(hass, entry)
+
+    state = hass.states.get(MOCK_NUMBER_ENTITY_ID)
+    assert state.attributes["min"] == -25
+    assert state.attributes["max"] == 25
     await hass.config_entries.async_unload(entry.entry_id)
 
 
