@@ -13,7 +13,7 @@ class DemoFixFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     async def async_step_init(
-        self, user_input: dict[str, str] | None = None
+        self, _: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
 
@@ -33,16 +33,16 @@ class DemoColdTeaFixFlow(RepairsFlow):
     """Handler for cold tea."""
 
     async def async_step_init(
-        self, user_input: dict[str, str] | None = None
+        self, _: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
         return self.async_abort(reason="not_tea_time")
 
 
 async def async_create_fix_flow(
-    hass: HomeAssistant,
+    _: HomeAssistant,
     issue_id: str,
-    data: dict[str, str | int | float | None] | None,
+    __: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
     if issue_id == "bad_psu":

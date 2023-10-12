@@ -12,10 +12,10 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 
 async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
+    _: HomeAssistant,
+    __: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    ___: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Demo locks."""
     async_add_entities(
@@ -48,7 +48,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    _: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Everything but the Kitchen Sink config entry."""

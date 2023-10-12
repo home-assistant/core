@@ -37,7 +37,7 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up the demo environment."""
     hass.async_create_task(
         hass.config_entries.flow.async_init(
