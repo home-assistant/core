@@ -529,5 +529,39 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "binary_input": {
+        "name": "Binary input"
+      },
+      "frost_lock": {
+        "name": "Frost lock"
+      },
+      "replace_filter": {
+        "name": "Replace filter"
+      },
+      "error_detected": {
+        "name": "Error detected"
+      },
+      "consumer_connected": {
+        "name": "Consumer connected"
+      },
+      "valve_alarm": {
+        "name": "Valve alarm"
+      },
+      "calibrated": {
+        "name": "Calibrated"
+      },
+      "external_sensor": {
+        "name": "External sensor"
+      },
+      "linkage_alarm_state": {
+        "name": "Linkage alarm state"
+      },
+      "ias_zone": {
+        "name": "IAS zone"
+      }
+    }
   }
 }
