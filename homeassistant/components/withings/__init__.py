@@ -27,7 +27,7 @@ from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -271,6 +271,8 @@ async def async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) 
         webhook_url = await cloud.async_create_cloudhook(hass, webhook_id)
         data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
         hass.config_entries.async_update_entry(entry, data=data)
+        if entry.state == ConfigEntryState.LOADED:
+            await hass.config_entries.async_reload(entry.entry_id)
         return webhook_url
     return str(entry.data[CONF_CLOUDHOOK_URL])
 
