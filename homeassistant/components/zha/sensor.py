@@ -1059,6 +1059,41 @@ class EnumSensor(Sensor):
         return self._enum(value).name
 
 
+class BitMapSensor(Sensor):
+    """A sensor with only state attributes.
+
+    The sensor value will be a sensor of the state attributes.
+    """
+
+    _default_value: str
+
+    _bitmap: dict[str, int]
+
+    def formatter(self, _value: int) -> str:
+        """Summary of all attributes."""
+        binary_state_attributes = [
+            key for (key, elem) in self.extra_state_attributes.items() if elem
+        ]
+
+        return (
+            ", ".join(binary_state_attributes)
+            if binary_state_attributes
+            else self._default_value
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Bitmap."""
+        value = self._cluster_handler.cluster.get(self.SENSOR_ATTR)
+
+        state_attr = {}
+
+        for text, bit in self._bitmap.items():
+            state_attr[text] = bool(value & bit)
+
+        return state_attr
+
+
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class PiHeatingDemand(Sensor, id_suffix="pi_heating_demand"):
@@ -1142,30 +1177,18 @@ class DanfossLoadEstimate(Sensor, id_suffix="load_estimate"):
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossAdaptationRunStatus(Sensor, id_suffix="adaptation_run_status"):
+class DanfossAdaptationRunStatus(BitMapSensor, id_suffix="adaptation_run_status"):
     """Danfoss Proprietary attribute for showing the status of the adaptation run."""
 
     SENSOR_ATTR = "adaptation_run_status"
     _attr_name: str = "Adaptation Run Status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def formatter(self, _value: int) -> str:
-        """Summary of all attributes."""
-        error_code_list = [
-            key for (key, elem) in self.extra_state_attributes.items() if elem
-        ]
-
-        return ", ".join(error_code_list) if error_code_list else "Nothing"
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Bitmap."""
-        value = self._cluster_handler.cluster.get("adaptation_run_status")
-        return {
-            "In Progress": bool(value & 0x0001),
-            "Run Successful": bool(value & 0x0002),
-            "Valve characteristic lost": bool(value & 0x0004),
-        }
+    _default_value = "Nothing"
+    _bitmap = {
+        "In Progress": 0x0001,
+        "Run Successful": 0x0002,
+        "Valve characteristic lost": 0x0004,
+    }
 
 
 @MULTI_MATCH(
@@ -1187,43 +1210,31 @@ class DanfossPreheatTime(Sensor, id_suffix="preheat_time"):
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossSoftwareErrorCode(Sensor, id_suffix="sw_error_code"):
+class DanfossSoftwareErrorCode(BitMapSensor, id_suffix="sw_error_code"):
     """Danfoss Proprietary attribute for communicating the error code."""
 
     SENSOR_ATTR = "sw_error_code"
     _attr_name: str = "Software Error"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def formatter(self, _value: int) -> str:
-        """Summary of all attributes."""
-        error_code_list = [
-            key for (key, elem) in self.extra_state_attributes.items() if elem
-        ]
-
-        return ", ".join(error_code_list) if error_code_list else "Good"
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Bitmap."""
-        value = self._cluster_handler.cluster.get("sw_error_code")
-        return {
-            "Top PCB sensor error": bool(value & 0x0001),
-            "Side PCB sensor error": bool(value & 0x0002),
-            "Non-volative Memory error": bool(value & 0x0004),
-            "Unknown HW error": bool(value & 0x0008),
-            # 0x0010 = N/A
-            "Motor error": bool(value & 0x0020),
-            # 0x0040 = N/A
-            "Invalid internal communication": bool(value & 0x0080),
-            # 0x0100 = N/A
-            "Invalid clock information": bool(value & 0x0200),
-            # 0x0400 = N/A
-            "Radio communication error": bool(value & 0x0800),
-            "Encoder Jammed": bool(value & 0x1000),
-            "Low Battery": bool(value & 0x2000),
-            "Critical Low Battery": bool(value & 0x4000),
-            # 0x8000 = Reserved
-        }
+    _default_value = "Good"
+    _bitmap = {
+        "Top PCB sensor error": 0x0001,
+        "Side PCB sensor error": 0x0002,
+        "Non-volative Memory error": 0x0004,
+        "Unknown HW error": 0x0008,
+        # 0x0010 = N/A
+        "Motor error": 0x0020,
+        # 0x0040 = N/A
+        "Invalid internal communication": 0x0080,
+        # 0x0100 = N/A
+        "Invalid clock information": 0x0200,
+        # 0x0400 = N/A
+        "Radio communication error": 0x0800,
+        "Encoder Jammed": 0x1000,
+        "Low Battery": 0x2000,
+        "Critical Low Battery": 0x4000,
+        # 0x8000 = Reserved
+    }
 
 
 @MULTI_MATCH(
