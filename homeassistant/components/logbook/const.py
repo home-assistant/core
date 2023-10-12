@@ -44,3 +44,8 @@ AUTOMATION_EVENTS = {EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED}
 
 # Events that are built-in to the logbook or core
 BUILT_IN_EVENTS = {EVENT_LOGBOOK_ENTRY, EVENT_CALL_SERVICE}
+
+# Flags
+EXTERNAL_EVENTS = "external_events"
+INVALID_START_TIME = "Invalid start_time"
+INVALID_END_TIME = "Invalid end_time"
