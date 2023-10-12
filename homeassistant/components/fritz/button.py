@@ -201,8 +201,6 @@ class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
     @property
     def available(self) -> bool:
         """Return availability of the button."""
-        if self._avm_wrapper.devices[self._mac].wan_access is None:
-            return False
         return super().available
 
     async def async_press(self) -> None:
