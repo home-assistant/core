@@ -76,8 +76,8 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # the user has entered their email in the first prompt
-            user_input[CONF_EMAIL] = user_input[CONF_EMAIL].replace(" ", "")
-            await validate_input(self.p_api, user_input)  # ClientException
+            user_input[CONF_EMAIL] = user_input[CONF_EMAIL]
+            await validate_input(self.p_api, user_input)
             self.data[CONF_EMAIL] = user_input[CONF_EMAIL]
             _LOGGER.debug("Permobil: email %s", self.p_api.email)
 
