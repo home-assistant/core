@@ -4,6 +4,7 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
+
 class ViCareEntity(Entity):
     """Base class for ViCare entities."""
 
