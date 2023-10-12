@@ -108,7 +108,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
 
     @abstractmethod
     async def _internal_update_data(self) -> _T:
-        pass
+        """Update coordinator data."""
 
 
 class WithingsMeasurementDataUpdateCoordinator(
@@ -255,4 +255,4 @@ class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[Non
         self.async_update_listeners()
 
     async def _internal_update_data(self) -> None:
-        pass
+        """Update coordinator data."""
