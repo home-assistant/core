@@ -53,16 +53,6 @@ async def async_set_charging_current_value(
     await coordinator.async_set_charging_current(value)
 
 
-def max_energy_price_value(coordinator: WallboxCoordinator) -> float:
-    """Return the maximum available value for energy price."""
-    return 5
-
-
-def min_energy_price_value(coordinator: WallboxCoordinator) -> float:
-    """Return the maximum available value for energy price."""
-    return -5
-
-
 async def async_set_energy_price_value(
     coordinator: WallboxCoordinator, value: float
 ) -> None:
@@ -98,8 +88,8 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CHARGER_ENERGY_PRICE_KEY: WallboxNumberEntityDescription(
         key=CHARGER_ENERGY_PRICE_KEY,
         translation_key="energy_price",
-        max_value_fn=max_energy_price_value,
-        min_value_fn=min_energy_price_value,
+        max_value_fn=lambda _: 5,
+        min_value_fn=lambda _: -5,
         set_value_fn=async_set_energy_price_value,
         native_step=0.01,
     ),
