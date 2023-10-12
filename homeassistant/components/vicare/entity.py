@@ -7,7 +7,7 @@ from .const import DOMAIN
 
 class ViCareEntity(Entity):
     """Base class for ViCare entities."""
-    
+
     _attr_has_entity_name = True
 
     def __init__(self, device_config) -> None:
