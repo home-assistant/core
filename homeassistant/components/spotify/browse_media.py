@@ -300,7 +300,7 @@ def build_item_response(  # noqa: C901
     return browse_media
 
 
-def _build_item_browse_media(  # noqa: C901
+def _build_item_browse_media(
     media_content_type: str,
     spotify: Spotify,
     user: dict[str, Any],
@@ -375,6 +375,7 @@ def _build_item_browse_media(  # noqa: C901
 def _browsing_get_items(media_content_type, spotify):
     """Get items."""
     items = []
+    media: dict[str, Any] | None = None
 
     if media_content_type == BrowsableMedia.CURRENT_USER_PLAYLISTS:
         if media := spotify.current_user_playlists(limit=BROWSE_LIMIT):
@@ -392,6 +393,8 @@ def _browsing_get_items(media_content_type, spotify):
 def _browsing_get_object_items(media_content_type, spotify, media_content_id, user):
     """Get items from object."""
     items = []
+    media: dict[str, Any] | None = None
+
     if media_content_type == BrowsableMedia.CURRENT_USER_FOLLOWED_ARTISTS:
         if media := spotify.current_user_followed_artists(limit=BROWSE_LIMIT):
             items = media.get("artists", {}).get("items", [])
@@ -412,6 +415,8 @@ def _browsing_get_object_items(media_content_type, spotify, media_content_id, us
 def _browsing_get_iterable_items(media_content_type, spotify):
     """Get items and media."""
     items = []
+    media: dict[str, Any] | None = None
+
     if media_content_type == BrowsableMedia.CURRENT_USER_SAVED_ALBUMS:
         if media := spotify.current_user_saved_albums(limit=BROWSE_LIMIT):
             items = [item["album"] for item in media.get("items", [])]
@@ -434,6 +439,8 @@ def _browsing_get_iterable_items(media_content_type, spotify):
 def _browsing_get_playlist(media_content_id, spotify):
     """Get items and media."""
     items = []
+    media: dict[str, Any] | None = None
+
     if media := spotify.playlist(media_content_id):
         items = [item["track"] for item in media.get("tracks", {}).get("items", [])]
 
@@ -442,6 +449,10 @@ def _browsing_get_playlist(media_content_id, spotify):
 
 def _browsing_get_objects(media_content_type, spotify, user, media_content_id):
     """Get title, image, media and item."""
+    title = None
+    image = None
+    media: dict[str, Any] | None = None
+    items = []
     if media_content_type == BrowsableMedia.CATEGORIES:
         if media := spotify.categories(country=user["country"], limit=BROWSE_LIMIT):
             items = media.get("categories", {}).get("items", [])
