@@ -122,8 +122,8 @@ class RoonDevice(MediaPlayerEntity):
         self._attr_shuffle = False
         self._attr_media_image_url = None
         self._attr_volume_level = 0
-        self.volume_fixed = True
-        self.volume_incremental = False
+        self._volume_fixed = True
+        self._volume_incremental = False
         self.update_data(player_data)
 
     async def async_added_to_hass(self) -> None:
@@ -291,13 +291,13 @@ class RoonDevice(MediaPlayerEntity):
         self._attr_is_volume_muted = volume["muted"]
         self._attr_volume_step = volume["step"]
         self._attr_volume_level = volume["level"]
-        self.volume_fixed = volume["fixed"]
-        self.volume_incremental = volume["incremental"]
-        if not self.volume_fixed:
+        self._volume_fixed = volume["fixed"]
+        self._volume_incremental = volume["incremental"]
+        if not self._volume_fixed:
             self._attr_supported_features = (
                 self._attr_supported_features | MediaPlayerEntityFeature.VOLUME_STEP
             )
-            if not self.volume_incremental:
+            if not self._volume_incremental:
                 self._attr_supported_features = (
                     self._attr_supported_features | MediaPlayerEntityFeature.VOLUME_SET
                 )
@@ -372,14 +372,14 @@ class RoonDevice(MediaPlayerEntity):
 
     def volume_up(self) -> None:
         """Send new volume_level to device."""
-        if self.volume_incremental:
+        if self._volume_incremental:
             self._server.roonapi.change_volume_raw(self.output_id, 1, "relative_step")
         else:
             self._server.roonapi.change_volume_percent(self.output_id, 3)
 
     def volume_down(self) -> None:
         """Send new volume_level to device."""
-        if self.volume_incremental:
+        if self._volume_incremental:
             self._server.roonapi.change_volume_raw(self.output_id, -1, "relative_step")
         else:
             self._server.roonapi.change_volume_percent(self.output_id, -3)
