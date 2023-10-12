@@ -110,6 +110,128 @@ SWITCH_TYPES = {
 }
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
+# REFACTORED
+def domain_cover(state: State, features: Any) -> str:
+    device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    if device_class in (
+            CoverDeviceClass.GARAGE,
+            CoverDeviceClass.GATE,
+        ) and features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
+            a_type = "GarageDoorOpener"
+            return a_type
+    elif (
+        device_class == CoverDeviceClass.WINDOW
+        and features & CoverEntityFeature.SET_POSITION
+    ):
+        a_type = "Window"
+        return a_type
+    elif (
+        device_class == CoverDeviceClass.DOOR
+        and features & CoverEntityFeature.SET_POSITION
+    ):
+        a_type = "Door"
+        return a_type
+    elif features & CoverEntityFeature.SET_POSITION:
+        a_type = "WindowCovering"
+        return a_type
+    elif features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
+        a_type = "WindowCoveringBasic"
+        return a_type
+    elif features & CoverEntityFeature.SET_TILT_POSITION:
+        # WindowCovering and WindowCoveringBasic both support tilt
+        # only WindowCovering can handle the covers that are missing
+        # CoverEntityFeature.SET_POSITION, CoverEntityFeature.OPEN,
+        # and CoverEntityFeature.CLOSE
+        a_type = "WindowCovering"
+        return a_type
+
+#REFACTORED
+def domain_sensor(state: State) -> str:
+    device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+    if device_class == SensorDeviceClass.TEMPERATURE or unit in (
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
+    ):
+        a_type = "TemperatureSensor"
+        return a_type
+    elif device_class == SensorDeviceClass.HUMIDITY and unit == PERCENTAGE:
+       a_type = "HumiditySensor"
+       return a_type
+    elif (
+        device_class == SensorDeviceClass.PM10
+        or SensorDeviceClass.PM10 in state.entity_id
+    ):
+        a_type = "PM10Sensor"
+        return a_type
+    elif (
+        device_class == SensorDeviceClass.PM25
+        or SensorDeviceClass.PM25 in state.entity_id
+    ):
+        a_type = "PM25Sensor"
+        return a_type
+    elif device_class == SensorDeviceClass.NITROGEN_DIOXIDE:
+        a_type = "NitrogenDioxideSensor"
+        return a_type
+    elif device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
+        a_type = "VolatileOrganicCompoundsSensor"
+        return a_type
+    elif (
+        device_class == SensorDeviceClass.GAS
+        or SensorDeviceClass.GAS in state.entity_id
+    ):
+        a_type = "AirQualitySensor"
+        return a_type
+    elif device_class == SensorDeviceClass.CO:
+        a_type = "CarbonMonoxideSensor"
+        return a_type
+    elif device_class == SensorDeviceClass.CO2 or "co2" in state.entity_id:
+        a_type = "CarbonDioxideSensor"
+        return a_type
+    elif device_class == SensorDeviceClass.ILLUMINANCE or unit == LIGHT_LUX:
+        a_type = "LightSensor"
+        return a_type
+
+
+#REFACTORED
+def domain_media_player (state: State, config: dict) -> str:
+    device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    feature_list = config.get(CONF_FEATURE_LIST, [])
+    if device_class == MediaPlayerDeviceClass.TV:
+        a_type = "TelevisionMediaPlayer"
+        return a_type
+    elif validate_media_player_features(state, feature_list):
+        a_type = "MediaPlayer"
+        return a_type
+#REFACTORED
+def domain_collection (state: State) -> str:
+    if state.domain == "fan":
+        a_type = "Fan"
+        return a_type
+    elif state.domain == "humidifier":
+        a_type = "HumidifierDehumidifier"
+        return a_type
+    elif state.domain == "light":
+        a_type = "Light"
+        return a_type
+    elif state.domain == "lock":
+        a_type = "Lock"
+        return a_type
+    elif state.domain == "vacuum":
+        a_type = "Vacuum"
+        return a_type
+    elif state.domain == "water_heater":
+        a_type = "WaterHeater"
+        return a_type
+    elif state.domain == "camera":
+        a_type = "Camera"
+        return a_type
+    elif state.domain == "alarm_control_panel":
+        a_type = "SecuritySystem"
+        return a_type
+    elif state.domain == "climate":
+        a_type = "Thermostat"
+        return a_type
 
 def get_accessory(  # noqa: C901
     hass: HomeAssistant, driver: HomeDriver, state: State, aid: int | None, config: dict
@@ -129,108 +251,28 @@ def get_accessory(  # noqa: C901
     name = config.get(CONF_NAME, state.name)
     features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-    if state.domain == "alarm_control_panel":
-        a_type = "SecuritySystem"
-
-    elif state.domain in ("binary_sensor", "device_tracker", "person"):
+    if state.domain in ("binary_sensor", "device_tracker", "person"):
         a_type = "BinarySensor"
 
-    elif state.domain == "climate":
-        a_type = "Thermostat"
-
     elif state.domain == "cover":
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+       # REFACTORED
+       a_type = domain_cover(state, features)
 
-        if device_class in (
-            CoverDeviceClass.GARAGE,
-            CoverDeviceClass.GATE,
-        ) and features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
-            a_type = "GarageDoorOpener"
-        elif (
-            device_class == CoverDeviceClass.WINDOW
-            and features & CoverEntityFeature.SET_POSITION
-        ):
-            a_type = "Window"
-        elif (
-            device_class == CoverDeviceClass.DOOR
-            and features & CoverEntityFeature.SET_POSITION
-        ):
-            a_type = "Door"
-        elif features & CoverEntityFeature.SET_POSITION:
-            a_type = "WindowCovering"
-        elif features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
-            a_type = "WindowCoveringBasic"
-        elif features & CoverEntityFeature.SET_TILT_POSITION:
-            # WindowCovering and WindowCoveringBasic both support tilt
-            # only WindowCovering can handle the covers that are missing
-            # CoverEntityFeature.SET_POSITION, CoverEntityFeature.OPEN,
-            # and CoverEntityFeature.CLOSE
-            a_type = "WindowCovering"
-
-    elif state.domain == "fan":
-        a_type = "Fan"
-
-    elif state.domain == "humidifier":
-        a_type = "HumidifierDehumidifier"
-
-    elif state.domain == "light":
-        a_type = "Light"
-
-    elif state.domain == "lock":
-        a_type = "Lock"
+    #REFACTORED
+    elif state.domain in ("fan", "humidifier", "light", "lock", "vacuum", "alarm_control_panel", "climate", "water_heater", "camera"):
+       a_type = domain_collection(state)
 
     elif state.domain == "media_player":
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        feature_list = config.get(CONF_FEATURE_LIST, [])
-
-        if device_class == MediaPlayerDeviceClass.TV:
-            a_type = "TelevisionMediaPlayer"
-        elif validate_media_player_features(state, feature_list):
-            a_type = "MediaPlayer"
+        #REFACTORED
+        a_type = domain_media_player(state, config)
 
     elif state.domain == "sensor":
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-
-        if device_class == SensorDeviceClass.TEMPERATURE or unit in (
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.FAHRENHEIT,
-        ):
-            a_type = "TemperatureSensor"
-        elif device_class == SensorDeviceClass.HUMIDITY and unit == PERCENTAGE:
-            a_type = "HumiditySensor"
-        elif (
-            device_class == SensorDeviceClass.PM10
-            or SensorDeviceClass.PM10 in state.entity_id
-        ):
-            a_type = "PM10Sensor"
-        elif (
-            device_class == SensorDeviceClass.PM25
-            or SensorDeviceClass.PM25 in state.entity_id
-        ):
-            a_type = "PM25Sensor"
-        elif device_class == SensorDeviceClass.NITROGEN_DIOXIDE:
-            a_type = "NitrogenDioxideSensor"
-        elif device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
-            a_type = "VolatileOrganicCompoundsSensor"
-        elif (
-            device_class == SensorDeviceClass.GAS
-            or SensorDeviceClass.GAS in state.entity_id
-        ):
-            a_type = "AirQualitySensor"
-        elif device_class == SensorDeviceClass.CO:
-            a_type = "CarbonMonoxideSensor"
-        elif device_class == SensorDeviceClass.CO2 or "co2" in state.entity_id:
-            a_type = "CarbonDioxideSensor"
-        elif device_class == SensorDeviceClass.ILLUMINANCE or unit == LIGHT_LUX:
-            a_type = "LightSensor"
+        #REFACTORED
+        a_type = domain_sensor(state)
 
     elif state.domain == "switch":
         switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
         a_type = SWITCH_TYPES[switch_type]
-
-    elif state.domain == "vacuum":
-        a_type = "Vacuum"
 
     elif state.domain == "remote" and features & RemoteEntityFeature.ACTIVITY:
         a_type = "ActivityRemote"
@@ -249,18 +291,11 @@ def get_accessory(  # noqa: C901
     elif state.domain in ("input_select", "select"):
         a_type = "SelectSwitch"
 
-    elif state.domain == "water_heater":
-        a_type = "WaterHeater"
-
-    elif state.domain == "camera":
-        a_type = "Camera"
-
     if a_type is None:
         return None
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
     return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
-
 
 class HomeAccessory(Accessory):  # type: ignore[misc]
     """Adapter class for Accessory."""
@@ -288,6 +323,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             **kwargs,
         )
         self.config = config or {}
+
         if device_id:
             self.device_id: str | None = device_id
             serial_number = device_id
@@ -305,6 +341,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             manufacturer = f"{MANUFACTURER} {domain}".title()
         else:
             manufacturer = MANUFACTURER
+
         if self.config.get(ATTR_MODEL) is not None:
             model = str(self.config[ATTR_MODEL])
         elif domain:
@@ -312,6 +349,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         else:
             model = MANUFACTURER
         sw_version = None
+
         if self.config.get(ATTR_SW_VERSION) is not None:
             sw_version = format_version(self.config[ATTR_SW_VERSION])
         if sw_version is None:
@@ -362,34 +400,20 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         entity_attributes = state.attributes
         battery_found = entity_attributes.get(ATTR_BATTERY_LEVEL)
 
+        # REFACTORED
         if self.linked_battery_sensor:
             state = self.hass.states.get(self.linked_battery_sensor)
-            if state is not None:
-                battery_found = state.state
-            else:
-                _LOGGER.warning(
-                    "%s: Battery sensor state missing: %s",
-                    self.entity_id,
-                    self.linked_battery_sensor,
-                )
-                self.linked_battery_sensor = None
+            battery_found = self.handle_linked_battery_sensor(state)
 
         if not battery_found:
             return
 
         _LOGGER.debug("%s: Found battery level", self.entity_id)
 
+        # REFACTORED
         if self.linked_battery_charging_sensor:
             state = self.hass.states.get(self.linked_battery_charging_sensor)
-            if state is None:
-                self.linked_battery_charging_sensor = None
-                _LOGGER.warning(
-                    "%s: Battery charging binary_sensor state missing: %s",
-                    self.entity_id,
-                    self.linked_battery_charging_sensor,
-                )
-            else:
-                _LOGGER.debug("%s: Found battery charging", self.entity_id)
+            self.handle_linked_battery_charging_sensor(state)
 
         serv_battery = self.add_preload_service(SERV_BATTERY_SERVICE)
         self._char_battery = serv_battery.configure_char(CHAR_BATTERY_LEVEL, value=0)
@@ -399,6 +423,36 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self._char_low_battery = serv_battery.configure_char(
             CHAR_STATUS_LOW_BATTERY, value=0
         )
+
+    # REFACTORED
+    def handle_linked_battery_sensor(self, state: Any) -> Any | None:
+        """Handle linked battery sensor."""
+        battery_found = None
+        if state is not None:
+            battery_found = state.state
+            return battery_found
+
+        _LOGGER.warning(
+            "%s: Battery sensor state missing: %s",
+            self.entity_id,
+            self.linked_battery_sensor,
+        )
+        self.linked_battery_sensor = None
+
+
+    def handle_linked_battery_charging_sensor(self, state: Any) -> None:
+        """Handle linked battery charging sensor."""
+        if state is None:
+            self.linked_battery_charging_sensor = None
+            _LOGGER.warning(
+                "%s: Battery charging binary_sensor state missing: %s",
+                self.entity_id,
+                self.linked_battery_charging_sensor,
+            )
+        else:
+            _LOGGER.debug("%s: Found battery charging", self.entity_id)
+
+    ################################################################################
 
     @property
     def available(self) -> bool:

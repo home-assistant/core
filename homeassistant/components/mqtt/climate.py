@@ -1026,8 +1026,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 self._attr_preset_mode = preset_mode
                 self.async_write_ha_state()
 
-            return
-
     # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
     # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
     # Support will be removed in HA Core 2024.3

@@ -316,38 +316,49 @@ class Thermostat(HomeAccessory):
             self.char_active = serv_fan.configure_char(
                 CHAR_ACTIVE, value=1, setter_callback=self._set_fan_active
             )
-            if CHAR_SWING_MODE in self.fan_chars:
-                self.char_swing = serv_fan.configure_char(
-                    CHAR_SWING_MODE,
-                    value=0,
-                    setter_callback=self._set_fan_swing_mode,
-                )
-                self.char_swing.display_name = "Swing Mode"
-            if CHAR_ROTATION_SPEED in self.fan_chars:
-                self.char_speed = serv_fan.configure_char(
-                    CHAR_ROTATION_SPEED,
-                    value=100,
-                    properties={PROP_MIN_STEP: 100 / len(self.ordered_fan_speeds)},
-                    setter_callback=self._set_fan_speed,
-                )
-                self.char_speed.display_name = "Fan Mode"
-            if CHAR_CURRENT_FAN_STATE in self.fan_chars:
-                self.char_current_fan_state = serv_fan.configure_char(
-                    CHAR_CURRENT_FAN_STATE,
-                    value=0,
-                )
-                self.char_current_fan_state.display_name = "Fan State"
-            if CHAR_TARGET_FAN_STATE in self.fan_chars and FAN_AUTO in self.fan_modes:
-                self.char_target_fan_state = serv_fan.configure_char(
-                    CHAR_TARGET_FAN_STATE,
-                    value=0,
-                    setter_callback=self._set_fan_auto,
-                )
-                self.char_target_fan_state.display_name = "Fan Auto"
+            # REFACTORED
+            self._configure_fan_service(serv_fan)
 
         self._async_update_state(state)
 
         serv_thermostat.setter_callback = self._set_chars
+
+    # REFACTORED
+    def _configure_fan_service(self, serv_fan):
+        """Handle the configure of fan service."""
+        if CHAR_SWING_MODE in self.fan_chars:
+            self.char_swing = serv_fan.configure_char(
+                CHAR_SWING_MODE,
+                value=0,
+                setter_callback=self._set_fan_swing_mode,
+            )
+            self.char_swing.display_name = "Swing Mode"
+
+        if CHAR_ROTATION_SPEED in self.fan_chars:
+            self.char_speed = serv_fan.configure_char(
+                CHAR_ROTATION_SPEED,
+                value=100,
+                properties={PROP_MIN_STEP: 100 / len(self.ordered_fan_speeds)},
+                setter_callback=self._set_fan_speed,
+            )
+            self.char_speed.display_name = "Fan Mode"
+
+        if CHAR_CURRENT_FAN_STATE in self.fan_chars:
+            self.char_current_fan_state = serv_fan.configure_char(
+                CHAR_CURRENT_FAN_STATE,
+                value=0,
+            )
+            self.char_current_fan_state.display_name = "Fan State"
+
+        if CHAR_TARGET_FAN_STATE in self.fan_chars and FAN_AUTO in self.fan_modes:
+            self.char_target_fan_state = serv_fan.configure_char(
+                CHAR_TARGET_FAN_STATE,
+                value=0,
+                setter_callback=self._set_fan_auto,
+            )
+            self.char_target_fan_state.display_name = "Fan Auto"
+
+    ################################################################################
 
     def _set_fan_swing_mode(self, swing_on) -> None:
         _LOGGER.debug("%s: Set swing mode to %s", self.entity_id, swing_on)
@@ -390,6 +401,8 @@ class Thermostat(HomeAccessory):
 
     def _temperature_to_states(self, temp):
         return temperature_to_states(temp, self._unit)
+
+    ################################################################################
 
     def _set_chars(self, char_values):
         _LOGGER.debug("Thermostat _set_chars: %s", char_values)
@@ -530,6 +543,8 @@ class Thermostat(HomeAccessory):
         if CHAR_TARGET_HUMIDITY in char_values:
             self.set_target_humidity(char_values[CHAR_TARGET_HUMIDITY])
 
+    ################################################################################
+
     def _configure_hvac_modes(self, state):
         """Configure target mode characteristics."""
         # This cannot be none OR an empty list
@@ -598,6 +613,8 @@ class Thermostat(HomeAccessory):
 
         self._async_update_state(new_state)
 
+    ################################################################################
+
     @callback
     def _async_update_state(self, new_state):
         """Update state without rechecking the device features."""
@@ -606,19 +623,9 @@ class Thermostat(HomeAccessory):
 
         # Update target operation mode FIRST
         hvac_mode = new_state.state
-        if hvac_mode and hvac_mode in HC_HASS_TO_HOMEKIT:
-            homekit_hvac_mode = HC_HASS_TO_HOMEKIT[hvac_mode]
-            if homekit_hvac_mode in self.hc_homekit_to_hass:
-                self.char_target_heat_cool.set_value(homekit_hvac_mode)
-            else:
-                _LOGGER.error(
-                    (
-                        "Cannot map hvac target mode: %s to homekit as only %s modes"
-                        " are supported"
-                    ),
-                    hvac_mode,
-                    self.hc_homekit_to_hass,
-                )
+        if hvac_mode:
+            # REFACTORED
+            self.update_target_information_first(hvac_mode)
 
         # Set current operation mode for supported thermostats
         if hvac_action := attributes.get(ATTR_HVAC_ACTION):
@@ -633,28 +640,22 @@ class Thermostat(HomeAccessory):
         # Update current humidity
         if CHAR_CURRENT_HUMIDITY in self.chars:
             current_humdity = attributes.get(ATTR_CURRENT_HUMIDITY)
-            if isinstance(current_humdity, (int, float)):
-                self.char_current_humidity.set_value(current_humdity)
+            self.update_current_humidity(current_humdity)
 
         # Update target humidity
         if CHAR_TARGET_HUMIDITY in self.chars:
             target_humdity = attributes.get(ATTR_HUMIDITY)
-            if isinstance(target_humdity, (int, float)):
-                self.char_target_humidity.set_value(target_humdity)
+            self.update_target_humidity(target_humdity)
 
         # Update cooling threshold temperature if characteristic exists
         if self.char_cooling_thresh_temp:
             cooling_thresh = attributes.get(ATTR_TARGET_TEMP_HIGH)
-            if isinstance(cooling_thresh, (int, float)):
-                cooling_thresh = self._temperature_to_homekit(cooling_thresh)
-                self.char_cooling_thresh_temp.set_value(cooling_thresh)
+            self.update_cooling_threshold_temperature(cooling_thresh)
 
         # Update heating threshold temperature if characteristic exists
         if self.char_heating_thresh_temp:
             heating_thresh = attributes.get(ATTR_TARGET_TEMP_LOW)
-            if isinstance(heating_thresh, (int, float)):
-                heating_thresh = self._temperature_to_homekit(heating_thresh)
-                self.char_heating_thresh_temp.set_value(heating_thresh)
+            self.update_heating_threshold_temperature(heating_thresh)
 
         # Update target temperature
         target_temp = _get_target_temperature(new_state, self._unit)
@@ -662,17 +663,8 @@ class Thermostat(HomeAccessory):
             target_temp is None
             and features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         ):
-            # Homekit expects a target temperature
-            # even if the device does not support it
-            hc_hvac_mode = self.char_target_heat_cool.value
-            if hc_hvac_mode == HC_HEAT_COOL_HEAT:
-                temp_low = attributes.get(ATTR_TARGET_TEMP_LOW)
-                if isinstance(temp_low, (int, float)):
-                    target_temp = self._temperature_to_homekit(temp_low)
-            elif hc_hvac_mode == HC_HEAT_COOL_COOL:
-                temp_high = attributes.get(ATTR_TARGET_TEMP_HIGH)
-                if isinstance(temp_high, (int, float)):
-                    target_temp = self._temperature_to_homekit(temp_high)
+            # REFACTORED
+            target_temp = self.update_target_temperature(attributes)
         if target_temp:
             self.char_target_temp.set_value(target_temp)
 
@@ -683,6 +675,64 @@ class Thermostat(HomeAccessory):
 
         if self.fan_chars:
             self._async_update_fan_state(new_state)
+
+    # REFACTORED
+    def update_target_information_first(self, hvac_mode) -> None:
+        """Handle the updating of the target information."""
+        if hvac_mode in HC_HASS_TO_HOMEKIT:
+            homekit_hvac_mode = HC_HASS_TO_HOMEKIT[hvac_mode]
+            if homekit_hvac_mode in self.hc_homekit_to_hass:
+                self.char_target_heat_cool.set_value(homekit_hvac_mode)
+            else:
+                _LOGGER.error(
+                    (
+                        "Cannot map hvac target mode: %s to homekit as only %s modes"
+                        " are supported"
+                    ),
+                    hvac_mode,
+                    self.hc_homekit_to_hass,
+                )
+
+    # REFACTORED
+    def update_target_temperature(self, attributes) -> float:
+        """Handle the update of the target temperature."""
+        # Homekit expects a target temperature
+        # even if the device does not support it
+        hc_hvac_mode = self.char_target_heat_cool.value
+        if hc_hvac_mode == HC_HEAT_COOL_HEAT:
+            temp_low = attributes.get(ATTR_TARGET_TEMP_LOW)
+            if isinstance(temp_low, (int, float)):
+                target_temp = self._temperature_to_homekit(temp_low)
+                return target_temp
+        elif hc_hvac_mode == HC_HEAT_COOL_COOL:
+            temp_high = attributes.get(ATTR_TARGET_TEMP_HIGH)
+            if isinstance(temp_high, (int, float)):
+                target_temp = self._temperature_to_homekit(temp_high)
+                return target_temp
+
+    def update_current_humidity(self, current_humdity) -> None:
+        """Handle the update of the current humidity."""
+        if isinstance(current_humdity, (int, float)):
+            self.char_current_humidity.set_value(current_humdity)
+
+    def update_target_humidity(self, target_humdity) -> None:
+        """Handle the update of the target temperature."""
+        if isinstance(target_humdity, (int, float)):
+            self.char_target_humidity.set_value(target_humdity)
+
+    def update_cooling_threshold_temperature(self, cooling_thresh) -> None:
+        """Handle the update of the cooling threshold temperature."""
+        if isinstance(cooling_thresh, (int, float)):
+            cooling_thresh = self._temperature_to_homekit(cooling_thresh)
+            self.char_cooling_thresh_temp.set_value(cooling_thresh)
+
+    def update_heating_threshold_temperature(self, heating_thresh) -> None:
+        """Handle the update of heating the target temperature."""
+        if isinstance(heating_thresh, (int, float)):
+            heating_thresh = self._temperature_to_homekit(heating_thresh)
+            self.char_heating_thresh_temp.set_value(heating_thresh)
+
+    ################################################################################
 
     @callback
     def _async_update_fan_state(self, new_state):

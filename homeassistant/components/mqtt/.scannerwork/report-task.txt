@@ -1,0 +1,6 @@
+projectKey=mqtt-new
+serverUrl=http://localhost:8084
+serverVersion=8.7.1.42226
+dashboardUrl=http://localhost:8084/dashboard?id=mqtt-new
+ceTaskId=AYsUE_WnpjcXZVAkYPeI
+ceTaskUrl=http://localhost:8084/api/ce/task?id=AYsUE_WnpjcXZVAkYPeI

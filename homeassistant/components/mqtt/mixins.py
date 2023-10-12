@@ -723,7 +723,6 @@ class MqttDiscoveryDeviceUpdate(ABC):
                 self.log_name,
                 discovery_hash,
             )
-            return
 
     async def _async_device_removed(
         self, event: EventType[EventDeviceRegistryUpdatedData]

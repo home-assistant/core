@@ -1,0 +1,6 @@
+projectKey=homekit-refactored7
+serverUrl=http://localhost:8084
+serverVersion=8.7.1.42226
+dashboardUrl=http://localhost:8084/dashboard?id=homekit-refactored7
+ceTaskId=AYskJ9RYpjcXZVAkYPgr
+ceTaskUrl=http://localhost:8084/api/ce/task?id=AYskJ9RYpjcXZVAkYPgr
