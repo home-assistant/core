@@ -102,3 +102,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return unload_ok
+
+
+class ViCareEntity(Entity):
+    """Base class for ViCare entities."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self) -> None:
+        """Initialize the entity."""
