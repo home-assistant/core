@@ -150,6 +150,28 @@ class SensorEntityDescription(EntityDescription):
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
 
 
+def _numeric_state_expected(
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass | str | None,
+    native_unit_of_measurement: str | None,
+    suggested_display_precision: int | None,
+) -> bool:
+    """Return true if the sensor must be numeric."""
+    # Note: the order of the checks needs to be kept aligned
+    # with the checks in `state` property.
+    if device_class in NON_NUMERIC_DEVICE_CLASSES:
+        return False
+    if (
+        state_class is not None
+        or native_unit_of_measurement is not None
+        or suggested_display_precision is not None
+    ):
+        return True
+    # Sensors with custom device classes will have the device class
+    # converted to None and are not considered numeric
+    return device_class is not None
+
+
 class SensorEntity(Entity):
     """Base class for sensor entities."""
 
@@ -284,20 +306,12 @@ class SensorEntity(Entity):
     @property
     def _numeric_state_expected(self) -> bool:
         """Return true if the sensor must be numeric."""
-        # Note: the order of the checks needs to be kept aligned
-        # with the checks in `state` property.
-        device_class = try_parse_enum(SensorDeviceClass, self.device_class)
-        if device_class in NON_NUMERIC_DEVICE_CLASSES:
-            return False
-        if (
-            self.state_class is not None
-            or self.native_unit_of_measurement is not None
-            or self.suggested_display_precision is not None
-        ):
-            return True
-        # Sensors with custom device classes will have the device class
-        # converted to None and are not considered numeric
-        return device_class is not None
+        return _numeric_state_expected(
+            try_parse_enum(SensorDeviceClass, self.device_class),
+            self.state_class,
+            self.native_unit_of_measurement,
+            self.suggested_display_precision,
+        )
 
     @property
     def options(self) -> list[str] | None:
@@ -590,7 +604,9 @@ class SensorEntity(Entity):
 
         # If the sensor has neither a device class, a state class, a unit of measurement
         # nor a precision then there are no further checks or conversions
-        if not self._numeric_state_expected:
+        if not _numeric_state_expected(
+            device_class, state_class, native_unit_of_measurement, suggested_precision
+        ):
             return value
 
         # From here on a numerical value is expected
