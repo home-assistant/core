@@ -18,6 +18,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
+from .config_flow import validate_custom_dates
 from .const import CONF_PROVINCE, CONF_REMOVE_HOLIDAYS
 
 
@@ -130,13 +131,27 @@ class HolidayFixFlow(RepairsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the options step of a fix flow."""
+        errors: dict[str, str] = {}
         if user_input:
             options = dict(self.entry.options)
             new_options = {**options, **user_input}
-            self.hass.config_entries.async_update_entry(self.entry, options=new_options)
-            await self.hass.config_entries.async_reload(self.entry.entry_id)
-            return self.async_create_entry(data={})
+            try:
+                await self.hass.async_add_executor_job(
+                    validate_custom_dates, new_options
+                )
+            except Exception:  # pylint: disable=broad-except
+                errors["remove_holidays"] = "remove_holiday_error"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.entry, options=new_options
+                )
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_create_entry(data={})
 
+        remove_holidays = self.entry.options[CONF_REMOVE_HOLIDAYS]
+        removed_named_holiday = [
+            value for value in remove_holidays if value != self.named_holiday
+        ]
         new_schema = self.add_suggested_values_to_schema(
             vol.Schema(
                 {
@@ -150,7 +165,7 @@ class HolidayFixFlow(RepairsFlow):
                     ),
                 }
             ),
-            self.entry.options,
+            {**self.entry.options, CONF_REMOVE_HOLIDAYS: removed_named_holiday},
         )
         return self.async_show_form(
             step_id="named_holiday",
@@ -160,6 +175,7 @@ class HolidayFixFlow(RepairsFlow):
                 CONF_REMOVE_HOLIDAYS: self.named_holiday,
                 "title": self.entry.title,
             },
+            errors=errors,
         )
 
 

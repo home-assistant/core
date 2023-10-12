@@ -147,6 +147,9 @@
               "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]"
             }
           }
+        },
+        "error": {
+          "remove_holiday_error": "[%key:component::workday::config::error::remove_holiday_error%]"
         }
       }
     }

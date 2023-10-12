@@ -369,6 +369,17 @@ async def test_bad_named_holiday(
 
     url = RepairsFlowResourceView.url.format(flow_id=flow_id)
     resp = await client.post(
+        url, json={"remove_holidays": ["Christmas", "Not exist 2"]}
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["errors"] == {
+        CONF_REMOVE_HOLIDAYS: "remove_holiday_error",
+    }
+
+    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    resp = await client.post(
         url, json={"remove_holidays": ["Christmas", "Thanksgiving"]}
     )
     assert resp.status == HTTPStatus.OK
