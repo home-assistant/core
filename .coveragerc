@@ -1470,6 +1470,7 @@ omit =
     homeassistant/components/vicare/binary_sensor.py
     homeassistant/components/vicare/button.py
     homeassistant/components/vicare/climate.py
+    homeassistant/components/vicare/entity.py
     homeassistant/components/vicare/sensor.py
     homeassistant/components/vicare/water_heater.py
     homeassistant/components/vilfo/__init__.py

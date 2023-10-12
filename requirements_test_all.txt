@@ -121,6 +121,9 @@ RtmAPI==0.7.2
 # homeassistant.components.sql
 SQLAlchemy==2.0.21
 
+# homeassistant.components.tami4
+Tami4EdgeAPI==2.1
+
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
 
@@ -1389,9 +1392,6 @@ pymailgunner==1.4
 
 # homeassistant.components.firmata
 pymata-express==1.19
-
-# homeassistant.components.mazda
-pymazda==0.3.11
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.8

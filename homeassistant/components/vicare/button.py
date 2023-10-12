@@ -18,7 +18,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareEntity, ViCareRequiredKeysMixinWithSet
+from . import ViCareRequiredKeysMixinWithSet
 from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
@@ -26,6 +26,7 @@ from .const import (
     VICARE_DEVICE_LIST,
     HeatingType,
 )
+from .entity import ViCareEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,10 +123,10 @@ class ViCareButton(ViCareEntity, ButtonEntity):
         has_multiple_devices: bool,
     ) -> None:
         """Initialize the button."""
+        super().__init__(device_config, has_multiple_devices)
         self.entity_description = description
         self._device_config = device_config
         self._api = api
-        ViCareEntity.__init__(self, device_config, has_multiple_devices)
 
     def press(self) -> None:
         """Handle the button press."""

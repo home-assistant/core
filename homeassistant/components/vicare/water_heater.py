@@ -19,7 +19,6 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemper
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareEntity
 from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
@@ -27,6 +26,7 @@ from .const import (
     VICARE_DEVICE_LIST,
     HeatingType,
 )
+from .entity import ViCareEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,13 +118,13 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         self, name, api, circuit, device_config, has_multiple_devices: bool
     ) -> None:
         """Initialize the DHW water_heater device."""
+        super().__init__(device_config, has_multiple_devices)
         self._attr_name = name
         self._api = api
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
         self._current_mode = None
         self._attr_unique_id = f"{device_config.getConfig().serial}-{circuit.id}"
-        ViCareEntity.__init__(self, device_config, has_multiple_devices)
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""

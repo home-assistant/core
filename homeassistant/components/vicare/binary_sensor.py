@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareEntity, ViCareRequiredKeysMixin
+from . import ViCareRequiredKeysMixin
 from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
@@ -29,6 +29,7 @@ from .const import (
     VICARE_DEVICE_LIST,
     HeatingType,
 )
+from .entity import ViCareEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -225,12 +226,11 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
         has_multiple_devices: bool,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(device_config, has_multiple_devices)
         self.entity_description = description
         self._attr_name = name
         self._api = api
-        self.entity_description = description
         self._device_config = device_config
-        ViCareEntity.__init__(self, device_config, has_multiple_devices)
 
     @property
     def available(self):
