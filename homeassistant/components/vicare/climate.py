@@ -152,7 +152,7 @@ class ViCareClimate(ClimateEntity):
         self._attr_name = name
         self._api = api
         self._circuit = circuit
-        self._attributes = {}
+        self._attributes: dict[str, Any] = {}
         self._current_mode = None
         self._current_program = None
         self._current_action = None
