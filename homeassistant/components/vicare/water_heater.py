@@ -17,7 +17,6 @@ from homeassistant.components.water_heater import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareEntity
@@ -109,14 +108,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         self._attributes = {}
         self._current_mode = None
         self._attr_unique_id = f"{device_config.getConfig().serial}-{circuit.id}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=device_config.getModel(),
-            manufacturer="Viessmann",
-            model=device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
-        ViCareEntity.__init__(self)
+        ViCareEntity.__init__(self, device_config)
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""

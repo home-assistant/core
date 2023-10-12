@@ -30,7 +30,6 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareEntity, ViCareRequiredKeysMixin
@@ -673,18 +672,7 @@ class ViCareSensor(ViCareEntity, SensorEntity):
         self._attr_name = name
         self._api = api
         self._device_config = device_config
-        ViCareEntity.__init__(self)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_config.getConfig().serial)},
-            name=self._device_config.getModel(),
-            manufacturer="Viessmann",
-            model=self._device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
+        ViCareEntity.__init__(self, device_config)
 
     @property
     def available(self):

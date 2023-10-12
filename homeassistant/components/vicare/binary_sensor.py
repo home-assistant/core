@@ -19,7 +19,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareEntity, ViCareRequiredKeysMixin
@@ -196,14 +195,7 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
         self._api = api
         self.entity_description = description
         self._device_config = device_config
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=device_config.getModel(),
-            manufacturer="Viessmann",
-            model=device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
-        ViCareEntity.__init__(self)
+        ViCareEntity.__init__(self, device_config)
 
     @property
     def available(self):

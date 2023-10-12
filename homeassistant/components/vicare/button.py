@@ -16,7 +16,6 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareEntity, ViCareRequiredKeysMixinWithSet
@@ -104,14 +103,7 @@ class ViCareButton(ViCareEntity, ButtonEntity):
         self.entity_description = description
         self._device_config = device_config
         self._api = api
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=device_config.getModel(),
-            manufacturer="Viessmann",
-            model=device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
-        ViCareEntity.__init__(self)
+        ViCareEntity.__init__(self, device_config)
 
     def press(self) -> None:
         """Handle the button press."""
