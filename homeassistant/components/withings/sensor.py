@@ -25,13 +25,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
+    MEASUREMENT_COORDINATOR,
     SCORE_POINTS,
     SLEEP_COORDINATOR,
     UOM_BEATS_PER_MINUTE,
     UOM_BREATHS_PER_MINUTE,
     UOM_FREQUENCY,
     UOM_MMHG,
-    WEIGHT_COORDINATOR,
     Measurement,
 )
 from .coordinator import (
@@ -379,7 +379,7 @@ async def async_setup_entry(
     """Set up the sensor config entry."""
     measurement_coordinator: WithingsMeasurementDataUpdateCoordinator = hass.data[
         DOMAIN
-    ][entry.entry_id][WEIGHT_COORDINATOR]
+    ][entry.entry_id][MEASUREMENT_COORDINATOR]
 
     async_add_entities(
         WithingsMeasurementSensor(measurement_coordinator, attribute)

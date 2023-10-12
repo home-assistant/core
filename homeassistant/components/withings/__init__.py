@@ -50,8 +50,8 @@ from .const import (
     DEFAULT_TITLE,
     DOMAIN,
     LOGGER,
+    MEASUREMENT_COORDINATOR,
     SLEEP_COORDINATOR,
-    WEIGHT_COORDINATOR,
 )
 from .coordinator import (
     WithingsBedPresenceDataUpdateCoordinator,
@@ -143,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
     coordinators: dict[str, WithingsDataUpdateCoordinator] = {
-        WEIGHT_COORDINATOR: WithingsMeasurementDataUpdateCoordinator(hass, client),
+        MEASUREMENT_COORDINATOR: WithingsMeasurementDataUpdateCoordinator(hass, client),
         SLEEP_COORDINATOR: WithingsSleepDataUpdateCoordinator(hass, client),
         BED_PRESENCE_COORDINATOR: WithingsBedPresenceDataUpdateCoordinator(
             hass, client
