@@ -74,9 +74,9 @@ class AcmedaBase(entity.Entity):
         return self.roller.id
 
     @property
-    def device_info(self) -> entity.DeviceInfo:
+    def device_info(self) -> dr.DeviceInfo:
         """Return the device info."""
-        return entity.DeviceInfo(
+        return dr.DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Rollease Acmeda",
             name=self.roller.name,

@@ -11,7 +11,7 @@ from roborock.local_api import RoborockLocalClient
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN

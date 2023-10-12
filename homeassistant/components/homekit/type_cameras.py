@@ -79,7 +79,7 @@ VIDEO_OUTPUT = (
     "-ssrc {v_ssrc} -f rtp "
     "-srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params {v_srtp_key} "
     "srtp://{address}:{v_port}?rtcpport={v_port}&"
-    "localrtcpport={v_port}&pkt_size={v_pkt_size}"
+    "localrtpport={v_port}&pkt_size={v_pkt_size}"
 )
 
 AUDIO_OUTPUT = (
@@ -92,7 +92,7 @@ AUDIO_OUTPUT = (
     "-ssrc {a_ssrc} -f rtp "
     "-srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params {a_srtp_key} "
     "srtp://{address}:{a_port}?rtcpport={a_port}&"
-    "localrtcpport={a_port}&pkt_size={a_pkt_size}"
+    "localrtpport={a_port}&pkt_size={a_pkt_size}"
 )
 
 SLOW_RESOLUTIONS = [
@@ -447,13 +447,14 @@ class Camera(HomeAccessory, PyhapCamera):
         self.sessions[session_id].pop(FFMPEG_WATCHER)()
         self.sessions[session_id].pop(FFMPEG_LOGGER).cancel()
 
-    async def stop(self):
+    @callback
+    def async_stop(self):
         """Stop any streams when the accessory is stopped."""
         for session_info in self.sessions.values():
             self.hass.async_create_background_task(
                 self.stop_stream(session_info), "homekit.camera-stop-stream"
             )
-        await super().stop()
+        super().async_stop()
 
     async def stop_stream(self, session_info):
         """Stop the stream for the given ``session_id``."""

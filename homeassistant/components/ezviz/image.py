@@ -38,8 +38,6 @@ async def async_setup_entry(
 class EzvizLastMotion(EzvizEntity, ImageEntity):
     """Return Last Motion Image from Ezviz Camera."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self, hass: HomeAssistant, coordinator: EzvizDataUpdateCoordinator, serial: str
     ) -> None:

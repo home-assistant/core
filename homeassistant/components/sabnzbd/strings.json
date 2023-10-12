@@ -14,6 +14,43 @@
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "queue": {
+        "name": "Queue"
+      },
+      "left": {
+        "name": "Left to download"
+      },
+      "total_disk_space": {
+        "name": "Total disk space"
+      },
+      "free_disk_space": {
+        "name": "Free disk space"
+      },
+      "queue_count": {
+        "name": "Queue count"
+      },
+      "daily_total": {
+        "name": "Daily total"
+      },
+      "weekly_total": {
+        "name": "Weekly total"
+      },
+      "monthly_total": {
+        "name": "Monthly total"
+      },
+      "overall_total": {
+        "name": "Overall total"
+      }
+    }
+  },
   "services": {
     "pause": {
       "name": "[%key:common::action::pause%]",

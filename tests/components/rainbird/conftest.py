@@ -35,8 +35,9 @@ SERIAL_NUMBER = 0x12635436566
 
 # Get serial number Command 0x85. Serial is 0x12635436566
 SERIAL_RESPONSE = "850000012635436566"
+ZERO_SERIAL_RESPONSE = "850000000000000000"
 # Model and version command 0x82
-MODEL_AND_VERSION_RESPONSE = "820006090C"
+MODEL_AND_VERSION_RESPONSE = "820005090C"  # ESP-TM2
 # Get available stations command 0x83
 AVAILABLE_STATIONS_RESPONSE = "83017F000000"  # Mask for 7 zones
 EMPTY_STATIONS_RESPONSE = "830000000000"
@@ -72,11 +73,6 @@ CONFIG_ENTRY_DATA = {
 }
 
 
-UNAVAILABLE_RESPONSE = AiohttpClientMockResponse(
-    "POST", URL, status=HTTPStatus.SERVICE_UNAVAILABLE
-)
-
-
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
@@ -90,6 +86,12 @@ def yaml_config() -> dict[str, Any]:
 
 
 @pytest.fixture
+async def config_entry_unique_id() -> str:
+    """Fixture for serial number used in the config entry."""
+    return SERIAL_NUMBER
+
+
+@pytest.fixture
 async def config_entry_data() -> dict[str, Any]:
     """Fixture for MockConfigEntry data."""
     return CONFIG_ENTRY_DATA
@@ -97,13 +99,14 @@ async def config_entry_data() -> dict[str, Any]:
 
 @pytest.fixture
 async def config_entry(
-    config_entry_data: dict[str, Any] | None
+    config_entry_data: dict[str, Any] | None,
+    config_entry_unique_id: str | None,
 ) -> MockConfigEntry | None:
     """Fixture for MockConfigEntry."""
     if config_entry_data is None:
         return None
     return MockConfigEntry(
-        unique_id=SERIAL_NUMBER,
+        unique_id=config_entry_unique_id,
         domain=DOMAIN,
         data=config_entry_data,
         options={ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES},
@@ -150,6 +153,13 @@ def mock_response(data: str) -> AiohttpClientMockResponse:
     return AiohttpClientMockResponse("POST", URL, response=rainbird_response(data))
 
 
+def mock_response_error(
+    status: HTTPStatus = HTTPStatus.SERVICE_UNAVAILABLE,
+) -> AiohttpClientMockResponse:
+    """Create a fake AiohttpClientMockResponse."""
+    return AiohttpClientMockResponse("POST", URL, status=status)
+
+
 @pytest.fixture(name="stations_response")
 def mock_station_response() -> str:
     """Mock response to return available stations."""
@@ -174,8 +184,15 @@ def mock_rain_delay_response() -> str:
     return RAIN_DELAY_OFF
 
 
+@pytest.fixture(name="model_and_version_response")
+def mock_model_and_version_response() -> str:
+    """Mock response to return rain delay state."""
+    return MODEL_AND_VERSION_RESPONSE
+
+
 @pytest.fixture(name="api_responses")
 def mock_api_responses(
+    model_and_version_response: str,
     stations_response: str,
     zone_state_response: str,
     rain_response: str,
@@ -186,7 +203,7 @@ def mock_api_responses(
     These are returned in the order they are requested by the update coordinator.
     """
     return [
-        MODEL_AND_VERSION_RESPONSE,
+        model_and_version_response,
         stations_response,
         zone_state_response,
         rain_response,

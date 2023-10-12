@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 import logging
+from operator import attrgetter
 from types import MappingProxyType
 from typing import Any
 
@@ -26,7 +27,7 @@ from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, c
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import normalize_hkid
@@ -508,9 +509,7 @@ class HKDevice:
 
         # Accessories need to be created in the correct order or setting up
         # relationships with ATTR_VIA_DEVICE may fail.
-        for accessory in sorted(
-            self.entity_map.accessories, key=lambda accessory: accessory.aid
-        ):
+        for accessory in sorted(self.entity_map.accessories, key=attrgetter("aid")):
             device_info = self.device_info_for_accessory(accessory)
 
             device = device_registry.async_get_or_create(

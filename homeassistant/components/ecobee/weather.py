@@ -24,7 +24,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -197,6 +197,7 @@ class EcobeeWeather(WeatherEntity):
         await self.data.update()
         thermostat = self.data.ecobee.get_thermostat(self._index)
         self.weather = thermostat.get("weather")
+        await self.async_update_listeners(("daily",))
 
 
 def _process_forecast(json):

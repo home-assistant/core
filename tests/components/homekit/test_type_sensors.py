@@ -1,4 +1,6 @@
 """Test different accessory types: Sensors."""
+from unittest.mock import patch
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homekit import get_accessory
 from homeassistant.components.homekit.const import (
@@ -71,11 +73,13 @@ async def test_temperature(hass: HomeAssistant, hk_driver) -> None:
     await hass.async_block_till_done()
     assert acc.char_temp.value == 0
 
-    hass.states.async_set(
-        entity_id, "75.2", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT}
-    )
-    await hass.async_block_till_done()
-    assert acc.char_temp.value == 24
+    # The UOM changes, the accessory should reload itself
+    with patch.object(acc, "async_reload") as mock_reload:
+        hass.states.async_set(
+            entity_id, "75.2", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT}
+        )
+        await hass.async_block_till_done()
+        assert mock_reload.called
 
 
 async def test_humidity(hass: HomeAssistant, hk_driver) -> None:
