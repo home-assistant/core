@@ -250,77 +250,9 @@ def build_item_response(  # noqa: C901
     if media_content_type is None or media_content_id is None:
         return None
 
-    title = None
-    image = None
-    media: dict[str, Any] | None = None
-    items = []
-
-    if media_content_type == BrowsableMedia.CURRENT_USER_PLAYLISTS:
-        if media := spotify.current_user_playlists(limit=BROWSE_LIMIT):
-            items = media.get("items", [])
-    elif media_content_type == BrowsableMedia.CURRENT_USER_FOLLOWED_ARTISTS:
-        if media := spotify.current_user_followed_artists(limit=BROWSE_LIMIT):
-            items = media.get("artists", {}).get("items", [])
-    elif media_content_type == BrowsableMedia.CURRENT_USER_SAVED_ALBUMS:
-        if media := spotify.current_user_saved_albums(limit=BROWSE_LIMIT):
-            items = [item["album"] for item in media.get("items", [])]
-    elif media_content_type == BrowsableMedia.CURRENT_USER_SAVED_TRACKS:
-        if media := spotify.current_user_saved_tracks(limit=BROWSE_LIMIT):
-            items = [item["track"] for item in media.get("items", [])]
-    elif media_content_type == BrowsableMedia.CURRENT_USER_SAVED_SHOWS:
-        if media := spotify.current_user_saved_shows(limit=BROWSE_LIMIT):
-            items = [item["show"] for item in media.get("items", [])]
-    elif media_content_type == BrowsableMedia.CURRENT_USER_RECENTLY_PLAYED:
-        if media := spotify.current_user_recently_played(limit=BROWSE_LIMIT):
-            items = [item["track"] for item in media.get("items", [])]
-    elif media_content_type == BrowsableMedia.CURRENT_USER_TOP_ARTISTS:
-        if media := spotify.current_user_top_artists(limit=BROWSE_LIMIT):
-            items = media.get("items", [])
-    elif media_content_type == BrowsableMedia.CURRENT_USER_TOP_TRACKS:
-        if media := spotify.current_user_top_tracks(limit=BROWSE_LIMIT):
-            items = media.get("items", [])
-    elif media_content_type == BrowsableMedia.FEATURED_PLAYLISTS:
-        if media := spotify.featured_playlists(
-            country=user["country"], limit=BROWSE_LIMIT
-        ):
-            items = media.get("playlists", {}).get("items", [])
-    elif media_content_type == BrowsableMedia.CATEGORIES:
-        if media := spotify.categories(country=user["country"], limit=BROWSE_LIMIT):
-            items = media.get("categories", {}).get("items", [])
-    elif media_content_type == "category_playlists":
-        if (
-            media := spotify.category_playlists(
-                category_id=media_content_id,
-                country=user["country"],
-                limit=BROWSE_LIMIT,
-            )
-        ) and (category := spotify.category(media_content_id, country=user["country"])):
-            title = category.get("name")
-            image = fetch_image_url(category, key="icons")
-            items = media.get("playlists", {}).get("items", [])
-    elif media_content_type == BrowsableMedia.NEW_RELEASES:
-        if media := spotify.new_releases(country=user["country"], limit=BROWSE_LIMIT):
-            items = media.get("albums", {}).get("items", [])
-    elif media_content_type == MediaType.PLAYLIST:
-        if media := spotify.playlist(media_content_id):
-            items = [item["track"] for item in media.get("tracks", {}).get("items", [])]
-    elif media_content_type == MediaType.ALBUM:
-        if media := spotify.album(media_content_id):
-            items = media.get("tracks", {}).get("items", [])
-    elif media_content_type == MediaType.ARTIST:
-        if (media := spotify.artist_albums(media_content_id, limit=BROWSE_LIMIT)) and (
-            artist := spotify.artist(media_content_id)
-        ):
-            title = artist.get("name")
-            image = fetch_image_url(artist)
-            items = media.get("items", [])
-    elif media_content_type == MEDIA_TYPE_SHOW:
-        if (media := spotify.show_episodes(media_content_id, limit=BROWSE_LIMIT)) and (
-            show := spotify.show(media_content_id)
-        ):
-            title = show.get("name")
-            image = fetch_image_url(show)
-            items = media.get("items", [])
+    title, image, media, items = _build_item_browse_media(
+        media_content_type, spotify, user, media_content_id
+    )
 
     if media is None:
         return None
@@ -342,35 +274,12 @@ def build_item_response(  # noqa: C901
             title=LIBRARY_MAP.get(media_content_id, "Unknown"),
         )
 
-        media_item.children = []
-        for item in items:
-            try:
-                item_id = item["id"]
-            except KeyError:
-                _LOGGER.debug("Missing ID for media item: %s", item)
-                continue
-            media_item.children.append(
-                BrowseMedia(
-                    can_expand=True,
-                    can_play=False,
-                    children_media_class=MediaClass.TRACK,
-                    media_class=MediaClass.PLAYLIST,
-                    media_content_id=item_id,
-                    media_content_type=f"{MEDIA_PLAYER_PREFIX}category_playlists",
-                    thumbnail=fetch_image_url(item, key="icons"),
-                    title=item.get("name"),
-                )
-            )
+        media_item.children = _make_media_children(items)
         return media_item
 
-    if title is None:
-        title = LIBRARY_MAP.get(media_content_id, "Unknown")
-        if "name" in media:
-            title = media["name"]
+    title = _check_title(title, media, media_content_id)
 
-    can_play = media_content_type in PLAYABLE_MEDIA_TYPES and (
-        media_content_type != MediaType.ARTIST or can_play_artist
-    )
+    can_play = _can_play_browse_media(media_content_type, can_play_artist)
 
     browse_media = BrowseMedia(
         can_expand=True,
@@ -383,19 +292,250 @@ def build_item_response(  # noqa: C901
         title=title,
     )
 
-    browse_media.children = []
-    for item in items:
-        try:
-            browse_media.children.append(
-                item_payload(item, can_play_artist=can_play_artist)
-            )
-        except (MissingMediaInformation, UnknownMediaType):
-            continue
+    browse_media.children = _make_browse_media_children(items, can_play_artist)
 
     if "images" in media:
         browse_media.thumbnail = fetch_image_url(media)
 
     return browse_media
+
+
+def _build_item_browse_media(
+    media_content_type: str,
+    spotify: Spotify,
+    user: dict[str, Any],
+    media_content_id: str,
+):
+    """Create media."""
+    title = None
+    image = None
+    media: dict[str, Any] | None = None
+    items = []
+
+    extract_items = {
+        str(BrowsableMedia.CURRENT_USER_PLAYLISTS): _browsing_get_items(
+            media_content_type, spotify
+        ),
+        str(BrowsableMedia.CURRENT_USER_TOP_ARTISTS): _browsing_get_items(
+            media_content_type, spotify
+        ),
+        str(BrowsableMedia.CURRENT_USER_TOP_TRACKS): _browsing_get_items(
+            media_content_type, spotify
+        ),
+        str(BrowsableMedia.CURRENT_USER_FOLLOWED_ARTISTS): _browsing_get_object_items(
+            media_content_type, spotify, media_content_id, user
+        ),
+        str(BrowsableMedia.FEATURED_PLAYLISTS): _browsing_get_object_items(
+            media_content_type, spotify, media_content_id, user
+        ),
+        str(BrowsableMedia.NEW_RELEASES): _browsing_get_object_items(
+            media_content_type, spotify, media_content_id, user
+        ),
+        str(MediaType.ALBUM): _browsing_get_object_items(
+            media_content_type, spotify, media_content_id, user
+        ),
+        str(BrowsableMedia.CURRENT_USER_SAVED_ALBUMS): _browsing_get_iterable_items(
+            media_content_type, spotify
+        ),
+        str(BrowsableMedia.CURRENT_USER_SAVED_TRACKS): _browsing_get_iterable_items(
+            media_content_type, spotify
+        ),
+        str(BrowsableMedia.CURRENT_USER_SAVED_SHOWS): _browsing_get_iterable_items(
+            media_content_type, spotify
+        ),
+        str(BrowsableMedia.CURRENT_USER_RECENTLY_PLAYED): _browsing_get_iterable_items(
+            media_content_type, spotify
+        ),
+        str(MediaType.PLAYLIST): _browsing_get_playlist(media_content_id, spotify),
+    }
+
+    extract_object = {
+        str(BrowsableMedia.CATEGORIES): _browsing_get_objects(
+            media_content_type, spotify, user, media_content_id
+        ),
+        "category_playlists": _browsing_get_objects(
+            media_content_type, spotify, user, media_content_id
+        ),
+        str(MediaType.ARTIST): _browsing_get_objects(
+            media_content_type, spotify, user, media_content_id
+        ),
+        str(MEDIA_TYPE_SHOW): _browsing_get_objects(
+            media_content_type, spotify, user, media_content_id
+        ),
+    }
+
+    if media_content_type in extract_items:
+        media, items = extract_items[str(media_content_type)]
+    elif media_content_type in extract_object:
+        media, items, image, title = extract_object[str(media_content_type)]
+
+    return title, image, media, items
+
+
+def _browsing_get_items(media_content_type, spotify):
+    """Get items."""
+    items = []
+    media: dict[str, Any] | None = None
+
+    if media_content_type == BrowsableMedia.CURRENT_USER_PLAYLISTS:
+        if media := spotify.current_user_playlists(limit=BROWSE_LIMIT):
+            items = media.get("items", [])
+    elif media_content_type == BrowsableMedia.CURRENT_USER_TOP_ARTISTS:
+        if media := spotify.current_user_top_artists(limit=BROWSE_LIMIT):
+            items = media.get("items", [])
+    elif media_content_type == BrowsableMedia.CURRENT_USER_TOP_TRACKS:
+        if media := spotify.current_user_top_tracks(limit=BROWSE_LIMIT):
+            items = media.get("items", [])
+
+    return media, items
+
+
+def _browsing_get_object_items(media_content_type, spotify, media_content_id, user):
+    """Get items from object."""
+    items = []
+    media: dict[str, Any] | None = None
+
+    if media_content_type == BrowsableMedia.CURRENT_USER_FOLLOWED_ARTISTS:
+        if media := spotify.current_user_followed_artists(limit=BROWSE_LIMIT):
+            items = media.get("artists", {}).get("items", [])
+    elif media_content_type == BrowsableMedia.FEATURED_PLAYLISTS:
+        if media := spotify.featured_playlists(
+            country=user["country"], limit=BROWSE_LIMIT
+        ):
+            items = media.get("playlists", {}).get("items", [])
+    elif media_content_type == BrowsableMedia.NEW_RELEASES:
+        if media := spotify.new_releases(country=user["country"], limit=BROWSE_LIMIT):
+            items = media.get("albums", {}).get("items", [])
+    elif media_content_type == MediaType.ALBUM:
+        if media := spotify.album(media_content_id):
+            items = media.get("tracks", {}).get("items", [])
+    return media, items
+
+
+def _browsing_get_iterable_items(media_content_type, spotify):
+    """Get items and media."""
+    items = []
+    media: dict[str, Any] | None = None
+
+    if media_content_type == BrowsableMedia.CURRENT_USER_SAVED_ALBUMS:
+        if media := spotify.current_user_saved_albums(limit=BROWSE_LIMIT):
+            items = [item["album"] for item in media.get("items", [])]
+
+    elif media_content_type == BrowsableMedia.CURRENT_USER_SAVED_TRACKS:
+        if media := spotify.current_user_saved_tracks(limit=BROWSE_LIMIT):
+            items = [item["track"] for item in media.get("items", [])]
+
+    elif media_content_type == BrowsableMedia.CURRENT_USER_SAVED_SHOWS:
+        if media := spotify.current_user_saved_shows(limit=BROWSE_LIMIT):
+            items = [item["show"] for item in media.get("items", [])]
+
+    elif media_content_type == BrowsableMedia.CURRENT_USER_RECENTLY_PLAYED:
+        if media := spotify.current_user_recently_played(limit=BROWSE_LIMIT):
+            items = [item["track"] for item in media.get("items", [])]
+
+    return media, items
+
+
+def _browsing_get_playlist(media_content_id, spotify):
+    """Get items and media."""
+    items = []
+    media: dict[str, Any] | None = None
+
+    if media := spotify.playlist(media_content_id):
+        items = [item["track"] for item in media.get("tracks", {}).get("items", [])]
+
+    return media, items
+
+
+def _browsing_get_objects(media_content_type, spotify, user, media_content_id):
+    """Get title, image, media and item."""
+    title = None
+    image = None
+    media: dict[str, Any] | None = None
+    items = []
+    if media_content_type == BrowsableMedia.CATEGORIES:
+        if media := spotify.categories(country=user["country"], limit=BROWSE_LIMIT):
+            items = media.get("categories", {}).get("items", [])
+    elif media_content_type == "category_playlists":
+        if (
+            media := spotify.category_playlists(
+                category_id=media_content_id,
+                country=user["country"],
+                limit=BROWSE_LIMIT,
+            )
+        ) and (category := spotify.category(media_content_id, country=user["country"])):
+            title = category.get("name")
+            image = fetch_image_url(category, key="icons")
+            items = media.get("playlists", {}).get("items", [])
+
+    elif media_content_type == MediaType.ARTIST:
+        if (media := spotify.artist_albums(media_content_id, limit=BROWSE_LIMIT)) and (
+            artist := spotify.artist(media_content_id)
+        ):
+            title = artist.get("name")
+            image = fetch_image_url(artist)
+            items = media.get("items", [])
+
+    elif (
+        media_content_type == MEDIA_TYPE_SHOW
+        and (media := spotify.show_episodes(media_content_id, limit=BROWSE_LIMIT))
+        and (show := spotify.show(media_content_id))
+    ):
+        title = show.get("name")
+        image = fetch_image_url(show)
+        items = media.get("items", [])
+    return media, items, image, title
+
+
+def _make_media_children(items):
+    """Create children for media item."""
+    children = []
+    for item in items:
+        try:
+            item_id = item["id"]
+        except KeyError:
+            _LOGGER.debug("Missing ID for media item: %s", item)
+            continue
+        children.append(
+            BrowseMedia(
+                can_expand=True,
+                can_play=False,
+                children_media_class=MediaClass.TRACK,
+                media_class=MediaClass.PLAYLIST,
+                media_content_id=item_id,
+                media_content_type=f"{MEDIA_PLAYER_PREFIX}category_playlists",
+                thumbnail=fetch_image_url(item, key="icons"),
+                title=item.get("name"),
+            )
+        )
+    return children
+
+
+def _check_title(title: str, media, media_content_id: str):
+    """Create title."""
+    if title is None:
+        title = LIBRARY_MAP.get(media_content_id, "Unknown")
+        if "name" in media:
+            title = media["name"]
+    return title
+
+
+def _can_play_browse_media(media_content_type: str, can_play_artist: bool):
+    """Set whether the item can be played."""
+    return media_content_type in PLAYABLE_MEDIA_TYPES and (
+        media_content_type != MediaType.ARTIST or can_play_artist
+    )
+
+
+def _make_browse_media_children(items, can_play_artist: bool):
+    """Create browse media children."""
+    children = []
+    for item in items:
+        try:
+            children.append(item_payload(item, can_play_artist=can_play_artist))
+        except (MissingMediaInformation, UnknownMediaType):
+            continue
+    return children
 
 
 def item_payload(item: dict[str, Any], *, can_play_artist: bool) -> BrowseMedia:
