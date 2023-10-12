@@ -327,7 +327,7 @@ aiopvpc==4.2.2
 aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.3.4
+aioqsw==0.3.5
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -518,7 +518,7 @@ beautifulsoup4==4.12.2
 bellows==0.36.5
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected==0.14.0
+bimmer-connected==0.14.1
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -530,7 +530,7 @@ bleak-retry-connector==3.2.1
 bleak==0.21.1
 
 # homeassistant.components.blebox
-blebox-uniapi==2.1.4
+blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
 blinkpy==0.21.0
@@ -752,7 +752,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.5.37
+env-canada==0.6.0
 
 # homeassistant.components.season
 ephem==4.1.5
@@ -2122,7 +2122,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==2.1.0
+python-homewizard-energy==2.1.2
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
