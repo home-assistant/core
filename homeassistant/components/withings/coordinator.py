@@ -77,7 +77,6 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
 
     config_entry: ConfigEntry
     _default_update_interval: timedelta | None = UPDATE_INTERVAL
-    notification_categories: list[NotifyAppli] = []
 
     def __init__(self, hass: HomeAssistant, client: ConfigEntryWithingsApi) -> None:
         """Initialize the Withings data coordinator."""
@@ -85,6 +84,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
             hass, LOGGER, name="Withings", update_interval=self._default_update_interval
         )
         self._client = client
+        self.notification_categories: set[NotifyAppli] = set()
 
     def webhook_subscription_listener(self, connected: bool) -> None:
         """Call when webhook status changed."""
@@ -116,13 +116,17 @@ class WithingsMeasurementDataUpdateCoordinator(
 ):
     """Withings measurement coordinator."""
 
-    notification_categories = [
-        NotifyAppli.WEIGHT,
-        NotifyAppli.ACTIVITY,
-        NotifyAppli.CIRCULATORY,
-    ]
+    def __init__(self, hass: HomeAssistant, client: ConfigEntryWithingsApi) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotifyAppli.WEIGHT,
+            NotifyAppli.ACTIVITY,
+            NotifyAppli.CIRCULATORY,
+        }
 
     async def _internal_update_data(self) -> dict[Measurement, Any]:
+        """Retrieve measurement data."""
         now = dt_util.utcnow()
         startdate = now - timedelta(days=7)
 
@@ -154,11 +158,15 @@ class WithingsSleepDataUpdateCoordinator(
 ):
     """Withings sleep coordinator."""
 
-    notification_categories = [
-        NotifyAppli.SLEEP,
-    ]
+    def __init__(self, hass: HomeAssistant, client: ConfigEntryWithingsApi) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotifyAppli.SLEEP,
+        }
 
     async def _internal_update_data(self) -> dict[Measurement, Any]:
+        """Retrieve sleep data."""
         now = dt_util.now()
         yesterday = now - timedelta(days=1)
         yesterday_noon = dt_util.start_of_local_day(yesterday) + timedelta(hours=12)
@@ -239,13 +247,16 @@ class WithingsSleepDataUpdateCoordinator(
 class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[None]):
     """Withings bed presence coordinator."""
 
-    notification_categories = [
-        NotifyAppli.BED_IN,
-        NotifyAppli.BED_OUT,
-    ]
-
     in_bed: bool | None = None
     _default_update_interval = None
+
+    def __init__(self, hass: HomeAssistant, client: ConfigEntryWithingsApi) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotifyAppli.BED_IN,
+            NotifyAppli.BED_OUT,
+        }
 
     async def async_webhook_data_updated(
         self, notification_category: NotifyAppli

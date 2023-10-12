@@ -380,8 +380,8 @@ async def async_setup_entry(
     measurement_coordinator: WithingsMeasurementDataUpdateCoordinator = hass.data[
         DOMAIN
     ][entry.entry_id][MEASUREMENT_COORDINATOR]
-
-    async_add_entities(
+    entities: list[SensorEntity] = []
+    entities.extend(
         WithingsMeasurementSensor(measurement_coordinator, attribute)
         for attribute in MEASUREMENT_SENSORS
     )
@@ -389,9 +389,10 @@ async def async_setup_entry(
         entry.entry_id
     ][SLEEP_COORDINATOR]
 
-    async_add_entities(
+    entities.extend(
         WithingsSleepSensor(sleep_coordinator, attribute) for attribute in SLEEP_SENSORS
     )
+    async_add_entities(entities)
 
 
 class WithingsSensor(WithingsEntity, SensorEntity):
