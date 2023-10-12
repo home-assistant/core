@@ -192,9 +192,9 @@ async def test_validate_input() -> None:
 
     await config_flow.validate_input(p_api, data)
 
-    assert p_api.set_email.called_once_with("test@example.com")
-    assert p_api.set_code.called_once_with("123456")
-    assert p_api.set_token.called_once_with("abcdef")
+    p_api.set_email.assert_called_once_with("test@example.com")
+    p_api.set_code.assert_called_once_with("123456")
+    p_api.set_token.assert_called_once_with("abcdef")
 
 
 async def test_validate_input_missing_values() -> None:
@@ -206,6 +206,6 @@ async def test_validate_input_missing_values() -> None:
 
     await config_flow.validate_input(p_api, data)
 
-    assert p_api.set_email.called_once_with("test@example.com")
+    p_api.set_email.assert_called_once_with("test@example.com")
     assert not p_api.set_code.called
     assert not p_api.set_token.called

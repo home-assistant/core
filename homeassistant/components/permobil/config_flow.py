@@ -13,6 +13,11 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import APPLICATION, DOMAIN
 
@@ -20,7 +25,9 @@ _LOGGER = logging.getLogger(__name__)
 
 GET_EMAIL_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_EMAIL): vol.Email(),
+        vol.Required(CONF_EMAIL): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.EMAIL)
+        ),
     }
 )
 
