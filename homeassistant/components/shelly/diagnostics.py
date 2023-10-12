@@ -10,6 +10,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
+from .const import NOT_INITIALISED
 from .coordinator import get_entry_data
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
@@ -21,9 +22,9 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     shelly_entry_data = get_entry_data(hass)[entry.entry_id]
 
-    device_settings: str | dict = "not initialized"
-    device_status: str | dict = "not initialized"
-    bluetooth: str | dict = "not initialized"
+    device_settings: str | dict = NOT_INITIALISED
+    device_status: str | dict = NOT_INITIALISED
+    bluetooth: str | dict = NOT_INITIALISED
     if shelly_entry_data.block:
         block_coordinator = shelly_entry_data.block
         assert block_coordinator
