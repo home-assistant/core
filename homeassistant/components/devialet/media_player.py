@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MANUFACTURER, SOUND_MODES
@@ -58,24 +58,21 @@ class DevialetDevice(MediaPlayerEntity):
     def __init__(self, client: DevialetApi, entry: ConfigEntry) -> None:
         """Initialize the Devialet device."""
         self._client = client
-        self._attr_name = entry.data[CONF_NAME]
+
         if entry.unique_id:
             self._serial = self._attr_unique_id = entry.unique_id
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._serial)},
+            manufacturer=MANUFACTURER,
+            model=self._client.model,
+            name=entry.data[CONF_NAME],
+            sw_version=self._client.version,
+        )
 
     async def async_update(self) -> None:
         """Get the latest details from the device."""
         await self._client.async_update()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._serial)},
-            name=self.name,
-            manufacturer=MANUFACTURER,
-            model=self._client.model,
-            sw_version=self._client.version,
-        )
 
     @property
     def state(self) -> MediaPlayerState | None:
