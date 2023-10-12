@@ -528,7 +528,9 @@ class CalendarEntity(Entity):
         the current or upcoming event.
         """
         super().async_write_ha_state()
-
+        _LOGGER.debug(
+            "Clearing %s alarms (%s)", self.entity_id, len(self._alarm_unsubs)
+        )
         for unsub in self._alarm_unsubs:
             unsub()
         self._alarm_unsubs.clear()
@@ -536,6 +538,7 @@ class CalendarEntity(Entity):
         now = dt_util.now()
         event = self.event
         if event is None or now >= event.end_datetime_local:
+            _LOGGER.debug("No alarms needed for %s (event=%s)", self.entity_id, event)
             return
 
         @callback
