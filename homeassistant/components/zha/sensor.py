@@ -1046,6 +1046,19 @@ class AqaraSmokeDensityDbm(Sensor, id_suffix="smoke_density_dbm"):
     _attr_suggested_display_precision: int = 3
 
 
+class EnumSensor(Sensor):
+    """Sensor with value from enum."""
+
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
+    _enum: type[enum.Enum] | None = None
+
+    def formatter(self, value: int) -> str | None:
+        """Use name of enum."""
+        if self._enum is None:
+            return None
+        return self._enum(value).name
+
+
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class PiHeatingDemand(Sensor, id_suffix="pi_heating_demand"):
@@ -1071,7 +1084,7 @@ class SetpointChangeSourceEnum(types.enum8):
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class SetpointChangeSource(Sensor, id_suffix="setpoint_change_source"):
+class SetpointChangeSource(EnumSensor, id_suffix="setpoint_change_source"):
     """Sensor that displays the source of the setpoint change.
 
     Optional Thermostat attribute
@@ -1081,10 +1094,7 @@ class SetpointChangeSource(Sensor, id_suffix="setpoint_change_source"):
     _attr_name: str = "Setpoint Change Source"
     _attr_icon: str = "mdi:thermostat"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def formatter(self, value: int) -> str:
-        """Use name of enum."""
-        return SetpointChangeSourceEnum(value).name
+    _enum = SetpointChangeSourceEnum
 
 
 class DanfossOpenWindowDetectionEnum(types.enum8):
@@ -1102,7 +1112,7 @@ class DanfossOpenWindowDetectionEnum(types.enum8):
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossOpenWindowDetection(Sensor, id_suffix="open_window_detection"):
+class DanfossOpenWindowDetection(EnumSensor, id_suffix="open_window_detection"):
     """Danfoss Proprietary attribute.
 
     Sensor that displays whether the TRV detects an open window using the temperature sensor.
@@ -1111,11 +1121,7 @@ class DanfossOpenWindowDetection(Sensor, id_suffix="open_window_detection"):
     SENSOR_ATTR = "open_window_detection"
     _attr_name: str = "Open Window Detected"
     _attr_icon: str = "mdi:window-open"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
-
-    def formatter(self, value: int) -> str:
-        """Use name of enum."""
-        return DanfossOpenWindowDetectionEnum(value).name
+    _enum = DanfossOpenWindowDetectionEnum
 
 
 @MULTI_MATCH(

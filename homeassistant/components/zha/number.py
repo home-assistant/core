@@ -1111,14 +1111,5 @@ class DanfossRegulationSetpointOffset(
     _attr_native_min_value: float = -2.5
     _attr_native_max_value: float = 2.5
     _attr_native_step: float = 0.1
-
+    _attr_multiplier = 1 / 10
     OFFSET_RESOLUTION = 10
-
-    @property
-    def native_value(self) -> float:
-        """Return the current value."""
-        return super().native_value / self.OFFSET_RESOLUTION
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Update the current value from HA."""
-        return await super().async_set_native_value(int(value * self.OFFSET_RESOLUTION))
