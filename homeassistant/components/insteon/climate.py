@@ -53,7 +53,7 @@ FAN_MODES = {4: FAN_AUTO, 8: FAN_ONLY}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    _: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Insteon climate entities from a config entry."""

@@ -294,13 +294,12 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             if hasattr(self.block, "brightness"):
                 params["brightness"] = brightness_to_percentage(kwargs[ATTR_BRIGHTNESS])
 
-        if (
-            ATTR_COLOR_TEMP_KELVIN in kwargs
-            and ColorMode.COLOR_TEMP in supported_color_modes
-        ):
-            # Color temperature change - used only in white mode,
-            # switch device mode to white
-            color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
+        color_temp = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
+        rgb_color = kwargs.get(ATTR_RGB_COLOR)
+        rgbw_color = kwargs.get(ATTR_RGBW_COLOR)
+        effect = kwargs.get(ATTR_EFFECT)
+
+        if color_temp and ColorMode.COLOR_TEMP in supported_color_modes:
             set_mode = "white"
             params["temp"] = int(
                 min(
@@ -309,35 +308,33 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                 )
             )
 
-        if ATTR_RGB_COLOR in kwargs and ColorMode.RGB in supported_color_modes:
-            # Color channels change - used only in color mode,
-            # switch device mode to color
+        if rgb_color and ColorMode.RGB in supported_color_modes:
             set_mode = "color"
-            (params["red"], params["green"], params["blue"]) = kwargs[ATTR_RGB_COLOR]
+            (params["red"], params["green"], params["blue"]) = rgb_color
 
-        if ATTR_RGBW_COLOR in kwargs and ColorMode.RGBW in supported_color_modes:
-            # Color channels change - used only in color mode,
-            # switch device mode to color
+        if rgbw_color and ColorMode.RGBW in supported_color_modes:
             set_mode = "color"
-            (params["red"], params["green"], params["blue"], params["white"]) = kwargs[
-                ATTR_RGBW_COLOR
-            ]
+            (
+                params["red"],
+                params["green"],
+                params["blue"],
+                params["white"],
+            ) = rgbw_color
 
-        if ATTR_EFFECT in kwargs and ATTR_COLOR_TEMP_KELVIN not in kwargs:
-            # Color effect change - used only in color mode, switch device mode to color
+        if effect and not color_temp:
             set_mode = "color"
-            if self.coordinator.model == "SHBLB-1":
-                effect_dict = SHBLB_1_RGB_EFFECTS
-            else:
-                effect_dict = STANDARD_RGB_EFFECTS
-            if kwargs[ATTR_EFFECT] in effect_dict.values():
-                params["effect"] = [
-                    k for k, v in effect_dict.items() if v == kwargs[ATTR_EFFECT]
-                ][0]
+            effect_dict = (
+                SHBLB_1_RGB_EFFECTS
+                if self.coordinator.model == "SHBLB-1"
+                else STANDARD_RGB_EFFECTS
+            )
+            effect_key = next((k for k, v in effect_dict.items() if v == effect), None)
+            if effect_key is not None:
+                params["effect"] = effect_key
             else:
                 LOGGER.error(
                     "Effect '%s' not supported by device %s",
-                    kwargs[ATTR_EFFECT],
+                    effect,
                     self.coordinator.model,
                 )
 

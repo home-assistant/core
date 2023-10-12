@@ -29,7 +29,6 @@ from .const import (
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
-    UNEXPECTED_EXCEPTION,
     BLEScannerMode,
 )
 from .coordinator import async_reconnect_soon, get_entry_data
@@ -55,6 +54,8 @@ BLE_SCANNER_OPTIONS = [
 ]
 
 INTERNAL_WIFI_AP_IP = "192.168.33.1"
+
+UNEXPECTED_EXCEPTION = "Unexpected exception"
 
 
 async def validate_input(
@@ -199,15 +200,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             user_input = {}
 
-        if get_info_gen(self.info) == 2:
-            schema = {
-                vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
-            }
-        else:
-            schema = {
-                vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME)): str,
-                vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
-            }
+        schema = {
+            vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
+        }
+
+        if get_info_gen(self.info) != 2:
+            schema[
+                vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME))
+            ] = str
 
         return self.async_show_form(
             step_id="credentials", data_schema=vol.Schema(schema), errors=errors
@@ -304,7 +304,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, __: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()

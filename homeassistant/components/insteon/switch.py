@@ -15,7 +15,7 @@ from .utils import async_add_insteon_devices, async_add_insteon_entities
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    _: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Insteon switches from a config entry."""
@@ -45,7 +45,7 @@ class InsteonSwitchEntity(InsteonEntity, SwitchEntity):
     """A Class for an Insteon switch entity."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> None | bool:
         """Return the boolean response if the node is on."""
         return bool(self._insteon_device_group.value)
 
