@@ -43,10 +43,10 @@
         "name": "Flame state"
       },
       "heating_state": {
-        "name": "Heating"
+        "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]"
       },
       "cooling_state": {
-        "name": "Cooling"
+        "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]"
       },
       "slave_boiler_state": {
         "name": "Secondary boiler state"
@@ -93,8 +93,8 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "auto": "Auto",
-          "boost": "Boost",
-          "comfort": "Comfort"
+          "boost": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::boost%]",
+          "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]"
         }
       },
       "regulation_mode": {
@@ -102,8 +102,8 @@
         "state": {
           "bleeding_cold": "Bleeding cold",
           "bleeding_hot": "Bleeding hot",
-          "cooling": "[%key:component::plugwise::entity::binary_sensor::cooling_state::name%]",
-          "heating": "[%key:component::plugwise::entity::binary_sensor::heating_state::name%]",
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
           "off": "[%key:common::state::off%]"
         }
       },
@@ -253,7 +253,7 @@
     },
     "switch": {
       "cooling_ena_switch": {
-        "name": "[%key:component::plugwise::entity::binary_sensor::cooling_state::name%]"
+        "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]"
       },
       "dhw_cm_switch": {
         "name": "DHW comfort mode"
