@@ -16,23 +16,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     token = dict(entry.data)["token"]
 
-    bees = await getBees(hass,token)
+    bees = await getBees(hass, token)
 
     entry.data = dict({"token": token, "bees": bees})
 
     for bee in bees:
-        _LOGGER.info(bee)
-
+        availablePlatforms = []
         for actuator in bee.get("actuators"):
             match actuator.get("device_type"):
                 case 0:
-                    platforms.append(Platform.SWITCH)
+                    availablePlatforms.append(Platform.SWITCH)
 
         match bee.get("productID"):
+            case 31:
+                availablePlatforms.append(Platform.LIGHT)
             case 46:
-                platforms.append(Platform.SWITCH)
+                availablePlatforms.append(Platform.SWITCH)
+            case 79:
+                availablePlatforms.append(Platform.LIGHT)
 
-    platforms = list(dict.fromkeys(platforms))
+    platforms.extend(list(dict.fromkeys(availablePlatforms)))
 
     for platform in platforms:
         hass.async_create_task(
