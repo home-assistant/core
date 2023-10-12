@@ -1112,4 +1112,3 @@ class DanfossRegulationSetpointOffset(
     _attr_native_max_value: float = 2.5
     _attr_native_step: float = 0.1
     _attr_multiplier = 1 / 10
-    OFFSET_RESOLUTION = 10
