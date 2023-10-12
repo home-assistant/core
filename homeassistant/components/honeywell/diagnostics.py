@@ -16,10 +16,10 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    Honeywell: HoneywellData = hass.data[DOMAIN][config_entry.entry_id]
+    honeywell: HoneywellData = hass.data[DOMAIN][config_entry.entry_id]
     diagnostics_data = {}
 
-    for device, module in Honeywell.devices.items():
+    for device, module in honeywell.devices.items():
         diagnostics_data.update(
             {
                 f"Device {device}": {
