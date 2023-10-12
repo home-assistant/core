@@ -113,6 +113,13 @@ class NetatmoSource(MediaSource):
         if not media.can_expand:
             return media
 
+        self._build_media_children(media, source, camera_id)
+
+        return media
+
+    def _build_media_children(
+        self, media: BrowseMediaSource, source: str, camera_id: str
+    ) -> None:
         media.children = []
         # Append first level children
         if not camera_id:
@@ -128,8 +135,6 @@ class NetatmoSource(MediaSource):
                     continue
                 if child:
                     media.children.append(child)
-
-        return media
 
 
 def remove_html_tags(text: str) -> str:

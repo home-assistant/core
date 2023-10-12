@@ -64,6 +64,9 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     # Test successful listing
     media = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/events/")
 
+    # Test successful media children is not None
+    assert media.children
+
     # Test successful events listing
     media = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/events/12:34:56:78:90:ab"
