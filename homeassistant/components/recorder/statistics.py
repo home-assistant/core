@@ -2451,6 +2451,10 @@ def async_change_statistics_unit(
 
 
 def cleanup_statistics_sqlite(instance: Recorder) -> None:
+    """Clean up the statistics migration from timestamp to datetime.
+
+    If supported Dialect is SQLITE
+    """
     for table in STATISTICS_TABLES:
         with session_scope(session=instance.get_session()) as session:
             session.connection().execute(
@@ -2461,6 +2465,11 @@ def cleanup_statistics_sqlite(instance: Recorder) -> None:
 
 
 def cleanup_statistics_mysql(instance: Recorder) -> bool:
+    """Clean up the statistics migration from timestamp to datetime.
+
+    If supported Dialect is MYSQL
+    Returns False if there are more rows to update.
+    """
     for table in STATISTICS_TABLES:
         with session_scope(session=instance.get_session()) as session:
             if (
@@ -2475,9 +2484,15 @@ def cleanup_statistics_mysql(instance: Recorder) -> bool:
                 # We have more rows to update so return False
                 # to indicate we need to run again
                 return False
+    return True
 
 
 def cleanup_statistics_postgresql(instance: Recorder) -> bool:
+    """Clean up the statistics migration from timestamp to datetime.
+
+    If supported Dialect is POSTGRESQL
+    Returns False if there are more rows to update.
+    """
     for table in STATISTICS_TABLES:
         with session_scope(session=instance.get_session()) as session:
             if (
@@ -2493,6 +2508,7 @@ def cleanup_statistics_postgresql(instance: Recorder) -> bool:
                 # We have more rows to update so return False
                 # to indicate we need to run again
                 return False
+    return True
 
 
 def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
