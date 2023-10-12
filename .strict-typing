@@ -103,6 +103,7 @@ homeassistant.components.devolo_home_control.*
 homeassistant.components.devolo_home_network.*
 homeassistant.components.dhcp.*
 homeassistant.components.diagnostics.*
+homeassistant.components.discovergy.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
 homeassistant.components.doorbird.*
@@ -214,6 +215,7 @@ homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.logbook.*
 homeassistant.components.logger.*
+homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
@@ -260,6 +262,7 @@ homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
+homeassistant.components.poolsense.*
 homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
 homeassistant.components.proximity.*

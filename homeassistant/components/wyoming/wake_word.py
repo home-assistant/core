@@ -5,7 +5,7 @@ import logging
 
 from wyoming.audio import AudioChunk, AudioStart
 from wyoming.client import AsyncTcpClient
-from wyoming.wake import Detection
+from wyoming.wake import Detect, Detection
 
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .data import WyomingService
+from .data import WyomingService, load_wyoming_info
 from .error import WyomingError
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ async def async_setup_entry(
     service: WyomingService = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
-            WyomingWakeWordProvider(config_entry, service),
+            WyomingWakeWordProvider(hass, config_entry, service),
         ]
     )
 
@@ -38,27 +38,39 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         config_entry: ConfigEntry,
         service: WyomingService,
     ) -> None:
         """Set up provider."""
+        self.hass = hass
         self.service = service
         wake_service = service.info.wake[0]
 
         self._supported_wake_words = [
-            wake_word.WakeWord(ww_id=ww.name, name=ww.name)
+            wake_word.WakeWord(id=ww.name, name=ww.description or ww.name)
             for ww in wake_service.models
         ]
         self._attr_name = wake_service.name
         self._attr_unique_id = f"{config_entry.entry_id}-wake_word"
 
-    @property
-    def supported_wake_words(self) -> list[wake_word.WakeWord]:
+    async def get_supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
+        info = await load_wyoming_info(
+            self.service.host, self.service.port, retries=0, timeout=1
+        )
+
+        if info is not None:
+            wake_service = info.wake[0]
+            self._supported_wake_words = [
+                wake_word.WakeWord(id=ww.name, name=ww.description or ww.name)
+                for ww in wake_service.models
+            ]
+
         return self._supported_wake_words
 
     async def _async_process_audio_stream(
-        self, stream: AsyncIterable[tuple[bytes, int]]
+        self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str | None
     ) -> wake_word.DetectionResult | None:
         """Try to detect one or more wake words in an audio stream.
 
@@ -72,6 +84,11 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
 
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
+                # Inform client which wake word we want to detect (None = default)
+                await client.write_event(
+                    Detect(names=[wake_word_id] if wake_word_id else None).event()
+                )
+
                 await client.write_event(
                     AudioStart(
                         rate=16000,
@@ -98,9 +115,19 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                                 break
 
                             if Detection.is_type(event.type):
-                                # Successful detection
+                                # Possible detection
                                 detection = Detection.from_event(event)
                                 _LOGGER.info(detection)
+
+                                if wake_word_id and (detection.name != wake_word_id):
+                                    _LOGGER.warning(
+                                        "Expected wake word %s but got %s, skipping",
+                                        wake_word_id,
+                                        detection.name,
+                                    )
+                                    wake_task = asyncio.create_task(client.read_event())
+                                    pending.add(wake_task)
+                                    continue
 
                                 # Retrieve queued audio
                                 queued_audio: list[tuple[bytes, int]] | None = None
@@ -111,7 +138,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                                     queued_audio = [audio_task.result()]
 
                                 return wake_word.DetectionResult(
-                                    ww_id=detection.name,
+                                    wake_word_id=detection.name,
                                     timestamp=detection.timestamp,
                                     queued_audio=queued_audio,
                                 )

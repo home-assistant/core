@@ -1,15 +1,17 @@
 """Tests for the withings component."""
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any
 from urllib.parse import urlparse
 
+from aiohttp.test_utils import TestClient
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.webhook import async_generate_url
-from homeassistant.components.withings.const import CONF_USE_WEBHOOK, DOMAIN
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @dataclass
@@ -21,7 +23,7 @@ class WebhookResponse:
 
 
 async def call_webhook(
-    hass: HomeAssistant, webhook_id: str, data: dict[str, Any], client
+    hass: HomeAssistant, webhook_id: str, data: dict[str, Any], client: TestClient
 ) -> WebhookResponse:
     """Call the webhook."""
     webhook_url = async_generate_url(hass, webhook_id)
@@ -34,32 +36,31 @@ async def call_webhook(
     # Wait for remaining tasks to complete.
     await hass.async_block_till_done()
 
-    data: dict[str, Any] = await resp.json()
+    data = await resp.json()
     resp.close()
 
     return WebhookResponse(message=data["message"], message_code=data["code"])
 
 
-async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def setup_integration(
+    hass: HomeAssistant, config_entry: MockConfigEntry, enable_webhooks: bool = True
+) -> None:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
+    if enable_webhooks:
+        await async_process_ha_core_config(
+            hass,
+            {"external_url": "https://example.local:8123"},
+        )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
 
-async def enable_webhooks(hass: HomeAssistant) -> None:
-    """Enable webhooks."""
-    assert await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_USE_WEBHOOK: True,
-            }
-        },
-    )
+async def prepare_webhook_setup(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Prepare webhooks are registered by waiting a second."""
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()

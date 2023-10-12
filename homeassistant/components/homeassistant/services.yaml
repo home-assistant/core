@@ -60,3 +60,5 @@ reload_config_entry:
         text:
 
 save_persistent_states:
+
+reload_all:

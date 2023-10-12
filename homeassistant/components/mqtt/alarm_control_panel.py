@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import functools
 import logging
-import re
 
 import voluptuous as vol
 
@@ -158,16 +157,6 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     _entity_id_format = alarm.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_ALARM_ATTRIBUTES_BLOCKED
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Init the MQTT Alarm Control Panel."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""
@@ -188,9 +177,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         if (code := self._config.get(CONF_CODE)) is None:
             self._attr_code_format = None
-        elif code == REMOTE_CODE or (
-            isinstance(code, str) and re.search("^\\d+$", code)
-        ):
+        elif code == REMOTE_CODE or str(code).isdigit():
             self._attr_code_format = alarm.CodeFormat.NUMBER
         else:
             self._attr_code_format = alarm.CodeFormat.TEXT
