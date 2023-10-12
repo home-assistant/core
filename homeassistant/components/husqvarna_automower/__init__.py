@@ -3,12 +3,11 @@
 import contextlib
 import logging
 
-from aiohttp import ClientError
+from aioautomower.session import AutomowerSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
@@ -32,19 +31,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    hass.data[DOMAIN][entry.entry_id] = api.AsyncConfigEntryAuth(
-        aiohttp_client.async_get_clientsession(hass), session
-    )
-    try:
-        await session.async_ensure_token_valid()
-    except ClientError as err:
-        raise ConfigEntryNotReady from err
 
-    coordinator = AutomowerDataUpdateCoordinator(
-        hass,
-        implementation,
-        session,
+    automower_api = AutomowerSession(
+        api.AsyncConfigEntryAuth(
+            aiohttp_client.async_get_clientsession(hass),
+            session,
+        )
     )
+
+    coordinator = AutomowerDataUpdateCoordinator(hass, automower_api)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -57,7 +52,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle unload of an entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     with contextlib.suppress(Exception):
-        await coordinator.session.close()
+        await coordinator.api.close()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

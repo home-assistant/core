@@ -98,12 +98,12 @@ class AutomowerLawnMowerEntity(LawnMowerEntity, AutomowerBaseEntity):
 
     async def async_start_mowing(self) -> None:
         """Resume schedule."""
-        await self.coordinator.mowersession.resume_schedule(self.mower_id)
+        await self.coordinator.api.resume_schedule(self.mower_id)
 
     async def async_pause(self) -> None:
         """Pauses the mower."""
-        await self.coordinator.mowersession.pause_mowing(self.mower_id)
+        await self.coordinator.api.pause_mowing(self.mower_id)
 
     async def async_dock(self) -> None:
         """Parks the mower until next schedule."""
-        await self.coordinator.mowersession.park_until_next_schedule(self.mower_id)
+        await self.coordinator.api.park_until_next_schedule(self.mower_id)
