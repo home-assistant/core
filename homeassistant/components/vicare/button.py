@@ -52,9 +52,7 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 )
 
 
-def _build_entity(
-    name, vicare_api, device_config, description, has_multiple_devices: bool
-):
+def _build_entity(name, vicare_api, device_config, description):
     """Create a ViCare button entity."""
     _LOGGER.debug("Found device %s", name)
     try:
@@ -72,7 +70,6 @@ def _build_entity(
         vicare_api,
         device_config,
         description,
-        has_multiple_devices,
     )
 
 
@@ -83,9 +80,6 @@ async def async_setup_entry(
 ) -> None:
     """Create the ViCare button entities."""
     entities = []
-    has_multiple_devices = (
-        len(hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]) > 1
-    )
 
     for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
         api = getattr(
@@ -101,7 +95,6 @@ async def async_setup_entry(
                 api,
                 device,
                 description,
-                has_multiple_devices,
             )
             if entity is not None:
                 entities.append(entity)
@@ -116,14 +109,12 @@ class ViCareButton(ViCareEntity, ButtonEntity):
 
     def __init__(
         self,
-        name,
         api,
         device_config,
         description: ViCareButtonEntityDescription,
-        has_multiple_devices: bool,
     ) -> None:
         """Initialize the button."""
-        super().__init__(device_config, has_multiple_devices)
+        super().__init__(device_config)
         self.entity_description = description
         self._device_config = device_config
         self._api = api

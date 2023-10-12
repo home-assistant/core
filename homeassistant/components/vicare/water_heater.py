@@ -76,9 +76,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ViCare climate platform."""
     entities = []
-    has_multiple_devices = (
-        len(hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]) > 1
-    )
+
     for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
         api = getattr(
             device,
@@ -97,7 +95,6 @@ async def async_setup_entry(
                 api,
                 circuit,
                 device,
-                has_multiple_devices,
             )
             entities.append(entity)
 
@@ -114,11 +111,9 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _attr_max_temp = VICARE_TEMP_WATER_MAX
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
 
-    def __init__(
-        self, name, api, circuit, device_config, has_multiple_devices: bool
-    ) -> None:
+    def __init__(self, name, api, circuit, device_config) -> None:
         """Initialize the DHW water_heater device."""
-        super().__init__(device_config, has_multiple_devices)
+        super().__init__(device_config)
         self._attr_name = name
         self._api = api
         self._circuit = circuit

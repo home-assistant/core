@@ -575,7 +575,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 )
 
 
-def _build_entity(name, vicare_api, device_config, sensor, has_multiple_devices: bool):
+def _build_entity(name, vicare_api, device_config, sensor):
     """Create a ViCare sensor entity."""
     _LOGGER.debug("Found device %s", name)
     try:
@@ -593,7 +593,6 @@ def _build_entity(name, vicare_api, device_config, sensor, has_multiple_devices:
         vicare_api,
         device_config,
         sensor,
-        has_multiple_devices,
     )
 
 
@@ -603,7 +602,6 @@ async def _entities_from_descriptions(
     sensor_descriptions,
     iterables,
     device,
-    has_multiple_devices: bool,
 ):
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
@@ -617,7 +615,6 @@ async def _entities_from_descriptions(
                 current,
                 device,
                 description,
-                has_multiple_devices,
             )
             if entity is not None:
                 entities.append(entity)
@@ -630,9 +627,7 @@ async def async_setup_entry(
 ) -> None:
     """Create the ViCare sensor devices."""
     entities = []
-    has_multiple_devices = (
-        len(hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]) > 1
-    )
+
     for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
         api = getattr(
             device,
@@ -647,7 +642,6 @@ async def async_setup_entry(
                 api,
                 device,
                 description,
-                has_multiple_devices,
             )
             if entity is not None:
                 entities.append(entity)
@@ -659,7 +653,6 @@ async def async_setup_entry(
                 CIRCUIT_SENSORS,
                 api.circuits,
                 device,
-                has_multiple_devices,
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No circuits found")
@@ -671,7 +664,6 @@ async def async_setup_entry(
                 BURNER_SENSORS,
                 api.burners,
                 device,
-                has_multiple_devices,
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No burners found")
@@ -683,7 +675,6 @@ async def async_setup_entry(
                 COMPRESSOR_SENSORS,
                 api.compressors,
                 device,
-                has_multiple_devices,
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No compressors found")
@@ -702,10 +693,9 @@ class ViCareSensor(ViCareEntity, SensorEntity):
         api,
         device_config,
         description: ViCareSensorEntityDescription,
-        has_multiple_devices: bool,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device_config, has_multiple_devices)
+        super().__init__(device_config)
         self.entity_description = description
         self._attr_name = name
         self._api = api

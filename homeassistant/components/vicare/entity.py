@@ -10,18 +10,11 @@ class ViCareEntity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device_config, has_multiple_devices: bool) -> None:
+    def __init__(self, device_config) -> None:
         """Initialize the entity."""
-        device_name = device_config.getModel()
-
-        if has_multiple_devices:
-            device_name = (
-                f"{device_config.getModel()}-{device_config.getConfig().serial}"
-            )
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=device_name,
+            name=f"{device_config.getModel()}-{device_config.getConfig().serial}",
             manufacturer="Viessmann",
             model=device_config.getModel(),
             configuration_url="https://developer.viessmann.com/",
