@@ -4,8 +4,9 @@ The number component allows control of charging current.
 """
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, cast
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -27,8 +28,61 @@ from .coordinator import InvalidAuth, WallboxCoordinator
 from .entity import WallboxEntity
 
 
+def max_charging_current_value(coordinator: WallboxCoordinator) -> float:
+    """Return the maximum available value for charging current."""
+    return cast(float, coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY])
+
+
+def min_charging_current_value(coordinator: WallboxCoordinator) -> float:
+    """Return the minimum available value for charging current."""
+    return cast(
+        float,
+        (
+            coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY] * -1
+            if coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY][0:2]
+            in BIDIRECTIONAL_MODEL_PREFIXES
+            else 0
+        ),
+    )
+
+
+async def async_set_charging_current_value(
+    coordinator: WallboxCoordinator, value: float
+) -> None:
+    """Set the value for charging current."""
+    await coordinator.async_set_charging_current(value)
+
+
+def max_energy_price_value(coordinator: WallboxCoordinator) -> float:
+    """Return the maximum available value for energy price."""
+    return 5
+
+
+def min_energy_price_value(coordinator: WallboxCoordinator) -> float:
+    """Return the maximum available value for energy price."""
+    return -5
+
+
+async def async_set_energy_price_value(
+    coordinator: WallboxCoordinator, value: float
+) -> None:
+    """Set the value for energy price."""
+    await coordinator.async_set_energy_cost(value)
+
+
 @dataclass
-class WallboxNumberEntityDescription(NumberEntityDescription):
+class WallboxNumberEntityDescriptionMixin:
+    """Load entities from different handlers."""
+
+    max_value_fn: Callable[[WallboxCoordinator], float]
+    min_value_fn: Callable[[WallboxCoordinator], float]
+    set_value_fn: Callable[[WallboxCoordinator, float], Coroutine[Any, Any, Any]]
+
+
+@dataclass
+class WallboxNumberEntityDescription(
+    NumberEntityDescription, WallboxNumberEntityDescriptionMixin
+):
     """Describes Wallbox number entity."""
 
 
@@ -36,15 +90,17 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CHARGER_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CHARGER_MAX_CHARGING_CURRENT_KEY,
         translation_key="maximum_charging_current",
-        native_min_value=0,
-        native_max_value=6,
+        max_value_fn=max_charging_current_value,
+        min_value_fn=min_charging_current_value,
+        set_value_fn=async_set_charging_current_value,
         native_step=1,
     ),
     CHARGER_ENERGY_PRICE_KEY: WallboxNumberEntityDescription(
         key=CHARGER_ENERGY_PRICE_KEY,
         translation_key="energy_price",
-        native_min_value=-5,
-        native_max_value=5,
+        max_value_fn=max_energy_price_value,
+        min_value_fn=min_energy_price_value,
+        set_value_fn=async_set_energy_price_value,
         native_step=0.01,
     ),
 }
@@ -90,35 +146,16 @@ class WallboxNumber(WallboxEntity, NumberEntity):
         self.entity_description = description
         self._coordinator = coordinator
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
-        self._is_bidirectional = (
-            coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY][0:2]
-            in BIDIRECTIONAL_MODEL_PREFIXES
-        )
 
     @property
     def native_max_value(self) -> float:
-        """Return the maximum available current."""
-        return cast(
-            float,
-            (
-                self._coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY]
-                if self.entity_description.key == CHARGER_MAX_CHARGING_CURRENT_KEY
-                else self.entity_description.native_max_value
-            ),
-        )
+        """Return the maximum available value."""
+        return self.entity_description.max_value_fn(self.coordinator)
 
     @property
     def native_min_value(self) -> float:
-        """Return the minimum available current based on charger type - some chargers can discharge."""
-        return cast(
-            float,
-            (
-                (self.max_value * -1)
-                if self._is_bidirectional
-                and self.entity_description.key == CHARGER_MAX_CHARGING_CURRENT_KEY
-                else self.entity_description.native_min_value
-            ),
-        )
+        """Return the minimum available value."""
+        return self.entity_description.min_value_fn(self.coordinator)
 
     @property
     def native_value(self) -> float | None:
@@ -127,7 +164,4 @@ class WallboxNumber(WallboxEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the entity."""
-        if self.entity_description.key == CHARGER_MAX_CHARGING_CURRENT_KEY:
-            await self._coordinator.async_set_charging_current(value)
-        if self.entity_description.key == CHARGER_ENERGY_PRICE_KEY:
-            await self._coordinator.async_set_energy_cost(value)
+        await self.entity_description.set_value_fn(self.coordinator, value)
