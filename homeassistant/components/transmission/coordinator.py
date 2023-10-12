@@ -163,4 +163,4 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         if self._session is None:
             return None
 
-        return self._session.alt_speed_enabled
+        return self._session.alt_speed_enabled  # type: ignore[no-any-return]
