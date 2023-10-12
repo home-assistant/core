@@ -152,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _: Any,
     ) -> None:
         if cloud.async_active_subscription(hass):
-            webhook_url = await async_cloudhook_generate_url(hass, entry)
+            webhook_url = await __async_cloudhook_generate_url(hass, entry)
         else:
             webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
 
@@ -260,7 +260,9 @@ async def async_unsubscribe_webhooks(client: ConfigEntryWithingsApi) -> None:
         )
 
 
-async def async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
+async def __async_cloudhook_generate_url(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> str:
     """Generate the full URL for a webhook_id."""
     if CONF_CLOUDHOOK_URL not in entry.data:
         webhook_id = entry.data[CONF_WEBHOOK_ID]
