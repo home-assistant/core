@@ -177,7 +177,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         if (code := self._config.get(CONF_CODE)) is None:
             self._attr_code_format = None
-        elif code == REMOTE_CODE or (isinstance(code, str) and code.isdigit()):
+        elif code == REMOTE_CODE or str(code).isdigit():
             self._attr_code_format = alarm.CodeFormat.NUMBER
         else:
             self._attr_code_format = alarm.CodeFormat.TEXT

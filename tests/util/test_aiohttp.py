@@ -51,7 +51,7 @@ def test_serialize_body_str() -> None:
     assert aiohttp.serialize_response(response) == {
         "status": 201,
         "body": "Hello",
-        "headers": {"Content-Length": "5", "Content-Type": "text/plain; charset=utf-8"},
+        "headers": {"Content-Type": "text/plain; charset=utf-8"},
     }
 
 

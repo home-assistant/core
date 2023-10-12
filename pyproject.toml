@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.11.0"
 dependencies    = [
-    "aiohttp==3.8.5",
+    "aiohttp==3.9.0b0",
     "astral==2.2",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
@@ -33,7 +33,7 @@ dependencies    = [
     "ciso8601==2.3.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
-    "httpx==0.24.1",
+    "httpx==0.25.0",
     "home-assistant-bluetooth==1.10.3",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
@@ -437,8 +437,10 @@ filterwarnings = [
     # -- design choice 3rd party
     # https://github.com/gwww/elkm1/blob/2.2.5/elkm1_lib/util.py#L8-L19
     "ignore:ssl.TLSVersion.TLSv1 is deprecated:DeprecationWarning:elkm1_lib.util",
-    # https://github.com/michaeldavie/env_canada/blob/v0.5.37/env_canada/ec_cache.py
+    # https://github.com/michaeldavie/env_canada/blob/v0.6.0/env_canada/ec_cache.py
     "ignore:Inheritance class CacheClientSession from ClientSession is discouraged:DeprecationWarning:env_canada.ec_cache",
+    # https://github.com/allenporter/ical/pull/215 - v5.0.0
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:ical.util",
     # https://github.com/bachya/regenmaschine/blob/2023.08.0/regenmaschine/client.py#L51
     "ignore:ssl.TLSVersion.SSLv3 is deprecated:DeprecationWarning:regenmaschine.client",
 
@@ -451,6 +453,13 @@ filterwarnings = [
     # -- tracked upstream / open PRs
     # https://github.com/caronc/apprise/issues/659 - v1.4.5
     "ignore:Use setlocale\\(\\), getencoding\\(\\) and getlocale\\(\\) instead:DeprecationWarning:apprise.AppriseLocal",
+    # https://github.com/kiorky/croniter/issues/49 - v1.4.1
+    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:croniter.croniter",
+    # https://github.com/spulec/freezegun/issues/508 - v1.2.2
+    # https://github.com/spulec/freezegun/pull/511
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:freezegun.api",
+    # https://github.com/influxdata/influxdb-client-python/issues/603 - v1.37.0
+    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:influxdb_client.client.write.point",
     # https://github.com/beetbox/mediafile/issues/67 - v0.12.0
     "ignore:'imghdr' is deprecated and slated for removal in Python 3.13:DeprecationWarning:mediafile",
     # https://github.com/eclipse/paho.mqtt.python/issues/653 - v1.6.1
@@ -458,6 +467,8 @@ filterwarnings = [
     "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:paho.mqtt.client",
     # https://github.com/PythonCharmers/python-future/issues/488 - v0.18.3
     "ignore:the imp module is deprecated in favour of importlib and slated for removal in Python 3.12:DeprecationWarning:future.standard_library",
+    # https://github.com/frenck/python-toonapi/pull/9 - v0.2.1 - 2021-09-23
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:toonapi.models",
     # https://github.com/foxel/python_ndms2_client/issues/6 - v0.1.2
     "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:ndms2_client.connection",
     # https://github.com/pytest-dev/pytest-cov/issues/557 - v4.1.0
@@ -465,16 +476,40 @@ filterwarnings = [
     "ignore:The --rsyncdir command line argument and rsyncdirs config variable are deprecated:DeprecationWarning:xdist.plugin",
 
     # -- fixed, waiting for release / update
+    # https://github.com/ludeeus/aiogithubapi/pull/208 - >=23.9.0
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiogithubapi.namespaces.events",
+    # https://github.com/bachya/aiopurpleair/pull/200 - >2023.08.0
+    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiopurpleair.helpers.validators",
+    # https://github.com/scrapinghub/dateparser/pull/1179 - >1.1.8
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:dateparser.timezone_parser",
+    # https://github.com/zopefoundation/DateTime/pull/55 - >5.2
+    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:DateTime.pytz_support",
     # https://github.com/kurtmckee/feedparser/issues/330 - >6.0.10
     "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:feedparser.encodings",
     # https://github.com/jaraco/jaraco.abode/commit/9e3e789efc96cddcaa15f920686bbeb79a7469e0 - update jaraco.abode to >=5.1.0
     "ignore:`jaraco.functools.call_aside` is deprecated, use `jaraco.functools.invoke` instead:DeprecationWarning:jaraco.abode.helpers.timeline",
-    # https://github.com/poljar/matrix-nio/pull/438 - >0.21.2
-    "ignore:FormatChecker.cls_checks is deprecated:DeprecationWarning:nio.schemas",
-    # https://github.com/poljar/matrix-nio/pull/439 - >0.21.2
-    "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:nio.client.http_client",
+    # https://github.com/nextcord/nextcord/pull/1095 - >2.6.1
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:nextcord.health_check",
+    # https://github.com/pytest-dev/pytest/pull/10894 - >=7.4.0
+    "ignore:ast.(Str|Num|NameConstant) is deprecated and will be removed in Python 3.14:DeprecationWarning:_pytest.assertion.rewrite",
+    "ignore:Attribute s is deprecated and will be removed in Python 3.14:DeprecationWarning:_pytest.assertion.rewrite",
+    # https://github.com/bachya/pytile/pull/280 - >2023.08.0
+    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pytile.tile",
+    # https://github.com/rytilahti/python-miio/pull/1809 - >0.5.12
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.protocol",
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",
+    # https://github.com/hunterjm/python-onvif-zeep-async/pull/51 - >3.1.12
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:onvif.client",
+    # Fixed upstream in python-telegram-bot - >=20.0
+    "ignore:python-telegram-bot is using upstream urllib3:UserWarning:telegram.utils.request",
+    # https://github.com/ludeeus/pytraccar/pull/15 - >1.0.0
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pytraccar.client",
+    # https://github.com/zopefoundation/RestrictedPython/pull/259 - >7.0a1.dev0
+    "ignore:ast\\.(Str|Num) is deprecated and will be removed in Python 3.14:DeprecationWarning:RestrictedPython.transformer",
     # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - >0.5.3
     "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
+    # https://github.com/Bluetooth-Devices/xiaomi-ble/pull/59 - >0.21.1
+    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:xiaomi_ble.parser",
 
     # -- not helpful
     # pyatmo.__init__ imports deprecated moduls from itself - v7.5.0
@@ -484,9 +519,22 @@ filterwarnings = [
     # Locale changes might take some time to resolve upstream
     "ignore:Use setlocale\\(\\), getencoding\\(\\) and getlocale\\(\\) instead:DeprecationWarning:homematicip.base.base_connection",
     "ignore:Use setlocale\\(\\), getencoding\\(\\) and getlocale\\(\\) instead:DeprecationWarning:micloud.micloud",
+    # https://github.com/protocolbuffers/protobuf - v4.24.4
+    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:google.protobuf.internal.well_known_types",
+    "ignore:Type google._upb._message.(Message|Scalar)MapContainer uses PyType_Spec with a metaclass that has custom tp_new. .* Python 3.14:DeprecationWarning",
+    # https://github.com/googleapis/google-auth-library-python/blob/v2.23.3/google/auth/_helpers.py#L95 - v2.23.3
+    "ignore:datetime.*utcnow\\(\\) is deprecated:DeprecationWarning:google.auth._helpers",
+    # https://github.com/googleapis/proto-plus-python/blob/v1.22.3/proto/datetime_helpers.py#L24 - v1.22.3
+    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated:DeprecationWarning:proto.datetime_helpers",
+    # https://github.com/MatsNl/pyatag/issues/11 - v0.3.7.1
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pyatag.gateway",
+    # https://github.com/Python-MyQ/Python-MyQ - v3.1.13
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pymyq.(api|account)",
     # Wrong stacklevel
     # https://bugs.launchpad.net/beautifulsoup/+bug/2034451
     "ignore:It looks like you're parsing an XML document using an HTML parser:UserWarning:bs4.builder",
+    # New in aiohttp - v3.9.0
+    "ignore:It is recommended to use web.AppKey instances for keys:UserWarning:(homeassistant|tests|aiohttp_cors)",
 
     # -- unmaintained projects, last release about 2+ years
     # https://pypi.org/project/agent-py/ - v0.0.23 - 2020-06-04
@@ -495,10 +543,13 @@ filterwarnings = [
     "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:aiomodernforms.modernforms",
     # https://pypi.org/project/directv/ - v0.4.0 - 2020-09-12
     "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:directv.directv",
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:directv.models",
     # https://pypi.org/project/emulated-roku/ - v0.2.1 - 2020-01-23 (archived)
     "ignore:loop argument is deprecated:DeprecationWarning:emulated_roku",
     # https://pypi.org/project/foobot_async/ - v1.0.0 - 2020-11-24
     "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:foobot_async",
+    # https://pypi.org/project/influxdb/ - v5.3.1 - 2020-11-11 (archived)
+    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:influxdb.line_protocol",
     # https://pypi.org/project/lark-parser/ - v0.12.0 - 2021-08-30 -> moved to `lark`
     # https://pypi.org/project/commentjson/ - v0.9.0 - 2020-10-05
     # https://github.com/vaidik/commentjson/issues/51
@@ -507,11 +558,17 @@ filterwarnings = [
     "ignore:module '(sre_parse|sre_constants)' is deprecate:DeprecationWarning:lark.utils",
     # https://pypi.org/project/lomond/ - v0.3.3 - 2018-09-21
     "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:lomond.session",
+    # https://pypi.org/project/oauth2client/ - v4.1.3 - 2018-09-07 (archived)
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:oauth2client.client",
     # https://pypi.org/project/passlib/ - v1.7.4 - 2020-10-08
     "ignore:'crypt' is deprecated and slated for removal in Python 3.13:DeprecationWarning:passlib.utils",
+    # https://pypi.org/project/PyMetEireann/ - v2021.8.0 - 2021-08-16
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:meteireann",
     # https://pypi.org/project/pyqwikswitch/ - v0.94 - 2019-08-19
     "ignore:client.loop property is deprecated:DeprecationWarning:pyqwikswitch.async_",
     "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:pyqwikswitch.async_",
+    # https://pypi.org/project/Rx/ - v3.2.0 - 2021-04-25
+    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:rx.internal.constants",
     # https://pypi.org/project/rxv/ - v0.7.0 - 2021-10-10
     "ignore:defusedxml.cElementTree is deprecated, import from defusedxml.ElementTree instead:DeprecationWarning:rxv.ssdp",
     # https://pypi.org/project/vilfo-api-client/ - v0.4.1 - 2021-11-06
