@@ -2,27 +2,25 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Home Assistant",
+      "name": "Home Assistant",
       "type": "python",
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
       "args": ["--debug", "-c", "config"],
-      "preLaunchTask": "Compile English translations",
-      "description": "Debug Home Assistant locally with English translations compilation."
+      "preLaunchTask": "Compile English translations"
     },
     {
-      "name": "Debug Home Assistant (Skip pip)",
+      "name": "Home Assistant (skip pip)",
       "type": "python",
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
       "args": ["--debug", "-c", "config", "--skip-pip"],
-      "preLaunchTask": "Compile English translations",
-      "description": "Debug Home Assistant without pip installation, with English translations compilation."
+      "preLaunchTask": "Compile English translations"
     },
     {
-      "name": "Attach to Local Home Assistant",
+      "name": "Home Assistant: Attach Local",
       "type": "python",
       "request": "attach",
       "port": 5678,
@@ -31,12 +29,11 @@
         {
           "localRoot": "${workspaceFolder}",
           "remoteRoot": "."
-        },
-      ],
-      "description": "Attach debugger to a locally running Home Assistant instance."
+        }
+      ]
     },
     {
-      "name": "Attach to Remote Home Assistant",
+      "name": "Home Assistant: Attach Remote",
       "type": "python",
       "request": "attach",
       "port": 5678,
@@ -45,9 +42,8 @@
         {
           "localRoot": "${workspaceFolder}",
           "remoteRoot": "/usr/src/homeassistant"
-        },
-      ],
-      "description": "Attach debugger to a remote Home Assistant instance on 'homeassistant.local'."
+        }
+      ]
     }
   ]
 }
