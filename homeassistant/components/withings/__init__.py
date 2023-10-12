@@ -27,7 +27,7 @@ from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -43,14 +43,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType
 
 from .api import ConfigEntryWithingsApi
-from .const import (
-    CONF_CLOUDHOOK_URL,
-    CONF_PROFILES,
-    CONF_USE_WEBHOOK,
-    DEFAULT_TITLE,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_PROFILES, CONF_USE_WEBHOOK, DEFAULT_TITLE, DOMAIN, LOGGER
 from .coordinator import WithingsDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -82,6 +75,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 SUBSCRIBE_DELAY = timedelta(seconds=5)
 UNSUBSCRIBE_DELAY = timedelta(seconds=1)
+CONF_CLOUDHOOK_URL = "cloudhook_url"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -152,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _: Any,
     ) -> None:
         if cloud.async_active_subscription(hass):
-            webhook_url = await __async_cloudhook_generate_url(hass, entry)
+            webhook_url = await _async_cloudhook_generate_url(hass, entry)
         else:
             webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
 
@@ -260,9 +254,7 @@ async def async_unsubscribe_webhooks(client: ConfigEntryWithingsApi) -> None:
         )
 
 
-async def __async_cloudhook_generate_url(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> str:
+async def _async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
     """Generate the full URL for a webhook_id."""
     if CONF_CLOUDHOOK_URL not in entry.data:
         webhook_id = entry.data[CONF_WEBHOOK_ID]
@@ -273,8 +265,6 @@ async def __async_cloudhook_generate_url(
         webhook_url = await cloud.async_create_cloudhook(hass, webhook_id)
         data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
         hass.config_entries.async_update_entry(entry, data=data)
-        if entry.state == ConfigEntryState.LOADED:
-            await hass.config_entries.async_reload(entry.entry_id)
         return webhook_url
     return str(entry.data[CONF_CLOUDHOOK_URL])
 
