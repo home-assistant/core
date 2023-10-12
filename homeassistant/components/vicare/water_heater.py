@@ -99,13 +99,13 @@ class ViCareWater(WaterHeaterEntity):
     _attr_min_temp = VICARE_TEMP_WATER_MIN
     _attr_max_temp = VICARE_TEMP_WATER_MAX
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
+    _attributes: dict[str, Any] = {}
 
     def __init__(self, name, api, circuit, device_config):
         """Initialize the DHW water_heater device."""
         self._attr_name = name
         self._api = api
         self._circuit = circuit
-        self._attributes: dict[str, Any] = {}
         self._current_mode = None
         self._attr_unique_id = f"{device_config.getConfig().serial}-{circuit.id}"
         self._attr_device_info = DeviceInfo(
