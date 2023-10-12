@@ -12,11 +12,12 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_DOMAIN,
 )
-from .const import CONFIG_ENTRY_VERSION,GET_TOKEN_URL
+from .const import CONFIG_ENTRY_VERSION, GET_TOKEN_URL
 import json
 import aiohttp
 import base64
 from homeassistant.helpers import aiohttp_client
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -25,7 +26,7 @@ class microBeesFlowHandler(config_entries.ConfigFlow, domain=CONF_DOMAIN):
 
     VERSION = CONFIG_ENTRY_VERSION
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self.data = {}
 
