@@ -121,6 +121,9 @@ RtmAPI==0.7.2
 # homeassistant.components.sql
 SQLAlchemy==2.0.21
 
+# homeassistant.components.tami4
+Tami4EdgeAPI==2.1
+
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
 
@@ -302,7 +305,7 @@ aiopvpc==4.2.2
 aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.3.4
+aioqsw==0.3.5
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -442,7 +445,7 @@ beautifulsoup4==4.12.2
 bellows==0.36.5
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected==0.14.0
+bimmer-connected==0.14.1
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.2.1
@@ -451,7 +454,7 @@ bleak-retry-connector==3.2.1
 bleak==0.21.1
 
 # homeassistant.components.blebox
-blebox-uniapi==2.1.4
+blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
 blinkpy==0.21.0
@@ -1390,9 +1393,6 @@ pymailgunner==1.4
 # homeassistant.components.firmata
 pymata-express==1.19
 
-# homeassistant.components.mazda
-pymazda==0.3.11
-
 # homeassistant.components.melcloud
 pymelcloud==2.5.8
 
@@ -1584,7 +1584,7 @@ python-ecobee-api==0.2.14
 python-fullykiosk==0.0.12
 
 # homeassistant.components.homewizard
-python-homewizard-energy==2.1.0
+python-homewizard-energy==2.1.2
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -1602,7 +1602,7 @@ python-matter-server==3.7.0
 python-miio==0.5.12
 
 # homeassistant.components.myq
-python-myq==3.1.11
+python-myq==3.1.13
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
@@ -2003,7 +2003,7 @@ vultr==0.1.2
 wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
-wallbox==0.4.12
+wallbox==0.4.14
 
 # homeassistant.components.folder_watcher
 watchdog==2.3.1

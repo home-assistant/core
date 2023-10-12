@@ -45,7 +45,6 @@ from homeassistant.helpers.typing import ConfigType
 from .api import ConfigEntryWithingsApi
 from .const import (
     BED_PRESENCE_COORDINATOR,
-    CONF_CLOUDHOOK_URL,
     CONF_PROFILES,
     CONF_USE_WEBHOOK,
     DEFAULT_TITLE,
@@ -90,6 +89,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 SUBSCRIBE_DELAY = timedelta(seconds=5)
 UNSUBSCRIBE_DELAY = timedelta(seconds=1)
+CONF_CLOUDHOOK_URL = "cloudhook_url"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -168,7 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _: Any,
     ) -> None:
         if cloud.async_active_subscription(hass):
-            webhook_url = await async_cloudhook_generate_url(hass, entry)
+            webhook_url = await _async_cloudhook_generate_url(hass, entry)
         else:
             webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
 
@@ -217,7 +217,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.async_on_unload(async_call_later(hass, 1, register_webhook))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -229,11 +228,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_subscribe_webhooks(
@@ -283,7 +277,7 @@ async def async_unsubscribe_webhooks(client: ConfigEntryWithingsApi) -> None:
         )
 
 
-async def async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
+async def _async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
     """Generate the full URL for a webhook_id."""
     if CONF_CLOUDHOOK_URL not in entry.data:
         webhook_id = entry.data[CONF_WEBHOOK_ID]
