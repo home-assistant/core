@@ -43,7 +43,11 @@ TASK_ITEM_UPDATE_FIELDS = {
 
 
 def _as_todo_item(result_key: str) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Convert dictionary fields to a TodoItem dataclass."""
+    """Convert dictionary fields to a TodoItem dataclass.
+
+    This exists to (1) collapse individual fields into a dataclass and (2) map
+    it to a single field of the entity method while preserving other fields.
+    """
 
     def validate(obj: dict[str, Any]) -> dict[str, Any]:
         """Convert all keys that to a TodoItem dataclass."""

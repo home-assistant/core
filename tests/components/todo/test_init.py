@@ -123,23 +123,9 @@ async def test_list_todo_items(
     }
 
 
-@pytest.mark.parametrize(
-    ("payload", "expected_error"),
-    [
-        (
-            {
-                "type": "todo/item/list",
-                "entity_id": "todo.unknown",
-            },
-            "not_found",
-        ),
-    ],
-)
 async def test_unsupported_websocket(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    payload: dict[str, Any],
-    expected_error: str,
 ) -> None:
     """Test a To-do list that does not support features."""
 
@@ -148,10 +134,16 @@ async def test_unsupported_websocket(
     await create_mock_platform(hass, [entity1])
 
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 1, **payload})
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "todo/item/list",
+            "entity_id": "todo.unknown",
+        }
+    )
     resp = await client.receive_json()
     assert resp.get("id") == 1
-    assert resp.get("error", {}).get("code") == expected_error
+    assert resp.get("error", {}).get("code") == "not_found"
 
 
 @pytest.mark.parametrize(
