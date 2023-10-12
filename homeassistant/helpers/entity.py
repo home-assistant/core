@@ -268,9 +268,6 @@ class Entity(ABC):
     # it should be using async_write_ha_state.
     _async_update_ha_state_reported = False
 
-    # If we reported this entity is implicitly using device name
-    _implicit_device_name_reported = False
-
     # If we reported this entity was added without its platform set
     _no_platform_reported = False
 
