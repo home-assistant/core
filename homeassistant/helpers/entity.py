@@ -394,14 +394,14 @@ class Entity(ABC):
                 # Backwards compatibility with leaving EntityDescription.name unassigned
                 # for device name.
                 # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
-                self._report_implicit_device_name()
-                return True
+                raise ValueError(
+                    f"{self.entity_id}: entity is using implicit device name"
+                )
             return False
         if self.name is UNDEFINED and not self._default_to_device_class_name():
             # Backwards compatibility with not overriding name property for device name.
             # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
-            self._report_implicit_device_name()
-            return True
+            raise ValueError(f"{self.entity_id}: entity is using implicit device name")
         return not self.name
 
     @property
