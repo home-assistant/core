@@ -45,7 +45,7 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
         translation_key="energy_price",
         native_min_value=-5,
         native_max_value=5,
-        native_step=0.1,
+        native_step=0.01,
     ),
 }
 
