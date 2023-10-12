@@ -340,11 +340,6 @@
         "name": "Pure Boost"
       }
     },
-    "update": {
-      "fw_ver_available": {
-        "name": "Update available"
-      }
-    },
     "climate": {
       "climate_device": {
         "state_attributes": {
