@@ -564,6 +564,7 @@ def _apply_update_1( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 1."""
     pass
 
 def _apply_update_2( # noqa: C901
@@ -572,6 +573,7 @@ def _apply_update_2( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 2."""
     # Create compound start/end index for recorder_runs
     _create_index(session_maker, "recorder_runs", "ix_recorder_runs_start_end")
     # This used to create ix_states_last_updated bit it was removed in version 32
@@ -582,6 +584,7 @@ def _apply_update_3( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 3."""
     # There used to be a new index here, but it was removed in version 4.
     pass
 
@@ -591,6 +594,7 @@ def _apply_update_4( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 4."""
     # Queries were rewritten in this schema release. Most indexes from
     # earlier versions of the schema are no longer needed.
 
@@ -614,6 +618,7 @@ def _apply_update_5( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 5."""
     # Create supporting index for States.event_id foreign key
     _create_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
     
@@ -623,6 +628,7 @@ def _apply_update_6( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 6."""
     _add_columns(
         session_maker,
         "events",
@@ -646,6 +652,7 @@ def _apply_update_7( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 7."""
     # There used to be a ix_states_entity_id index here,
     # but it was removed in later schema
     pass
@@ -656,6 +663,7 @@ def _apply_update_8( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 8."""
     _add_columns(session_maker, "events", ["context_parent_id CHARACTER(36)"])
     _add_columns(session_maker, "states", ["old_state_id INTEGER"])
     # This used to create ix_events_context_parent_id,
@@ -667,6 +675,7 @@ def _apply_update_9( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 9."""
     # We now get the context from events with a join
     # since its always there on state_changed events
     #
@@ -693,6 +702,7 @@ def _apply_update_10( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 10."""
     # Now done in step 11
     pass
 
@@ -702,6 +712,7 @@ def _apply_update_11( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 11."""
     _create_index(session_maker, "states", "ix_states_old_state_id")
     _update_states_table_with_foreign_key_options(session_maker, engine)
 
@@ -711,6 +722,7 @@ def _apply_update_12( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 12."""
     if engine.dialect.name == SupportedDialect.MYSQL:
         _modify_columns(session_maker, engine, "events", ["event_data LONGTEXT"])
         _modify_columns(session_maker, engine, "states", ["attributes LONGTEXT"])
@@ -721,6 +733,7 @@ def _apply_update_13( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 13."""
     if engine.dialect.name == SupportedDialect.MYSQL:
         _modify_columns(
             session_maker,
@@ -745,6 +758,7 @@ def _apply_update_14( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 14."""
     _modify_columns(session_maker, engine, "events", ["event_type VARCHAR(64)"])
 
 def _apply_update_15( # noqa: C901
@@ -753,6 +767,7 @@ def _apply_update_15( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 15."""
     # This dropped the statistics table, done again in version 18.
     pass
 
@@ -762,6 +777,7 @@ def _apply_update_16( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 16."""
     _drop_foreign_key_constraints(
         session_maker, engine, TABLE_STATES, ["old_state_id"]
     )
@@ -772,6 +788,7 @@ def _apply_update_17( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 17."""
     # This dropped the statistics table, done again in version 18.
     pass
 
@@ -781,6 +798,7 @@ def _apply_update_18( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 18."""
     # Recreate the statistics and statistics meta tables.
     #
     # Order matters! Statistics and StatisticsShortTerm have a relation with
@@ -808,6 +826,7 @@ def _apply_update_19( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 19."""
     # This adds the statistic runs table, insert a fake run to prevent duplicating
     # statistics.
     with session_scope(session=session_maker()) as session:
@@ -819,6 +838,7 @@ def _apply_update_20( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 20."""
     # This changed the precision of statistics from float to double
     if engine.dialect.name in [SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL]:
         _modify_columns(
@@ -837,6 +857,7 @@ def _apply_update_21( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 21."""
     # Try to change the character set of the statistic_meta table
     if engine.dialect.name == SupportedDialect.MYSQL:
         for table in ("events", "states", "statistics_meta"):
@@ -848,6 +869,7 @@ def _apply_update_22( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 22."""
     # Recreate the all statistics tables for Oracle DB with Identity columns
     #
     # Order matters! Statistics has a relation with StatisticsMeta,
@@ -922,6 +944,7 @@ def _apply_update_23( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 23."""
     # Add name column to StatisticsMeta
     _add_columns(session_maker, "statistics_meta", ["name VARCHAR(255)"])
 
@@ -931,6 +954,7 @@ def _apply_update_24( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 24."""
     # This used to create the unique indices for start and statistic_id
     # but we changed the format in schema 34 which will now take care
     # of removing any duplicate if they still exist.
@@ -942,6 +966,7 @@ def _apply_update_26( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 26."""
     _create_index(session_maker, "statistics_runs", "ix_statistics_runs_start")
 
 def _apply_update_28( # noqa: C901
@@ -950,6 +975,7 @@ def _apply_update_28( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 28."""
     _add_columns(session_maker, "events", ["origin_idx INTEGER"])
     # We never use the user_id or parent_id index
     _drop_index(session_maker, "events", "ix_events_context_user_id")
@@ -974,6 +1000,7 @@ def _apply_update_29( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 29."""
     # Recreate statistics_meta index to block duplicated statistic_id
     _drop_index(session_maker, "statistics_meta", "ix_statistics_meta_statistic_id")
     if engine.dialect.name == SupportedDialect.MYSQL:
@@ -1007,6 +1034,7 @@ def _apply_update_30( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 30."""
     # This added a column to the statistics_meta table, removed again before
     # release of HA Core 2022.10.0
     # SQLite 3.31.0 does not support dropping columns.
@@ -1020,6 +1048,7 @@ def _apply_update_32( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 32."""
     # Migration is done in two steps to ensure we can start using
     # the new columns before we wipe the old ones.
     _drop_index(session_maker, "states", "ix_states_entity_id_last_updated")
@@ -1033,6 +1062,7 @@ def _apply_update_33( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 33."""
     # This index is no longer used and can cause MySQL to use the wrong index
     # when querying the states table.
     # https://github.com/home-assistant/core/issues/83787
@@ -1045,6 +1075,7 @@ def _apply_update_35( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 35."""
     # Migration is done in two steps to ensure we can start using
     # the new columns before we wipe the old ones.
     _drop_index(
@@ -1065,6 +1096,7 @@ def _apply_update_39( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 39."""
     # Dropping indexes with PostgreSQL never worked correctly if there was a prefix
     # so we need to cleanup leftover indexes.
     _drop_index(
@@ -1105,6 +1137,7 @@ def _apply_update_40( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 40."""
     # ix_events_event_type_id is a left-prefix of ix_events_event_type_id_time_fired_ts
     _drop_index(session_maker, "events", "ix_events_event_type_id")
     # ix_states_metadata_id is a left-prefix of ix_states_metadata_id_last_updated_ts
@@ -1124,10 +1157,11 @@ def _apply_update_41( # noqa: C901
     engine: Engine,
     session_maker: Callable[[], Session],
     old_version: int,) -> None:
+    """Perform operations to bring schema up to date to new version 41."""
     _create_index(session_maker, "event_types", "ix_event_types_event_type")
     _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
 
-
+# Dictionary for the _apply_update function to point to the different possible new version changes that needs to be made.
 dictAU = {
     1: _apply_update_1, 
     2: _apply_update_2,
@@ -1506,6 +1540,7 @@ def _migrate_columns_to_timestamp(
                 )
 
 def _get_dialect_sqlite(session_maker: Callable[[], Session]) -> None:
+    """Migrate statistics columns to use timestamp in sqlite."""
     for table in STATISTICS_TABLES:
         with session_scope(session=session_maker()) as session:
             session.connection().execute(
@@ -1521,7 +1556,8 @@ def _get_dialect_sqlite(session_maker: Callable[[], Session]) -> None:
 
 
 def _get_dialect_mysql(session_maker: Callable[[], Session], result: CursorResult) -> CursorResult:
-     # With MySQL we do this in chunks to avoid hitting the `innodb_buffer_pool_size` limit
+    """Migrate statistics columns to use timestamp in mysql."""
+    # With MySQL we do this in chunks to avoid hitting the `innodb_buffer_pool_size` limit
     # We also need to do this in a loop since we can't be sure that we have
     # updated all rows in the table until the rowcount is 0
     for table in STATISTICS_TABLES:
@@ -1546,6 +1582,7 @@ def _get_dialect_mysql(session_maker: Callable[[], Session], result: CursorResul
 
 
 def _get_dialect_postgresql(session_maker: Callable[[], Session], result: CursorResult) -> CursorResult:
+    """Migrate statistics columns to use timestamp in postgresql."""
     # With Postgresql we do this in chunks to avoid using too much memory
     # We also need to do this in a loop since we can't be sure that we have
     # updated all rows in the table until the rowcount is 0
