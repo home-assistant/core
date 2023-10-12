@@ -4,10 +4,12 @@ import contextlib
 import logging
 
 from aioautomower.session import AutomowerSession
+from aiohttp import ClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
@@ -31,7 +33,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-
+    try:
+        await session.async_ensure_token_valid()
+    except ClientError as err:
+        raise ConfigEntryNotReady from err
     automower_api = AutomowerSession(
         api.AsyncConfigEntryAuth(
             aiohttp_client.async_get_clientsession(hass),
