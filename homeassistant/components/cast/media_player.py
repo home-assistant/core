@@ -613,6 +613,42 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             self.hass, media_content_id, content_filter=content_filter
         )
 
+    async def _async_play_known_cast_app(
+        self,
+        media_id: str,
+        extra: Any,
+        chromecast: pychromecast.Chromecast,
+    ):
+        """Handle media supported by a known cast app."""
+        try:
+            app_data = json.loads(media_id)
+            if metadata := extra.get("metadata"):
+                app_data["metadata"] = metadata
+        except json.JSONDecodeError:
+            _LOGGER.error("Invalid JSON in media_content_id")
+            raise
+
+        # Special handling for passed `app_id` parameter. This will only launch
+        # an arbitrary cast app, generally for UX.
+        if "app_id" in app_data:
+            app_id = app_data.pop("app_id")
+            _LOGGER.info("Starting Cast app by ID %s", app_id)
+            await self.hass.async_add_executor_job(chromecast.start_app, app_id)
+            if app_data:
+                _LOGGER.warning(
+                    "Extra keys %s were ignored. Please use app_name to cast media",
+                    app_data.keys(),
+                )
+            return
+
+        app_name = app_data.pop("app_name")
+        try:
+            await self.hass.async_add_executor_job(
+                quick_play, chromecast, app_name, app_data
+            )
+        except NotImplementedError:
+            _LOGGER.error("App %s not supported", app_name)
+
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -630,34 +666,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         # Handle media supported by a known cast app
         if media_type == CAST_DOMAIN:
-            try:
-                app_data = json.loads(media_id)
-                if metadata := extra.get("metadata"):
-                    app_data["metadata"] = metadata
-            except json.JSONDecodeError:
-                _LOGGER.error("Invalid JSON in media_content_id")
-                raise
-
-            # Special handling for passed `app_id` parameter. This will only launch
-            # an arbitrary cast app, generally for UX.
-            if "app_id" in app_data:
-                app_id = app_data.pop("app_id")
-                _LOGGER.info("Starting Cast app by ID %s", app_id)
-                await self.hass.async_add_executor_job(chromecast.start_app, app_id)
-                if app_data:
-                    _LOGGER.warning(
-                        "Extra keys %s were ignored. Please use app_name to cast media",
-                        app_data.keys(),
-                    )
-                return
-
-            app_name = app_data.pop("app_name")
-            try:
-                await self.hass.async_add_executor_job(
-                    quick_play, chromecast, app_name, app_data
-                )
-            except NotImplementedError:
-                _LOGGER.error("App %s not supported", app_name)
+            await self._async_play_known_cast_app(media_id, extra, chromecast)
             return
 
         # Try the cast platforms
@@ -672,16 +681,16 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         media_id = async_process_play_media_url(self.hass, media_id)
 
         # Configure play command for when playing a HLS stream
-        if is_hass_url(self.hass, media_id):
-            parsed = yarl.URL(media_id)
-            if parsed.path.startswith("/api/hls/"):
-                extra = {
-                    **extra,
-                    "stream_type": "LIVE",
-                    "media_info": {
-                        "hlsVideoSegmentFormat": "fmp4",
-                    },
-                }
+        if is_hass_url(self.hass, media_id) and yarl.URL(media_id).path.startswith(
+            "/api/hls/"
+        ):
+            extra = {
+                **extra,
+                "stream_type": "LIVE",
+                "media_info": {
+                    "hlsVideoSegmentFormat": "fmp4",
+                },
+            }
         elif (
             media_id.endswith(".m3u")
             or media_id.endswith(".m3u8")
@@ -752,12 +761,8 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         return (media_status, media_status_received)
 
-    @property
-    def state(self) -> MediaPlayerState | None:
-        """Return the state of the player."""
-        # The lovelace app loops media to prevent timing out, don't show that
-        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
-            return MediaPlayerState.PLAYING
+    def _media_status_state(self) -> MediaPlayerState | None:
+        """Return the media player state based on media status."""
         if (media_status := self._media_status()[0]) is not None:
             if media_status.player_state == MEDIA_PLAYER_STATE_PLAYING:
                 return MediaPlayerState.PLAYING
@@ -767,6 +772,16 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 return MediaPlayerState.PAUSED
             if media_status.player_is_idle:
                 return MediaPlayerState.IDLE
+        return None
+
+    @property
+    def state(self) -> MediaPlayerState | None:
+        """Return the state of the player."""
+        # The lovelace app loops media to prevent timing out, don't show that
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return MediaPlayerState.PLAYING
+        if (media_status_state := self._media_status_state()) is not None:
+            return media_status_state
         if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
             if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
                 # Some apps don't report media status, show the player as playing
