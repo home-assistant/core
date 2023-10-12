@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
-    HOST_IP,
+    HOST,
     MOCK_USER_INPUT,
     MOCK_ZEROCONF_DATA,
     NAME,
@@ -38,7 +38,7 @@ async def test_cannot_connect(
 ) -> None:
     """Test we show user form on connection error."""
     aioclient_mock.get(
-        f"http://{HOST_IP}{UrlSuffix.GET_GENERAL_INFO}", exc=HTTPClientError
+        f"http://{HOST}{UrlSuffix.GET_GENERAL_INFO}", exc=HTTPClientError
     )
 
     user_input = MOCK_USER_INPUT.copy()
@@ -97,7 +97,7 @@ async def test_full_user_flow_implementation(
     assert result["title"] == NAME
 
     assert result["data"]
-    assert result["data"][CONF_HOST] == HOST_IP
+    assert result["data"][CONF_HOST] == HOST
 
 
 async def test_zeroconf_devialet(
@@ -125,7 +125,7 @@ async def test_zeroconf_devialet(
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Livingroom (Phantom I Silver)"
     assert result2["data"] == {
-        CONF_HOST: HOST_IP,
+        CONF_HOST: HOST,
         CONF_NAME: NAME,
     }
 
@@ -143,7 +143,7 @@ async def test_async_step_confirm(
     assert result["step_id"] == "confirm"
 
     aioclient_mock.get(
-        f"http://{HOST_IP}{UrlSuffix.GET_GENERAL_INFO}", exc=HTTPClientError
+        f"http://{HOST}{UrlSuffix.GET_GENERAL_INFO}", exc=HTTPClientError
     )
 
     result = await hass.config_entries.flow.async_configure(

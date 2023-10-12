@@ -1,8 +1,6 @@
 """Test the Devialet diagnostics."""
 import json
 
-from aiohttp import ClientSession
-
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -10,10 +8,13 @@ from . import setup_integration
 from tests.common import load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSession, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test diagnostics."""
     entry = await setup_integration(hass, aioclient_mock)

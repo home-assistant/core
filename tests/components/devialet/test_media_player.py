@@ -44,7 +44,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import HOST_IP, NAME, setup_integration
+from . import HOST, SERIAL, setup_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -105,10 +105,10 @@ async def test_media_player_playing(
 
     assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
-    state = hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}")
+    state = hass.states.get(f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}")
 
     assert state.state == MediaPlayerState.PLAYING
-    assert state.name == NAME
+    assert state.name == f"{DOMAIN} {SERIAL.lower()}"
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
     assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is False
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] is not None
@@ -133,7 +133,7 @@ async def test_media_player_playing(
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
         assert (
-            hass.states.get(f"media_player.{NAME.lower()}").state
+            hass.states.get(f"media_player.{DOMAIN}_{SERIAL.lower()}").state
             == MediaPlayerState.PAUSED
         )
 
@@ -146,7 +146,8 @@ async def test_media_player_playing(
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
         assert (
-            hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").state == MediaPlayerState.ON
+            hass.states.get(f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}").state
+            == MediaPlayerState.ON
         )
 
     with patch.object(DevialetApi, "equalizer", new_callable=PropertyMock) as mock:
@@ -158,7 +159,7 @@ async def test_media_player_playing(
             await hass.config_entries.async_reload(entry.entry_id)
             await hass.async_block_till_done()
             assert (
-                hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes[
+                hass.states.get(f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}").attributes[
                     ATTR_SOUND_MODE
                 ]
                 == "Night mode"
@@ -174,7 +175,9 @@ async def test_media_player_playing(
             await hass.async_block_till_done()
             assert (
                 ATTR_SOUND_MODE
-                not in hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes
+                not in hass.states.get(
+                    f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}"
+                ).attributes
             )
 
     with patch.object(
@@ -184,7 +187,7 @@ async def test_media_player_playing(
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
         assert (
-            hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes[
+            hass.states.get(f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}").attributes[
                 ATTR_SUPPORTED_FEATURES
             ]
             == SUPPORT_DEVIALET
@@ -205,10 +208,10 @@ async def test_media_player_offline(
 
     assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
-    state = hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}")
+    state = hass.states.get(f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}")
 
     assert state.state == MediaPlayerState.IDLE
-    assert state.name == NAME
+    assert state.name == f"{DOMAIN} {SERIAL.lower()}"
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -245,11 +248,15 @@ async def test_media_player_services(
     assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
 
-    target = {ATTR_ENTITY_ID: hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").entity_id}
+    target = {
+        ATTR_ENTITY_ID: hass.states.get(
+            f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}"
+        ).entity_id
+    }
 
     for i, (service, urls) in enumerate(SERVICE_TO_URL.items()):
         for url in urls:
-            aioclient_mock.post(f"http://{HOST_IP}{url}")
+            aioclient_mock.post(f"http://{HOST}{url}")
 
         for data_set in list(SERVICE_TO_DATA.values())[i]:
             service_data = target.copy()
@@ -266,7 +273,7 @@ async def test_media_player_services(
         for url in urls:
             call_available = False
             for item in aioclient_mock.mock_calls:
-                if item[0] == "POST" and item[1] == URL(f"http://{HOST_IP}{url}"):
+                if item[0] == "POST" and item[1] == URL(f"http://{HOST}{url}"):
                     call_available = True
                     break
 

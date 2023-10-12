@@ -4,7 +4,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlay
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import NAME, setup_integration
+from . import SERIAL, setup_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -19,7 +19,7 @@ async def test_load_unload_config_entry(
     assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id is not None
 
-    state = hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}")
+    state = hass.states.get(f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}")
     assert state.state == MediaPlayerState.PLAYING
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -39,7 +39,7 @@ async def test_load_unload_config_entry_when_device_offline(
     assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id is not None
 
-    state = hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}")
+    state = hass.states.get(f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}")
     assert state.state == MediaPlayerState.OFF
 
     await hass.config_entries.async_unload(entry.entry_id)
