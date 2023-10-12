@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 import sqlalchemy
-from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
+from sqlalchemy import ForeignKeyConstraint, Table, func, text, update
 from sqlalchemy.engine import CursorResult, Engine
 from sqlalchemy.exc import (
     DatabaseError,
@@ -202,7 +202,7 @@ def validate_db_schema(
 
 
 def _find_schema_errors(
-    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
+    _: HomeAssistant, instance: Recorder, ___: Callable[[], Session]
 ) -> set[str]:
     """Find schema errors."""
     schema_errors: set[str] = set()
@@ -524,9 +524,6 @@ def _update_states_table_with_foreign_key_options(
         return
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
-    old_states_table = Table(  # noqa: F841
-        TABLE_STATES, MetaData(), *(alter["old_fk"] for alter in alters)  # type: ignore[arg-type]
-    )
 
     for alter in alters:
         with session_scope(session=session_maker()) as session:
@@ -553,7 +550,6 @@ def _drop_foreign_key_constraints(
             drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))
 
     # Bind the ForeignKeyConstraints to the table
-    old_table = Table(table, MetaData(), *drops)  # noqa: F841
 
     for drop in drops:
         with session_scope(session=session_maker()) as session:

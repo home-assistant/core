@@ -349,7 +349,7 @@ class EventData(Base):
     ) -> bytes:
         """Create shared_data from an event."""
         if dialect == SupportedDialect.POSTGRESQL:
-            bytes_result = json_bytes_strip_null(event.data)
+            return json_bytes_strip_null(event.data)
         bytes_result = json_bytes(event.data)
         if len(bytes_result) > MAX_EVENT_DATA_BYTES:
             _LOGGER.warning(
