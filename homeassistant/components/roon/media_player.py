@@ -196,36 +196,26 @@ class RoonDevice(MediaPlayerEntity):
 
         try:
             volume_data = player_data["volume"]
-
-            volume_fixed = False
-            volume_incremental = volume_data["type"] == "incremental"
-            volume_muted = volume_data.get("is_muted", False)
-
-            try:
-                volume_step = convert(volume_data["step"], int, 0)
-
-                volume_max = volume_data["max"]
-                volume_min = volume_data["min"]
-                raw_level = convert(volume_data["value"], float, 0)
-
-                volume_range = volume_max - volume_min
-                volume_percentage_factor = volume_range / 100
-
-                level = (raw_level - volume_min) / volume_percentage_factor
-                volume_level = convert(level, int, 0) / 100
-            except KeyError:
-                volume_step = 0
-                volume_level = 0
-
         except KeyError:
-            # catch KeyError
+            return volume
+
+        volume["fixed"] = False
+        volume["incremental"] = volume_data["type"] == "incremental"
+        volume["muted"] = volume_data.get("is_muted", False)
+        volume["step"] = convert(volume_data.get("step"), int, 0)
+
+        try:
+            volume_max = volume_data["max"]
+            volume_min = volume_data["min"]
+            raw_level = convert(volume_data["value"], float, 0)
+
+            volume_range = volume_max - volume_min
+            volume_percentage_factor = volume_range / 100
+
+            level = (raw_level - volume_min) / volume_percentage_factor
+            volume["level"] = convert(level, int, 0) / 100
+        except KeyError:
             pass
-        else:
-            volume["muted"] = volume_muted
-            volume["step"] = volume_step
-            volume["level"] = volume_level
-            volume["fixed"] = volume_fixed
-            volume["incremental"] = volume_incremental
 
         return volume
 
