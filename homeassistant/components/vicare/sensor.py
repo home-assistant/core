@@ -669,11 +669,11 @@ class ViCareSensor(ViCareEntity, SensorEntity):
         self, name, api, device_config, description: ViCareSensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(device_config)
         self.entity_description = description
         self._attr_name = name
         self._api = api
         self._device_config = device_config
-        ViCareEntity.__init__(self, device_config)
 
     @property
     def available(self):

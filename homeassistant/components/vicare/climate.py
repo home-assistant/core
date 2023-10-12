@@ -149,6 +149,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
     def __init__(self, name, api, circuit, device_config):
         """Initialize the climate device."""
+        super().__init__(device_config)
         self._attr_name = name
         self._api = api
         self._circuit = circuit
@@ -157,7 +158,6 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         self._current_program = None
         self._current_action = None
         self._attr_unique_id = f"{device_config.getConfig().serial}-{circuit.id}"
-        ViCareEntity.__init__(self, device_config)
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
