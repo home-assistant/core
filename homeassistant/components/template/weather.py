@@ -326,99 +326,62 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     def _async_setup_templates(self) -> None:
         """Set up templates."""
 
-        if self._condition_template:
-            self.add_template_attribute(
-                "_condition",
-                self._condition_template,
-                lambda condition: condition if condition in CONDITION_CLASSES else None,
-            )
-        if self._temperature_template:
-            self.add_template_attribute(
-                "_temperature",
-                self._temperature_template,
-            )
-        if self._humidity_template:
-            self.add_template_attribute(
-                "_humidity",
-                self._humidity_template,
-            )
-        if self._attribution_template:
-            self.add_template_attribute(
-                "_attribution",
-                self._attribution_template,
-            )
-        if self._pressure_template:
-            self.add_template_attribute(
-                "_pressure",
-                self._pressure_template,
-            )
-        if self._wind_speed_template:
-            self.add_template_attribute(
-                "_wind_speed",
-                self._wind_speed_template,
-            )
-        if self._wind_bearing_template:
-            self.add_template_attribute(
-                "_wind_bearing",
-                self._wind_bearing_template,
-            )
-        if self._ozone_template:
-            self.add_template_attribute(
-                "_ozone",
-                self._ozone_template,
-            )
-        if self._visibility_template:
-            self.add_template_attribute(
-                "_visibility",
-                self._visibility_template,
-            )
-        if self._wind_gust_speed_template:
-            self.add_template_attribute(
-                "_wind_gust_speed",
-                self._wind_gust_speed_template,
-            )
-        if self._cloud_coverage_template:
-            self.add_template_attribute(
-                "_cloud_coverage",
-                self._cloud_coverage_template,
-            )
-        if self._dew_point_template:
-            self.add_template_attribute(
-                "_dew_point",
-                self._dew_point_template,
-            )
-        if self._apparent_temperature_template:
-            self.add_template_attribute(
-                "_apparent_temperature",
-                self._apparent_temperature_template,
-            )
-        if self._forecast_template:
-            self.add_template_attribute(
-                "_forecast",
-                self._forecast_template,
-            )
+        templates = [
+            ("_condition", self._condition_template),
+            ("_temperature", self._temperature_template),
+            ("_humidity", self._humidity_template),
+            ("_attribution", self._attribution_template),
+            ("_pressure", self._pressure_template),
+            ("_wind_speed", self._wind_speed_template),
+            ("_wind_bearing", self._wind_bearing_template),
+            ("_ozone", self._ozone_template),
+            ("_visibility", self._visibility_template),
+            ("_wind_gust_speed", self._wind_gust_speed_template),
+            ("_cloud_coverage", self._cloud_coverage_template),
+            ("_dew_point", self._dew_point_template),
+            ("_apparent_temperature", self._apparent_temperature_template),
+            ("_forecast", self._forecast_template),
+            ("_forecast_daily", self._forecast_daily_template),
+            ("_forecast_hourly", self._forecast_hourly_template),
+            ("_forecast_twice_daily", self._forecast_twice_daily_template),
+        ]
 
-        if self._forecast_daily_template:
-            self.add_template_attribute(
-                "_forecast_daily",
-                self._forecast_daily_template,
-                on_update=partial(self._update_forecast, "daily"),
-                validator=partial(self._validate_forecast, "daily"),
-            )
-        if self._forecast_hourly_template:
-            self.add_template_attribute(
-                "_forecast_hourly",
-                self._forecast_hourly_template,
-                on_update=partial(self._update_forecast, "hourly"),
-                validator=partial(self._validate_forecast, "hourly"),
-            )
-        if self._forecast_twice_daily_template:
-            self.add_template_attribute(
-                "_forecast_twice_daily",
-                self._forecast_twice_daily_template,
-                on_update=partial(self._update_forecast, "twice_daily"),
-                validator=partial(self._validate_forecast, "twice_daily"),
-            )
+        for attribute, template in templates:
+            if attribute == "_condition" and template:
+                self.add_template_attribute(
+                    attribute,
+                    template,
+                    lambda condition: condition
+                    if condition in CONDITION_CLASSES
+                    else None,
+                )
+
+            elif attribute == "_forecast_daily" and template:
+                self.add_template_attribute(
+                    attribute,
+                    template,
+                    on_update=partial(self._update_forecast, "daily"),
+                    validator=partial(self._validate_forecast, "daily"),
+                )
+
+            elif attribute == "_forecast_hourly" and template:
+                self.add_template_attribute(
+                    attribute,
+                    template,
+                    on_update=partial(self._update_forecast, "hourly"),
+                    validator=partial(self._validate_forecast, "hourly"),
+                )
+
+            elif attribute == "_forecast_twice_daily" and template:
+                self.add_template_attribute(
+                    attribute,
+                    template,
+                    on_update=partial(self._update_forecast, "twice_daily"),
+                    validator=partial(self._validate_forecast, "twice_daily"),
+                )
+
+            elif template:
+                self.add_template_attribute(attribute, template)
 
         super()._async_setup_templates()
 
