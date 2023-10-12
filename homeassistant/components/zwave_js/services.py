@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+from voluptuous import Schema
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import SET_VALUE_SUCCESS, CommandClass, CommandStatus
 from zwave_js_server.exceptions import FailedZWaveCommand, SetValueFailed
@@ -111,298 +112,284 @@ class ZWaveServices:
         self._dev_reg = dev_reg
 
     @callback
+    def get_nodes_from_service_data(self, val: dict[str, Any]) -> dict[str, Any]:
+        """Get nodes set from service data."""
+        val[const.ATTR_NODES] = async_get_nodes_from_targets(
+            self._hass, val, self._ent_reg, self._dev_reg, _LOGGER
+        )
+        return val
+
+    @callback
+    def has_at_least_one_node(self, val: dict[str, Any]) -> dict[str, Any]:
+        """Validate that at least one node is specified."""
+        if not val.get(const.ATTR_NODES):
+            raise vol.Invalid(f"No {const.DOMAIN} nodes found for given targets")
+        return val
+
+    @callback
+    def validate_multicast_nodes(self, val: dict[str, Any]) -> dict[str, Any]:
+        """Validate the input nodes for multicast."""
+        nodes: set[ZwaveNode] = val[const.ATTR_NODES]
+        broadcast: bool = val[const.ATTR_BROADCAST]
+
+        if not broadcast:
+            self.has_at_least_one_node(val)
+
+        # User must specify a node if they are attempting a broadcast and have more
+        # than one zwave-js network.
+        if (
+            broadcast
+            and not nodes
+            and len(self._hass.config_entries.async_entries(const.DOMAIN)) > 1
+        ):
+            raise vol.Invalid(
+                "You must include at least one entity or device in the service call"
+            )
+
+        first_node = next((node for node in nodes), None)
+
+        if first_node and not all(node.client.driver is not None for node in nodes):
+            raise vol.Invalid(f"Driver not ready for all nodes: {nodes}")
+
+        # If any nodes don't have matching home IDs, we can't run the command
+        # because we can't multicast across multiple networks
+        if (
+            first_node
+            and first_node.client.driver  # We checked the driver was ready above.
+            and any(
+                node.client.driver.controller.home_id
+                != first_node.client.driver.controller.home_id
+                for node in nodes
+                if node.client.driver is not None
+            )
+        ):
+            raise vol.Invalid(
+                "Multicast commands only work on devices in the same network"
+            )
+
+        return val
+
+    @callback
+    def validate_entities(self, val: dict[str, Any]) -> dict[str, Any]:
+        """Validate entities exist and are from the zwave_js platform."""
+        val[ATTR_ENTITY_ID] = expand_entity_ids(self._hass, val[ATTR_ENTITY_ID])
+        invalid_entities = []
+        for entity_id in val[ATTR_ENTITY_ID]:
+            entry = self._ent_reg.async_get(entity_id)
+            if entry is None or entry.platform != const.DOMAIN:
+                _LOGGER.info(
+                    "Entity %s is not a valid %s entity", entity_id, const.DOMAIN
+                )
+                invalid_entities.append(entity_id)
+
+        # Remove invalid entities
+        val[ATTR_ENTITY_ID] = list(set(val[ATTR_ENTITY_ID]) - set(invalid_entities))
+
+        if not val[ATTR_ENTITY_ID]:
+            raise vol.Invalid(f"No {const.DOMAIN} entities found in service call")
+
+        return val
+
+    @callback
     def async_register(self) -> None:
         """Register all our services."""
+        services = [
+            {
+                "name": const.SERVICE_SET_CONFIG_PARAMETER,
+                "method": self.async_set_config_parameter,
+                "schema": self._get_set_config_parameter_schema(),
+            },
+            {
+                "name": const.SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+                "method": self.async_bulk_set_partial_config_parameters,
+                "schema": self._get_set_partial_config_parameters_schema(),
+            },
+            {
+                "name": const.SERVICE_REFRESH_VALUE,
+                "method": self.async_poll_value,
+                "schema": self._get_refresh_value_schema(),
+            },
+            {
+                "name": const.SERVICE_SET_VALUE,
+                "method": self.async_set_value,
+                "schema": self._get_set_value_schema(),
+            },
+            {
+                "name": const.SERVICE_MULTICAST_SET_VALUE,
+                "method": self.async_multicast_set_value,
+                "schema": self._get_multicast_set_value_schema(),
+            },
+            {
+                "name": const.SERVICE_PING,
+                "method": self.async_ping,
+                "schema": self._get_ping_schema(),
+            },
+            {
+                "name": const.SERVICE_INVOKE_CC_API,
+                "method": self.async_invoke_cc_api,
+                "schema": self._get_invoke_cc_api_schema(),
+            },
+        ]
 
-        @callback
-        def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
-            """Get nodes set from service data."""
-            val[const.ATTR_NODES] = async_get_nodes_from_targets(
-                self._hass, val, self._ent_reg, self._dev_reg, _LOGGER
+        for service in services:
+            self._hass.services.async_register(
+                const.DOMAIN,
+                service["name"],
+                service["method"],
+                schema=service["schema"],
             )
-            return val
 
-        @callback
-        def has_at_least_one_node(val: dict[str, Any]) -> dict[str, Any]:
-            """Validate that at least one node is specified."""
-            if not val.get(const.ATTR_NODES):
-                raise vol.Invalid(f"No {const.DOMAIN} nodes found for given targets")
-            return val
+    def _get_set_config_parameter_schema(self) -> Schema:
+        """Get the schema for set config parameter service."""
+        return vol.Schema(
+            vol.All(
+                {
+                    vol.Optional(ATTR_AREA_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                    vol.Optional(const.ATTR_ENDPOINT, default=0): vol.Coerce(int),
+                    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
+                        vol.Coerce(int), cv.string
+                    ),
+                    vol.Optional(const.ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(
+                        vol.Coerce(int), BITMASK_SCHEMA
+                    ),
+                    vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
+                        vol.Coerce(int), BITMASK_SCHEMA, cv.string
+                    ),
+                },
+                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+                parameter_name_does_not_need_bitmask,
+                self.get_nodes_from_service_data,
+                self.has_at_least_one_node,
+            ),
+        )
 
-        @callback
-        def validate_multicast_nodes(val: dict[str, Any]) -> dict[str, Any]:
-            """Validate the input nodes for multicast."""
-            nodes: set[ZwaveNode] = val[const.ATTR_NODES]
-            broadcast: bool = val[const.ATTR_BROADCAST]
+    def _get_set_partial_config_parameters_schema(self) -> Schema:
+        """Get the schema for set partial config parameters service."""
+        return vol.Schema(
+            vol.All(
+                {
+                    vol.Optional(ATTR_AREA_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                    vol.Optional(const.ATTR_ENDPOINT, default=0): vol.Coerce(int),
+                    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
+                    vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
+                        vol.Coerce(int),
+                        {
+                            vol.Any(
+                                vol.Coerce(int), BITMASK_SCHEMA, cv.string
+                            ): vol.Any(vol.Coerce(int), BITMASK_SCHEMA, cv.string)
+                        },
+                    ),
+                },
+                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+                self.get_nodes_from_service_data,
+                self.has_at_least_one_node,
+            ),
+        )
 
-            if not broadcast:
-                has_at_least_one_node(val)
+    def _get_refresh_value_schema(self) -> Schema:
+        """Get the schema for refresh value service."""
+        return vol.Schema(
+            vol.All(
+                {
+                    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+                    vol.Optional(
+                        const.ATTR_REFRESH_ALL_VALUES, default=False
+                    ): cv.boolean,
+                },
+                self.validate_entities,
+            )
+        )
 
-            # User must specify a node if they are attempting a broadcast and have more
-            # than one zwave-js network.
-            if (
-                broadcast
-                and not nodes
-                and len(self._hass.config_entries.async_entries(const.DOMAIN)) > 1
-            ):
-                raise vol.Invalid(
-                    "You must include at least one entity or device in the service call"
-                )
+    def _get_set_value_schema(self) -> Schema:
+        """Get the schema for set value service."""
+        return vol.Schema(
+            vol.All(
+                {
+                    vol.Optional(ATTR_AREA_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                    vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
+                    vol.Required(const.ATTR_PROPERTY): vol.Any(vol.Coerce(int), str),
+                    vol.Optional(const.ATTR_PROPERTY_KEY): vol.Any(
+                        vol.Coerce(int), str
+                    ),
+                    vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
+                    vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
+                    vol.Optional(const.ATTR_WAIT_FOR_RESULT): cv.boolean,
+                    vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
+                },
+                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+                self.get_nodes_from_service_data,
+                self.has_at_least_one_node,
+            ),
+        )
 
-            first_node = next((node for node in nodes), None)
-
-            if first_node and not all(node.client.driver is not None for node in nodes):
-                raise vol.Invalid(f"Driver not ready for all nodes: {nodes}")
-
-            # If any nodes don't have matching home IDs, we can't run the command
-            # because we can't multicast across multiple networks
-            if (
-                first_node
-                and first_node.client.driver  # We checked the driver was ready above.
-                and any(
-                    node.client.driver.controller.home_id
-                    != first_node.client.driver.controller.home_id
-                    for node in nodes
-                    if node.client.driver is not None
-                )
-            ):
-                raise vol.Invalid(
-                    "Multicast commands only work on devices in the same network"
-                )
-
-            return val
-
-        @callback
-        def validate_entities(val: dict[str, Any]) -> dict[str, Any]:
-            """Validate entities exist and are from the zwave_js platform."""
-            val[ATTR_ENTITY_ID] = expand_entity_ids(self._hass, val[ATTR_ENTITY_ID])
-            invalid_entities = []
-            for entity_id in val[ATTR_ENTITY_ID]:
-                entry = self._ent_reg.async_get(entity_id)
-                if entry is None or entry.platform != const.DOMAIN:
-                    _LOGGER.info(
-                        "Entity %s is not a valid %s entity", entity_id, const.DOMAIN
-                    )
-                    invalid_entities.append(entity_id)
-
-            # Remove invalid entities
-            val[ATTR_ENTITY_ID] = list(set(val[ATTR_ENTITY_ID]) - set(invalid_entities))
-
-            if not val[ATTR_ENTITY_ID]:
-                raise vol.Invalid(f"No {const.DOMAIN} entities found in service call")
-
-            return val
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_SET_CONFIG_PARAMETER,
-            self.async_set_config_parameter,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                        vol.Optional(const.ATTR_ENDPOINT, default=0): vol.Coerce(int),
-                        vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
-                            vol.Coerce(int), cv.string
-                        ),
-                        vol.Optional(const.ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(
-                            vol.Coerce(int), BITMASK_SCHEMA
-                        ),
-                        vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
-                            vol.Coerce(int), BITMASK_SCHEMA, cv.string
-                        ),
-                    },
+    def _get_multicast_set_value_schema(self) -> Schema:
+        """Get the schema for multicast set value service."""
+        return vol.Schema(
+            vol.All(
+                {
+                    vol.Optional(ATTR_AREA_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                    vol.Optional(const.ATTR_BROADCAST, default=False): cv.boolean,
+                    vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
+                    vol.Required(const.ATTR_PROPERTY): vol.Any(vol.Coerce(int), str),
+                    vol.Optional(const.ATTR_PROPERTY_KEY): vol.Any(
+                        vol.Coerce(int), str
+                    ),
+                    vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
+                    vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
+                    vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
+                },
+                vol.Any(
                     cv.has_at_least_one_key(
                         ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
                     ),
-                    parameter_name_does_not_need_bitmask,
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
+                    broadcast_command,
                 ),
+                self.get_nodes_from_service_data,
+                self.validate_multicast_nodes,
             ),
         )
 
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
-            self.async_bulk_set_partial_config_parameters,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                        vol.Optional(const.ATTR_ENDPOINT, default=0): vol.Coerce(int),
-                        vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
-                        vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
-                            vol.Coerce(int),
-                            {
-                                vol.Any(
-                                    vol.Coerce(int), BITMASK_SCHEMA, cv.string
-                                ): vol.Any(vol.Coerce(int), BITMASK_SCHEMA, cv.string)
-                            },
-                        ),
-                    },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+    def _get_ping_schema(self) -> Schema:
+        """Get the schema for ping service."""
+        return vol.Schema(
+            vol.All(
+                {
+                    vol.Optional(ATTR_AREA_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                },
+                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+                self.get_nodes_from_service_data,
+                self.has_at_least_one_node,
+            ),
+        )
+
+    def _get_invoke_cc_api_schema(self) -> Schema:
+        """Get the schema for invoke cc api service."""
+        return vol.Schema(
+            vol.All(
+                {
+                    vol.Optional(ATTR_AREA_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                    vol.Required(const.ATTR_COMMAND_CLASS): vol.All(
+                        vol.Coerce(int), vol.Coerce(CommandClass)
                     ),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_REFRESH_VALUE,
-            self.async_poll_value,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-                        vol.Optional(
-                            const.ATTR_REFRESH_ALL_VALUES, default=False
-                        ): cv.boolean,
-                    },
-                    validate_entities,
-                )
-            ),
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_SET_VALUE,
-            self.async_set_value,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                        vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
-                        vol.Required(const.ATTR_PROPERTY): vol.Any(
-                            vol.Coerce(int), str
-                        ),
-                        vol.Optional(const.ATTR_PROPERTY_KEY): vol.Any(
-                            vol.Coerce(int), str
-                        ),
-                        vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                        vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
-                        vol.Optional(const.ATTR_WAIT_FOR_RESULT): cv.boolean,
-                        vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
-                    },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_MULTICAST_SET_VALUE,
-            self.async_multicast_set_value,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                        vol.Optional(const.ATTR_BROADCAST, default=False): cv.boolean,
-                        vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
-                        vol.Required(const.ATTR_PROPERTY): vol.Any(
-                            vol.Coerce(int), str
-                        ),
-                        vol.Optional(const.ATTR_PROPERTY_KEY): vol.Any(
-                            vol.Coerce(int), str
-                        ),
-                        vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                        vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
-                        vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
-                    },
-                    vol.Any(
-                        cv.has_at_least_one_key(
-                            ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                        ),
-                        broadcast_command,
-                    ),
-                    get_nodes_from_service_data,
-                    validate_multicast_nodes,
-                ),
-            ),
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_PING,
-            self.async_ping,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                    },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_INVOKE_CC_API,
-            self.async_invoke_cc_api,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                        vol.Required(const.ATTR_COMMAND_CLASS): vol.All(
-                            vol.Coerce(int), vol.Coerce(CommandClass)
-                        ),
-                        vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                        vol.Required(const.ATTR_METHOD_NAME): cv.string,
-                        vol.Required(const.ATTR_PARAMETERS): list,
-                    },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
+                    vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
+                    vol.Required(const.ATTR_METHOD_NAME): cv.string,
+                    vol.Required(const.ATTR_PARAMETERS): list,
+                },
+                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+                self.get_nodes_from_service_data,
+                self.has_at_least_one_node,
             ),
         )
 

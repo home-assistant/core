@@ -387,69 +387,85 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
 
     def resolve_data(self, value: ZwaveValue) -> NumericSensorDataTemplateData:
         """Resolve helper class data for a discovered value."""
+        result = NumericSensorDataTemplateData()  # default return value
 
         if value.command_class == CommandClass.BATTERY:
-            return NumericSensorDataTemplateData(ENTITY_DESC_KEY_BATTERY, PERCENTAGE)
+            result = NumericSensorDataTemplateData(ENTITY_DESC_KEY_BATTERY, PERCENTAGE)
 
         if value.command_class == CommandClass.METER:
-            try:
-                meter_scale_type = get_meter_scale_type(value)
-            except UnknownValueData:
-                return NumericSensorDataTemplateData()
-
-            unit = self.find_key_from_matching_set(meter_scale_type, METER_UNIT_MAP)
-            # We do this because even though these are energy scales, they don't meet
-            # the unit requirements for the energy device class.
-            if meter_scale_type in (
-                ElectricScale.PULSE_COUNT,
-                ElectricScale.KILOVOLT_AMPERE_HOUR,
-                ElectricScale.KILOVOLT_AMPERE_REACTIVE_HOUR,
-            ):
-                return NumericSensorDataTemplateData(
-                    ENTITY_DESC_KEY_TOTAL_INCREASING, unit
-                )
-            # We do this because even though these are power scales, they don't meet
-            # the unit requirements for the power device class.
-            if meter_scale_type == ElectricScale.KILOVOLT_AMPERE_REACTIVE:
-                return NumericSensorDataTemplateData(ENTITY_DESC_KEY_MEASUREMENT, unit)
-
-            return NumericSensorDataTemplateData(
-                self.find_key_from_matching_set(
-                    meter_scale_type, METER_DEVICE_CLASS_MAP
-                ),
-                unit,
-            )
+            result = self._resolve_meter_data(value)
 
         if value.command_class == CommandClass.SENSOR_MULTILEVEL:
-            try:
-                sensor_type = get_multilevel_sensor_type(value)
-                multilevel_sensor_scale_type = get_multilevel_sensor_scale_type(value)
-            except UnknownValueData:
-                return NumericSensorDataTemplateData()
-            unit = self.find_key_from_matching_set(
-                multilevel_sensor_scale_type, MULTILEVEL_SENSOR_UNIT_MAP
-            )
-            if sensor_type == MultilevelSensorType.TARGET_TEMPERATURE:
-                return NumericSensorDataTemplateData(
-                    ENTITY_DESC_KEY_TARGET_TEMPERATURE, unit
-                )
-            key = self.find_key_from_matching_set(
-                sensor_type, MULTILEVEL_SENSOR_DEVICE_CLASS_MAP
-            )
-            if key:
-                return NumericSensorDataTemplateData(key, unit)
+            result = self._resolve_multilevel_sensor_data(value)
 
         if value.command_class == CommandClass.ENERGY_PRODUCTION:
-            energy_production_parameter = get_energy_production_parameter(value)
-            energy_production_scale_type = get_energy_production_scale_type(value)
-            unit = self.find_key_from_matching_set(
-                energy_production_scale_type, ENERGY_PRODUCTION_UNIT_MAP
+            result = self._resolve_energy_production_data(value)
+
+        return result
+
+    def _resolve_meter_data(self, value: ZwaveValue) -> NumericSensorDataTemplateData:
+        try:
+            meter_scale_type = get_meter_scale_type(value)
+        except UnknownValueData:
+            return NumericSensorDataTemplateData()
+
+        unit = self.find_key_from_matching_set(meter_scale_type, METER_UNIT_MAP)
+        # We do this because even though these are energy scales, they don't meet
+        # the unit requirements for the energy device class.
+        if meter_scale_type in (
+            ElectricScale.PULSE_COUNT,
+            ElectricScale.KILOVOLT_AMPERE_HOUR,
+            ElectricScale.KILOVOLT_AMPERE_REACTIVE_HOUR,
+        ):
+            return NumericSensorDataTemplateData(ENTITY_DESC_KEY_TOTAL_INCREASING, unit)
+        # We do this because even though these are power scales, they don't meet
+        # the unit requirements for the power device class.
+        if meter_scale_type == ElectricScale.KILOVOLT_AMPERE_REACTIVE:
+            return NumericSensorDataTemplateData(ENTITY_DESC_KEY_MEASUREMENT, unit)
+
+        return NumericSensorDataTemplateData(
+            self.find_key_from_matching_set(meter_scale_type, METER_DEVICE_CLASS_MAP),
+            unit,
+        )
+
+    def _resolve_multilevel_sensor_data(
+        self, value: ZwaveValue
+    ) -> NumericSensorDataTemplateData:
+        result = NumericSensorDataTemplateData()  # default return value
+
+        try:
+            sensor_type = get_multilevel_sensor_type(value)
+            multilevel_sensor_scale_type = get_multilevel_sensor_scale_type(value)
+        except UnknownValueData:
+            return result
+        unit = self.find_key_from_matching_set(
+            multilevel_sensor_scale_type, MULTILEVEL_SENSOR_UNIT_MAP
+        )
+        if sensor_type == MultilevelSensorType.TARGET_TEMPERATURE:
+            result = NumericSensorDataTemplateData(
+                ENTITY_DESC_KEY_TARGET_TEMPERATURE, unit
             )
-            key = self.find_key_from_matching_set(
-                energy_production_parameter, ENERGY_PRODUCTION_DEVICE_CLASS_MAP
-            )
-            if key:
-                return NumericSensorDataTemplateData(key, unit)
+        key = self.find_key_from_matching_set(
+            sensor_type, MULTILEVEL_SENSOR_DEVICE_CLASS_MAP
+        )
+        if key:
+            result = NumericSensorDataTemplateData(key, unit)
+
+        return result
+
+    def _resolve_energy_production_data(
+        self, value: ZwaveValue
+    ) -> NumericSensorDataTemplateData:
+        energy_production_parameter = get_energy_production_parameter(value)
+        energy_production_scale_type = get_energy_production_scale_type(value)
+        unit = self.find_key_from_matching_set(
+            energy_production_scale_type, ENERGY_PRODUCTION_UNIT_MAP
+        )
+        key = self.find_key_from_matching_set(
+            energy_production_parameter, ENERGY_PRODUCTION_DEVICE_CLASS_MAP
+        )
+        if key:
+            return NumericSensorDataTemplateData(key, unit)
 
         return NumericSensorDataTemplateData()
 

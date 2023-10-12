@@ -31,6 +31,7 @@ from homeassistant.components.zwave_js.const import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
+from homeassistant.components.zwave_js.services import ZWaveServices
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -50,6 +51,31 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry
+
+
+async def test_async_register(hass: HomeAssistant) -> None:
+    """Test that the services are registered with the correct methods and schemas."""
+    dev_reg = async_get_dev_reg(hass)
+    ent_reg = async_get_ent_reg(hass)
+
+    instance = ZWaveServices(hass, ent_reg, dev_reg)
+    instance.async_register()
+
+    services_to_test = [
+        SERVICE_SET_CONFIG_PARAMETER,
+        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        SERVICE_REFRESH_VALUE,
+        SERVICE_SET_VALUE,
+        SERVICE_MULTICAST_SET_VALUE,
+        SERVICE_PING,
+        SERVICE_INVOKE_CC_API,
+    ]
+
+    for service in services_to_test:
+        # Check if the service is registered
+        assert hass.services.has_service(
+            DOMAIN, service
+        ), f"Service {service} was not registered"
 
 
 async def test_set_config_parameter(
