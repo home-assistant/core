@@ -28,8 +28,8 @@ PUSH_URL = "https://ios-push.home-assistant.io/push"
 def log_rate_limits(hass, target, resp, level=20):
     """Output rate limit log line at given level."""
     rate_limits = resp["rateLimits"]
-    resetsAt = dt_util.parse_datetime(rate_limits["resetsAt"])
-    resetsAtTime = resetsAt - dt_util.utcnow()
+    resets_at = dt_util.parse_datetime(rate_limits["resetsAt"])
+    resets_at_time = resets_at - dt_util.utcnow()
     rate_limit_msg = (
         "iOS push notification rate limits for %s: "
         "%d sent, %d allowed, %d errors, "
@@ -42,15 +42,15 @@ def log_rate_limits(hass, target, resp, level=20):
         rate_limits["successful"],
         rate_limits["maximum"],
         rate_limits["errors"],
-        str(resetsAtTime).split(".", maxsplit=1)[0],
+        str(resets_at_time).split(".", maxsplit=1)[0],
     )
 
 
 def get_service(
     hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> iOSNotificationService | None:
+    _: ConfigType,
+    __: DiscoveryInfoType | None = None,
+) -> IOSNotificationService | None:
     """Get the iOS notification service."""
     if "notify.ios" not in hass.config.components:
         # Need this to enable requirements checking in the app.
@@ -59,10 +59,10 @@ def get_service(
     if not ios.devices_with_push(hass):
         return None
 
-    return iOSNotificationService()
+    return IOSNotificationService()
 
 
-class iOSNotificationService(BaseNotificationService):
+class IOSNotificationService(BaseNotificationService):
     """Implement the notification service for iOS."""
 
     def __init__(self) -> None:
