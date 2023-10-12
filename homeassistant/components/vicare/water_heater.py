@@ -19,7 +19,7 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemper
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
+from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
 from .entity import ViCareEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +69,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare climate platform."""
-    name = VICARE_NAME
     entities = []
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     circuits = await hass.async_add_executor_job(_get_circuits, api)
@@ -80,7 +79,7 @@ async def async_setup_entry(
             suffix = f" {circuit.id}"
 
         entity = ViCareWater(
-            f"{name} Water{suffix}",
+            f"Water{suffix}",
             api,
             circuit,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
