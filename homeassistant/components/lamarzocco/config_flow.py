@@ -7,6 +7,7 @@ from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -16,14 +17,12 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
-    CONF_USE_WEBSOCKET,
     DEFAULT_CLIENT_ID,
     DEFAULT_CLIENT_SECRET,
     DEFAULT_PORT_CLOUD,
@@ -64,7 +63,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         lm = LaMarzoccoClient(hass, data)
         machine_info = await lm.try_connect(data)
 
-        if machine_info:
+        if not machine_info:
             raise CannotConnect
 
     except AuthFail:
@@ -75,7 +74,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
-    return {"title": lm.machine_name, **lm.machine_info}
+    return {"title": machine_info["machine_name"], **machine_info}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -122,7 +121,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_bluetooth(self, discovery_info) -> FlowResult:
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfo
+    ) -> FlowResult:
         """Handle a flow initialized by discovery over Bluetooth."""
         address = discovery_info.address
         name = discovery_info.name
@@ -152,76 +153,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
+        errors = {}
         assert self.reauth_entry
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=STEP_REAUTH_DATA_SCHEMA,
-            )
-        self.hass.config_entries.async_update_entry(self.reauth_entry, data=user_input)
-        await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-        return self.async_abort(reason="reauth_successful")
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Create the options flow."""
-        return OptionsFlowHandler(config_entry)
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handles options flow for the component."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize the options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options for the custom component."""
-        errors: dict[str, str] = {}
-
         if user_input is not None:
+            try:
+                await validate_input(self.hass, self.reauth_entry.data | user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
             if not errors:
-                # write entry to config and not options dict, pass empty options out
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data=user_input,
-                    options=self.config_entry.options,
+                    self.reauth_entry, data=user_input
                 )
-
-                return self.async_create_entry(title="", data=user_input)
+                await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST, default=self.config_entry.data.get(CONF_HOST)
-                    ): cv.string,
-                    vol.Required(
-                        CONF_CLIENT_ID,
-                        default=self.config_entry.data.get(CONF_CLIENT_ID),
-                    ): cv.string,
-                    vol.Required(
-                        CONF_CLIENT_SECRET,
-                        default=self.config_entry.data.get(CONF_CLIENT_SECRET),
-                    ): cv.string,
-                    vol.Required(
-                        CONF_USERNAME, default=self.config_entry.data.get(CONF_USERNAME)
-                    ): cv.string,
-                    vol.Required(
-                        CONF_PASSWORD, default=self.config_entry.data.get(CONF_PASSWORD)
-                    ): cv.string,
-                    vol.Optional(
-                        CONF_USE_WEBSOCKET,
-                        default=self.config_entry.options.get(CONF_USE_WEBSOCKET, True),
-                    ): cv.boolean,
-                }
-            ),
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
 

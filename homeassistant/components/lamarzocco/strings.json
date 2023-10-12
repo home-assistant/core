@@ -1,207 +1,189 @@
 {
-    "config": {
-        "flow_title": "La Marzocco Espresso {host}",
-        "abort": {
-            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-            "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-        },
-        "error": {
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-            "unknown": "[%key:common::config_flow::error::unknown%]"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "host": "[%key:common::config_flow::data::ip%]",
-                    "username": "[%key:common::config_flow::data::username%]",
-                    "password": "[%key:common::config_flow::data::password%]"
-                },
-                "data_description": {
-                    "host": "Local IP address of the machine",
-                    "password": "Your password from the La Marzocco app",
-                    "username": "Your username from the La Marzocco app"
-                }
-            },
-            "reauth_confirm": {
-                "title": "[%key:common::config_flow::title::reauth%]",
-                "description": "One or more of your provided credentials are invalid.",
-                "data": {
-                    "client_id": "Client ID",
-                    "client_secret": "Client Secret",
-                    "username": "[%key:common::config_flow::data::username%]",
-                    "password": "[%key:common::config_flow::data::password%]"
-                }
-            }
-        }
+  "config": {
+    "flow_title": "La Marzocco Espresso {host}",
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Update Settings",
-                "data": {
-                    "host": "[%key:common::config_flow::data::ip%]",
-                    "client_id": "Client ID",
-                    "client_secret": "Client Secret",
-                    "username": "[%key:common::config_flow::data::username%]",
-                    "password": "[%key:common::config_flow::data::password%]",
-                    "use_websocket": "Use WebSockets to connect to machine"
-                },
-                "data_description": {
-                    "use_websocket": "Check to use WebSockets, this will give you access to a sensor indicating an active brew."
-                }
-            }
-        }
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "services": {
-        "set_auto_on_off_enable": {
-            "name": "Enable/Disable Auto On/Off",
-            "description": "Enable or disable auto on/off for a specific day of the week",
-            "fields": {
-                "day_of_week": {
-                    "name": "Day of Week",
-                    "description": "Enable or disable auto on/off for a specific day of the week"
-                },
-                "enable": {
-                    "name": "Enable",
-                    "description": "Boolean value indicating whether to enable or disable auto on/off"
-                }
-            }
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
-        "set_auto_on_off_times": {
-            "name": "Set Auto On/Off Times",
-            "description": "Set the auto on and off times for each day of the week",
-            "fields": {
-                "day_of_week": {
-                    "name": "Day of Week",
-                    "description": "The day of the week to change (mon, tue, wed, thu, fri, sat, sun)"
-                },
-                "hour_on": {
-                    "name": "Hour On",
-                    "description": "The hour to turn the machine on (0-23)"
-                },
-                "minute_on": {
-                    "name": "Minute On",
-                    "description": "The minute to turn the machine on (0-59)"
-                },
-                "hour_off": {
-                    "name": "Hour Off",
-                    "description": "The hour to turn the machine off (0-23)"
-                },
-                "minute_off": {
-                    "name": "Minute Off",
-                    "description": "The minute to turn the machine off (0-59)"
-                }
-            }
-        },
-        "set_dose": {
-            "name": "Set Dose",
-            "description": "Set the dose for a specific button",
-            "fields": {
-                "key": {
-                    "name": "Key",
-                    "description": "The button to set the dose for (1-4)"
-                },
-                "pulses": {
-                    "name": "Dose",
-                    "description": "The dose in pulses (roughly ~0.5ml per pulse)"
-                }
-            }
-        },
-        "set_dose_hot_water": {
-            "name": "Set Hot Water Dose",
-            "description": "Set the dose for the hot water button",
-            "fields": {
-                "seconds": {
-                    "name": "Dose",
-                    "description": "The number of seconds to stream hot water"
-                }
-            }
-        },
-        "set_prebrew_times": {
-            "name": "Set Prebrew Times",
-            "description": "Set the prebrew times for each button",
-            "fields": {
-                "key": {
-                    "name": "Key",
-                    "description": "The button to set the prebrew time for (1-4)"
-                },
-                "seconds_on": {
-                    "name": "Prebrew Time On",
-                    "description": "The time in seconds for the pump to run during prebrewing (0-5.9s)"
-                },
-                "seconds_off": {
-                    "name": "Prebrew Time Off",
-                    "description": "The time in seconds for the pump to rest during prebrewing (0-5.9s)"
-                }
-            }
-        },
-        "set_preinfusion_time": {
-            "name": "Set Preinfusion Time",
-            "description": "Set the preinfusion time for each button",
-            "fields": {
-                "key": {
-                    "name": "Key",
-                    "description": "The button to set the preinfusion time for (1-4)"
-                },
-                "seconds": {
-                    "name": "Preinfusion Time",
-                    "description": "The time in seconds to run preinfusion (0-24.9s)"
-                }
-            }
+        "data_description": {
+          "host": "Local IP address of the machine",
+          "password": "Your password from the La Marzocco app",
+          "username": "Your username from the La Marzocco app"
         }
-    },
-    "entity": {
-        "binary_sensor": {
-            "water_reservoir": {
-                "name": "Water Reservoir"
-            },
-            "brew_active": {
-                "name": "Brew Active"
-            }
-        },
-        "button": {
-            "start_backflush": {
-                "name": "Start Backflush"
-            }
-        },
-        "sensor": {
-            "drink_stats": {
-                "name": "Drink Stats"
-            }
-        },
-        "switch": {
-            "main": {
-                "name": "Main"
-            },
-            "auto_on_off": {
-                "name": "Auto On/Off"
-            },
-            "prebrew": {
-                "name": "Prebrew"
-            },
-            "preinfusion": {
-                "name": "Preinfusion"
-            },
-            "steam_boiler_enable": {
-                "name": "Steam Boiler Enable"
-            }
-        },
-        "update": {
-            "machine_firmware": {
-                "name": "Machine Firmware"
-            },
-            "gateway_firmware": {
-                "name": "Gateway Firmware"
-            }
-        },
-        "water_heater": {
-            "coffee_boiler": {
-                "name": "Coffee Boiler"
-            },
-            "steam_boiler": {
-                "name": "Steam Boiler"
-            }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "One or more of your provided credentials are invalid.",
+        "data": {
+          "client_id": "Client ID",
+          "client_secret": "Client Secret",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
+      }
     }
+  },
+  "services": {
+    "set_auto_on_off_enable": {
+      "name": "Enable/Disable Auto On/Off",
+      "description": "Enable or disable auto on/off for a specific day of the week",
+      "fields": {
+        "day_of_week": {
+          "name": "Day of Week",
+          "description": "Enable or disable auto on/off for a specific day of the week"
+        },
+        "enable": {
+          "name": "Enable",
+          "description": "Boolean value indicating whether to enable or disable auto on/off"
+        }
+      }
+    },
+    "set_auto_on_off_times": {
+      "name": "Set Auto On/Off Times",
+      "description": "Set the auto on and off times for each day of the week",
+      "fields": {
+        "day_of_week": {
+          "name": "Day of Week",
+          "description": "The day of the week to change (mon, tue, wed, thu, fri, sat, sun)"
+        },
+        "hour_on": {
+          "name": "Hour On",
+          "description": "The hour to turn the machine on (0-23)"
+        },
+        "minute_on": {
+          "name": "Minute On",
+          "description": "The minute to turn the machine on (0-59)"
+        },
+        "hour_off": {
+          "name": "Hour Off",
+          "description": "The hour to turn the machine off (0-23)"
+        },
+        "minute_off": {
+          "name": "Minute Off",
+          "description": "The minute to turn the machine off (0-59)"
+        }
+      }
+    },
+    "set_dose": {
+      "name": "Set Dose",
+      "description": "Set the dose for a specific button",
+      "fields": {
+        "key": {
+          "name": "Key",
+          "description": "The button to set the dose for (1-4)"
+        },
+        "pulses": {
+          "name": "Dose",
+          "description": "The dose in pulses (roughly ~0.5ml per pulse)"
+        }
+      }
+    },
+    "set_dose_hot_water": {
+      "name": "Set Hot Water Dose",
+      "description": "Set the dose for the hot water button",
+      "fields": {
+        "seconds": {
+          "name": "Dose",
+          "description": "The number of seconds to stream hot water"
+        }
+      }
+    },
+    "set_prebrew_times": {
+      "name": "Set Prebrew Times",
+      "description": "Set the prebrew times for each button",
+      "fields": {
+        "key": {
+          "name": "Key",
+          "description": "The button to set the prebrew time for (1-4)"
+        },
+        "seconds_on": {
+          "name": "Prebrew Time On",
+          "description": "The time in seconds for the pump to run during prebrewing (0-5.9s)"
+        },
+        "seconds_off": {
+          "name": "Prebrew Time Off",
+          "description": "The time in seconds for the pump to rest during prebrewing (0-5.9s)"
+        }
+      }
+    },
+    "set_preinfusion_time": {
+      "name": "Set Preinfusion Time",
+      "description": "Set the preinfusion time for each button",
+      "fields": {
+        "key": {
+          "name": "Key",
+          "description": "The button to set the preinfusion time for (1-4)"
+        },
+        "seconds": {
+          "name": "Preinfusion Time",
+          "description": "The time in seconds to run preinfusion (0-24.9s)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "water_reservoir": {
+        "name": "Water Reservoir"
+      },
+      "brew_active": {
+        "name": "Brew Active"
+      }
+    },
+    "button": {
+      "start_backflush": {
+        "name": "Start Backflush"
+      }
+    },
+    "sensor": {
+      "drink_stats": {
+        "name": "Drink Stats"
+      }
+    },
+    "switch": {
+      "main": {
+        "name": "Main"
+      },
+      "auto_on_off": {
+        "name": "Auto On/Off"
+      },
+      "prebrew": {
+        "name": "Prebrew"
+      },
+      "preinfusion": {
+        "name": "Preinfusion"
+      },
+      "steam_boiler_enable": {
+        "name": "Steam Boiler Enable"
+      }
+    },
+    "update": {
+      "machine_firmware": {
+        "name": "Machine Firmware"
+      },
+      "gateway_firmware": {
+        "name": "Gateway Firmware"
+      }
+    },
+    "water_heater": {
+      "coffee_boiler": {
+        "name": "Coffee Boiler"
+      },
+      "steam_boiler": {
+        "name": "Steam Boiler"
+      }
+    }
+  }
 }

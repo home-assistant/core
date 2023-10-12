@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_USE_WEBSOCKET
+from .lm_client import LaMarzoccoClient
 
 SCAN_INTERVAL = timedelta(seconds=30)
 UPDATE_DELAY = 2
@@ -24,7 +24,7 @@ class LmApiCoordinator(DataUpdateCoordinator):
         """Return the La Marzocco API object."""
         return self._lm
 
-    def __init__(self, hass: HomeAssistant, config_entry, lm) -> None:
+    def __init__(self, hass: HomeAssistant, lm: LaMarzoccoClient) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
@@ -38,8 +38,6 @@ class LmApiCoordinator(DataUpdateCoordinator):
         self._initialized = False
         self._websocket_initialized = False
         self._websocket_task = None
-        self._config_entry = config_entry
-        self._use_websocket = self._config_entry.options.get(CONF_USE_WEBSOCKET, True)
 
     async def _async_update_data(self):
         try:
@@ -47,11 +45,7 @@ class LmApiCoordinator(DataUpdateCoordinator):
             if not self._initialized:
                 await self._lm.hass_init()
 
-            elif (
-                self._initialized
-                and not self._websocket_initialized
-                and self._use_websocket
-            ):
+            elif self._initialized and not self._websocket_initialized:
                 # only initialize websockets after the first update
                 _LOGGER.debug("Initializing WebSockets")
                 self._websocket_task = self.hass.async_create_task(
