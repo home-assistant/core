@@ -484,9 +484,9 @@ class SensorEntity(Entity):
         native_unit_of_measurement = self.native_unit_of_measurement
 
         if (
-            self.device_class == SensorDeviceClass.TEMPERATURE
-            and native_unit_of_measurement
+            native_unit_of_measurement
             in {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
+            and self.device_class == SensorDeviceClass.TEMPERATURE
         ):
             return self.hass.config.units.temperature_unit
 
