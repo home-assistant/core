@@ -48,7 +48,9 @@ class ShoppingTodoListEntity(TodoListEntity):
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
-        await self._data.async_add(item.summary)
+        await self._data.async_add(
+            item.summary, complete=(item.status == TodoItemStatus.COMPLETED)
+        )
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item to the To-do list."""
@@ -63,9 +65,9 @@ class ShoppingTodoListEntity(TodoListEntity):
                 f"Shopping list item '{item.uid}' was not found"
             ) from err
 
-    async def async_delete_todo_items(self, uids: set[str]) -> None:
+    async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Add an item to the To-do list."""
-        await self._data.async_remove_items(uids)
+        await self._data.async_remove_items(set(uids))
 
     async def async_move_todo_item(self, uid: str, previous: str | None = None) -> None:
         """Re-order an item to the To-do list."""

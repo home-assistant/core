@@ -20,5 +20,5 @@ class TodoItemStatus(StrEnum):
     This is a subset of the statuses supported in rfc5545.
     """
 
-    NEEDS_ACTION = "NEEDS-ACTION"
-    COMPLETED = "COMPLETED"
+    NEEDS_ACTION = "needs_action"
+    COMPLETED = "completed"

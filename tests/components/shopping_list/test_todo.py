@@ -1,11 +1,12 @@
 """Test shopping list todo platform."""
 
 from collections.abc import Awaitable, Callable
-from typing import Any
 
 import pytest
 
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.typing import WebSocketGenerator
 
@@ -51,33 +52,6 @@ async def ws_get_items(
     return get
 
 
-@pytest.fixture
-async def ws_move_item(
-    hass_ws_client: WebSocketGenerator,
-    ws_req_id: Callable[[], int],
-) -> Callable[[str, str | None], Awaitable[None]]:
-    """Fixture to move an item in the todo list."""
-
-    async def move(uid: str, previous: str | None) -> dict[str, Any]:
-        # Fetch items using To-do platform
-        client = await hass_ws_client()
-        id = ws_req_id()
-        data = {
-            "id": id,
-            "type": "todo/item/move",
-            "entity_id": TEST_ENTITY,
-            "uid": uid,
-        }
-        if previous is not None:
-            data["previous"] = previous
-        await client.send_json(data)
-        resp = await client.receive_json()
-        assert resp.get("id") == id
-        return resp
-
-    return move
-
-
 async def test_get_items(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -106,7 +80,7 @@ async def test_get_items(
     items = await ws_get_items()
     assert len(items) == 1
     assert items[0]["summary"] == "soda"
-    assert items[0]["status"] == "NEEDS-ACTION"
+    assert items[0]["status"] == "needs_action"
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -115,29 +89,46 @@ async def test_get_items(
 
 async def test_create_item(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     sl_setup: None,
     ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test creating shopping_list item and listing it."""
-    client = await hass_ws_client(hass)
-
-    # Native shopping list websocket
-    await client.send_json(
-        {"id": ws_req_id(), "type": "shopping_list/items/add", "name": "soda"}
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "create_item",
+        {
+            "summary": "soda",
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
     )
-    msg = await client.receive_json()
-    assert msg["success"] is True
-    data = msg["result"]
-    assert data["name"] == "soda"
-    assert data["complete"] is False
 
     # Fetch items using To-do platform
     items = await ws_get_items()
     assert len(items) == 1
     assert items[0]["summary"] == "soda"
-    assert items[0]["status"] == "NEEDS-ACTION"
+    assert items[0]["status"] == "needs_action"
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+
+    # Add a completed item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "create_item",
+        {"summary": "paper", "status": "completed"},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    items = await ws_get_items()
+    assert len(items) == 2
+    assert items[0]["summary"] == "soda"
+    assert items[0]["status"] == "needs_action"
+    assert items[1]["summary"] == "paper"
+    assert items[1]["status"] == "completed"
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -146,47 +137,37 @@ async def test_create_item(
 
 async def test_delete_item(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     sl_setup: None,
     ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test deleting a todo item."""
-    client = await hass_ws_client(hass)
-
-    await client.send_json(
-        {
-            "id": ws_req_id(),
-            "type": "todo/item/create",
-            "entity_id": TEST_ENTITY,
-            "item": {
-                "summary": "soda",
-            },
-        }
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "create_item",
+        {"summary": "soda", "status": "needs_action"},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
     )
-    resp = await client.receive_json()
-    assert resp.get("success")
-
     items = await ws_get_items()
     assert len(items) == 1
     assert items[0]["summary"] == "soda"
-    assert items[0]["status"] == "NEEDS-ACTION"
+    assert items[0]["status"] == "needs_action"
     assert "uid" in items[0]
 
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == "1"
 
-    await client.send_json(
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "delete_item",
         {
-            "id": ws_req_id(),
-            "type": "todo/item/delete",
-            "entity_id": TEST_ENTITY,
             "uids": [items[0]["uid"]],
-        }
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
     )
-    resp = await client.receive_json()
-    assert resp.get("success")
 
     items = await ws_get_items()
     assert len(items) == 0
@@ -198,27 +179,22 @@ async def test_delete_item(
 
 async def test_bulk_delete(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     sl_setup: None,
     ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test deleting a todo item."""
-    client = await hass_ws_client(hass)
 
     for _i in range(0, 5):
-        await client.send_json(
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "create_item",
             {
-                "id": ws_req_id(),
-                "type": "todo/item/create",
-                "entity_id": TEST_ENTITY,
-                "item": {
-                    "summary": "soda",
-                },
-            }
+                "summary": "soda",
+            },
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
         )
-        resp = await client.receive_json()
-        assert resp.get("success")
 
     items = await ws_get_items()
     assert len(items) == 5
@@ -228,16 +204,15 @@ async def test_bulk_delete(
     assert state
     assert state.state == "5"
 
-    await client.send_json(
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "delete_item",
         {
-            "id": ws_req_id(),
-            "type": "todo/item/delete",
-            "entity_id": TEST_ENTITY,
             "uids": uids,
-        }
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
     )
-    resp = await client.receive_json()
-    assert resp.get("success")
 
     items = await ws_get_items()
     assert len(items) == 0
@@ -249,60 +224,52 @@ async def test_bulk_delete(
 
 async def test_update_item(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     sl_setup: None,
     ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test updating a todo item."""
-    client = await hass_ws_client(hass)
 
     # Create new item
-    await client.send_json(
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "create_item",
         {
-            "id": 5,
-            "type": "todo/item/create",
-            "entity_id": TEST_ENTITY,
-            "item": {
-                "summary": "soda",
-            },
-        }
+            "summary": "soda",
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
     )
-    resp = await client.receive_json()
-    assert resp.get("id") == 5
-    assert resp.get("success")
 
     # Fetch item
     items = await ws_get_items()
     assert len(items) == 1
     item = items[0]
     assert item["summary"] == "soda"
-    assert item["status"] == "NEEDS-ACTION"
+    assert item["status"] == "needs_action"
 
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == "1"
 
     # Mark item completed
-    item["status"] = "COMPLETED"
-    await client.send_json(
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
         {
-            "id": 7,
-            "type": "todo/item/update",
-            "entity_id": TEST_ENTITY,
-            "item": item,
-        }
+            **item,
+            "status": "completed",
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
     )
-    resp = await client.receive_json()
-    assert resp.get("id") == 7
-    assert resp.get("success")
 
     # Verify item is marked as completed
     items = await ws_get_items()
     assert len(items) == 1
     item = items[0]
     assert item["summary"] == "soda"
-    assert item["status"] == "COMPLETED"
+    assert item["status"] == "completed"
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -311,31 +278,23 @@ async def test_update_item(
 
 async def test_update_invalid_item(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     sl_setup: None,
     ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test updating a todo item that does not exist."""
-    client = await hass_ws_client(hass)
 
-    await client.send_json(
-        {
-            "id": 7,
-            "type": "todo/item/update",
-            "entity_id": TEST_ENTITY,
-            "item": {
+    with pytest.raises(HomeAssistantError, match="was not found"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "update_item",
+            {
                 "uid": "invalid-uid",
                 "summary": "Example task",
             },
-        }
-    )
-    resp = await client.receive_json()
-    assert resp.get("id") == 7
-    assert not resp.get("success")
-    assert resp.get("error")
-    assert resp.get("error", {}).get("code") == "failed"
-    assert "was not found" in resp.get("error", {}).get("message")
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -366,31 +325,25 @@ async def test_update_invalid_item(
 )
 async def test_move_item(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     sl_setup: None,
     ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
-    ws_move_item: Callable[[str, str | None], Awaitable[dict[str, Any]]],
     src_idx: int,
     dst_idx: int | None,
     expected_items: list[str],
 ) -> None:
     """Test moving a todo item within the list."""
-    client = await hass_ws_client(hass)
 
     for i in range(1, 5):
-        await client.send_json(
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "create_item",
             {
-                "id": ws_req_id(),
-                "type": "todo/item/create",
-                "entity_id": TEST_ENTITY,
-                "item": {
-                    "summary": f"item {i}",
-                },
-            }
+                "summary": f"item {i}",
+            },
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
         )
-        resp = await client.receive_json()
-        assert resp.get("success")
 
     items = await ws_get_items()
     assert len(items) == 4
@@ -399,13 +352,19 @@ async def test_move_item(
     assert summaries == ["item 1", "item 2", "item 3", "item 4"]
 
     # Prepare items for moving
-    uid = uids[src_idx]
-    previous = None
+    data = {
+        "uid": uids[src_idx],
+    }
     if dst_idx is not None:
-        previous = uids[dst_idx]
+        data["previous"] = uids[dst_idx]
 
-    resp = await ws_move_item(uid, previous)
-    assert resp.get("success")
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "move_item",
+        data,
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
 
     items = await ws_get_items()
     assert len(items) == 4
@@ -415,25 +374,19 @@ async def test_move_item(
 
 async def test_move_invalid_item(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     sl_setup: None,
     ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
-    ws_move_item: Callable[[str, str | None], Awaitable[dict[str, Any]]],
 ) -> None:
     """Test moving a todo item within the list."""
-    client = await hass_ws_client(hass)
 
-    await client.send_json(
-        {
-            "id": ws_req_id(),
-            "type": "todo/item/create",
-            "entity_id": TEST_ENTITY,
-            "item": {"summary": "soda"},
-        }
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "create_item",
+        {"summary": "soda"},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
     )
-    resp = await client.receive_json()
-    assert resp.get("success")
 
     items = await ws_get_items()
     assert len(items) == 1
@@ -441,12 +394,26 @@ async def test_move_invalid_item(
     assert item["summary"] == "soda"
     uid = item["uid"]
 
-    resp = await ws_move_item(uid, "unknown")
-    assert not resp.get("success")
-    assert resp.get("error", {}).get("code") == "failed"
-    assert "could not be re-ordered" in resp.get("error", {}).get("message")
+    with pytest.raises(HomeAssistantError, match="could not be re-ordered"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "move_item",
+            {
+                "uid": uid,
+                "previous": "unknown",
+            },
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
+        )
 
-    resp = await ws_move_item("unknown", uid)
-    assert not resp.get("success")
-    assert resp.get("error", {}).get("code") == "failed"
-    assert "could not be re-ordered" in resp.get("error", {}).get("message")
+    with pytest.raises(HomeAssistantError, match="could not be re-ordered"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "move_item",
+            {
+                "uid": "unknown",
+                "previous": uid,
+            },
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
+        )

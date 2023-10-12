@@ -201,9 +201,9 @@ class ShoppingData:
         self.items: list[dict[str, JsonValueType]] = []
         self._listeners: list[Callable[[], None]] = []
 
-    async def async_add(self, name, context=None):
+    async def async_add(self, name, complete=False, context=None):
         """Add a shopping list item."""
-        item = {"name": name, "id": uuid.uuid4().hex, "complete": False}
+        item = {"name": name, "id": uuid.uuid4().hex, "complete": complete}
         self.items.append(item)
         await self.hass.async_add_executor_job(self.save)
         self._async_notify()
@@ -476,7 +476,9 @@ async def websocket_handle_add(
     msg: dict[str, Any],
 ) -> None:
     """Handle adding item to shopping_list."""
-    item = await hass.data[DOMAIN].async_add(msg["name"], connection.context(msg))
+    item = await hass.data[DOMAIN].async_add(
+        msg["name"], context=connection.context(msg)
+    )
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
 

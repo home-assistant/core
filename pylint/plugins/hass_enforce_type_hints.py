@@ -2461,7 +2461,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="async_delete_todo_items",
                     arg_types={
-                        1: "set[str]",
+                        1: "list[str]",
                     },
                     return_type="None",
                 ),
