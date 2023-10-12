@@ -33,14 +33,22 @@ from .const import (
     Measurement,
 )
 from .coordinator import WithingsDataUpdateCoordinator
-from .entity import WithingsEntity, WithingsEntityDescription
+from .entity import WithingsEntity
+
+
+@dataclass
+class WithingsEntityDescriptionMixin:
+    """Mixin for describing withings data."""
+
+    measurement: Measurement
+    measure_type: GetSleepSummaryField | MeasureType
 
 
 @dataclass
 class WithingsSensorEntityDescription(
-    SensorEntityDescription, WithingsEntityDescription
+    SensorEntityDescription, WithingsEntityDescriptionMixin
 ):
-    """Immutable class for describing withings binary sensor data."""
+    """Immutable class for describing withings data."""
 
 
 SENSORS = [
@@ -370,6 +378,15 @@ class WithingsSensor(WithingsEntity, SensorEntity):
     """Implementation of a Withings sensor."""
 
     entity_description: WithingsSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: WithingsDataUpdateCoordinator,
+        entity_description: WithingsSensorEntityDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, entity_description.key)
+        self.entity_description = entity_description
 
     @property
     def native_value(self) -> None | str | int | float:
