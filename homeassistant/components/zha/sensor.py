@@ -1066,7 +1066,6 @@ class BitMapSensor(Sensor):
     """
 
     _default_value: str
-
     _bitmap: dict[str, int]
 
     def formatter(self, _value: int) -> str:
