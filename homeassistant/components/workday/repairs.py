@@ -150,7 +150,7 @@ class HolidayFixFlow(RepairsFlow):
                     ),
                 }
             ),
-            user_input or self.entry.options,
+            self.entry.options,
         )
         return self.async_show_form(
             step_id="named_holiday",
