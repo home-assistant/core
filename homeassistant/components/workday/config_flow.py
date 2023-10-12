@@ -16,6 +16,8 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
+    CountrySelector,
+    CountrySelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -113,11 +115,9 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
 DATA_SCHEMA_SETUP = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Optional(CONF_COUNTRY): SelectSelector(
-            SelectSelectorConfig(
-                options=list(list_supported_countries()),
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_COUNTRY,
+        vol.Optional(CONF_COUNTRY): CountrySelector(
+            CountrySelectorConfig(
+                countries=list(list_supported_countries()),
             )
         ),
     }
