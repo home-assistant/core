@@ -391,10 +391,8 @@ class SensorEntity(Entity):
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if last_reset := self.last_reset:
-            if (
-                self.state_class != SensorStateClass.TOTAL
-                and not self._last_reset_reported
-            ):
+            state_class = self.state_class
+            if state_class != SensorStateClass.TOTAL and not self._last_reset_reported:
                 self._last_reset_reported = True
                 report_issue = self._suggest_report_issue()
                 # This should raise in Home Assistant Core 2022.5
@@ -407,11 +405,11 @@ class SensorEntity(Entity):
                     ),
                     self.entity_id,
                     type(self),
-                    self.state_class,
+                    state_class,
                     report_issue,
                 )
 
-            if self.state_class == SensorStateClass.TOTAL:
+            if state_class == SensorStateClass.TOTAL:
                 return {ATTR_LAST_RESET: last_reset.isoformat()}
 
         return None
