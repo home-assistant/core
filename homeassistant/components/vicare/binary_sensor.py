@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareRequiredKeysMixin
+from . import ViCareEntity, ViCareRequiredKeysMixin
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -182,7 +182,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViCareBinarySensor(BinarySensorEntity):
+class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
     """Representation of a ViCare sensor."""
 
     entity_description: ViCareBinarySensorEntityDescription
@@ -203,6 +203,7 @@ class ViCareBinarySensor(BinarySensorEntity):
             model=device_config.getModel(),
             configuration_url="https://developer.viessmann.com/",
         )
+        ViCareEntity.__init__(self)
 
     @property
     def available(self):

@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareRequiredKeysMixinWithSet
+from . import ViCareEntity, ViCareRequiredKeysMixinWithSet
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,7 +92,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViCareButton(ButtonEntity):
+class ViCareButton(ViCareEntity, ButtonEntity):
     """Representation of a ViCare button."""
 
     entity_description: ViCareButtonEntityDescription
@@ -111,6 +111,7 @@ class ViCareButton(ButtonEntity):
             model=device_config.getModel(),
             configuration_url="https://developer.viessmann.com/",
         )
+        ViCareEntity.__init__(self)
 
     def press(self) -> None:
         """Handle the button press."""

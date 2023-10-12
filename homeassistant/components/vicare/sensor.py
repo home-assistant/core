@@ -33,7 +33,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareRequiredKeysMixin
+from . import ViCareEntity, ViCareRequiredKeysMixin
 from .const import (
     DOMAIN,
     VICARE_API,
@@ -660,7 +660,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViCareSensor(SensorEntity):
+class ViCareSensor(ViCareEntity, SensorEntity):
     """Representation of a ViCare sensor."""
 
     entity_description: ViCareSensorEntityDescription
@@ -673,6 +673,7 @@ class ViCareSensor(SensorEntity):
         self._attr_name = name
         self._api = api
         self._device_config = device_config
+        ViCareEntity.__init__(self)
 
     @property
     def device_info(self) -> DeviceInfo:

@@ -36,6 +36,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import ViCareEntity
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,7 +135,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViCareClimate(ClimateEntity):
+class ViCareClimate(ViCareEntity, ClimateEntity):
     """Representation of the ViCare heating climate device."""
 
     _attr_precision = PRECISION_TENTHS
@@ -164,6 +165,7 @@ class ViCareClimate(ClimateEntity):
             model=device_config.getModel(),
             configuration_url="https://developer.viessmann.com/",
         )
+        ViCareEntity.__init__(self)
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
