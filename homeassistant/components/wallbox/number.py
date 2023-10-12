@@ -4,9 +4,9 @@ The number component allows control of charging current.
 """
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import cast
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -28,21 +28,14 @@ from .coordinator import InvalidAuth, WallboxCoordinator
 from .entity import WallboxEntity
 
 
-def max_charging_current_value(coordinator: WallboxCoordinator) -> float:
-    """Return the maximum available value for charging current."""
-    return cast(float, coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY])
-
-
 def min_charging_current_value(coordinator: WallboxCoordinator) -> float:
     """Return the minimum available value for charging current."""
     return cast(
         float,
-        (
-            coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY] * -1
-            if coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY][0:2]
-            in BIDIRECTIONAL_MODEL_PREFIXES
-            else 0
-        ),
+        (coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY] * -1)
+        if coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY][0:2]
+        in BIDIRECTIONAL_MODEL_PREFIXES
+        else 0,
     )
 
 
@@ -66,7 +59,7 @@ class WallboxNumberEntityDescriptionMixin:
 
     max_value_fn: Callable[[WallboxCoordinator], float]
     min_value_fn: Callable[[WallboxCoordinator], float]
-    set_value_fn: Callable[[WallboxCoordinator, float], Coroutine[Any, Any, Any]]
+    set_value_fn: Callable[[WallboxCoordinator, float], Awaitable[None]]
 
 
 @dataclass
@@ -80,7 +73,9 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CHARGER_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CHARGER_MAX_CHARGING_CURRENT_KEY,
         translation_key="maximum_charging_current",
-        max_value_fn=max_charging_current_value,
+        max_value_fn=lambda coordinator: cast(
+            float, coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY]
+        ),
         min_value_fn=min_charging_current_value,
         set_value_fn=async_set_charging_current_value,
         native_step=1,
