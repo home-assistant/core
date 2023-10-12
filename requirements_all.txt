@@ -530,7 +530,7 @@ bleak-retry-connector==3.2.1
 bleak==0.21.1
 
 # homeassistant.components.blebox
-blebox-uniapi==2.1.4
+blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
 blinkpy==0.21.0
@@ -2152,7 +2152,7 @@ python-miio==0.5.12
 python-mpd2==3.0.5
 
 # homeassistant.components.myq
-python-myq==3.1.11
+python-myq==3.1.13
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
@@ -2691,7 +2691,7 @@ vultr==0.1.2
 wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
-wallbox==0.4.12
+wallbox==0.4.14
 
 # homeassistant.components.folder_watcher
 watchdog==2.3.1
