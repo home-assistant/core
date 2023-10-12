@@ -77,13 +77,14 @@ class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
-        if not self._device.remote_value.readable and (
-            last_state := await self.async_get_last_state()
+        if (
+            not self._device.remote_value.readable
+            and (last_state := await self.async_get_last_state())
+            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
-            if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-                await self._device.remote_value.update_value(
-                    self._option_payloads.get(last_state.state)
-                )
+            await self._device.remote_value.update_value(
+                self._option_payloads.get(last_state.state)
+            )
 
     async def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
