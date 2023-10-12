@@ -30,13 +30,13 @@ from .entity import WallboxEntity
 
 def min_charging_current_value(coordinator: WallboxCoordinator) -> float:
     """Return the minimum available value for charging current."""
-    return cast(
-        float,
+    min_value = (
         (coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY] * -1)
         if coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY][0:2]
         in BIDIRECTIONAL_MODEL_PREFIXES
-        else 0,
+        else 0
     )
+    return cast(float, min_value)
 
 
 async def async_set_charging_current_value(
