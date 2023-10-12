@@ -562,6 +562,95 @@
       "ias_zone": {
         "name": "IAS zone"
       }
+    },
+    "sensor": {
+      "analog_input": {
+        "name": "Analog input"
+      },
+      "active_power": {
+        "name": "Active power"
+      },
+      "apparent_power": {
+        "name": "Apparent power"
+      },
+      "rms_current": {
+        "name": "RMS current"
+      },
+      "rms_voltage": {
+        "name": "RMS voltage"
+      },
+      "ac_frequency": {
+        "name": "AC frequency"
+      },
+      "power_factor": {
+        "name": "Power factor"
+      },
+      "soil_moisture": {
+        "name": "Soil moisture"
+      },
+      "leaf_wetness": {
+        "name": "Leaf wetness"
+      },
+      "instantaneous_demand": {
+        "name": "Instantaneous demand"
+      },
+      "summation_delivered": {
+        "name": "Summation delivered"
+      },
+      "summation_delivered_1": {
+        "name": "Tier 1 summation delivered"
+      },
+      "summation_delivered_2": {
+        "name": "Tier 2 summation delivered"
+      },
+      "summation_delivered_3": {
+        "name": "Tier 3 summation delivered"
+      },
+      "summation_delivered_4": {
+        "name": "Tier 4 summation delivered"
+      },
+      "summation_delivered_5": {
+        "name": "Tier 5 summation delivered"
+      },
+      "summation_delivered_6": {
+        "name": "Tier 6 summation delivered"
+      },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
+      "formaldehyde_concentration": {
+        "name": "Formaldehyde concentration"
+      },
+      "hvac_action": {
+        "name": "HVAC action"
+      },
+      "lqi": {
+        "name": "LQI"
+      },
+      "timer_time_left": {
+        "name": "Time left"
+      },
+      "device_run_time": {
+        "name": "Device run time"
+      },
+      "filter_run_time": {
+        "name": "Filter run time"
+      },
+      "last_feeding_source": {
+        "name": "Last feeding source"
+      },
+      "last_feeding_size": {
+        "name": "Last feeding size"
+      },
+      "portions_dispensed_today": {
+        "name": "Portions dispensed today"
+      },
+      "weight_dispensed_today": {
+        "name": "Weight dispensed today"
+      },
+      "smoke_density": {
+        "name": "Smoke density"
+      }
     }
   }
 }
