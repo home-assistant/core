@@ -13,8 +13,6 @@ from PyViCare.PyViCareDevice import Device
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
@@ -104,18 +102,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return unload_ok
-
-
-class ViCareEntity(Entity):
-    """Base class for ViCare entities."""
-
-    def __init__(self, device_config) -> None:
-        """Initialize the entity."""
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=device_config.getModel(),
-            manufacturer="Viessmann",
-            model=device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
