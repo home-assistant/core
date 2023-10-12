@@ -1,5 +1,6 @@
 """Class to hold all cover accessories."""
 import logging
+from typing import Any
 
 from pyhap.const import (
     CATEGORY_DOOR,
@@ -7,6 +8,7 @@ from pyhap.const import (
     CATEGORY_WINDOW,
     CATEGORY_WINDOW_COVERING,
 )
+from pyhap.service import Service
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -98,7 +100,7 @@ class GarageDoorOpener(HomeAccessory):
     and support no more than open, close, and stop.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a GarageDoorOpener accessory object."""
         super().__init__(*args, category=CATEGORY_GARAGE_DOOR_OPENER)
         state = self.hass.states.get(self.entity_id)
@@ -203,12 +205,12 @@ class OpeningDeviceBase(HomeAccessory):
     WindowCovering
     """
 
-    def __init__(self, *args, category, service):
+    def __init__(self, *args: Any, category: int, service: Service) -> None:
         """Initialize a OpeningDeviceBase accessory object."""
         super().__init__(*args, category=category)
         state = self.hass.states.get(self.entity_id)
-
-        self.features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        assert state
+        self.features: int = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         self._supports_stop = self.features & CoverEntityFeature.STOP
         self.chars = []
         if self._supports_stop:
@@ -276,14 +278,15 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
     The cover entity must support: set_cover_position.
     """
 
-    def __init__(self, *args, category, service):
+    def __init__(self, *args: Any, category: int, service: Service) -> None:
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=category, service=service)
         state = self.hass.states.get(self.entity_id)
+        assert state
         self.char_current_position = self.serv_cover.configure_char(
             CHAR_CURRENT_POSITION, value=0
         )
-        target_args = {"value": 0}
+        target_args: dict[str, Any] = {"value": 0}
         if self.features & CoverEntityFeature.SET_POSITION:
             target_args["setter_callback"] = self.move_cover
         else:
@@ -307,7 +310,7 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         )
         self.async_update_state(state)
 
-    def move_cover(self, value):
+    def move_cover(self, value: int) -> None:
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_POSITION: value}
@@ -338,7 +341,7 @@ class Door(OpeningDevice):
     The entity must support: set_cover_position.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a Door accessory object."""
         super().__init__(*args, category=CATEGORY_DOOR, service=SERV_DOOR)
 
@@ -350,7 +353,7 @@ class Window(OpeningDevice):
     The entity must support: set_cover_position.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a Window accessory object."""
         super().__init__(*args, category=CATEGORY_WINDOW, service=SERV_WINDOW)
 
@@ -362,7 +365,7 @@ class WindowCovering(OpeningDevice):
     The entity must support: set_cover_position.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a WindowCovering accessory object."""
         super().__init__(
             *args, category=CATEGORY_WINDOW_COVERING, service=SERV_WINDOW_COVERING
@@ -377,12 +380,13 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
     stop_cover (optional).
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a WindowCoveringBasic accessory object."""
         super().__init__(
             *args, category=CATEGORY_WINDOW_COVERING, service=SERV_WINDOW_COVERING
         )
         state = self.hass.states.get(self.entity_id)
+        assert state
         self.char_current_position = self.serv_cover.configure_char(
             CHAR_CURRENT_POSITION, value=0
         )
@@ -394,7 +398,7 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
         )
         self.async_update_state(state)
 
-    def move_cover(self, value):
+    def move_cover(self, value: int) -> None:
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
 
@@ -436,7 +440,7 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
         super().async_update_state(new_state)
 
 
-def _hass_state_to_position_start(state):
+def _hass_state_to_position_start(state: str) -> int:
     """Convert hass state to homekit position state."""
     if state == STATE_OPENING:
         return HK_POSITION_GOING_TO_MAX

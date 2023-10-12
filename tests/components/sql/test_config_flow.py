@@ -8,7 +8,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from homeassistant import config_entries
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
-from homeassistant.components.sql.config_flow import NONE_SENTINEL
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -669,8 +668,6 @@ async def test_device_state_class(recorder_mock: Recorder, hass: HomeAssistant) 
                 "query": "SELECT 5 as value",
                 "column": "value",
                 "unit_of_measurement": "MiB",
-                "device_class": NONE_SENTINEL,
-                "state_class": NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()

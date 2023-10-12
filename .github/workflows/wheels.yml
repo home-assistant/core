@@ -82,7 +82,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp311"]
+        abi: ["cp311", "cp312"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
@@ -112,7 +112,7 @@ jobs:
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements.txt"
 
-  integrations_cp311:
+  integrations:
     name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
     if: github.repository_owner == 'home-assistant'
     needs: init
@@ -120,7 +120,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp311"]
+        abi: ["cp311", "cp312"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository

@@ -103,6 +103,7 @@ homeassistant.components.devolo_home_control.*
 homeassistant.components.devolo_home_network.*
 homeassistant.components.dhcp.*
 homeassistant.components.diagnostics.*
+homeassistant.components.discovergy.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
 homeassistant.components.doorbird.*
@@ -327,6 +328,7 @@ homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
 homeassistant.components.tailscale.*
+homeassistant.components.tami4.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.text.*
