@@ -129,7 +129,7 @@ async def async_setup_entry(
                 DOMAIN,
                 f"bad_named_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
                 is_fixable=True,
-                is_persistent=True,
+                is_persistent=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="bad_named_holiday",
                 translation_placeholders={
