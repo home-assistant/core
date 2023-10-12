@@ -44,18 +44,7 @@ async def test_form_empty_code(hass: HomeAssistant) -> None:
         user_input={CONF_CODE: EMPTY},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"].get("reason") == "empty_code"
-
-
-async def test_form_invalid_region_no_match(hass: HomeAssistant) -> None:
-    """Test we handle invalid region."""
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": "region"},
-        data={CONF_REGION: INVALID_REGION},
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"].get("reason") == "invalid_region"
+    assert result["errors"].get("base") == "empty_code"
 
 
 async def test_form_invalid_region_api(hass: HomeAssistant) -> None:
@@ -73,7 +62,18 @@ async def test_form_invalid_region_api(hass: HomeAssistant) -> None:
             data={CONF_REGION: MOCK_REGION},
         )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"].get("reason") == "connection_error"
+    assert result["errors"].get("base") == "region_connection_error"
+
+
+async def test_form_invalid_email(hass: HomeAssistant) -> None:
+    """Test we handle invalid email."""
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_EMAIL: INVALID_EMAIL},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"].get("base") == "invalid_email"
 
 
 async def test_form_invalid_code(hass: HomeAssistant) -> None:
@@ -84,7 +84,7 @@ async def test_form_invalid_code(hass: HomeAssistant) -> None:
         data={CONF_CODE: INVALID_CODE},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"].get("reason") == "invalid_code"
+    assert result["errors"].get("base") == "invalid_code"
 
 
 async def test_form_valid_email(hass: HomeAssistant) -> None:
@@ -161,7 +161,7 @@ async def test_form_connection_error_region(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "region"
-    assert result["errors"].get("reason") == "connection_error"
+    assert result["errors"].get("base") == "region_fetch_error"
 
 
 async def test_form_connection_error_token(hass: HomeAssistant) -> None:
@@ -178,7 +178,7 @@ async def test_form_connection_error_token(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "email_code"
-    assert result["errors"].get("reason") == "invalid_code"
+    assert result["errors"].get("base") == "invalid_code"
 
 
 async def test_validate_input() -> None:

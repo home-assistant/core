@@ -77,7 +77,12 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # the user has entered their email in the first prompt
             user_input[CONF_EMAIL] = user_input[CONF_EMAIL]
-            await validate_input(self.p_api, user_input)
+            try:
+                await validate_input(self.p_api, user_input)
+            except MyPermobilClientException as err:
+                # the email did not pass validation by the api client
+                _LOGGER.error("Permobil: %s", err)
+                errors["base"] = "invalid_email"
             self.data[CONF_EMAIL] = user_input[CONF_EMAIL]
             _LOGGER.debug("Permobil: email %s", self.p_api.email)
 
@@ -101,36 +106,39 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             session = async_get_clientsession(self.hass)
             self.p_api = MyPermobil(APPLICATION, session=session)
 
-        try:
-            if user_input is None:
-                # The user has opened the 2nd prompt for the first time
-                # fetch the list of regions names and urls from the api
-                # for the user to select from. [("name","url"),("name","url"),...]
-                self.region_names = await self.p_api.request_region_names()
+        if user_input is None:
+            # The user has opened the 2nd prompt for the first time
+            # fetch the list of regions names and urls from the api
+            # for the user to select from. [("name","url"),("name","url"),...]
+            try:
+                self.region_names = (
+                    await self.p_api.request_region_names()
+                )  # MyPermobilAPIException
                 _LOGGER.debug(
                     "Permobil: region names %s",
                     ",".join(list(self.region_names.keys())),
                 )
+            except MyPermobilAPIException as err:
+                # The backend has returned an error when fetching available regions
+                _LOGGER.error("Permobil: %s", err)
+                errors["base"] = "region_fetch_error"
 
-            else:
-                # the user has selected their region name in the second prompt
-                # find the url for the selected region name
-                region_url = self.region_names[user_input[CONF_REGION]]  # KeyError
-                # set the region url in the api instance and in the entry
-                self.data[CONF_REGION] = region_url
-                self.p_api.set_region(region_url)
-                _LOGGER.debug("Permobil: region %s", self.p_api.region)
-                # tell backend to send code to the users email
-                # the code will be entered in the next prompt
+        else:
+            # the user has selected their region name in the second prompt
+            # find the url for the selected region name
+            region_url = self.region_names[user_input[CONF_REGION]]
+            # set the region url in the api instance and in the entry
+            self.data[CONF_REGION] = region_url
+            self.p_api.set_region(region_url)
+            _LOGGER.debug("Permobil: region %s", self.p_api.region)
+            # tell backend to send code to the users email
+            # the code will be entered in the next prompt
+            try:
                 await self.p_api.request_application_code()  # MyPermobilAPIException
-        except KeyError as err:
-            # the user has selected a region name that is not in the list (somehow)
-            errors["base"] = f"Pemobil: {err}"
-            errors["reason"] = "invalid_region"
-        except MyPermobilAPIException as err:
-            # the backend has returned an error
-            errors["base"] = f"Pemobil: {err}"
-            errors["reason"] = "connection_error"
+            except MyPermobilAPIException as err:
+                # the backend has returned an error when requesting the code
+                _LOGGER.error("Permobil: %s", err)
+                errors["base"] = "region_connection_error"
 
         if errors or user_input is None:
             # There was an error when the user selected their region
@@ -173,23 +181,19 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_CODE] = user_input[CONF_CODE].replace(" ", "")
                 await validate_input(self.p_api, user_input)  # ClientException
                 self.data[CONF_CODE] = user_input[CONF_CODE]
-                _LOGGER.debug("Permobil: code %s…", self.data[CONF_CODE][:3])
                 resp = await self.p_api.request_application_token()  # APIException
                 token, ttl = resp  # get token and ttl from the response
                 self.data[CONF_TOKEN] = token
                 self.data[CONF_TTL] = ttl
-                _LOGGER.debug("Permobil: token %s…", self.data[CONF_TOKEN][:5])
-                _LOGGER.debug("Permobil: ttl %s", self.data[CONF_TTL])
+                _LOGGER.debug("Permobil: Success")
         except (MyPermobilAPIException, MyPermobilClientException) as err:
             # the code did not pass validation by the api client
             # or the backend returned an error when trying to validate the code
             _LOGGER.error("Permobil: %s", err)
-            errors["base"] = f"Pemobil: {err}"
-            errors["reason"] = "invalid_code"
+            errors["base"] = "invalid_code"
         except InvalidAuth as err:
             _LOGGER.error("Permobil: %s", err)
-            errors["base"] = "Empty Code"
-            errors["reason"] = "empty_code"
+            errors["base"] = "empty_code"
 
         if errors or user_input is None:
             # There was an error when the user entered their code
