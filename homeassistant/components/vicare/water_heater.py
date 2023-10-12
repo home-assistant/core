@@ -105,7 +105,7 @@ class ViCareWater(WaterHeaterEntity):
         self._attr_name = name
         self._api = api
         self._circuit = circuit
-        self._attributes = {}
+        self._attributes: dict[str, Any] = {}
         self._current_mode = None
         self._attr_unique_id = f"{device_config.getConfig().serial}-{circuit.id}"
         self._attr_device_info = DeviceInfo(
