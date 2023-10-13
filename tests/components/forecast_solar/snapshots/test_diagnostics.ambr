@@ -33,10 +33,11 @@
       'options': dict({
         'api_key': '**REDACTED**',
         'azimuth': 190,
-        'damping': 0.5,
+        'damping_evening': 0.5,
+        'damping_morning': 0.5,
         'declination': 30,
         'inverter_size': 2000,
-        'modules power': 5100,
+        'modules_power': 5100,
       }),
       'title': 'Green House',
     }),

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from yalesmartalarmclient.const import YALE_STATE_ARM_FULL
@@ -26,7 +26,7 @@ OPTIONS_CONFIG = {"lock_code_digits": 6}
 @pytest.fixture
 async def load_config_entry(
     hass: HomeAssistant, load_json: dict[str, Any]
-) -> MockConfigEntry:
+) -> tuple[MockConfigEntry, Mock]:
     """Set up the Yale Smart Living integration in Home Assistant."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -52,7 +52,7 @@ async def load_config_entry(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    return config_entry
+    return (config_entry, client)
 
 
 @pytest.fixture(name="load_json", scope="session")

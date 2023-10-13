@@ -1,6 +1,8 @@
 """Constants used by the Withings component."""
 from enum import StrEnum
+import logging
 
+DEFAULT_TITLE = "Withings"
 CONF_PROFILES = "profiles"
 CONF_USE_WEBHOOK = "use_webhook"
 
@@ -11,6 +13,12 @@ DOMAIN = "withings"
 LOG_NAMESPACE = "homeassistant.components.withings"
 PROFILE = "profile"
 PUSH_HANDLER = "push_handler"
+
+MEASUREMENT_COORDINATOR = "measurement_coordinator"
+SLEEP_COORDINATOR = "sleep_coordinator"
+BED_PRESENCE_COORDINATOR = "bed_presence_coordinator"
+
+LOGGER = logging.getLogger(__package__)
 
 
 class Measurement(StrEnum):

@@ -422,7 +422,7 @@ toggle:
       advanced: true
       example: "[255, 100, 100]"
       selector:
-        object:
+        color_rgb:
     color_name:
       filter:
         attribute:

@@ -19,11 +19,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareRequiredKeysMixin
-from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
+from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
+from .entity import ViCareEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,7 +117,7 @@ def _build_entity(name, vicare_api, device_config, sensor):
 
 
 async def _entities_from_descriptions(
-    hass, name, entities, sensor_descriptions, iterables, config_entry
+    hass, entities, sensor_descriptions, iterables, config_entry
 ):
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
@@ -127,7 +127,7 @@ async def _entities_from_descriptions(
                 suffix = f" {current.id}"
             entity = await hass.async_add_executor_job(
                 _build_entity,
-                f"{name} {description.name}{suffix}",
+                f"{description.name}{suffix}",
                 current,
                 hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
                 description,
@@ -142,7 +142,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare binary sensor devices."""
-    name = VICARE_NAME
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
 
     entities = []
@@ -150,7 +149,7 @@ async def async_setup_entry(
     for description in GLOBAL_SENSORS:
         entity = await hass.async_add_executor_job(
             _build_entity,
-            f"{name} {description.name}",
+            description.name,
             api,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             description,
@@ -160,21 +159,21 @@ async def async_setup_entry(
 
     try:
         await _entities_from_descriptions(
-            hass, name, entities, CIRCUIT_SENSORS, api.circuits, config_entry
+            hass, entities, CIRCUIT_SENSORS, api.circuits, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No circuits found")
 
     try:
         await _entities_from_descriptions(
-            hass, name, entities, BURNER_SENSORS, api.burners, config_entry
+            hass, entities, BURNER_SENSORS, api.burners, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No burners found")
 
     try:
         await _entities_from_descriptions(
-            hass, name, entities, COMPRESSOR_SENSORS, api.compressors, config_entry
+            hass, entities, COMPRESSOR_SENSORS, api.compressors, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No compressors found")
@@ -182,7 +181,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViCareBinarySensor(BinarySensorEntity):
+class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
     """Representation of a ViCare sensor."""
 
     entity_description: ViCareBinarySensorEntityDescription
@@ -191,28 +190,16 @@ class ViCareBinarySensor(BinarySensorEntity):
         self, name, api, device_config, description: ViCareBinarySensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(device_config)
         self.entity_description = description
         self._attr_name = name
         self._api = api
-        self.entity_description = description
         self._device_config = device_config
-        self._state = None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_config.getConfig().serial)},
-            name=self._device_config.getModel(),
-            manufacturer="Viessmann",
-            model=self._device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._state is not None
+        return self._attr_is_on is not None
 
     @property
     def unique_id(self) -> str:
@@ -224,16 +211,11 @@ class ViCareBinarySensor(BinarySensorEntity):
             return f"{tmp_id}-{self._api.id}"
         return tmp_id
 
-    @property
-    def is_on(self):
-        """Return the state of the sensor."""
-        return self._state
-
     def update(self):
         """Update state of sensor."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
-                self._state = self.entity_description.value_getter(self._api)
+                self._attr_is_on = self.entity_description.value_getter(self._api)
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:

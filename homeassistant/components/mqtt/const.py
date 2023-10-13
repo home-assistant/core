@@ -17,6 +17,7 @@ CONF_COMMAND_TOPIC = "command_topic"
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 CONF_ENCODING = "encoding"
 CONF_KEEPALIVE = "keepalive"
+CONF_ORIGIN = "origin"
 CONF_QOS = ATTR_QOS
 CONF_RETAIN = ATTR_RETAIN
 CONF_SCHEMA = "schema"
@@ -56,6 +57,19 @@ CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
+
+# Device and integration info options
+CONF_IDENTIFIERS = "identifiers"
+CONF_CONNECTIONS = "connections"
+CONF_MANUFACTURER = "manufacturer"
+CONF_HW_VERSION = "hw_version"
+CONF_SW_VERSION = "sw_version"
+CONF_VIA_DEVICE = "via_device"
+CONF_DEPRECATED_VIA_HUB = "via_hub"
+CONF_SUGGESTED_AREA = "suggested_area"
+CONF_CONFIGURATION_URL = "configuration_url"
+CONF_OBJECT_ID = "object_id"
+CONF_SUPPORT_URL = "support_url"
 
 DATA_MQTT = "mqtt"
 DATA_MQTT_AVAILABLE = "mqtt_client_available"
@@ -120,6 +134,7 @@ PLATFORMS = [
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.IMAGE,
+    Platform.LAWN_MOWER,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
@@ -147,6 +162,7 @@ RELOADABLE_PLATFORMS = [
     Platform.HUMIDIFIER,
     Platform.IMAGE,
     Platform.LIGHT,
+    Platform.LAWN_MOWER,
     Platform.LOCK,
     Platform.NUMBER,
     Platform.SCENE,
