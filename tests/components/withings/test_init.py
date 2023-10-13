@@ -126,7 +126,7 @@ async def test_data_manager_webhook_subscription(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
 
-    assert withings.async_notify_subscribe.call_count == 4
+    assert withings.async_notify_subscribe.call_count == 6
 
     webhook_url = "https://example.local:8123/api/webhook/55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
 
@@ -223,13 +223,14 @@ async def test_triggering_reauth(
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
     error: Exception,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test triggering reauth."""
     await setup_integration(hass, polling_config_entry, False)
 
     withings.async_measure_get_meas.side_effect = error
-    future = dt_util.utcnow() + timedelta(minutes=10)
-    async_fire_time_changed(hass, future)
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()

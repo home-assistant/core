@@ -1,8 +1,8 @@
 """Withings coordinator."""
-import asyncio
+from abc import abstractmethod
 from collections.abc import Callable
 from datetime import timedelta
-from typing import Any
+from typing import Any, TypeVar
 
 from withings_api.common import (
     AuthFailedException,
@@ -23,9 +23,6 @@ from homeassistant.util import dt as dt_util
 
 from .api import ConfigEntryWithingsApi
 from .const import LOGGER, Measurement
-
-SUBSCRIBE_DELAY = timedelta(seconds=5)
-UNSUBSCRIBE_DELAY = timedelta(seconds=1)
 
 WITHINGS_MEASURE_TYPE_MAP: dict[
     NotifyAppli | GetSleepSummaryField | MeasureType, Measurement
@@ -70,83 +67,66 @@ WITHINGS_MEASURE_TYPE_MAP: dict[
     NotifyAppli.BED_IN: Measurement.IN_BED,
 }
 
+_T = TypeVar("_T")
+
 UPDATE_INTERVAL = timedelta(minutes=10)
 
 
-class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]]):
+class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
     """Base coordinator."""
 
-    in_bed: bool | None = None
     config_entry: ConfigEntry
+    _default_update_interval: timedelta | None = UPDATE_INTERVAL
 
     def __init__(self, hass: HomeAssistant, client: ConfigEntryWithingsApi) -> None:
         """Initialize the Withings data coordinator."""
-        super().__init__(hass, LOGGER, name="Withings", update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass, LOGGER, name="Withings", update_interval=self._default_update_interval
+        )
         self._client = client
+        self.notification_categories: set[NotifyAppli] = set()
 
-    async def async_subscribe_webhooks(self, webhook_url: str) -> None:
-        """Subscribe to webhooks."""
-        await self.async_unsubscribe_webhooks()
+    def webhook_subscription_listener(self, connected: bool) -> None:
+        """Call when webhook status changed."""
+        if connected:
+            self.update_interval = None
+        else:
+            self.update_interval = self._default_update_interval
 
-        current_webhooks = await self._client.async_notify_list()
+    async def async_webhook_data_updated(
+        self, notification_category: NotifyAppli
+    ) -> None:
+        """Update data when webhook is called."""
+        LOGGER.debug("Withings webhook triggered for %s", notification_category)
+        await self.async_request_refresh()
 
-        subscribed_notifications = frozenset(
-            profile.appli
-            for profile in current_webhooks.profiles
-            if profile.callbackurl == webhook_url
-        )
-
-        notification_to_subscribe = (
-            set(NotifyAppli)
-            - subscribed_notifications
-            - {NotifyAppli.USER, NotifyAppli.UNKNOWN}
-        )
-
-        for notification in notification_to_subscribe:
-            LOGGER.debug(
-                "Subscribing %s for %s in %s seconds",
-                webhook_url,
-                notification,
-                SUBSCRIBE_DELAY.total_seconds(),
-            )
-            # Withings will HTTP HEAD the callback_url and needs some downtime
-            # between each call or there is a higher chance of failure.
-            await asyncio.sleep(SUBSCRIBE_DELAY.total_seconds())
-            await self._client.async_notify_subscribe(webhook_url, notification)
-        self.update_interval = None
-
-    async def async_unsubscribe_webhooks(self) -> None:
-        """Unsubscribe to webhooks."""
-        current_webhooks = await self._client.async_notify_list()
-
-        for webhook_configuration in current_webhooks.profiles:
-            LOGGER.debug(
-                "Unsubscribing %s for %s in %s seconds",
-                webhook_configuration.callbackurl,
-                webhook_configuration.appli,
-                UNSUBSCRIBE_DELAY.total_seconds(),
-            )
-            # Quick calls to Withings can result in the service returning errors.
-            # Give them some time to cool down.
-            await asyncio.sleep(UNSUBSCRIBE_DELAY.total_seconds())
-            await self._client.async_notify_revoke(
-                webhook_configuration.callbackurl, webhook_configuration.appli
-            )
-        self.update_interval = UPDATE_INTERVAL
-
-    async def _async_update_data(self) -> dict[Measurement, Any]:
+    async def _async_update_data(self) -> _T:
         try:
-            measurements = await self._get_measurements()
-            sleep_summary = await self._get_sleep_summary()
+            return await self._internal_update_data()
         except (UnauthorizedException, AuthFailedException) as exc:
             raise ConfigEntryAuthFailed from exc
-        return {
-            **measurements,
-            **sleep_summary,
+
+    @abstractmethod
+    async def _internal_update_data(self) -> _T:
+        """Update coordinator data."""
+
+
+class WithingsMeasurementDataUpdateCoordinator(
+    WithingsDataUpdateCoordinator[dict[Measurement, Any]]
+):
+    """Withings measurement coordinator."""
+
+    def __init__(self, hass: HomeAssistant, client: ConfigEntryWithingsApi) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotifyAppli.WEIGHT,
+            NotifyAppli.ACTIVITY,
+            NotifyAppli.CIRCULATORY,
         }
 
-    async def _get_measurements(self) -> dict[Measurement, Any]:
-        LOGGER.debug("Updating withings measures")
+    async def _internal_update_data(self) -> dict[Measurement, Any]:
+        """Retrieve measurement data."""
         now = dt_util.utcnow()
         startdate = now - timedelta(days=7)
 
@@ -172,7 +152,21 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
             if measure.type in WITHINGS_MEASURE_TYPE_MAP
         }
 
-    async def _get_sleep_summary(self) -> dict[Measurement, Any]:
+
+class WithingsSleepDataUpdateCoordinator(
+    WithingsDataUpdateCoordinator[dict[Measurement, Any]]
+):
+    """Withings sleep coordinator."""
+
+    def __init__(self, hass: HomeAssistant, client: ConfigEntryWithingsApi) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotifyAppli.SLEEP,
+        }
+
+    async def _internal_update_data(self) -> dict[Measurement, Any]:
+        """Retrieve sleep data."""
         now = dt_util.now()
         yesterday = now - timedelta(days=1)
         yesterday_noon = dt_util.start_of_local_day(yesterday) + timedelta(hours=12)
@@ -249,18 +243,27 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
             for field, value in values.items()
         }
 
+
+class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[None]):
+    """Withings bed presence coordinator."""
+
+    in_bed: bool | None = None
+    _default_update_interval = None
+
+    def __init__(self, hass: HomeAssistant, client: ConfigEntryWithingsApi) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotifyAppli.BED_IN,
+            NotifyAppli.BED_OUT,
+        }
+
     async def async_webhook_data_updated(
         self, notification_category: NotifyAppli
     ) -> None:
-        """Update data when webhook is called."""
-        LOGGER.debug("Withings webhook triggered")
-        if notification_category in {
-            NotifyAppli.WEIGHT,
-            NotifyAppli.CIRCULATORY,
-            NotifyAppli.SLEEP,
-        }:
-            await self.async_request_refresh()
+        """Only set new in bed value instead of refresh."""
+        self.in_bed = notification_category == NotifyAppli.BED_IN
+        self.async_update_listeners()
 
-        elif notification_category in {NotifyAppli.BED_IN, NotifyAppli.BED_OUT}:
-            self.in_bed = notification_category == NotifyAppli.BED_IN
-            self.async_update_listeners()
+    async def _internal_update_data(self) -> None:
+        """Update coordinator data."""

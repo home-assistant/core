@@ -160,10 +160,10 @@ def disable_webhook_delay():
 
     mock = AsyncMock()
     with patch(
-        "homeassistant.components.withings.coordinator.SUBSCRIBE_DELAY",
+        "homeassistant.components.withings.SUBSCRIBE_DELAY",
         timedelta(seconds=0),
     ), patch(
-        "homeassistant.components.withings.coordinator.UNSUBSCRIBE_DELAY",
+        "homeassistant.components.withings.UNSUBSCRIBE_DELAY",
         timedelta(seconds=0),
     ):
         yield mock
