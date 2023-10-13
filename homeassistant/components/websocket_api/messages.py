@@ -32,9 +32,6 @@ MINIMAL_MESSAGE_SCHEMA: Final = vol.Schema(
 # Base schema to extend by message handlers
 BASE_COMMAND_MESSAGE_SCHEMA: Final = vol.Schema({vol.Required("id"): cv.positive_int})
 
-IDEN_TEMPLATE: Final = "__IDEN__"
-IDEN_JSON_TEMPLATE: Final = '"__IDEN__"'
-
 STATE_DIFF_ADDITIONS = "+"
 STATE_DIFF_REMOVALS = "-"
 
@@ -50,8 +47,7 @@ def result_message(iden: int, result: Any = None) -> dict[str, Any]:
 
 def construct_result_message(iden: int, payload: str) -> str:
     """Construct a success result message JSON."""
-    iden_str = str(iden)
-    return f'{{"id":{iden_str},"type":"result","success":true,"result":{payload}}}'
+    return f'{{"id":{iden},"type":"result","success":true,"result":{payload}}}'
 
 
 def error_message(iden: int | None, code: str, message: str) -> dict[str, Any]:
@@ -66,8 +62,7 @@ def error_message(iden: int | None, code: str, message: str) -> dict[str, Any]:
 
 def construct_event_message(iden: int, payload: str) -> str:
     """Construct an event message JSON."""
-    iden_str = str(iden)
-    return f'{{"id":{iden_str},"type":"event","event":{payload}}}'
+    return f'{{"id":{iden},"type":"event","event":{payload}}}'
 
 
 def event_message(iden: int, event: Any) -> dict[str, Any]:
@@ -84,19 +79,17 @@ def cached_event_message(iden: int, event: Event) -> str:
     all getting many of the same events (mostly state changed)
     we can avoid serializing the same data for each connection.
     """
-    return _cached_event_message(event).replace(IDEN_JSON_TEMPLATE, str(iden), 1)
+    return f'{_partial_cached_event_message(event)[:-1]},"id":{iden}}}'
 
 
 @lru_cache(maxsize=128)
-def _cached_event_message(event: Event) -> str:
+def _partial_cached_event_message(event: Event) -> str:
     """Cache and serialize the event to json.
 
-    The IDEN_TEMPLATE is used which will be replaced
-    with the actual iden in cached_event_message
+    The message is constructed without the id which appended
+    in cached_event_message.
     """
-    return message_to_json(
-        {"id": IDEN_TEMPLATE, "type": "event", "event": event.as_dict()}
-    )
+    return message_to_json({"type": "event", "event": event.as_dict()})
 
 
 def cached_state_diff_message(iden: int, event: Event) -> str:
@@ -108,19 +101,17 @@ def cached_state_diff_message(iden: int, event: Event) -> str:
     all getting many of the same events (mostly state changed)
     we can avoid serializing the same data for each connection.
     """
-    return _cached_state_diff_message(event).replace(IDEN_JSON_TEMPLATE, str(iden), 1)
+    return f'{_partial_cached_state_diff_message(event)[:-1]},"id":{iden}}}'
 
 
 @lru_cache(maxsize=128)
-def _cached_state_diff_message(event: Event) -> str:
+def _partial_cached_state_diff_message(event: Event) -> str:
     """Cache and serialize the event to json.
 
-    The IDEN_TEMPLATE is used which will be replaced
-    with the actual iden in cached_event_message
+    The message is constructed without the id which
+    will be appended in cached_state_diff_message
     """
-    return message_to_json(
-        {"id": IDEN_TEMPLATE, "type": "event", "event": _state_diff_event(event)}
-    )
+    return message_to_json({"type": "event", "event": _state_diff_event(event)})
 
 
 def _state_diff_event(event: Event) -> dict:
