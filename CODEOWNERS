@@ -1323,10 +1323,10 @@ build.json @home-assistant/supervisor
 /tests/components/trafikverket_camera/ @gjohansson-ST
 /homeassistant/components/trafikverket_ferry/ @gjohansson-ST
 /tests/components/trafikverket_ferry/ @gjohansson-ST
-/homeassistant/components/trafikverket_train/ @endor-force @gjohansson-ST
-/tests/components/trafikverket_train/ @endor-force @gjohansson-ST
-/homeassistant/components/trafikverket_weatherstation/ @endor-force @gjohansson-ST
-/tests/components/trafikverket_weatherstation/ @endor-force @gjohansson-ST
+/homeassistant/components/trafikverket_train/ @gjohansson-ST
+/tests/components/trafikverket_train/ @gjohansson-ST
+/homeassistant/components/trafikverket_weatherstation/ @gjohansson-ST
+/tests/components/trafikverket_weatherstation/ @gjohansson-ST
 /homeassistant/components/transmission/ @engrbm87 @JPHutchins
 /tests/components/transmission/ @engrbm87 @JPHutchins
 /homeassistant/components/trend/ @jpbede

@@ -33,7 +33,6 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
 
     config_entry: ConfigEntry
     _default_update_interval: timedelta | None = UPDATE_INTERVAL
-    notification_categories: list[NotificationCategory] = []
 
     def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
         """Initialize the Withings data coordinator."""
@@ -41,6 +40,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
             hass, LOGGER, name="Withings", update_interval=self._default_update_interval
         )
         self._client = client
+        self.notification_categories: set[NotificationCategory] = set()
 
     def webhook_subscription_listener(self, connected: bool) -> None:
         """Call when webhook status changed."""
@@ -64,7 +64,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
 
     @abstractmethod
     async def _internal_update_data(self) -> _T:
-        pass
+        """Update coordinator data."""
 
 
 class WithingsMeasurementDataUpdateCoordinator(
@@ -72,13 +72,17 @@ class WithingsMeasurementDataUpdateCoordinator(
 ):
     """Withings measurement coordinator."""
 
-    notification_categories = [
-        NotificationCategory.WEIGHT,
-        NotificationCategory.ACTIVITY,
-        NotificationCategory.PRESSURE,
-    ]
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotificationCategory.WEIGHT,
+            NotificationCategory.ACTIVITY,
+            NotificationCategory.PRESSURE,
+        }
 
     async def _internal_update_data(self) -> dict[MeasurementType, float]:
+        """Retrieve measurement data."""
         now = dt_util.utcnow()
         startdate = now - timedelta(days=7)
 
@@ -92,9 +96,12 @@ class WithingsSleepDataUpdateCoordinator(
 ):
     """Withings sleep coordinator."""
 
-    notification_categories = [
-        NotificationCategory.SLEEP,
-    ]
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotificationCategory.SLEEP,
+        }
 
     async def _internal_update_data(self) -> SleepSummary | None:
         now = dt_util.now()
@@ -130,13 +137,16 @@ class WithingsSleepDataUpdateCoordinator(
 class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[None]):
     """Withings bed presence coordinator."""
 
-    notification_categories = [
-        NotificationCategory.IN_BED,
-        NotificationCategory.OUT_BED,
-    ]
-
     in_bed: bool | None = None
     _default_update_interval = None
+
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotificationCategory.IN_BED,
+            NotificationCategory.OUT_BED,
+        }
 
     async def async_webhook_data_updated(
         self, notification_category: NotificationCategory
@@ -146,4 +156,4 @@ class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[Non
         self.async_update_listeners()
 
     async def _internal_update_data(self) -> None:
-        pass
+        """Update coordinator data."""

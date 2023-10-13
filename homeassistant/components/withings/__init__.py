@@ -55,8 +55,8 @@ from .const import (
     DEFAULT_TITLE,
     DOMAIN,
     LOGGER,
+    MEASUREMENT_COORDINATOR,
     SLEEP_COORDINATOR,
-    WEIGHT_COORDINATOR,
 )
 from .coordinator import (
     WithingsBedPresenceDataUpdateCoordinator,
@@ -150,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client.refresh_token_function = _refresh_token
     coordinators: dict[str, WithingsDataUpdateCoordinator] = {
-        WEIGHT_COORDINATOR: WithingsMeasurementDataUpdateCoordinator(hass, client),
+        MEASUREMENT_COORDINATOR: WithingsMeasurementDataUpdateCoordinator(hass, client),
         SLEEP_COORDINATOR: WithingsSleepDataUpdateCoordinator(hass, client),
         BED_PRESENCE_COORDINATOR: WithingsBedPresenceDataUpdateCoordinator(
             hass, client
@@ -168,7 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.debug("Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID])
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         await async_unsubscribe_webhooks(client)
-        for coordinator in hass.data[DOMAIN][entry.entry_id].values():
+        for coordinator in coordinators.values():
             coordinator.webhook_subscription_listener(False)
 
     async def register_webhook(
@@ -199,7 +199,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         await async_subscribe_webhooks(client, webhook_url)
-        for coordinator in hass.data[DOMAIN][entry.entry_id].values():
+        for coordinator in coordinators.values():
             coordinator.webhook_subscription_listener(True)
         LOGGER.debug("Register Withings webhook: %s", webhook_url)
         entry.async_on_unload(

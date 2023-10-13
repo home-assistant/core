@@ -27,13 +27,13 @@ from homeassistant.helpers.typing import StateType
 
 from .const import (
     DOMAIN,
+    MEASUREMENT_COORDINATOR,
     SCORE_POINTS,
     SLEEP_COORDINATOR,
     UOM_BEATS_PER_MINUTE,
     UOM_BREATHS_PER_MINUTE,
     UOM_FREQUENCY,
     UOM_MMHG,
-    WEIGHT_COORDINATOR,
 )
 from .coordinator import (
     WithingsDataUpdateCoordinator,
@@ -362,9 +362,9 @@ async def async_setup_entry(
     """Set up the sensor config entry."""
     measurement_coordinator: WithingsMeasurementDataUpdateCoordinator = hass.data[
         DOMAIN
-    ][entry.entry_id][WEIGHT_COORDINATOR]
-
-    async_add_entities(
+    ][entry.entry_id][MEASUREMENT_COORDINATOR]
+    entities: list[SensorEntity] = []
+    entities.extend(
         WithingsMeasurementSensor(measurement_coordinator, attribute)
         for attribute in MEASUREMENT_SENSORS
     )
@@ -372,9 +372,10 @@ async def async_setup_entry(
         entry.entry_id
     ][SLEEP_COORDINATOR]
 
-    async_add_entities(
+    entities.extend(
         WithingsSleepSensor(sleep_coordinator, attribute) for attribute in SLEEP_SENSORS
     )
+    async_add_entities(entities)
 
 
 class WithingsSensor(WithingsEntity, SensorEntity):
