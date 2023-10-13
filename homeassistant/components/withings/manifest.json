@@ -8,5 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/withings",
   "iot_class": "cloud_polling",
   "loggers": ["withings_api"],
-  "requirements": ["aiowithings==0.4.1"]
+  "requirements": ["aiowithings==0.4.2"]
 }
