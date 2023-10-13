@@ -328,6 +328,7 @@ homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
 homeassistant.components.tailscale.*
+homeassistant.components.tami4.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.text.*
@@ -344,6 +345,7 @@ homeassistant.components.trafikverket_camera.*
 homeassistant.components.trafikverket_ferry.*
 homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
+homeassistant.components.transmission.*
 homeassistant.components.trend.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*

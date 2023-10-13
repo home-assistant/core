@@ -134,6 +134,9 @@ RtmAPI==0.7.2
 # homeassistant.components.sql
 SQLAlchemy==2.0.21
 
+# homeassistant.components.tami4
+Tami4EdgeAPI==2.1
+
 # homeassistant.components.travisci
 TravisPy==0.3.5
 
@@ -234,7 +237,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==17.0.1
+aioesphomeapi==17.1.5
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -327,7 +330,7 @@ aiopvpc==4.2.2
 aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.3.4
+aioqsw==0.3.5
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -518,7 +521,7 @@ beautifulsoup4==4.12.2
 bellows==0.36.5
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected==0.14.0
+bimmer-connected==0.14.1
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -530,7 +533,7 @@ bleak-retry-connector==3.2.1
 bleak==0.21.1
 
 # homeassistant.components.blebox
-blebox-uniapi==2.1.4
+blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
 blinkpy==0.21.0
@@ -1847,9 +1850,6 @@ pymailgunner==1.4
 # homeassistant.components.firmata
 pymata-express==1.19
 
-# homeassistant.components.mazda
-pymazda==0.3.11
-
 # homeassistant.components.mediaroom
 pymediaroom==0.6.5.4
 
@@ -1866,7 +1866,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.5.2
+pymodbus==3.5.4
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2152,7 +2152,7 @@ python-miio==0.5.12
 python-mpd2==3.0.5
 
 # homeassistant.components.myq
-python-myq==3.1.11
+python-myq==3.1.13
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
@@ -2315,7 +2315,7 @@ renault-api==0.2.0
 renson-endura-delta==1.6.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.10
+reolink-aio==0.7.11
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2691,7 +2691,7 @@ vultr==0.1.2
 wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
-wallbox==0.4.12
+wallbox==0.4.14
 
 # homeassistant.components.folder_watcher
 watchdog==2.3.1
@@ -2787,7 +2787,7 @@ zamg==0.3.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.115.2
+zeroconf==0.116.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
