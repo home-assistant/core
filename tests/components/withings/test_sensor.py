@@ -8,7 +8,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.withings.const import DOMAIN
-from homeassistant.components.withings.sensor import SENSORS
+from homeassistant.components.withings.sensor import MEASUREMENT_SENSORS, SLEEP_SENSORS
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -42,7 +42,7 @@ async def test_all_entities(
     """Test all entities."""
     await setup_integration(hass, polling_config_entry)
 
-    for sensor in SENSORS:
+    for sensor in MEASUREMENT_SENSORS + SLEEP_SENSORS:
         entity_id = await async_get_entity_id(hass, sensor.key, USER_ID, SENSOR_DOMAIN)
         assert hass.states.get(entity_id) == snapshot
 
