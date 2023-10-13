@@ -952,7 +952,7 @@ class AqaraThermostatAwayTemp(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="tuya_manufacturer",
+    cluster_handler_names="tuya_manufacturer",
     manufacturers={
         "_TZE200_sh1btabb",
         "_TZE200_a7sghmms",
@@ -971,7 +971,7 @@ class GiexIrrigationTarget(ZHANumberConfigurationEntity, id_suffix="irrigation_t
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="tuya_manufacturer",
+    cluster_handler_names="tuya_manufacturer",
     manufacturers={
         "_TZE200_sh1btabb",
         "_TZE200_a7sghmms",
@@ -991,7 +991,7 @@ class GiexIrrigationCycleTimes(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="tuya_manufacturer",
+    cluster_handler_names="tuya_manufacturer",
     manufacturers={
         "_TZE200_sh1btabb",
         "_TZE200_a7sghmms",

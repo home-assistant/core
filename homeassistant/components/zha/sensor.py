@@ -1045,13 +1045,15 @@ class AqaraSmokeDensityDbm(Sensor, id_suffix="smoke_density_dbm"):
     _attr_icon: str = "mdi:google-circles-communities"
     _attr_suggested_display_precision: int = 3
 
+
 @MULTI_MATCH(
-    channel_names="tuya_manufacturer",
+    cluster_handler_names="tuya_manufacturer",
     manufacturers={
         "_TZE200_sh1btabb",
         "_TZE200_a7sghmms",
     },
 )
+
 class GiexIrrigationDuration(Sensor, id_suffix="irrigation_duration"):
     """Sensor that displays last irrigation duration."""
 
@@ -1065,11 +1067,11 @@ class GiexIrrigationDuration(Sensor, id_suffix="irrigation_duration"):
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         assert self.SENSOR_ATTR is not None
-        return self._channel.cluster.get(self.SENSOR_ATTR)
+        return self._cluster_handler.cluster.get(self.SENSOR_ATTR)
 
 
 @MULTI_MATCH(
-    channel_names="tuya_manufacturer",
+    cluster_handler_names="tuya_manufacturer",
     manufacturers={
         "_TZE200_sh1btabb",
         "_TZE200_a7sghmms",
@@ -1088,11 +1090,11 @@ class GiexIrrigationStartTime(Sensor, id_suffix="irrigation_start_time"):
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         assert self.SENSOR_ATTR is not None
-        return self._channel.cluster.get(self.SENSOR_ATTR)
+        return self._cluster_handler.cluster.get(self.SENSOR_ATTR)
 
 
 @MULTI_MATCH(
-    channel_names="tuya_manufacturer",
+    cluster_handler_names="tuya_manufacturer",
     manufacturers={
         "_TZE200_sh1btabb",
         "_TZE200_a7sghmms",

@@ -578,7 +578,7 @@ class GiexValveMode(types.enum1):
     Capacity = 1
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="tuya_manufacturer",
+    cluster_handler_names="tuya_manufacturer",
     manufacturers={
         "_TZE200_sh1btabb",
         "_TZE200_a7sghmms",
