@@ -3,6 +3,7 @@ import asyncio
 from collections import OrderedDict
 import logging
 
+from aiohttp import web_response
 from pypoint import PointSession
 import voluptuous as vol
 
@@ -186,4 +187,7 @@ class MinutAuthCallbackView(HomeAssistantView):
                     DOMAIN, context={"source": "code"}, data=request.query["code"]
                 )
             )
-        return "OK!"
+            return web_response.Response(
+                headers={"content-type": "text/html"},
+                text="<script>window.close()</script>Success! This window can be closed",
+            )
