@@ -14,11 +14,11 @@ from .const import DOMAIN, LOGGER
 
 
 def _schema_with_defaults(
-    host: str = "", name: str = "", requires_password: bool = False
+    default_values: dict[str, Any] = {}, requires_password: bool = False
 ) -> vol.Schema:
     schema = {
-        vol.Required(CONF_HOST, default=host): cv.string,
-        vol.Optional(CONF_NAME, default=name): cv.string,
+        vol.Required(CONF_HOST, default=default_values.get(CONF_HOST, "")): cv.string,
+        vol.Optional(CONF_NAME, default=default_values.get(CONF_NAME,"")): cv.string,
     }
 
     if requires_password:
