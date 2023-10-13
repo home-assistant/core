@@ -164,7 +164,7 @@ class HassIOView(HomeAssistantView):
                 method=request.method,
                 url=f"http://{self._host}/{quote(path)}",
                 params=request.query,
-                data=request.content,
+                data=request.content if request.method != "GET" else None,
                 headers=headers,
                 timeout=_get_timeout(path),
             )
