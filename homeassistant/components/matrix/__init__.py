@@ -37,11 +37,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
@@ -58,6 +54,9 @@ CONF_ROOMS = "rooms"
 CONF_COMMANDS = "commands"
 CONF_WORD = "word"
 CONF_EXPRESSION = "expression"
+
+CONF_USERNAME_REGEX = "@[^:]*:.*"
+CONF_ROOMS_REGEX = "[!|#][^:]*:.*"
 
 EVENT_MATRIX_COMMAND = "matrix_command"
 
@@ -91,7 +90,9 @@ COMMAND_SCHEMA = vol.All(
             vol.Exclusive(CONF_WORD, "trigger"): cv.string,
             vol.Exclusive(CONF_EXPRESSION, "trigger"): cv.is_regex,
             vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_ROOMS): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_ROOMS): vol.All(
+                cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
+            ),
         }
     ),
     cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION),
@@ -103,10 +104,10 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_HOMESERVER): cv.url,
                 vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-                vol.Required(CONF_USERNAME): cv.matches_regex("@[^:]*:.*"),
+                vol.Required(CONF_USERNAME): cv.matches_regex(CONF_USERNAME_REGEX),
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_ROOMS, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                    cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
                 ),
                 vol.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA],
             }
@@ -124,7 +125,9 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
             ),
             vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
         },
-        vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(ATTR_TARGET): vol.All(
+            cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
+        ),
     }
 )
 
@@ -186,10 +189,7 @@ class MatrixBot:
             homeserver=self._homeserver, user=self._mx_id, ssl=self._verify_tls
         )
 
-        self._listening_rooms: dict[RoomAnyID, RoomID] = {
-            room_alias_or_id: RoomID("") for room_alias_or_id in listening_rooms
-        }
-
+        self._listening_rooms: dict[RoomAnyID, RoomID] = {}
         self._word_commands: dict[RoomID, dict[WordCommand, ConfigCommand]] = {}
         self._expression_commands: dict[RoomID, list[ConfigCommand]] = {}
         self._unparsed_commands = commands
@@ -205,8 +205,8 @@ class MatrixBot:
             """Run once when Home Assistant finished startup."""
             self._access_tokens = await self._get_auth_tokens()
             await self._login()
-            await self._resolve_room_aliases()
-            self._load_commands(self._unparsed_commands)
+            await self._resolve_room_aliases(listening_rooms)
+            self._load_commands(commands)
             await self._join_rooms()
             # Sync once so that we don't respond to past events.
             await self._client.sync(timeout=30_000)
@@ -277,6 +277,7 @@ class MatrixBot:
     async def _resolve_room_alias(
         self, room_alias_or_id: RoomAnyID
     ) -> dict[RoomAnyID, RoomID]:
+        """Resolve a single RoomAlias if needed."""
         if room_alias_or_id.startswith("!"):
             room_id = RoomID(room_alias_or_id)
             _LOGGER.debug("Will listen to room_id '%s'", room_id)
@@ -297,16 +298,14 @@ class MatrixBot:
                     resolve_response,
                 )
                 return {}
-        else:
-            raise ConfigEntryError(f"Invalid room ID or alias: {room_alias_or_id}")
-
+        # The config schema guarantees it's a valid room alias or id, so room_id is always set.
         return {room_alias_or_id: room_id}
 
-    async def _resolve_room_aliases(self) -> None:
+    async def _resolve_room_aliases(self, listening_rooms: list[RoomAnyID]) -> None:
         """Resolve any RoomAliases into RoomIDs for the purpose of client interactions."""
         resolved_rooms = [
             self.hass.async_create_task(self._resolve_room_alias(room_alias_or_id))
-            for room_alias_or_id in self._listening_rooms
+            for room_alias_or_id in listening_rooms
         ]
         for resolved_room in asyncio.as_completed(resolved_rooms):
             self._listening_rooms |= await resolved_room

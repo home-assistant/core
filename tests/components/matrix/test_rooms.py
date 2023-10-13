@@ -5,11 +5,10 @@ from homeassistant.components.matrix import MatrixBot
 from tests.components.matrix.conftest import TEST_BAD_ROOM, TEST_JOINABLE_ROOMS
 
 
-async def test_join(matrix_bot: MatrixBot, caplog):
+async def test_join(hass, matrix_bot: MatrixBot, caplog):
     """Test joining configured rooms."""
 
-    # Join configured rooms.
-    await matrix_bot._join_rooms()
+    await hass.async_start()
     for room_id in TEST_JOINABLE_ROOMS:
         assert f"Joined or already in room '{room_id}'" in caplog.messages
 
