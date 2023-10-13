@@ -83,7 +83,7 @@ def setup_vicare_api(hass, entry):
     hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_LIST] = vicare_api.devices
 
 
-def get_api(entry, device):
+def get_api(entry: ConfigEntry, device):
     """Get API for device."""
     return getattr(
         device,
