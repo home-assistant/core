@@ -98,22 +98,11 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     """Representation a binary sensor that is updated by MQTT."""
 
     _default_name = DEFAULT_NAME
+    _delay_listener: CALLBACK_TYPE | None = None
     _entity_id_format = binary_sensor.ENTITY_ID_FORMAT
     _expired: bool | None
     _expire_after: int | None
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT binary sensor."""
-        self._expiration_trigger: CALLBACK_TYPE | None = None
-        self._delay_listener: CALLBACK_TYPE | None = None
-
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
+    _expiration_trigger: CALLBACK_TYPE | None = None
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
@@ -191,7 +180,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_is_on"})
+        @write_state_on_attr_change(self, {"_attr_is_on", "_expired"})
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT state message."""
             # auto-expire enabled?

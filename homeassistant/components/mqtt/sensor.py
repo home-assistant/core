@@ -130,21 +130,11 @@ class MqttSensor(MqttEntity, RestoreSensor):
     _entity_id_format = ENTITY_ID_FORMAT
     _attr_last_reset: datetime | None = None
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
+    _expiration_trigger: CALLBACK_TYPE | None = None
     _expire_after: int | None
     _expired: bool | None
     _template: Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
     _last_reset_template: Callable[[ReceivePayloadType], ReceivePayloadType]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the sensor."""
-        self._expiration_trigger: CALLBACK_TYPE | None = None
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
@@ -287,7 +277,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 )
 
         @callback
-        @write_state_on_attr_change(self, {"_attr_native_value", "_attr_last_reset"})
+        @write_state_on_attr_change(
+            self, {"_attr_native_value", "_attr_last_reset", "_expired"}
+        )
         @log_messages(self.hass, self.entity_id)
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""

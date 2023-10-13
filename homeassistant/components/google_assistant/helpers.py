@@ -9,6 +9,7 @@ from functools import lru_cache
 from http import HTTPStatus
 import logging
 import pprint
+from typing import Any
 
 from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
@@ -183,7 +184,9 @@ class AbstractConfig(ABC):
         """If an entity should have 2FA checked."""
         return True
 
-    async def async_report_state(self, message, agent_user_id: str):
+    async def async_report_state(
+        self, message: dict[str, Any], agent_user_id: str, event_id: str | None = None
+    ) -> HTTPStatus | None:
         """Send a state report to Google."""
         raise NotImplementedError
 
@@ -233,6 +236,33 @@ class AbstractConfig(ABC):
             )
         )
         return max(res, default=204)
+
+    async def async_sync_notification(
+        self, agent_user_id: str, event_id: str, payload: dict[str, Any]
+    ) -> HTTPStatus:
+        """Sync notifications to Google."""
+        # Remove any pending sync
+        self._google_sync_unsub.pop(agent_user_id, lambda: None)()
+        status = await self.async_report_state(payload, agent_user_id, event_id)
+        assert status is not None
+        if status == HTTPStatus.NOT_FOUND:
+            await self.async_disconnect_agent_user(agent_user_id)
+        return status
+
+    async def async_sync_notification_all(
+        self, event_id: str, payload: dict[str, Any]
+    ) -> HTTPStatus:
+        """Sync notification to Google for all registered agents."""
+        if not self._store.agent_user_ids:
+            return HTTPStatus.NO_CONTENT
+
+        res = await gather(
+            *(
+                self.async_sync_notification(agent_user_id, event_id, payload)
+                for agent_user_id in self._store.agent_user_ids
+            )
+        )
+        return max(res, default=HTTPStatus.NO_CONTENT)
 
     @callback
     def async_schedule_google_sync(self, agent_user_id: str):
@@ -617,7 +647,6 @@ class GoogleEntity:
                 state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
             ),
         }
-
         # Add aliases
         if (config_aliases := entity_config.get(CONF_ALIASES, [])) or (
             entity_entry and entity_entry.aliases
@@ -638,6 +667,10 @@ class GoogleEntity:
         # Add trait sync attributes
         for trt in traits:
             device["attributes"].update(trt.sync_attributes())
+
+        # Add trait options
+        for trt in traits:
+            device.update(trt.sync_options())
 
         # Add roomhint
         if room := entity_config.get(CONF_ROOM_HINT):
@@ -680,6 +713,16 @@ class GoogleEntity:
             deep_update(attrs, trt.query_attributes())
 
         return attrs
+
+    @callback
+    def notifications_serialize(self) -> dict[str, Any] | None:
+        """Serialize the payload for notifications to be sent."""
+        notifications: dict[str, Any] = {}
+
+        for trt in self.traits():
+            deep_update(notifications, trt.query_notifications() or {})
+
+        return notifications or None
 
     @callback
     def reachable_device_serialize(self):

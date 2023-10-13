@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import functools
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -52,7 +53,7 @@ DEFAULT_SOURCE_TYPE = SourceType.GPS
 def valid_config(config: ConfigType) -> ConfigType:
     """Check if there is a state topic or json_attributes_topic."""
     if CONF_STATE_TOPIC not in config and CONF_JSON_ATTRS_TOPIC not in config:
-        raise vol.MultipleInvalid(
+        raise vol.Invalid(
             f"Invalid device tracker config, missing {CONF_STATE_TOPIC} or {CONF_JSON_ATTRS_TOPIC}, got: {config}"
         )
     return config
@@ -107,18 +108,8 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
 
     _default_name = None
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
+    _location_name: str | None = None
     _value_template: Callable[..., ReceivePayloadType]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the tracker."""
-        self._location_name: str | None = None
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -147,7 +138,8 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             elif payload == self._config[CONF_PAYLOAD_RESET]:
                 self._location_name = None
             else:
-                assert isinstance(msg.payload, str)
+                if TYPE_CHECKING:
+                    assert isinstance(msg.payload, str)
                 self._location_name = msg.payload
 
         state_topic: str | None = self._config.get(CONF_STATE_TOPIC)

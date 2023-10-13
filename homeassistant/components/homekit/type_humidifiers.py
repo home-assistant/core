@@ -1,5 +1,6 @@
 """Class to hold all thermostat accessories."""
 import logging
+from typing import Any
 
 from pyhap.const import CATEGORY_HUMIDIFIER
 
@@ -73,11 +74,19 @@ HC_STATE_DEHUMIDIFYING = 3
 class HumidifierDehumidifier(HomeAccessory):
     """Generate a HumidifierDehumidifier accessory for a humidifier."""
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a HumidifierDehumidifier accessory object."""
         super().__init__(*args, category=CATEGORY_HUMIDIFIER)
-        self.chars = []
+        self._reload_on_change_attrs.extend(
+            (
+                ATTR_MAX_HUMIDITY,
+                ATTR_MIN_HUMIDITY,
+            )
+        )
+
+        self.chars: list[str] = []
         state = self.hass.states.get(self.entity_id)
+        assert state
         device_class = state.attributes.get(
             ATTR_DEVICE_CLASS, HumidifierDeviceClass.HUMIDIFIER
         )
@@ -144,7 +153,7 @@ class HumidifierDehumidifier(HomeAccessory):
             if humidity_state:
                 self._async_update_current_humidity(humidity_state)
 
-    async def run(self):
+    async def run(self) -> None:
         """Handle accessory driver started event.
 
         Run inside the Home Assistant event loop.
@@ -198,7 +207,8 @@ class HumidifierDehumidifier(HomeAccessory):
                 ex,
             )
 
-    def _set_chars(self, char_values):
+    def _set_chars(self, char_values: dict[str, Any]) -> None:
+        """Set characteristics based on the data coming from HomeKit."""
         _LOGGER.debug("HumidifierDehumidifier _set_chars: %s", char_values)
 
         if CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER in char_values:
@@ -218,6 +228,7 @@ class HumidifierDehumidifier(HomeAccessory):
 
         if self._target_humidity_char_name in char_values:
             state = self.hass.states.get(self.entity_id)
+            assert state
             max_humidity = state.attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY)
             max_humidity = round(max_humidity)
             max_humidity = min(max_humidity, 100)
@@ -225,6 +236,11 @@ class HumidifierDehumidifier(HomeAccessory):
             min_humidity = state.attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
             min_humidity = round(min_humidity)
             min_humidity = max(min_humidity, 0)
+            # The min/max humidity values here should be clamped to the HomeKit
+            # min/max that was set when the accessory was added to HomeKit so
+            # that the user cannot set a value outside of the range that was
+            # originally set as it could cause HomeKit to report the accessory
+            # as not responding.
 
             humidity = round(char_values[self._target_humidity_char_name])
 
@@ -245,7 +261,7 @@ class HumidifierDehumidifier(HomeAccessory):
             )
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update state without rechecking the device features."""
         is_active = new_state.state == STATE_ON
 
