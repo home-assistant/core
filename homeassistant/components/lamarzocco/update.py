@@ -92,6 +92,6 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
         return self.entity_description.current_fw_fn(self._lm_client)
 
     @property
-    def available_version(self):
+    def available_version(self) -> str:
         """Return the latest firmware version."""
         return self.entity_description.latest_fw_fn(self._lm_client)
