@@ -967,7 +967,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.71.0
+hass-nabucasa==0.73.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
