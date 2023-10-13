@@ -104,6 +104,7 @@ class WithingsSleepDataUpdateCoordinator(
         }
 
     async def _internal_update_data(self) -> SleepSummary | None:
+        """Retrieve sleep data."""
         now = dt_util.now()
         yesterday = now - timedelta(days=1)
         yesterday_noon = dt_util.start_of_local_day(yesterday) + timedelta(hours=12)
