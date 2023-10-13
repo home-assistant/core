@@ -275,38 +275,38 @@ class MatrixBot:
             self.hass.bus.async_fire(EVENT_MATRIX_COMMAND, message_data)
 
     async def _resolve_room_alias(
-        self, room_id_or_alias: RoomAnyID
+        self, room_alias_or_id: RoomAnyID
     ) -> dict[RoomAnyID, RoomID]:
-        if room_id_or_alias.startswith("!"):
-            room_id = RoomID(room_id_or_alias)
+        if room_alias_or_id.startswith("!"):
+            room_id = RoomID(room_alias_or_id)
             _LOGGER.debug("Will listen to room_id '%s'", room_id)
-        elif room_id_or_alias.startswith("#"):
-            room_alias = RoomAlias(room_id_or_alias)
+        elif room_alias_or_id.startswith("#"):
+            room_alias = RoomAlias(room_alias_or_id)
             resolve_response = await self._client.room_resolve_alias(room_alias)
             if isinstance(resolve_response, RoomResolveAliasResponse):
                 room_id = RoomID(resolve_response.room_id)
                 _LOGGER.debug(
                     "Will listen to room_alias '%s' as room_id '%s'",
-                    room_id_or_alias,
+                    room_alias_or_id,
                     room_id,
                 )
             else:
                 _LOGGER.error(
                     "Could not resolve '%s' to a room_id: '%s'",
-                    room_id_or_alias,
+                    room_alias_or_id,
                     resolve_response,
                 )
                 return {}
         else:
-            raise ConfigEntryError(f"Invalid room ID or alias: {room_id_or_alias}")
+            raise ConfigEntryError(f"Invalid room ID or alias: {room_alias_or_id}")
 
-        return {room_id_or_alias: room_id}
+        return {room_alias_or_id: room_id}
 
     async def _resolve_room_aliases(self) -> None:
         """Resolve any RoomAliases into RoomIDs for the purpose of client interactions."""
         resolved_rooms = [
-            self.hass.async_create_task(self._resolve_room_alias(room_id_or_alias))
-            for room_id_or_alias in self._listening_rooms
+            self.hass.async_create_task(self._resolve_room_alias(room_alias_or_id))
+            for room_alias_or_id in self._listening_rooms
         ]
         for resolved_room in asyncio.as_completed(resolved_rooms):
             self._listening_rooms |= await resolved_room

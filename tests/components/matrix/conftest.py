@@ -119,8 +119,7 @@ class _MockAsyncClient(AsyncClient):
     async def room_send(self, *args, **kwargs):
         if not self.logged_in:
             raise LocalProtocolError
-        room_id = kwargs["room_id"]
-        if room_id == TEST_BAD_ROOM or room_id not in TEST_JOINABLE_ROOMS.values():
+        if kwargs["room_id"] not in TEST_JOINABLE_ROOMS.values():
             return ErrorResponse(message="Cannot send a message in this room.")
         else:
             return Response()
@@ -141,7 +140,7 @@ MOCK_CONFIG_DATA = {
         CONF_USERNAME: TEST_MXID,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_VERIFY_SSL: True,
-        CONF_ROOMS: list(TEST_JOINABLE_ROOMS.keys()),
+        CONF_ROOMS: list(TEST_JOINABLE_ROOMS),
         CONF_COMMANDS: [
             {
                 CONF_WORD: "WordTrigger",
@@ -200,11 +199,6 @@ def mock_client():
     """Return mocked AsyncClient."""
     with patch("homeassistant.components.matrix.AsyncClient", _MockAsyncClient) as mock:
         yield mock
-
-
-# @pytest.fixture
-# def mock_resolve_room_aliases():
-#     """Ensure that matrix_bot._resolve_room_aliases resolves"""
 
 
 @pytest.fixture
