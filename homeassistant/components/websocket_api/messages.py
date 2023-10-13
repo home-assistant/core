@@ -39,6 +39,17 @@ ENTITY_EVENT_ADD = "a"
 ENTITY_EVENT_REMOVE = "r"
 ENTITY_EVENT_CHANGE = "c"
 
+INVALID_JSON_PARTIAL_MESSAGE = JSON_DUMP(
+    {
+        "type": const.TYPE_RESULT,
+        "success": False,
+        "error": {
+            "code": const.ERR_UNKNOWN_ERROR,
+            "message": "Invalid JSON in response",
+        },
+    }
+)
+
 
 def result_message(iden: int, result: Any = None) -> dict[str, Any]:
     """Return a success result message."""
@@ -89,7 +100,10 @@ def _partial_cached_event_message(event: Event) -> str:
     The message is constructed without the id which appended
     in cached_event_message.
     """
-    return message_to_json({"type": "event", "event": event.as_dict()})
+    return (
+        _message_to_json_or_none({"type": "event", "event": event.as_dict()})
+        or INVALID_JSON_PARTIAL_MESSAGE
+    )
 
 
 def cached_state_diff_message(iden: int, event: Event) -> str:
@@ -111,7 +125,10 @@ def _partial_cached_state_diff_message(event: Event) -> str:
     The message is constructed without the id which
     will be appended in cached_state_diff_message
     """
-    return message_to_json({"type": "event", "event": _state_diff_event(event)})
+    return (
+        _message_to_json_or_none({"type": "event", "event": _state_diff_event(event)})
+        or INVALID_JSON_PARTIAL_MESSAGE
+    )
 
 
 def _state_diff_event(event: Event) -> dict:
@@ -180,8 +197,8 @@ def _state_diff(
     return {ENTITY_EVENT_CHANGE: {new_state.entity_id: diff}}
 
 
-def message_to_json(message: dict[str, Any]) -> str:
-    """Serialize a websocket message to json."""
+def _message_to_json_or_none(message: dict[str, Any]) -> str | None:
+    """Serialize a websocket message to json or return None."""
     try:
         return JSON_DUMP(message)
     except (ValueError, TypeError):
@@ -191,8 +208,13 @@ def message_to_json(message: dict[str, Any]) -> str:
                 find_paths_unserializable_data(message, dump=JSON_DUMP)
             ),
         )
-        return JSON_DUMP(
-            error_message(
-                message["id"], const.ERR_UNKNOWN_ERROR, "Invalid JSON in response"
-            )
+    return None
+
+
+def message_to_json(message: dict[str, Any]) -> str:
+    """Serialize a websocket message to json or return an error."""
+    return _message_to_json_or_none(message) or JSON_DUMP(
+        error_message(
+            message["id"], const.ERR_UNKNOWN_ERROR, "Invalid JSON in response"
         )
+    )
