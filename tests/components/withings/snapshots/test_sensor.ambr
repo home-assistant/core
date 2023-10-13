@@ -11,7 +11,7 @@
     'entity_id': 'sensor.henk_weight',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '71',
+    'state': '70.0',
   })
 # ---
 # name: test_all_entities.1
@@ -26,7 +26,7 @@
     'entity_id': 'sensor.henk_fat_mass',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': '5.0',
   })
 # ---
 # name: test_all_entities.10
@@ -40,7 +40,7 @@
     'entity_id': 'sensor.henk_diastolic_blood_pressure',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '71',
+    'state': '70.0',
   })
 # ---
 # name: test_all_entities.11
@@ -54,7 +54,7 @@
     'entity_id': 'sensor.henk_systolic_blood_pressure',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '101',
+    'state': '100.0',
   })
 # ---
 # name: test_all_entities.12
@@ -69,7 +69,7 @@
     'entity_id': 'sensor.henk_heart_pulse',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '61',
+    'state': '60.0',
   })
 # ---
 # name: test_all_entities.13
@@ -83,7 +83,7 @@
     'entity_id': 'sensor.henk_spo2',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.98',
+    'state': '0.95',
   })
 # ---
 # name: test_all_entities.14
@@ -99,7 +99,7 @@
     'entity_id': 'sensor.henk_hydration',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.96',
+    'state': '0.95',
   })
 # ---
 # name: test_all_entities.15
@@ -114,7 +114,7 @@
     'entity_id': 'sensor.henk_pulse_wave_velocity',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '102',
+    'state': '100.0',
   })
 # ---
 # name: test_all_entities.16
@@ -127,7 +127,7 @@
     'entity_id': 'sensor.henk_breathing_disturbances_intensity',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '6',
+    'state': '10.0',
   })
 # ---
 # name: test_all_entities.17
@@ -143,7 +143,7 @@
     'entity_id': 'sensor.henk_deep_sleep',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '22140',
+    'state': '26220',
   })
 # ---
 # name: test_all_entities.18
@@ -159,7 +159,7 @@
     'entity_id': 'sensor.henk_time_to_sleep',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '840',
+    'state': '780.0',
   })
 # ---
 # name: test_all_entities.19
@@ -175,7 +175,7 @@
     'entity_id': 'sensor.henk_time_to_wakeup',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '975',
+    'state': '996.0',
   })
 # ---
 # name: test_all_entities.2
@@ -190,7 +190,7 @@
     'entity_id': 'sensor.henk_fat_free_mass',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '40',
+    'state': '60.0',
   })
 # ---
 # name: test_all_entities.20
@@ -205,7 +205,7 @@
     'entity_id': 'sensor.henk_average_heart_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '86',
+    'state': '83.2',
   })
 # ---
 # name: test_all_entities.21
@@ -220,7 +220,7 @@
     'entity_id': 'sensor.henk_maximum_heart_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '113',
+    'state': '108.4',
   })
 # ---
 # name: test_all_entities.22
@@ -235,7 +235,7 @@
     'entity_id': 'sensor.henk_minimum_heart_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '58',
+    'state': '58.0',
   })
 # ---
 # name: test_all_entities.23
@@ -251,7 +251,7 @@
     'entity_id': 'sensor.henk_light_sleep',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '52260',
+    'state': '58440',
   })
 # ---
 # name: test_all_entities.24
@@ -267,7 +267,7 @@
     'entity_id': 'sensor.henk_rem_sleep',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '15420',
+    'state': '17280',
   })
 # ---
 # name: test_all_entities.25
@@ -281,7 +281,7 @@
     'entity_id': 'sensor.henk_average_respiratory_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '15',
+    'state': '14.2',
   })
 # ---
 # name: test_all_entities.26
@@ -295,7 +295,7 @@
     'entity_id': 'sensor.henk_maximum_respiratory_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '20',
+    'state': '20.0',
   })
 # ---
 # name: test_all_entities.27
@@ -309,7 +309,7 @@
     'entity_id': 'sensor.henk_minimum_respiratory_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '10',
+    'state': '10.0',
   })
 # ---
 # name: test_all_entities.28
@@ -337,7 +337,7 @@
     'entity_id': 'sensor.henk_snoring',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '810',
+    'state': '1044.0',
   })
 # ---
 # name: test_all_entities.3
@@ -352,7 +352,7 @@
     'entity_id': 'sensor.henk_muscle_mass',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '51',
+    'state': '50.0',
   })
 # ---
 # name: test_all_entities.30
@@ -365,7 +365,7 @@
     'entity_id': 'sensor.henk_snoring_episode_count',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '54',
+    'state': '87',
   })
 # ---
 # name: test_all_entities.31
@@ -380,7 +380,7 @@
     'entity_id': 'sensor.henk_wakeup_count',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '9',
+    'state': '8',
   })
 # ---
 # name: test_all_entities.32
@@ -396,7 +396,7 @@
     'entity_id': 'sensor.henk_wakeup_time',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3468.0',
   })
 # ---
 # name: test_all_entities.33
@@ -568,7 +568,7 @@
     'entity_id': 'sensor.henk_bone_mass',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '11',
+    'state': '10.0',
   })
 # ---
 # name: test_all_entities.40
@@ -820,7 +820,7 @@
     'entity_id': 'sensor.henk_height',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '201',
+    'state': '2.0',
   })
 # ---
 # name: test_all_entities.50
@@ -1065,7 +1065,7 @@
     'entity_id': 'sensor.henk_temperature',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '41',
+    'state': '40.0',
   })
 # ---
 # name: test_all_entities.60
@@ -1220,7 +1220,7 @@
     'entity_id': 'sensor.henk_body_temperature',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '34',
+    'state': '40.0',
   })
 # ---
 # name: test_all_entities.8
@@ -1235,7 +1235,7 @@
     'entity_id': 'sensor.henk_skin_temperature',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '21',
+    'state': '20.0',
   })
 # ---
 # name: test_all_entities.9
@@ -1249,6 +1249,6 @@
     'entity_id': 'sensor.henk_fat_ratio',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.071',
+    'state': '0.07',
   })
 # ---
