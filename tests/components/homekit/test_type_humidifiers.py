@@ -77,7 +77,11 @@ async def test_humidifier(hass: HomeAssistant, hk_driver, events) -> None:
     assert acc.char_target_humidifier_dehumidifier.properties[PROP_VALID_VALUES] == {
         "Humidifier": 1
     }
-
+    assert acc.char_current_humidifier_dehumidifier.properties[PROP_VALID_VALUES] == {
+        "Humidifying": 2,
+        "Idle": 1,
+        "Inactive": 0,
+    }
     hass.states.async_set(
         entity_id,
         STATE_ON,
@@ -157,6 +161,11 @@ async def test_dehumidifier(hass: HomeAssistant, hk_driver, events) -> None:
     assert acc.char_target_humidity.properties[PROP_MIN_STEP] == 1.0
     assert acc.char_target_humidifier_dehumidifier.properties[PROP_VALID_VALUES] == {
         "Dehumidifier": 2
+    }
+    assert acc.char_current_humidifier_dehumidifier.properties[PROP_VALID_VALUES] == {
+        "Dehumidifying": 3,
+        "Idle": 1,
+        "Inactive": 0,
     }
 
     hass.states.async_set(

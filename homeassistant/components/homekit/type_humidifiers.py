@@ -65,10 +65,27 @@ HC_DEVICE_CLASS_TO_TARGET_CHAR = {
     HC_DEHUMIDIFIER: CHAR_DEHUMIDIFIER_THRESHOLD_HUMIDITY,
 }
 
+
 HC_STATE_INACTIVE = 0
 HC_STATE_IDLE = 1
 HC_STATE_HUMIDIFYING = 2
 HC_STATE_DEHUMIDIFYING = 3
+
+BASE_VALID_VALUES = {
+    "Inactive": HC_STATE_INACTIVE,
+    "Idle": HC_STATE_IDLE,
+}
+
+VALID_VALUES_BY_DEVICE_CLASS = {
+    HumidifierDeviceClass.HUMIDIFIER: {
+        **BASE_VALID_VALUES,
+        "Humidifying": HC_STATE_HUMIDIFYING,
+    },
+    HumidifierDeviceClass.DEHUMIDIFIER: {
+        **BASE_VALID_VALUES,
+        "Dehumidifying": HC_STATE_DEHUMIDIFYING,
+    },
+}
 
 
 @TYPES.register("HumidifierDehumidifier")
@@ -106,7 +123,9 @@ class HumidifierDehumidifier(HomeAccessory):
         # Current and target mode characteristics
         self.char_current_humidifier_dehumidifier = (
             serv_humidifier_dehumidifier.configure_char(
-                CHAR_CURRENT_HUMIDIFIER_DEHUMIDIFIER, value=0
+                CHAR_CURRENT_HUMIDIFIER_DEHUMIDIFIER,
+                value=0,
+                valid_values=VALID_VALUES_BY_DEVICE_CLASS[device_class],
             )
         )
         self.char_target_humidifier_dehumidifier = (
