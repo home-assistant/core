@@ -1,10 +1,14 @@
 """Support for OpenUV binary sensors."""
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
@@ -17,10 +21,41 @@ ATTR_PROTECTION_WINDOW_ENDING_UV = "end_uv"
 ATTR_PROTECTION_WINDOW_STARTING_TIME = "start_time"
 ATTR_PROTECTION_WINDOW_STARTING_UV = "start_uv"
 
-BINARY_SENSOR_DESCRIPTION_PROTECTION_WINDOW = BinarySensorEntityDescription(
+
+def in_protection_window(protection_window_data: dict[str, Any]) -> bool:
+    """Return true if the current time is in the protection window."""
+    from_dt = parse_datetime(protection_window_data["from_time"])
+    to_dt = parse_datetime(protection_window_data["to_time"])
+
+    if not from_dt or not to_dt:
+        LOGGER.warning(
+            "Unable to parse protection window datetimes: %s, %s",
+            protection_window_data["from_time"],
+            protection_window_data["to_time"],
+        )
+        return False
+    return from_dt <= utcnow() <= to_dt
+
+
+@dataclass
+class OpenUvBinarySensorEntityDescriptionMixin:
+    """Define a mixin for OpenUV sensor descriptions."""
+
+    value_fn: Callable[[dict[str, Any]], bool]
+
+
+@dataclass
+class OpenUvBinarySensorDescription(
+    BinarySensorEntityDescription, OpenUvBinarySensorEntityDescriptionMixin
+):
+    """Define a class that describes OpenUV sensor entities."""
+
+
+BINARY_SENSOR_DESCRIPTION_PROTECTION_WINDOW = OpenUvBinarySensorDescription(
     key=TYPE_PROTECTION_WINDOW,
     translation_key="protection_window",
     icon="mdi:sunglasses",
+    value_fn=in_protection_window,
 )
 
 
@@ -44,35 +79,23 @@ async def async_setup_entry(
 class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
     """Define a binary sensor for OpenUV."""
 
-    @callback
-    def _update_from_latest_data(self) -> None:
-        """Update the entity from the latest data."""
-        data = self.coordinator.data
+    entity_description: OpenUvBinarySensorDescription
 
-        for key in ("from_time", "to_time", "from_uv", "to_uv"):
-            if not data.get(key):
-                LOGGER.info("Skipping update due to missing data: %s", key)
-                return
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return entity specific state attributes."""
+        attrs = {}
+        attrs[ATTR_PROTECTION_WINDOW_ENDING_UV] = self.coordinator.data["to_uv"]
+        attrs[ATTR_PROTECTION_WINDOW_STARTING_UV] = self.coordinator.data["from_uv"]
 
-        if self.entity_description.key == TYPE_PROTECTION_WINDOW:
-            from_dt = parse_datetime(data["from_time"])
-            to_dt = parse_datetime(data["to_time"])
+        if to_dt := parse_datetime(self.coordinator.data["to_time"]):
+            attrs[ATTR_PROTECTION_WINDOW_ENDING_TIME] = as_local(to_dt)
+        if from_dt := parse_datetime(self.coordinator.data["from_time"]):
+            attrs[ATTR_PROTECTION_WINDOW_ENDING_TIME] = as_local(from_dt)
 
-            if not from_dt or not to_dt:
-                LOGGER.warning(
-                    "Unable to parse protection window datetimes: %s, %s",
-                    data["from_time"],
-                    data["to_time"],
-                )
-                self._attr_is_on = False
-                return
+        return attrs
 
-            self._attr_is_on = from_dt <= utcnow() <= to_dt
-            self._attr_extra_state_attributes.update(
-                {
-                    ATTR_PROTECTION_WINDOW_ENDING_TIME: as_local(to_dt),
-                    ATTR_PROTECTION_WINDOW_ENDING_UV: data["to_uv"],
-                    ATTR_PROTECTION_WINDOW_STARTING_UV: data["from_uv"],
-                    ATTR_PROTECTION_WINDOW_STARTING_TIME: as_local(from_dt),
-                }
-            )
+    @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        return self.entity_description.value_fn(self.coordinator.data)
