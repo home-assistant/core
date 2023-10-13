@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE, UnitOfTime
+from homeassistant.const import CONF_TYPE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -92,6 +92,8 @@ SENSOR_DESCRIPTIONS = [
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
         },
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     MinecraftServerSensorEntityDescription(
         key=KEY_PLAYERS_MAX,
@@ -104,6 +106,7 @@ SENSOR_DESCRIPTIONS = [
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
         },
+        entity_registry_enabled_default=False,
     ),
     MinecraftServerSensorEntityDescription(
         key=KEY_LATENCY,
@@ -117,6 +120,7 @@ SENSOR_DESCRIPTIONS = [
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
         },
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     MinecraftServerSensorEntityDescription(
         key=KEY_MOTD,
@@ -150,6 +154,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.BEDROCK_EDITION,
         },
+        entity_registry_enabled_default=False,
     ),
     MinecraftServerSensorEntityDescription(
         key=KEY_GAME_MODE,
