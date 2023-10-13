@@ -18,7 +18,7 @@ _T = TypeVar("_T")
 
 
 class SuppressHomeAssistantErrorStackTrace(logging.Filter):
-    """Filter API password calls."""
+    """Filter to suppress stack traces for HomeAssistantError."""
 
     def __init__(self) -> None:
         """Initialize sensitive data filter."""
