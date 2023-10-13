@@ -1,6 +1,8 @@
 """Config flow for ROMY integration."""
 from __future__ import annotations
 
+from typing import Any, Optional
+
 import romy
 import voluptuous as vol
 
@@ -14,15 +16,18 @@ from .const import DOMAIN, LOGGER
 
 
 def _schema_with_defaults(
-    default_values: dict[str, Any] = {}, requires_password: bool = False
+    default_values: Optional[dict[str, Any]] = None,
+    requires_password: bool = False,
 ) -> vol.Schema:
+    if default_values is None:
+        default_values = {}
     schema = {
         vol.Required(CONF_HOST, default=default_values.get(CONF_HOST, "")): cv.string,
-        vol.Optional(CONF_NAME, default=default_values.get(CONF_NAME,"")): cv.string,
+        vol.Optional(CONF_NAME, default=default_values.get(CONF_NAME, "")): cv.string,
     }
 
     if requires_password:
-        schema[vol.Required(CONF_PASSWORD)]= vol.All(str, vol.Length(8))
+        schema[vol.Required(CONF_PASSWORD)] = vol.All(str, vol.Length(8))
 
     return vol.Schema(schema)
 
@@ -46,7 +51,9 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Save the user input and finish the setup
-            new_romy = await romy.create_romy(user_input[CONF_HOST], user_input.get(CONF_PASSWORD, ""))
+            new_romy = await romy.create_romy(
+                user_input[CONF_HOST], user_input.get(CONF_PASSWORD, "")
+            )
 
             # get robots name in case none was provided
             if not user_input[CONF_NAME]:
@@ -56,14 +63,12 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_HOST] = "cannot_connect"
 
             if not new_romy.is_unlocked:
-                data = _schema_with_defaults(
-                    user_input, requires_password=True
-                )
+                data = _schema_with_defaults(user_input, requires_password=True)
                 errors[CONF_PASSWORD] = "invalid_auth"
 
             if not errors:
                 return self.async_create_entry(
-                    title=user_input["name"], data=user_input
+                    title=user_input[CONF_NAME], data=user_input
                 )
 
         return self.async_show_form(step_id="user", data_schema=data, errors=errors)
@@ -95,8 +100,7 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         self.discovery_schema = _schema_with_defaults(
-            host=discovery_info.host,
-            name=discovery_info.name,
+            {CONF_HOST: discovery_info.host, CONF_NAME: discovery_info.name},
             requires_password=not new_discovered_romy.is_unlocked,
         )
         return await self.async_step_user()
