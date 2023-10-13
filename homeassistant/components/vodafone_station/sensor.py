@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfDataRate
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -193,21 +192,9 @@ class VodafoneStationSensorEntity(
     ) -> None:
         """Initialize a Vodafone Station sensor."""
         super().__init__(coordinator)
-
-        sensors_data = coordinator.data.sensors
-        serial_num = sensors_data["sys_serial_number"]
         self.entity_description = description
-
-        self._attr_device_info = DeviceInfo(
-            configuration_url=coordinator.api.base_url,
-            identifiers={(DOMAIN, serial_num)},
-            name=f"Vodafone Station ({serial_num})",
-            manufacturer="Vodafone",
-            model=sensors_data.get("sys_model_name"),
-            hw_version=sensors_data["sys_hardware_version"],
-            sw_version=sensors_data["sys_firmware_version"],
-        )
-        self._attr_unique_id = f"{serial_num}_{description.key}"
+        self._attr_device_info = coordinator.device_info
+        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
     def native_value(self) -> StateType:

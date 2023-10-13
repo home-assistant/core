@@ -67,3 +67,24 @@ def fixture_get_camera() -> CameraInfo:
         status="Running",
         camera_type="Road",
     )
+
+
+@pytest.fixture(name="get_camera_no_location")
+def fixture_get_camera_no_location() -> CameraInfo:
+    """Construct Camera Mock."""
+
+    return CameraInfo(
+        camera_name="Test Camera",
+        camera_id="1234",
+        active=True,
+        deleted=False,
+        description="Test Camera for testing",
+        direction="180",
+        fullsizephoto=True,
+        location=None,
+        modified=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
+        phototime=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
+        photourl="https://www.testurl.com/test_photo.jpg",
+        status="Running",
+        camera_type="Road",
+    )

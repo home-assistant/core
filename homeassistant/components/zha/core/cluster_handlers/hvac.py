@@ -5,7 +5,6 @@ https://home-assistant.io/integrations/zha/
 """
 from __future__ import annotations
 
-from collections import namedtuple
 from typing import Any
 
 from zigpy.zcl.clusters import hvac
@@ -21,7 +20,6 @@ from ..const import (
 )
 from . import AttrReportConfig, ClusterHandler
 
-AttributeUpdateRecord = namedtuple("AttributeUpdateRecord", "attr_id, attr_name, value")
 REPORT_CONFIG_CLIMATE = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 25)
 REPORT_CONFIG_CLIMATE_DEMAND = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 5)
 REPORT_CONFIG_CLIMATE_DISCRETE = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1)
@@ -235,7 +233,9 @@ class ThermostatClusterHandler(ClusterHandler):
         )
         self.async_send_signal(
             f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-            AttributeUpdateRecord(attrid, attr_name, value),
+            attrid,
+            attr_name,
+            value,
         )
 
     async def async_set_operation_mode(self, mode) -> bool:
