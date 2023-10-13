@@ -377,6 +377,13 @@ def verify_cleanup(
 
 
 @pytest.fixture(autouse=True)
+def reset_hass_threading_local_object() -> Generator[None, None, None]:
+    """Reset the _Hass threading.local object for every test case."""
+    yield
+    ha._hass.__dict__.clear()
+
+
+@pytest.fixture(autouse=True)
 def bcrypt_cost() -> Generator[None, None, None]:
     """Run with reduced rounds during tests, to speed up uses."""
     import bcrypt

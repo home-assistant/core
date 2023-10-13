@@ -109,7 +109,10 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.0.3
 
 # homeassistant.components.python_script
-RestrictedPython==6.2
+RestrictedPython==6.2;python_version<'3.12'
+
+# homeassistant.components.python_script
+RestrictedPython==7.0a1.dev0;python_version>='3.12'
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -117,6 +120,9 @@ RtmAPI==0.7.2
 # homeassistant.components.recorder
 # homeassistant.components.sql
 SQLAlchemy==2.0.21
+
+# homeassistant.components.tami4
+Tami4EdgeAPI==2.1
 
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
@@ -191,7 +197,7 @@ aiobafi6==0.9.0
 aiobotocore==2.6.0
 
 # homeassistant.components.comelit
-aiocomelit==0.0.9
+aiocomelit==0.2.0
 
 # homeassistant.components.dhcp
 aiodiscover==1.5.1
@@ -212,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==17.0.1
+aioesphomeapi==17.1.5
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -299,7 +305,7 @@ aiopvpc==4.2.2
 aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.3.4
+aioqsw==0.3.5
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -439,7 +445,7 @@ beautifulsoup4==4.12.2
 bellows==0.36.5
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected==0.14.0
+bimmer-connected==0.14.1
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.2.1
@@ -448,7 +454,7 @@ bleak-retry-connector==3.2.1
 bleak==0.21.1
 
 # homeassistant.components.blebox
-blebox-uniapi==2.1.4
+blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
 blinkpy==0.21.0
@@ -525,7 +531,7 @@ crownstone-uart==2.1.0
 datadog==0.15.0
 
 # homeassistant.components.metoffice
-datapoint==0.9.8
+datapoint==0.9.8;python_version<'3.12'
 
 # homeassistant.components.bluetooth
 dbus-fast==2.11.1
@@ -605,10 +611,10 @@ energyzero==0.5.0
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.5.37
+env-canada==0.6.0
 
 # homeassistant.components.season
-ephem==4.1.2
+ephem==4.1.5
 
 # homeassistant.components.epson
 epson-projector==0.5.1
@@ -617,7 +623,7 @@ epson-projector==0.5.1
 esphome-dashboard-api==1.2.3
 
 # homeassistant.components.eufylife_ble
-eufylife-ble-client==0.1.7
+eufylife-ble-client==0.1.8
 
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
@@ -740,7 +746,7 @@ growattServer==1.3.0
 gspread==5.5.0
 
 # homeassistant.components.profiler
-guppy3==3.1.3
+guppy3==3.1.3;python_version<'3.12'
 
 # homeassistant.components.iaqualink
 h2==4.1.0
@@ -915,7 +921,7 @@ lxml==4.9.3
 mac-vendor-lookup==0.1.12
 
 # homeassistant.components.matrix
-matrix-nio==0.21.2
+matrix-nio==0.22.1
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -1104,7 +1110,7 @@ pilight==0.1.1
 plexauth==0.0.6
 
 # homeassistant.components.plex
-plexwebsocket==0.0.13
+plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
 plugwise==0.33.0
@@ -1171,7 +1177,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2023.9.0
+pyDuotecno==2023.10.0
 
 # homeassistant.components.eight_sleep
 pyEight==0.3.2
@@ -1387,9 +1393,6 @@ pymailgunner==1.4
 # homeassistant.components.firmata
 pymata-express==1.19
 
-# homeassistant.components.mazda
-pymazda==0.3.11
-
 # homeassistant.components.melcloud
 pymelcloud==2.5.8
 
@@ -1400,7 +1403,7 @@ pymeteoclimatic==0.0.6
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.5.2
+pymodbus==3.5.4
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1450,7 +1453,7 @@ pyotgw==2.1.3
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.9.0
+pyoverkiz==1.12.1
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1581,7 +1584,7 @@ python-ecobee-api==0.2.14
 python-fullykiosk==0.0.12
 
 # homeassistant.components.homewizard
-python-homewizard-energy==2.1.0
+python-homewizard-energy==2.1.2
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -1599,7 +1602,7 @@ python-matter-server==3.7.0
 python-miio==0.5.12
 
 # homeassistant.components.myq
-python-myq==3.1.11
+python-myq==3.1.13
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
@@ -1675,7 +1678,7 @@ pyvolumio==0.1.5
 pywaze==0.5.1
 
 # homeassistant.components.weatherflow
-pyweatherflowudp==1.4.3
+pyweatherflowudp==1.4.5
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -1723,7 +1726,7 @@ renault-api==0.2.0
 renson-endura-delta==1.6.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.10
+reolink-aio==0.7.11
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -1762,7 +1765,7 @@ samsungtvws[async,encrypted]==2.6.0
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.9.1
+screenlogicpy==0.9.2
 
 # homeassistant.components.backup
 securetar==2023.3.0
@@ -1874,7 +1877,7 @@ sunwatcher==0.2.1
 surepy==0.8.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==1.1.0
+switchbot-api==1.2.1
 
 # homeassistant.components.system_bridge
 systembridgeconnector==3.8.4
@@ -2000,7 +2003,7 @@ vultr==0.1.2
 wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
-wallbox==0.4.12
+wallbox==0.4.14
 
 # homeassistant.components.folder_watcher
 watchdog==2.3.1
@@ -2078,7 +2081,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.115.2
+zeroconf==0.116.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
