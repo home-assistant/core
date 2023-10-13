@@ -1,6 +1,6 @@
 """Common fixtures for the Hydrawise tests."""
 
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -95,13 +95,25 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 async def mock_added_config_entry(
+    mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]]
+) -> MockConfigEntry:
+    """Mock ConfigEntry that's been added to HA."""
+    return await mock_add_config_entry()
+
+
+@pytest.fixture
+async def mock_add_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pydrawise: Mock,
-) -> MockConfigEntry:
-    """Mock ConfigEntry that's been added to HA."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert DOMAIN in hass.config_entries.async_domains()
-    return mock_config_entry
+) -> Callable[[], Awaitable[MockConfigEntry]]:
+    """Callable that creates a mock ConfigEntry that's been added to HA."""
+
+    async def callback() -> MockConfigEntry:
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert DOMAIN in hass.config_entries.async_domains()
+        return mock_config_entry
+
+    return callback

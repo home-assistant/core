@@ -1,8 +1,11 @@
 """Test Hydrawise sensor."""
 
-from freezegun.api import FrozenDateTimeFactory
+from collections.abc import Awaitable, Callable
+from typing import Any
+
 import pytest
 
+from homeassistant.components.hydrawise.const import NEXT_CYCLE_SUSPENDED
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -12,7 +15,6 @@ from tests.common import MockConfigEntry
 async def test_states(
     hass: HomeAssistant,
     mock_added_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor states."""
     watering_time1 = hass.states.get("sensor.zone_one_watering_time")
@@ -26,3 +28,18 @@ async def test_states(
     next_cycle = hass.states.get("sensor.zone_one_next_cycle")
     assert next_cycle is not None
     assert next_cycle.state == "2023-10-04T19:49:57+00:00"
+
+
+@pytest.mark.freeze_time("2023-10-01 00:00:00+00:00")
+async def test_suspended_state(
+    hass: HomeAssistant,
+    mock_zones: list[dict[str, Any]],
+    mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
+) -> None:
+    """Test sensor states."""
+    mock_zones[0]["time"] = NEXT_CYCLE_SUSPENDED
+    await mock_add_config_entry()
+
+    next_cycle = hass.states.get("sensor.zone_one_next_cycle")
+    assert next_cycle is not None
+    assert next_cycle.state == "unknown"

@@ -11,6 +11,9 @@ CONF_WATERING_TIME = "watering_minutes"
 DOMAIN = "hydrawise"
 DEFAULT_WATERING_TIME = 15
 
+NEXT_CYCLE_SUSPENDED = 1576800000
+"""The "next_cycle" value returned by the API when a zone is suspended."""
+
 MANUFACTURER = "Hydrawise"
 
 SCAN_INTERVAL = timedelta(seconds=120)

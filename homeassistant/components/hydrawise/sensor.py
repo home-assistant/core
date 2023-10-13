@@ -1,6 +1,8 @@
 """Support for Hydrawise sprinkler sensors."""
 from __future__ import annotations
 
+from datetime import timedelta
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -17,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, NEXT_CYCLE_SUSPENDED
 from .coordinator import HydrawiseDataUpdateCoordinator
 from .entity import HydrawiseEntity
 
@@ -47,7 +49,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-TWO_YEAR_SECONDS = 60 * 60 * 24 * 365 * 2
 WATERING_TIME_ICON = "mdi:water-pump"
 
 
@@ -90,8 +91,10 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
                 self._attr_native_value = int(relay_data["run"] / 60)
             else:
                 self._attr_native_value = 0
-        else:  # _sensor_type == 'next_cycle'
-            next_cycle = min(relay_data["time"], TWO_YEAR_SECONDS)
-            self._attr_native_value = dt_util.utc_from_timestamp(
-                dt_util.as_timestamp(dt_util.now()) + next_cycle
-            )
+        elif self.entity_description.key == "next_cycle":
+            if (next_cycle := relay_data["time"]) == NEXT_CYCLE_SUSPENDED:
+                # When the zone is suspended, we can't calculate a next cycle time.
+                self._attr_native_value = None
+            else:
+                next_cycle_delta = timedelta(seconds=next_cycle)
+                self._attr_native_value = dt_util.utcnow() + next_cycle_delta
