@@ -12,7 +12,8 @@ from typing import Any
 
 from aiohttp.hdrs import METH_HEAD, METH_POST
 from aiohttp.web import Request, Response
-from aiowithings import NotificationCategory, WebhookCall, WithingsClient
+from aiowithings import NotificationCategory, WithingsClient
+from aiowithings.util import to_enum
 import voluptuous as vol
 
 from homeassistant.components import cloud
@@ -337,28 +338,20 @@ def get_webhook_handler(
 
         params = await request.post()
 
-        call = WebhookCall.from_api(
-            {
-                "userid": params.getone("userid"),
-                "appli": int(params.getone("appli")),  # type: ignore[arg-type]
-                "startdate": int(params.getone("startdate")),  # type: ignore[arg-type]
-                "enddate": int(params.getone("enddate")),  # type: ignore[arg-type]
-            }
+        if "appli" not in params:
+            return json_message_response(
+                "Parameter appli not provided", message_code=20
+            )
+
+        notification_category = to_enum(
+            NotificationCategory,
+            int(params.getone("appli")),  # type: ignore[arg-type]
+            NotificationCategory.UNKNOWN,
         )
 
-        # if "appli" not in params:
-        #     return json_message_response(
-        #         "Parameter appli not provided", message_code=20
-        #     )
-        #
-        # try:
-        #     appli = NotifyAppli(int(params.getone("appli")))  # type: ignore[arg-type]
-        # except ValueError:
-        #     return json_message_response("Invalid appli provided", message_code=21)
-
         for coordinator in coordinators.values():
-            if call.notification_category in coordinator.notification_categories:
-                await coordinator.async_webhook_data_updated(call.notification_category)
+            if notification_category in coordinator.notification_categories:
+                await coordinator.async_webhook_data_updated(notification_category)
 
         return json_message_response("Success", message_code=0)
 

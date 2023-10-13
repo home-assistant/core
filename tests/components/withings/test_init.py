@@ -515,7 +515,6 @@ async def test_cloud_disconnect(
         [{}, 12],  # No request body.
         [{"userid": "GG"}, 20],  # appli not provided.
         [{"userid": 0}, 20],  # appli not provided.
-        [{"userid": 0, "appli": 99}, 21],  # Invalid appli.
         [
             {"userid": 11, "appli": NotificationCategory.WEIGHT.value},
             0,
