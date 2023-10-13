@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EGSUpdateCoordinator
@@ -30,7 +31,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class EGSCalendar(CalendarEntity):
+class EGSCalendar(CoordinatorEntity[EGSUpdateCoordinator], CalendarEntity):
     """A calendar entity by Epic Games Store."""
 
     _attr_has_entity_name = True
@@ -42,7 +43,7 @@ class EGSCalendar(CalendarEntity):
         cal_type: str,
     ) -> None:
         """Initialize EGSCalendar."""
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._cal_type = cal_type
         self._attr_translation_key = f"{self._cal_type}_games"
         self._attr_unique_id = f"{config_entry_id}-{self._cal_type}"
@@ -64,19 +65,19 @@ class EGSCalendar(CalendarEntity):
         """Return the entity state attributes."""
         return {
             **(super().state_attributes or {}),
-            "games": self._coordinator.data[self._cal_type],
+            "games": self.coordinator.data[self._cal_type],
         }
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        events: list[dict[str, Any]] = self._coordinator.data[self._cal_type]
+        events: list[dict[str, Any]] = self.coordinator.data[self._cal_type]
         return [_get_calendar_event(event) for event in events]
 
     async def async_update(self) -> None:
         """Update entity state with the next upcoming event."""
-        event: list[dict[str, Any]] = self._coordinator.data[self._cal_type]
+        event: list[dict[str, Any]] = self.coordinator.data[self._cal_type]
         if event:
             self._event = _get_calendar_event(event[0])
 
