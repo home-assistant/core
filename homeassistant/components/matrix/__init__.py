@@ -7,7 +7,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import NewType, TypedDict, cast
+from typing import NewType, TypedDict
 
 import aiofiles.os
 from nio import AsyncClient, Event, MatrixRoom
@@ -278,15 +278,21 @@ class MatrixBot:
         self, room_id_or_alias: RoomAnyID
     ) -> dict[RoomAnyID, RoomID]:
         if room_id_or_alias.startswith("!"):
-            room_id = cast(RoomID, room_id_or_alias)
+            room_id = RoomID(room_id_or_alias)
+            _LOGGER.debug("Will listen to room_id '%s'", room_id)
         elif room_id_or_alias.startswith("#"):
-            room_alias = cast(RoomAlias, room_id_or_alias)
+            room_alias = RoomAlias(room_id_or_alias)
             resolve_response = await self._client.room_resolve_alias(room_alias)
             if isinstance(resolve_response, RoomResolveAliasResponse):
-                room_id = cast(RoomID, resolve_response.room_id)
+                room_id = RoomID(resolve_response.room_id)
+                _LOGGER.debug(
+                    "Will listen to room_alias '%s' as room_id '%s'",
+                    room_id_or_alias,
+                    room_id,
+                )
             else:
                 _LOGGER.error(
-                    "Could not resolve '%s' to a room_id: %s",
+                    "Could not resolve '%s' to a room_id: '%s'",
                     room_id_or_alias,
                     resolve_response,
                 )
