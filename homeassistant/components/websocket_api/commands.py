@@ -53,6 +53,7 @@ from homeassistant.util.json import format_unserializable_data
 from . import const, decorators, messages
 from .connection import ActiveConnection
 from .messages import construct_event_message, construct_result_message
+from .permissions import SUBSCRIBE_ALLOWLIST
 
 ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
 
@@ -128,10 +129,6 @@ def handle_subscribe_events(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe events command."""
-    # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from .permissions import SUBSCRIBE_ALLOWLIST
-
     event_type = msg["event_type"]
 
     if event_type not in SUBSCRIBE_ALLOWLIST and not connection.user.is_admin:
