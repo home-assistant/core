@@ -39,10 +39,14 @@ ENTITY_EVENT_ADD = "a"
 ENTITY_EVENT_REMOVE = "r"
 ENTITY_EVENT_CHANGE = "c"
 
+BASE_ERROR_MESSAGE = {
+    "type": const.TYPE_RESULT,
+    "success": False,
+}
+
 INVALID_JSON_PARTIAL_MESSAGE = JSON_DUMP(
     {
-        "type": const.TYPE_RESULT,
-        "success": False,
+        **BASE_ERROR_MESSAGE,
         "error": {
             "code": const.ERR_UNKNOWN_ERROR,
             "message": "Invalid JSON in response",
@@ -65,8 +69,7 @@ def error_message(iden: int | None, code: str, message: str) -> dict[str, Any]:
     """Return an error result message."""
     return {
         "id": iden,
-        "type": const.TYPE_RESULT,
-        "success": False,
+        **BASE_ERROR_MESSAGE,
         "error": {"code": code, "message": message},
     }
 
