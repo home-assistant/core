@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from aiowithings import AUTHORIZATION_URL, TOKEN_URL
+
 from homeassistant.components.application_credentials import (
     AuthImplementation,
     AuthorizationServer,
@@ -22,8 +24,8 @@ async def async_get_auth_implementation(
         DOMAIN,
         credential,
         authorization_server=AuthorizationServer(
-            authorize_url="https://account.withings.com/oauth2_user/authorize2",
-            token_url="https://wbsapi.withings.net/v2/oauth2",
+            authorize_url=AUTHORIZATION_URL,
+            token_url=TOKEN_URL,
         ),
     )
 
