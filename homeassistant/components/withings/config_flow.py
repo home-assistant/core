@@ -5,6 +5,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from aiowithings import AuthScope
+
 from homeassistant.components.webhook import async_generate_id
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
@@ -34,10 +36,10 @@ class WithingsFlowHandler(
         return {
             "scope": ",".join(
                 [
-                    "user.info",
-                    "user.metrics",
-                    "user.activity",
-                    "user.sleepevents",
+                    AuthScope.USER_INFO,
+                    AuthScope.USER_METRICS,
+                    AuthScope.USER_ACTIVITY,
+                    AuthScope.USER_SLEEP_EVENTS,
                 ]
             )
         }
