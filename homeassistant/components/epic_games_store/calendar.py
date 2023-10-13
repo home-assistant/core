@@ -24,8 +24,8 @@ async def async_setup_entry(
     coordinator: EGSUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = [
-        EGSFreeGamesCalendar(coordinator, entry.entry_id),
-        EGSDiscountGameCalendar(coordinator, entry.entry_id),
+        EGSCalendar(coordinator, entry.entry_id, "free"),
+        EGSCalendar(coordinator, entry.entry_id, "discount"),
     ]
     async_add_entities(entities, True)
 
@@ -35,16 +35,15 @@ class EGSCalendar(CalendarEntity):
 
     _attr_has_entity_name = True
 
-    _cal_type: str = ""
-
     def __init__(
         self,
         coordinator: EGSUpdateCoordinator,
         config_entry_id: str,
+        cal_type: str,
     ) -> None:
         """Initialize EGSCalendar."""
         self._coordinator = coordinator
-        self._event: CalendarEvent | None = None
+        self._cal_type = cal_type
         self._attr_translation_key = f"{self._cal_type}_games"
         self._attr_unique_id = f"{config_entry_id}-{self._cal_type}"
         self._attr_device_info = DeviceInfo(
@@ -53,6 +52,7 @@ class EGSCalendar(CalendarEntity):
             manufacturer="Epic Games Store",
             name="Epic Games Store",
         )
+        self._event: CalendarEvent | None = None
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -79,18 +79,6 @@ class EGSCalendar(CalendarEntity):
         event: list[dict[str, Any]] = self._coordinator.data[self._cal_type]
         if event:
             self._event = _get_calendar_event(event[0])
-
-
-class EGSFreeGamesCalendar(EGSCalendar):
-    """A calendar of free games from the Epic Games Store."""
-
-    _cal_type = "free"
-
-
-class EGSDiscountGameCalendar(EGSCalendar):
-    """A calendar of discount games from the Epic Games Store."""
-
-    _cal_type = "discount"
 
 
 def _get_calendar_event(event: dict[str, Any]) -> CalendarEvent:
