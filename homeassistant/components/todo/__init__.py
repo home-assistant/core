@@ -50,8 +50,7 @@ def _as_todo_item(result_key: str) -> Callable[[dict[str, Any]], dict[str, Any]]
     """
 
     def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Convert all keys that to a TodoItem dataclass."""
-        _LOGGER.info("To-do %s", obj)
+        """Convert input to a TodoItem dataclass."""
         return {
             result_key: TodoItem.from_dict(obj),
             # Forward any fields not in the schema
