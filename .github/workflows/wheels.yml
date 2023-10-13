@@ -179,6 +179,7 @@ jobs:
 
           touch requirements_old-cython.txt
           cat homeassistant/package_constraints.txt | grep 'grpcio==' >> requirements_old-cython.txt
+          cat homeassistant/package_constraints.txt | grep 'pydantic==' >> requirements_old-cython.txt
 
       - name: Adjust build env
         run: |
