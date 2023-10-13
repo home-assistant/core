@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def vicare_login(hass, entry_data):
+def vicare_login(hass: HomeAssistant, entry_data):
     """Login via PyVicare API."""
     vicare_api = PyViCare()
     vicare_api.setCacheDuration(DEFAULT_SCAN_INTERVAL)
@@ -72,7 +72,7 @@ def vicare_login(hass, entry_data):
     return vicare_api
 
 
-def setup_vicare_api(hass, entry):
+def setup_vicare_api(hass: HomeAssistant, entry):
     """Set up PyVicare API."""
     vicare_api = vicare_login(hass, entry.data)
 
