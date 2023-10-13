@@ -197,7 +197,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         is_async = service.data.get(ATTR_ASYNC)
 
         if is_async:
-            threading.Thread(target=do_download).start()
+            hass.async_add_executor_job(do_download)
         else:
             do_download()
 
