@@ -72,7 +72,7 @@ def vicare_login(hass: HomeAssistant, entry_data):
     return vicare_api
 
 
-def setup_vicare_api(hass: HomeAssistant, entry):
+def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry):
     """Set up PyVicare API."""
     vicare_api = vicare_login(hass, entry.data)
 
