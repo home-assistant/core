@@ -396,7 +396,7 @@
     'entity_id': 'sensor.henk_wakeup_time',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3468',
   })
 # ---
 # name: test_all_entities.33

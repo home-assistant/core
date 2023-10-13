@@ -343,7 +343,7 @@ SLEEP_SENSORS = [
     ),
     WithingsSleepSensorEntityDescription(
         key="sleep_wakeup_duration_seconds",
-        value_fn=lambda sleep_summary: sleep_summary.time_awake_during_sleep,
+        value_fn=lambda sleep_summary: sleep_summary.total_time_awake,
         translation_key="wakeup_time",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         icon="mdi:sleep-off",
