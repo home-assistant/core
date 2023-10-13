@@ -54,11 +54,11 @@ class UvLabel:
 
 
 UV_LABEL_DEFINITIONS = (
-    UvLabel(value="Extreme", minimum_index=11),
-    UvLabel(value="Very High", minimum_index=8),
-    UvLabel(value="High", minimum_index=6),
-    UvLabel(value="Moderate", minimum_index=3),
-    UvLabel(value="Low", minimum_index=0),
+    UvLabel(value="extreme", minimum_index=11),
+    UvLabel(value="very_high", minimum_index=8),
+    UvLabel(value="high", minimum_index=6),
+    UvLabel(value="moderate", minimum_index=3),
+    UvLabel(value="low", minimum_index=0),
 )
 
 
