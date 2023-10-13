@@ -92,7 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cv.has_at_least_one_key("uid", "summary"),
             cv.has_at_most_one_key("uid", "summary"),
             cv.has_at_most_one_key("previous_uid", "previous_summary"),
-            # Don't mix and match uid and summary across current and previous
+            # Don't mix and match uid and summary across items
             cv.has_at_most_one_key("uid", "previous_summary"),
             cv.has_at_most_one_key("previous_uid", "summary"),
         ),
