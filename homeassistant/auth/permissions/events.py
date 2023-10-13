@@ -1,7 +1,4 @@
-"""Permission constants for the websocket API.
-
-Separate file to avoid circular imports.
-"""
+"""Permission for events."""
 from __future__ import annotations
 
 from typing import Final
