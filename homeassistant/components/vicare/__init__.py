@@ -1,14 +1,13 @@
 """The ViCare integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
 import os
 from typing import Any
 
-from construct import Mapping
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device
 
