@@ -1107,9 +1107,3 @@ class GiexIrrigationEndTime(Sensor, id_suffix="irrigation_end_time"):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
     _decimals: int = 0
-    
-    #@property
-    #def native_value(self) -> StateType:
-    #    """Return the state of the entity."""
-    #    assert self.SENSOR_ATTR is not None
-    #    return self._channel.cluster.get(self.SENSOR_ATTR)
