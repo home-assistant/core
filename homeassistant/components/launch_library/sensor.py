@@ -50,7 +50,7 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
     LaunchLibrarySensorEntityDescription(
         key="next_launch",
         icon="mdi:rocket-launch",
-        name="Next launch",
+        translation_key="next_launch",
         value_fn=lambda nl: nl.name,
         attributes_fn=lambda nl: {
             "provider": nl.launch_service_provider.name,
@@ -62,7 +62,7 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
     LaunchLibrarySensorEntityDescription(
         key="launch_time",
         icon="mdi:clock-outline",
-        name="Launch time",
+        translation_key="launch_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda nl: parse_datetime(nl.net),
         attributes_fn=lambda nl: {
@@ -74,7 +74,7 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
     LaunchLibrarySensorEntityDescription(
         key="launch_probability",
         icon="mdi:dice-multiple",
-        name="Launch probability",
+        translation_key="next_launch",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda nl: None if nl.probability == -1 else nl.probability,
         attributes_fn=lambda nl: None,
@@ -82,14 +82,14 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
     LaunchLibrarySensorEntityDescription(
         key="launch_status",
         icon="mdi:rocket-launch",
-        name="Launch status",
+        translation_key="next_launch",
         value_fn=lambda nl: nl.status.name,
         attributes_fn=lambda nl: {"reason": nl.holdreason} if nl.inhold else None,
     ),
     LaunchLibrarySensorEntityDescription(
         key="launch_mission",
         icon="mdi:orbit",
-        name="Launch mission",
+        translation_key="launch_mission",
         value_fn=lambda nl: nl.mission.name,
         attributes_fn=lambda nl: {
             "mission_type": nl.mission.type,
@@ -100,7 +100,7 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
     LaunchLibrarySensorEntityDescription(
         key="starship_launch",
         icon="mdi:rocket",
-        name="Next Starship launch",
+        translation_key="starship_launch",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda sl: parse_datetime(sl.net),
         attributes_fn=lambda sl: {
@@ -113,7 +113,7 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
     LaunchLibrarySensorEntityDescription(
         key="starship_event",
         icon="mdi:calendar",
-        name="Next Starship event",
+        translation_key="starship_event",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda se: parse_datetime(se.date),
         attributes_fn=lambda se: {
@@ -152,6 +152,7 @@ class LaunchLibrarySensor(
     """Representation of the next launch sensors."""
 
     _attr_attribution = "Data provided by Launch Library."
+    _attr_has_entity_name = True
     _next_event: Launch | Event | None = None
     entity_description: LaunchLibrarySensorEntityDescription
 
@@ -160,7 +161,7 @@ class LaunchLibrarySensor(
         coordinator: DataUpdateCoordinator[LaunchLibraryData],
         entry_id: str,
         description: LaunchLibrarySensorEntityDescription,
-        name: str | None = None,
+        name: str,
     ) -> None:
         """Initialize a Launch Library sensor."""
         super().__init__(coordinator)
