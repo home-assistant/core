@@ -65,8 +65,10 @@ async def _noop_wait(*args: Any, **kwargs: Any) -> None:
     return
 
 
-# pylint: disable-next=protected-access
-web.BaseSite._wait = _noop_wait  # type: ignore[method-assign]
+# TODO: Remove version check with aiohttp 3.9.0  # pylint: disable=fixme
+if sys.version_info >= (3, 12):
+    # pylint: disable-next=protected-access
+    web.BaseSite._wait = _noop_wait  # type: ignore[method-assign]
 
 
 class HassClientResponse(aiohttp.ClientResponse):
