@@ -64,10 +64,10 @@ UV_LABEL_DEFINITIONS = (
 
 def get_uv_label(uv_index: int) -> str:
     """Return the UV label for the UV index."""
-    for uv_label in UV_LABEL_DEFINITIONS:
-        if uv_index >= uv_label.minimum_index:
-            return uv_label.value
-    return "Unknown"
+    label = next(
+        label for label in UV_LABEL_DEFINITIONS if uv_index >= label.minimum_index
+    )
+    return label.value
 
 
 @dataclass
