@@ -1,8 +1,6 @@
 """Support for Hydrawise sprinkler sensors."""
 from __future__ import annotations
 
-from datetime import datetime
-
 from pydrawise.schema import Zone
 import voluptuous as vol
 
@@ -96,7 +94,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
             else:
                 self._attr_native_value = 0
         elif self.entity_description.key == "next_cycle":
-            if (next_run := self.zone.scheduled_runs.next_run) is not None:
-                self._attr_native_value = dt_util.as_utc(next_run.start_time)
+            if (next_run := self.zone.scheduled_runs.next_run) is None:
+                self._attr_native_value = None
             else:
-                self._attr_native_value = datetime.max.replace(tzinfo=dt_util.UTC)
+                self._attr_native_value = dt_util.as_utc(next_run.start_time)

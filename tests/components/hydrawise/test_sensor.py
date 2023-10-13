@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 
-from freezegun.api import FrozenDateTimeFactory
 from pydrawise.schema import Zone
 import pytest
 
@@ -43,4 +42,4 @@ async def test_suspended_state(
 
     next_cycle = hass.states.get("sensor.zone_one_next_cycle")
     assert next_cycle is not None
-    assert next_cycle.state == "9999-12-31T23:59:59+00:00"
+    assert next_cycle.state == "unknown"
