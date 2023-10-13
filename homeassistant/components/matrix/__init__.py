@@ -6,7 +6,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import NewType, TypedDict
+from typing import NewType, TypedDict, cast
 
 import aiofiles.os
 from nio import AsyncClient, Event, MatrixRoom
@@ -17,6 +17,7 @@ from nio.responses import (
     JoinResponse,
     LoginError,
     Response,
+    RoomResolveAliasResponse,
     UploadError,
     UploadResponse,
     WhoamiError,
@@ -35,7 +36,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    HomeAssistantError,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
@@ -65,14 +70,16 @@ ATTR_IMAGES = "images"  # optional images
 
 WordCommand = NewType("WordCommand", str)
 ExpressionCommand = NewType("ExpressionCommand", re.Pattern)
-RoomID = NewType("RoomID", str)
+RoomAlias = NewType("RoomAlias", str)  # Starts with "#"
+RoomID = NewType("RoomID", str)  # Starts with "!"
+RoomAnyID = RoomID | RoomAlias
 
 
 class ConfigCommand(TypedDict, total=False):
     """Corresponds to a single COMMAND_SCHEMA."""
 
     name: str  # CONF_NAME
-    rooms: list[RoomID] | None  # CONF_ROOMS
+    rooms: list[RoomAnyID] | None  # CONF_ROOMS
     word: WordCommand | None  # CONF_WORD
     expression: ExpressionCommand | None  # CONF_EXPRESSION
 
@@ -160,7 +167,7 @@ class MatrixBot:
         verify_ssl: bool,
         username: str,
         password: str,
-        listening_rooms: list[RoomID],
+        listening_rooms: list[RoomAnyID],
         commands: list[ConfigCommand],
     ) -> None:
         """Set up the client."""
@@ -178,7 +185,9 @@ class MatrixBot:
             homeserver=self._homeserver, user=self._mx_id, ssl=self._verify_tls
         )
 
-        self._listening_rooms = listening_rooms
+        self._listening_rooms: dict[RoomAnyID, RoomID] = {
+            room_alias_or_id: RoomID("") for room_alias_or_id in listening_rooms
+        }
 
         self._word_commands: dict[RoomID, dict[WordCommand, ConfigCommand]] = {}
         self._expression_commands: dict[RoomID, list[ConfigCommand]] = {}
@@ -195,6 +204,7 @@ class MatrixBot:
             """Run once when Home Assistant finished startup."""
             self._access_tokens = await self._get_auth_tokens()
             await self._login()
+            await self._resolve_room_aliases()
             await self._join_rooms()
             # Sync once so that we don't respond to past events.
             await self._client.sync(timeout=30_000)
@@ -261,6 +271,34 @@ class MatrixBot:
                 "args": match.groupdict(),
             }
             self.hass.bus.async_fire(EVENT_MATRIX_COMMAND, message_data)
+
+    async def _resolve_room_alias(
+        self, room_id_or_alias: RoomAnyID
+    ) -> dict[RoomAnyID, RoomID]:
+        if room_id_or_alias.startswith("!"):
+            room_id = cast(RoomID, room_id_or_alias)
+        elif room_id_or_alias.startswith("#"):
+            room_alias = cast(RoomAlias, room_id_or_alias)
+            resolve_response = await self._client.room_resolve_alias(room_alias)
+            if isinstance(resolve_response, RoomResolveAliasResponse):
+                room_id = cast(RoomID, resolve_response.room_id)
+            else:
+                raise ConfigEntryError(
+                    f"Could not resolve {room_alias} to a room_id: {resolve_response}"
+                )
+        else:
+            raise ConfigEntryError(f"Invalid room ID or alias: {room_id_or_alias}")
+
+        return {room_id_or_alias: room_id}
+
+    async def _resolve_room_aliases(self) -> None:
+        """Resolve any RoomAliases into RoomIDs for the purpose of client interactions."""
+        resolved_rooms = [
+            self.hass.async_create_task(self._resolve_room_alias(room_id_or_alias))
+            for room_id_or_alias in self._listening_rooms
+        ]
+        for resolved_room in asyncio.as_completed(resolved_rooms):
+            self._listening_rooms |= await resolved_room
 
     async def _join_room(self, room_id_or_alias: str) -> None:
         """Join a room or do nothing if already joined."""
