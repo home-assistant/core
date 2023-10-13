@@ -49,8 +49,7 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             new_romy = await romy.create_romy(user_input[CONF_HOST], user_input.get(CONF_PASSWORD, ""))
 
             # get robots name in case none was provided
-            if name == "":
-                name = new_romy.name
+            if not user_input[CONF_NAME]:
                 user_input["name"] = new_romy.name
 
             if not new_romy.is_initialized:
