@@ -96,7 +96,9 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 )
 
 
-def _build_entity(name, vicare_api, device_config, sensor):
+def _build_entity(
+    name: str, vicare_api, device_config, sensor: ViCareBinarySensorEntityDescription
+):
     """Create a ViCare binary sensor entity."""
     try:
         sensor.value_getter(vicare_api)
