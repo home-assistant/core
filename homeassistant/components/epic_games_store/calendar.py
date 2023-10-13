@@ -40,16 +40,16 @@ class EGSCalendar(CalendarEntity):
     def __init__(
         self,
         coordinator: EGSUpdateCoordinator,
-        unique_id: str,
+        config_entry_id: str,
     ) -> None:
         """Initialize EGSCalendar."""
         self._coordinator = coordinator
         self._event: CalendarEvent | None = None
         self._attr_translation_key = f"{self._cal_type}_games"
-        self._attr_unique_id = f"{unique_id}-{self._cal_type}"
+        self._attr_unique_id = f"{config_entry_id}-{self._cal_type}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, unique_id)},
+            identifiers={(DOMAIN, config_entry_id)},
             manufacturer="Epic Games Store",
             name="Epic Games Store",
         )
