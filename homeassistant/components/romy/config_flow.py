@@ -46,13 +46,7 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Save the user input and finish the setup
-            host = user_input["host"]
-            name = user_input["name"]
-            password = ""
-            if "password" in user_input:
-                password = user_input["password"]
-
-            new_romy = await romy.create_romy(host, password)
+            new_romy = await romy.create_romy(user_input[CONF_HOST], user_input.get(CONF_PASSWORD, ""))
 
             # get robots name in case none was provided
             if name == "":
