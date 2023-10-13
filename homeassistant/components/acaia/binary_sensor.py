@@ -71,6 +71,6 @@ class AcaiaSensor(AcaiaEntity, BinarySensorEntity):
     entity_description: AcaiaBinarySensorEntityDescription
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on_fn(self._scale)
