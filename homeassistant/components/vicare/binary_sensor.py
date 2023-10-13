@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareRequiredKeysMixin
-from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
+from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
 from .entity import ViCareEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,7 +117,7 @@ def _build_entity(name, vicare_api, device_config, sensor):
 
 
 async def _entities_from_descriptions(
-    hass, name, entities, sensor_descriptions, iterables, config_entry
+    hass, entities, sensor_descriptions, iterables, config_entry
 ):
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
@@ -127,7 +127,7 @@ async def _entities_from_descriptions(
                 suffix = f" {current.id}"
             entity = await hass.async_add_executor_job(
                 _build_entity,
-                f"{name} {description.name}{suffix}",
+                f"{description.name}{suffix}",
                 current,
                 hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
                 description,
@@ -142,7 +142,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare binary sensor devices."""
-    name = VICARE_NAME
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
 
     entities = []
@@ -150,7 +149,7 @@ async def async_setup_entry(
     for description in GLOBAL_SENSORS:
         entity = await hass.async_add_executor_job(
             _build_entity,
-            f"{name} {description.name}",
+            description.name,
             api,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             description,
@@ -160,21 +159,21 @@ async def async_setup_entry(
 
     try:
         await _entities_from_descriptions(
-            hass, name, entities, CIRCUIT_SENSORS, api.circuits, config_entry
+            hass, entities, CIRCUIT_SENSORS, api.circuits, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No circuits found")
 
     try:
         await _entities_from_descriptions(
-            hass, name, entities, BURNER_SENSORS, api.burners, config_entry
+            hass, entities, BURNER_SENSORS, api.burners, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No burners found")
 
     try:
         await _entities_from_descriptions(
-            hass, name, entities, COMPRESSOR_SENSORS, api.compressors, config_entry
+            hass, entities, COMPRESSOR_SENSORS, api.compressors, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No compressors found")
