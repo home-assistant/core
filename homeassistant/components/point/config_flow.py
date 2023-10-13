@@ -4,16 +4,16 @@ from collections import OrderedDict
 import logging
 
 from aiohttp import web_response
-from pypoint import PointSession
+from pypoint import MINUT_AUTH_URL, PointSession
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CONF_REDIRECT_URI, DOMAIN
 
 AUTH_CALLBACK_PATH = "/api/minut"
 AUTH_CALLBACK_NAME = "api:minut"
@@ -45,10 +45,23 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
+    code: str | None = None
+
+    @property
+    def schema(self):
+        """Return current schema."""
+        return vol.Schema(
+            {
+                vol.Required(CONF_REDIRECT_URI): str,
+            }
+        )
 
     def __init__(self) -> None:
         """Initialize flow."""
         self.flow_impl = None
+        self.client_id = None
+        self.client_secret = None
+        self.redirect_uri = None
 
     async def async_step_import(self, user_input=None):
         """Handle external yaml configuration."""
@@ -56,6 +69,9 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_setup")
 
         self.flow_impl = DOMAIN
+        flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
+        self.client_id = flow[CONF_CLIENT_ID]
+        self.client_secret = flow[CONF_CLIENT_SECRET]
 
         return await self.async_step_auth()
 
@@ -88,66 +104,62 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="external_setup")
 
-        errors = {}
-
         if user_input is not None:
-            errors["base"] = "follow_link"
+            self.redirect_uri = user_input.get(CONF_REDIRECT_URI)
 
-        try:
-            async with asyncio.timeout(10):
-                url = await self._get_authorization_url()
-        except asyncio.TimeoutError:
-            return self.async_abort(reason="authorize_url_timeout")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected error generating auth url")
-            return self.async_abort(reason="unknown_authorize_url_generation")
+            try:
+                async with asyncio.timeout(10):
+                    url = await self._get_authorization_url()
+            except asyncio.TimeoutError:
+                return self.async_abort(reason="authorize_url_timeout")
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected error generating auth url")
+                return self.async_abort(reason="unknown_authorize_url_generation")
+            return self.async_external_step(
+                step_id="code",
+                url=url,
+            )
+
         return self.async_show_form(
             step_id="auth",
-            description_placeholders={"authorization_url": url},
-            errors=errors,
+            data_schema=self.schema,
         )
 
     async def _get_authorization_url(self):
         """Create Minut Point session and get authorization url."""
-        flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
-        client_id = flow[CONF_CLIENT_ID]
-        client_secret = flow[CONF_CLIENT_SECRET]
         point_session = PointSession(
             async_get_clientsession(self.hass),
-            client_id,
-            client_secret,
+            client_id=self.client_id,
+            client_secret=self.client_secret,
+            redirect_uri=self.redirect_uri,
         )
-
         self.hass.http.register_view(MinutAuthCallbackView())
+        return point_session.create_authorization_url(
+            MINUT_AUTH_URL, state=self.flow_id
+        )[0]
 
-        return point_session.get_authorization_url
-
-    async def async_step_code(self, code=None):
+    async def async_step_code(self, user_input=None):
         """Received code for authentication."""
+        if user_input is not None:
+            self.code = user_input
+            return self.async_external_step_done(next_step_id="finish")
+
+    async def async_step_finish(self, user_input=None):
+        """Create point session and entries."""
         if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
+        code = self.code
         if code is None:
             return self.async_abort(reason="no_code")
 
-        _LOGGER.debug(
-            "Should close all flows below %s",
-            self._async_in_progress(),
-        )
-        # Remove notification if no other discovery config entries in progress
-
-        return await self._async_create_session(code)
-
-    async def _async_create_session(self, code):
-        """Create point session and entries."""
-
-        flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
-        client_id = flow[CONF_CLIENT_ID]
-        client_secret = flow[CONF_CLIENT_SECRET]
+        client_id = self.client_id
+        client_secret = self.client_secret
         point_session = PointSession(
             async_get_clientsession(self.hass),
             client_id,
             client_secret,
+            redirect_uri=self.redirect_uri,
         )
         token = await point_session.get_access_token(code)
         _LOGGER.debug("Got new token")
@@ -182,12 +194,12 @@ class MinutAuthCallbackView(HomeAssistantView):
         """Receive authorization code."""
         hass = request.app["hass"]
         if "code" in request.query:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": "code"}, data=request.query["code"]
+            result = await hass.config_entries.flow.async_configure(
+                flow_id=request.query["state"], user_input=request.query["code"]
+            )
+            if result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP_DONE:
+                return web_response.Response(
+                    headers={"content-type": "text/html"},
+                    text="<script>window.close()</script>Success! This window can be closed",
                 )
-            )
-            return web_response.Response(
-                headers={"content-type": "text/html"},
-                text="<script>window.close()</script>Success! This window can be closed",
-            )
+        return "Error authenticating Minut Point."

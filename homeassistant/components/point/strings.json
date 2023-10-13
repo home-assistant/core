@@ -8,7 +8,8 @@
       },
       "auth": {
         "title": "Authenticate Point",
-        "description": "Please follow the link below and **Accept** access to your Minut account, then come back and press **Submit** below.\n\n[Link]({authorization_url})"
+        "description": "Please fill Redirect URI below, **Submit** and  **Accept** access to your Minut account in the popup dialog.",
+        "data": { "redirect_uri": "Redirect URI" }
       }
     },
     "create_entry": {
