@@ -51,11 +51,11 @@ class EGSCalendarUpdateCoordinator(
         try:
             # pylint: disable-next=protected-access
             self._api._get_errors = not_handle_service_errors
-            data = await self.hass.async_add_executor_job(self._api.get_free_games)
+            raw_data = await self.hass.async_add_executor_job(self._api.get_free_games)
+            _LOGGER.debug(raw_data)
+            data = raw_data["data"]["Catalog"]["searchStore"]["elements"]
         except Exception as error:
             raise UpdateFailed(error) from error
-
-        _LOGGER.debug(data)
 
         discount_games = filter(
             lambda game:
@@ -70,7 +70,7 @@ class EGSCalendarUpdateCoordinator(
                 # Upcoming discount(s)
                 game["promotions"]["upcomingPromotionalOffers"]
             ),
-            data["data"]["Catalog"]["searchStore"]["elements"],
+            data,
         )
 
         return_data: dict[str, list[dict[str, Any]]] = self.data or {
