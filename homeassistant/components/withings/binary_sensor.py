@@ -9,8 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import WithingsDataUpdateCoordinator
+from .const import BED_PRESENCE_COORDINATOR, DOMAIN
+from .coordinator import WithingsBedPresenceDataUpdateCoordinator
 from .entity import WithingsEntity
 
 
@@ -20,7 +20,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    coordinator: WithingsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WithingsBedPresenceDataUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ][BED_PRESENCE_COORDINATOR]
 
     entities = [WithingsBinarySensor(coordinator)]
 
@@ -33,8 +35,9 @@ class WithingsBinarySensor(WithingsEntity, BinarySensorEntity):
     _attr_icon = "mdi:bed"
     _attr_translation_key = "in_bed"
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
+    coordinator: WithingsBedPresenceDataUpdateCoordinator
 
-    def __init__(self, coordinator: WithingsDataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: WithingsBedPresenceDataUpdateCoordinator) -> None:
         """Initialize binary sensor."""
         super().__init__(coordinator, "in_bed")
 
