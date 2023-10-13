@@ -96,7 +96,9 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 )
 
 
-def _build_entity(name, vicare_api, device_config, sensor):
+def _build_entity(
+    name: str, vicare_api, device_config, sensor: ViCareBinarySensorEntityDescription
+):
     """Create a ViCare binary sensor entity."""
     try:
         sensor.value_getter(vicare_api)
@@ -117,8 +119,12 @@ def _build_entity(name, vicare_api, device_config, sensor):
 
 
 async def _entities_from_descriptions(
-    hass, entities, sensor_descriptions, iterables, device
-):
+    hass: HomeAssistant,
+    entities: list[ViCareBinarySensor],
+    sensor_descriptions: tuple[ViCareBinarySensorEntityDescription, ...],
+    iterables,
+    device,
+) -> None:
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
         for current in iterables:

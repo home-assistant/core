@@ -46,7 +46,9 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 )
 
 
-def _build_entity(name, vicare_api, device_config, description):
+def _build_entity(
+    name: str, vicare_api, device_config, description: ViCareButtonEntityDescription
+):
     """Create a ViCare button entity."""
     _LOGGER.debug("Found device %s", name)
     try:

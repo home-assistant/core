@@ -218,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==17.0.1
+aioesphomeapi==17.1.5
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -768,7 +768,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.71.0
+hass-nabucasa==0.73.0
 
 # homeassistant.components.conversation
 hassil==1.2.5
@@ -2081,7 +2081,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.115.2
+zeroconf==0.116.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
