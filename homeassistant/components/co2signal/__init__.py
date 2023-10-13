@@ -1,8 +1,10 @@
 """The CO2 Signal integration."""
 from __future__ import annotations
 
+from aioelectricitymaps import ElectricityMaps
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -13,7 +15,9 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up CO2 Signal from a config entry."""
-    coordinator = CO2SignalCoordinator(hass, entry)
+    coordinator = CO2SignalCoordinator(
+        hass, ElectricityMaps(token=entry.data[CONF_API_KEY])
+    )
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator

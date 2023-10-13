@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["CO2Signal"],
-  "requirements": ["CO2Signal==0.4.2"]
+  "requirements": ["aioelectricitymaps==0.1.2"]
 }

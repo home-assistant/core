@@ -18,9 +18,6 @@ Adax-local==0.1.5
 # homeassistant.components.ambiclimate
 Ambiclimate==0.2.1
 
-# homeassistant.components.co2signal
-CO2Signal==0.4.2
-
 # homeassistant.components.doorbird
 DoorBirdPy==2.1.0
 
@@ -213,6 +210,9 @@ aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
 aioecowitt==2023.5.0
+
+# homeassistant.components.co2signal
+aioelectricitymaps==0.1.2
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
