@@ -36,12 +36,7 @@ async def test_binary_sensor(
     resp = await call_webhook(
         hass,
         WEBHOOK_ID,
-        {
-            "userid": USER_ID,
-            "appli": NotificationCategory.IN_BED,
-            "startdate": 1620237486,
-            "enddate": 1620237486,
-        },
+        {"userid": USER_ID, "appli": NotificationCategory.IN_BED},
         client,
     )
     assert resp.message_code == 0
@@ -51,12 +46,7 @@ async def test_binary_sensor(
     resp = await call_webhook(
         hass,
         WEBHOOK_ID,
-        {
-            "userid": USER_ID,
-            "appli": NotificationCategory.OUT_BED,
-            "startdate": 1620237486,
-            "enddate": 1620237486,
-        },
+        {"userid": USER_ID, "appli": NotificationCategory.OUT_BED},
         client,
     )
     assert resp.message_code == 0
@@ -83,11 +73,6 @@ async def test_polling_binary_sensor(
         await call_webhook(
             hass,
             WEBHOOK_ID,
-            {
-                "userid": USER_ID,
-                "appli": NotificationCategory.IN_BED,
-                "startdate": 1620237486,
-                "enddate": 1620237486,
-            },
+            {"userid": USER_ID, "appli": NotificationCategory.IN_BED},
             client,
         )

@@ -217,12 +217,7 @@ async def test_webhooks_request_data(
     await call_webhook(
         hass,
         WEBHOOK_ID,
-        {
-            "userid": USER_ID,
-            "appli": NotificationCategory.WEIGHT,
-            "startdate": 1620237486,
-            "enddate": 1620237486,
-        },
+        {"userid": USER_ID, "appli": NotificationCategory.WEIGHT},
         client,
     )
     assert withings.get_measurement_in_period.call_count == 2
