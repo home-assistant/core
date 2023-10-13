@@ -573,7 +573,9 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 )
 
 
-def _build_entity(name, vicare_api, device_config, sensor):
+def _build_entity(
+    name: str, vicare_api, device_config, sensor: ViCareSensorEntityDescription
+):
     """Create a ViCare sensor entity."""
     _LOGGER.debug("Found device %s", name)
     try:
