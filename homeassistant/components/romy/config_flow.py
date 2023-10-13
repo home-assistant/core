@@ -58,7 +58,7 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not new_romy.is_unlocked:
                 data = _schema_with_defaults(
-                    host=host, name=name, requires_password=True
+                    user_input, requires_password=True
                 )
                 errors[CONF_PASSWORD] = "invalid_auth"
 
