@@ -37,7 +37,7 @@ async def async_setup_entry(
     ]
     name: str = config_entry.data[CONF_NAME]
 
-    dev = [
+    entities = [
         TransmissionSpeedSensor(
             coordinator,
             name,
@@ -88,7 +88,7 @@ async def async_setup_entry(
         ),
     ]
 
-    async_add_entities(dev, True)
+    async_add_entities(entities)
 
 
 class TransmissionSensor(
