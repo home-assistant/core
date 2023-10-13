@@ -223,13 +223,14 @@ async def test_triggering_reauth(
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
     error: Exception,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test triggering reauth."""
     await setup_integration(hass, polling_config_entry, False)
 
     withings.async_measure_get_meas.side_effect = error
-    future = dt_util.utcnow() + timedelta(minutes=10)
-    async_fire_time_changed(hass, future)
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
