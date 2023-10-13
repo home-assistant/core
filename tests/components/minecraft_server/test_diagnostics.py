@@ -1,8 +1,8 @@
 """Tests for Minecraft Server diagnostics."""
-import json
 from unittest.mock import patch
 
 from mcstatus import BedrockServer, JavaServer
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.minecraft_server.api import MinecraftServerType
 from homeassistant.components.minecraft_server.const import DEFAULT_NAME, DOMAIN
@@ -17,7 +17,7 @@ from .const import (
     TEST_PORT,
 )
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -25,6 +25,7 @@ from tests.typing import ClientSessionGenerator
 async def test_config_entry_diagnostics_java(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test fetching of the Java Edition config entry diagnostics."""
 
@@ -56,18 +57,16 @@ async def test_config_entry_diagnostics_java(
         await hass.async_block_till_done()
 
     # Test diagnostics.
-    diagnostics_fixture = json.loads(
-        load_fixture("diagnostics_java_edition.json", DOMAIN)
-    )
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
-        == diagnostics_fixture
+        == snapshot
     )
 
 
 async def test_config_entry_diagnostics_bedrock(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test fetching of the Bedrock Edition config entry diagnostics."""
 
@@ -99,10 +98,7 @@ async def test_config_entry_diagnostics_bedrock(
         await hass.async_block_till_done()
 
     # Test diagnostics.
-    diagnostics_fixture = json.loads(
-        load_fixture("diagnostics_bedrock_edition.json", DOMAIN)
-    )
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
-        == diagnostics_fixture
+        == snapshot
     )
