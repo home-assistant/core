@@ -44,14 +44,21 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api import ConfigEntryWithingsApi
 from .const import (
-    CONF_CLOUDHOOK_URL,
+    BED_PRESENCE_COORDINATOR,
     CONF_PROFILES,
     CONF_USE_WEBHOOK,
     DEFAULT_TITLE,
     DOMAIN,
     LOGGER,
+    MEASUREMENT_COORDINATOR,
+    SLEEP_COORDINATOR,
 )
-from .coordinator import WithingsDataUpdateCoordinator
+from .coordinator import (
+    WithingsBedPresenceDataUpdateCoordinator,
+    WithingsDataUpdateCoordinator,
+    WithingsMeasurementDataUpdateCoordinator,
+    WithingsSleepDataUpdateCoordinator,
+)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -82,6 +89,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 SUBSCRIBE_DELAY = timedelta(seconds=5)
 UNSUBSCRIBE_DELAY = timedelta(seconds=1)
+CONF_CLOUDHOOK_URL = "cloudhook_url"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -134,11 +142,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, entry
         ),
     )
-    coordinator = WithingsDataUpdateCoordinator(hass, client)
+    coordinators: dict[str, WithingsDataUpdateCoordinator] = {
+        MEASUREMENT_COORDINATOR: WithingsMeasurementDataUpdateCoordinator(hass, client),
+        SLEEP_COORDINATOR: WithingsSleepDataUpdateCoordinator(hass, client),
+        BED_PRESENCE_COORDINATOR: WithingsBedPresenceDataUpdateCoordinator(
+            hass, client
+        ),
+    }
 
-    await coordinator.async_config_entry_first_refresh()
+    for coordinator in coordinators.values():
+        await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
 
     async def unregister_webhook(
         _: Any,
@@ -146,13 +161,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.debug("Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID])
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         await async_unsubscribe_webhooks(client)
-        coordinator.webhook_subscription_listener(False)
+        for coordinator in coordinators.values():
+            coordinator.webhook_subscription_listener(False)
 
     async def register_webhook(
         _: Any,
     ) -> None:
         if cloud.async_active_subscription(hass):
-            webhook_url = await async_cloudhook_generate_url(hass, entry)
+            webhook_url = await _async_cloudhook_generate_url(hass, entry)
         else:
             webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
 
@@ -172,11 +188,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DOMAIN,
             webhook_name,
             entry.data[CONF_WEBHOOK_ID],
-            get_webhook_handler(coordinator),
+            get_webhook_handler(coordinators),
         )
 
         await async_subscribe_webhooks(client, webhook_url)
-        coordinator.webhook_subscription_listener(True)
+        for coordinator in coordinators.values():
+            coordinator.webhook_subscription_listener(True)
         LOGGER.debug("Register Withings webhook: %s", webhook_url)
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
@@ -200,7 +217,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.async_on_unload(async_call_later(hass, 1, register_webhook))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -212,11 +228,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_subscribe_webhooks(
@@ -266,7 +277,7 @@ async def async_unsubscribe_webhooks(client: ConfigEntryWithingsApi) -> None:
         )
 
 
-async def async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
+async def _async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
     """Generate the full URL for a webhook_id."""
     if CONF_CLOUDHOOK_URL not in entry.data:
         webhook_id = entry.data[CONF_WEBHOOK_ID]
@@ -299,7 +310,7 @@ def json_message_response(message: str, message_code: int) -> Response:
 
 
 def get_webhook_handler(
-    coordinator: WithingsDataUpdateCoordinator,
+    coordinators: dict[str, WithingsDataUpdateCoordinator],
 ) -> Callable[[HomeAssistant, str, Request], Awaitable[Response | None]]:
     """Return webhook handler."""
 
@@ -330,7 +341,9 @@ def get_webhook_handler(
         except ValueError:
             return json_message_response("Invalid appli provided", message_code=21)
 
-        await coordinator.async_webhook_data_updated(appli)
+        for coordinator in coordinators.values():
+            if appli in coordinator.notification_categories:
+                await coordinator.async_webhook_data_updated(appli)
 
         return json_message_response("Success", message_code=0)
 
