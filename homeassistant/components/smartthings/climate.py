@@ -495,10 +495,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return (
-            UNIT_MAP.get(self._device.status.attributes[Attribute.temperature].unit)
-            or ""
-        )
+        return UNIT_MAP[self._device.status.attributes[Attribute.temperature].unit]
 
     def _determine_swing_modes(self) -> list[str]:
         """Return the list of available swing modes."""
