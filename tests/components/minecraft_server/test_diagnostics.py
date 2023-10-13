@@ -45,7 +45,6 @@ async def test_config_entry_diagnostics(
     # Setup mock entry.
     with patch(
         f"mcstatus.server.{server.__name__}.lookup",
-        side_effect=None,
         return_value=server(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         f"mcstatus.server.{server.__name__}.async_status",
