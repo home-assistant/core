@@ -22,9 +22,7 @@ def _schema_with_defaults(
     }
 
     if requires_password:
-        schema.update(
-            {vol.Required(CONF_PASSWORD, default=""): vol.All(str, vol.Length(8))}
-        )
+        schema[vol.Required(CONF_PASSWORD)]= vol.All(str, vol.Length(8))
 
     return vol.Schema(schema)
 
