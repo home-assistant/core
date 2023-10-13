@@ -121,6 +121,9 @@ RtmAPI==0.7.2
 # homeassistant.components.sql
 SQLAlchemy==2.0.21
 
+# homeassistant.components.tami4
+Tami4EdgeAPI==2.1
+
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
 
@@ -215,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==17.0.1
+aioesphomeapi==17.1.5
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1390,9 +1393,6 @@ pymailgunner==1.4
 # homeassistant.components.firmata
 pymata-express==1.19
 
-# homeassistant.components.mazda
-pymazda==0.3.11
-
 # homeassistant.components.melcloud
 pymelcloud==2.5.8
 
@@ -1403,7 +1403,7 @@ pymeteoclimatic==0.0.6
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.5.2
+pymodbus==3.5.4
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1726,7 +1726,7 @@ renault-api==0.2.0
 renson-endura-delta==1.6.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.10
+reolink-aio==0.7.11
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -2081,7 +2081,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.115.2
+zeroconf==0.116.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
