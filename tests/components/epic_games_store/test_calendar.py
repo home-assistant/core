@@ -94,9 +94,13 @@ async def test_free_games(
 
 
 async def test_attribute_not_found(
-    hass: HomeAssistant, service_attribute_not_found: Mock
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_attribute_not_found: Mock,
 ) -> None:
     """Test setup component with calendars."""
+    freezer.move_to("2023-10-12T00:00:00.000Z")
+
     await setup_platform(hass, CALENDAR_DOMAIN)
 
     state = hass.states.get("calendar.epic_games_store_discount_games")
