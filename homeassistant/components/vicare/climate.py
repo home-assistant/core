@@ -67,7 +67,7 @@ VICARE_HOLD_MODE_OFF = "off"
 VICARE_TEMP_HEATING_MIN = 3
 VICARE_TEMP_HEATING_MAX = 37
 
-VICARE_TO_HA_HVAC_HEATING = {
+VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
     VICARE_MODE_FORCEDREDUCED: HVACMode.OFF,
     VICARE_MODE_OFF: HVACMode.OFF,
     VICARE_MODE_DHW: HVACMode.OFF,
@@ -230,7 +230,10 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current hvac mode."""
-        return VICARE_TO_HA_HVAC_HEATING.get(self._current_mode)
+        if self._current_mode is None:
+            return None
+        mode: str = self._current_mode
+        return VICARE_TO_HA_HVAC_HEATING.get(mode)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new hvac mode on the ViCare API."""
