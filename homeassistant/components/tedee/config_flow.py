@@ -46,10 +46,10 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self._errors: dict = {}
-        self._reload: dict = False
+        self._reload: bool = False
         self._previous_step_data: dict = {}
         self._config: dict = {}
 

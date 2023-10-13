@@ -7,7 +7,10 @@ from typing import Any
 from pytedee_async import TedeeClient, TedeeClientException
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import TedeeEntity, TedeeEntityDescription
@@ -47,7 +50,11 @@ ENTITIES: tuple[TedeeButtonEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Tedee button entity."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     entities = []
@@ -66,7 +73,7 @@ class TedeeButtonEntity(TedeeEntity, ButtonEntity):
 
     entity_description: TedeeButtonEntityDescription
 
-    def __init__(self, lock, coordinator, entity_description):
+    def __init__(self, lock, coordinator, entity_description) -> None:
         """Initialize the button."""
         _LOGGER.debug("Setting up ButtonEntity for %s", lock.name)
         super().__init__(lock, coordinator, entity_description)

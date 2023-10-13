@@ -11,6 +11,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import TedeeEntity, TedeeEntityDescription
@@ -45,7 +48,11 @@ ENTITIES: tuple[TedeeSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Tedee sensor entity."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
@@ -63,12 +70,12 @@ class TedeeSensorEntity(TedeeEntity, SensorEntity):
 
     entity_description: TedeeSensorEntityDescription
 
-    def __init__(self, lock, coordinator, entity_description):
+    def __init__(self, lock, coordinator, entity_description) -> None:
         """Initialize Tedee sensor entity."""
         _LOGGER.debug("Setting up SensorEntity for %s", lock.name)
         super().__init__(lock, coordinator, entity_description)
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._lock)

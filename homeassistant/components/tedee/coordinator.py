@@ -11,7 +11,7 @@ from pytedee_async import (
     TedeeWebhookException,
 )
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 class TedeeApiCoordinator(DataUpdateCoordinator):
     """Class to handle fetching data from the tedee API centrally."""
 
-    def __init__(self, hass, tedee_client):
+    def __init__(self, hass: HomeAssistant, tedee_client) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
