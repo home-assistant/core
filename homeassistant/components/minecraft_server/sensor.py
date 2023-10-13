@@ -81,6 +81,7 @@ SENSOR_DESCRIPTIONS = [
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
         },
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     MinecraftServerSensorEntityDescription(
         key=KEY_PROTOCOL_VERSION,
@@ -154,6 +155,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.BEDROCK_EDITION,
         },
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     MinecraftServerSensorEntityDescription(
