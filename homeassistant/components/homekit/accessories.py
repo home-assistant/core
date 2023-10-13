@@ -17,6 +17,7 @@ from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.remote import RemoteEntityFeature
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -46,6 +47,7 @@ from homeassistant.core import (
     callback as ha_callback,
     split_entity_id,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
@@ -68,7 +70,6 @@ from .const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
-    DOMAIN,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
     HK_NOT_CHARGABLE,
@@ -80,7 +81,6 @@ from .const import (
     MAX_VERSION_LENGTH,
     SERV_ACCESSORY_INFO,
     SERV_BATTERY_SERVICE,
-    SERVICE_HOMEKIT_RESET_ACCESSORY,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -109,6 +109,12 @@ SWITCH_TYPES = {
     TYPE_VALVE: "Valve",
 }
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
+
+RELOAD_ON_CHANGE_ATTRS = (
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+)
 
 
 def get_accessory(  # noqa: C901
@@ -183,7 +189,9 @@ def get_accessory(  # noqa: C901
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         feature_list = config.get(CONF_FEATURE_LIST, [])
 
-        if device_class == MediaPlayerDeviceClass.TV:
+        if device_class == MediaPlayerDeviceClass.RECEIVER:
+            a_type = "ReceiverMediaPlayer"
+        elif device_class == MediaPlayerDeviceClass.TV:
             a_type = "TelevisionMediaPlayer"
         elif validate_media_player_features(state, feature_list):
             a_type = "MediaPlayer"
@@ -226,8 +234,12 @@ def get_accessory(  # noqa: C901
             a_type = "LightSensor"
 
     elif state.domain == "switch":
-        switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
-        a_type = SWITCH_TYPES[switch_type]
+        if switch_type := config.get(CONF_TYPE):
+            a_type = SWITCH_TYPES[switch_type]
+        elif state.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.OUTLET:
+            a_type = "Outlet"
+        else:
+            a_type = "Switch"
 
     elif state.domain == "vacuum":
         a_type = "Vacuum"
@@ -265,6 +277,8 @@ def get_accessory(  # noqa: C901
 class HomeAccessory(Accessory):  # type: ignore[misc]
     """Adapter class for Accessory."""
 
+    driver: HomeDriver
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -274,7 +288,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         aid: int,
         config: dict,
         *args: Any,
-        category: str = CATEGORY_OTHER,
+        category: int = CATEGORY_OTHER,
         device_id: str | None = None,
         **kwargs: Any,
     ) -> None:
@@ -287,6 +301,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             *args,  # noqa: B026
             **kwargs,
         )
+        self._reload_on_change_attrs = list(RELOAD_ON_CHANGE_ATTRS)
         self.config = config or {}
         if device_id:
             self.device_id: str | None = device_id
@@ -457,13 +472,35 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self, event: EventType[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
-        self.async_update_state_callback(event.data["new_state"])
+        new_state = event.data["new_state"]
+        old_state = event.data["old_state"]
+        if (
+            new_state
+            and old_state
+            and STATE_UNAVAILABLE not in (old_state.state, new_state.state)
+        ):
+            old_attributes = old_state.attributes
+            new_attributes = new_state.attributes
+            for attr in self._reload_on_change_attrs:
+                if old_attributes.get(attr) != new_attributes.get(attr):
+                    _LOGGER.debug(
+                        "%s: Reloading HomeKit accessory since %s has changed from %s -> %s",
+                        self.entity_id,
+                        attr,
+                        old_attributes.get(attr),
+                        new_attributes.get(attr),
+                    )
+                    self.async_reload()
+                    return
+        self.async_update_state_callback(new_state)
 
     @ha_callback
     def async_update_state_callback(self, new_state: State | None) -> None:
         """Handle state change listener callback."""
         _LOGGER.debug("New_state: %s", new_state)
-        if new_state is None:
+        # HomeKit handles unavailable state via the available property
+        # so we should not propagate it here
+        if new_state is None or new_state.state == STATE_UNAVAILABLE:
             return
         battery_state = None
         battery_charging_state = None
@@ -568,20 +605,29 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         )
 
     @ha_callback
-    def async_reset(self) -> None:
-        """Reset and recreate an accessory."""
-        self.hass.async_create_task(
-            self.hass.services.async_call(
-                DOMAIN,
-                SERVICE_HOMEKIT_RESET_ACCESSORY,
-                {ATTR_ENTITY_ID: self.entity_id},
-            )
+    def async_reload(self) -> None:
+        """Reload and recreate an accessory and update the c# value in the mDNS record."""
+        async_dispatcher_send(
+            self.hass,
+            f"homekit_reload_entities_{self.driver.entry_id}",
+            (self.entity_id,),
         )
 
-    async def stop(self) -> None:
+    @ha_callback
+    def async_stop(self) -> None:
         """Cancel any subscriptions when the bridge is stopped."""
         while self._subscriptions:
             self._subscriptions.pop(0)()
+
+    async def stop(self) -> None:
+        """Stop the accessory.
+
+        This is overrides the parent class to call async_stop
+        since pyhap will call this function to stop the accessory
+        but we want to use our async_stop method since we need
+        it to be a callback to avoid races in reloading accessories.
+        """
+        self.async_stop()
 
 
 class HomeBridge(Bridge):  # type: ignore[misc]
@@ -628,7 +674,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         """Initialize a AccessoryDriver object."""
         super().__init__(**kwargs)
         self.hass = hass
-        self._entry_id = entry_id
+        self.entry_id = entry_id
         self._bridge_name = bridge_name
         self._entry_title = entry_title
         self.iid_storage = iid_storage
@@ -640,7 +686,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         """Override super function to dismiss setup message if paired."""
         success = super().pair(client_username_bytes, client_public, client_permissions)
         if success:
-            async_dismiss_setup_message(self.hass, self._entry_id)
+            async_dismiss_setup_message(self.hass, self.entry_id)
         return cast(bool, success)
 
     @pyhap_callback  # type: ignore[misc]
@@ -653,7 +699,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
 
         async_show_setup_message(
             self.hass,
-            self._entry_id,
+            self.entry_id,
             accessory_friendly_name(self._entry_title, self.accessory),
             self.state.pincode,
             self.accessory.xhm_uri(),

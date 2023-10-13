@@ -1,4 +1,6 @@
 """Test aiohttp request helper."""
+import sys
+
 from aiohttp import web
 
 from homeassistant.util import aiohttp
@@ -12,10 +14,17 @@ async def test_request_json() -> None:
 
 
 async def test_request_text() -> None:
-    """Test a JSON request."""
+    """Test bytes in request."""
     request = aiohttp.MockRequest(b"hello", status=201, mock_source="test")
+    assert request.body_exists
     assert request.status == 201
     assert await request.text() == "hello"
+
+
+async def test_request_body_exists() -> None:
+    """Test body exists."""
+    request = aiohttp.MockRequest(b"", mock_source="test")
+    assert not request.body_exists
 
 
 async def test_request_post_query() -> None:
@@ -41,11 +50,22 @@ def test_serialize_text() -> None:
 def test_serialize_body_str() -> None:
     """Test serializing a response with a str as body."""
     response = web.Response(status=201, body="Hello")
-    assert aiohttp.serialize_response(response) == {
-        "status": 201,
-        "body": "Hello",
-        "headers": {"Content-Length": "5", "Content-Type": "text/plain; charset=utf-8"},
-    }
+    # TODO: Remove version check with aiohttp 3.9.0
+    if sys.version_info >= (3, 12):
+        assert aiohttp.serialize_response(response) == {
+            "status": 201,
+            "body": "Hello",
+            "headers": {"Content-Type": "text/plain; charset=utf-8"},
+        }
+    else:
+        assert aiohttp.serialize_response(response) == {
+            "status": 201,
+            "body": "Hello",
+            "headers": {
+                "Content-Length": "5",
+                "Content-Type": "text/plain; charset=utf-8",
+            },
+        }
 
 
 def test_serialize_body_None() -> None:

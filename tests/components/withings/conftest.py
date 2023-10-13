@@ -20,10 +20,7 @@ from homeassistant.components.withings.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .common import ComponentFactory
-
 from tests.common import MockConfigEntry, load_json_object_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -36,22 +33,6 @@ SCOPES = [
 TITLE = "henk"
 USER_ID = 12345
 WEBHOOK_ID = "55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
-
-
-@pytest.fixture
-def component_factory(
-    hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
-):
-    """Return a factory for initializing the withings component."""
-    with patch(
-        "homeassistant.components.withings.common.ConfigEntryWithingsApi"
-    ) as api_class_mock:
-        yield ComponentFactory(
-            hass, api_class_mock, hass_client_no_auth, aioclient_mock
-        )
 
 
 @pytest.fixture(name="scopes")
@@ -78,8 +59,8 @@ def mock_expires_at() -> int:
     return time.time() + 3600
 
 
-@pytest.fixture(name="config_entry")
-def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
+@pytest.fixture
+def webhook_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
     """Create Withings entry in Home Assistant."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -98,8 +79,52 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
             "profile": TITLE,
             "webhook_id": WEBHOOK_ID,
         },
-        options={
-            "use_webhook": True,
+    )
+
+
+@pytest.fixture
+def cloudhook_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
+    """Create Withings entry in Home Assistant."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=TITLE,
+        unique_id=str(USER_ID),
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "status": 0,
+                "userid": str(USER_ID),
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": ",".join(scopes),
+            },
+            "profile": TITLE,
+            "webhook_id": WEBHOOK_ID,
+            "cloudhook_url": "https://hooks.nabu.casa/ABCD",
+        },
+    )
+
+
+@pytest.fixture
+def polling_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
+    """Create Withings entry in Home Assistant."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=TITLE,
+        unique_id=str(USER_ID),
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "status": 0,
+                "userid": str(USER_ID),
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": ",".join(scopes),
+            },
+            "profile": TITLE,
+            "webhook_id": WEBHOOK_ID,
         },
     )
 
@@ -123,21 +148,22 @@ def mock_withings():
     )
 
     with patch(
-        "homeassistant.components.withings.common.ConfigEntryWithingsApi",
+        "homeassistant.components.withings.ConfigEntryWithingsApi",
         return_value=mock,
     ):
         yield mock
 
 
-@pytest.fixture(name="disable_webhook_delay")
+@pytest.fixture(name="disable_webhook_delay", autouse=True)
 def disable_webhook_delay():
     """Disable webhook delay."""
 
     mock = AsyncMock()
     with patch(
-        "homeassistant.components.withings.common.SUBSCRIBE_DELAY", timedelta(seconds=0)
+        "homeassistant.components.withings.SUBSCRIBE_DELAY",
+        timedelta(seconds=0),
     ), patch(
-        "homeassistant.components.withings.common.UNSUBSCRIBE_DELAY",
+        "homeassistant.components.withings.UNSUBSCRIBE_DELAY",
         timedelta(seconds=0),
     ):
         yield mock

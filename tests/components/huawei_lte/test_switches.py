@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from tests.common import MockConfigEntry
 
-SWITCH_WIFI_GUEST_NETWORK = "switch.lte_wifi_guest_network"
+SWITCH_WIFI_GUEST_NETWORK = "switch.lte_wi_fi_guest_network"
 
 
 def magic_client(multi_basic_settings_value: dict) -> MagicMock:

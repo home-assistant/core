@@ -46,6 +46,7 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
+    CONF_RETRY_ON_EMPTY,
     CONF_SLAVE_COUNT,
     CONF_STOPBITS,
     CONF_SWAP,
@@ -419,6 +420,12 @@ async def test_duplicate_entity_validator(do_config) -> None:
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_CLOSE_COMM_ON_ERROR: True,
+        },
+        {
+            CONF_TYPE: TCP,
+            CONF_HOST: TEST_MODBUS_HOST,
+            CONF_PORT: TEST_PORT_TCP,
+            CONF_RETRY_ON_EMPTY: True,
         },
         {
             CONF_TYPE: TCP,

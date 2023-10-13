@@ -1053,6 +1053,7 @@ async def test_multiple_runs_wait(hass: HomeAssistant, action_type) -> None:
         hass.states.async_set("switch.test", "on")
         hass.async_create_task(script_obj.async_run(context=Context()))
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
 
         assert script_obj.is_running
         assert len(events) == 1
@@ -1062,6 +1063,7 @@ async def test_multiple_runs_wait(hass: HomeAssistant, action_type) -> None:
         wait_started_flag.clear()
         hass.async_create_task(script_obj.async_run())
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
     except (AssertionError, asyncio.TimeoutError):
         await script_obj.async_stop()
         raise
@@ -4079,6 +4081,7 @@ async def test_script_mode_2(
         hass.states.async_set("switch.test", "on")
         hass.async_create_task(script_obj.async_run(context=Context()))
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
 
         assert script_obj.is_running
         assert len(events) == 1
@@ -4089,6 +4092,7 @@ async def test_script_mode_2(
         wait_started_flag.clear()
         hass.async_create_task(script_obj.async_run(context=Context()))
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
 
         assert script_obj.is_running
         assert len(events) == 2
