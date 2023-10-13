@@ -17,6 +17,7 @@ FLOWS = {
     ],
     "integration": [
         "abode",
+        "acaia",
         "accuweather",
         "acmeda",
         "adax",
