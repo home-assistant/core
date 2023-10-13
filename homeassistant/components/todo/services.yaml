@@ -27,11 +27,11 @@ update_item:
         - todo.TodoListEntityFeature.UPDATE_TODO_ITEM
   fields:
     uid:
-      required: true
+      required: false
       selector:
         text:
     summary:
-      required: true
+      required: false
       example: "Submit Income Tax Return"
       selector:
         text:
@@ -51,8 +51,12 @@ delete_item:
       supported_features:
         - todo.TodoListEntityFeature.DELETE_TODO_ITEM
   fields:
-    uids:
-      required: true
+    uid:
+      required: false
+      selector:
+        object:
+    summary:
+      required: false
       selector:
         object:
 move_item:
@@ -66,7 +70,15 @@ move_item:
       required: true
       selector:
         text:
-    previous:
+    summary:
+      required: true
+      selector:
+        text:
+    previous_uid:
+      required: false
+      selector:
+        text:
+    previous_summary:
       required: false
       selector:
         text:

@@ -22,7 +22,7 @@
     },
     "update_item": {
       "name": "Update To-do List Item",
-      "description": "Update an existing To-do List Item.",
+      "description": "Update an existing To-do List Item based on either it's Unique Id or Summary.",
       "fields": {
         "uid": {
           "name": "To-do Item Unique Id",
@@ -40,25 +40,37 @@
     },
     "delete_item": {
       "name": "Delete a To-do List Item",
-      "description": "Delete an existing To-do List Item.",
+      "description": "Delete an existing To-do List Item either by it's Unique Id or Summary.",
       "fields": {
-        "uids": {
+        "uid": {
           "name": "To-do Item Unique Ids",
           "description": "Unique Identifiers for the To-do List Items."
+        },
+        "summary": {
+          "name": "Summary",
+          "description": "The short summary that represents the To-do item."
         }
       }
     },
     "move_item": {
       "name": "Re-order a To-do List Item",
-      "description": "Re-orde an existing To-do List Item within the To-do List.",
+      "description": "Re-orde an existing To-do List Item within the To-do List either by it's Unique Id or Summary. The item is either moved to the first position in the list or immediately following the item identified by the Previous Unique Id or Summary.",
       "fields": {
         "uid": {
           "name": "To-do Item Unique Id",
           "description": "Unique Identifier for the To-do List Item to move."
         },
-        "previous": {
+        "summary": {
+          "name": "Summary",
+          "description": "The summary of the To-dot represents the To-do item."
+        },
+        "previous_uid": {
           "name": "Previous To-do Item Unique Id",
-          "description": "Unique Identifier for the item before the destination of the moving To-do List item."
+          "description": "Move the To-do Item after the To-do Item with this Unique Identifier."
+        },
+        "previous_summary": {
+          "name": "Previous To-do Item Summary",
+          "description": "Move the To-do Item after the To-do Item with this Summary."
         }
       }
     }

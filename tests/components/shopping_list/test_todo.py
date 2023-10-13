@@ -163,7 +163,7 @@ async def test_delete_item(
         TODO_DOMAIN,
         "delete_item",
         {
-            "uids": [items[0]["uid"]],
+            "uid": [items[0]["uid"]],
         },
         target={"entity_id": TEST_ENTITY},
         blocking=True,
@@ -208,7 +208,7 @@ async def test_bulk_delete(
         TODO_DOMAIN,
         "delete_item",
         {
-            "uids": uids,
+            "uid": uids,
         },
         target={"entity_id": TEST_ENTITY},
         blocking=True,
@@ -356,7 +356,7 @@ async def test_move_item(
         "uid": uids[src_idx],
     }
     if dst_idx is not None:
-        data["previous"] = uids[dst_idx]
+        data["previous_uid"] = uids[dst_idx]
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -400,7 +400,7 @@ async def test_move_invalid_item(
             "move_item",
             {
                 "uid": uid,
-                "previous": "unknown",
+                "previous_uid": "unknown",
             },
             target={"entity_id": TEST_ENTITY},
             blocking=True,
@@ -412,7 +412,7 @@ async def test_move_invalid_item(
             "move_item",
             {
                 "uid": "unknown",
-                "previous": uid,
+                "previous_uid": uid,
             },
             target={"entity_id": TEST_ENTITY},
             blocking=True,

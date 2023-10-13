@@ -30,7 +30,7 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 TASK_ITEM_FIELDS = {
-    vol.Required("summary"): cv.string,
+    vol.Required("summary"): vol.All(cv.string, vol.Length(min=1)),
     vol.Optional("status", default=TodoItemStatus.NEEDS_ACTION): vol.In(
         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED}
     ),
@@ -57,24 +57,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         "update_item",
-        TASK_ITEM_UPDATE_FIELDS,
+        vol.All(
+            cv.make_entity_service_schema(TASK_ITEM_UPDATE_FIELDS),
+            cv.has_at_least_one_key("uid", "summary"),
+        ),
         _async_update_todo_item,
         required_features=[TodoListEntityFeature.UPDATE_TODO_ITEM],
     )
     component.async_register_entity_service(
         "delete_item",
-        {
-            vol.Required("uids"): vol.All(cv.ensure_list, [cv.string]),
-        },
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Optional("uid"): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional("summary"): vol.All(cv.ensure_list, [cv.string]),
+                }
+            ),
+            cv.has_at_least_one_key("uid", "summary"),
+        ),
         _async_delete_todo_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
     component.async_register_entity_service(
         "move_item",
-        {
-            vol.Required("uid"): cv.string,
-            vol.Optional("previous"): cv.string,
-        },
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Optional("uid"): cv.string,
+                    vol.Optional("summary"): cv.string,
+                    vol.Optional("previous_uid"): cv.string,
+                    vol.Optional("previous_summary"): cv.string,
+                }
+            ),
+            cv.has_at_least_one_key("uid", "summary"),
+            cv.has_at_most_one_key("uid", "summary"),
+            cv.has_at_most_one_key("previous_uid", "previous_summary"),
+            # Don't mix and match uid and summary across current and previous
+            cv.has_at_most_one_key("uid", "previous_summary"),
+            cv.has_at_most_one_key("summary", "previous_uid"),
+        ),
         _async_move_todo_item,
         required_features=[TodoListEntityFeature.MOVE_TODO_ITEM],
     )
@@ -144,7 +165,7 @@ class TodoListEntity(Entity):
         """Delete an item in the To-do list."""
         raise NotImplementedError()
 
-    async def async_move_todo_item(self, uid: str, previous: str | None) -> None:
+    async def async_move_todo_item(self, uid: str, previous_uid: str | None) -> None:
         """Move an item in the To-do list."""
         raise NotImplementedError()
 
@@ -177,6 +198,14 @@ async def websocket_handle_todo_item_list(
     )
 
 
+def _find_by_summary(summary: str, items: list[TodoItem] | None) -> TodoItem | None:
+    """Find a To-do List item by summary name."""
+    for item in items or ():
+        if item.summary == summary:
+            return item
+    return None
+
+
 async def _async_create_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Add an item to the To-do list."""
     await entity.async_create_todo_item(item=TodoItem.from_dict(call.data))
@@ -185,21 +214,45 @@ async def _async_create_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
 async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Update an item in the To-do list."""
     item = TodoItem.from_dict(call.data)
-    if item.uid:
-        await entity.async_update_todo_item(item=item)
-        return
+    if not item.uid:
+        found = _find_by_summary(item.summary, entity.todo_items)
+        if not found:
+            raise vol.Invalid(
+                f"Unable to find To-do item with summary '{item.summary}'"
+            )
+        item.uid = found.uid
 
-    raise NotImplementedError()
+    await entity.async_update_todo_item(item=item)
 
 
 async def _async_delete_todo_items(entity: TodoListEntity, call: ServiceCall) -> None:
     """Delete an item in the To-do list."""
-    uids: list[str] = call.data["uids"]
+    uids = call.data.get("uid", [])
+    if not uids:
+        summaries = call.data.get("summary", [])
+        for summary in summaries:
+            item = _find_by_summary(summary, entity.todo_items)
+            if not item:
+                raise vol.Invalid(f"Unable to find To-do item with summariy'{summary}")
+            uids.append(item.uid)
     await entity.async_delete_todo_items(uids=uids)
 
 
 async def _async_move_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Move an item in the To-do list."""
-    uid = call.data["uid"]
-    previous = call.data.get("previous")
-    await entity.async_move_todo_item(uid=uid, previous=previous)
+    uid = call.data.get("uid", "")
+    if not uid:
+        summary = call.data["summary"]
+        item = _find_by_summary(summary, entity.todo_items)
+        if not item:
+            raise vol.Invalid(f"Unable to find To-do item with summary '{summary}'")
+        uid = item.uid
+    previous_uid = call.data.get("previous_uid")
+    if not previous_uid and (previous_summary := call.data.get("previous_summary")):
+        item = _find_by_summary(previous_summary, entity.todo_items)
+        if not item:
+            raise vol.Invalid(
+                f"Unable to find To-do item with summary '{previous_summary}'"
+            )
+        previous_uid = item.uid
+    await entity.async_move_todo_item(uid=uid, previous_uid=previous_uid)
