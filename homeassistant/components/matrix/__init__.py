@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 import logging
 import mimetypes
 import os
@@ -79,7 +80,7 @@ class ConfigCommand(TypedDict, total=False):
     """Corresponds to a single COMMAND_SCHEMA."""
 
     name: str  # CONF_NAME
-    rooms: list[RoomAnyID] | None  # CONF_ROOMS
+    rooms: list[RoomID] | None  # CONF_ROOMS
     word: WordCommand | None  # CONF_WORD
     expression: ExpressionCommand | None  # CONF_EXPRESSION
 
@@ -191,7 +192,7 @@ class MatrixBot:
 
         self._word_commands: dict[RoomID, dict[WordCommand, ConfigCommand]] = {}
         self._expression_commands: dict[RoomID, list[ConfigCommand]] = {}
-        self._load_commands(commands)
+        self._unparsed_commands = commands
 
         async def stop_client(event: HassEvent) -> None:
             """Run once when Home Assistant stops."""
@@ -205,6 +206,7 @@ class MatrixBot:
             self._access_tokens = await self._get_auth_tokens()
             await self._login()
             await self._resolve_room_aliases()
+            self._load_commands(self._unparsed_commands)
             await self._join_rooms()
             # Sync once so that we don't respond to past events.
             await self._client.sync(timeout=30_000)
@@ -221,7 +223,7 @@ class MatrixBot:
     def _load_commands(self, commands: list[ConfigCommand]) -> None:
         for command in commands:
             # Set the command for all listening_rooms, unless otherwise specified.
-            command.setdefault(CONF_ROOMS, self._listening_rooms)  # type: ignore[misc]
+            command.setdefault(CONF_ROOMS, list(self._listening_rooms.values()))  # type: ignore[misc]
 
             # COMMAND_SCHEMA guarantees that exactly one of CONF_WORD and CONF_expression are set.
             if (word_command := command.get(CONF_WORD)) is not None:
@@ -283,9 +285,12 @@ class MatrixBot:
             if isinstance(resolve_response, RoomResolveAliasResponse):
                 room_id = cast(RoomID, resolve_response.room_id)
             else:
-                raise ConfigEntryError(
-                    f"Could not resolve {room_alias} to a room_id: {resolve_response}"
+                _LOGGER.error(
+                    "Could not resolve '%s' to a room_id: %s",
+                    room_id_or_alias,
+                    resolve_response,
                 )
+                return {}
         else:
             raise ConfigEntryError(f"Invalid room ID or alias: {room_id_or_alias}")
 
@@ -300,24 +305,24 @@ class MatrixBot:
         for resolved_room in asyncio.as_completed(resolved_rooms):
             self._listening_rooms |= await resolved_room
 
-    async def _join_room(self, room_id_or_alias: str) -> None:
+    async def _join_room(self, room_id: RoomID, room_alias_or_id: RoomAnyID) -> None:
         """Join a room or do nothing if already joined."""
-        join_response = await self._client.join(room_id_or_alias)
+        join_response = await self._client.join(room_id)
 
         if isinstance(join_response, JoinResponse):
-            _LOGGER.debug("Joined or already in room '%s'", room_id_or_alias)
+            _LOGGER.debug("Joined or already in room '%s'", room_alias_or_id)
         elif isinstance(join_response, JoinError):
             _LOGGER.error(
                 "Could not join room '%s': %s",
-                room_id_or_alias,
+                room_alias_or_id,
                 join_response,
             )
 
     async def _join_rooms(self) -> None:
         """Join the Matrix rooms that we listen for commands in."""
         rooms = [
-            self.hass.async_create_task(self._join_room(room_id))
-            for room_id in self._listening_rooms
+            self.hass.async_create_task(self._join_room(room_id, room_alias_or_id))
+            for room_alias_or_id, room_id in self._listening_rooms.items()
         ]
         await asyncio.wait(rooms)
 
@@ -394,11 +399,11 @@ class MatrixBot:
         await self._store_auth_token(self._client.access_token)
 
     async def _handle_room_send(
-        self, target_room: RoomID, message_type: str, content: dict
+        self, target_room: RoomAnyID, message_type: str, content: dict
     ) -> None:
         """Wrap _client.room_send and handle ErrorResponses."""
         response: Response = await self._client.room_send(
-            room_id=target_room,
+            room_id=self._listening_rooms.get(target_room, target_room),
             message_type=message_type,
             content=content,
         )
@@ -412,7 +417,7 @@ class MatrixBot:
             _LOGGER.debug("Message delivered to room '%s'", target_room)
 
     async def _handle_multi_room_send(
-        self, target_rooms: list[RoomID], message_type: str, content: dict
+        self, target_rooms: Sequence[RoomAnyID], message_type: str, content: dict
     ) -> None:
         """Wrap _handle_room_send for multiple target_rooms."""
         _tasks = []
@@ -428,7 +433,9 @@ class MatrixBot:
             )
         await asyncio.wait(_tasks)
 
-    async def _send_image(self, image_path: str, target_rooms: list[RoomID]) -> None:
+    async def _send_image(
+        self, image_path: str, target_rooms: Sequence[RoomAnyID]
+    ) -> None:
         """Upload an image, then send it to all target_rooms."""
         _is_allowed_path = await self.hass.async_add_executor_job(
             self.hass.config.is_allowed_path, image_path
@@ -480,7 +487,7 @@ class MatrixBot:
         )
 
     async def _send_message(
-        self, message: str, target_rooms: list[RoomID], data: dict | None
+        self, message: str, target_rooms: list[RoomAnyID], data: dict | None
     ) -> None:
         """Send a message to the Matrix server."""
         content = {"msgtype": "m.text", "body": message}

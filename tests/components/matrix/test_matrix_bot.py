@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from .conftest import (
     MOCK_EXPRESSION_COMMANDS,
     MOCK_WORD_COMMANDS,
-    TEST_JOINABLE_ROOMS,
     TEST_NOTIFIER_NAME,
+    TEST_ROOM_A_ID,
 )
 
 
@@ -34,12 +34,13 @@ async def test_services(hass: HomeAssistant, matrix_bot: MatrixBot):
 async def test_commands(hass, matrix_bot: MatrixBot, command_events):
     """Test that the configured commands were parsed correctly."""
 
+    await hass.async_start()
     assert len(command_events) == 0
 
     assert matrix_bot._word_commands == MOCK_WORD_COMMANDS
     assert matrix_bot._expression_commands == MOCK_EXPRESSION_COMMANDS
 
-    room_id = TEST_JOINABLE_ROOMS[0]
+    room_id = TEST_ROOM_A_ID
     room = MatrixRoom(room_id=room_id, own_user_id=matrix_bot._mx_id)
 
     # Test single-word command.
