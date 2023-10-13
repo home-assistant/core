@@ -83,13 +83,11 @@ def setup_vicare_api(hass, entry):
     hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_LIST] = vicare_api.devices
 
 
-def get_api(config_entry, device):
+def get_api(entry, device):
     """Get API for device."""
     return getattr(
         device,
-        HEATING_TYPE_TO_CREATOR_METHOD[
-            HeatingType(config_entry.data[CONF_HEATING_TYPE])
-        ],
+        HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(entry.data[CONF_HEATING_TYPE])],
     )()
 
 
