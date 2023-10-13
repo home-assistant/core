@@ -1,6 +1,5 @@
 """The todo integration."""
 
-from collections.abc import Callable
 import dataclasses
 import datetime
 import logging
@@ -12,7 +11,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -37,27 +36,9 @@ TASK_ITEM_FIELDS = {
     ),
 }
 TASK_ITEM_UPDATE_FIELDS = {
-    vol.Required("uid"): cv.string,
+    vol.Optional("uid"): cv.string,
     **TASK_ITEM_FIELDS,
 }
-
-
-def _as_todo_item(result_key: str) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Convert dictionary fields to a TodoItem dataclass.
-
-    This exists to (1) collapse individual fields into a dataclass and (2) map
-    it to a single field of the entity method while preserving other fields.
-    """
-
-    def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Convert input to a TodoItem dataclass."""
-        return {
-            result_key: TodoItem.from_dict(obj),
-            # Forward any fields not in the schema
-            **{k: v for k, v in obj.items() if k not in TASK_ITEM_UPDATE_FIELDS},
-        }
-
-    return validate
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -70,20 +51,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         "create_item",
-        vol.All(
-            cv.make_entity_service_schema(TASK_ITEM_FIELDS),
-            _as_todo_item("item"),
-        ),
-        "async_create_todo_item",
+        TASK_ITEM_FIELDS,
+        _async_create_todo_item,
         required_features=[TodoListEntityFeature.CREATE_TODO_ITEM],
     )
     component.async_register_entity_service(
         "update_item",
-        vol.All(
-            cv.make_entity_service_schema(TASK_ITEM_UPDATE_FIELDS),
-            _as_todo_item("item"),
-        ),
-        "async_update_todo_item",
+        TASK_ITEM_UPDATE_FIELDS,
+        _async_update_todo_item,
         required_features=[TodoListEntityFeature.UPDATE_TODO_ITEM],
     )
     component.async_register_entity_service(
@@ -91,7 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {
             vol.Required("uids"): vol.All(cv.ensure_list, [cv.string]),
         },
-        "async_delete_todo_items",
+        _async_delete_todo_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
     component.async_register_entity_service(
@@ -100,7 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Required("uid"): cv.string,
             vol.Optional("previous"): cv.string,
         },
-        "async_move_todo_item",
+        _async_move_todo_item,
         required_features=[TodoListEntityFeature.MOVE_TODO_ITEM],
     )
 
@@ -200,3 +175,31 @@ async def websocket_handle_todo_item_list(
             msg["id"], {"items": [dataclasses.asdict(item) for item in items]}
         )
     )
+
+
+async def _async_create_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
+    """Add an item to the To-do list."""
+    await entity.async_create_todo_item(item=TodoItem.from_dict(call.data))
+
+
+async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
+    """Update an item in the To-do list."""
+    item = TodoItem.from_dict(call.data)
+    if item.uid:
+        await entity.async_update_todo_item(item=item)
+        return
+
+    raise NotImplementedError()
+
+
+async def _async_delete_todo_items(entity: TodoListEntity, call: ServiceCall) -> None:
+    """Delete an item in the To-do list."""
+    uids: list[str] = call.data["uids"]
+    await entity.async_delete_todo_items(uids=uids)
+
+
+async def _async_move_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
+    """Move an item in the To-do list."""
+    uid = call.data["uid"]
+    previous = call.data.get("previous")
+    await entity.async_move_todo_item(uid=uid, previous=previous)
