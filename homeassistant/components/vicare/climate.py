@@ -147,7 +147,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     _attr_preset_modes = list(HA_TO_VICARE_PRESET_HEATING)
     _current_action: bool | None = None
 
-    def __init__(self, name, api, circuit, device_config):
+    def __init__(self, name, api, circuit, device_config) -> None:
         """Initialize the climate device."""
         super().__init__(device_config)
         self._attr_name = name
