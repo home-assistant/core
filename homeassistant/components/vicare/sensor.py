@@ -573,7 +573,9 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 )
 
 
-def _build_entity(name, vicare_api, device_config, sensor):
+def _build_entity(
+    name: str, vicare_api, device_config, sensor: ViCareSensorEntityDescription
+):
     """Create a ViCare sensor entity."""
     _LOGGER.debug("Found device %s", name)
     try:
@@ -595,8 +597,12 @@ def _build_entity(name, vicare_api, device_config, sensor):
 
 
 async def _entities_from_descriptions(
-    hass, entities, sensor_descriptions, iterables, config_entry
-):
+    hass: HomeAssistant,
+    entities: list[ViCareSensor],
+    sensor_descriptions: tuple[ViCareSensorEntityDescription, ...],
+    iterables,
+    config_entry: ConfigEntry,
+) -> None:
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
         for current in iterables:
