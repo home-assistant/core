@@ -11,7 +11,6 @@ create_item:
       selector:
         text:
     status:
-      required: false
       example: "needs_action"
       selector:
         select:
@@ -27,16 +26,14 @@ update_item:
         - todo.TodoListEntityFeature.UPDATE_TODO_ITEM
   fields:
     uid:
-      required: false
       selector:
         text:
     summary:
-      required: false
+      required: true
       example: "Submit Income Tax Return"
       selector:
         text:
     status:
-      required: false
       example: "needs_action"
       selector:
         select:
@@ -52,11 +49,9 @@ delete_item:
         - todo.TodoListEntityFeature.DELETE_TODO_ITEM
   fields:
     uid:
-      required: false
       selector:
         object:
     summary:
-      required: false
       selector:
         object:
 move_item:
@@ -67,18 +62,14 @@ move_item:
         - todo.TodoListEntityFeature.MOVE_TODO_ITEM
   fields:
     uid:
-      required: true
       selector:
         text:
     summary:
-      required: true
       selector:
         text:
     previous_uid:
-      required: false
       selector:
         text:
     previous_summary:
-      required: false
       selector:
         text:
