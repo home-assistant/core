@@ -25,8 +25,11 @@ from aioesphomeapi import (
     BluetoothProxyFeature,
     DeviceInfo,
 )
-from aioesphomeapi.connection import APIConnectionError, TimeoutAPIError
-from aioesphomeapi.core import BluetoothGATTAPIError
+from aioesphomeapi.core import (
+    APIConnectionError,
+    BluetoothGATTAPIError,
+    TimeoutAPIError,
+)
 from async_interrupt import interrupt
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.client import BaseBleakClient, NotifyCallback

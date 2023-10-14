@@ -1,5 +1,6 @@
 """Support for a ScreenLogic number entity."""
-from collections.abc import Callable
+import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 
@@ -105,13 +106,13 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
     ) -> None:
         """Initialize a ScreenLogic number entity."""
         super().__init__(coordinator, entity_description)
-        if not callable(
+        if not asyncio.iscoroutinefunction(
             func := getattr(self.gateway, entity_description.set_value_name)
         ):
             raise TypeError(
-                f"set_value_name '{entity_description.set_value_name}' is not a callable"
+                f"set_value_name '{entity_description.set_value_name}' is not a coroutine"
             )
-        self._set_value_func: Callable[..., bool] = func
+        self._set_value_func: Callable[..., Awaitable[bool]] = func
         self._set_value_args = entity_description.set_value_args
         self._attr_native_unit_of_measurement = get_ha_unit(
             self.entity_data.get(ATTR.UNIT)
@@ -145,9 +146,12 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
             data_key = data_path[-1]
             args[data_key] = self.coordinator.gateway.get_value(*data_path, strict=True)
 
+        # Current API requires int values for the currently supported numbers.
+        value = int(value)
+
         args[self._data_key] = value
 
-        if self._set_value_func(*args.values()):
+        if await self._set_value_func(*args.values()):
             _LOGGER.debug("Set '%s' to %s", self._data_key, value)
             await self._async_refresh()
         else:
