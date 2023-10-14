@@ -1,4 +1,9 @@
 """Support for OpenUV binary sensors."""
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -6,6 +11,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
 from . import OpenUvEntity
@@ -17,64 +23,120 @@ ATTR_PROTECTION_WINDOW_ENDING_UV = "end_uv"
 ATTR_PROTECTION_WINDOW_STARTING_TIME = "start_time"
 ATTR_PROTECTION_WINDOW_STARTING_UV = "start_uv"
 
-BINARY_SENSOR_DESCRIPTION_PROTECTION_WINDOW = BinarySensorEntityDescription(
-    key=TYPE_PROTECTION_WINDOW,
-    translation_key="protection_window",
-    icon="mdi:sunglasses",
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    # Once we've successfully authenticated, we re-enable client request retries:
     """Set up an OpenUV sensor based on a config entry."""
     coordinators: dict[str, OpenUvCoordinator] = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
-            OpenUvBinarySensor(
+            ProtectionWindowBinarySensor(
                 coordinators[DATA_PROTECTION_WINDOW],
-                BINARY_SENSOR_DESCRIPTION_PROTECTION_WINDOW,
+                BinarySensorEntityDescription(
+                    key=TYPE_PROTECTION_WINDOW,
+                    translation_key="protection_window",
+                    icon="mdi:sunglasses",
+                ),
             )
         ]
     )
 
 
-class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
+@dataclass
+class ProtectionWindow:
+    """Define a protection window."""
+
+    from_dt_utc: datetime
+    to_dt_utc: datetime
+
+
+class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
     """Define a binary sensor for OpenUV."""
 
+    COORDINATOR_KEYS = ("from_time", "to_time")
+
     @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update the entity from the latest data."""
-        data = self.coordinator.data
+    def _get_current_window(self) -> ProtectionWindow | None:
+        """Get the current window start/end datetimes (if they exist) from data."""
+        if not all(
+            self.coordinator.data.get(key) is not None for key in self.COORDINATOR_KEYS
+        ):
+            LOGGER.debug("Cannot find protection window data keys in coordinator")
+            return None
 
-        for key in ("from_time", "to_time", "from_uv", "to_uv"):
-            if not data.get(key):
-                LOGGER.info("Skipping update due to missing data: %s", key)
-                return
+        from_dt_raw = self.coordinator.data["from_time"]
+        to_dt_raw = self.coordinator.data["to_time"]
 
-        if self.entity_description.key == TYPE_PROTECTION_WINDOW:
-            from_dt = parse_datetime(data["from_time"])
-            to_dt = parse_datetime(data["to_time"])
+        if from_dt_raw is None or to_dt_raw is None:
+            LOGGER.debug("Protection window data values are invalid")
+            return None
 
-            if not from_dt or not to_dt:
-                LOGGER.warning(
-                    "Unable to parse protection window datetimes: %s, %s",
-                    data["from_time"],
-                    data["to_time"],
-                )
-                self._attr_is_on = False
-                return
+        from_dt_utc = parse_datetime(from_dt_raw)
+        to_dt_utc = parse_datetime(to_dt_raw)
 
-            self._attr_is_on = from_dt <= utcnow() <= to_dt
-            self._attr_extra_state_attributes.update(
-                {
-                    ATTR_PROTECTION_WINDOW_ENDING_TIME: as_local(to_dt),
-                    ATTR_PROTECTION_WINDOW_ENDING_UV: data["to_uv"],
-                    ATTR_PROTECTION_WINDOW_STARTING_UV: data["from_uv"],
-                    ATTR_PROTECTION_WINDOW_STARTING_TIME: as_local(from_dt),
-                }
+        if from_dt_utc is None or to_dt_utc is None:
+            LOGGER.debug("Protection window data cannot be parsed")
+            return None
+
+        return ProtectionWindow(from_dt_utc=from_dt_utc, to_dt_utc=to_dt_utc)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return entity specific state attributes."""
+        attrs = {
+            ATTR_PROTECTION_WINDOW_ENDING_UV: self.coordinator.data["to_uv"],
+            ATTR_PROTECTION_WINDOW_STARTING_UV: self.coordinator.data["from_uv"],
+        }
+
+        if window := self._get_current_window():
+            attrs[ATTR_PROTECTION_WINDOW_ENDING_TIME] = as_local(window.to_dt_utc)
+            attrs[ATTR_PROTECTION_WINDOW_STARTING_TIME] = as_local(window.from_dt_utc)
+        else:
+            attrs[ATTR_PROTECTION_WINDOW_ENDING_TIME] = None
+            attrs[ATTR_PROTECTION_WINDOW_STARTING_TIME] = None
+
+        return attrs
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        if (window := self._get_current_window()) is None:
+            return False
+        return window.from_dt_utc <= utcnow() <= window.to_dt_utc
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        @callback
+        def async_update_state(_: datetime) -> None:
+            """Update the entity state."""
+            self.async_write_ha_state()
+
+        @callback
+        def async_schedule_state_change(target: datetime) -> None:
+            """Schedule an entity state change based upon a datetime."""
+            LOGGER.debug("Scheduling a protection window state change at %s", target)
+            self.async_on_remove(
+                async_track_point_in_utc_time(self.hass, async_update_state, target)
             )
 
-        super()._handle_coordinator_update()
+        @callback
+        def async_schedule_state_changes() -> None:
+            """Schedule protection window state updates."""
+            if (window := self._get_current_window()) is None:
+                LOGGER.debug("Skipping protection window state schedule due to no data")
+                return
+
+            now = utcnow()
+            if now < window.from_dt_utc:
+                async_schedule_state_change(window.from_dt_utc)
+                async_schedule_state_change(window.to_dt_utc)
+            elif now < window.to_dt_utc:
+                async_schedule_state_change(window.to_dt_utc)
+
+        self.async_on_remove(
+            self.coordinator.async_add_listener(async_schedule_state_changes)
+        )
