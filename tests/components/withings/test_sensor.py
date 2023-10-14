@@ -65,3 +65,24 @@ async def test_update_failed(
     state = hass.states.get("sensor.henk_weight")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_no_sleep(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test no sleep found."""
+    await setup_integration(hass, polling_config_entry, False)
+
+    withings.get_sleep_summary_since.return_value = []
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.henk_average_respiratory_rate")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

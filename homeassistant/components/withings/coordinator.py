@@ -13,7 +13,6 @@ from aiowithings import (
     WithingsUnauthorizedError,
     aggregate_measurements,
 )
-from aiowithings.helpers import aggregate_sleep_summary
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -132,7 +131,9 @@ class WithingsSleepDataUpdateCoordinator(
                 SleepSummaryDataFields.TOTAL_TIME_AWAKE,
             ],
         )
-        return aggregate_sleep_summary(response)
+        if not response:
+            return None
+        return response[0]
 
 
 class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[None]):
