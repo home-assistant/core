@@ -105,7 +105,6 @@ class ZHAIdentifyButton(ZHAButton):
 
     _attr_device_class = ButtonDeviceClass.IDENTIFY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Identify"
     _command_name = "identify"
 
     def get_args(self) -> list[Any]:
