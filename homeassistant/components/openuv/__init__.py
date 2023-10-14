@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 from typing import Any
 
 from pyopenuv import Client
@@ -22,6 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -87,6 +89,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Schedule a once-per-morning update for the protection window coordinator (always
+    # at the same local time every morning):
+    async def async_refresh_protection_window_coordinator(_: datetime) -> None:
+        """Schedule a manual refresh of the protection window coordinator."""
+        await coordinators[DATA_PROTECTION_WINDOW].async_refresh()
+
+    entry.async_on_unload(
+        async_track_utc_time_change(
+            hass,
+            async_refresh_protection_window_coordinator,
+            hour=1,
+            minute=0,
+            second=0,
+            local=True,
+        )
+    )
 
     # Automations to update the protection window binary sensor are deprecated (in favor
     # of an automatic update); create issue registry entries for every such automation
