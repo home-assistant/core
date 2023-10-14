@@ -251,9 +251,9 @@ turn_on:
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
       selector:
-        color_temp:
-          min_mireds: 153
-          max_mireds: 500
+        color_temp_mired:
+          min: 153
+          max: 500
     kelvin:
       filter:
         attribute:
@@ -266,11 +266,9 @@ turn_on:
             - light.ColorMode.RGBWW
       advanced: true
       selector:
-        number:
+        color_temp_kelvin:
           min: 2000
           max: 6500
-          step: 100
-          unit_of_measurement: K
     brightness:
       filter:
         attribute:
@@ -624,7 +622,7 @@ toggle:
             - light.ColorMode.RGBWW
       advanced: true
       selector:
-        color_temp:
+        color_temp_mired:
     kelvin:
       filter:
         attribute:
@@ -637,11 +635,9 @@ toggle:
             - light.ColorMode.RGBWW
       advanced: true
       selector:
-        number:
+        color_temp_kelvin:
           min: 2000
           max: 6500
-          step: 100
-          unit_of_measurement: K
     brightness:
       filter:
         attribute:

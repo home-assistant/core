@@ -909,12 +909,58 @@ def test_rgb_color_selector_schema(
         ),
     ),
 )
-def test_color_tempselector_schema(
+def test_old_color_tempselector_schema(
     schema, valid_selections, invalid_selections
 ) -> None:
-    """Test color_temp selector."""
+    """Test the old color_temp selector."""
 
     _test_selector("color_temp", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {},
+            (100, 100.0),
+            (None, "abc", [100]),
+        ),
+        (
+            {"min": 100, "max": 200},
+            (100, 200),
+            (99, 201),
+        ),
+    ),
+)
+def test_color_temp_mired_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test color_temp_mired selector."""
+
+    _test_selector("color_temp_mired", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {},
+            (100, 100.0),
+            (None, "abc", [100]),
+        ),
+        (
+            {"min": 1000, "max": 2000},
+            (1000, 2000),
+            (999, 2001),
+        ),
+    ),
+)
+def test_color_temp_kelvin_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test color_temp_kelvin selector."""
+
+    _test_selector("color_temp_kelvin", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
