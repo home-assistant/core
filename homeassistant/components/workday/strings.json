@@ -2,7 +2,6 @@
   "title": "Workday",
   "config": {
     "abort": {
-      "incorrect_province": "Incorrect subdivision from yaml import",
       "already_configured": "Workday has already been setup with chosen configuration"
     },
     "step": {
@@ -70,11 +69,6 @@
     }
   },
   "selector": {
-    "country": {
-      "options": {
-        "none": "No country"
-      }
-    },
     "province": {
       "options": {
         "none": "No subdivision"

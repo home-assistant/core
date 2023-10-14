@@ -2,7 +2,9 @@
 from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
+from urllib.error import HTTPError
 
+from py_nextbus.client import NextBusFormatError, NextBusHTTPError, RouteStop
 import pytest
 
 from homeassistant.components import sensor
@@ -12,10 +14,12 @@ from homeassistant.components.nextbus.const import (
     CONF_STOP,
     DOMAIN,
 )
+from homeassistant.components.nextbus.coordinator import NextBusDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -70,9 +74,7 @@ BASIC_RESULTS = {
 @pytest.fixture
 def mock_nextbus() -> Generator[MagicMock, None, None]:
     """Create a mock py_nextbus module."""
-    with patch(
-        "homeassistant.components.nextbus.sensor.NextBusClient",
-    ) as client:
+    with patch("homeassistant.components.nextbus.coordinator.NextBusClient") as client:
         yield client
 
 
@@ -89,7 +91,7 @@ def mock_nextbus_predictions(
 
 async def assert_setup_sensor(
     hass: HomeAssistant,
-    config: dict[str, str],
+    config: dict[str, dict[str, str]],
     expected_state=ConfigEntryState.LOADED,
 ) -> MockConfigEntry:
     """Set up the sensor and assert it's been created."""
@@ -144,9 +146,11 @@ async def test_verify_valid_state(
 ) -> None:
     """Verify all attributes are set from a valid response."""
     await assert_setup_sensor(hass, CONFIG_BASIC)
+    entity = er.async_get(hass).async_get(SENSOR_ID)
+    assert entity
 
     mock_nextbus_predictions.assert_called_once_with(
-        [{"stop_tag": VALID_STOP, "route_tag": VALID_ROUTE}], VALID_AGENCY
+        {RouteStop(VALID_ROUTE, VALID_STOP)}
     )
 
     state = hass.states.get(SENSOR_ID)
@@ -270,6 +274,28 @@ async def test_direction_list(
     assert state.attributes["stop"] == VALID_STOP_TITLE
     assert state.attributes["direction"] == "Outbound, Outbound 2"
     assert state.attributes["upcoming"] == "0, 1, 2, 3"
+
+
+@pytest.mark.parametrize(
+    "client_exception",
+    (
+        NextBusHTTPError("failed", HTTPError("url", 500, "error", MagicMock(), None)),
+        NextBusFormatError("failed"),
+    ),
+)
+async def test_prediction_exceptions(
+    hass: HomeAssistant,
+    mock_nextbus: MagicMock,
+    mock_nextbus_lists: MagicMock,
+    mock_nextbus_predictions: MagicMock,
+    client_exception: Exception,
+) -> None:
+    """Test that some coodinator exceptions raise UpdateFailed exceptions."""
+    await assert_setup_sensor(hass, CONFIG_BASIC)
+    coordinator: NextBusDataUpdateCoordinator = hass.data[DOMAIN][VALID_AGENCY]
+    mock_nextbus_predictions.side_effect = client_exception
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
 
 
 async def test_custom_name(

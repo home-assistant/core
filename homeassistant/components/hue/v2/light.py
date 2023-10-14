@@ -19,6 +19,7 @@ from homeassistant.components.light import (
     FLASH_SHORT,
     ColorMode,
     LightEntity,
+    LightEntityDescription,
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -68,6 +69,10 @@ async def async_setup_entry(
 
 class HueLight(HueBaseEntity, LightEntity):
     """Representation of a Hue light."""
+
+    entity_description = LightEntityDescription(
+        key="hue_light", has_entity_name=True, name=None
+    )
 
     def __init__(
         self, bridge: HueBridge, controller: LightsController, resource: Light
