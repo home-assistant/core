@@ -217,9 +217,7 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     if not item.uid:
         found = _find_by_summary(item.summary, entity.todo_items)
         if not found:
-            raise vol.Invalid(
-                f"Unable to find To-do item with summary '{item.summary}'"
-            )
+            raise ValueError(f"Unable to find To-do item with summary '{item.summary}'")
         item.uid = found.uid
 
     await entity.async_update_todo_item(item=item)
@@ -233,7 +231,7 @@ async def _async_delete_todo_items(entity: TodoListEntity, call: ServiceCall) ->
         for summary in summaries:
             item = _find_by_summary(summary, entity.todo_items)
             if not item:
-                raise vol.Invalid(f"Unable to find To-do item with summariy'{summary}")
+                raise ValueError(f"Unable to find To-do item with summariy'{summary}")
             uids.append(item.uid)
     await entity.async_delete_todo_items(uids=uids)
 
@@ -245,13 +243,13 @@ async def _async_move_todo_item(entity: TodoListEntity, call: ServiceCall) -> No
         summary = call.data["summary"]
         item = _find_by_summary(summary, entity.todo_items)
         if not item:
-            raise vol.Invalid(f"Unable to find To-do item with summary '{summary}'")
+            raise ValueError(f"Unable to find To-do item with summary '{summary}'")
         uid = item.uid
     previous_uid = call.data.get("previous_uid")
     if not previous_uid and (previous_summary := call.data.get("previous_summary")):
         item = _find_by_summary(previous_summary, entity.todo_items)
         if not item:
-            raise vol.Invalid(
+            raise ValueError(
                 f"Unable to find To-do item with summary '{previous_summary}'"
             )
         previous_uid = item.uid

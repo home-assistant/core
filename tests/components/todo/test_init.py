@@ -335,7 +335,7 @@ async def test_update_todo_item_service_by_summary_not_found(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(vol.Invalid, match="Unable to find"):
+    with pytest.raises(ValueError, match="Unable to find"):
         await hass.services.async_call(
             DOMAIN,
             "update_item",
@@ -432,7 +432,7 @@ async def test_delete_todo_item_service_by_summary_not_found(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(vol.Invalid, match="Unable to find"):
+    with pytest.raises(ValueError, match="Unable to find"):
         await hass.services.async_call(
             DOMAIN,
             "delete_item",
@@ -571,7 +571,7 @@ async def test_move_todo_item_service_by_name_not_found(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(vol.Invalid, match="Unable to find"):
+    with pytest.raises(ValueError, match="Unable to find"):
         await hass.services.async_call(
             DOMAIN,
             "move_item",
@@ -591,7 +591,7 @@ async def test_move_todo_item_service_by_name_previous_not_found(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(vol.Invalid, match="Unable to find"):
+    with pytest.raises(ValueError, match="Unable to find"):
         await hass.services.async_call(
             DOMAIN,
             "move_item",
