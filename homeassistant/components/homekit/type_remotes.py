@@ -165,19 +165,19 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         return list(self._get_mapped_sources(state))
 
     @abstractmethod
-    def set_on_off(self, value):
+    def set_on_off(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
 
     @abstractmethod
-    def set_input_source(self, value):
+    def set_input_source(self, value: int) -> None:
         """Send input set value if call came from HomeKit."""
 
     @abstractmethod
-    def set_remote_key(self, value):
+    def set_remote_key(self, value: int) -> None:
         """Send remote key value if call came from HomeKit."""
 
     @callback
-    def _async_update_input_state(self, hk_state, new_state):
+    def _async_update_input_state(self, hk_state: int, new_state: State) -> None:
         """Update input state after state changed."""
         # Set active input
         if not self.support_select_source or not self.sources:
