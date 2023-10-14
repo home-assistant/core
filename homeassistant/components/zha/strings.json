@@ -531,6 +531,11 @@
     }
   },
   "entity": {
+    "alarm_control_panel": {
+      "alarm_control_panel": {
+        "name": "[%key:component::alarm_control_panel::title%]"
+      }
+    },
     "binary_sensor": {
       "accelerometer": {
         "name": "Accelerometer"
