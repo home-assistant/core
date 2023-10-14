@@ -121,6 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             DOMAIN,
             f"protection_window_automation_{automation_entity_id}",
+            breaks_in_ha_version="2024.1.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="protection_window_automation",

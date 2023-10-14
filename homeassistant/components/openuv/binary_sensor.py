@@ -142,11 +142,3 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
         self.async_on_remove(
             self.coordinator.async_add_listener(async_schedule_state_changes)
         )
-
-    async def async_update(self) -> None:
-        """Update the entity.
-
-        Since protection window data is only updated once per day (and handled
-        automatically), this disables the generic entity update service to prevent
-        unnecessary API waste.
-        """
