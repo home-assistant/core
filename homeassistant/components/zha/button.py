@@ -150,10 +150,10 @@ class FrostLockResetButton(ZHAAttributeButton):
 
     _unique_id_suffix = "reset_frost_lock"
     _attribute_name = "frost_lock_reset"
-    _attr_name = "Frost lock reset"
     _attribute_value = 0
     _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "reset_frost_lock"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -164,10 +164,10 @@ class NoPresenceStatusResetButton(ZHAAttributeButton):
 
     _unique_id_suffix = "reset_no_presence_status"
     _attribute_name = "reset_no_presence_status"
-    _attr_name = "Presence status reset"
     _attribute_value = 1
     _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "reset_no_presence_status"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -176,8 +176,8 @@ class AqaraPetFeederFeedButton(ZHAAttributeButton):
 
     _unique_id_suffix = "feeding"
     _attribute_name = "feeding"
-    _attr_name = "Feed"
     _attribute_value = 1
+    _attr_translation_key = "feed"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -188,6 +188,6 @@ class AqaraSelfTestButton(ZHAAttributeButton):
 
     _unique_id_suffix = "self_test"
     _attribute_name = "self_test"
-    _attr_name = "Self-test"
     _attribute_value = 1
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "self_test"

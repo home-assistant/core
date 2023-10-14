@@ -566,6 +566,20 @@
         "name": "IAS zone"
       }
     },
+    "button": {
+      "reset_frost_lock": {
+        "name": "Frost lock reset"
+      },
+      "reset_no_presence_status": {
+        "name": "Presence status reset"
+      },
+      "feed": {
+        "name": "Feed"
+      },
+      "self_test": {
+        "name": "Self-test"
+      }
+    },
     "sensor": {
       "analog_input": {
         "name": "Analog input"
