@@ -612,6 +612,11 @@
         "name": "Light group"
       }
     },
+    "lock": {
+      "door_lock": {
+        "name": "Door lock"
+      }
+    },
     "sensor": {
       "analog_input": {
         "name": "Analog input"
