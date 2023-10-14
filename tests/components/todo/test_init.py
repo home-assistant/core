@@ -275,6 +275,56 @@ async def test_update_todo_item_service_by_id(
     assert item.status == TodoItemStatus.COMPLETED
 
 
+async def test_update_todo_item_service_by_id_status_only(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test updating an item in a To-do list."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        "update_item",
+        {"uid": "item-1", "status": "completed"},
+        target={"entity_id": "todo.entity1"},
+        blocking=True,
+    )
+
+    args = test_entity.async_update_todo_item.call_args
+    assert args
+    item = args.kwargs.get("item")
+    assert item
+    assert item.uid == "item-1"
+    assert item.summary is None
+    assert item.status == TodoItemStatus.COMPLETED
+
+
+async def test_update_todo_item_service_by_id_summary_only(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test updating an item in a To-do list."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        "update_item",
+        {"uid": "item-1", "summary": "Updated item"},
+        target={"entity_id": "todo.entity1"},
+        blocking=True,
+    )
+
+    args = test_entity.async_update_todo_item.call_args
+    assert args
+    item = args.kwargs.get("item")
+    assert item
+    assert item.uid == "item-1"
+    assert item.summary == "Updated item"
+    assert item.status is None
+
+
 async def test_update_todo_item_service_raises(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
@@ -348,8 +398,8 @@ async def test_update_todo_item_service_by_summary_not_found(
 @pytest.mark.parametrize(
     ("item_data", "expected_error"),
     [
-        ({}, "required key not provided"),
-        ({"status": "needs_action"}, "required key not provided"),
+        ({}, "must contain at least one of"),
+        ({"status": "needs_action"}, "must contain at least one of"),
         (
             {"summary": "", "status": "needs_action"},
             "length of value must be at least 1",

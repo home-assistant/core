@@ -29,17 +29,6 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-TASK_ITEM_FIELDS = {
-    vol.Required("summary"): vol.All(cv.string, vol.Length(min=1)),
-    vol.Optional("status", default=TodoItemStatus.NEEDS_ACTION): vol.In(
-        {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED}
-    ),
-}
-TASK_ITEM_UPDATE_FIELDS = {
-    vol.Optional("uid"): cv.string,
-    **TASK_ITEM_FIELDS,
-}
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Todo entities."""
@@ -51,14 +40,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         "create_item",
-        TASK_ITEM_FIELDS,
+        {
+            vol.Required("summary"): vol.All(cv.string, vol.Length(min=1)),
+            vol.Optional("status", default=TodoItemStatus.NEEDS_ACTION): vol.In(
+                {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED}
+            ),
+        },
         _async_create_todo_item,
         required_features=[TodoListEntityFeature.CREATE_TODO_ITEM],
     )
     component.async_register_entity_service(
         "update_item",
         vol.All(
-            cv.make_entity_service_schema(TASK_ITEM_UPDATE_FIELDS),
+            cv.make_entity_service_schema(
+                {
+                    vol.Optional("uid"): cv.string,
+                    vol.Optional("summary"): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Optional("status"): vol.In(
+                        {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED}
+                    ),
+                }
+            ),
             cv.has_at_least_one_key("uid", "summary"),
         ),
         _async_update_todo_item,
@@ -120,19 +122,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class TodoItem:
     """A To-do item in a To-do list."""
 
-    summary: str
+    summary: str | None = None
     """The summary that represents the item."""
 
     uid: str | None = None
     """A unique identifier for the To-do item."""
 
-    status: TodoItemStatus = TodoItemStatus.NEEDS_ACTION
+    status: TodoItemStatus | None = None
     """A status or confirmation of the To-do item."""
 
     @classmethod
     def from_dict(cls, obj: dict[str, Any]) -> "TodoItem":
         """Create a To-do Item from a dictionary parsed by schema validators."""
-        return cls(summary=obj["summary"], status=obj["status"], uid=obj.get("uid"))
+        return cls(
+            summary=obj.get("summary"), status=obj.get("status"), uid=obj.get("uid")
+        )
 
 
 class TodoListEntity(Entity):
@@ -215,7 +219,7 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     """Update an item in the To-do list."""
     item = TodoItem.from_dict(call.data)
     if not item.uid:
-        found = _find_by_summary(item.summary, entity.todo_items)
+        found = _find_by_summary(call.data["summary"], entity.todo_items)
         if not found:
             raise ValueError(f"Unable to find To-do item with summary '{item.summary}'")
         item.uid = found.uid
