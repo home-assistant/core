@@ -86,6 +86,11 @@ class PhilipsTVBinarySensorEntityRecordingType(PhilipsJsEntity, BinarySensorEnti
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
         self._attr_device_info = coordinator.device_info
+        self._attr_is_on = _check_for_recording_entry(
+            coordinator.api,
+            "RecordingType",
+            description.recording_value,
+        )
 
         super().__init__(coordinator)
 
