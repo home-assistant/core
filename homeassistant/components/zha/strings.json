@@ -600,7 +600,7 @@
     },
     "fan": {
       "fan": {
-        "name": "[%key:component::fan::entity_component::_::name%]"
+        "name": "[%key:component::fan::title%]"
       },
       "fan_group": {
         "name": "Fan group"
@@ -608,7 +608,7 @@
     },
     "light": {
       "light": {
-        "name": "[%key:component::light::entity_component::_::name%]"
+        "name": "[%key:component::light::title%]"
       },
       "light_group": {
         "name": "Light group"
