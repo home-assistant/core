@@ -163,8 +163,8 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
                         self.hass, async_request_coordinator_refresh, target_dt
                     )
                 else:
-                    LOGGER.debug(
-                        "Skipping protection window state schedule (%s retries attempted)",
+                    LOGGER.warning(
+                        "Cannot schedule protection window update (bad data after %s retries)",
                         self.COORDINATOR_RETRIES,
                     )
                     self._coordinator_retries = 0
