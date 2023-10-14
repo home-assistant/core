@@ -604,6 +604,14 @@
         "name": "Fan group"
       }
     },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::entity_component::_::name%]"
+      },
+      "light_group": {
+        "name": "Light group"
+      }
+    },
     "sensor": {
       "analog_input": {
         "name": "Analog input"
