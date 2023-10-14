@@ -345,6 +345,37 @@ async def test_update_todo_item_service_by_summary_not_found(
         )
 
 
+@pytest.mark.parametrize(
+    ("item_data", "expected_error"),
+    [
+        ({}, "required key not provided"),
+        ({"status": "needs_action"}, "required key not provided"),
+        (
+            {"summary": "", "status": "needs_action"},
+            "length of value must be at least 1",
+        ),
+    ],
+)
+async def test_update_item_service_invalid_input(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+    item_data: dict[str, Any],
+    expected_error: str,
+) -> None:
+    """Test invalid input to the update item service."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    with pytest.raises(vol.Invalid, match=expected_error):
+        await hass.services.async_call(
+            DOMAIN,
+            "update_item",
+            item_data,
+            target={"entity_id": "todo.entity1"},
+            blocking=True,
+        )
+
+
 async def test_delete_todo_item_service_by_id(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
