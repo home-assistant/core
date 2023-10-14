@@ -596,6 +596,14 @@
         "name": "Keen vent"
       }
     },
+    "fan": {
+      "fan": {
+        "name": "[%key:component::fan::entity_component::_::name%]"
+      },
+      "fan_group": {
+        "name": "Fan group"
+      }
+    },
     "sensor": {
       "analog_input": {
         "name": "Analog input"
