@@ -70,7 +70,7 @@ class MoonSensorEntity(SensorEntity):
 
     async def async_update(self) -> None:
         """Get the time and updates the states."""
-        today = dt_util.now().date()
+        today = dt_util.now()
         state = moon.phase(today)
 
         if state < 0.5 or state > 27.5:
