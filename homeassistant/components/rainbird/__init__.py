@@ -70,10 +70,10 @@ async def _fix_unique_id(
         _LOGGER.warning("Unable to fix missing unique id: %s", err)
         return
 
-    if (new_unique_id := wifi_params.mac_address) is None:
-        _LOGGER.warning("Unable to fix missing unique id (was None)")
+    if (mac_address := wifi_params.mac_address) is None:
+        _LOGGER.warning("Unable to fix missing unique id (mac address was None)")
         return
-    new_unique_id = format_mac(new_unique_id)
+    new_unique_id = format_mac(mac_address)
     entries = hass.config_entries.async_entries(DOMAIN)
     for existing_entry in entries:
         if existing_entry.unique_id == new_unique_id:
@@ -86,7 +86,7 @@ async def _fix_unique_id(
         unique_id=new_unique_id,
         data={
             **entry.data,
-            CONF_MAC: wifi_params.mac_address,
+            CONF_MAC: mac_address,
         },
     )
 
