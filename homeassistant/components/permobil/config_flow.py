@@ -1,6 +1,7 @@
 """Config flow for MyPermobil integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -204,3 +205,36 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # the entire flow finished successfully
         return self.async_create_entry(title=self.data[CONF_EMAIL], data=self.data)
+
+    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        errors: dict[str, str] = {}
+        if not self.p_api:
+            session = async_get_clientsession(self.hass)
+            self.p_api = MyPermobil(APPLICATION, session=session)
+
+        reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context.get("entry_id", "")
+        )
+
+        if reauth_entry:
+            email: str = reauth_entry.data[CONF_EMAIL]
+            region: str = reauth_entry.data[CONF_REGION]
+            self.p_api.set_email(email)
+            self.p_api.set_region(region)
+            self.data = {
+                CONF_EMAIL: email,
+                CONF_REGION: region,
+            }
+
+            try:
+                await self.p_api.request_application_code()  # MyPermobilAPIException
+            except MyPermobilAPIException as err:
+                _LOGGER.error("Permobil: %s", err)
+                errors["base"] = "region_connection_error"
+        else:
+            errors["base"] = "unknown"
+
+        if errors:
+            return self.async_show_form(step_id="reauth", errors=errors)
+        return await self.async_step_email_code()

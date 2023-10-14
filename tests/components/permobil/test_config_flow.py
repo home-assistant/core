@@ -12,9 +12,9 @@ from homeassistant.data_entry_flow import FlowResultType
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-
-MOCK_REGIONS = {"region_name": "https://example.com"}
+MOCK_URL = "https://example.com"
 MOCK_REGION = "region_name"
+MOCK_REGIONS = {MOCK_REGION: MOCK_URL}
 MOCK_TOKEN = ("a" * 256, "date")
 MOCK_CODE = "012345                      "
 MOCK_EMAIL = "valid@email.com"
@@ -22,6 +22,9 @@ EMPTY = ""
 INVALID_EMAIL = "this is not a valid email"
 INVALID_REGION = "this is not a valid region"
 INVALID_CODE = "this is not a valid code"
+MOCK_REENTRY = MagicMock()
+MOCK_REENTRY.data = {CONF_EMAIL: MOCK_EMAIL, CONF_REGION: MOCK_URL}
+MOCK_CONTEXT = {"entry_id": None}
 
 
 async def test_flow_init(hass: HomeAssistant) -> None:
@@ -179,6 +182,65 @@ async def test_form_connection_error_token(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "email_code"
     assert result["errors"].get("base") == "invalid_code"
+
+
+async def test_form_reauth_api_fail(hass: HomeAssistant) -> None:
+    """Test we handle a connection error. in the reauth flow."""
+    with patch(
+        "homeassistant.components.permobil.config_flow.MyPermobil.request_application_code",
+        side_effect=config_flow.MyPermobilAPIException,
+    ), patch(
+        "homeassistant.config_entries.ConfigEntries.async_get_entry",
+        return_value=MOCK_REENTRY,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": "reauth"},
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth"
+    assert result["errors"].get("base") == "region_connection_error"
+
+
+async def test_form_reauth_context_fail(hass: HomeAssistant) -> None:
+    """Test we handle a connection error. in the reauth flow."""
+    with patch(
+        "homeassistant.components.permobil.config_flow.MyPermobil.request_application_code",
+        side_effect=config_flow.MyPermobilAPIException,
+    ), patch(
+        "homeassistant.config_entries.ConfigEntries.async_get_entry",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": "reauth"},
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth"
+    assert result["errors"].get("base") == "unknown"
+
+
+async def test_form_reauth_api_success(hass: HomeAssistant) -> None:
+    """Test we handle a reauth."""
+    with patch(
+        "homeassistant.components.permobil.config_flow.MyPermobil.request_application_code",
+        return_value=True,
+    ), patch(
+        "homeassistant.config_entries.ConfigEntries.async_get_entry",
+        return_value=MOCK_REENTRY,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": "reauth"},
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "email_code"
+    assert result["errors"] == {}
+    assert config_flow.PermobilConfigFlow.data.get(CONF_REGION) == MOCK_URL
+    assert config_flow.PermobilConfigFlow.data.get(CONF_EMAIL) == MOCK_EMAIL
 
 
 async def test_validate_input() -> None:

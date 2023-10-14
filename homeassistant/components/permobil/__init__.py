@@ -15,7 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import APPLICATION, DOMAIN
 from .coordinator import MyPermobilCoordinator
@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         p_api.self_authenticate()
     except MyPermobilClientException as err:
         _LOGGER.error("Permobil: %s", err)
-        raise ConfigEntryNotReady(f"Permobil Config error for {p_api.email}") from err
+        raise ConfigEntryAuthFailed(f"Permobil Config error for {p_api.email}") from err
 
     # create the coordinator with the API object
     coordinator = MyPermobilCoordinator(hass, p_api)
