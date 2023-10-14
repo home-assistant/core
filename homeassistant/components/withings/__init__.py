@@ -15,6 +15,7 @@ from aiohttp.web import Request, Response
 from aiowithings import NotificationCategory, WithingsClient
 from aiowithings.util import to_enum
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components import cloud
 from homeassistant.components.application_credentials import (
@@ -179,8 +180,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             webhook_url = await _async_cloudhook_generate_url(hass, entry)
         else:
             webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
-
-        if not webhook_url.startswith("https://"):
+        url = URL(webhook_url)
+        if url.scheme != "https" or url.port != 443:
             LOGGER.warning(
                 "Webhook not registered - "
                 "https and port 443 is required to register the webhook"
