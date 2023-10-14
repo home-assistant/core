@@ -378,7 +378,7 @@ async def async_setup_entry(
     )
 
     def measurement_listener() -> None:
-        """Listen for new data points and add sensors if they did not exist."""
+        """Listen for new measurements and add sensors if they did not exist."""
         new_measurement_types = (
             set(measurement_coordinator.data.keys()) - current_measurement_types
         )
