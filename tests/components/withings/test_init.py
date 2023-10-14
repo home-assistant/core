@@ -212,6 +212,7 @@ async def test_webhooks_request_data(
 
     client = await hass_client_no_auth()
 
+    assert withings.get_measurement_since.call_count == 0
     assert withings.get_measurement_in_period.call_count == 1
 
     await call_webhook(
@@ -220,7 +221,8 @@ async def test_webhooks_request_data(
         {"userid": USER_ID, "appli": NotificationCategory.WEIGHT},
         client,
     )
-    assert withings.get_measurement_in_period.call_count == 2
+    assert withings.get_measurement_since.call_count == 1
+    assert withings.get_measurement_in_period.call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -240,7 +242,7 @@ async def test_triggering_reauth(
     """Test triggering reauth."""
     await setup_integration(hass, polling_config_entry, False)
 
-    withings.get_measurement_in_period.side_effect = error
+    withings.get_measurement_since.side_effect = error
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
