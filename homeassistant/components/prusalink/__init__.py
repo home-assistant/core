@@ -8,7 +8,8 @@ import logging
 from time import monotonic
 from typing import Generic, TypeVar
 
-from pyprusalink import InvalidAuth, JobInfo, PrinterInfo, PrusaLink, PrusaLinkError
+from pyprusalink import InvalidAuth, JobInfo, PrinterInfo, PrusaLinkError
+from .prusalink_api_wrapper import PrusaLink
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -33,6 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_get_clientsession(hass),
         entry.data["host"],
         entry.data["api_key"],
+        entry.data["is_legacy"] if "is_legacy" in entry.data.keys() else False
     )
 
     coordinators = {

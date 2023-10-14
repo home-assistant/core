@@ -43,6 +43,15 @@ class PrusaLinkSensorEntityDescription(
     available_fn: Callable[[T], bool] = lambda _: True
 
 
+def get_datetime_from_seconds(seconds, multiplier):
+    return ignore_variance(
+        lambda val: (
+                utcnow() + timedelta(seconds=val)
+        ),
+        timedelta(minutes=2),
+    )(seconds * multiplier) if seconds is not None else None
+
+
 SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
     "printer": (
         PrusaLinkSensorEntityDescription[PrinterInfo](
@@ -128,7 +137,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             translation_key="progress",
             icon="mdi:progress-clock",
             native_unit_of_measurement=PERCENTAGE,
-            value_fn=lambda data: cast(float, data["progress"]["completion"]) * 100,
+            value_fn=lambda data: cast(float, data["progress"]["completion"]) * 100 if data["progress"]["completion"] is not None else None,
             available_fn=lambda data: data.get("progress") is not None,
         ),
         PrusaLinkSensorEntityDescription[JobInfo](
@@ -143,12 +152,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             translation_key="print_start",
             device_class=SensorDeviceClass.TIMESTAMP,
             icon="mdi:clock-start",
-            value_fn=ignore_variance(
-                lambda data: (
-                    utcnow() - timedelta(seconds=data["progress"]["printTime"])
-                ),
-                timedelta(minutes=2),
-            ),
+            value_fn=lambda data: get_datetime_from_seconds(data["progress"]["printTime"], -1),
             available_fn=lambda data: data.get("progress") is not None,
         ),
         PrusaLinkSensorEntityDescription[JobInfo](
@@ -156,12 +160,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             translation_key="print_finish",
             icon="mdi:clock-end",
             device_class=SensorDeviceClass.TIMESTAMP,
-            value_fn=ignore_variance(
-                lambda data: (
-                    utcnow() + timedelta(seconds=data["progress"]["printTimeLeft"])
-                ),
-                timedelta(minutes=2),
-            ),
+            value_fn=lambda data: get_datetime_from_seconds(data["progress"]["printTimeLeft"], 1),
             available_fn=lambda data: data.get("progress") is not None,
         ),
     ),

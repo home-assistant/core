@@ -5,7 +5,8 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar, cast
 
-from pyprusalink import Conflict, JobInfo, PrinterInfo, PrusaLink
+from pyprusalink import Conflict, JobInfo, PrinterInfo
+from .prusalink_api_wrapper import PrusaLink
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry

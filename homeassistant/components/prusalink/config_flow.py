@@ -30,7 +30,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> PrusalinkApiInfo:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -45,13 +45,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
         _LOGGER.error("Could not connect to PrusaLink: %s", err)
         raise CannotConnect from err
 
+    legacy = False
     try:
         if AwesomeVersion(version["api"]) < AwesomeVersion("2.0.0"):
-            raise NotSupported
+            legacy = True
     except AwesomeVersionException as err:
         raise NotSupported from err
 
-    return {"title": version["hostname"] or version["text"]}
+    return PrusalinkApiInfo(version["hostname"] or version["text"], legacy)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -90,11 +91,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=info["title"], data=data)
+            data['is_legacy'] = info.is_legacy
+            return self.async_create_entry(title=info.title, data=data)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+
+class PrusalinkApiInfo:
+    def __init__(self, title: str, is_legacy: bool):
+        self.title = title
+        self.is_legacy = is_legacy
 
 
 class CannotConnect(HomeAssistantError):
