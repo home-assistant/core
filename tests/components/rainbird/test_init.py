@@ -156,7 +156,7 @@ async def test_fix_unique_id(
             None,
             CONFIG_ENTRY_DATA,
             mock_response("bogus"),
-            "Unable to fix missing unique id (was None)",
+            "Unable to fix missing unique id (mac address was None)",
         ),
     ],
     ids=["service_unavailable", "not_found", "unexpected_response_format"],
