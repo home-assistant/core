@@ -47,7 +47,7 @@ async def test_all_entities(
     """Test all entities."""
     await setup_integration(hass, polling_config_entry)
 
-    for sensor in MEASUREMENT_SENSORS + SLEEP_SENSORS:
+    for sensor in list(MEASUREMENT_SENSORS.values()) + SLEEP_SENSORS:
         entity_id = await async_get_entity_id(hass, sensor.key, USER_ID, SENSOR_DOMAIN)
         assert hass.states.get(entity_id) == snapshot
 
