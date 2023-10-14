@@ -94,7 +94,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cv.has_at_most_one_key("previous_uid", "previous_summary"),
             # Don't mix and match uid and summary across current and previous
             cv.has_at_most_one_key("uid", "previous_summary"),
-            cv.has_at_most_one_key("summary", "previous_uid"),
+            cv.has_at_most_one_key("previous_uid", "summary"),
         ),
         _async_move_todo_item,
         required_features=[TodoListEntityFeature.MOVE_TODO_ITEM],
