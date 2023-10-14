@@ -39,6 +39,7 @@ from homeassistant.components.emulated_hue.hue_api import (
     HueOneLightChangeView,
     HueOneLightStateView,
     HueUsernameView,
+    _remote_is_allowed,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -1333,16 +1334,23 @@ async def test_external_ip_blocked(hue_client) -> None:
         return_value=ip_address("45.45.45.45"),
     ):
         for getUrl in getUrls:
+            _remote_is_allowed.cache_clear()
             result = await hue_client.get(getUrl)
             assert result.status == HTTPStatus.UNAUTHORIZED
 
         for postUrl in postUrls:
+            _remote_is_allowed.cache_clear()
             result = await hue_client.post(postUrl)
             assert result.status == HTTPStatus.UNAUTHORIZED
 
         for putUrl in putUrls:
+            _remote_is_allowed.cache_clear()
             result = await hue_client.put(putUrl)
             assert result.status == HTTPStatus.UNAUTHORIZED
+
+    # We are patching inside of a cache so be sure to clear it
+    # so that the next test is not affected
+    _remote_is_allowed.cache_clear()
 
 
 async def test_unauthorized_user_blocked(hue_client) -> None:
