@@ -600,22 +600,22 @@
       "summation_delivered": {
         "name": "Summation delivered"
       },
-      "summation_delivered_1": {
+      "tier1_summation_delivered": {
         "name": "Tier 1 summation delivered"
       },
-      "summation_delivered_2": {
+      "tier2_summation_delivered": {
         "name": "Tier 2 summation delivered"
       },
-      "summation_delivered_3": {
+      "tier3_summation_delivered": {
         "name": "Tier 3 summation delivered"
       },
-      "summation_delivered_4": {
+      "tier4_summation_delivered": {
         "name": "Tier 4 summation delivered"
       },
-      "summation_delivered_5": {
+      "tier5_summation_delivered": {
         "name": "Tier 5 summation delivered"
       },
-      "summation_delivered_6": {
+      "tier6_summation_delivered": {
         "name": "Tier 6 summation delivered"
       },
       "device_temperature": {

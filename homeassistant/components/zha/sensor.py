@@ -564,7 +564,7 @@ class Tier1SmartEnergySummation(PolledSmartEnergySummation):
 
     SENSOR_ATTR: int | str = "current_tier1_summ_delivered"
     _unique_id_suffix = "tier1_summation_delivered"
-    _attr_translation_key: str = "summation_delivered_1"
+    _attr_translation_key: str = "tier1_summation_delivered"
 
 
 @MULTI_MATCH(
@@ -577,7 +577,7 @@ class Tier2SmartEnergySummation(PolledSmartEnergySummation):
 
     SENSOR_ATTR: int | str = "current_tier2_summ_delivered"
     _unique_id_suffix = "tier2_summation_delivered"
-    _attr_translation_key: str = "summation_delivered_2"
+    _attr_translation_key: str = "tier2_summation_delivered"
 
 
 @MULTI_MATCH(
@@ -590,7 +590,7 @@ class Tier3SmartEnergySummation(PolledSmartEnergySummation):
 
     SENSOR_ATTR: int | str = "current_tier3_summ_delivered"
     _unique_id_suffix = "tier3_summation_delivered"
-    _attr_translation_key: str = "summation_delivered_3"
+    _attr_translation_key: str = "tier3_summation_delivered"
 
 
 @MULTI_MATCH(
@@ -603,7 +603,7 @@ class Tier4SmartEnergySummation(PolledSmartEnergySummation):
 
     SENSOR_ATTR: int | str = "current_tier4_summ_delivered"
     _unique_id_suffix = "tier4_summation_delivered"
-    _attr_translation_key: str = "summation_delivered_4"
+    _attr_translation_key: str = "tier4_summation_delivered"
 
 
 @MULTI_MATCH(
@@ -616,7 +616,7 @@ class Tier5SmartEnergySummation(PolledSmartEnergySummation):
 
     SENSOR_ATTR: int | str = "current_tier5_summ_delivered"
     _unique_id_suffix = "tier5_summation_delivered"
-    _attr_translation_key: str = "summation_delivered_5"
+    _attr_translation_key: str = "tier5_summation_delivered"
 
 
 @MULTI_MATCH(
@@ -629,7 +629,7 @@ class Tier6SmartEnergySummation(PolledSmartEnergySummation):
 
     SENSOR_ATTR: int | str = "current_tier6_summ_delivered"
     _unique_id_suffix = "tier6_summation_delivered"
-    _attr_translation_key: str = "summation_delivered_6"
+    _attr_translation_key: str = "tier6_summation_delivered"
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_PRESSURE)
