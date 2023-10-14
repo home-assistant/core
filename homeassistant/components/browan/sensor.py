@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 import json
 import logging
 
@@ -9,12 +10,22 @@ from pyliblorawan.models import Uplink
 from pyliblorawan.network_servers.ttn import TTN
 
 from homeassistant.components.mqtt.models import ReceiveMessage
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_TEMPERATURE,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UndefinedType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -22,9 +33,38 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import devices
 from .const import DOMAIN, MANUFACTURER, TTN_TOPIC
-from .models import SensorTypes
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class BrowanSensorDescriptionMixin:
+    """Mixin for Browan sensor."""
+
+
+@dataclass
+class BrowanSensorEntityDescription(
+    SensorEntityDescription, BrowanSensorDescriptionMixin
+):
+    """Class describing Browan sensor entities."""
+
+    name: str | None = None
+
+
+ENTITY_DESCRIPTIONS: tuple[BrowanSensorEntityDescription, ...] = (
+    BrowanSensorEntityDescription(
+        key=ATTR_BATTERY_LEVEL,
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        translation_key="battery_level",
+    ),
+    BrowanSensorEntityDescription(
+        key=ATTR_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        translation_key="temperature",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -66,8 +106,13 @@ async def _async_setup_entity(
         return
 
     coordinator = LorawanSensorCoordinator(hass, config_entry, device.parse_uplink)
-    for sensor in device.supported_sensors():
-        entities.append(LorawanSensorEntity(hass, config_entry, coordinator, sensor))
+    for key in device.supported_sensors():
+        description = [
+            description for description in ENTITY_DESCRIPTIONS if key == description.key
+        ][0]
+        entities.append(
+            LorawanSensorEntity(hass, config_entry, coordinator, description)
+        )
     async_add_entities(entities)
     await coordinator.subscribe()
 
@@ -115,17 +160,15 @@ class LorawanSensorEntity(CoordinatorEntity, SensorEntity):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         coordinator: LorawanSensorCoordinator,
-        sensor: type[SensorTypes.SensorType],
+        description: BrowanSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        self._attr_unique_id = f"{config_entry.unique_id}_{sensor.NAME}"
-        self._attr_device_class = sensor.DEVICE_CLASS
-        self._attr_name = sensor.NAME
-        self._attr_native_unit_of_measurement = sensor.UNIT
+        self.entity_description: BrowanSensorEntityDescription = description
 
+        self._attr_unique_id = f"{config_entry.unique_id}_{description.key}"
         self._config = config_entry
         self._hass = hass
-        self._sensor_data_key = sensor.DATA_KEY
+        self._sensor_data_key = description.key
         super().__init__(coordinator)
 
     @callback
@@ -140,10 +183,10 @@ class LorawanSensorEntity(CoordinatorEntity, SensorEntity):
         """Return the device info."""
         if self._config.unique_id is None:
             raise ValueError("config.unique_id should not be None")
-        if self.name is None:
-            raise ValueError("name should not be None")
-        if isinstance(self.name, UndefinedType):
-            raise TypeError("name should not be undefined")
+        # if self.name is None:
+        #    raise ValueError("name should not be None")
+        # if isinstance(self.name, UndefinedType):
+        #    raise TypeError("name should not be undefined")
         return DeviceInfo(
             identifiers={(DOMAIN, self._config.unique_id)},
             name=self._config.title,

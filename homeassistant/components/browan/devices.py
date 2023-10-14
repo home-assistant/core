@@ -1,7 +1,7 @@
 """Import Browan devices and add supported sensor types."""
 from pyliblorawan.devices.browan.tbms100 import TBMS100
 
-from .models import SensorTypes
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE
 
 
 class HassTBMS100(TBMS100):
@@ -9,5 +9,5 @@ class HassTBMS100(TBMS100):
 
     @staticmethod
     def supported_sensors() -> list:
-        """Return supported measurements for this sensor."""
-        return [SensorTypes.Temperature, SensorTypes.BatteryLevel]
+        """Return supported measurements keys for this sensor."""
+        return [ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE]

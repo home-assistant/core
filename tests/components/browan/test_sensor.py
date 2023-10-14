@@ -9,19 +9,30 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.browan.devices import HassTBMS100
-from homeassistant.components.browan.models import SensorTypes
 from homeassistant.components.browan.sensor import (
     _LOGGER as DUT_LOGGER,
+    ENTITY_DESCRIPTIONS,
+    BrowanSensorEntityDescription,
     LorawanSensorCoordinator,
     LorawanSensorEntity,
     async_setup_entry,
 )
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.sensor import SensorStateClass
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import UndefinedType
 
 from .data import ttn_uplink  # noqa: F401
+
+
+@pytest.fixture
+def description_temperature():
+    """Fixture to select temperature sensor description."""
+    return [
+        description
+        for description in ENTITY_DESCRIPTIONS
+        if description.key == ATTR_TEMPERATURE
+    ][0]
 
 
 @patch(
@@ -185,24 +196,23 @@ async def test_lorawansensorcoordinator_subscribe_callback(
 def test_lorawan_sensor_entity_constructor(
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
+    description_temperature: BrowanSensorEntityDescription,
     caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test LoRaWAN sensor entity constructor."""
     coordinator = LorawanSensorCoordinator(
         hass, mock_config_entry, HassTBMS100.parse_uplink
     )
-    sensor = SensorTypes.Temperature
-    entity = LorawanSensorEntity(hass, mock_config_entry, coordinator, sensor)
+    entity = LorawanSensorEntity(
+        hass, mock_config_entry, coordinator, description_temperature
+    )
 
     assert entity._attr_has_entity_name is True
     assert entity._attr_state_class == SensorStateClass.MEASUREMENT
-    assert entity._attr_unique_id == "0011223344556677_Temperature"
-    assert entity._attr_device_class == sensor.DEVICE_CLASS
-    assert entity._attr_name == sensor.NAME
-    assert entity._attr_native_unit_of_measurement == sensor.UNIT
+    assert entity._attr_unique_id == "0011223344556677_temperature"
     assert entity._config == mock_config_entry
     assert entity._hass == hass
-    assert entity._sensor_data_key == sensor.DATA_KEY
+    assert entity._sensor_data_key == description_temperature.key
     assert entity.coordinator == coordinator
 
 
@@ -210,6 +220,7 @@ def test_lorawan_sensor_entity_constructor(
 async def test_lorawan_sensor_entity_handle_update(
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
+    description_temperature: BrowanSensorEntityDescription,
     caplog_debug: pytest.LogCaptureFixture,
     ttn_uplink: dict,  # noqa: F811
 ) -> None:
@@ -217,8 +228,9 @@ async def test_lorawan_sensor_entity_handle_update(
     coordinator = LorawanSensorCoordinator(
         hass, mock_config_entry, HassTBMS100.parse_uplink
     )
-    sensor = SensorTypes.Temperature
-    entity = LorawanSensorEntity(hass, mock_config_entry, coordinator, sensor)
+    entity = LorawanSensorEntity(
+        hass, mock_config_entry, coordinator, description_temperature
+    )
     msg = ReceiveMessage(
         "TEST-TOPIC",
         json.dumps(ttn_uplink),
@@ -247,14 +259,16 @@ async def test_lorawan_sensor_entity_handle_update(
 async def test_device_info(
     hass: HomeAssistant,
     mock_config_entry: config_entries.ConfigEntry,
+    description_temperature: BrowanSensorEntityDescription,
     caplog_debug: pytest.LogCaptureFixture,
 ) -> None:
     """Test LoRaWAN sensor device info."""
     coordinator = LorawanSensorCoordinator(
         hass, mock_config_entry, HassTBMS100.parse_uplink
     )
-    sensor = SensorTypes.Temperature
-    entity = LorawanSensorEntity(hass, mock_config_entry, coordinator, sensor)
+    entity = LorawanSensorEntity(
+        hass, mock_config_entry, coordinator, description_temperature
+    )
 
     assert entity.device_info == {
         "identifiers": {("browan", "0011223344556677")},
@@ -262,16 +276,6 @@ async def test_device_info(
         "model": "TBMS100",
         "name": "TEST-ENTRY-TITLE",
     }
-
-    with pytest.raises(TypeError) as e1:
-        entity._attr_name = UndefinedType._singleton  # type: ignore [assignment]
-        _ = entity.device_info
-    assert str(e1.value) == "name should not be undefined"
-
-    with pytest.raises(ValueError) as e2:
-        entity._attr_name = None
-        _ = entity.device_info
-    assert str(e2.value) == "name should not be None"
 
     with pytest.raises(ValueError) as e3:
         entity._config.unique_id = None
