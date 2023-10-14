@@ -379,9 +379,8 @@ async def async_setup_entry(
 
     def measurement_listener() -> None:
         """Listen for new measurements and add sensors if they did not exist."""
-        new_measurement_types = (
-            set(measurement_coordinator.data.keys()) - current_measurement_types
-        )
+        received_measurement_types = set(measurement_coordinator.data.keys())
+        new_measurement_types = received_measurement_types - current_measurement_types
         if new_measurement_types:
             async_add_entities(
                 WithingsMeasurementSensor(
