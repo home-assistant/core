@@ -164,7 +164,7 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
                     )
                 else:
                     LOGGER.debug(
-                        "Skipping protection window state schedule (%s retries)",
+                        "Skipping protection window state schedule (%s retries attempted)",
                         self.COORDINATOR_RETRIES,
                     )
                     self._coordinator_retries = 0
