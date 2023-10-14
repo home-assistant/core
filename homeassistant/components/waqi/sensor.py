@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -154,12 +155,18 @@ class WaqiSensor(CoordinatorEntity[WAQIDataUpdateCoordinator], SensorEntity):
     _attr_icon = ATTR_ICON
     _attr_device_class = SensorDeviceClass.AQI
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, coordinator: WAQIDataUpdateCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = f"WAQI {self.coordinator.data.city.name}"
-        self._attr_unique_id = str(coordinator.data.station_id)
+        self._attr_unique_id = f"{coordinator.data.station_id}_air_quality"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(coordinator.data.station_id))},
+            name=coordinator.data.city.name,
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def native_value(self) -> int | None:

@@ -326,7 +326,6 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         super().__init__(coordinator)
         self.block = block
         self._attr_name = get_block_entity_name(coordinator.device, block)
-        self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
@@ -364,7 +363,6 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
-        self._attr_should_poll = False
         self._attr_device_info = {
             "connections": {(CONNECTION_NETWORK_MAC, coordinator.mac)}
         }
@@ -571,7 +569,6 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
         self.block: Block | None = block  # type: ignore[assignment]
         self.entity_description = description
 
-        self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
@@ -643,7 +640,6 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self.attribute = attribute
         self.entity_description = description
 
-        self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )

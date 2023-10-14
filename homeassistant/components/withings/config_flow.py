@@ -5,13 +5,11 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import voluptuous as vol
-from withings_api.common import AuthScope
+from aiowithings import AuthScope
 
 from homeassistant.components.webhook import async_generate_id
-from homeassistant.config_entries import ConfigEntry, OptionsFlowWithConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -27,14 +25,6 @@ class WithingsFlowHandler(
 
     reauth_entry: ConfigEntry | None = None
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> WithingsOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return WithingsOptionsFlowHandler(config_entry)
-
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
@@ -46,10 +36,10 @@ class WithingsFlowHandler(
         return {
             "scope": ",".join(
                 [
-                    AuthScope.USER_INFO.value,
-                    AuthScope.USER_METRICS.value,
-                    AuthScope.USER_ACTIVITY.value,
-                    AuthScope.USER_SLEEP_EVENTS.value,
+                    AuthScope.USER_INFO,
+                    AuthScope.USER_METRICS,
+                    AuthScope.USER_ACTIVITY,
+                    AuthScope.USER_SLEEP_EVENTS,
                 ]
             )
         }
@@ -83,27 +73,10 @@ class WithingsFlowHandler(
             )
 
         if self.reauth_entry.unique_id == user_id:
-            self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
+            self.hass.config_entries.async_update_entry(
+                self.reauth_entry, data={**self.reauth_entry.data, **data}
+            )
+            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
         return self.async_abort(reason="wrong_account")
-
-
-class WithingsOptionsFlowHandler(OptionsFlowWithConfigEntry):
-    """Withings Options flow handler."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Initialize form."""
-        if user_input is not None:
-            return self.async_create_entry(
-                data=user_input,
-            )
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_USE_WEBHOOK): bool}),
-                self.options,
-            ),
-        )

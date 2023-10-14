@@ -1,11 +1,12 @@
 {
   "domain": "withings",
   "name": "Withings",
+  "after_dependencies": ["cloud"],
   "codeowners": ["@vangorra", "@joostlek"],
   "config_flow": true,
   "dependencies": ["application_credentials", "http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/withings",
   "iot_class": "cloud_polling",
   "loggers": ["withings_api"],
-  "requirements": ["withings-api==2.4.0"]
+  "requirements": ["aiowithings==0.4.4"]
 }

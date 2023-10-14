@@ -66,6 +66,7 @@ class WeatherKitFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
+                user_input[CONF_KEY_PEM] = self._fix_key_input(user_input[CONF_KEY_PEM])
                 await self._test_config(user_input)
             except WeatherKitUnsupportedLocationError as exception:
                 LOGGER.error(exception)
@@ -103,6 +104,25 @@ class WeatherKitFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors=errors,
         )
+
+    def _fix_key_input(self, key_input: str) -> str:
+        """Fix common user errors with the key input."""
+        # OSes may sometimes turn two hyphens (--) into an em dash (—)
+        key_input = key_input.replace("—", "--")
+
+        # Trim whitespace and line breaks
+        key_input = key_input.strip()
+
+        # Make sure header and footer are present
+        header = "-----BEGIN PRIVATE KEY-----"
+        if not key_input.startswith(header):
+            key_input = f"{header}\n{key_input}"
+
+        footer = "-----END PRIVATE KEY-----"
+        if not key_input.endswith(footer):
+            key_input += f"\n{footer}"
+
+        return key_input
 
     async def _test_config(self, user_input: dict[str, Any]) -> None:
         """Validate credentials."""

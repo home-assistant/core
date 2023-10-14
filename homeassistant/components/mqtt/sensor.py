@@ -45,6 +45,7 @@ from .mixins import (
     MqttAvailability,
     MqttEntity,
     async_setup_entry_helper,
+    write_state_on_attr_change,
 )
 from .models import (
     MqttValueTemplate,
@@ -52,7 +53,6 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,21 +130,11 @@ class MqttSensor(MqttEntity, RestoreSensor):
     _entity_id_format = ENTITY_ID_FORMAT
     _attr_last_reset: datetime | None = None
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
+    _expiration_trigger: CALLBACK_TYPE | None = None
     _expire_after: int | None
     _expired: bool | None
     _template: Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
     _last_reset_template: Callable[[ReceivePayloadType], ReceivePayloadType]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the sensor."""
-        self._expiration_trigger: CALLBACK_TYPE | None = None
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
@@ -287,13 +277,15 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 )
 
         @callback
+        @write_state_on_attr_change(
+            self, {"_attr_native_value", "_attr_last_reset", "_expired"}
+        )
         @log_messages(self.hass, self.entity_id)
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             _update_state(msg)
             if CONF_LAST_RESET_VALUE_TEMPLATE in self._config:
                 _update_last_reset(msg)
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         topics["state_topic"] = {
             "topic": self._config[CONF_STATE_TOPIC],

@@ -16,6 +16,7 @@ from aioesphomeapi import (
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArgType,
+    VoiceAssistantAudioSettings,
     VoiceAssistantEventType,
 )
 from awesomeversion import AwesomeVersion
@@ -319,27 +320,34 @@ class ESPHomeManager:
             self.voice_assistant_udp_server = None
 
     async def _handle_pipeline_start(
-        self, conversation_id: str, flags: int
+        self,
+        conversation_id: str,
+        flags: int,
+        audio_settings: VoiceAssistantAudioSettings,
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_udp_server is not None:
-            return None
+            _LOGGER.warning("Voice assistant UDP server was not stopped")
+            self.voice_assistant_udp_server.stop()
+            self.voice_assistant_udp_server.close()
+            self.voice_assistant_udp_server = None
 
         hass = self.hass
-        voice_assistant_udp_server = VoiceAssistantUDPServer(
+        self.voice_assistant_udp_server = VoiceAssistantUDPServer(
             hass,
             self.entry_data,
             self._handle_pipeline_event,
             self._handle_pipeline_finished,
         )
-        port = await voice_assistant_udp_server.start_server()
+        port = await self.voice_assistant_udp_server.start_server()
 
         assert self.device_id is not None, "Device ID must be set"
         hass.async_create_background_task(
-            voice_assistant_udp_server.run_pipeline(
+            self.voice_assistant_udp_server.run_pipeline(
                 device_id=self.device_id,
                 conversation_id=conversation_id or None,
                 flags=flags,
+                audio_settings=audio_settings,
             ),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )
