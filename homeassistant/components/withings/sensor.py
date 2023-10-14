@@ -374,6 +374,7 @@ async def async_setup_entry(
             measurement_coordinator, MEASUREMENT_SENSORS[measurement_type]
         )
         for measurement_type in measurement_coordinator.data
+        if measurement_type in MEASUREMENT_SENSORS
     )
 
     def measurement_listener() -> None:
