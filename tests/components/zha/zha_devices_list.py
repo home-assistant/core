@@ -5526,7 +5526,7 @@ DEVICES = [
             ("select", "00:11:22:33:44:55:66:77-2-1030-motion_sensitivity"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["philips_occupancy"],
                 DEV_SIG_ENT_MAP_CLASS: "HueV1MotionSensitivity",
-                DEV_SIG_ENT_MAP_ID: "select.philips_sml001_hue_motion_sensitivity",
+                DEV_SIG_ENT_MAP_ID: "select.philips_sml001_motion_sensitivity",
             },
         },
     },

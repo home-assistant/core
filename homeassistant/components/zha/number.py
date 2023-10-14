@@ -833,7 +833,7 @@ class InovelliDefaultAllLEDOnIntensity(ZHANumberConfigurationEntity):
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 100
     _zcl_attribute: str = "led_intensity_when_on"
-    _attr_translation_key: str = ""
+    _attr_translation_key: str = "led_intensity_when_on"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -847,7 +847,7 @@ class InovelliDefaultAllLEDOffIntensity(ZHANumberConfigurationEntity):
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 100
     _zcl_attribute: str = "led_intensity_when_off"
-    _attr_translation_key: str = ""
+    _attr_translation_key: str = "led_intensity_when_off"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)

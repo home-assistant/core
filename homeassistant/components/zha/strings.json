@@ -721,6 +721,59 @@
         "name": "Away preset temperature"
       }
     },
+    "select": {
+      "default_siren_tone": {
+        "name": "Default siren tone"
+      },
+      "default_siren_level": {
+        "name": "Default siren level"
+      },
+      "default_strobe_level": {
+        "name": "Default strobe level"
+      },
+      "default_strobe": {
+        "name": "Default strobe"
+      },
+      "start_up_on_off": {
+        "name": "Start-up behavior"
+      },
+      "power_on_state": {
+        "name": "Power on state"
+      },
+      "backlight_mode": {
+        "name": "Backlight mode"
+      },
+      "motion_sensitivity": {
+        "name": "Motion sensitivity"
+      },
+      "monitoring_mode": {
+        "name": "Monitoring mode"
+      },
+      "approach_distance": {
+        "name": "Approach distance"
+      },
+      "window_covering_mode": {
+        "name": "Curtain mode"
+      },
+      "output_mode": {
+        "name": "Output mode"
+      },
+      "switch_type": {
+        "name": "Switch type"
+      },
+      "led_scaling_mode": {
+        "name": "Led scaling mode"
+      },
+      "increased_non_neutral_output": {
+        "name": "Non neutral output"
+      },
+      "feeding_mode": {
+        "name": "Mode"
+      },
+      "preset": {
+        "name": "Preset"
+      }
+    },
     "sensor": {
       "analog_input": {
         "name": "Analog input"
