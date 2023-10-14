@@ -276,6 +276,83 @@ async def test_update_item(
     assert state.state == "0"
 
 
+async def test_partial_update_item(
+    hass: HomeAssistant,
+    sl_setup: None,
+    ws_req_id: Callable[[], int],
+    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+) -> None:
+    """Test updating a todo item with partial information."""
+
+    # Create new item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "create_item",
+        {
+            "summary": "soda",
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Fetch item
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert item["status"] == "needs_action"
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+
+    # Mark item completed without changing the summary
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {
+            "uid": item["uid"],
+            "status": "completed",
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Verify item is marked as completed
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert item["status"] == "completed"
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "0"
+
+    # Change the summary without changing the status
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {
+            "uid": item["uid"],
+            "summary": "other summary",
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Verify item is changed and still marked as completed
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "other summary"
+    assert item["status"] == "completed"
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "0"
+
+
 async def test_update_invalid_item(
     hass: HomeAssistant,
     sl_setup: None,
