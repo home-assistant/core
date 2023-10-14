@@ -580,6 +580,11 @@
         "name": "Self-test"
       }
     },
+    "climate": {
+      "thermostat": {
+        "name": "Thermostat"
+      }
+    },
     "sensor": {
       "analog_input": {
         "name": "Analog input"
