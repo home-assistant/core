@@ -865,6 +865,80 @@
       "smoke_density": {
         "name": "Smoke density"
       }
+    },
+    "switch": {
+      "switch": {
+        "name": "[%key:component::switch::title%]"
+      },
+      "window_detection_function": {
+        "name": "Invert window detection"
+      },
+      "trigger_indicator": {
+        "name": "LED trigger indicator"
+      },
+      "power_outage_memory": {
+        "name": "Power outage memory"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "disable_led": {
+        "name": "Disable LED"
+      },
+      "invert_switch": {
+        "name": "Invert switch"
+      },
+      "smart_bulb_mode": {
+        "name": "Smart bulb mode"
+      },
+      "double_tap_up_enabled": {
+        "name": "Double tap up enabled"
+      },
+      "double_tap_down_enabled": {
+        "name": "Double tap down enabled"
+      },
+      "aux_switch_scenes": {
+        "name": "Aux switch scenes"
+      },
+      "binding_off_to_on_sync_level": {
+        "name": "Binding off to on sync level"
+      },
+      "local_protection": {
+        "name": "Local protection"
+      },
+      "one_led_mode": {
+        "name": "Only 1 LED mode"
+      },
+      "firmware_progress_led": {
+        "name": "Firmware progress LED"
+      },
+      "relay_click_in_on_off_mode": {
+        "name": "Disable relay click in on off mode"
+      },
+      "disable_clear_notifications_double_tap": {
+        "name": "Disable config 2x tap to clear notifications"
+      },
+      "led_indicator": {
+        "name": "LED indicator"
+      },
+      "window_detection": {
+        "name": "Window detection"
+      },
+      "valve_detection": {
+        "name": "Valve detection"
+      },
+      "heartbeat_indicator": {
+        "name": "Heartbeat indicator"
+      },
+      "linkage_alarm": {
+        "name": "Linkage alarm"
+      },
+      "buzzer_manual_mute": {
+        "name": "Buzzer manual mute"
+      },
+      "buzzer_manual_alarm": {
+        "name": "Buzzer manual alarm"
+      }
     }
   }
 }
