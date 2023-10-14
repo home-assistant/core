@@ -53,6 +53,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             camera_info = await camera_api.async_get_camera(location)
         except Exception:  # pylint: disable=broad-except
+            _LOGGER.error(
+                "Could not migrate the config entry. No connection to the api"
+            )
             return False
 
         if camera_id := camera_info.camera_id:
@@ -66,5 +69,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 unique_id=f"{DOMAIN}-{camera_id}",
             )
             return True
+        _LOGGER.error("Could not migrate the config entry. Camera has no id")
         return False
     return True
