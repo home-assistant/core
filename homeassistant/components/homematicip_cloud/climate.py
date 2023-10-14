@@ -34,6 +34,11 @@ from .hap import HomematicipHAP
 
 HEATING_PROFILES = {"PROFILE_1": 0, "PROFILE_2": 1, "PROFILE_3": 2}
 COOLING_PROFILES = {"PROFILE_4": 3, "PROFILE_5": 4, "PROFILE_6": 5}
+HEATING_PROFILES_NAMES = {
+    "PROFILE_1": "Default",
+    "PROFILE_2": "Alternative 1",
+    "PROFILE_3": "Alternative 2",
+}
 
 ATTR_PRESET_END_TIME = "preset_end_time"
 PERMANENT_END_TIME = "permanent"
@@ -272,7 +277,12 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         ]
 
     def _get_qualified_profile_name(self, profile) -> str:
-        return profile.name if profile.name != "" else profile.index
+        if profile.name != "":
+            return profile.name
+        if profile.index in HEATING_PROFILES_NAMES:
+            return HEATING_PROFILES_NAMES[profile.index]
+
+        return profile.index
 
     def _get_profile_idx_by_name(self, profile_name: str) -> int:
         """Return a profile index by name."""
