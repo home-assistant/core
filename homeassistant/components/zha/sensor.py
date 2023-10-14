@@ -891,6 +891,7 @@ class RSSISensor(Sensor):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = True  # BaseZhaEntity defaults to False
+    _attr_translation_key: str = "rssi"
 
     @classmethod
     def create_entity(

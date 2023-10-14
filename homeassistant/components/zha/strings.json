@@ -532,6 +532,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "accelerometer": {
+        "name": "Accelerometer"
+      },
       "binary_input": {
         "name": "Binary input"
       },
@@ -623,6 +626,9 @@
       },
       "hvac_action": {
         "name": "HVAC action"
+      },
+      "rssi": {
+        "name": "RSSI"
       },
       "lqi": {
         "name": "LQI"

@@ -100,7 +100,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-5-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.bosch_isw_zpr1_wp13_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.bosch_isw_zpr1_wp13_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-5-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -319,7 +319,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_3315_s_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_3315_s_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -374,7 +374,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_3320_l_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_3320_l_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -429,7 +429,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_3326_l_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_3326_l_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -484,7 +484,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_motion_sensor_a_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_motion_sensor_a_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -603,7 +603,7 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
                 DEV_SIG_ENT_MAP_ID: (
-                    "binary_sensor.climaxtechnology_sd8sc_00_00_03_12tc_iaszone"
+                    "binary_sensor.climaxtechnology_sd8sc_00_00_03_12tc_ias_zone"
                 ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -678,7 +678,7 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
                 DEV_SIG_ENT_MAP_ID: (
-                    "binary_sensor.climaxtechnology_ws15_00_00_03_03tc_iaszone"
+                    "binary_sensor.climaxtechnology_ws15_00_00_03_03tc_ias_zone"
                 ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -764,7 +764,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.heiman_smokesensor_em_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.heiman_smokesensor_em_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -832,7 +832,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.heiman_co_v16_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.heiman_co_v16_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -895,7 +895,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.heiman_warningdevice_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.heiman_warningdevice_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -933,7 +933,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-6-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.hivehome_com_mot003_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.hivehome_com_mot003_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-6-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -3205,7 +3205,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.lumi_lumi_sensor_wleak_aq1_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.lumi_lumi_sensor_wleak_aq1_ias_zone",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["device_temperature"],
@@ -3378,7 +3378,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.nyce_3010_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.nyce_3010_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -3421,7 +3421,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.nyce_3014_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.nyce_3014_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -3881,7 +3881,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_button_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_button_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -3929,7 +3929,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_multi_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_multi_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -3982,7 +3982,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_water_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_water_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -4098,7 +4098,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.sercomm_corp_sz_dws04n_sf_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.sercomm_corp_sz_dws04n_sf_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -4231,7 +4231,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.sercomm_corp_sz_pir04_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.sercomm_corp_sz_pir04_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -4731,7 +4731,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.visonic_mct_340_e_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.visonic_mct_340_e_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -4896,7 +4896,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.netvox_z308e3ed_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.netvox_z308e3ed_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],

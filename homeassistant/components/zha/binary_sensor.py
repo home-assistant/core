@@ -111,6 +111,7 @@ class Accelerometer(BinarySensor):
 
     SENSOR_ATTR = "acceleration"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOVING
+    _attr_translation_key: str = "accelerometer"
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY)
