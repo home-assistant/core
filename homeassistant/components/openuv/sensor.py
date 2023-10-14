@@ -106,6 +106,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="current_uv_level",
         icon="mdi:weather-sunny",
         device_class=SensorDeviceClass.ENUM,
+        options=[label.value for label in UV_LABEL_DEFINITIONS],
         value_fn=lambda data: get_uv_label(data["uv"]),
     ),
     OpenUvSensorEntityDescription(
