@@ -151,7 +151,7 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
                     target_dt = utcnow() + timedelta(hours=1)
 
                     LOGGER.debug(
-                        "Retrying window state schedule: %s (attempt %s of %s)",
+                        "Retrying protection window state schedule at %s (attempt %s of %s)",
                         target_dt,
                         self._coordinator_retries + 1,
                         self.COORDINATOR_RETRIES,
@@ -163,7 +163,10 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
                         self.hass, async_request_coordinator_refresh, target_dt
                     )
                 else:
-                    LOGGER.debug("Skipping window state schedule due to no data")
+                    LOGGER.debug(
+                        "Skipping protection window state schedule (%s retries)",
+                        self.COORDINATOR_RETRIES,
+                    )
                     self._coordinator_retries = 0
                 return
 
