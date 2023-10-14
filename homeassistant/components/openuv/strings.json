@@ -86,7 +86,7 @@
   "issues": {
     "protection_window_automation": {
       "title": "Manually updating the protection window is no longer required",
-      "description": "OpenUV can now automatically update the `{protection_window_entity_id}` entity; you are no longer required to call the `homeassistant.update_entity` service on this entity and should remove the `{automation_entity_id}` automation."
+      "description": "OpenUV can now automatically update the `{protection_window_entity_id}` entity; you are no longer required to call the `homeassistant.update_entity` service on this entity and should remove the `{automation_entity_id}` automation to prevent unnecessary API calls."
     }
   }
 }
