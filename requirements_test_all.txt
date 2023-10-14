@@ -218,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==17.1.5
+aioesphomeapi==17.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -360,6 +360,9 @@ aiowatttime==0.1.1
 
 # homeassistant.components.webostv
 aiowebostv==0.3.3
+
+# homeassistant.components.withings
+aiowithings==0.4.4
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -2019,9 +2022,6 @@ whois==0.9.27
 
 # homeassistant.components.wiffi
 wiffi==1.1.2
-
-# homeassistant.components.withings
-withings-api==2.4.0
 
 # homeassistant.components.wled
 wled==0.16.0
