@@ -29,6 +29,7 @@ class TodoistCoordinator(DataUpdateCoordinator[list[Task]]):
 
     async def _async_update_data(self) -> list[Task]:
         """Fetch tasks from the Todoist API."""
+        logging.debug("_async_update_data")
         try:
             return await self.api.get_tasks()
         except Exception as err:
