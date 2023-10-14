@@ -147,9 +147,14 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
                 # window data. If that happens, we should try a few more times
                 # (properly spaced out) before giving up:
                 if self._coordinator_retries < self.COORDINATOR_RETRIES:
+                    self._coordinator_retries += 1
                     target_dt = utcnow() + timedelta(hours=1)
+
                     LOGGER.debug(
-                        "Retrying protection window state schedule at %s", target_dt
+                        "Retrying window state schedule: %s (attempt %s of %s)",
+                        target_dt,
+                        self._coordinator_retries + 1,
+                        self.COORDINATOR_RETRIES,
                     )
 
                     if self._unsub_coordinator_retry:
@@ -157,11 +162,8 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
                     self._unsub_coordinator_retry = async_track_point_in_utc_time(
                         self.hass, async_request_coordinator_refresh, target_dt
                     )
-                    self._coordinator_retries += 1
                 else:
-                    LOGGER.debug(
-                        "Skipping protection window state schedule due to no data"
-                    )
+                    LOGGER.debug("Skipping window state schedule due to no data")
                     self._coordinator_retries = 0
                 return
 
