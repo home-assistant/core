@@ -60,9 +60,9 @@
         "name": "Preheater"
       }
     },
-    "switch": {
+    "fan": {
       "breeze": {
-        "name": "Breeze"
+        "name": "[%key:component::renson::entity::sensor::ventilation_level::state::breeze%]"
       }
     },
     "sensor": {
