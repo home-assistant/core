@@ -874,6 +874,35 @@ async def test_report_playback_state(hass: HomeAssistant) -> None:
     )
 
 
+async def test_report_recording_state(hass: HomeAssistant) -> None:
+    """Test RecordController reports state property."""
+    hass.states.async_set(
+        "media_player.test_record",
+        "recording",
+        {
+            "friendly_name": "Test media player recorder",
+            "supported_features": MediaPlayerEntityFeature.START_RECORD
+            | MediaPlayerEntityFeature.STOP_RECORD,
+        },
+    )
+
+    properties = await reported_properties(hass, "media_player.test_record")
+    properties.assert_equal("Alexa.RecordController", "recordingState", "RECORDING")
+
+    hass.states.async_set(
+        "media_player.test_record",
+        "Not_recording",
+        {
+            "friendly_name": "Test media player recorder",
+            "supported_features": MediaPlayerEntityFeature.START_RECORD
+            | MediaPlayerEntityFeature.STOP_RECORD,
+        },
+    )
+
+    properties = await reported_properties(hass, "media_player.test_record")
+    properties.assert_equal("Alexa.RecordController", "recordingState", "NOT_RECORDING")
+
+
 async def test_report_speaker_volume(hass: HomeAssistant) -> None:
     """Test Speaker reports volume correctly."""
     hass.states.async_set(

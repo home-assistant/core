@@ -1682,6 +1682,50 @@ async def async_api_seek(
     )
 
 
+@HANDLERS.register(("Alexa.RecordController", "StartRecording"))
+async def async_api_start_recording(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
+    """Process a seek request."""
+    entity = directive.entity
+    data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
+
+    await hass.services.async_call(
+        media_player.DOMAIN, 
+        media_player.SERVICE_MEDIA_START_RECORD, 
+        data, 
+        blocking=False, 
+        context=context
+    )
+
+    return directive.response()
+
+
+@HANDLERS.register(("Alexa.RecordController", "StopRecording"))
+async def async_api_stop_recording(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
+    """Process a seek request."""
+    entity = directive.entity
+    data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
+
+    await hass.services.async_call(
+        media_player.DOMAIN, 
+        media_player.SERVICE_MEDIA_STOP_RECORD, 
+        data, 
+        blocking=False, 
+        context=context
+    )
+
+    return directive.response()
+
+
 @HANDLERS.register(("Alexa.EqualizerController", "SetMode"))
 async def async_api_set_eq_mode(
     hass: ha.HomeAssistant,

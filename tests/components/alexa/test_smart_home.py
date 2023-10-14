@@ -1307,6 +1307,7 @@ async def test_media_player_power(hass: HomeAssistant) -> None:
         "Alexa.PlaybackController",
         "Alexa.PlaybackStateReporter",
         "Alexa.PowerController",
+        "Alexa.RecordController",
         "Alexa.SeekController",
         "Alexa.Speaker",
     )
@@ -1729,6 +1730,55 @@ async def test_media_player_seek_error(hass: HomeAssistant) -> None:
         assert msg["header"]["name"] == "ErrorResponse"
         assert msg["header"]["namespace"] == "Alexa.Video"
         assert msg["payload"]["type"] == "ACTION_NOT_PERMITTED_FOR_CONTENT"
+
+
+async def test_media_player_record(hass: HomeAssistant) -> None:
+    """Test media player record capability."""
+    device = (
+        "media_player.test_record",
+        "playing",
+        {
+            "friendly_name": "Test media player record",
+            "supported_features": MediaPlayerEntityFeature.START_RECORD | MediaPlayerEntityFeature.STOP_RECORD,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "media_player#test_record"
+    assert appliance["displayCategories"][0] == "TV"
+    assert appliance["friendlyName"] == "Test media player record"
+
+    assert_endpoint_capabilities(
+        appliance,
+        "Alexa",
+        "Alexa.EndpointHealth",
+        "Alexa.PowerController",
+        "Alexa.RecordController",
+    )
+
+    # Test start recording.
+    _, msg = await assert_request_calls_service(
+        "Alexa.RecordController",
+        "StartRecording",
+        "media_player#test_record",
+        "media_player.media_start_record",
+        hass,
+        response_type="StateReport",
+    )
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.RecordController", "recordingState", "RECORDING")
+
+    # Test stop recording.
+    _, msg = await assert_request_calls_service(
+        "Alexa.RecordController",
+        "StopRecording",
+        "media_player#test_record",
+        "media_player.media_stop_record",
+        hass,
+        response_type="StateReport",
+    )
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.RecordController", "recordingState", "NOT_RECORDING")
 
 
 @pytest.mark.freeze_time("2022-04-19 07:53:05")

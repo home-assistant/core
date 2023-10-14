@@ -1070,6 +1070,8 @@ SERVICE_MEDIA_STOP: Final = "media_stop"
 SERVICE_MEDIA_NEXT_TRACK: Final = "media_next_track"
 SERVICE_MEDIA_PREVIOUS_TRACK: Final = "media_previous_track"
 SERVICE_MEDIA_SEEK: Final = "media_seek"
+SERVICE_MEDIA_START_RECORD: Final = "media_start_record"
+SERVICE_MEDIA_STOP_RECORD: Final = "media_stop_record"
 SERVICE_REPEAT_SET: Final = "repeat_set"
 SERVICE_SHUFFLE_SET: Final = "shuffle_set"
 

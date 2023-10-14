@@ -199,6 +199,8 @@ class MediaPlayerEntityFeature(IntFlag):
     GROUPING = 524288
     MEDIA_ANNOUNCE = 1048576
     MEDIA_ENQUEUE = 2097152
+    START_RECORD = 4194304
+    STOP_RECORD = 8388608
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.

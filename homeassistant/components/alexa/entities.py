@@ -69,6 +69,7 @@ from .capabilities import (
     AlexaPlaybackStateReporter,
     AlexaPowerController,
     AlexaRangeController,
+    AlexaRecordController,
     AlexaSceneController,
     AlexaSecurityPanelController,
     AlexaSeekController,
@@ -692,6 +693,10 @@ class MediaPlayerCapabilities(AlexaEntity):
 
         if supported & media_player.MediaPlayerEntityFeature.SEEK:
             yield AlexaSeekController(self.entity)
+        
+        record_features = (media_player.MediaPlayerEntityFeature.START_RECORD | media_player.MediaPlayerEntityFeature.STOP_RECORD)
+        if supported & record_features:
+            yield AlexaRecordController(self.entity)
 
         if supported & media_player.MediaPlayerEntityFeature.SELECT_SOURCE:
             inputs = AlexaInputController.get_valid_inputs(
