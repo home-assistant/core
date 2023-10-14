@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -104,6 +105,7 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_CURRENT_UV_LEVEL,
         translation_key="current_uv_level",
         icon="mdi:weather-sunny",
+        device_class=SensorDeviceClass.ENUM,
         value_fn=lambda data: get_uv_label(data["uv"]),
     ),
     OpenUvSensorEntityDescription(
