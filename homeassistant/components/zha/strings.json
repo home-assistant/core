@@ -582,7 +582,18 @@
     },
     "climate": {
       "thermostat": {
-        "name": "Thermostat"
+        "name": "[%key:component::climate::entity_component::_::name%]"
+      }
+    },
+    "cover": {
+      "cover": {
+        "name": "[%key:component::cover::title%]"
+      },
+      "shade": {
+        "name": "[%key:component::cover::entity_component::shade::name%]"
+      },
+      "keen_vent": {
+        "name": "Keen vent"
       }
     },
     "sensor": {
