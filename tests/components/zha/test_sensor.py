@@ -363,7 +363,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
-            "rms_current",
+            "current",
             async_test_em_rms_current,
             7,
             {"ac_current_divisor": 1000, "ac_current_multiplier": 1},
@@ -371,7 +371,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
-            "rms_voltage",
+            "voltage",
             async_test_em_rms_voltage,
             7,
             {"ac_voltage_divisor": 10, "ac_voltage_multiplier": 1},

@@ -264,7 +264,6 @@ class ElectricalMeasurement(Sensor):
     SENSOR_ATTR = "active_power"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_translation_key: str = "active_power"
     _attr_native_unit_of_measurement: str = UnitOfPower.WATT
     _div_mul_prefix = "ac_power"
 
@@ -324,7 +323,6 @@ class ElectricalMeasurementApparentPower(ElectricalMeasurement):
     SENSOR_ATTR = "apparent_power"
     _unique_id_suffix = "apparent_power"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.APPARENT_POWER
-    _attr_translation_key: str = "apparent_power"
     _attr_native_unit_of_measurement = UnitOfApparentPower.VOLT_AMPERE
     _div_mul_prefix = "ac_power"
 
@@ -337,7 +335,6 @@ class ElectricalMeasurementRMSCurrent(ElectricalMeasurement):
     SENSOR_ATTR = "rms_current"
     _unique_id_suffix = "rms_current"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
-    _attr_translation_key: str = "rms_current"
     _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
     _div_mul_prefix = "ac_current"
 
@@ -350,7 +347,6 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement):
     SENSOR_ATTR = "rms_voltage"
     _unique_id_suffix = "rms_voltage"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLTAGE
-    _attr_translation_key: str = "rms_voltage"
     _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _div_mul_prefix = "ac_voltage"
 
@@ -376,7 +372,6 @@ class ElectricalMeasurementPowerFactor(ElectricalMeasurement):
     SENSOR_ATTR = "power_factor"
     _unique_id_suffix = "power_factor"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
-    _attr_translation_key: str = "power_factor"
     _attr_native_unit_of_measurement = PERCENTAGE
 
 
@@ -420,7 +415,7 @@ class LeafWetness(Sensor):
     SENSOR_ATTR = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.HUMIDITY
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_translation_key: str = "leave_wetness"
+    _attr_translation_key: str = "leaf_wetness"
     _divisor = 100
     _attr_native_unit_of_measurement = PERCENTAGE
 
@@ -749,7 +744,7 @@ class FormaldehydeConcentration(Sensor):
 
     SENSOR_ATTR = "measured_value"
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_translation_key: str = "formaldehyde_concentration"
+    _attr_translation_key: str = "formaldehyde"
     _decimals = 0
     _multiplier = 1e6
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
@@ -987,7 +982,7 @@ class AqaraPetFeederLastFeedingSource(Sensor):
 
     SENSOR_ATTR = "last_feeding_source"
     _unique_id_suffix = "last_feeding_source"
-    _attr_translation_key: str = "Last feeding source"
+    _attr_translation_key: str = "last_feeding_source"
     _attr_icon = "mdi:devices"
 
     def formatter(self, value: int) -> int | float | None:
@@ -1002,7 +997,7 @@ class AqaraPetFeederLastFeedingSize(Sensor):
 
     SENSOR_ATTR = "last_feeding_size"
     _unique_id_suffix = "last_feeding_size"
-    _attr_translation_key: str = "Last feeding size"
+    _attr_translation_key: str = "last_feeding_size"
     _attr_icon: str = "mdi:counter"
 
 

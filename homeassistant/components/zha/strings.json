@@ -549,9 +549,6 @@
       "replace_filter": {
         "name": "Replace filter"
       },
-      "error_detected": {
-        "name": "Error detected"
-      },
       "consumer_connected": {
         "name": "Consumer connected"
       },
@@ -783,23 +780,8 @@
       "analog_input": {
         "name": "Analog input"
       },
-      "active_power": {
-        "name": "Active power"
-      },
-      "apparent_power": {
-        "name": "Apparent power"
-      },
-      "rms_current": {
-        "name": "RMS current"
-      },
-      "rms_voltage": {
-        "name": "RMS voltage"
-      },
       "ac_frequency": {
         "name": "AC frequency"
-      },
-      "power_factor": {
-        "name": "Power factor"
       },
       "soil_moisture": {
         "name": "Soil moisture"
@@ -834,7 +816,7 @@
       "device_temperature": {
         "name": "Device temperature"
       },
-      "formaldehyde_concentration": {
+      "formaldehyde": {
         "name": "Formaldehyde concentration"
       },
       "hvac_action": {

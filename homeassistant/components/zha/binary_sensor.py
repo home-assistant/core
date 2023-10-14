@@ -270,7 +270,6 @@ class AqaraPetFeederErrorDetected(BinarySensor):
     SENSOR_ATTR = "error_detected"
     _unique_id_suffix = "error_detected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
-    _attr_translation_key: str = "error_detected"
 
 
 @MULTI_MATCH(

@@ -196,7 +196,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -206,12 +206,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -2081,12 +2081,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -2156,7 +2156,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -2166,12 +2166,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -3629,9 +3629,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-3-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: (
-                    "sensor.osram_lightify_rt_tunable_white_active_power"
-                ),
+                DEV_SIG_ENT_MAP_ID: ("sensor.osram_lightify_rt_tunable_white_power"),
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -3643,16 +3641,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: (
-                    "sensor.osram_lightify_rt_tunable_white_rms_current"
-                ),
+                DEV_SIG_ENT_MAP_ID: ("sensor.osram_lightify_rt_tunable_white_current"),
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: (
-                    "sensor.osram_lightify_rt_tunable_white_rms_voltage"
-                ),
+                DEV_SIG_ENT_MAP_ID: ("sensor.osram_lightify_rt_tunable_white_voltage"),
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4035,7 +4029,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4045,12 +4039,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4163,7 +4157,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4173,12 +4167,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4289,7 +4283,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4301,12 +4295,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4374,7 +4368,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4386,12 +4380,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4464,7 +4458,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4476,12 +4470,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4544,7 +4538,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4554,12 +4548,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
