@@ -27,8 +27,8 @@ WIDGET_TO_CLIMATE_ENTITY = {
     UIWidget.VALVE_HEATING_TEMPERATURE_INTERFACE: ValveHeatingTemperatureInterface,
 }
 
-# Hitachi air-to-air heatpumps come in 2 flavors that are separated in 2 classes
-WIDGET_TO_PROTOCOL_TO_CLIMATE_ENTITY = {
+# Hitachi air-to-air heatpumps come in 2 flavors (HLRRWIFI and OVP) that are separated in 2 classes
+WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY = {
     UIWidget.HITACHI_AIR_TO_AIR_HEAT_PUMP: {
         Protocol.HLRR_WIFI: HitachiAirToAirHeatPumpHLRRWIFI,
     },

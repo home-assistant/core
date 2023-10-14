@@ -8,8 +8,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
 from .climate_entities import (
+    WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY,
     WIDGET_TO_CLIMATE_ENTITY,
-    WIDGET_TO_PROTOCOL_TO_CLIMATE_ENTITY,
 )
 from .const import DOMAIN
 
@@ -30,10 +30,10 @@ async def async_setup_entry(
 
     # Hitachi Air To Air Heat Pumps
     async_add_entities(
-        WIDGET_TO_PROTOCOL_TO_CLIMATE_ENTITY[device.widget][device.protocol](
+        WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY[device.widget][device.protocol](
             device.device_url, data.coordinator
         )
         for device in data.platforms[Platform.CLIMATE]
-        if device.widget in WIDGET_TO_PROTOCOL_TO_CLIMATE_ENTITY
-        and device.protocol in WIDGET_TO_PROTOCOL_TO_CLIMATE_ENTITY[device.widget]
+        if device.widget in WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY
+        and device.protocol in WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY[device.widget]
     )
