@@ -561,6 +561,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'weight',
       'friendly_name': 'henk Bone mass',
+      'icon': 'mdi:bone',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
     }),
