@@ -413,14 +413,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         options=["open", "tilt", "closed"],
         translation_key="three_way_handle_direction",
     ),
-    # Hitachi air to air heatpump outdoor temperature sensors
-    OverkizSensorDescription(
-        key="hlrrwifi:OutdoorTemperatureState",
-        name="Outdoor temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
