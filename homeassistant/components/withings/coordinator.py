@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from typing import TypeVar
 
 from aiowithings import (
-    MeasurementGroup,
     MeasurementType,
     NotificationCategory,
     SleepSummary,
@@ -87,27 +86,19 @@ class WithingsMeasurementDataUpdateCoordinator(
     async def _internal_update_data(self) -> dict[MeasurementType, float]:
         """Retrieve measurement data."""
         if self._last_valid_update is None:
-            measurements = await self._measurements_last_two_weeks()
+            now = dt_util.utcnow()
+            startdate = now - timedelta(days=14)
+            measurements = await self._client.get_measurement_in_period(startdate, now)
         else:
-            measurements = await self._measurements_since_last_valid_update()
+            measurements = await self._client.get_measurement_since(
+                self._last_valid_update
+            )
 
         if measurements:
             self._last_valid_update = measurements[0].taken_at
             aggregated_measurements = aggregate_measurements(measurements)
             self._previous_data.update(aggregated_measurements)
         return self._previous_data
-
-    async def _measurements_last_two_weeks(self) -> list[MeasurementGroup]:
-        """Retrieve measurements from the last two weeks."""
-        now = dt_util.utcnow()
-        startdate = now - timedelta(days=14)
-
-        return await self._client.get_measurement_in_period(startdate, now)
-
-    async def _measurements_since_last_valid_update(self) -> list[MeasurementGroup]:
-        """Retrieve measurements since the last valid update."""
-        assert self._last_valid_update
-        return await self._client.get_measurement_since(self._last_valid_update)
 
 
 class WithingsSleepDataUpdateCoordinator(
