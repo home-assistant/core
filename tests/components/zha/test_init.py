@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from zigpy.application import ControllerApplication
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import TransientConnectionError
 
@@ -136,7 +137,10 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
     "homeassistant.components.zha.websocket_api.async_load_api", Mock(return_value=True)
 )
 async def test_setup_with_v3_cleaning_uri(
-    hass: HomeAssistant, path: str, cleaned_path: str, mock_zigpy_connect
+    hass: HomeAssistant,
+    path: str,
+    cleaned_path: str,
+    mock_zigpy_connect: ControllerApplication,
 ) -> None:
     """Test migration of config entry from v3, applying corrections to the port path."""
     config_entry_v3 = MockConfigEntry(
@@ -166,7 +170,7 @@ async def test_zha_retry_unique_ids(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     zigpy_device_mock,
-    mock_zigpy_connect,
+    mock_zigpy_connect: ControllerApplication,
     caplog,
 ) -> None:
     """Test that ZHA retrying creates unique entity IDs."""
@@ -174,7 +178,7 @@ async def test_zha_retry_unique_ids(
     config_entry.add_to_hass(hass)
 
     # Ensure we have some device to try to load
-    app = mock_zigpy_connect.return_value
+    app = mock_zigpy_connect
     light = zigpy_device_mock(LIGHT_ON_OFF)
     app.devices[light.ieee] = light
 

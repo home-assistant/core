@@ -39,16 +39,18 @@ env:
   BLACK_CACHE_VERSION: 1
   HA_SHORT_VERSION: "2023.11"
   DEFAULT_PYTHON: "3.11"
-  ALL_PYTHON_VERSIONS: "['3.11']"
+  ALL_PYTHON_VERSIONS: "['3.11', '3.12']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
   # - 10.6.10 is the version currently shipped with the Add-on (as of 31 Jan 2023)
   # 10.10 is the latest short-term-support
   # - 10.10.3 is the latest (as of 6 Feb 2023)
+  # 10.11 is the latest long-term-support
+  # - 10.11.2 is the version currently shipped with Synology (as of 11 Oct 2023)
   # mysql 8.0.32 does not always behave the same as MariaDB
   # and some queries that work on MariaDB do not work on MySQL
-  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3','mysql:8.0.32']"
+  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3','mariadb:10.11.2','mysql:8.0.32']"
   # 12 is the oldest supported version
   # - 12.14 is the latest (as of 9 Feb 2023)
   # 15 is the latest version

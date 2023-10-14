@@ -116,10 +116,6 @@ async def async_setup_entry(
     else:
         device_info = None
 
-    unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
-    if unit_prefix == "none":
-        unit_prefix = None
-
     derivative_sensor = DerivativeSensor(
         name=config_entry.title,
         round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
@@ -127,7 +123,7 @@ async def async_setup_entry(
         time_window=cv.time_period_dict(config_entry.options[CONF_TIME_WINDOW]),
         unique_id=config_entry.entry_id,
         unit_of_measurement=None,
-        unit_prefix=unit_prefix,
+        unit_prefix=config_entry.options.get(CONF_UNIT_PREFIX),
         unit_time=config_entry.options[CONF_UNIT_TIME],
         device_info=device_info,
     )
