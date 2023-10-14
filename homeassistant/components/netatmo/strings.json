@@ -126,7 +126,7 @@
         },
         "end_datetime": {
           "name": "End datetime",
-          "description": "Datetime for the how long the preset will be active."
+          "description": "Datetime for until when the preset will be active."
         }
       }
     }
