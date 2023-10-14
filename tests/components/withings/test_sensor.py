@@ -57,7 +57,7 @@ async def test_update_failed(
     """Test all entities."""
     await setup_integration(hass, polling_config_entry, False)
 
-    withings.async_measure_get_meas.side_effect = Exception
+    withings.get_measurement_in_period.side_effect = Exception
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

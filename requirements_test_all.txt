@@ -361,6 +361,9 @@ aiowatttime==0.1.1
 # homeassistant.components.webostv
 aiowebostv==0.3.3
 
+# homeassistant.components.withings
+aiowithings==0.4.4
+
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
 
@@ -2019,9 +2022,6 @@ whois==0.9.27
 
 # homeassistant.components.wiffi
 wiffi==1.1.2
-
-# homeassistant.components.withings
-withings-api==2.4.0
 
 # homeassistant.components.wled
 wled==0.16.0
