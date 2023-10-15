@@ -1034,14 +1034,16 @@ class LightEntity(ToggleEntity):
             data[ATTR_BRIGHTNESS] = self.brightness if self.is_on else None
 
         if color_temp_supported(self.supported_color_modes):
-            if self.is_on:
+            if self.is_on and color_mode == ColorMode.COLOR_TEMP:
                 data[ATTR_COLOR_TEMP_KELVIN] = self.color_temp_kelvin
-                if self.color_temp_kelvin is not None:
+                if self.color_temp_kelvin:
                     data[
                         ATTR_COLOR_TEMP
                     ] = color_util.color_temperature_kelvin_to_mired(
                         self.color_temp_kelvin
                     )
+                else:
+                    data[ATTR_COLOR_TEMP] = None
             else:
                 data[ATTR_COLOR_TEMP_KELVIN] = None
                 data[ATTR_COLOR_TEMP] = None
@@ -1050,12 +1052,14 @@ class LightEntity(ToggleEntity):
             # Add warning in 2021.6, remove in 2021.10
             if self.is_on:
                 data[ATTR_COLOR_TEMP_KELVIN] = self.color_temp_kelvin
-                if self.color_temp_kelvin is not None:
+                if self.color_temp_kelvin:
                     data[
                         ATTR_COLOR_TEMP
                     ] = color_util.color_temperature_kelvin_to_mired(
                         self.color_temp_kelvin
                     )
+                else:
+                    data[ATTR_COLOR_TEMP] = None
             else:
                 data[ATTR_COLOR_TEMP_KELVIN] = None
                 data[ATTR_COLOR_TEMP] = None
