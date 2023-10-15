@@ -1340,6 +1340,7 @@ def _migrate_statistics_columns_to_timestamp_fallback(
                         # This can happen if we have duplicate rows
                         # in the statistics table.
                         session.execute(delete_func(statistic_id))
+                session.commit()
 
 
 @database_job_retry_wrapper("Migrate statistics columns to timestamp", 3)
