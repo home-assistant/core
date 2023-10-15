@@ -57,9 +57,6 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
     _attr_icon = "mdi:sunglasses"
     _attr_translation_key = "protection_window"
 
-    COORDINATOR_KEYS = ("from_time", "to_time")
-    COORDINATOR_RETRIES = 3
-
     @callback
     def _get_current_window(self) -> ProtectionWindow | None:
         """Get the current window start/end datetimes (if they exist) from data."""
