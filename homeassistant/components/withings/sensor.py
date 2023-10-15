@@ -385,11 +385,12 @@ async def async_setup_entry(
         if measurement_type in MEASUREMENT_SENSORS
     )
 
-    def measurement_listener() -> None:
+    def _async_measurement_listener() -> None:
         """Listen for new measurements and add sensors if they did not exist."""
         received_measurement_types = set(measurement_coordinator.data.keys())
         new_measurement_types = received_measurement_types - current_measurement_types
         if new_measurement_types:
+            current_measurement_types.update(new_measurement_types)
             async_add_entities(
                 WithingsMeasurementSensor(
                     measurement_coordinator, MEASUREMENT_SENSORS[measurement_type]
@@ -397,7 +398,7 @@ async def async_setup_entry(
                 for measurement_type in new_measurement_types
             )
 
-    measurement_coordinator.async_add_listener(measurement_listener)
+    measurement_coordinator.async_add_listener(_async_measurement_listener)
     sleep_coordinator: WithingsSleepDataUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ][SLEEP_COORDINATOR]
