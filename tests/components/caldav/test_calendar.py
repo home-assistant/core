@@ -1078,6 +1078,8 @@ async def test_calendar_components(
         _mock_calendar("Calendar 1", supported_components=["VEVENT"]),
         _mock_calendar("Calendar 2", supported_components=["VEVENT", "VJOURNAL"]),
         _mock_calendar("Calendar 3", supported_components=["VTODO"]),
+        # Fallback to allow when no components are supported to be conservative
+        _mock_calendar("Calendar 4", supported_components=[]),
     ]
     with patch(
         "homeassistant.components.caldav.calendar.caldav.DAVClient",
@@ -1096,5 +1098,10 @@ async def test_calendar_components(
     assert state.name == "Calendar 2"
     assert state.state == STATE_OFF
 
+    # No entity created for To-do only component
     state = hass.states.get("calendar.calendar_3")
     assert not state
+
+    state = hass.states.get("calendar.calendar_4")
+    assert state.name == "Calendar 4"
+    assert state.state == STATE_OFF
