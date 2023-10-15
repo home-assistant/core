@@ -32,7 +32,7 @@ async def test_setup_entry_success(
 ) -> None:
     """Test successful setup of entry."""
     mock_list_devices.return_value = [
-        Device(
+        Remote(
             deviceId="air-conditonner-id-1",
             deviceName="air-conditonner-name-1",
             deviceType="Air Conditioner",
