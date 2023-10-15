@@ -102,14 +102,14 @@ scene: !include {SCENE_CONFIG_PATH}
 """
 DEFAULT_SCRIPTS = """
 bedtime:
-  alias: Bedtime routine
+  alias: Assist - Bedtime routine
   sequence:
   - service: light.turn_off
     data: {}
   mode: single
   icon: mdi:weather-night
 morning:
-  alias: Morning routine
+  alias: Assist - Morning routine
   sequence: []
   mode: single
   icon: mdi:weather-sunny
