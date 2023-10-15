@@ -1051,9 +1051,11 @@ def _apply_update(  # noqa: C901
         _create_index(session_maker, "event_types", "ix_event_types_event_type")
         _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
     elif new_version == 42:
-        # If the user downgraded from 2023.3.x to an older version
-        # we will have unmigrated statistics columns so we want to
-        # clean this up one last time.
+        # If the user had a previously failed migration, or they
+        # downgraded from 2023.3.x to an older version we will have
+        # unmigrated statistics columns so we want to clean this up
+        # one last time since compiling the statistics will be slow
+        # or fail if we have unmigrated statistics.
         _migrate_statistics_columns_to_timestamp_removing_duplicates(
             hass, instance, session_maker, engine
         )
