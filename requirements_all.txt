@@ -1329,7 +1329,7 @@ numato-gpio==0.10.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.26.0
+numpy==1.26.1
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
