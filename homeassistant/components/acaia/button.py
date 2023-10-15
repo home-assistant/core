@@ -32,21 +32,18 @@ BUTTONS: tuple[AcaiaButtonEntityDescription, ...] = (
         key="tare",
         translation_key="tare",
         icon="mdi:scale-balance",
-        unique_id_fn=lambda scale: f"{scale.mac}_tare_button",
         async_press_fn=lambda scale: scale.tare(),
     ),
     AcaiaButtonEntityDescription(
         key="reset_timer",
         translation_key="reset_timer",
         icon="mdi:timer-refresh",
-        unique_id_fn=lambda scale: f"{scale.mac}_reset_button",
         async_press_fn=lambda scale: scale.resetTimer(),
     ),
     AcaiaButtonEntityDescription(
         key="start_stop",
         translation_key="start_stop",
         icon="mdi:timer-play",
-        unique_id_fn=lambda scale: f"{scale.mac}_start_stop_button",
         async_press_fn=lambda scale: scale.startStopTimer(),
     ),
 )
