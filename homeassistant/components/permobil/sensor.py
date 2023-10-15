@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -31,24 +30,12 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import BATTERY_ASSUMED_VOLTAGE, DOMAIN
 from .coordinator import MyPermobilCoordinator
 
-
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the sensor platform."""
-
-
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=50)
 
 
 @dataclass
@@ -176,10 +163,7 @@ async def async_setup_entry(
 ) -> None:
     """Create sensors from a config entry created in the integrations UI."""
 
-    # load the coordinator from the config
     coordinator: MyPermobilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-
-    # create a sensor for each sensor description
 
     async_add_entities(
         PermobilSensor(coordinator=coordinator, description=description)
