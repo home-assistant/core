@@ -80,14 +80,6 @@ class ProtectionWindowCoordinator(OpenUvCoordinator):
 
         self.window_calculated: bool = False
 
-    @callback
-    def _async_is_data_valid(self, data: dict[str, Any]) -> bool:
-        """Validate protection window data from OpenUV."""
-        if not all(key in data for key in self.DATA_KEYS):
-            LOGGER.debug("Protection window data is incomplete: %s", data)
-            return False
-        return True
-
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from OpenUV."""
         if self.window_calculated:
@@ -107,10 +99,10 @@ class ProtectionWindowCoordinator(OpenUvCoordinator):
 
         data = data["result"]
 
-        if self._async_is_data_valid(data):
-            # If the protection window data is valid, set the flag to indicate that
-            # the window has been calculated (to prevent further API updates until the
-            # flag is the next day):
+        if all(key in data for key in self.DATA_KEYS):
+            # The OpenUV API can sometimes return a successful response that's missing
+            # the protection window data; if the appropriate keys exist, mark the data
+            # as valid:
             self.window_calculated = True
 
         return data
