@@ -1321,24 +1321,25 @@ def _migrate_statistics_columns_to_timestamp_fallback(
         ),
     ):
         with session_scope(session=session_maker()) as session:
-            if not (stats := session.execute(find_func(instance.max_bind_vars)).all()):
-                continue
-            for statistic_id, start in stats:
-                processed = process_timestamp(start)
-                if TYPE_CHECKING:
-                    assert isinstance(processed, datetime)
-                try:
-                    session.execute(migrate_func(statistic_id, processed.timestamp()))
-                except IntegrityError:
-                    _LOGGER.debug(
-                        "Removed duplicate statistics row %s found with time %s in %s",
-                        statistic_id,
-                        start,
-                        table.__tablename__,
-                    )
-                    # This can happen if we have duplicate rows
-                    # in the statistics table.
-                    session.execute(delete_func(statistic_id))
+            while stats := session.execute(find_func(instance.max_bind_vars)).all():
+                for statistic_id, start in stats:
+                    processed = process_timestamp(start)
+                    if TYPE_CHECKING:
+                        assert isinstance(processed, datetime)
+                    try:
+                        session.execute(
+                            migrate_func(statistic_id, processed.timestamp())
+                        )
+                    except IntegrityError:
+                        _LOGGER.warning(
+                            "Removed duplicate statistics row %s found with time %s in %s",
+                            statistic_id,
+                            start,
+                            table.__tablename__,
+                        )
+                        # This can happen if we have duplicate rows
+                        # in the statistics table.
+                        session.execute(delete_func(statistic_id))
 
 
 @database_job_retry_wrapper("Migrate statistics columns to timestamp", 3)
