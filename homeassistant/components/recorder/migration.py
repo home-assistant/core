@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 import contextlib
 from dataclasses import dataclass, replace as dataclass_replace
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from time import time
 from typing import TYPE_CHECKING, cast
@@ -68,6 +68,7 @@ from .db_schema import (
     StatisticsShortTerm,
 )
 from .models import process_timestamp
+from .models.time import datetime_to_timestamp_or_none
 from .queries import (
     batch_cleanup_entity_ids,
     delete_duplicate_short_term_statistics_row,
@@ -1333,13 +1334,19 @@ def _migrate_statistics_columns_to_timestamp_one_by_one(
     ):
         with session_scope(session=session_maker()) as session:
             while stats := session.execute(find_func(instance.max_bind_vars)).all():
-                for statistic_id, start in stats:
-                    processed = process_timestamp(start)
-                    if TYPE_CHECKING:
-                        assert isinstance(processed, datetime)
+                for statistic_id, start, created, last_reset in stats:
+                    start_ts = datetime_to_timestamp_or_none(process_timestamp(start))
+                    created_ts = datetime_to_timestamp_or_none(
+                        process_timestamp(created)
+                    )
+                    last_reset_ts = datetime_to_timestamp_or_none(
+                        process_timestamp(last_reset)
+                    )
                     try:
                         session.execute(
-                            migrate_func(statistic_id, processed.timestamp())
+                            migrate_func(
+                                statistic_id, start_ts, created_ts, last_reset_ts
+                            )
                         )
                     except IntegrityError:
                         # This can happen if we have duplicate rows

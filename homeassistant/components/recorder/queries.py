@@ -868,7 +868,12 @@ def find_unmigrated_short_term_statistics_rows(
 ) -> StatementLambdaElement:
     """Find unmigrated short term statistics rows."""
     return lambda_stmt(
-        lambda: select(StatisticsShortTerm.id, StatisticsShortTerm.start)
+        lambda: select(
+            StatisticsShortTerm.id,
+            StatisticsShortTerm.start,
+            StatisticsShortTerm.created,
+            StatisticsShortTerm.last_reset,
+        )
         .filter(StatisticsShortTerm.start_ts.is_(None))
         .filter(StatisticsShortTerm.start.isnot(None))
         .limit(max_bind_vars)
@@ -878,7 +883,9 @@ def find_unmigrated_short_term_statistics_rows(
 def find_unmigrated_statistics_rows(max_bind_vars: int) -> StatementLambdaElement:
     """Find unmigrated statistics rows."""
     return lambda_stmt(
-        lambda: select(Statistics.id, Statistics.start)
+        lambda: select(
+            Statistics.id, Statistics.start, Statistics.created, Statistics.last_reset
+        )
         .filter(Statistics.start_ts.is_(None))
         .filter(Statistics.start.isnot(None))
         .limit(max_bind_vars)
@@ -886,25 +893,45 @@ def find_unmigrated_statistics_rows(max_bind_vars: int) -> StatementLambdaElemen
 
 
 def migrate_single_short_term_statistics_row_to_timestamp(
-    statistic_id: int, timestamp: float
+    statistic_id: int,
+    start_ts: float | None,
+    created_ts: float | None,
+    last_reset_ts: float | None,
 ) -> StatementLambdaElement:
     """Migrate a single short term statistics row to timestamp."""
     return lambda_stmt(
         lambda: update(StatisticsShortTerm)
         .where(StatisticsShortTerm.id == statistic_id)
-        .values(start_ts=timestamp, state=None)
+        .values(
+            start_ts=start_ts,
+            start=None,
+            created_ts=created_ts,
+            created=None,
+            last_reset_ts=last_reset_ts,
+            last_reset=None,
+        )
         .execution_options(synchronize_session=False)
     )
 
 
 def migrate_single_statistics_row_to_timestamp(
-    statistic_id: int, timestamp: float
+    statistic_id: int,
+    start_ts: float | None,
+    created_ts: float | None,
+    last_reset_ts: float | None,
 ) -> StatementLambdaElement:
     """Migrate a single statistics row to timestamp."""
     return lambda_stmt(
         lambda: update(Statistics)
         .where(Statistics.id == statistic_id)
-        .values(start_ts=timestamp, state=None)
+        .values(
+            start_ts=start_ts,
+            start=None,
+            created_ts=created_ts,
+            created=None,
+            last_reset_ts=last_reset_ts,
+            last_reset=None,
+        )
         .execution_options(synchronize_session=False)
     )
 
