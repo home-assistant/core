@@ -17,10 +17,10 @@ from homeassistant.components.water_heater import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
+from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
+from .entity import ViCareEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare climate platform."""
-    name = VICARE_NAME
     entities = []
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     circuits = await hass.async_add_executor_job(_get_circuits, api)
@@ -80,7 +79,7 @@ async def async_setup_entry(
             suffix = f" {circuit.id}"
 
         entity = ViCareWater(
-            f"{name} Water{suffix}",
+            f"Water{suffix}",
             api,
             circuit,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
@@ -90,7 +89,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViCareWater(WaterHeaterEntity):
+class ViCareWater(ViCareEntity, WaterHeaterEntity):
     """Representation of the ViCare domestic hot water device."""
 
     _attr_precision = PRECISION_TENTHS
@@ -100,21 +99,15 @@ class ViCareWater(WaterHeaterEntity):
     _attr_max_temp = VICARE_TEMP_WATER_MAX
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
 
-    def __init__(self, name, api, circuit, device_config):
+    def __init__(self, name, api, circuit, device_config) -> None:
         """Initialize the DHW water_heater device."""
+        super().__init__(device_config)
         self._attr_name = name
         self._api = api
         self._circuit = circuit
-        self._attributes = {}
+        self._attributes: dict[str, Any] = {}
         self._current_mode = None
         self._attr_unique_id = f"{device_config.getConfig().serial}-{circuit.id}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=device_config.getModel(),
-            manufacturer="Viessmann",
-            model=device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
