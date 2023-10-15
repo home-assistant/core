@@ -246,7 +246,7 @@ class RegistryEntry:
 
         return None
 
-    @property
+    @cached_property
     def as_partial_dict(self) -> dict[str, Any]:
         """Return a partial dict representation of the entry."""
         return {
@@ -266,6 +266,18 @@ class RegistryEntry:
             "platform": self.platform,
             "translation_key": self.translation_key,
             "unique_id": self.unique_id,
+        }
+
+    @cached_property
+    def extended_dict(self) -> dict[str, Any]:
+        """Return a extended dict representation of the entry."""
+        return {
+            **self.as_partial_dict,
+            "aliases": self.aliases,
+            "capabilities": self.capabilities,
+            "device_class": self.device_class,
+            "original_device_class": self.original_device_class,
+            "original_icon": self.original_icon,
         }
 
     @cached_property
