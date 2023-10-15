@@ -2,7 +2,7 @@
 
 import logging
 
-from aioautomower.const import MowerAttributes
+from aioautomower.model import MowerAttributes
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

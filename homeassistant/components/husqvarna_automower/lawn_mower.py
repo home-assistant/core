@@ -1,7 +1,7 @@
 """Husqvarna Automower lawn mower entity."""
 import logging
 
-from aioautomower.const import MowerActivities, MowerStates
+from aioautomower.model import MowerActivities, MowerStates
 
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,

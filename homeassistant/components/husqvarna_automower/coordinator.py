@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from aioautomower.const import MowerAttributes, MowerList
+from aioautomower.model import MowerAttributes, MowerList
 from aioautomower.session import AutomowerSession
 
 from homeassistant.core import HomeAssistant, callback
