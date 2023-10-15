@@ -36,8 +36,9 @@ async def test_all_entities(
     )
 
     for entity in entities:
-        if entity.platform == Platform.SENSOR:
+        if entity.domain == Platform.SENSOR:
             assert hass.states.get(entity.entity_id) == snapshot
+    assert entities
 
 
 async def test_update_failed(
