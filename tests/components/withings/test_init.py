@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from urllib.parse import urlparse
 
+from aiohttp.hdrs import METH_HEAD
 from aiowithings import (
     NotificationCategory,
     WithingsAuthenticationFailedError,
@@ -173,27 +174,19 @@ async def test_webhook_subscription_polling_config(
     assert withings.list_notification_configurations.call_count == 0
 
 
-@pytest.mark.parametrize(
-    "method",
-    [
-        "PUT",
-        "HEAD",
-    ],
-)
-async def test_requests(
+async def test_head_request(
     hass: HomeAssistant,
     withings: AsyncMock,
     webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
-    method: str,
 ) -> None:
-    """Test we handle request methods Withings sends."""
+    """Test we handle head requests Withings sends."""
     await setup_integration(hass, webhook_config_entry)
     client = await hass_client_no_auth()
     webhook_url = async_generate_url(hass, WEBHOOK_ID)
 
     response = await client.request(
-        method=method,
+        method=METH_HEAD,
         path=urlparse(webhook_url).path,
     )
     assert response.status == 200
