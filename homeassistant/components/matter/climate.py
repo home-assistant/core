@@ -250,9 +250,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self._attr_min_temp = DEFAULT_MIN_TEMP
         # update max_temp
         if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.HEAT_COOL):
-            attribute = clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
-        else:
             attribute = clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit
+        else:
+            attribute = clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
         if (value := self._get_temperature_in_degrees(attribute)) is not None:
             self._attr_max_temp = value
         else:

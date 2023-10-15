@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
+from ssl import SSLContext
 import sys
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
@@ -65,8 +66,10 @@ async def _noop_wait(*args: Any, **kwargs: Any) -> None:
     return
 
 
-# pylint: disable-next=protected-access
-web.BaseSite._wait = _noop_wait  # type: ignore[method-assign]
+# TODO: Remove version check with aiohttp 3.9.0  # pylint: disable=fixme
+if sys.version_info >= (3, 12):
+    # pylint: disable-next=protected-access
+    web.BaseSite._wait = _noop_wait  # type: ignore[method-assign]
 
 
 class HassClientResponse(aiohttp.ClientResponse):
@@ -286,7 +289,7 @@ def _async_get_connector(
         return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
-        ssl_context = ssl_util.get_default_context()
+        ssl_context: bool | SSLContext = ssl_util.get_default_context()
     else:
         ssl_context = ssl_util.get_default_no_verify_context()
 
