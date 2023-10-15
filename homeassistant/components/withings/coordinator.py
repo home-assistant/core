@@ -1,6 +1,6 @@
 """Withings coordinator."""
 from abc import abstractmethod
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TypeVar
 
 from aiowithings import (
@@ -32,6 +32,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
 
     config_entry: ConfigEntry
     _default_update_interval: timedelta | None = UPDATE_INTERVAL
+    _last_valid_update: datetime | None = None
 
     def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
         """Initialize the Withings data coordinator."""
@@ -79,15 +80,24 @@ class WithingsMeasurementDataUpdateCoordinator(
             NotificationCategory.ACTIVITY,
             NotificationCategory.PRESSURE,
         }
+        self._previous_data: dict[MeasurementType, float] = {}
 
     async def _internal_update_data(self) -> dict[MeasurementType, float]:
         """Retrieve measurement data."""
-        now = dt_util.utcnow()
-        startdate = now - timedelta(days=7)
+        if self._last_valid_update is None:
+            now = dt_util.utcnow()
+            startdate = now - timedelta(days=14)
+            measurements = await self._client.get_measurement_in_period(startdate, now)
+        else:
+            measurements = await self._client.get_measurement_since(
+                self._last_valid_update
+            )
 
-        response = await self._client.get_measurement_in_period(startdate, now)
-
-        return aggregate_measurements(response)
+        if measurements:
+            self._last_valid_update = measurements[0].taken_at
+            aggregated_measurements = aggregate_measurements(measurements)
+            self._previous_data.update(aggregated_measurements)
+        return self._previous_data
 
 
 class WithingsSleepDataUpdateCoordinator(
