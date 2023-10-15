@@ -124,6 +124,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         data: DeskData = hass.data[DOMAIN].pop(entry.entry_id)
+        await data.coordinator.disconnect()
         bluetooth.async_rediscover_address(hass, data.address)
 
     return unload_ok
