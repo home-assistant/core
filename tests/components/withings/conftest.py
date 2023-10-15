@@ -151,6 +151,7 @@ def mock_withings():
     mock = AsyncMock(spec=WithingsClient)
     mock.get_devices.return_value = devices
     mock.get_measurement_in_period.return_value = measurement_groups
+    mock.get_measurement_since.return_value = measurement_groups
     mock.get_sleep_summary_since.return_value = sleep_summaries
     mock.list_notification_configurations.return_value = notifications
 
