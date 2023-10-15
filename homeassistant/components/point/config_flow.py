@@ -77,32 +77,17 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
-        flows = self.hass.data.get(DATA_FLOW_IMPL, {})
-
         if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
-        if not flows:
-            _LOGGER.debug("no flows")
+        if not self.flow_impl:
             return self.async_abort(reason="no_flows")
-
-        if len(flows) == 1:
-            self.flow_impl = list(flows)[0]
-            return await self.async_step_auth()
-
-        if user_input is not None:
-            self.flow_impl = user_input["flow_impl"]
-            return await self.async_step_auth()
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required("flow_impl"): vol.In(list(flows))}),
-        )
+        return await self.async_step_auth()
 
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
         if self._async_current_entries():
-            return self.async_abort(reason="external_setup")
+            return self.async_abort(reason="already_setup")
 
         if user_input is not None:
             self.redirect_uri = user_input.get(CONF_REDIRECT_URI)

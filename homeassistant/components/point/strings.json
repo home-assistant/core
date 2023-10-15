@@ -1,11 +1,6 @@
 {
   "config": {
     "step": {
-      "user": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
-        "description": "[%key:common::config_flow::description::confirm_setup%]",
-        "data": { "flow_impl": "Provider" }
-      },
       "auth": {
         "title": "Authenticate Point",
         "description": "Please fill Redirect URI below, **Submit** and  **Accept** access to your Minut account in the popup dialog.",

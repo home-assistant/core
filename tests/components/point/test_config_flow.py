@@ -1,14 +1,17 @@
 """Tests for the Point config flow."""
 import asyncio
+from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.point import DOMAIN, config_flow
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
+
+from tests.typing import ClientSessionGenerator
 
 
 def init_config_flow(hass, side_effect=None):
@@ -44,6 +47,16 @@ def mock_pypoint(is_authorized):
         yield PointSession
 
 
+async def test_no_yaml(hass: HomeAssistant) -> None:
+    """Test if no yaml is configured."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "no_flows"
+
+
 async def test_abort_if_no_implementation_registered(hass: HomeAssistant) -> None:
     """Test we abort if no implementation is registered."""
     flow = config_flow.PointFlowHandler()
@@ -65,6 +78,16 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_import()
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_setup"
+
+    with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
+        result = await flow.async_step_auth()
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_setup"
+
+    with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
+        result = await flow.async_step_finish()
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_setup"
 
@@ -130,10 +153,10 @@ async def test_wrong_code_flow_implementation(
     assert result["reason"] == "auth_error"
 
 
-async def test_not_pick_implementation_if_only_one(hass: HomeAssistant) -> None:
+async def test_user_with_external_conf(hass: HomeAssistant) -> None:
     """Test we allow picking implementation if we have one flow_imp."""
     flow = init_config_flow(hass)
-
+    flow.flow_impl = DOMAIN
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
@@ -159,3 +182,56 @@ async def test_abort_if_exception_generating_auth_url(hass: HomeAssistant) -> No
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "unknown_authorize_url_generation"
+
+
+async def test_abort_no_code(hass: HomeAssistant) -> None:
+    """Test if no code is given to step_code."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_finish()
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "no_code"
+
+
+async def test_callback_view(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_pypoint,
+) -> None:
+    """Test callback view."""
+    config_flow.register_flow_implementation(hass, "test-other", None, None)
+    init_config_flow(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_CLIENT_ID: "id", CONF_CLIENT_SECRET: "secret"},
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "auth"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            "redirect_uri": "http://example.com",
+        },
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result["step_id"] == "code"
+
+    client = await hass_client_no_auth()
+    forward_url = config_flow.AUTH_CALLBACK_PATH
+    resp = await client.get(forward_url)
+    assert resp.status == HTTPStatus.OK
+
+    forward_url = (
+        f'{config_flow.AUTH_CALLBACK_PATH}?code=ABC123&state={result["flow_id"]}'
+    )
+
+    resp = await client.get(forward_url)
+    assert resp.status == HTTPStatus.OK
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
