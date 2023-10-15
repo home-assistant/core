@@ -178,7 +178,10 @@ class HassIOView(HomeAssistantView):
             if should_compress(response.content_type):
                 response.enable_compression()
             await response.prepare(request)
-            async for data in client.content.iter_chunked(8192):
+            # In testing iter_chunked, iter_any, and iter_chunks:
+            # iter_chunks was the best performing option since
+            # it does not have to do as much re-assembly
+            async for data, _ in client.content.iter_chunks():
                 await response.write(data)
 
             return response
