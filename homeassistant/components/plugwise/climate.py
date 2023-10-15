@@ -120,16 +120,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
-        # When control_state is present, prefer this data
-        if (control_state := self.device.get("control_state")) == "cooling":
-            return HVACAction.COOLING
-        # Support preheating state as heating,
-        # until preheating is added as a separate state
-        if control_state in ["heating", "preheating"]:
-            return HVACAction.HEATING
-        if control_state == "off":
-            return HVACAction.IDLE
-
         heater: str | None = self.coordinator.data.gateway["heater_id"]
         if heater:
             heater_data = self.coordinator.data.devices[heater]
