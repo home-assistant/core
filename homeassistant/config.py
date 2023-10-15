@@ -100,6 +100,20 @@ automation: !include {AUTOMATION_CONFIG_PATH}
 script: !include {SCRIPT_CONFIG_PATH}
 scene: !include {SCENE_CONFIG_PATH}
 """
+DEFAULT_SCRIPTS = """
+bedtime:
+  alias: Bedtime routine
+  sequence:
+  - service: light.turn_off
+    data: {}
+  mode: single
+  icon: mdi:weather-night
+morning:
+  alias: Morning routine
+  sequence: []
+  mode: single
+  icon: mdi:weather-sunny
+"""
 DEFAULT_SECRETS = """
 # Use this file to store secrets like usernames and passwords.
 # Learn more at https://www.home-assistant.io/docs/configuration/secrets/
@@ -368,8 +382,8 @@ def _write_default_config(config_dir: str) -> bool:
                 automation_file.write("[]")
 
         if not os.path.isfile(script_yaml_path):
-            with open(script_yaml_path, "w", encoding="utf8"):
-                pass
+            with open(script_yaml_path, "w", encoding="utf8") as script_file:
+                script_file.write(DEFAULT_SCRIPTS)
 
         if not os.path.isfile(scene_yaml_path):
             with open(scene_yaml_path, "w", encoding="utf8"):
