@@ -36,6 +36,7 @@ from homeassistant.components.emulated_hue.hue_api import (
     HueAllLightsStateView,
     HueConfigView,
     HueFullStateView,
+    HueGroupView,
     HueOneLightChangeView,
     HueOneLightStateView,
     HueUsernameView,
@@ -233,6 +234,7 @@ def _mock_hue_endpoints(
     HueOneLightStateView(config).register(hass, web_app, web_app.router)
     HueOneLightChangeView(config).register(hass, web_app, web_app.router)
     HueAllGroupsStateView(config).register(hass, web_app, web_app.router)
+    HueGroupView(config).register(hass, web_app, web_app.router)
     HueFullStateView(config).register(hass, web_app, web_app.router)
     HueConfigView(config).register(hass, web_app, web_app.router)
 
@@ -1328,7 +1330,10 @@ async def test_external_ip_blocked(hue_client) -> None:
         "/api/username/lights/light.ceiling_lights",
     ]
     postUrls = ["/api"]
-    putUrls = ["/api/username/lights/light.ceiling_lights/state"]
+    putUrls = [
+        "/api/username/lights/light.ceiling_lights/state",
+        "/api/username/groups/0/action",
+    ]
     with patch(
         "homeassistant.components.emulated_hue.hue_api.ip_address",
         return_value=ip_address("45.45.45.45"),
