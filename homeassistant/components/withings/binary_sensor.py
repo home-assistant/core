@@ -6,8 +6,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 
 from .const import BED_PRESENCE_COORDINATOR, DOMAIN
 from .coordinator import WithingsBedPresenceDataUpdateCoordinator
@@ -24,9 +26,20 @@ async def async_setup_entry(
         entry.entry_id
     ][BED_PRESENCE_COORDINATOR]
 
-    entities = [WithingsBinarySensor(coordinator)]
+    ent_reg = er.async_get(hass)
 
-    async_add_entities(entities)
+    def _async_add_bed_presence_entity() -> None:
+        """Add bed presence entity."""
+        entities = [WithingsBinarySensor(coordinator)]
+
+        async_add_entities(entities)
+
+    if ent_reg.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, f"withings_{entry.unique_id}_in_bed"
+    ):
+        _async_add_bed_presence_entity()
+    else:
+        coordinator.async_add_listener(_async_add_bed_presence_entity)
 
 
 class WithingsBinarySensor(WithingsEntity, BinarySensorEntity):
