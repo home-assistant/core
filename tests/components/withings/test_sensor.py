@@ -120,11 +120,6 @@ async def test_update_new_sensor_creates_new_sensor(
     withings.get_measurement_in_period.return_value = measurement_groups
     await setup_integration(hass, polling_config_entry, False)
 
-    async def _skip_10_minutes() -> None:
-        freezer.tick(timedelta(minutes=10))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
     assert hass.states.get("sensor.henk_fat_mass") is None
 
     meas_json = load_json_object_fixture("withings/get_meas.json")
@@ -133,6 +128,9 @@ async def test_update_new_sensor_creates_new_sensor(
         for measurement in meas_json["measuregrps"]
     ]
     withings.get_measurement_in_period.return_value = measurement_groups
-    await _skip_10_minutes()
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert hass.states.get("sensor.henk_fat_mass") is not None
