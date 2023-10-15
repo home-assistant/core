@@ -1306,15 +1306,13 @@ def _migrate_statistics_columns_to_timestamp_fallback(
     instance: Recorder, session_maker: Callable[[], Session]
 ) -> None:
     """Migrate statistics columns to use timestamp fallback."""
-    for table, find_func, migrate_func, delete_func in (
+    for find_func, migrate_func, delete_func in (
         (
-            Statistics,
             find_unmigrated_statistics_rows,
             migrate_single_statistics_row_to_timestamp,
             delete_duplicate_statistics_row,
         ),
         (
-            StatisticsShortTerm,
             find_unmigrated_short_term_statistics_rows,
             migrate_single_short_term_statistics_row_to_timestamp,
             delete_duplicate_short_term_statistics_row,
@@ -1331,12 +1329,6 @@ def _migrate_statistics_columns_to_timestamp_fallback(
                             migrate_func(statistic_id, processed.timestamp())
                         )
                     except IntegrityError:
-                        _LOGGER.warning(
-                            "Removed duplicate statistics row %s found with time %s in %s",
-                            statistic_id,
-                            start,
-                            table.__tablename__,
-                        )
                         # This can happen if we have duplicate rows
                         # in the statistics table.
                         session.execute(delete_func(statistic_id))
