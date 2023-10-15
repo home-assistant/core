@@ -462,14 +462,18 @@ class Entity(ABC):
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
-        if (
-            self.has_entity_name
-            and (name_translation_key := self._name_translation_key)
-            and (name := platform_translations.get(name_translation_key))
+        if self.has_entity_name and (
+            name_translation_key := self._name_translation_key
         ):
-            if TYPE_CHECKING:
-                assert isinstance(name, str)
-            return name
+            if name := platform_translations.get(name_translation_key):
+                if TYPE_CHECKING:
+                    assert isinstance(name, str)
+                return name
+            _LOGGER.warning(
+                "Translation key %s for %s was not found in the translations",
+                name_translation_key,
+                type(self),
+            )
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
             if description_name is UNDEFINED and self._default_to_device_class_name():
