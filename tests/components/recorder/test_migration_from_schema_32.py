@@ -934,7 +934,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
                 )
             return sorted(results, key=lambda row: row["start_ts"])
 
-    # Do not optimize this block, its intentionally written to to interleave
+    # Do not optimize this block, its intentionally written to interleave
     # with the migration
     await hass.async_add_executor_job(_insert_fake_metadata)
     await async_wait_recording_done(hass)
