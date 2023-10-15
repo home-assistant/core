@@ -181,9 +181,7 @@ async def test_cover(
         assert cluster.request.call_args[0][2].command.name == "down_close"
         assert cluster.request.call_args[1]["expect_reply"] is True
 
-    with patch(
-        "zigpy.zcl.Cluster.request", return_value=mock_coro([0x1, zcl_f.Status.SUCCESS])
-    ):
+    with patch("zigpy.zcl.Cluster.request", return_value=[0x1, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER_TILT,
@@ -208,9 +206,7 @@ async def test_cover(
         assert cluster.request.call_args[0][2].command.name == "up_open"
         assert cluster.request.call_args[1]["expect_reply"] is True
 
-    with patch(
-        "zigpy.zcl.Cluster.request", return_value=mock_coro([0x0, zcl_f.Status.SUCCESS])
-    ):
+    with patch("zigpy.zcl.Cluster.request", return_value=[0x0, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER_TILT,
@@ -239,9 +235,7 @@ async def test_cover(
         assert cluster.request.call_args[0][3] == 53
         assert cluster.request.call_args[1]["expect_reply"] is True
 
-    with patch(
-        "zigpy.zcl.Cluster.request", return_value=mock_coro([0x5, zcl_f.Status.SUCCESS])
-    ):
+    with patch("zigpy.zcl.Cluster.request", return_value=[0x5, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_TILT_POSITION,
@@ -266,9 +260,7 @@ async def test_cover(
         assert cluster.request.call_args[0][2].command.name == "stop"
         assert cluster.request.call_args[1]["expect_reply"] is True
 
-    with patch(
-        "zigpy.zcl.Cluster.request", return_value=mock_coro([0x2, zcl_f.Status.SUCCESS])
-    ):
+    with patch("zigpy.zcl.Cluster.request", return_value=[0x2, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_STOP_COVER_TILT,
@@ -287,9 +279,7 @@ async def test_cover(
     assert hass.states.get(entity_id).state == STATE_OPEN
 
     # test toggle
-    with patch(
-        "zigpy.zcl.Cluster.request", return_value=mock_coro([0x2, zcl_f.Status.SUCCESS])
-    ):
+    with patch("zigpy.zcl.Cluster.request", return_value=[0x2, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_TOGGLE_COVER_TILT,
