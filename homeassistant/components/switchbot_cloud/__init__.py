@@ -1,13 +1,13 @@
 """The SwitchBot via API integration."""
 from asyncio import gather
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from logging import getLogger
 
 from switchbot_api import CannotConnect, Device, InvalidAuth, Remote, SwitchBotAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
@@ -21,8 +21,8 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
 class SwitchbotDevices:
     """Switchbot devices data."""
 
-    climates: list[Remote]
-    switches: list[Device | Remote]
+    climates: list[Remote] = field(default_factory=list)
+    switches: list[Device | Remote] = field(default_factory=list)
 
 
 @dataclass
@@ -33,6 +33,7 @@ class SwitchbotCloudData:
     devices: SwitchbotDevices
 
 
+@callback
 def prepare_device(
     hass: HomeAssistant,
     api: SwitchBotAPI,
@@ -44,6 +45,33 @@ def prepare_device(
         device.device_id, SwitchBotCoordinator(hass, api, device)
     )
     return (device, coordinator)
+
+
+@callback
+def make_device_data(
+    hass: HomeAssistant,
+    api: SwitchBotAPI,
+    devices: list[Device | Remote],
+    coordinators_by_id: dict[str, SwitchBotCoordinator],
+) -> SwitchbotDevices:
+    """Make device data."""
+    devices_data = SwitchbotDevices()
+    for device in devices:
+        if isinstance(device, Remote) and device.device_type.endswith(
+            "Air Conditioner"
+        ):
+            devices_data.climates.append(
+                prepare_device(hass, api, device, coordinators_by_id)
+            )
+        if (
+            isinstance(device, Device)
+            and device.device_type.startswith("Plug")
+            or isinstance(device, Remote)
+        ):
+            devices_data.switches.append(
+                prepare_device(hass, api, device, coordinators_by_id)
+            )
+    return devices_data
 
 
 async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
@@ -64,27 +92,9 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     _LOGGER.debug("Devices: %s", devices)
     coordinators_by_id: dict[str, SwitchBotCoordinator] = {}
     hass.data.setdefault(DOMAIN, {})
-    data = SwitchbotCloudData(
-        api=api,
-        devices=SwitchbotDevices(
-            climates=[
-                prepare_device(hass, api, device, coordinators_by_id)
-                for device in devices
-                if isinstance(device, Remote)
-                and device.device_type.endswith("Air Conditioner")
-            ],
-            switches=[
-                prepare_device(hass, api, device, coordinators_by_id)
-                for device in devices
-                if isinstance(device, Device)
-                and device.device_type.startswith("Plug")
-                or isinstance(device, Remote)
-            ],
-        ),
+    hass.data[DOMAIN][config.entry_id] = SwitchbotCloudData(
+        api=api, devices=make_device_data(hass, api, devices, coordinators_by_id)
     )
-    hass.data[DOMAIN][config.entry_id] = data
-    for device_type, devices in vars(data.devices).items():
-        _LOGGER.debug("%s: %s", device_type, devices)
     await hass.config_entries.async_forward_entry_setups(config, PLATFORMS)
     await gather(
         *[coordinator.async_refresh() for coordinator in coordinators_by_id.values()]
