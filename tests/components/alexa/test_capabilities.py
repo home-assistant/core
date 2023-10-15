@@ -891,7 +891,7 @@ async def test_report_recording_state(hass: HomeAssistant) -> None:
 
     hass.states.async_set(
         "media_player.test_record",
-        "Not_recording",
+        "not_recording",
         {
             "friendly_name": "Test media player recorder",
             "supported_features": MediaPlayerEntityFeature.START_RECORD

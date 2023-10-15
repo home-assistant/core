@@ -1307,7 +1307,6 @@ async def test_media_player_power(hass: HomeAssistant) -> None:
         "Alexa.PlaybackController",
         "Alexa.PlaybackStateReporter",
         "Alexa.PowerController",
-        "Alexa.RecordController",
         "Alexa.SeekController",
         "Alexa.Speaker",
     )
@@ -1736,10 +1735,11 @@ async def test_media_player_record(hass: HomeAssistant) -> None:
     """Test media player record capability."""
     device = (
         "media_player.test_record",
-        "playing",
+        "recording",
         {
             "friendly_name": "Test media player record",
-            "supported_features": MediaPlayerEntityFeature.START_RECORD | MediaPlayerEntityFeature.STOP_RECORD,
+            "supported_features": MediaPlayerEntityFeature.START_RECORD
+            | MediaPlayerEntityFeature.STOP_RECORD,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -1757,26 +1757,26 @@ async def test_media_player_record(hass: HomeAssistant) -> None:
     )
 
     # Test start recording.
-    _, msg = await assert_request_calls_service(
+    call, msg = await assert_request_calls_service(
         "Alexa.RecordController",
         "StartRecording",
         "media_player#test_record",
         "media_player.media_start_record",
         hass,
-        response_type="StateReport",
     )
+    assert call.data["recording_state"] == "recording"
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal("Alexa.RecordController", "recordingState", "RECORDING")
 
     # Test stop recording.
-    _, msg = await assert_request_calls_service(
+    call, msg = await assert_request_calls_service(
         "Alexa.RecordController",
         "StopRecording",
         "media_player#test_record",
         "media_player.media_stop_record",
         hass,
-        response_type="StateReport",
     )
+    assert call.data["recording_state"] == "not_recording"
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal("Alexa.RecordController", "recordingState", "NOT_RECORDING")
 

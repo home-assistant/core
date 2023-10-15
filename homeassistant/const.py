@@ -359,6 +359,8 @@ STATE_JAMMED: Final = "jammed"
 STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
+STATE_RECORDING: Final = "recording"
+STATE_NOT_RECORDING: Final = "not_recording"
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution

@@ -37,7 +37,9 @@ from homeassistant.const import (
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_START_RECORD,
     SERVICE_MEDIA_STOP,
+    SERVICE_MEDIA_STOP_RECORD,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_TURN_OFF,
@@ -48,6 +50,8 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_ALARM_DISARMED,
+    STATE_NOT_RECORDING,
+    STATE_RECORDING,
     UnitOfTemperature,
 )
 from homeassistant.helpers import network
@@ -1689,19 +1693,30 @@ async def async_api_start_recording(
     directive: AlexaDirective,
     context: ha.Context,
 ) -> AlexaResponse:
-    """Process a seek request."""
+    """Process a start recording request."""
     entity = directive.entity
-    data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
+    data: dict[str, Any] = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.const.ATTR_MEDIA_RECORDING_STATE: STATE_RECORDING,
+    }
 
     await hass.services.async_call(
-        media_player.DOMAIN, 
-        media_player.SERVICE_MEDIA_START_RECORD, 
-        data, 
-        blocking=False, 
-        context=context
+        media_player.DOMAIN,
+        SERVICE_MEDIA_START_RECORD,
+        data,
+        blocking=False,
+        context=context,
+    )
+    response = directive.response()
+    response.add_context_property(
+        {
+            "name": "recordingState",
+            "namespace": "Alexa.RecordController",
+            "value": "RECORDING",
+        }
     )
 
-    return directive.response()
+    return response
 
 
 @HANDLERS.register(("Alexa.RecordController", "StopRecording"))
@@ -1711,19 +1726,31 @@ async def async_api_stop_recording(
     directive: AlexaDirective,
     context: ha.Context,
 ) -> AlexaResponse:
-    """Process a seek request."""
+    """Process a stop recording request."""
     entity = directive.entity
-    data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
+    data: dict[str, Any] = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.const.ATTR_MEDIA_RECORDING_STATE: STATE_NOT_RECORDING,
+    }
 
     await hass.services.async_call(
-        media_player.DOMAIN, 
-        media_player.SERVICE_MEDIA_STOP_RECORD, 
-        data, 
-        blocking=False, 
-        context=context
+        media_player.DOMAIN,
+        SERVICE_MEDIA_STOP_RECORD,
+        data,
+        blocking=False,
+        context=context,
     )
 
-    return directive.response()
+    response = directive.response()
+    response.add_context_property(
+        {
+            "name": "recordingState",
+            "namespace": "Alexa.RecordController",
+            "value": "NOT_RECORDING",
+        }
+    )
+
+    return response
 
 
 @HANDLERS.register(("Alexa.EqualizerController", "SetMode"))

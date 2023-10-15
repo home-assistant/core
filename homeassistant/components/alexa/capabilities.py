@@ -7,7 +7,6 @@ from typing import Any
 
 from homeassistant.components import (
     button,
-    camera,
     climate,
     cover,
     fan,
@@ -43,6 +42,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_RECORDING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
@@ -2294,7 +2294,7 @@ class AlexaCameraStreamController(AlexaCapability):
                 "audioCodecs": ["AAC"],
             }
         ]
-    
+
 
 class AlexaRecordController(AlexaCapability):
     """Implements Alexa.RecordController.
@@ -2317,11 +2317,11 @@ class AlexaRecordController(AlexaCapability):
     def properties_retrievable(self) -> bool:
         """Return True if properties can be retrieved."""
         return True
-    
+
     def get_property(self, name: str) -> Any:
         """Read and return a property."""
-        if name != "temperature":
+        if name != "recordingState":
             raise UnsupportedProperty(name)
-        if self.entity.state == camera.STATE_RECORDING:
+        if self.entity.state == STATE_RECORDING:
             return "RECORDING"
         return "NOT_RECORDING"

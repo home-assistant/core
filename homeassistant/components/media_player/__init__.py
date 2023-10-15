@@ -33,10 +33,10 @@ from homeassistant.const import (  # noqa: F401
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_START_RECORD,
-    SERVICE_MEDIA_STOP_RECORD,
     SERVICE_MEDIA_SEEK,
+    SERVICE_MEDIA_START_RECORD,
     SERVICE_MEDIA_STOP,
+    SERVICE_MEDIA_STOP_RECORD,
     SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
     SERVICE_TOGGLE,
@@ -326,6 +326,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {},
         "async_media_previous_track",
         [MediaPlayerEntityFeature.PREVIOUS_TRACK],
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_START_RECORD,
+        {},
+        "async_media_start_record",
+        [MediaPlayerEntityFeature.START_RECORD],
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_STOP_RECORD,
+        {},
+        "async_media_stop_record",
+        [MediaPlayerEntityFeature.STOP_RECORD],
     )
     component.async_register_entity_service(
         SERVICE_CLEAR_PLAYLIST,
@@ -779,6 +791,22 @@ class MediaPlayerEntity(Entity):
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.hass.async_add_executor_job(self.media_next_track)
+
+    def media_start_record(self) -> None:
+        """Send start record command."""
+        raise NotImplementedError()
+
+    async def async_media_start_record(self) -> None:
+        """Send start record command."""
+        await self.hass.async_add_executor_job(self.media_start_record)
+
+    def media_stop_record(self) -> None:
+        """Send stop record command."""
+        raise NotImplementedError()
+
+    async def async_media_stop_record(self) -> None:
+        """Send stop record command."""
+        await self.hass.async_add_executor_job(self.media_stop_record)
 
     def media_seek(self, position: float) -> None:
         """Send seek command."""
