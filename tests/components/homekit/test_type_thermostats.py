@@ -106,7 +106,9 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events) -> None:
     assert acc.aid == 1
     assert acc.category == 9  # Thermostat
 
-    assert acc.get_temperature_range() == (7.0, 35.0)
+    state = hass.states.get(entity_id)
+    assert state
+    assert acc.get_temperature_range(state) == (7.0, 35.0)
     assert acc.char_current_heat_cool.value == 0
     assert acc.char_target_heat_cool.value == 0
     assert acc.char_current_temp.value == 21.0
@@ -841,7 +843,9 @@ async def test_thermostat_fahrenheit(hass: HomeAssistant, hk_driver, events) -> 
         },
     )
     await hass.async_block_till_done()
-    assert acc.get_temperature_range() == (7.0, 35.0)
+    state = hass.states.get(entity_id)
+    assert state
+    assert acc.get_temperature_range(state) == (7.0, 35.0)
     assert acc.char_heating_thresh_temp.value == 20.1
     assert acc.char_cooling_thresh_temp.value == 24.0
     assert acc.char_current_temp.value == 23.0
@@ -929,14 +933,18 @@ async def test_thermostat_get_temperature_range(hass: HomeAssistant, hk_driver) 
         entity_id, HVACMode.OFF, {ATTR_MIN_TEMP: 20, ATTR_MAX_TEMP: 25}
     )
     await hass.async_block_till_done()
-    assert acc.get_temperature_range() == (20, 25)
+    state = hass.states.get(entity_id)
+    assert state
+    assert acc.get_temperature_range(state) == (20, 25)
 
     acc._unit = UnitOfTemperature.FAHRENHEIT
     hass.states.async_set(
         entity_id, HVACMode.OFF, {ATTR_MIN_TEMP: 60, ATTR_MAX_TEMP: 70}
     )
     await hass.async_block_till_done()
-    assert acc.get_temperature_range() == (15.5, 21.0)
+    state = hass.states.get(entity_id)
+    assert state
+    assert acc.get_temperature_range(state) == (15.5, 21.0)
 
 
 async def test_thermostat_temperature_step_whole(
@@ -982,9 +990,14 @@ async def test_thermostat_restore(hass: HomeAssistant, hk_driver, events) -> Non
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
     await hass.async_block_till_done()
 
-    acc = Thermostat(hass, hk_driver, "Climate", "climate.simple", 2, None)
+    entity_id = "climate.simple"
+    hass.states.async_set(entity_id, HVACMode.OFF)
+
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 2, None)
     assert acc.category == 9
-    assert acc.get_temperature_range() == (7, 35)
+    state = hass.states.get(entity_id)
+    assert state
+    assert acc.get_temperature_range(state) == (7, 35)
     assert set(acc.char_target_heat_cool.properties["ValidValues"].keys()) == {
         "cool",
         "heat",
@@ -992,9 +1005,13 @@ async def test_thermostat_restore(hass: HomeAssistant, hk_driver, events) -> Non
         "off",
     }
 
-    acc = Thermostat(hass, hk_driver, "Climate", "climate.all_info_set", 3, None)
+    entity_id = "climate.all_info_set"
+    state = hass.states.get(entity_id)
+    assert state
+
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 3, None)
     assert acc.category == 9
-    assert acc.get_temperature_range() == (60.0, 70.0)
+    assert acc.get_temperature_range(state) == (60.0, 70.0)
     assert set(acc.char_target_heat_cool.properties["ValidValues"].keys()) == {
         "heat_cool",
         "off",
@@ -1762,15 +1779,19 @@ async def test_water_heater_get_temperature_range(
     hass.states.async_set(
         entity_id, HVACMode.HEAT, {ATTR_MIN_TEMP: 20, ATTR_MAX_TEMP: 25}
     )
+    state = hass.states.get(entity_id)
+    assert state
     await hass.async_block_till_done()
-    assert acc.get_temperature_range() == (20, 25)
+    assert acc.get_temperature_range(state) == (20, 25)
 
     acc._unit = UnitOfTemperature.FAHRENHEIT
     hass.states.async_set(
         entity_id, HVACMode.OFF, {ATTR_MIN_TEMP: 60, ATTR_MAX_TEMP: 70}
     )
+    state = hass.states.get(entity_id)
+    assert state
     await hass.async_block_till_done()
-    assert acc.get_temperature_range() == (15.5, 21.0)
+    assert acc.get_temperature_range(state) == (15.5, 21.0)
 
 
 async def test_water_heater_restore(hass: HomeAssistant, hk_driver, events) -> None:
@@ -1795,20 +1816,27 @@ async def test_water_heater_restore(hass: HomeAssistant, hk_driver, events) -> N
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
     await hass.async_block_till_done()
 
-    acc = Thermostat(hass, hk_driver, "WaterHeater", "water_heater.simple", 2, None)
+    entity_id = "water_heater.simple"
+    hass.states.async_set(entity_id, "off")
+    state = hass.states.get(entity_id)
+    assert state
+
+    acc = Thermostat(hass, hk_driver, "WaterHeater", entity_id, 2, None)
     assert acc.category == 9
-    assert acc.get_temperature_range() == (7, 35)
+    assert acc.get_temperature_range(state) == (7, 35)
     assert set(acc.char_current_heat_cool.properties["ValidValues"].keys()) == {
         "Cool",
         "Heat",
         "Off",
     }
 
-    acc = WaterHeater(
-        hass, hk_driver, "WaterHeater", "water_heater.all_info_set", 3, None
-    )
+    entity_id = "water_heater.all_info_set"
+    state = hass.states.get(entity_id)
+    assert state
+
+    acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 3, None)
     assert acc.category == 9
-    assert acc.get_temperature_range() == (60.0, 70.0)
+    assert acc.get_temperature_range(state) == (60.0, 70.0)
     assert set(acc.char_current_heat_cool.properties["ValidValues"].keys()) == {
         "Cool",
         "Heat",
