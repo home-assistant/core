@@ -27,6 +27,61 @@ MOCK_REENTRY.data = {CONF_EMAIL: MOCK_EMAIL, CONF_REGION: MOCK_URL}
 MOCK_CONTEXT = {"entry_id": None}
 
 
+class MockApiClientError:
+    """An instance of the api that always returns an client exception when called."""
+
+    def set_email(self):
+        """Raise exception."""
+        raise config_flow.MyPermobilClientException
+
+    def set_code(self):
+        """Raise exception."""
+        raise config_flow.MyPermobilClientException
+
+
+class MockApiAPIError:
+    """An instance of the api that always returns an API exception when called."""
+
+    region = ""
+
+    def set_region(self):
+        """Pass."""
+
+    def set_code(self):
+        """Pass."""
+
+    async def request_application_code():
+        """Raise MyPermobilAPIException."""
+        raise config_flow.MyPermobilAPIException
+
+    async def request_region_names():
+        """Raise MyPermobilAPIException."""
+        raise config_flow.MyPermobilAPIException
+
+    async def request_application_token():
+        """Raise MyPermobilAPIException."""
+        raise config_flow.MyPermobilAPIException
+
+
+class MockApiSuccess:
+    """An instance of the api that never complains."""
+
+    region = ""
+
+    def set_region(self):
+        """Pass."""
+
+    def set_code(self):
+        """Pass."""
+
+    async def request_application_code():
+        """Fake a request for application code."""
+
+    async def request_application_token():
+        """Return a mock token."""
+        return MOCK_TOKEN
+
+
 async def test_flow_init(hass: HomeAssistant) -> None:
     """Test config flow init."""
     result = await hass.config_entries.flow.async_init(
@@ -53,8 +108,8 @@ async def test_form_empty_code(hass: HomeAssistant) -> None:
 async def test_form_invalid_region_api(hass: HomeAssistant) -> None:
     """Test we handle invalid region."""
     with patch(
-        "homeassistant.components.permobil.config_flow.MyPermobil.request_application_code",
-        side_effect=config_flow.MyPermobilAPIException,
+        "homeassistant.components.permobil.config_flow.PermobilConfigFlow.p_api",
+        MockApiAPIError,
     ), patch(
         "homeassistant.components.permobil.config_flow.PermobilConfigFlow.region_names",
         MOCK_REGIONS,
@@ -70,22 +125,30 @@ async def test_form_invalid_region_api(hass: HomeAssistant) -> None:
 
 async def test_form_invalid_email(hass: HomeAssistant) -> None:
     """Test we handle invalid email."""
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_EMAIL: INVALID_EMAIL},
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"].get("base") == "invalid_email"
+    with patch(
+        "homeassistant.components.permobil.config_flow.MyPermobil",
+        lambda x, session: MockApiClientError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_EMAIL: INVALID_EMAIL},
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"].get("base") == "invalid_email"
 
 
 async def test_form_invalid_code(hass: HomeAssistant) -> None:
     """Test we handle invalid code."""
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": "email_code"},
-        data={CONF_CODE: INVALID_CODE},
-    )
+    with patch(
+        "homeassistant.components.permobil.config_flow.PermobilConfigFlow.p_api",
+        MockApiClientError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": "email_code"},
+            data={CONF_CODE: INVALID_CODE},
+        )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"].get("base") == "invalid_code"
 
@@ -112,8 +175,8 @@ async def test_form_valid_email(hass: HomeAssistant) -> None:
 async def test_form_valid_region(hass: HomeAssistant) -> None:
     """Test we handle a valid region."""
     with patch(
-        "homeassistant.components.permobil.config_flow.MyPermobil.request_application_code",
-        return_value=None,
+        "homeassistant.components.permobil.config_flow.PermobilConfigFlow.p_api",
+        MockApiSuccess,
     ), patch(
         "homeassistant.components.permobil.config_flow.PermobilConfigFlow.region_names",
         MOCK_REGIONS,
@@ -134,8 +197,8 @@ async def test_form_valid_region(hass: HomeAssistant) -> None:
 async def test_form_valid_code(hass: HomeAssistant) -> None:
     """Test we handle a valid email."""
     with patch(
-        "homeassistant.components.permobil.config_flow.MyPermobil.request_application_token",
-        return_value=MOCK_TOKEN,
+        "homeassistant.components.permobil.config_flow.PermobilConfigFlow.p_api",
+        MockApiSuccess,
     ):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -170,8 +233,8 @@ async def test_form_connection_error_region(hass: HomeAssistant) -> None:
 async def test_form_connection_error_token(hass: HomeAssistant) -> None:
     """Test we handle a connection error."""
     with patch(
-        "homeassistant.components.permobil.config_flow.MyPermobil.request_application_token",
-        side_effect=config_flow.MyPermobilAPIException,
+        "homeassistant.components.permobil.config_flow.PermobilConfigFlow.p_api",
+        MockApiAPIError,
     ):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,

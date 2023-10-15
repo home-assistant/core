@@ -62,10 +62,8 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Invoke when a user initiates a flow via the user interface."""
         errors: dict[str, str] = {}
-        if not self.p_api:
-            # create the api instance to use for validation of the user input
-            session = async_get_clientsession(self.hass)
-            self.p_api = MyPermobil(APPLICATION, session=session)
+        session = async_get_clientsession(self.hass)
+        self.p_api = MyPermobil(APPLICATION, session=session)
 
         if user_input is not None:
             user_input[CONF_EMAIL] = user_input[CONF_EMAIL]
@@ -76,7 +74,6 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_email"
 
             self.data[CONF_EMAIL] = user_input[CONF_EMAIL]
-            _LOGGER.debug("email %s", self.p_api.email)
 
             await self.async_set_unique_id(self.data[CONF_EMAIL])
             self._abort_if_unique_id_configured()
@@ -91,10 +88,6 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_region(self, user_input=None) -> FlowResult:
         """Invoke when a user initiates a flow via the user interface."""
         errors: dict[str, str] = {}
-        if not self.p_api:
-            session = async_get_clientsession(self.hass)
-            self.p_api = MyPermobil(APPLICATION, session=session)
-
         if user_input is None:
             # fetch the list of regions names and urls from the api
             # for the user to select from. [("name","url"),("name","url"),...]
@@ -145,9 +138,6 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_email_code(self, user_input=None) -> FlowResult:
         """Second step in config flow to enter the email code."""
         errors: dict[str, str] = {}
-        if not self.p_api:
-            session = async_get_clientsession(self.hass)
-            self.p_api = MyPermobil(APPLICATION, session=session)
 
         try:
             if user_input is not None:
