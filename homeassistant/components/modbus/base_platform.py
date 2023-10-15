@@ -194,13 +194,9 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def __process_raw_value(
-        self, entry: float | int | str | bytes | None
-    ) -> str | None:
+    def __process_raw_value(self, entry: float | int | str | bytes) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
         if self._nan_value and entry in (self._nan_value, -self._nan_value):
-            return None
-        if entry is None:
             return None
         if isinstance(entry, bytes):
             return entry.decode()
