@@ -3,7 +3,7 @@ import datetime
 import importlib
 import sys
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 import uuid
 
 from freezegun import freeze_time
@@ -34,7 +34,11 @@ from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 from homeassistant.util.ulid import bytes_to_ulid, ulid_at_time, ulid_to_bytes
 
-from .common import async_recorder_block_till_done, async_wait_recording_done
+from .common import (
+    async_attach_db_engine,
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+)
 
 from tests.typing import RecorderInstanceGenerator
 
@@ -850,19 +854,6 @@ async def test_migrate_null_event_type_ids(
     assert len(events_by_type[migration._EMPTY_EVENT_TYPE]) == 1000
 
 
-async def _async_attach_db_engine(hass: HomeAssistant) -> None:
-    """Attach a database engine to the recorder."""
-    instance = recorder.get_instance(hass)
-
-    def _mock_setup_recorder_connection():
-        with instance.engine.connect() as connection:
-            instance._setup_recorder_connection(
-                connection._dbapi_connection, MagicMock()
-            )
-
-    await instance.async_add_executor_job(_mock_setup_recorder_connection)
-
-
 async def test_stats_timestamp_conversion_is_reentrant(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -870,7 +861,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
     """Test stats migration is reentrant."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
     now = dt_util.utcnow()
@@ -1025,7 +1016,7 @@ async def test_stats_timestamp_with_one_by_one(
     """Test stats migration with one by one."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
     now = dt_util.utcnow()
@@ -1248,7 +1239,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
     """Test stats migration with one by one removes duplicates."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
     now = dt_util.utcnow()
