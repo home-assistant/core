@@ -94,10 +94,10 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
         return attrs
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         if (window := self._get_current_window()) is None:
-            return None
+            return False
         return window.from_dt_utc <= utcnow() <= window.to_dt_utc
 
     async def async_added_to_hass(self) -> None:
