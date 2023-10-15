@@ -8,7 +8,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 import contextlib
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
@@ -148,7 +148,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _refresh_token() -> str:
         await oauth_session.async_ensure_token_valid()
-        return oauth_session.token[CONF_ACCESS_TOKEN]
+        token = oauth_session.token[CONF_ACCESS_TOKEN]
+        if TYPE_CHECKING:
+            assert isinstance(token, str)
+        return token
 
     client.refresh_token_function = _refresh_token
     coordinators: dict[str, WithingsDataUpdateCoordinator] = {
