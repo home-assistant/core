@@ -130,7 +130,7 @@ async def test_data_manager_webhook_subscription(
 
     assert withings.subscribe_notification.call_count == 6
 
-    webhook_url = "https://example.local:8123/api/webhook/55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
+    webhook_url = "https://example.com/api/webhook/55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
 
     withings.subscribe_notification.assert_any_call(
         webhook_url, NotificationCategory.WEIGHT
@@ -428,12 +428,14 @@ async def test_setup_with_cloud(
         assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_setup_without_https(
+@pytest.mark.parametrize("url", ["http://example.com", "https://example.com:444"])
+async def test_setup_no_webhook(
     hass: HomeAssistant,
     webhook_config_entry: MockConfigEntry,
     withings: AsyncMock,
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
+    url: str,
 ) -> None:
     """Test if set up with cloud link and without https."""
     hass.config.components.add("cloud")
@@ -445,7 +447,7 @@ async def test_setup_without_https(
     ), patch(
         "homeassistant.components.withings.webhook_generate_url"
     ) as mock_async_generate_url:
-        mock_async_generate_url.return_value = "http://example.com"
+        mock_async_generate_url.return_value = url
         await setup_integration(hass, webhook_config_entry)
         await prepare_webhook_setup(hass, freezer)
 
