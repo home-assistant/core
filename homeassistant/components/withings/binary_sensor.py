@@ -1,6 +1,8 @@
 """Sensors flow for Withings."""
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -28,18 +30,22 @@ async def async_setup_entry(
 
     ent_reg = er.async_get(hass)
 
+    callback: Callable[[], None] | None = None
+
     def _async_add_bed_presence_entity() -> None:
         """Add bed presence entity."""
         entities = [WithingsBinarySensor(coordinator)]
 
         async_add_entities(entities)
+        if callback:
+            callback()
 
     if ent_reg.async_get_entity_id(
         Platform.BINARY_SENSOR, DOMAIN, f"withings_{entry.unique_id}_in_bed"
     ):
         _async_add_bed_presence_entity()
     else:
-        coordinator.async_add_listener(_async_add_bed_presence_entity)
+        callback = coordinator.async_add_listener(_async_add_bed_presence_entity)
 
 
 class WithingsBinarySensor(WithingsEntity, BinarySensorEntity):
