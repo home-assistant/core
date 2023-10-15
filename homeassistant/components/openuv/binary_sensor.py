@@ -1,7 +1,7 @@
 """Support for OpenUV binary sensors."""
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
@@ -60,36 +60,21 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
     COORDINATOR_KEYS = ("from_time", "to_time")
     COORDINATOR_RETRIES = 3
 
-    def __init__(
-        self, coordinator: OpenUvCoordinator, description: BinarySensorEntityDescription
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator, description)
-
-        self._coordinator_retries = 0
-        self._unsub_coordinator_retry: CALLBACK_TYPE | None = None
-
     @callback
     def _get_current_window(self) -> ProtectionWindow | None:
         """Get the current window start/end datetimes (if they exist) from data."""
-        if not all(
-            self.coordinator.data.get(key) is not None for key in self.COORDINATOR_KEYS
-        ):
-            LOGGER.debug("Cannot find protection window data keys in coordinator")
-            return None
-
         from_dt_raw = self.coordinator.data["from_time"]
         to_dt_raw = self.coordinator.data["to_time"]
 
         if from_dt_raw is None or to_dt_raw is None:
-            LOGGER.debug("Protection window data values are invalid")
+            LOGGER.debug("Not in a protection window")
             return None
 
-        from_dt_utc = parse_datetime(from_dt_raw)
-        to_dt_utc = parse_datetime(to_dt_raw)
+        from_dt_utc = parse_datetime(self.coordinator.data["from_time"])
+        to_dt_utc = parse_datetime(self.coordinator.data["to_time"])
 
         if from_dt_utc is None or to_dt_utc is None:
-            LOGGER.debug("Protection window data cannot be parsed")
+            LOGGER.warning("Protection window data cannot be parsed")
             return None
 
         return ProtectionWindow(from_dt_utc=from_dt_utc, to_dt_utc=to_dt_utc)
@@ -112,10 +97,10 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
         return attrs
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if (window := self._get_current_window()) is None:
-            return False
+            return None
         return window.from_dt_utc <= utcnow() <= window.to_dt_utc
 
     async def async_added_to_hass(self) -> None:
@@ -126,10 +111,6 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
         def async_update_state(_: datetime) -> None:
             """Update the entity state."""
             self.async_write_ha_state()
-
-        async def async_request_coordinator_refresh(_: datetime) -> None:
-            """Request a coordinator refresh."""
-            await self.coordinator.async_request_refresh()
 
         @callback
         def async_schedule_state_change(target: datetime) -> None:
@@ -143,31 +124,6 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
         def async_schedule_state_changes() -> None:
             """Schedule protection window state updates."""
             if (window := self._get_current_window()) is None:
-                # Sometimes, the OpenUV API can hiccup and fail to return protection
-                # window data. If that happens, we should try a few more times
-                # (properly spaced out) before giving up:
-                if self._coordinator_retries < self.COORDINATOR_RETRIES:
-                    self._coordinator_retries += 1
-                    target_dt = utcnow() + timedelta(hours=1)
-
-                    LOGGER.debug(
-                        "Retrying protection window state schedule at %s (attempt %s of %s)",
-                        target_dt,
-                        self._coordinator_retries + 1,
-                        self.COORDINATOR_RETRIES,
-                    )
-
-                    if self._unsub_coordinator_retry:
-                        self._unsub_coordinator_retry()
-                    self._unsub_coordinator_retry = async_track_point_in_utc_time(
-                        self.hass, async_request_coordinator_refresh, target_dt
-                    )
-                else:
-                    LOGGER.warning(
-                        "Cannot schedule protection window update (bad data after %s retries)",
-                        self.COORDINATOR_RETRIES,
-                    )
-                    self._coordinator_retries = 0
                 return
 
             now = utcnow()
@@ -181,7 +137,4 @@ class ProtectionWindowBinarySensor(OpenUvEntity, BinarySensorEntity):
             self.coordinator.async_add_listener(async_schedule_state_changes)
         )
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        if self._unsub_coordinator_retry:
-            self._unsub_coordinator_retry()
+        async_schedule_state_changes()

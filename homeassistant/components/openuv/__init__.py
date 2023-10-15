@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
-from typing import Any
 
 from pyopenuv import Client
 
@@ -23,22 +21,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    CONF_FROM_WINDOW,
-    CONF_TO_WINDOW,
     DATA_PROTECTION_WINDOW,
     DATA_UV,
-    DEFAULT_FROM_WINDOW,
-    DEFAULT_TO_WINDOW,
     DOMAIN,
     LOGGER,
     TYPE_PROTECTION_WINDOW,
 )
-from .coordinator import OpenUvCoordinator
+from .coordinator import (
+    OpenUvCoordinator,
+    ProtectionWindowCoordinator,
+    UvIndexCoordinator,
+)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -58,25 +55,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         check_status_before_request=True,
     )
 
-    async def async_update_protection_data() -> dict[str, Any]:
-        """Update binary sensor (protection window) data."""
-        low = entry.options.get(CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW)
-        high = entry.options.get(CONF_TO_WINDOW, DEFAULT_TO_WINDOW)
-        return await client.uv_protection_window(low=low, high=high)
-
-    coordinators: dict[str, OpenUvCoordinator] = {
-        coordinator_name: OpenUvCoordinator(
-            hass,
-            entry=entry,
-            name=coordinator_name,
-            latitude=client.latitude,
-            longitude=client.longitude,
-            update_method=update_method,
-        )
-        for coordinator_name, update_method in (
-            (DATA_UV, client.uv_index),
-            (DATA_PROTECTION_WINDOW, async_update_protection_data),
-        )
+    coordinators = {
+        DATA_PROTECTION_WINDOW: ProtectionWindowCoordinator(hass, entry, client),
+        DATA_UV: UvIndexCoordinator(hass, entry, client),
     }
 
     init_tasks = [
@@ -90,26 +71,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Schedule a once-per-morning update for the protection window coordinator (always
-    # at the same local time every morning):
-    async def async_refresh_protection_window_coordinator(_: datetime) -> None:
-        """Schedule a manual refresh of the protection window coordinator."""
-        await coordinators[DATA_PROTECTION_WINDOW].async_refresh()
-
-    entry.async_on_unload(
-        async_track_utc_time_change(
-            hass,
-            async_refresh_protection_window_coordinator,
-            hour=1,
-            minute=0,
-            second=0,
-            local=True,
-        )
-    )
-
     # Automations to update the protection window binary sensor are deprecated (in favor
-    # of an automatic update); create issue registry entries for every such automation
-    # we find:
+    # of automatic updates); create issue registry entries for every such automation we
+    # find:
     ent_reg = er.async_get(hass)
     protection_window_registry_entry = ent_reg.async_get_or_create(
         BINARY_SENSOR_DOMAIN, DOMAIN, f"{latitude}_{longitude}_{TYPE_PROTECTION_WINDOW}"
