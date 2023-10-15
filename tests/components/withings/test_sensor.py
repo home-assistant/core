@@ -106,13 +106,13 @@ async def test_update_updates_incrementally(
     assert len(withings.get_measurement_in_period.call_args_list) == 1
 
 
-async def test_update_new_sensor_creates_new_sensor(
+async def test_update_new_measurement_creates_new_sensor(
     hass: HomeAssistant,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test fetching a new data point will add a new sensor."""
+    """Test fetching a new measurement will add a new sensor."""
     meas_json = load_json_array_fixture("withings/get_meas_1.json")
     measurement_groups = [
         MeasurementGroup.from_api(measurement) for measurement in meas_json
