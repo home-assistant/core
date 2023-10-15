@@ -943,6 +943,8 @@ async def test_stats_timestamp_conversion_is_reentrant(
                 )
             return sorted(results, key=lambda row: row["start_ts"])
 
+    # Do not optimize this block, its intentionally written to to interleave
+    # with the migration
     await hass.async_add_executor_job(_insert_fake_metadata)
     await async_wait_recording_done(hass)
     await hass.async_add_executor_job(_insert_pre_timestamp_stat, one_year_ago)
@@ -1016,11 +1018,11 @@ async def test_stats_timestamp_conversion_is_reentrant(
     ]
 
 
-async def test_stats_timestamp_with_duplications(
+async def test_stats_timestamp_with_one_by_one(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
 ) -> None:
-    """Test stats migration with duplicates."""
+    """Test stats migration with one by one."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     await _async_attach_db_engine(hass)
@@ -1057,63 +1059,137 @@ async def test_stats_timestamp_with_duplications(
 
     def _insert_pre_timestamp_stat(date_time: datetime) -> None:
         with session_scope(hass=hass) as session:
-            session.add(
-                old_db_schema.StatisticsShortTerm(
-                    metadata_id=1000,
-                    created=date_time,
-                    created_ts=None,
-                    start=date_time,
-                    start_ts=None,
-                    last_reset=date_time,
-                    last_reset_ts=None,
-                    state="1",
+            session.add_all(
+                (
+                    old_db_schema.StatisticsShortTerm(
+                        metadata_id=1000,
+                        created=date_time,
+                        created_ts=None,
+                        start=date_time,
+                        start_ts=None,
+                        last_reset=date_time,
+                        last_reset_ts=None,
+                        state="1",
+                    ),
+                    old_db_schema.Statistics(
+                        metadata_id=1000,
+                        created=date_time,
+                        created_ts=None,
+                        start=date_time,
+                        start_ts=None,
+                        last_reset=date_time,
+                        last_reset_ts=None,
+                        state="1",
+                    ),
                 )
             )
 
     def _insert_post_timestamp_stat(date_time: datetime) -> None:
         with session_scope(hass=hass) as session:
-            session.add(
-                db_schema.StatisticsShortTerm(
-                    metadata_id=1000,
-                    created=None,
-                    created_ts=date_time.timestamp(),
-                    start=None,
-                    start_ts=date_time.timestamp(),
-                    last_reset=None,
-                    last_reset_ts=date_time.timestamp(),
-                    state="1",
+            session.add_all(
+                (
+                    db_schema.StatisticsShortTerm(
+                        metadata_id=1000,
+                        created=None,
+                        created_ts=date_time.timestamp(),
+                        start=None,
+                        start_ts=date_time.timestamp(),
+                        last_reset=None,
+                        last_reset_ts=date_time.timestamp(),
+                        state="1",
+                    ),
+                    db_schema.Statistics(
+                        metadata_id=1000,
+                        created=None,
+                        created_ts=date_time.timestamp(),
+                        start=None,
+                        start_ts=date_time.timestamp(),
+                        last_reset=None,
+                        last_reset_ts=date_time.timestamp(),
+                        state="1",
+                    ),
                 )
             )
 
-    def _get_all_short_term_stats() -> list[dict[str, Any]]:
+    def _get_all_stats(table: old_db_schema.StatisticsBase) -> list[dict[str, Any]]:
+        """Get all stats from a table."""
         with session_scope(hass=hass) as session:
             results = []
-            for result in (
-                session.query(old_db_schema.StatisticsShortTerm)
-                .where(old_db_schema.StatisticsShortTerm.metadata_id == 1000)
-                .all()
-            ):
+            for result in session.query(table).where(table.metadata_id == 1000).all():
                 results.append(
                     {
                         field.name: getattr(result, field.name)
-                        for field in old_db_schema.StatisticsShortTerm.__table__.c
+                        for field in table.__table__.c
                     }
                 )
             return sorted(results, key=lambda row: row["start_ts"])
 
-    await hass.async_add_executor_job(_insert_fake_metadata)
-    await async_wait_recording_done(hass)
-    await hass.async_add_executor_job(_insert_pre_timestamp_stat, one_year_ago)
-    await async_wait_recording_done(hass)
-    await hass.async_add_executor_job(_do_migration)
-    await hass.async_add_executor_job(_insert_post_timestamp_stat, six_months_ago)
-    await async_wait_recording_done(hass)
-    await hass.async_add_executor_job(_do_migration)
-    await hass.async_add_executor_job(_insert_pre_timestamp_stat, one_month_ago)
-    await async_wait_recording_done(hass)
-    await hass.async_add_executor_job(_do_migration)
+    def _insert_and_do_migration():
+        _insert_fake_metadata()
+        _insert_pre_timestamp_stat(one_year_ago)
+        _insert_post_timestamp_stat(six_months_ago)
+        _insert_pre_timestamp_stat(one_month_ago)
+        _do_migration()
 
-    final_result = await hass.async_add_executor_job(_get_all_short_term_stats)
+    await hass.async_add_executor_job(_insert_and_do_migration)
+    final_short_term_result = await hass.async_add_executor_job(
+        _get_all_stats, old_db_schema.StatisticsShortTerm
+    )
+    final_short_term_result = sorted(
+        final_short_term_result, key=lambda row: row["start_ts"]
+    )
+
+    assert final_short_term_result == [
+        {
+            "created": None,
+            "created_ts": one_year_ago.timestamp(),
+            "id": 1,
+            "last_reset": None,
+            "last_reset_ts": one_year_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": one_year_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+        {
+            "created": None,
+            "created_ts": six_months_ago.timestamp(),
+            "id": 2,
+            "last_reset": None,
+            "last_reset_ts": six_months_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": six_months_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+        {
+            "created": None,
+            "created_ts": one_month_ago.timestamp(),
+            "id": 3,
+            "last_reset": None,
+            "last_reset_ts": one_month_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": one_month_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+    ]
+
+    final_result = await hass.async_add_executor_job(
+        _get_all_stats, old_db_schema.Statistics
+    )
     final_result = sorted(final_result, key=lambda row: row["start_ts"])
 
     assert final_result == [
@@ -1159,6 +1235,203 @@ async def test_stats_timestamp_with_duplications(
             "min": None,
             "start": None,
             "start_ts": one_month_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+    ]
+
+
+async def test_stats_timestamp_with_one_by_one_removes_duplicates(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+) -> None:
+    """Test stats migration with one by one removes duplicates."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+    await _async_attach_db_engine(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
+    now = dt_util.utcnow()
+    one_year_ago = now - datetime.timedelta(days=365)
+    six_months_ago = now - datetime.timedelta(days=180)
+    one_month_ago = now - datetime.timedelta(days=30)
+
+    def _do_migration():
+        with patch.object(
+            migration,
+            "_migrate_statistics_columns_to_timestamp",
+            side_effect=IntegrityError("test", "test", "test"),
+        ), patch.object(
+            migration,
+            "migrate_single_statistics_row_to_timestamp",
+            side_effect=IntegrityError("test", "test", "test"),
+        ):
+            migration._migrate_statistics_columns_to_timestamp_removing_duplicates(
+                hass, instance, instance.get_session, instance.engine
+            )
+
+    def _insert_fake_metadata():
+        with session_scope(hass=hass) as session:
+            session.add(
+                old_db_schema.StatisticsMeta(
+                    id=1000,
+                    statistic_id="test",
+                    source="test",
+                    unit_of_measurement="test",
+                    has_mean=True,
+                    has_sum=True,
+                    name="1",
+                )
+            )
+
+    def _insert_pre_timestamp_stat(date_time: datetime) -> None:
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    old_db_schema.StatisticsShortTerm(
+                        metadata_id=1000,
+                        created=date_time,
+                        created_ts=None,
+                        start=date_time,
+                        start_ts=None,
+                        last_reset=date_time,
+                        last_reset_ts=None,
+                        state="1",
+                    ),
+                    old_db_schema.Statistics(
+                        metadata_id=1000,
+                        created=date_time,
+                        created_ts=None,
+                        start=date_time,
+                        start_ts=None,
+                        last_reset=date_time,
+                        last_reset_ts=None,
+                        state="1",
+                    ),
+                )
+            )
+
+    def _insert_post_timestamp_stat(date_time: datetime) -> None:
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    db_schema.StatisticsShortTerm(
+                        metadata_id=1000,
+                        created=None,
+                        created_ts=date_time.timestamp(),
+                        start=None,
+                        start_ts=date_time.timestamp(),
+                        last_reset=None,
+                        last_reset_ts=date_time.timestamp(),
+                        state="1",
+                    ),
+                    db_schema.Statistics(
+                        metadata_id=1000,
+                        created=None,
+                        created_ts=date_time.timestamp(),
+                        start=None,
+                        start_ts=date_time.timestamp(),
+                        last_reset=None,
+                        last_reset_ts=date_time.timestamp(),
+                        state="1",
+                    ),
+                )
+            )
+
+    def _get_all_stats(table: old_db_schema.StatisticsBase) -> list[dict[str, Any]]:
+        """Get all stats from a table."""
+        with session_scope(hass=hass) as session:
+            results = []
+            for result in session.query(table).where(table.metadata_id == 1000).all():
+                results.append(
+                    {
+                        field.name: getattr(result, field.name)
+                        for field in table.__table__.c
+                    }
+                )
+            return sorted(results, key=lambda row: row["start_ts"])
+
+    def _insert_and_do_migration():
+        _insert_fake_metadata()
+        _insert_pre_timestamp_stat(one_year_ago)
+        _insert_post_timestamp_stat(six_months_ago)
+        _insert_pre_timestamp_stat(one_month_ago)
+        _do_migration()
+
+    await hass.async_add_executor_job(_insert_and_do_migration)
+    final_short_term_result = await hass.async_add_executor_job(
+        _get_all_stats, old_db_schema.StatisticsShortTerm
+    )
+    final_short_term_result = sorted(
+        final_short_term_result, key=lambda row: row["start_ts"]
+    )
+
+    assert final_short_term_result == [
+        {
+            "created": None,
+            "created_ts": one_year_ago.timestamp(),
+            "id": 1,
+            "last_reset": None,
+            "last_reset_ts": one_year_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": one_year_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+        {
+            "created": None,
+            "created_ts": six_months_ago.timestamp(),
+            "id": 2,
+            "last_reset": None,
+            "last_reset_ts": six_months_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": six_months_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+        {
+            "created": None,
+            "created_ts": one_month_ago.timestamp(),
+            "id": 3,
+            "last_reset": None,
+            "last_reset_ts": one_month_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": one_month_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+    ]
+
+    # All the duplicates should have been removed but
+    # the non-duplicates should still be there
+    final_result = await hass.async_add_executor_job(
+        _get_all_stats, old_db_schema.Statistics
+    )
+    assert final_result == [
+        {
+            "created": None,
+            "created_ts": six_months_ago.timestamp(),
+            "id": 2,
+            "last_reset": None,
+            "last_reset_ts": six_months_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": six_months_ago.timestamp(),
             "state": 1.0,
             "sum": None,
         },
