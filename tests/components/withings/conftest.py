@@ -3,19 +3,14 @@ from datetime import timedelta
 import time
 from unittest.mock import AsyncMock, patch
 
+from aiowithings import Device, MeasurementGroup, SleepSummary, WithingsClient
+from aiowithings.models import NotificationConfiguration
 import pytest
-from withings_api import (
-    MeasureGetMeasResponse,
-    NotifyListResponse,
-    SleepGetSummaryResponse,
-    UserGetDeviceResponse,
-)
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.withings.api import ConfigEntryWithingsApi
 from homeassistant.components.withings.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -133,22 +128,35 @@ def polling_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 def mock_withings():
     """Mock withings."""
 
-    mock = AsyncMock(spec=ConfigEntryWithingsApi)
-    mock.user_get_device.return_value = UserGetDeviceResponse(
-        **load_json_object_fixture("withings/get_device.json")
-    )
-    mock.async_measure_get_meas.return_value = MeasureGetMeasResponse(
-        **load_json_object_fixture("withings/get_meas.json")
-    )
-    mock.async_sleep_get_summary.return_value = SleepGetSummaryResponse(
-        **load_json_object_fixture("withings/get_sleep.json")
-    )
-    mock.async_notify_list.return_value = NotifyListResponse(
-        **load_json_object_fixture("withings/notify_list.json")
-    )
+    devices_json = load_json_object_fixture("withings/get_device.json")
+    devices = [Device.from_api(device) for device in devices_json["devices"]]
+
+    meas_json = load_json_object_fixture("withings/get_meas.json")
+    measurement_groups = [
+        MeasurementGroup.from_api(measurement)
+        for measurement in meas_json["measuregrps"]
+    ]
+
+    sleep_json = load_json_object_fixture("withings/get_sleep.json")
+    sleep_summaries = [
+        SleepSummary.from_api(sleep_summary) for sleep_summary in sleep_json["series"]
+    ]
+
+    notification_json = load_json_object_fixture("withings/notify_list.json")
+    notifications = [
+        NotificationConfiguration.from_api(not_conf)
+        for not_conf in notification_json["profiles"]
+    ]
+
+    mock = AsyncMock(spec=WithingsClient)
+    mock.get_devices.return_value = devices
+    mock.get_measurement_in_period.return_value = measurement_groups
+    mock.get_measurement_since.return_value = measurement_groups
+    mock.get_sleep_summary_since.return_value = sleep_summaries
+    mock.list_notification_configurations.return_value = notifications
 
     with patch(
-        "homeassistant.components.withings.ConfigEntryWithingsApi",
+        "homeassistant.components.withings.WithingsClient",
         return_value=mock,
     ):
         yield mock

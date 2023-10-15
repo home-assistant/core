@@ -237,7 +237,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==17.1.5
+aioesphomeapi==17.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -385,6 +385,9 @@ aiowatttime==0.1.1
 
 # homeassistant.components.webostv
 aiowebostv==0.3.3
+
+# homeassistant.components.withings
+aiowithings==0.4.4
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -967,7 +970,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.71.0
+hass-nabucasa==0.73.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1326,7 +1329,7 @@ numato-gpio==0.10.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.26.0
+numpy==1.26.1
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -2716,9 +2719,6 @@ wiffi==1.1.2
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
-
-# homeassistant.components.withings
-withings-api==2.4.0
 
 # homeassistant.components.wled
 wled==0.16.0
