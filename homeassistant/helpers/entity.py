@@ -268,9 +268,6 @@ class Entity(ABC):
     # it should be using async_write_ha_state.
     _async_update_ha_state_reported = False
 
-    # If we reported this entity is implicitly using device name
-    _implicit_device_name_reported = False
-
     # If we reported this entity was added without its platform set
     _no_platform_reported = False
 
@@ -358,22 +355,6 @@ class Entity(ABC):
         """Return a unique ID."""
         return self._attr_unique_id
 
-    def _report_implicit_device_name(self) -> None:
-        """Report entities which use implicit device name."""
-        if self._implicit_device_name_reported:
-            return
-        report_issue = self._suggest_report_issue()
-        _LOGGER.warning(
-            (
-                "Entity %s (%s) is implicitly using device name by not setting its "
-                "name. Instead, the name should be set to None, please %s"
-            ),
-            self.entity_id,
-            type(self),
-            report_issue,
-        )
-        self._implicit_device_name_reported = True
-
     @property
     def use_device_name(self) -> bool:
         """Return if this entity does not have its own name.
@@ -388,20 +369,8 @@ class Entity(ABC):
                 return False
 
         if hasattr(self, "entity_description"):
-            if not (name := self.entity_description.name):
-                return True
-            if name is UNDEFINED and not self._default_to_device_class_name():
-                # Backwards compatibility with leaving EntityDescription.name unassigned
-                # for device name.
-                # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
-                self._report_implicit_device_name()
-                return True
-            return False
-        if self.name is UNDEFINED and not self._default_to_device_class_name():
-            # Backwards compatibility with not overriding name property for device name.
-            # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
-            self._report_implicit_device_name()
-            return True
+            return not self.entity_description.name
+
         return not self.name
 
     @property
