@@ -35,7 +35,7 @@ async def test_setup_entry_success(
         Remote(
             deviceId="air-conditonner-id-1",
             deviceName="air-conditonner-name-1",
-            deviceType="Air Conditioner",
+            remoteType="Air Conditioner",
             hubDeviceId="test-hub-id",
         ),
         Device(
@@ -47,7 +47,7 @@ async def test_setup_entry_success(
         Remote(
             deviceId="plug-id-2",
             deviceName="plug-name-2",
-            deviceType="DIY Plug",
+            remoteType="DIY Plug",
             hubDeviceId="test-hub-id",
         ),
     ]
