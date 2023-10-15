@@ -21,6 +21,18 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Envoy Options",
+        "description": "Any change in settings will reload the envoy.",
+        "data": {
+          "scan_interval": "Time between data scans, minimum 5 sec."
+        },
+        "data_description": {}
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "communicating": {

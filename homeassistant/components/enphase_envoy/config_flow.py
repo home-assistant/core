@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN, INVALID_AUTH_ERRORS
+from .const import DOMAIN, INVALID_AUTH_ERRORS, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -198,4 +198,48 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=self._async_generate_schema(),
             description_placeholders=description_placeholders,
             errors=errors,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Add options flow handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle an options flow for Enphase Envoy."""
+
+    def __init__(self, config_entry):
+        """Initialize Envoy options flow."""
+        self.config_entry = config_entry
+
+    @callback
+    def _async_generate_schema(self) -> vol.Schema:
+        """Generate schema."""
+
+        schema = {
+            vol.Optional(
+                "scan_interval",
+                default=self.config_entry.options.get(
+                    "scan_interval",
+                    self.config_entry.options.get("scan_interval", SCAN_INTERVAL),
+                ),
+            ): vol.All(vol.Coerce(int), vol.Range(min=5)),
+        }
+        return vol.Schema(schema)
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        return await self.async_step_user()
+
+    async def async_step_user(self, user_input=None):
+        """Handle a flow initialized by the user."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="user", data_schema=self._async_generate_schema()
         )

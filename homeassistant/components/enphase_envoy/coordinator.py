@@ -17,9 +17,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from .const import INVALID_AUTH_ERRORS
-
-SCAN_INTERVAL = timedelta(seconds=60)
+from .const import INVALID_AUTH_ERRORS, SCAN_INTERVAL
 
 TOKEN_REFRESH_CHECK_INTERVAL = timedelta(days=1)
 STALE_TOKEN_THRESHOLD = timedelta(days=30).total_seconds()
@@ -36,6 +34,12 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize DataUpdateCoordinator for the envoy."""
         self.envoy = envoy
         entry_data = entry.data
+        entry_options = entry.options
+        scan_interval = timedelta(
+            seconds=entry_options.get(
+                "scan_interval", entry_data.get("scan_interval", SCAN_INTERVAL)
+            )
+        )
         self.entry = entry
         self.username = entry_data[CONF_USERNAME]
         self.password = entry_data[CONF_PASSWORD]
@@ -45,7 +49,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name=entry_data[CONF_NAME],
-            update_interval=SCAN_INTERVAL,
+            update_interval=scan_interval,
             always_update=False,
         )
 

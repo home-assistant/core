@@ -14,3 +14,5 @@ PLATFORMS = [
 ]
 
 INVALID_AUTH_ERRORS = (EnvoyAuthenticationError, EnvoyAuthenticationRequired)
+
+SCAN_INTERVAL = 60
