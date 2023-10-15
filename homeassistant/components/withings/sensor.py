@@ -193,6 +193,38 @@ MEASUREMENT_SENSORS: dict[
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    MeasurementType.VO2: WithingsMeasurementSensorEntityDescription(
+        key="vo2_max",
+        measurement_type=MeasurementType.VO2,
+        translation_key="vo2_max",
+        native_unit_of_measurement="ml/min/kg",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.EXTRACELLULAR_WATER: WithingsMeasurementSensorEntityDescription(
+        key="extracellular_water",
+        measurement_type=MeasurementType.EXTRACELLULAR_WATER,
+        translation_key="extracellular_water",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.INTRACELLULAR_WATER: WithingsMeasurementSensorEntityDescription(
+        key="intracellular_water",
+        measurement_type=MeasurementType.INTRACELLULAR_WATER,
+        translation_key="intracellular_water",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.VASCULAR_AGE: WithingsMeasurementSensorEntityDescription(
+        key="vascular_age",
+        measurement_type=MeasurementType.VASCULAR_AGE,
+        translation_key="vascular_age",
+        entity_registry_enabled_default=False,
+    ),
 }
 
 
