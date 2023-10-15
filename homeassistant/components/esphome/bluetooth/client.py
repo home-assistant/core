@@ -392,10 +392,9 @@ class ESPHomeClient(BaseBleakClient):
         return await self._disconnect()
 
     async def _disconnect(self) -> bool:
-        self._async_disconnected_cleanup()
         await self._client.bluetooth_device_disconnect(self._address_as_int)
+        self._async_ble_device_disconnected()        
         await self._wait_for_free_connection_slot(DISCONNECT_TIMEOUT)
-        self._async_call_bleak_disconnected_callback()
         return True
 
     async def _wait_for_free_connection_slot(self, timeout: float) -> None:
