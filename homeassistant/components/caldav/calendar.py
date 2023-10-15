@@ -14,6 +14,7 @@ from homeassistant.components.calendar import (
     CalendarEvent,
     is_offset_reached,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -30,6 +31,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import CalDavUpdateCoordinator
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CALENDARS = "calendars"
@@ -38,6 +41,10 @@ CONF_CALENDAR = "calendar"
 CONF_SEARCH = "search"
 CONF_DAYS = "days"
 
+# Number of days to look ahead for next event when configured by ConfigEntry
+CONFIG_ENTRY_DEFAULT_DAYS = 7
+
+OFFSET = "!!"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -135,6 +142,26 @@ def setup_platform(
 
     add_entities(calendar_devices, True)
 
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the CalDav calendar platform."""
+
+    client: caldav.DAVClient = hass.data[DOMAIN][entry.entry_id]
+    calendars = await hass.async_add_executor_job(client.principal().calendars)
+
+    entities = []
+    for calendar in list(calendars):
+        name = calendar.name
+        entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
+        entities.append(
+            WebDavCalendarEntity(name, calendar, entity_id, CONFIG_ENTRY_DEFAULT_DAYS)
+        )
+
+    async_add_entities(entities, True)
 
 class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
