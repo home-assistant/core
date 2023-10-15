@@ -36,7 +36,6 @@ class AcaiaEntity(CoordinatorEntity):
             f"{format_mac(self._scale.mac)}_{self.entity_description.key}"
         )
         self._attr_has_entity_name = True
-        self._attr_name = None
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._scale.mac)},

@@ -21,27 +21,27 @@ async def test_button(hass: HomeAssistant) -> None:
 
     await init_integration(hass)
 
-    state = hass.states.get("button.lunar_1234")
+    state = hass.states.get("button.lunar_1234_tare")
     assert state
     assert state.state == STATE_UNKNOWN
 
-    entry = registry.async_get("button.lunar_1234")
+    entry = registry.async_get("button.lunar_1234_tare")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff_tare"
 
-    state = hass.states.get("button.lunar_1234_2")
+    state = hass.states.get("button.lunar_1234_reset_timer")
     assert state
     assert state.state == STATE_UNKNOWN
 
-    entry = registry.async_get("button.lunar_1234_2")
+    entry = registry.async_get("button.lunar_1234_reset_timer")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff_reset_timer"
 
-    state = hass.states.get("button.lunar_1234_3")
+    state = hass.states.get("button.lunar_1234_start_stop_timer")
     assert state
     assert state.state == STATE_UNKNOWN
 
-    entry = registry.async_get("button.lunar_1234_3")
+    entry = registry.async_get("button.lunar_1234_start_stop_timer")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff_start_stop"
 
@@ -57,14 +57,14 @@ async def test_button_press(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.lunar_1234"},
+            {ATTR_ENTITY_ID: "button.lunar_1234_tare"},
             blocking=True,
         )
         await hass.async_block_till_done()
 
     mock_tare.assert_called_once()
 
-    state = hass.states.get("button.lunar_1234")
+    state = hass.states.get("button.lunar_1234_tare")
     assert state
     assert state.state == now.isoformat()
 
@@ -74,14 +74,14 @@ async def test_button_press(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.lunar_1234_2"},
+            {ATTR_ENTITY_ID: "button.lunar_1234_reset_timer"},
             blocking=True,
         )
         await hass.async_block_till_done()
 
     mock_resetTimer.assert_called_once()
 
-    state = hass.states.get("button.lunar_1234_2")
+    state = hass.states.get("button.lunar_1234_reset_timer")
     assert state
     assert state.state == now.isoformat()
 
@@ -93,14 +93,14 @@ async def test_button_press(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.lunar_1234_3"},
+            {ATTR_ENTITY_ID: "button.lunar_1234_start_stop_timer"},
             blocking=True,
         )
         await hass.async_block_till_done()
 
     mock_startStopTimer.assert_called_once()
 
-    state = hass.states.get("button.lunar_1234_3")
+    state = hass.states.get("button.lunar_1234_start_stop_timer")
     assert state
     assert state.state == now.isoformat()
 
@@ -121,12 +121,12 @@ async def test_button_connection_error(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.lunar_1234"},
+            {ATTR_ENTITY_ID: "button.lunar_1234_tare"},
             blocking=True,
         )
         await hass.async_block_till_done()
 
-    state = hass.states.get("button.lunar_1234")
+    state = hass.states.get("button.lunar_1234_tare")
     assert state
     assert state.state == now.isoformat()
 
@@ -140,12 +140,12 @@ async def test_button_connection_error(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.lunar_1234_2"},
+            {ATTR_ENTITY_ID: "button.lunar_1234_reset_timer"},
             blocking=True,
         )
         await hass.async_block_till_done()
 
-    state = hass.states.get("button.lunar_1234_2")
+    state = hass.states.get("button.lunar_1234_reset_timer")
     assert state
     assert state.state == now.isoformat()  #
 
@@ -163,11 +163,11 @@ async def test_button_connection_error(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.lunar_1234_3"},
+            {ATTR_ENTITY_ID: "button.lunar_1234_start_stop_timer"},
             blocking=True,
         )
         await hass.async_block_till_done()
 
-    state = hass.states.get("button.lunar_1234_3")
+    state = hass.states.get("button.lunar_1234_start_stop_timer")
     assert state
     assert state.state == now.isoformat()

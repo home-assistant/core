@@ -11,7 +11,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test a successful setup entry."""
     await init_integration(hass)
 
-    state = hass.states.get("button.lunar_1234_3")
+    state = hass.states.get("button.lunar_1234_tare")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
