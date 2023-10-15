@@ -1075,7 +1075,16 @@ def _migrate_statistics_columns_to_timestamp_removing_duplicates(
         # and try again
         with session_scope(session=session_maker()) as session:
             delete_statistics_duplicates(instance, hass, session)
-        _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
+        try:
+            _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
+        except IntegrityError as ex_after_cleanup:
+            _LOGGER.error(
+                "Statistics table still contains duplicate entries: %s; "
+                "This should not happen; "
+                "Please report this issue!",
+                ex_after_cleanup,
+            )
+            return
         # Log at error level to ensure the user sees this message in the log
         # since we logged the error above.
         _LOGGER.error(
