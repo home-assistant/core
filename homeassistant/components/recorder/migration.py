@@ -1088,7 +1088,7 @@ def _migrate_statistics_columns_to_timestamp_removing_duplicates(
                 "Statistics table still contains duplicate entries after cleanup; "
                 "Falling back to a one by one migration"
             )
-            _migrate_statistics_columns_to_timestamp_fallback(instance, session_maker)
+            _migrate_statistics_columns_to_timestamp_one_by_one(instance, session_maker)
         # Log at error level to ensure the user sees this message in the log
         # since we logged the error above.
         _LOGGER.error(
@@ -1301,11 +1301,24 @@ def _migrate_columns_to_timestamp(
                 )
 
 
-@database_job_retry_wrapper("Migrate statistics columns to timestamp fallback", 3)
-def _migrate_statistics_columns_to_timestamp_fallback(
+@database_job_retry_wrapper("Migrate statistics columns to timestamp one by one", 3)
+def _migrate_statistics_columns_to_timestamp_one_by_one(
     instance: Recorder, session_maker: Callable[[], Session]
 ) -> None:
-    """Migrate statistics columns to use timestamp fallback."""
+    """Migrate statistics columns to use timestamp on by one.
+
+    If something manually inserted data into the statistics table
+    in the past it may have inserted duplicate rows.
+
+    Before we had the unique index on (statistic_id, start) this
+    the data could have been inserted without any errors and we
+    could end up with duplicate rows that go undetected (even by
+    our current duplicate cleanup code) until we try to migrate the
+    data to use timestamps.
+
+    This will migrate the data one by one to ensure we do not hit any
+    duplicate rows, and remove the duplicate rows as they are found.
+    """
     for find_func, migrate_func, delete_func in (
         (
             find_unmigrated_statistics_rows,
