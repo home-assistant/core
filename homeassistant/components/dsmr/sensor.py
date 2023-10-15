@@ -29,7 +29,10 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
     EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfPower,
     UnitOfVolume,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
@@ -85,6 +88,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         force_update=True,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
     ),
     DSMRSensorEntityDescription(
         key="current_electricity_delivery",
@@ -93,6 +97,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         force_update=True,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
     ),
     DSMRSensorEntityDescription(
         key="electricity_active_tariff",
@@ -111,6 +116,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     DSMRSensorEntityDescription(
         key="electricity_used_tariff_2",
@@ -120,6 +126,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     DSMRSensorEntityDescription(
         key="electricity_delivered_tariff_1",
@@ -129,6 +136,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     DSMRSensorEntityDescription(
         key="electricity_delivered_tariff_2",
@@ -138,6 +146,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l1_positive",
@@ -146,6 +155,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l2_positive",
@@ -154,6 +164,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l3_positive",
@@ -162,6 +173,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l1_negative",
@@ -170,6 +182,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l2_negative",
@@ -178,6 +191,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l3_negative",
@@ -186,6 +200,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
     ),
     DSMRSensorEntityDescription(
         key="short_power_failure_count",
@@ -264,6 +279,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_voltage_l2",
@@ -273,6 +289,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_voltage_l3",
@@ -282,6 +299,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_current_l1",
@@ -291,6 +309,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_current_l2",
@@ -300,6 +319,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_current_l3",
@@ -309,6 +329,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     DSMRSensorEntityDescription(
         key="belgium_max_power_per_phase",
@@ -319,6 +340,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
     ),
     DSMRSensorEntityDescription(
         key="belgium_max_current_per_phase",
@@ -329,6 +351,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     DSMRSensorEntityDescription(
         key="electricity_imported_total",
@@ -338,6 +361,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     DSMRSensorEntityDescription(
         key="electricity_exported_total",
@@ -347,6 +371,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     DSMRSensorEntityDescription(
         key="hourly_gas_meter_reading",
@@ -357,6 +382,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         force_update=True,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     DSMRSensorEntityDescription(
         key="belgium_5min_gas_meter_reading",
@@ -367,6 +393,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         force_update=True,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     DSMRSensorEntityDescription(
         key="gas_meter_reading",
@@ -377,6 +404,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         force_update=True,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
 )
 
@@ -632,8 +660,8 @@ class DSMREntity(SensorEntity):
         """Return the unit of measurement of this entity, if any."""
         unit_of_measurement = self.get_dsmr_object_attr("unit")
         if unit_of_measurement in UNIT_CONVERSION:
-            return UNIT_CONVERSION[unit_of_measurement]
-        return unit_of_measurement
+            unit_of_measurement = UNIT_CONVERSION[unit_of_measurement]
+        return unit_of_measurement or self.entity_description.native_unit_of_measurement
 
     @staticmethod
     def translate_tariff(value: str, dsmr_version: str) -> str | None:

@@ -102,7 +102,10 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
         power_consumption.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.MEASUREMENT
     )
-    assert power_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert (
+        power_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfPower.KILO_WATT
+    )
 
     # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
     telegram_callback(telegram)
@@ -126,7 +129,7 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
     )
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
@@ -231,7 +234,7 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
@@ -307,7 +310,7 @@ async def test_v5_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
@@ -468,7 +471,7 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
@@ -529,7 +532,7 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
 
 async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
