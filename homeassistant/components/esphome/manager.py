@@ -538,7 +538,7 @@ class ESPHomeManager:
             on_connect=self.on_connect,
             on_disconnect=self.on_disconnect,
             zeroconf_instance=self.zeroconf_instance,
-            name=self.host,
+            name=entry.data.get(CONF_DEVICE_NAME, self.host),
             on_connect_error=self.on_connect_error,
         )
         self.reconnect_logic = reconnect_logic
