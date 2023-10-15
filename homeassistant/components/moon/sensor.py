@@ -1,14 +1,13 @@
 """Support for tracking the moon phases."""
 from __future__ import annotations
 
-from astral import moon
+import ephem
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 
@@ -70,24 +69,29 @@ class MoonSensorEntity(SensorEntity):
 
     async def async_update(self) -> None:
         """Get the time and updates the states."""
-        today = dt_util.now()
-        state = moon.phase(today)
+        today_utc = ephem.now()
+        today_local = ephem.localtime(today_utc)
+        moon = ephem.Moon(today_local)
+        state = moon.moon_phase
 
-        if state < 0.5 or state > 27.5:
+        if state < 0.0026:
             self._attr_native_value = STATE_NEW_MOON
-        elif state < 6.5:
-            self._attr_native_value = STATE_WAXING_CRESCENT
-        elif state < 7.5:
-            self._attr_native_value = STATE_FIRST_QUARTER
-        elif state < 13.5:
-            self._attr_native_value = STATE_WAXING_GIBBOUS
-        elif state < 14.5:
+        elif state > 0.9974:
             self._attr_native_value = STATE_FULL_MOON
-        elif state < 20.5:
-            self._attr_native_value = STATE_WANING_GIBBOUS
-        elif state < 21.5:
+        elif (today_utc - ephem.previous_new_moon(today_utc)) < (
+            today_utc - ephem.previous_full_moon(today_utc)
+        ):
+            if state < 0.4975:
+                self._attr_native_value = STATE_WAXING_CRESCENT
+            elif state < 0.5026:
+                self._attr_native_value = STATE_FIRST_QUARTER
+            else:
+                self._attr_native_value = STATE_WAXING_GIBBOUS
+        elif state < 0.4975:
+            self._attr_native_value = STATE_WANING_CRESCENT
+        elif state < 0.5026:
             self._attr_native_value = STATE_LAST_QUARTER
         else:
-            self._attr_native_value = STATE_WANING_CRESCENT
+            self._attr_native_value = STATE_WANING_GIBBOUS
 
         self._attr_icon = MOON_ICONS.get(self._attr_native_value)
