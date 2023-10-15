@@ -71,10 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
                 prepare_device(hass, api, device, coordinators_by_id)
                 for device in devices
                 if isinstance(device, Remote)
-                and (
-                    device.device_type.endswith("Air Conditioner")
-                    or device.device_type.endswith("Fan")
-                )
+                and device.device_type.endswith("Air Conditioner")
             ],
             switches=[
                 prepare_device(hass, api, device, coordinators_by_id)

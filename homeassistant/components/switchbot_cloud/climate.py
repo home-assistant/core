@@ -1,35 +1,24 @@
 """Support for SwitchBot Air Conditioner remotes."""
-from logging import getLogger
+
 from typing import Any
 
-from switchbot_api import (
-    AirConditionerCommands,
-    Device,
-    FanCommands,
-    Remote,
-    SwitchBotAPI,
-)
+from switchbot_api import AirConditionerCommands
 
 import homeassistant.components.climate as FanState
 from homeassistant.components.climate import (
-    SWING_HORIZONTAL,
-    SWING_ON,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import SwitchbotCloudData
 from .const import DOMAIN
-from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
-
-_LOGGER = getLogger(__name__)
 
 _SWITCHBOT_HVAC_MODES: dict[HVACMode, int] = {
     HVACMode.HEAT_COOL: 1,
@@ -56,7 +45,7 @@ async def async_setup_entry(
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
     async_add_entities(
-        _async_make_entity(data.api, device, coordinator)
+        SwitchBotCloudAirConditionner(data.api, device, coordinator)
         for device, coordinator in data.devices.climates
     )
 
@@ -118,55 +107,3 @@ class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
             return
         await self._do_send_command(temperature=temperature)
         self._attr_target_temperature = temperature
-
-
-class SwitchBotCloudFan(SwitchBotCloudEntity, ClimateEntity):
-    """Representation of a SwitchBot fan."""
-
-    _attr_supported_features = (
-        ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.SWING_MODE
-    )
-    _attr_fan_modes = [FanState.FAN_LOW, FanState.FAN_MEDIUM, FanState.FAN_HIGH]
-    _attr_fan_mode = FanState.FAN_LOW
-    _attr_swing_modes = [
-        SWING_ON,
-        SWING_HORIZONTAL,
-    ]  # Not sure what to do here, selecting multiple times should allow to cycle through all SWING_HORIZONTAL modes
-    _attr_swing_mode = SWING_HORIZONTAL
-    _attr_name = None
-
-    # Not sure why I need to set these, but it makes errors without
-    _attr_hvac_modes = []
-    _attr_hvac_mode = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-
-    async def async_set_fan_mode(self, fan_mode: str) -> None:
-        """Set target fan mode."""
-        match fan_mode:
-            case FanState.FAN_LOW:
-                await self.send_command(FanCommands.LOW_SPEED)
-            case FanState.FAN_MEDIUM:
-                await self.send_command(FanCommands.MIDDLE_SPEED)
-            case FanState.FAN_HIGH:
-                await self.send_command(FanCommands.HIGH_SPEED)
-            case _:
-                _LOGGER.error("Unsupported fan mode: %s", fan_mode)
-        self._attr_fan_mode = fan_mode
-        self.async_write_ha_state()
-
-    async def async_set_swing_mode(self, swing_mode: str) -> None:
-        """Set swing mode."""
-        await self.send_command(FanCommands.SWING)
-        self._attr_swing_mode = swing_mode
-
-
-@callback
-def _async_make_entity(
-    api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
-) -> ClimateEntity:
-    """Make a SwitchBotCloudAirConditionner or SwitchBotCloudFan."""
-    if isinstance(device, Remote) and "Air Conditioner" in device.device_type:
-        return SwitchBotCloudAirConditionner(api, device, coordinator)
-    if isinstance(device, Remote) and "Fan" in device.device_type:
-        return SwitchBotCloudFan(api, device, coordinator)
-    raise NotImplementedError(f"Unsupported device type: {device.device_type}")
