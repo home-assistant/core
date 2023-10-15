@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 import contextlib
 from dataclasses import dataclass, replace as dataclass_replace
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from time import time
 from typing import TYPE_CHECKING, cast
@@ -70,11 +70,17 @@ from .db_schema import (
 from .models import process_timestamp
 from .queries import (
     batch_cleanup_entity_ids,
+    delete_duplicate_short_term_statistics_row,
+    delete_duplicate_statistics_row,
     find_entity_ids_to_migrate,
     find_event_type_to_migrate,
     find_events_context_ids_to_migrate,
     find_states_context_ids_to_migrate,
+    find_unmigrated_short_term_statistics_rows,
+    find_unmigrated_statistics_rows,
     has_used_states_event_ids,
+    migrate_single_short_term_statistics_row_to_timestamp,
+    migrate_single_statistics_row_to_timestamp,
 )
 from .statistics import get_start_time
 from .tasks import (
@@ -1077,14 +1083,12 @@ def _migrate_statistics_columns_to_timestamp_removing_duplicates(
             delete_statistics_duplicates(instance, hass, session)
         try:
             _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
-        except IntegrityError as ex_after_cleanup:
-            _LOGGER.error(
-                "Statistics table still contains duplicate entries: %s; "
-                "This should not happen; "
-                "Please report this issue!",
-                ex_after_cleanup,
+        except IntegrityError:
+            _LOGGER.warning(
+                "Statistics table still contains duplicate entries after cleanup; "
+                "Falling back to a one by one migration"
             )
-            return
+            _migrate_statistics_columns_to_timestamp_fallback(instance, session_maker)
         # Log at error level to ensure the user sees this message in the log
         # since we logged the error above.
         _LOGGER.error(
@@ -1295,6 +1299,46 @@ def _migrate_columns_to_timestamp(
                         " );"
                     )
                 )
+
+
+@database_job_retry_wrapper("Migrate statistics columns to timestamp fallback", 3)
+def _migrate_statistics_columns_to_timestamp_fallback(
+    instance: Recorder, session_maker: Callable[[], Session]
+) -> None:
+    """Migrate statistics columns to use timestamp fallback."""
+    for table, find_func, migrate_func, delete_func in (
+        (
+            Statistics,
+            find_unmigrated_statistics_rows,
+            migrate_single_statistics_row_to_timestamp,
+            delete_duplicate_statistics_row,
+        ),
+        (
+            StatisticsShortTerm,
+            find_unmigrated_short_term_statistics_rows,
+            migrate_single_short_term_statistics_row_to_timestamp,
+            delete_duplicate_short_term_statistics_row,
+        ),
+    ):
+        with session_scope(session=session_maker()) as session:
+            if not (stats := session.execute(find_func(instance.max_bind_vars)).all()):
+                continue
+            for statistic_id, start in stats:
+                processed = process_timestamp(start)
+                if TYPE_CHECKING:
+                    assert isinstance(processed, datetime)
+                try:
+                    session.execute(migrate_func(statistic_id, processed.timestamp()))
+                except IntegrityError:
+                    _LOGGER.debug(
+                        "Removed duplicate statistics row %s found with time %s in %s",
+                        statistic_id,
+                        start,
+                        table.__tablename__,
+                    )
+                    # This can happen if we have duplicate rows
+                    # in the statistics table.
+                    session.execute(delete_func(statistic_id))
 
 
 @database_job_retry_wrapper("Migrate statistics columns to timestamp", 3)
