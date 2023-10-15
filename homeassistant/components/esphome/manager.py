@@ -327,7 +327,10 @@ class ESPHomeManager:
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_udp_server is not None:
-            return None
+            _LOGGER.warning("Voice assistant UDP server was not stopped")
+            self.voice_assistant_udp_server.stop()
+            self.voice_assistant_udp_server.close()
+            self.voice_assistant_udp_server = None
 
         hass = self.hass
         self.voice_assistant_udp_server = VoiceAssistantUDPServer(
@@ -535,7 +538,7 @@ class ESPHomeManager:
             on_connect=self.on_connect,
             on_disconnect=self.on_disconnect,
             zeroconf_instance=self.zeroconf_instance,
-            name=self.host,
+            name=entry.data.get(CONF_DEVICE_NAME, self.host),
             on_connect_error=self.on_connect_error,
         )
         self.reconnect_logic = reconnect_logic

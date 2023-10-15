@@ -36,9 +36,11 @@ from homeassistant.components.emulated_hue.hue_api import (
     HueAllLightsStateView,
     HueConfigView,
     HueFullStateView,
+    HueGroupView,
     HueOneLightChangeView,
     HueOneLightStateView,
     HueUsernameView,
+    _remote_is_allowed,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -232,6 +234,7 @@ def _mock_hue_endpoints(
     HueOneLightStateView(config).register(hass, web_app, web_app.router)
     HueOneLightChangeView(config).register(hass, web_app, web_app.router)
     HueAllGroupsStateView(config).register(hass, web_app, web_app.router)
+    HueGroupView(config).register(hass, web_app, web_app.router)
     HueFullStateView(config).register(hass, web_app, web_app.router)
     HueConfigView(config).register(hass, web_app, web_app.router)
 
@@ -1327,22 +1330,32 @@ async def test_external_ip_blocked(hue_client) -> None:
         "/api/username/lights/light.ceiling_lights",
     ]
     postUrls = ["/api"]
-    putUrls = ["/api/username/lights/light.ceiling_lights/state"]
+    putUrls = [
+        "/api/username/lights/light.ceiling_lights/state",
+        "/api/username/groups/0/action",
+    ]
     with patch(
         "homeassistant.components.emulated_hue.hue_api.ip_address",
         return_value=ip_address("45.45.45.45"),
     ):
         for getUrl in getUrls:
+            _remote_is_allowed.cache_clear()
             result = await hue_client.get(getUrl)
             assert result.status == HTTPStatus.UNAUTHORIZED
 
         for postUrl in postUrls:
+            _remote_is_allowed.cache_clear()
             result = await hue_client.post(postUrl)
             assert result.status == HTTPStatus.UNAUTHORIZED
 
         for putUrl in putUrls:
+            _remote_is_allowed.cache_clear()
             result = await hue_client.put(putUrl)
             assert result.status == HTTPStatus.UNAUTHORIZED
+
+    # We are patching inside of a cache so be sure to clear it
+    # so that the next test is not affected
+    _remote_is_allowed.cache_clear()
 
 
 async def test_unauthorized_user_blocked(hue_client) -> None:

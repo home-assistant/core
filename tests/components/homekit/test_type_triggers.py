@@ -71,3 +71,4 @@ async def test_programmable_switch_button_fires_on_trigger(
         char = acc.get_characteristic(call.args[0]["aid"], call.args[0]["iid"])
         assert char.display_name == CHAR_PROGRAMMABLE_SWITCH_EVENT
     await acc.stop()
+    await hass.async_block_till_done()

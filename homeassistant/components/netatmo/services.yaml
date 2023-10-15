@@ -26,6 +26,26 @@ set_schedule:
       selector:
         text:
 
+set_preset_mode_with_end_datetime:
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
+  fields:
+    preset_mode:
+      required: true
+      example: "away"
+      selector:
+        select:
+          options:
+            - "away"
+            - "Frost Guard"
+    end_datetime:
+      required: true
+      example: '"2019-04-20 05:04:20"'
+      selector:
+        datetime:
+
 set_persons_home:
   target:
     entity:
