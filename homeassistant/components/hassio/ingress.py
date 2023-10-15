@@ -162,7 +162,7 @@ class HassIOIngress(HomeAssistantView):
             headers=source_header,
             params=request.query,
             allow_redirects=False,
-            data=request.content,
+            data=request.content if request.method != "GET" else None,
             timeout=ClientTimeout(total=None),
             skip_auto_headers={hdrs.CONTENT_TYPE},
         ) as result:
