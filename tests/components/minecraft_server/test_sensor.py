@@ -56,10 +56,10 @@ async def test_sensor(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        f"mcstatus.server.{server.__name__}.lookup",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.lookup",
         return_value=server(host=TEST_HOST, port=TEST_PORT),
     ), patch(
-        f"mcstatus.server.{server.__name__}.async_status",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
         return_value=status_response,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -104,10 +104,10 @@ async def test_sensor_update(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        f"mcstatus.server.{server.__name__}.lookup",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.lookup",
         return_value=server(host=TEST_HOST, port=TEST_PORT),
     ), patch(
-        f"mcstatus.server.{server.__name__}.async_status",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
         return_value=status_response,  # TODO: Use second test status_response?
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -155,17 +155,17 @@ async def test_sensor_update_failure(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        f"mcstatus.server.{server.__name__}.lookup",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.lookup",
         return_value=server(host=TEST_HOST, port=TEST_PORT),
     ), patch(
-        f"mcstatus.server.{server.__name__}.async_status",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
         return_value=status_response,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     with patch(
-        f"mcstatus.server.{server.__name__}.async_status",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
         side_effect=OSError,
     ):
         future = dt_util.utcnow() + timedelta(minutes=1)
