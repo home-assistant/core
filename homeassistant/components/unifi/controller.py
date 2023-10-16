@@ -20,9 +20,14 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceEntryType,
@@ -33,6 +38,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.util.dt as dt_util
 
@@ -131,7 +137,7 @@ class UniFiController:
         # Client control options
 
         # Config entry option with list of clients to control network access.
-        self.option_block_clients = options.get(CONF_BLOCK_CLIENT, [])
+        self.option_block_clients: list[str] = options.get(CONF_BLOCK_CLIENT, [])
         # Config entry option to control DPI restriction groups.
         self.option_dpi_restrictions: bool = options.get(
             CONF_DPI_RESTRICTIONS, DEFAULT_DPI_RESTRICTIONS
@@ -244,7 +250,16 @@ class UniFiController:
         assert self.config_entry.unique_id is not None
         self.is_admin = self.api.sites[self.config_entry.unique_id].role == "admin"
 
-        for mac in self.option_block_clients:
+        # Restore device tracker clients that are not a part of active clients list.
+        macs: list[str] = []
+        entity_registry = er.async_get(self.hass)
+        for entry in async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        ):
+            if entry.domain == Platform.DEVICE_TRACKER:
+                macs.append(entry.unique_id.split("-", 1)[0])
+
+        for mac in self.option_block_clients + macs:
             if mac not in self.api.clients and mac in self.api.clients_all:
                 self.api.clients.process_raw([dict(self.api.clients_all[mac].raw)])
 
