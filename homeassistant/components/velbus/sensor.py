@@ -51,10 +51,10 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         # define the name
         if self._is_counter:
             self._attr_name = f"{self._attr_name}-counter"
-        # define the device class
         if self._is_counter:
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+            self._attr_icon = "mdi:counter"
         elif channel.is_counter_channel():
             self._attr_device_class = SensorDeviceClass.POWER
             self._attr_state_class = SensorStateClass.MEASUREMENT
@@ -63,9 +63,6 @@ class VelbusSensor(VelbusEntity, SensorEntity):
             self._attr_state_class = SensorStateClass.MEASUREMENT
         else:
             self._attr_state_class = SensorStateClass.MEASUREMENT
-        # define the icon
-        if self._is_counter:
-            self._attr_icon = "mdi:counter"
         # unit
         if self._is_counter:
             self._attr_native_unit_of_measurement = channel.get_counter_unit()
