@@ -29,7 +29,6 @@ update_item:
       selector:
         text:
     summary:
-      required: true
       example: "Submit Income Tax Return"
       selector:
         text:
