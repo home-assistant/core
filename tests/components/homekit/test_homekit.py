@@ -2263,13 +2263,12 @@ async def test_handle_unique_id_change(
         f"{PATH_HOMEKIT}.HomeKit", homekit
     ):
         await homekit.async_start()
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     assert homekit.aid_storage.allocations == {"demo.light.unique": 176109313}
     entity_registry.async_update_entity(light.entity_id, new_unique_id="new_unique")
     await hass.async_block_till_done()
     # Verify that the old unique id is removed from the allocations
     # and that the new unique id assumes the old aid
     assert homekit.aid_storage.allocations == {"demo.light.new_unique": 176109313}
-
     await homekit.async_stop()
     await hass.async_block_till_done()
