@@ -6,7 +6,8 @@ from typing import Any
 
 from bleak.exc import BleakError
 from bluetooth_data_tools import human_readable_name
-from idasen_ha import AuthFailedError, Desk
+from idasen_ha import Desk
+from idasen_ha.errors import AuthFailedError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -61,9 +62,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
 
-            desk = Desk(None)
+            desk = Desk(None, monitor_height=False)
             try:
-                await desk.connect(discovery_info.device, monitor_height=False)
+                await desk.connect(discovery_info.device, auto_reconnect=False)
             except AuthFailedError as err:
                 _LOGGER.exception("AuthFailedError", exc_info=err)
                 errors["base"] = "auth_failed"
