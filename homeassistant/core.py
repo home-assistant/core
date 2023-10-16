@@ -28,7 +28,17 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import TYPE_CHECKING, Any, Generic, ParamSpec, Self, TypeVar, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Literal,
+    ParamSpec,
+    Self,
+    TypeVar,
+    cast,
+    overload,
+)
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -220,6 +230,19 @@ def async_get_hass() -> HomeAssistant:
     if not _hass.hass:
         raise HomeAssistantError("async_get_hass called from the wrong thread")
     return _hass.hass
+
+
+@callback
+def get_release_channel() -> Literal["beta", "dev", "nightly", "stable"]:
+    """Find release channel based on version number."""
+    version = __version__
+    if "dev0" in version:
+        return "dev"
+    if "dev" in version:
+        return "nightly"
+    if "b" in version:
+        return "beta"
+    return "stable"
 
 
 @enum.unique

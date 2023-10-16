@@ -33,10 +33,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
+from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
+from .entity import ViCareEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ VICARE_HOLD_MODE_OFF = "off"
 VICARE_TEMP_HEATING_MIN = 3
 VICARE_TEMP_HEATING_MAX = 37
 
-VICARE_TO_HA_HVAC_HEATING = {
+VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
     VICARE_MODE_FORCEDREDUCED: HVACMode.OFF,
     VICARE_MODE_OFF: HVACMode.OFF,
     VICARE_MODE_DHW: HVACMode.OFF,
@@ -105,7 +105,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare climate platform."""
-    name = VICARE_NAME
     entities = []
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     circuits = await hass.async_add_executor_job(_get_circuits, api)
@@ -116,7 +115,7 @@ async def async_setup_entry(
             suffix = f" {circuit.id}"
 
         entity = ViCareClimate(
-            f"{name} Heating{suffix}",
+            f"Heating{suffix}",
             api,
             circuit,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
@@ -134,7 +133,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViCareClimate(ClimateEntity):
+class ViCareClimate(ViCareEntity, ClimateEntity):
     """Representation of the ViCare heating climate device."""
 
     _attr_precision = PRECISION_TENTHS
@@ -146,24 +145,18 @@ class ViCareClimate(ClimateEntity):
     _attr_max_temp = VICARE_TEMP_HEATING_MAX
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_preset_modes = list(HA_TO_VICARE_PRESET_HEATING)
+    _current_action: bool | None = None
+    _current_mode: str | None = None
 
-    def __init__(self, name, api, circuit, device_config):
+    def __init__(self, name, api, circuit, device_config) -> None:
         """Initialize the climate device."""
+        super().__init__(device_config)
         self._attr_name = name
         self._api = api
         self._circuit = circuit
-        self._attributes = {}
-        self._current_mode = None
+        self._attributes: dict[str, Any] = {}
         self._current_program = None
-        self._current_action = None
         self._attr_unique_id = f"{device_config.getConfig().serial}-{circuit.id}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_config.getConfig().serial)},
-            name=device_config.getModel(),
-            manufacturer="Viessmann",
-            model=device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
@@ -237,7 +230,9 @@ class ViCareClimate(ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current hvac mode."""
-        return VICARE_TO_HA_HVAC_HEATING.get(self._current_mode)
+        if self._current_mode is None:
+            return None
+        return VICARE_TO_HA_HVAC_HEATING.get(self._current_mode, None)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new hvac mode on the ViCare API."""
