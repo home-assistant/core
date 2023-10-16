@@ -8,6 +8,7 @@ from pyatmo.modules import NATherm1
 import voluptuous as vol
 
 from homeassistant.components.climate import (
+    ATTR_PRESET_MODE,
     DEFAULT_MIN_TEMP,
     PRESET_AWAY,
     PRESET_BOOST,
@@ -30,8 +31,10 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import (
+    ATTR_END_DATETIME,
     ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
@@ -43,6 +46,7 @@ from .const import (
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
     NETATMO_CREATE_CLIMATE,
+    SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoRoom
@@ -58,6 +62,8 @@ SUPPORT_FLAGS = (
     ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
 )
 SUPPORT_PRESET = [PRESET_AWAY, PRESET_BOOST, PRESET_FROST_GUARD, PRESET_SCHEDULE]
+
+THERM_MODES = (PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY)
 
 STATE_NETATMO_SCHEDULE = "schedule"
 STATE_NETATMO_HG = "hg"
@@ -123,6 +129,14 @@ async def async_setup_entry(
         SERVICE_SET_SCHEDULE,
         {vol.Required(ATTR_SCHEDULE_NAME): cv.string},
         "_async_service_set_schedule",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+        {
+            vol.Required(ATTR_PRESET_MODE): vol.In(THERM_MODES),
+            vol.Required(ATTR_END_DATETIME): cv.datetime,
+        },
+        "_async_service_set_preset_mode_with_end_datetime",
     )
 
 
@@ -314,7 +328,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             await self._room.async_therm_set(STATE_NETATMO_HOME)
         elif preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX):
             await self._room.async_therm_set(PRESET_MAP_NETATMO[preset_mode])
-        elif preset_mode in (PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY):
+        elif preset_mode in THERM_MODES:
             await self._room.home.async_set_thermmode(PRESET_MAP_NETATMO[preset_mode])
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
@@ -408,6 +422,23 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             self._room.home.entity_id,
             kwargs.get(ATTR_SCHEDULE_NAME),
             schedule_id,
+        )
+
+    async def _async_service_set_preset_mode_with_end_datetime(
+        self, **kwargs: Any
+    ) -> None:
+        preset_mode = kwargs[ATTR_PRESET_MODE]
+        end_datetime = kwargs[ATTR_END_DATETIME]
+        end_timestamp = int(dt_util.as_timestamp(end_datetime))
+
+        await self._room.home.async_set_thermmode(
+            mode=PRESET_MAP_NETATMO[preset_mode], end_time=end_timestamp
+        )
+        _LOGGER.debug(
+            "Setting %s preset to %s with optional end datetime to %s",
+            self._room.home.entity_id,
+            preset_mode,
+            end_timestamp,
         )
 
     @property

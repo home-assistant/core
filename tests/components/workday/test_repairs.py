@@ -126,7 +126,7 @@ async def test_bad_country_none(
     data = await resp.json()
 
     url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url, json={"province": "none"})
+    resp = await client.post(url, json={})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
@@ -303,7 +303,7 @@ async def test_bad_province_none(
     assert data["step_id"] == "province"
 
     url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url, json={"province": "none"})
+    resp = await client.post(url, json={})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 

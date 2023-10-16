@@ -123,7 +123,6 @@ async def test_setting_sensor_value_expires_availability_topic(
                     "name": "test",
                     "state_topic": "test-topic",
                     "expire_after": 4,
-                    "force_update": True,
                 }
             }
         }
@@ -199,6 +198,18 @@ async def expires_helper(hass: HomeAssistant) -> None:
         # Value is expired now
         state = hass.states.get("binary_sensor.test")
         assert state.state == STATE_UNAVAILABLE
+
+        # Send the last message again
+        # Time jump 0.5s
+        now += timedelta(seconds=0.5)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        async_fire_mqtt_message(hass, "test-topic", "OFF")
+        await hass.async_block_till_done()
+
+        # Value was updated correctly.
+        state = hass.states.get("binary_sensor.test")
+        assert state.state == STATE_OFF
 
 
 async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
