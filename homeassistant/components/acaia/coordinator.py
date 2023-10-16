@@ -68,7 +68,6 @@ class AcaiaApiCoordinator(DataUpdateCoordinator):
                 await self._acaia_client.auth()
                 await self._acaia_client.send_weight_notification_request()
         except Exception as ex:
-            _LOGGER.error(ex)
             raise UpdateFailed("Error: %s" % ex) from ex
 
         return self._data
