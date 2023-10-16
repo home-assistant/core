@@ -25,7 +25,7 @@ from .const import CONF_LOCATION, DOMAIN
 class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Trafikverket Camera integration."""
 
-    VERSION = 2
+    VERSION = 1
 
     entry: config_entries.ConfigEntry | None
 
@@ -117,7 +117,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 assert camera_location
-                await self.async_set_unique_id(f"{DOMAIN}-{camera_id}")
+                await self.async_set_unique_id(camera_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=camera_location,

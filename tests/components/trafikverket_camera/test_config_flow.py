@@ -53,7 +53,7 @@ async def test_form(hass: HomeAssistant, get_camera: CameraInfo) -> None:
         "location": "Test location",
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result2["result"].unique_id == "trafikverket_camera-1234"
+    assert result2["result"].unique_id == "1234"
 
 
 async def test_form_no_location_data(
@@ -90,7 +90,7 @@ async def test_form_no_location_data(
         "location": "Test Camera",
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result2["result"].unique_id == "trafikverket_camera-1234"
+    assert result2["result"].unique_id == "1234"
 
 
 @pytest.mark.parametrize(

@@ -40,8 +40,7 @@ async def test_coordinator(
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
         entry_id="1",
-        version=2,
-        unique_id="trafikverket_camera-1234",
+        unique_id="1234",
         title="Test location",
     )
     entry.add_to_hass(hass)
@@ -101,8 +100,7 @@ async def test_coordinator_failed_update(
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
         entry_id="1",
-        version=2,
-        unique_id="trafikverket_camera-1234",
+        unique_id="1234",
         title="Test location",
     )
     entry.add_to_hass(hass)
@@ -135,8 +133,7 @@ async def test_coordinator_failed_get_image(
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
         entry_id="1",
-        version=2,
-        unique_id="trafikverket_camera-1234",
+        unique_id="1234",
         title="Test location",
     )
     entry.add_to_hass(hass)

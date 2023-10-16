@@ -32,7 +32,6 @@ async def load_integration_from_entry(
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
         entry_id="1",
-        version=2,
         unique_id="trafikverket_camera-1234",
         title="Test location",
     )
