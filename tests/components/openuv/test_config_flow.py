@@ -6,7 +6,11 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components.openuv import CONF_FROM_WINDOW, CONF_TO_WINDOW, DOMAIN
+from homeassistant.components.openuv.const import (
+    CONF_FROM_WINDOW,
+    CONF_TO_WINDOW,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,

@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.openuv import CONF_FROM_WINDOW, CONF_TO_WINDOW, DOMAIN
+from homeassistant.components.openuv.const import (
+    CONF_FROM_WINDOW,
+    CONF_TO_WINDOW,
+    DOMAIN,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ELEVATION,
