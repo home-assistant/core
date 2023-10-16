@@ -34,6 +34,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
     config_entry: ConfigEntry
     _default_update_interval: timedelta | None = UPDATE_INTERVAL
     _last_valid_update: datetime | None = None
+    webhooks_connected: bool = False
 
     def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
         """Initialize the Withings data coordinator."""
@@ -45,6 +46,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
 
     def webhook_subscription_listener(self, connected: bool) -> None:
         """Call when webhook status changed."""
+        self.webhooks_connected = connected
         if connected:
             self.update_interval = None
         else:
