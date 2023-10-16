@@ -56,5 +56,18 @@
       "name": "Unregister webhook",
       "description": "Unregisters all Monzo webhooks with Monzo."
     }
+  },
+  "entity": {
+    "sensor": {
+      "balance": {
+        "name": "Balance"
+      },
+      "total_balance": {
+        "name": "Total Balance"
+      },
+      "pot_balance": {
+        "name": "Balance"
+      }
+    }
   }
 }

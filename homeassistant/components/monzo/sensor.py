@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ACCOUNTS, CONF_COORDINATOR, DOMAIN, POTS
+from .const import ACCOUNTS, CONF_COORDINATOR, DOMAIN, MODEL_POT, POTS
 from .entity import MonzoBaseEntity
 
 
@@ -37,7 +37,7 @@ class MonzoSensorEntityDescription(
 ACC_SENSORS = (
     MonzoSensorEntityDescription(
         key="balance",
-        name="Balance",
+        translation_key="balance",
         value=lambda data: data["balance"]["balance"] / 100,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="£",
@@ -45,7 +45,7 @@ ACC_SENSORS = (
     ),
     MonzoSensorEntityDescription(
         key="total_balance",
-        name="Total Balance",
+        translation_key="total_balance",
         value=lambda data: data["balance"]["total_balance"] / 100,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="£",
@@ -56,7 +56,7 @@ ACC_SENSORS = (
 POT_SENSORS = (
     MonzoSensorEntityDescription(
         key="pot_balance",
-        name="Balance",
+        translation_key="pot_balance",
         value=lambda data: data["balance"] / 100,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="£",
@@ -90,7 +90,7 @@ async def async_setup_entry(
         for entity_description in POT_SENSORS:
             entities.append(
                 MonzoSensor(
-                    coordinator, entity_description, index, "Pot", lambda x: x["pots"]
+                    coordinator, entity_description, index, MODEL_POT, lambda x: x[POTS]
                 )
             )
 
@@ -115,7 +115,6 @@ class MonzoSensor(MonzoBaseEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, index, device_model, data_accessor)
         self.entity_description = entity_description
-        self._attr_name = f"{self.data['name']} {entity_description.name}"
         self._attr_unique_id = f"{self.data['id']}_{entity_description.key}"
 
     @property
