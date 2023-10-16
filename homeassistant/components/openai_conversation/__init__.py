@@ -13,6 +13,7 @@ from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, MATCH_ALL
 from homeassistant.core import (
+    Context,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -40,6 +41,8 @@ from .const import (
     DEFAULT_TOP_P,
     DOMAIN,
 )
+from .openai_homeassistant_crossover import HASS_OPENAI_ACTIONS
+
 
 _LOGGER = logging.getLogger(__name__)
 SERVICE_GENERATE_IMAGE = "generate_image"
@@ -127,9 +130,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
         """Return a list of supported languages."""
         return MATCH_ALL
 
-    async def async_process(
-        self, user_input: conversation.ConversationInput
-    ) -> conversation.ConversationResult:
+    async def async_process(self, user_input: conversation.ConversationInput) -> conversation.ConversationResult:
         """Process a sentence."""
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         model = self.entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
@@ -143,7 +144,9 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
         else:
             conversation_id = ulid.ulid()
             try:
-                prompt = self._async_generate_prompt(raw_prompt)
+                states_str = await self._get_states_str()
+                _LOGGER.warning(f"states_str: {states_str}")
+                prompt = self._async_generate_prompt(raw_prompt, states_str)
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -151,16 +154,19 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
                     intent.IntentResponseErrorCode.UNKNOWN,
                     f"Sorry, I had a problem with my template: {err}",
                 )
-                return conversation.ConversationResult(
-                    response=intent_response, conversation_id=conversation_id
-                )
+                return conversation.ConversationResult(response=intent_response, conversation_id=conversation_id)
             messages = [{"role": "system", "content": prompt}]
 
         messages.append({"role": "user", "content": user_input.text})
 
-        _LOGGER.debug("Prompt for %s: %s", model, messages)
+        # await self._get_info_about_devices()
+
+        # Compile a list of OpenAI-compatible functions
+        openai_functions = [HASS_OPENAI_ACTIONS[action]["openai_function"] for action in HASS_OPENAI_ACTIONS]
+        _LOGGER.warning(f"openai_functions: {openai_functions}")
 
         try:
+            # _LOGGER.info(f"messages: {messages}")
             result = await openai.ChatCompletion.acreate(
                 api_key=self.entry.data[CONF_API_KEY],
                 model=model,
@@ -169,6 +175,8 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
                 top_p=top_p,
                 temperature=temperature,
                 user=conversation_id,
+                functions=openai_functions,
+                function_call="auto",
             )
         except error.OpenAIError as err:
             intent_response = intent.IntentResponse(language=user_input.language)
@@ -176,26 +184,62 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
                 intent.IntentResponseErrorCode.UNKNOWN,
                 f"Sorry, I had a problem talking to OpenAI: {err}",
             )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
-            )
+            return conversation.ConversationResult(response=intent_response, conversation_id=conversation_id)
 
-        _LOGGER.debug("Response %s", result)
+        _LOGGER.warning("Response %s", result)
         response = result["choices"][0]["message"]
         messages.append(response)
         self.history[conversation_id] = messages
 
-        intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(response["content"])
-        return conversation.ConversationResult(
-            response=intent_response, conversation_id=conversation_id
-        )
+        # if there's a function call in GPT's response, we perform the HASS action that corresponds to it
+        if "function_call" in response.keys():
+            func_response = dict(response["function_call"])
+            name = func_response["name"]
+            await self._perform_hass_action(name)
 
-    def _async_generate_prompt(self, raw_prompt: str) -> str:
+        intent_response = intent.IntentResponse(language=user_input.language)
+        intent_response.async_set_speech(response["content"] or "Done.")
+
+        return conversation.ConversationResult(response=intent_response, conversation_id=conversation_id)
+
+    async def _get_states_str(self) -> str:
+        """Return string with all entity states."""
+        all_states = self.hass.states.async_all()
+        device_str = "\n"
+        for device in all_states:
+            device_str += f"{device}\n\n"
+        return device_str
+
+    async def _get_info_about_devices(self) -> None:
+        entity_services = {}
+
+        # Get all entities
+        all_entities = self.hass.states.async_all()
+
+        # Get all services
+        services = self.hass.services.async_services()
+
+        for entity in all_entities:
+            domain = entity.domain  # e.g., 'light', 'switch', etc.
+
+            # Find services for the entity's domain
+            entity_services[entity.entity_id] = list(services.get(domain, {}).keys())
+
+        for entity, actions in entity_services.items():
+            _LOGGER.warn(f"Entity: {entity}, Possible Actions: {actions}")
+
+    def _async_generate_prompt(self, raw_prompt: str, devices_states: str) -> str:
         """Generate a prompt for the user."""
-        return template.Template(raw_prompt, self.hass).async_render(
-            {
-                "ha_name": self.hass.config.location_name,
-            },
-            parse_result=False,
-        )
+        full_prompt = raw_prompt.format(devices_states=devices_states)
+        return full_prompt
+
+    async def _perform_hass_action(self, action_to_perform: str) -> None:
+        """
+        Perform a Home Assistant action.
+        """
+        _LOGGER.warning(f"action_to_perform: {action_to_perform}")
+        action = HASS_OPENAI_ACTIONS[action_to_perform]["hass_action"]
+        _LOGGER.warning(f"action: {action}")
+
+        service_response = await self.hass.services.async_call(**action)
+        _LOGGER.warning(f"service_response: {service_response}")
