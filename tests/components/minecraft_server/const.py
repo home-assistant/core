@@ -16,7 +16,7 @@ TEST_PORT = 25566
 TEST_ADDRESS = f"{TEST_HOST}:{TEST_PORT}"
 
 TEST_JAVA_STATUS_RESPONSE_RAW = {
-    "description": {"text": "Dummy Description"},
+    "description": {"text": "Dummy MOTD"},
     "version": {"name": "Dummy Version", "protocol": 123},
     "players": {
         "online": 3,
@@ -54,7 +54,7 @@ TEST_JAVA_DATA = MinecraftServerData(
 TEST_BEDROCK_STATUS_RESPONSE = BedrockStatusResponse(
     players=BedrockStatusPlayers(online=3, max=10),
     version=BedrockStatusVersion(brand="MCPE", name="Dummy Version", protocol=123),
-    motd=Motd.parse("Dummy Description", bedrock=True),
+    motd=Motd.parse("Dummy MOTD", bedrock=True),
     latency=5,
     gamemode="Dummy Game Mode",
     map_name="Dummy Map Name",

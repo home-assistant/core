@@ -1325,10 +1325,10 @@ build.json @home-assistant/supervisor
 /tests/components/trafikverket_camera/ @gjohansson-ST
 /homeassistant/components/trafikverket_ferry/ @gjohansson-ST
 /tests/components/trafikverket_ferry/ @gjohansson-ST
-/homeassistant/components/trafikverket_train/ @endor-force @gjohansson-ST
-/tests/components/trafikverket_train/ @endor-force @gjohansson-ST
-/homeassistant/components/trafikverket_weatherstation/ @endor-force @gjohansson-ST
-/tests/components/trafikverket_weatherstation/ @endor-force @gjohansson-ST
+/homeassistant/components/trafikverket_train/ @gjohansson-ST
+/tests/components/trafikverket_train/ @gjohansson-ST
+/homeassistant/components/trafikverket_weatherstation/ @gjohansson-ST
+/tests/components/trafikverket_weatherstation/ @gjohansson-ST
 /homeassistant/components/transmission/ @engrbm87 @JPHutchins
 /tests/components/transmission/ @engrbm87 @JPHutchins
 /homeassistant/components/trend/ @jpbede
@@ -1440,8 +1440,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/wilight/ @leofig-rj
 /tests/components/wilight/ @leofig-rj
 /homeassistant/components/wirelesstag/ @sergeymaysak
-/homeassistant/components/withings/ @vangorra @joostlek
-/tests/components/withings/ @vangorra @joostlek
+/homeassistant/components/withings/ @joostlek
+/tests/components/withings/ @joostlek
 /homeassistant/components/wiz/ @sbidy
 /tests/components/wiz/ @sbidy
 /homeassistant/components/wled/ @frenck
