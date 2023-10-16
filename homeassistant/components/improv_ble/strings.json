@@ -1,0 +1,49 @@
+{
+  "config": {
+    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+    "step": {
+      "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
+        "data": {
+          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "identify": {
+        "description": "The device is now identifying itself, for example by blinking or beeping."
+      },
+      "main_menu": {
+        "description": "Choose next step.",
+        "menu_options": {
+          "identify": "Identify device",
+          "provision": "Connect device to WiFi"
+        }
+      },
+      "provision": {
+        "description": "Enter WiFi credentials to connect the device to your network.",
+        "data": {
+          "password": "Password",
+          "ssid": "SSID"
+        }
+      }
+    },
+    "progress": {
+      "authorize": "The device requires authorization, please press its authorization button or consult the device's manual for how to proceed.",
+      "provisioning": "The device is connecting to the WiFi network."
+    },
+    "error": {
+      "unable_to_connect": "The device could not connect to the WiFi network. Check that the SSID and password are correct and try again."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "characteristic_missing": "The device can't be connected to a WiFi network, it may already be connected.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "provision_successful": "The device has successfully connected to WiFi.",
+      "provision_successful_url": "The device has successfully connected to WiFi.\n\nPlease visit {url} to finish setup.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}
