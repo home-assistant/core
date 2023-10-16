@@ -29,6 +29,7 @@ class JSONDecodeErrorWithPath(json.JSONDecodeError):
         self.pos = pos
         self.lineno = lineno
         self.colno = colno
+        self._path = path
 
     def __reduce__(self):
         """Reduce."""
