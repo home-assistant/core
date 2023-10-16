@@ -15,9 +15,11 @@ import random
 
 from fnv_hash_fast import fnv1a_32
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import EventType
 
 from .util import get_aid_storage_filename_for_entry_id
 
@@ -33,9 +35,9 @@ AID_MIN = 2
 AID_MAX = 18446744073709551615
 
 
-def get_system_unique_id(entity: er.RegistryEntry) -> str:
+def get_system_unique_id(entity: er.RegistryEntry, entity_unique_id: str) -> str:
     """Determine the system wide unique_id for an entity."""
-    return f"{entity.platform}.{entity.domain}.{entity.unique_id}"
+    return f"{entity.platform}.{entity.domain}.{entity_unique_id}"
 
 
 def _generate_aids(unique_id: str | None, entity_id: str) -> Generator[int, None, None]:
@@ -72,11 +74,11 @@ class AccessoryAidStorage:
         self.allocated_aids: set[int] = set()
         self._entry_id = entry_id
         self.store: Store | None = None
-        self._entity_registry: er.EntityRegistry | None = None
+        self._entity_registry = er.async_get(hass)
+        self._entity_registry_watchers: dict[str, CALLBACK_TYPE] = {}
 
     async def async_initialize(self) -> None:
         """Load the latest AID data."""
-        self._entity_registry = er.async_get(self.hass)
         aidstore = get_aid_storage_filename_for_entry_id(self._entry_id)
         self.store = Store(self.hass, AID_MANAGER_STORAGE_VERSION, aidstore)
 
@@ -88,14 +90,51 @@ class AccessoryAidStorage:
         self.allocations = raw_storage.get(ALLOCATIONS_KEY, {})
         self.allocated_aids = set(self.allocations.values())
 
+    def async_stop(self) -> None:
+        """Stop the entity watchers."""
+        for entity_watcher in self._entity_registry_watchers.values():
+            entity_watcher()
+        self._entity_registry_watchers.clear()
+
     def get_or_allocate_aid_for_entity_id(self, entity_id: str) -> int:
         """Generate a stable aid for an entity id."""
         assert self._entity_registry is not None
         if not (entity := self._entity_registry.async_get(entity_id)):
             return self.get_or_allocate_aid(None, entity_id)
 
-        sys_unique_id = get_system_unique_id(entity)
+        sys_unique_id = get_system_unique_id(entity, entity.unique_id)
+        self._async_setup_entity_watcher(entity_id)
         return self.get_or_allocate_aid(sys_unique_id, entity_id)
+
+    @callback
+    def _async_setup_entity_watcher(self, entity_id: str) -> None:
+        """Set up a watcher for an entity."""
+        if entity_id in self._entity_registry_watchers:
+            return
+        self._entity_registry_watchers[
+            entity_id
+        ] = async_track_entity_registry_updated_event(
+            self.hass, [entity_id], self._async_registry_updated
+        )
+
+    @callback
+    def _async_registry_updated(
+        self, event: EventType[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Handle entity registry updated event."""
+        data = event.data
+        if (
+            (data["action"] != "update")
+            or not (old_unique_id := data["changes"].get("unique_id"))
+            or not (new_entry := self._entity_registry.async_get(data["entity_id"]))
+        ):
+            return
+        old_system_unique_id = get_system_unique_id(new_entry, old_unique_id)
+        if not (old_aid := self.allocations.pop(old_system_unique_id, None)):
+            return
+        new_system_unique_id = get_system_unique_id(new_entry, new_entry.unique_id)
+        self.allocations[new_system_unique_id] = old_aid
+        self.async_schedule_save()
 
     def get_or_allocate_aid(self, unique_id: str | None, entity_id: str) -> int:
         """Allocate (and return) a new aid for an accessory."""

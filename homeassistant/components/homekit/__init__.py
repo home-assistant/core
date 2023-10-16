@@ -1042,7 +1042,9 @@ class HomeKit:
         if self.status != STATUS_RUNNING:
             return
         async with self._reset_lock:
+            assert self.aid_storage
             self.status = STATUS_STOPPED
+            self.aid_storage.async_stop()
             assert self._cancel_reload_dispatcher is not None
             self._cancel_reload_dispatcher()
             _LOGGER.debug("Driver stop for %s", self._name)
