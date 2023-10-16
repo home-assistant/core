@@ -70,7 +70,10 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
 
         The zone is considered 'on' if & only if it is override/on (e.g. timer/on is 'off').
         """
-        return self._zone.data["mode"] == "override" and self._zone.data["setpoint"]
+        return (
+            self._zone.data["mode"] in ["override", "timer"]
+            and self._zone.data["setpoint"]
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the zone to Timer mode.
