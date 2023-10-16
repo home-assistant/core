@@ -148,20 +148,13 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the CalDav calendar platform."""
-
+    """Set up the CalDav calendar platform for a config entry."""
     client: caldav.DAVClient = hass.data[DOMAIN][entry.entry_id]
     calendars = await hass.async_add_executor_job(client.principal().calendars)
-
-    entities = []
-    for calendar in list(calendars):
-        name = calendar.name
-        entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
-        entities.append(
-            WebDavCalendarEntity(name, calendar, entity_id, CONFIG_ENTRY_DEFAULT_DAYS)
-        )
-
-    async_add_entities(entities, True)
+    async_add_entities(
+        (ConfigEntryCalendarEntity(entry.entry_id, calendar) for calendar in calendars),
+        True,
+    )
 
 class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
