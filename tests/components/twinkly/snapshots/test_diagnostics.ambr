@@ -4,6 +4,7 @@
     'attributes': dict({
       'brightness': 26,
       'color_mode': 'brightness',
+      'effect': None,
       'effect_list': list([
       ]),
       'friendly_name': 'twinkly_test_device_name',

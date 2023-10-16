@@ -1769,7 +1769,7 @@ class ModesTrait(_Trait):
         elif self.state.domain == humidifier.DOMAIN:
             if ATTR_MODE in attrs:
                 mode_settings["mode"] = attrs.get(ATTR_MODE)
-        elif self.state.domain == light.DOMAIN and light.ATTR_EFFECT in attrs:
+        elif self.state.domain == light.DOMAIN and attrs.get(light.ATTR_EFFECT):
             mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
 
         if mode_settings:
