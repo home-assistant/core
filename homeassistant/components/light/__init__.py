@@ -1027,7 +1027,11 @@ class LightEntity(ToggleEntity):
         data[ATTR_COLOR_MODE] = color_mode if self.is_on else None
 
         if brightness_supported(self.supported_color_modes):
-            data[ATTR_BRIGHTNESS] = self.brightness if self.is_on else None
+            data[ATTR_BRIGHTNESS] = (
+                self.brightness
+                if self.is_on and color_mode in COLOR_MODES_BRIGHTNESS
+                else None
+            )
         elif supported_features & SUPPORT_BRIGHTNESS:
             # Backwards compatibility for ambiguous / incomplete states
             # Add warning in 2021.6, remove in 2021.10
