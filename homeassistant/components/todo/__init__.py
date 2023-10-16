@@ -89,14 +89,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    _LOGGER.debug("async_setup_entry=%s", entry)
     component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    _LOGGER.debug("async_unload_entry=%s", entry)
     component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
