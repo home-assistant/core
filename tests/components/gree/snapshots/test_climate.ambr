@@ -109,6 +109,7 @@
       'original_icon': None,
       'original_name': 'fake-device-1',
       'platform': 'gree',
+      'previous_unique_id': None,
       'supported_features': <ClimateEntityFeature: 57>,
       'translation_key': None,
       'unique_id': 'aabbcc112233',
