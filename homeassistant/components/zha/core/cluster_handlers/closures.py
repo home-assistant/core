@@ -124,8 +124,12 @@ class WindowCoveringClient(ClientClusterHandler):
 class WindowCovering(ClusterHandler):
     """Window cluster handler."""
 
-    _value_attribute_lift = 8
-    _value_attribute_tilt = 9
+    _value_attribute_lift = (
+        closures.WindowCovering.AttributeDefs.current_position_lift_percentage.id
+    )
+    _value_attribute_tilt = (
+        closures.WindowCovering.AttributeDefs.current_position_tilt_percentage.id
+    )
     REPORT_CONFIG = (
         AttrReportConfig(
             attr="current_position_lift_percentage", config=REPORT_CONFIG_IMMEDIATE
