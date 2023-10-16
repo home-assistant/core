@@ -21,7 +21,7 @@ from homeassistant.components.homekit import (
     STATUS_WAIT,
     HomeKit,
 )
-from homeassistant.components.homekit.accessories import HomeBridge
+from homeassistant.components.homekit.accessories import HomeBridge, HomeDriver
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
@@ -2245,3 +2245,31 @@ async def test_wait_for_port_to_free(
         await hass.async_block_till_done()
         assert "Waiting for the HomeKit server to shutdown" in caplog.text
         assert port_mock.called
+
+
+async def test_handle_unique_id_change(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    mock_async_zeroconf: None,
+) -> None:
+    """Test handling unique id changes."""
+    entry = await async_init_integration(hass)
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
+    homekit.driver = hk_driver
+    entity_registry = er.async_get(hass)
+    light = entity_registry.async_get_or_create("light", "demo", "unique")
+    hass.states.async_set(light.entity_id, STATE_ON)
+    with patch(f"{PATH_HOMEKIT}.async_show_setup_message"), patch(
+        f"{PATH_HOMEKIT}.HomeKit", homekit
+    ):
+        await homekit.async_start()
+    await hass.async_block_till_done()
+    assert homekit.aid_storage.allocations == {"demo.light.unique": 176109313}
+    entity_registry.async_update_entity(light.entity_id, new_unique_id="new_unique")
+    await hass.async_block_till_done()
+    # Verify that the old unique id is removed from the allocations
+    # and that the new unique id assumes the old aid
+    assert homekit.aid_storage.allocations == {"demo.light.new_unique": 176109313}
+
+    await homekit.async_stop()
+    await hass.async_block_till_done()
