@@ -16,7 +16,7 @@ MOCK_URL = "https://example.com"
 MOCK_REGION = "region_name"
 MOCK_REGIONS = {MOCK_REGION: MOCK_URL}
 MOCK_TOKEN = ("a" * 256, "date")
-MOCK_CODE = "012345                      "
+MOCK_CODE = "012345"
 MOCK_EMAIL = "valid@email.com"
 EMPTY = ""
 INVALID_EMAIL = "this is not a valid email"
@@ -164,12 +164,11 @@ async def test_form_valid_email(hass: HomeAssistant) -> None:
             context={"source": "user"},
             data={CONF_EMAIL: MOCK_EMAIL},
         )
-    expected_email = MOCK_EMAIL.replace(" ", "")
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "region"
     assert result["errors"] == {}
     assert len(mock.mock_calls) == 1
-    assert config_flow.PermobilConfigFlow.data.get(CONF_EMAIL) == expected_email
+    assert config_flow.PermobilConfigFlow.data.get(CONF_EMAIL) == MOCK_EMAIL
 
 
 async def test_form_valid_region(hass: HomeAssistant) -> None:
@@ -205,9 +204,8 @@ async def test_form_valid_code(hass: HomeAssistant) -> None:
             context={"source": "email_code"},
             data={CONF_CODE: MOCK_CODE},
         )
-    expected_code = MOCK_CODE.replace(" ", "")
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"].get(CONF_CODE) == expected_code
+    assert result["data"].get(CONF_CODE) == MOCK_CODE
     assert result["data"].get(CONF_TOKEN) == MOCK_TOKEN[0]
     assert result["data"].get(CONF_TTL) == MOCK_TOKEN[1]
     assert not result.get("errors")

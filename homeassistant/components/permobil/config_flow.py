@@ -92,9 +92,7 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # fetch the list of regions names and urls from the api
             # for the user to select from. [("name","url"),("name","url"),...]
             try:
-                self.region_names = (
-                    await self.p_api.request_region_names()
-                )  # MyPermobilAPIException
+                self.region_names = await self.p_api.request_region_names()
                 _LOGGER.debug(
                     "region names %s",
                     ",".join(list(self.region_names.keys())),
@@ -111,7 +109,7 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("region %s", self.p_api.region)
             try:
                 # tell backend to send code to the users email
-                await self.p_api.request_application_code()  # MyPermobilAPIException
+                await self.p_api.request_application_code()
             except MyPermobilAPIException as err:
                 _LOGGER.error("Error requesting code: %s", err)
                 errors["base"] = "region_connection_error"
@@ -144,11 +142,9 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not user_input.get(CONF_CODE):
                     raise InvalidAuth("empty code")
 
-                user_input[CONF_CODE] = user_input[CONF_CODE].replace(" ", "")
-                await validate_input(self.p_api, user_input)  # ClientException
+                await validate_input(self.p_api, user_input)
                 self.data[CONF_CODE] = user_input[CONF_CODE]
-                resp = await self.p_api.request_application_token()  # APIException
-                token, ttl = resp
+                token, ttl = await self.p_api.request_application_token()
                 self.data[CONF_TOKEN] = token
                 self.data[CONF_TTL] = ttl
                 _LOGGER.debug("Success")
@@ -190,7 +186,7 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
 
             try:
-                await self.p_api.request_application_code()  # MyPermobilAPIException
+                await self.p_api.request_application_code()
             except MyPermobilAPIException as err:
                 _LOGGER.error("Error requesting code: %s", err)
                 errors["base"] = "region_connection_error"

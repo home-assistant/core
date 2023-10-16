@@ -126,7 +126,6 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         translation_key="max_distance_left",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
         # Distance traveled today monotonically increasing, resets every 24h (km)

@@ -33,11 +33,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     p_api = MyPermobil(
         application=APPLICATION,
         session=session,
-        email=entry.data.get(CONF_EMAIL),
-        region=entry.data.get(CONF_REGION),
-        code=entry.data.get(CONF_CODE),
-        token=entry.data.get(CONF_TOKEN),
-        expiration_date=entry.data.get(CONF_TTL),
+        email=entry.data[CONF_EMAIL],
+        region=entry.data[CONF_REGION],
+        code=entry.data[CONF_CODE],
+        token=entry.data[CONF_TOKEN],
+        expiration_date=entry.data[CONF_TTL],
     )
     try:
         p_api.self_authenticate()
