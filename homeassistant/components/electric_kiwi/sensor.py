@@ -46,21 +46,23 @@ class ElectricKiwiHOPSensorEntityDescription(
 def _check_and_move_time(hop: Hop, time: str) -> datetime:
     """Return the time a day forward if HOP end_time is in the past."""
     date_time = datetime.combine(
-        datetime.today(),
+        dt_util.start_of_local_day(),
         datetime.strptime(time, "%I:%M %p").time(),
-    ).astimezone(dt_util.DEFAULT_TIME_ZONE)
+        dt_util.DEFAULT_TIME_ZONE,
+    )
 
     end_time = datetime.combine(
-        datetime.today(),
+        dt_util.start_of_local_day(),
         datetime.strptime(hop.end.end_time, "%I:%M %p").time(),
-    ).astimezone(dt_util.DEFAULT_TIME_ZONE)
+        dt_util.DEFAULT_TIME_ZONE,
+    )
 
-    if end_time < datetime.now().astimezone(dt_util.DEFAULT_TIME_ZONE):
+    if end_time < dt_util.now():
         return date_time + timedelta(days=1)
     return date_time
 
 
-HOP_SENSOR_TYPE: tuple[ElectricKiwiHOPSensorEntityDescription, ...] = (
+HOP_SENSOR_TYPES: tuple[ElectricKiwiHOPSensorEntityDescription, ...] = (
     ElectricKiwiHOPSensorEntityDescription(
         key=ATTR_EK_HOP_START,
         translation_key="hopfreepowerstart",
@@ -83,7 +85,7 @@ async def async_setup_entry(
     hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][entry.entry_id]
     hop_entities = [
         ElectricKiwiHOPEntity(hop_coordinator, description)
-        for description in HOP_SENSOR_TYPE
+        for description in HOP_SENSOR_TYPES
     ]
     async_add_entities(hop_entities)
 
@@ -99,13 +101,16 @@ class ElectricKiwiHOPEntity(
 
     def __init__(
         self,
-        hop_coordinator: ElectricKiwiHOPDataCoordinator,
+        coordinator: ElectricKiwiHOPDataCoordinator,
         description: ElectricKiwiHOPSensorEntityDescription,
     ) -> None:
         """Entity object for Electric Kiwi sensor."""
-        super().__init__(hop_coordinator)
+        super().__init__(coordinator)
 
-        self._attr_unique_id = f"{self.coordinator._ek_api.customer_number}_{self.coordinator._ek_api.connection_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator._ek_api.customer_number}"
+            f"_{coordinator._ek_api.connection_id}_{description.key}"
+        )
         self.entity_description = description
 
     @property

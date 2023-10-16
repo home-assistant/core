@@ -26,6 +26,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.CALENDAR,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DATE,
@@ -47,6 +48,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.WATER_HEATER,
+    Platform.WEATHER,
 ]
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
@@ -54,9 +56,7 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.MAILBOX,
     Platform.NOTIFY,
     Platform.IMAGE_PROCESSING,
-    Platform.CALENDAR,
     Platform.DEVICE_TRACKER,
-    Platform.WEATHER,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

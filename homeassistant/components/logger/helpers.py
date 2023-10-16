@@ -9,6 +9,7 @@ from enum import StrEnum
 import logging
 from typing import Any, cast
 
+from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -16,7 +17,6 @@ from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from .const import (
     DOMAIN,
-    EVENT_LOGGING_CHANGED,
     LOGGER_DEFAULT,
     LOGGER_LOGS,
     LOGSEVERITY,

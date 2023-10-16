@@ -9,8 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .common import BASIC_NUMBER_ENTITY
-
 from tests.common import MockConfigEntry
 
 NUMBER_ENTITY = "number.thermostat_hvac_valve_control"
@@ -124,7 +122,7 @@ async def test_number_writeable(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
+    assert len(client.async_send_command.call_args_list) == 2
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 4
@@ -217,18 +215,6 @@ async def test_volume_number(
 
     state = hass.states.get(VOLUME_NUMBER_ENTITY)
     assert state.state == STATE_UNKNOWN
-
-
-async def test_disabled_basic_number(
-    hass: HomeAssistant, ge_in_wall_dimmer_switch, integration
-) -> None:
-    """Test number is created from Basic CC and is disabled."""
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(BASIC_NUMBER_ENTITY)
-
-    assert entity_entry
-    assert entity_entry.disabled
-    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_config_parameter_number(

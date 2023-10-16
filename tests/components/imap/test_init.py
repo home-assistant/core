@@ -470,6 +470,8 @@ async def test_reset_last_message(
 ) -> None:
     """Test receiving a message successfully."""
     event = asyncio.Event()  # needed for pushed coordinator to make a new loop
+    idle_start_future = asyncio.Future()
+    idle_start_future.set_result(None)
 
     async def _sleep_till_event() -> None:
         """Simulate imap server waiting for pushes message and keep the push loop going.
@@ -479,10 +481,10 @@ async def test_reset_last_message(
         nonlocal event
         await event.wait()
         event.clear()
-        mock_imap_protocol.idle_start.return_value = AsyncMock()()
+        mock_imap_protocol.idle_start = AsyncMock(return_value=idle_start_future)
 
     # Make sure we make another cycle (needed for pushed coordinator)
-    mock_imap_protocol.idle_start.return_value = AsyncMock()()
+    mock_imap_protocol.idle_start = AsyncMock(return_value=idle_start_future)
     # Mock we wait till we push an update (needed for pushed coordinator)
     mock_imap_protocol.wait_server_push.side_effect = _sleep_till_event
 
@@ -510,6 +512,7 @@ async def test_reset_last_message(
     assert data["sender"] == "john.doe@example.com"
     assert data["subject"] == "Test subject"
     assert data["text"]
+    assert data["initial"]
     assert (
         valid_date
         and isinstance(data["date"], datetime)
@@ -626,7 +629,7 @@ async def test_message_is_truncated(
     [
         ("{{ subject }}", "Test subject", None),
         ('{{ "@example.com" in sender }}', True, None),
-        ("{% bad template }}", None, "Error rendering imap custom template"),
+        ("{% bad template }}", None, "Error rendering IMAP custom template"),
     ],
     ids=["subject_test", "sender_filter", "template_error"],
 )

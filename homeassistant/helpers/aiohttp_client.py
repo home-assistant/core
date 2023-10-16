@@ -13,7 +13,6 @@ import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
-import async_timeout
 
 from homeassistant import config_entries
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
@@ -58,6 +57,19 @@ WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
 #
 MAXIMUM_CONNECTIONS = 4096
 MAXIMUM_CONNECTIONS_PER_HOST = 100
+
+
+# Overwrite base aiohttp _wait implementation
+# Homeassistant has a custom shutdown wait logic.
+async def _noop_wait(*args: Any, **kwargs: Any) -> None:
+    """Do nothing."""
+    return
+
+
+# TODO: Remove version check with aiohttp 3.9.0  # pylint: disable=fixme
+if sys.version_info >= (3, 12):
+    # pylint: disable-next=protected-access
+    web.BaseSite._wait = _noop_wait  # type: ignore[method-assign]
 
 
 class HassClientResponse(aiohttp.ClientResponse):
@@ -170,7 +182,7 @@ async def async_aiohttp_proxy_web(
 ) -> web.StreamResponse | None:
     """Stream websession request to aiohttp web response."""
     try:
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             req = await web_coro
 
     except asyncio.CancelledError:
@@ -211,7 +223,7 @@ async def async_aiohttp_proxy_stream(
     # Suppressing something went wrong fetching data, closed connection
     with suppress(asyncio.TimeoutError, aiohttp.ClientError):
         while hass.is_running:
-            async with async_timeout.timeout(timeout):
+            async with asyncio.timeout(timeout):
                 data = await stream.read(buffer_size)
 
             if not data:

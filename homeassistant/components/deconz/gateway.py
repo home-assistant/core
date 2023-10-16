@@ -7,7 +7,6 @@ from collections.abc import Callable
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
 
-import async_timeout
 from pydeconz import DeconzSession, errors
 from pydeconz.interfaces import sensors
 from pydeconz.interfaces.api_handlers import APIHandler, GroupedAPIHandler
@@ -353,7 +352,7 @@ async def get_deconz_session(
         config[CONF_API_KEY],
     )
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             await deconz_session.refresh_state()
         return deconz_session
 

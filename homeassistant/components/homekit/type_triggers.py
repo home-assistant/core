@@ -6,7 +6,7 @@ from typing import Any
 
 from pyhap.const import CATEGORY_SENSOR
 
-from homeassistant.core import CALLBACK_TYPE, Context
+from homeassistant.core import CALLBACK_TYPE, Context, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.trigger import async_initialize_triggers
 
@@ -112,10 +112,12 @@ class DeviceTriggerAccessory(HomeAccessory):
             _LOGGER.log,
         )
 
-    async def stop(self) -> None:
+    @callback
+    def async_stop(self) -> None:
         """Handle accessory driver stop event."""
         if self._remove_triggers:
             self._remove_triggers()
+        super().async_stop()
 
     @property
     def available(self) -> bool:

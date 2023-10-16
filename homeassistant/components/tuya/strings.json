@@ -71,6 +71,12 @@
       }
     },
     "cover": {
+      "blind": {
+        "name": "[%key:component::cover::entity_component::blind::name%]"
+      },
+      "curtain": {
+        "name": "[%key:component::cover::entity_component::curtain::name%]"
+      },
       "curtain_2": {
         "name": "Curtain 2"
       },

@@ -70,7 +70,7 @@ class BondDevice:
     @property
     def trust_state(self) -> bool:
         """Check if Trust State is turned on."""
-        return self.props.get("trust_state", False)
+        return self.props.get("trust_state", False)  # type: ignore[no-any-return]
 
     def has_action(self, action: str) -> bool:
         """Check to see if the device supports an actions."""
@@ -203,7 +203,7 @@ class BondHub:
     @property
     def make(self) -> str:
         """Return this hub make."""
-        return self._version.get("make", BRIDGE_MAKE)
+        return self._version.get("make", BRIDGE_MAKE)  # type: ignore[no-any-return]
 
     @property
     def name(self) -> str:

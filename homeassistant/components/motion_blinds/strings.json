@@ -60,5 +60,26 @@
         }
       }
     }
+  },
+  "entity": {
+    "cover": {
+      "top": {
+        "name": "Top"
+      },
+      "bottom": {
+        "name": "Bottom"
+      },
+      "combined": {
+        "name": "Combined"
+      }
+    },
+    "sensor": {
+      "top_battery": {
+        "name": "Top battery"
+      },
+      "bottom_battery": {
+        "name": "Bottom battery"
+      }
+    }
   }
 }

@@ -66,9 +66,6 @@
       },
       "find_vehicle": {
         "name": "Find vehicle"
-      },
-      "refresh": {
-        "name": "Refresh from cloud"
       }
     },
     "lock": {

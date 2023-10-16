@@ -2,7 +2,7 @@
 
 Call init before using it in your tests to ensure clean test data.
 """
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from homeassistant.components.datetime import DateTimeEntity
 
@@ -37,7 +37,7 @@ def init(empty=False):
             MockDateTimeEntity(
                 name="test",
                 unique_id=UNIQUE_DATETIME,
-                native_value=datetime(2020, 1, 1, 1, 2, 3, tzinfo=timezone.utc),
+                native_value=datetime(2020, 1, 1, 1, 2, 3, tzinfo=UTC),
             ),
         ]
     )

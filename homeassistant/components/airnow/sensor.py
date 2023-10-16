@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -13,15 +14,16 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_TIME,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import get_time_zone
 
 from . import AirNowDataUpdateCoordinator
 from .const import (
@@ -30,6 +32,12 @@ from .const import (
     ATTR_API_AQI_LEVEL,
     ATTR_API_O3,
     ATTR_API_PM25,
+    ATTR_API_REPORT_DATE,
+    ATTR_API_REPORT_HOUR,
+    ATTR_API_REPORT_TZ,
+    ATTR_API_STATION,
+    ATTR_API_STATION_LATITUDE,
+    ATTR_API_STATION_LONGITUDE,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -40,6 +48,7 @@ PARALLEL_UPDATES = 1
 
 ATTR_DESCR = "description"
 ATTR_LEVEL = "level"
+ATTR_STATION = "reporting_station"
 
 
 @dataclass
@@ -55,6 +64,16 @@ class AirNowEntityDescription(SensorEntityDescription, AirNowEntityDescriptionMi
     """Describes Airnow sensor entity."""
 
 
+def station_extra_attrs(data: dict[str, Any]) -> dict[str, Any]:
+    """Process extra attributes for station location (if available)."""
+    if ATTR_API_STATION in data:
+        return {
+            "lat": data.get(ATTR_API_STATION_LATITUDE),
+            "long": data.get(ATTR_API_STATION_LONGITUDE),
+        }
+    return {}
+
+
 SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_AQI,
@@ -65,6 +84,12 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
         extra_state_attributes_fn=lambda data: {
             ATTR_DESCR: data[ATTR_API_AQI_DESCRIPTION],
             ATTR_LEVEL: data[ATTR_API_AQI_LEVEL],
+            ATTR_TIME: datetime.strptime(
+                f"{data[ATTR_API_REPORT_DATE]} {data[ATTR_API_REPORT_HOUR]}",
+                "%Y-%m-%d %H",
+            )
+            .replace(tzinfo=get_time_zone(data[ATTR_API_REPORT_TZ]))
+            .isoformat(),
         },
     ),
     AirNowEntityDescription(
@@ -84,6 +109,13 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.get(ATTR_API_O3),
         extra_state_attributes_fn=None,
+    ),
+    AirNowEntityDescription(
+        key=ATTR_API_STATION,
+        translation_key="station",
+        icon="mdi:blur",
+        value_fn=lambda data: data.get(ATTR_API_STATION),
+        extra_state_attributes_fn=station_extra_attrs,
     ),
 )
 

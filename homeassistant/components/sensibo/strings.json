@@ -79,7 +79,9 @@
           "fixedright": "Fixed right",
           "fixedleftright": "Fixed left right",
           "rangecenter": "Range center",
-          "rangefull": "Range full"
+          "rangefull": "Range full",
+          "rangeleft": "Range left",
+          "rangeright": "Range right"
         }
       },
       "light": {
@@ -123,8 +125,10 @@
               "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]",
               "high": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::high%]",
               "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
+              "medium_low": "Medium low",
               "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
               "medium_high": "Medium high",
+              "strong": "Strong",
               "quiet": "Quiet"
             }
           },
@@ -207,8 +211,10 @@
               "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]",
               "high": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::high%]",
               "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
+              "medium_low": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_low%]",
               "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
               "medium_high": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_high%]",
+              "strong": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::strong%]",
               "quiet": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::quiet%]"
             }
           },
@@ -334,9 +340,38 @@
         "name": "Pure Boost"
       }
     },
-    "update": {
-      "fw_ver_available": {
-        "name": "Update available"
+    "climate": {
+      "climate_device": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::quiet%]",
+              "strong": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::strong%]",
+              "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
+              "medium_low": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_low%]",
+              "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
+              "medium_high": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_high%]",
+              "high": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::high%]",
+              "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "stopped": "[%key:common::state::off%]",
+              "fixedtop": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedtop%]",
+              "fixedmiddletop": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedmiddletop%]",
+              "fixedmiddle": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedmiddle%]",
+              "fixedmiddlebottom": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedmiddlebottom%]",
+              "fixedbottom": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedbottom%]",
+              "rangetop": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::rangetop%]",
+              "rangemiddle": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::rangemiddle%]",
+              "rangebottom": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::rangebottom%]",
+              "rangefull": "[%key:component::sensibo::entity::select::horizontalswing::state::rangefull%]",
+              "horizontal": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::horizontal%]",
+              "both": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::state::both%]"
+            }
+          }
+        }
       }
     }
   },

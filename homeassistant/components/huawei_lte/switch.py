@@ -69,7 +69,7 @@ class HuaweiLteBaseSwitch(HuaweiLteBaseEntityWithDevice, SwitchEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
-        self.router.subscriptions[self.key].add(f"{SWITCH_DOMAIN}/{self.item}")
+        self.router.subscriptions[self.key].append(f"{SWITCH_DOMAIN}/{self.item}")
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from needed data on remove."""
@@ -92,7 +92,7 @@ class HuaweiLteBaseSwitch(HuaweiLteBaseEntityWithDevice, SwitchEntity):
 class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
     """Huawei LTE mobile data switch device."""
 
-    _attr_name: str = field(default="Mobile data", init=False)
+    _attr_translation_key: str = field(default="mobile_data", init=False)
 
     def __post_init__(self) -> None:
         """Initialize identifiers."""
@@ -124,7 +124,7 @@ class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
 class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
     """Huawei LTE WiFi guest network switch device."""
 
-    _attr_name: str = field(default="WiFi guest network", init=False)
+    _attr_translation_key: str = field(default="wifi_guest_network", init=False)
 
     def __post_init__(self) -> None:
         """Initialize identifiers."""

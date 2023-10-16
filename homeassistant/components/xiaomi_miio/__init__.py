@@ -1,13 +1,13 @@
 """Support for Xiaomi Miio."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from miio import (
     AirFresh,
     AirFreshA1,
@@ -176,7 +176,7 @@ def _async_update_data_default(hass, device):
 
         async def _async_fetch_data():
             """Fetch data from the device."""
-            async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
+            async with asyncio.timeout(POLLING_TIMEOUT_SEC):
                 state = await hass.async_add_executor_job(device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
@@ -265,7 +265,7 @@ def _async_update_data_vacuum(
         """Fetch data from the device using async_add_executor_job."""
 
         async def execute_update() -> VacuumCoordinatorData:
-            async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
+            async with asyncio.timeout(POLLING_TIMEOUT_SEC):
                 state = await hass.async_add_executor_job(update)
                 _LOGGER.debug("Got new vacuum state: %s", state)
                 return state
@@ -296,9 +296,15 @@ async def async_create_miio_device_and_coordinator(
     name = entry.title
     device: MiioDevice | None = None
     migrate = False
-    lazy_discover = False
     update_method = _async_update_data_default
     coordinator_class: type[DataUpdateCoordinator[Any]] = DataUpdateCoordinator
+
+    # List of models requiring specific lazy_discover setting
+    LAZY_DISCOVER_FOR_MODEL = {
+        "zhimi.fan.za5": True,
+        "zhimi.airpurifier.za1": True,
+    }
+    lazy_discover = LAZY_DISCOVER_FOR_MODEL.get(model, False)
 
     if (
         model not in MODELS_HUMIDIFIER
