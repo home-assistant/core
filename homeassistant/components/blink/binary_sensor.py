@@ -52,7 +52,7 @@ async def async_setup_entry(
         for camera in data.cameras
         for description in BINARY_SENSORS_TYPES
     ]
-    async_add_entities(entities)
+    async_add_entities(entities, update_before_add=True)
 
 
 class BlinkBinarySensor(BinarySensorEntity):
@@ -75,15 +75,16 @@ class BlinkBinarySensor(BinarySensorEntity):
             model=self._camera.camera_type,
         )
 
-    def update(self) -> None:
+    @property
+    def is_on(self) -> bool | None:
         """Update sensor state."""
-        state = self._camera.attributes[self.entity_description.key]
+        is_on = self._camera.attributes[self.entity_description.key]
         _LOGGER.debug(
             "'%s' %s = %s",
             self._camera.attributes["name"],
             self.entity_description.key,
-            state,
+            is_on,
         )
         if self.entity_description.key == TYPE_BATTERY:
-            state = state != "ok"
-        self._attr_is_on = state
+            is_on = is_on != "ok"
+        return is_on
