@@ -8,13 +8,14 @@ import asyncio
 from collections.abc import Awaitable, Callable
 import contextlib
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohttp.hdrs import METH_HEAD, METH_POST
+from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
 from aiowithings import NotificationCategory, WithingsClient
 from aiowithings.util import to_enum
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components import cloud
 from homeassistant.components.application_credentials import (
@@ -147,7 +148,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _refresh_token() -> str:
         await oauth_session.async_ensure_token_valid()
-        return oauth_session.token[CONF_ACCESS_TOKEN]
+        token = oauth_session.token[CONF_ACCESS_TOKEN]
+        if TYPE_CHECKING:
+            assert isinstance(token, str)
+        return token
 
     client.refresh_token_function = _refresh_token
     coordinators: dict[str, WithingsDataUpdateCoordinator] = {
@@ -179,8 +183,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             webhook_url = await _async_cloudhook_generate_url(hass, entry)
         else:
             webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
-
-        if not webhook_url.startswith("https://"):
+        url = URL(webhook_url)
+        if url.scheme != "https" or url.port != 443:
             LOGGER.warning(
                 "Webhook not registered - "
                 "https and port 443 is required to register the webhook"
@@ -197,6 +201,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             webhook_name,
             entry.data[CONF_WEBHOOK_ID],
             get_webhook_handler(coordinators),
+            allowed_methods=[METH_POST],
         )
 
         await async_subscribe_webhooks(client, webhook_url)
@@ -324,14 +329,6 @@ def get_webhook_handler(
     async def async_webhook_handler(
         hass: HomeAssistant, webhook_id: str, request: Request
     ) -> Response | None:
-        # Handle http head calls to the path.
-        # When creating a notify subscription, Withings will check that the endpoint is running by sending a HEAD request.
-        if request.method == METH_HEAD:
-            return Response()
-
-        if request.method != METH_POST:
-            return json_message_response("Invalid method", message_code=2)
-
         # Handle http post calls to the path.
         if not request.body_exists:
             return json_message_response("No request body", message_code=12)

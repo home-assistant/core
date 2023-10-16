@@ -9,7 +9,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 
 async def async_setup_entry(
@@ -18,17 +17,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
-    setup_platform(hass, {}, async_add_entities)
-
-
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities_callback: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the demo remotes."""
-    add_entities_callback(
+    async_add_entities(
         [
             DemoRemote("Remote One", False, None),
             DemoRemote("Remote Two", True, "mdi:remote"),
