@@ -235,7 +235,7 @@ async def _async_delete_todo_items(entity: TodoListEntity, call: ServiceCall) ->
         for summary in summaries:
             item = _find_by_summary(summary, entity.todo_items)
             if not item:
-                raise ValueError(f"Unable to find To-do item with summariy'{summary}")
+                raise ValueError(f"Unable to find To-do item with summary '{summary}")
             uids.append(item.uid)
     await entity.async_delete_todo_items(uids=uids)
 
