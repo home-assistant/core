@@ -217,6 +217,10 @@ class ZWaveServices:
                         vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
                             vol.Coerce(int), BITMASK_SCHEMA, cv.string
                         ),
+                        vol.Optional(const.ATTR_VALUE_SIZE): vol.All(
+                            vol.Coerce(int), vol.Range(min=1, max=4)
+                        ),
+                        vol.Optional(const.ATTR_VALUE_FORMAT): cv.boolean,
                     },
                     cv.has_at_least_one_key(
                         ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
@@ -413,7 +417,28 @@ class ZWaveServices:
         property_or_property_name = service.data[const.ATTR_CONFIG_PARAMETER]
         property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
         new_value = service.data[const.ATTR_CONFIG_VALUE]
+        value_size = service.data.get(const.ATTR_VALUE_SIZE)
+        value_format = service.data.get(const.ATTR_VALUE_FORMAT)
 
+        nodes_without_endpoints = []
+        for node in nodes:
+            if endpoint not in node.endpoints:
+                nodes.remove(node)
+                nodes_without_endpoints.append(node)
+        if nodes_without_endpoints and _LOGGER.isEnabledFor(logging.WARNING):
+            _LOGGER.warning(
+                (
+                    "The following nodes do not have endpoint %x and will be "
+                    "skipped: %s"
+                ),
+                endpoint,
+                nodes_without_endpoints,
+            )
+
+        # If value_size isn't provided, we will use the utility function which includes
+        # additional checks and protections. If it is provided, we will use the
+        # node.async_set_raw_config_parameter_value method which calls the
+        # Configuration CC set API.
         results = await asyncio.gather(
             *(
                 async_set_config_parameter(
@@ -422,6 +447,14 @@ class ZWaveServices:
                     property_or_property_name,
                     property_key=property_key,
                     endpoint=endpoint,
+                )
+                if value_size is None
+                else node.endpoints[endpoint].async_set_raw_config_parameter_value(
+                    new_value,
+                    property_or_property_name,
+                    property_key=property_key,
+                    value_size=value_size,
+                    value_format=value_format,
                 )
                 for node in nodes
             ),
