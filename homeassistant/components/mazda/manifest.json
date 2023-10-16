@@ -2,8 +2,7 @@
   "domain": "mazda",
   "name": "Mazda Connected Services",
   "codeowners": [],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mazda",
-  "integration_type": "system",
-  "iot_class": "cloud_polling",
-  "requirements": []
+  "iot_class": "cloud_polling"
 }

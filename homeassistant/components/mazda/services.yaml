@@ -1,0 +1,30 @@
+send_poi:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: mazda
+    latitude:
+      example: 12.34567
+      required: true
+      selector:
+        number:
+          min: -90
+          max: 90
+          unit_of_measurement: °
+          mode: box
+    longitude:
+      example: -34.56789
+      required: true
+      selector:
+        number:
+          min: -180
+          max: 180
+          unit_of_measurement: °
+          mode: box
+    poi_name:
+      example: Work
+      required: true
+      selector:
+        text:
