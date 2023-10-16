@@ -1,17 +1,13 @@
 """Mock inputs for tests."""
-from homeassistant.components.acaia.const import (
-    CONF_IS_NEW_STYLE_SCALE,
-    CONF_MAC_ADDRESS,
-    CONF_NAME,
-    DOMAIN,
-)
+from homeassistant.components.acaia.const import CONF_IS_NEW_STYLE_SCALE, DOMAIN
+from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from tests.common import MockConfigEntry
 
 USER_INPUT = {
-    CONF_MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
+    CONF_MAC: "aa:bb:cc:dd:ee:ff",
     CONF_NAME: "LUNAR_1234",
     CONF_IS_NEW_STYLE_SCALE: True,
 }

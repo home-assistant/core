@@ -6,7 +6,7 @@
         "description": "Set a name of your choosing and enter the mac address of your scale.",
         "data": {
           "name": "Display Name",
-          "mac_address": "MAC Address",
+          "mac": "MAC Address",
           "is_new_style_scale": "Is this a newer (than 2021) scale? If the integration fails to work, try toggling this setting."
         }
       }
