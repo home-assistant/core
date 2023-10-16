@@ -56,7 +56,7 @@ class GeniusBattery(GeniusDevice, SensorEntity):
 
         self._state_attr = state_attr
 
-        self._attr_name = f"{device.type} {device.id}"
+        self._attr_name = f"{device.type} ({device.id}) in {device.assigned_zone.name}"
 
     @property
     def icon(self) -> str:
