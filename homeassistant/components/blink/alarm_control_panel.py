@@ -35,7 +35,7 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][config.entry_id]
 
     sync_modules = []
-    for sync_name, sync_module in await data.sync.items():
+    for sync_name, sync_module in data.sync.items():
         sync_modules.append(BlinkSyncModuleHA(data, sync_name, sync_module))
     async_add_entities(sync_modules, update_before_add=True)
 
