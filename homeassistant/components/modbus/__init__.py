@@ -232,8 +232,8 @@ CLIMATE_SCHEMA = vol.All(
         {
             vol.Required(CONF_TARGET_TEMP): cv.positive_int,
             vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
-            vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
-            vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
+            vol.Optional(CONF_MAX_TEMP, default=35): number_validator,
+            vol.Optional(CONF_MIN_TEMP, default=5): number_validator,
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
