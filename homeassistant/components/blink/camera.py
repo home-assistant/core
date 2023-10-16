@@ -30,7 +30,7 @@ async def async_setup_entry(
     """Set up a Blink Camera."""
     data = hass.data[DOMAIN][config.entry_id]
     entities = [
-        BlinkCamera(data, name, camera) for name, camera in data.cameras.items()
+        BlinkCamera(data, name, camera) for name, camera in await data.cameras.items()
     ]
 
     async_add_entities(entities)
