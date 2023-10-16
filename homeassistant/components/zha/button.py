@@ -148,7 +148,7 @@ class ZHAAttributeButton(ZhaEntity, ButtonEntity):
 class FrostLockResetButton(ZHAAttributeButton):
     """Defines a ZHA frost lock reset button."""
 
-    UNIQUE_ID_SUFFIX = "reset_frost_lock"
+    _unique_id_suffix = "reset_frost_lock"
     _attribute_name = "frost_lock_reset"
     _attr_name = "Frost lock reset"
     _attribute_value = 0
@@ -162,7 +162,7 @@ class FrostLockResetButton(ZHAAttributeButton):
 class NoPresenceStatusResetButton(ZHAAttributeButton):
     """Defines a ZHA no presence status reset button."""
 
-    UNIQUE_ID_SUFFIX = "reset_no_presence_status"
+    _unique_id_suffix = "reset_no_presence_status"
     _attribute_name = "reset_no_presence_status"
     _attr_name = "Presence status reset"
     _attribute_value = 1
@@ -174,7 +174,7 @@ class NoPresenceStatusResetButton(ZHAAttributeButton):
 class AqaraPetFeederFeedButton(ZHAAttributeButton):
     """Defines a feed button for the aqara c1 pet feeder."""
 
-    UNIQUE_ID_SUFFIX = "feeding"
+    _unique_id_suffix = "feeding"
     _attribute_name = "feeding"
     _attr_name = "Feed"
     _attribute_value = 1
@@ -186,7 +186,7 @@ class AqaraPetFeederFeedButton(ZHAAttributeButton):
 class AqaraSelfTestButton(ZHAAttributeButton):
     """Defines a ZHA self-test button for Aqara smoke sensors."""
 
-    UNIQUE_ID_SUFFIX = "self_test"
+    _unique_id_suffix = "self_test"
     _attribute_name = "self_test"
     _attr_name = "Self-test"
     _attribute_value = 1

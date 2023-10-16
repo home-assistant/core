@@ -455,7 +455,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
 class AqaraMotionDetectionInterval(ZHANumberConfigurationEntity):
     """Representation of a ZHA motion detection interval configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "detection_interval"
+    _unique_id_suffix = "detection_interval"
     _attr_native_min_value: float = 2
     _attr_native_max_value: float = 65535
     _zcl_attribute: str = "detection_interval"
@@ -467,7 +467,7 @@ class AqaraMotionDetectionInterval(ZHANumberConfigurationEntity):
 class OnOffTransitionTimeConfigurationEntity(ZHANumberConfigurationEntity):
     """Representation of a ZHA on off transition time configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "on_off_transition_time"
+    _unique_id_suffix = "on_off_transition_time"
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFF
     _zcl_attribute: str = "on_off_transition_time"
@@ -479,7 +479,7 @@ class OnOffTransitionTimeConfigurationEntity(ZHANumberConfigurationEntity):
 class OnLevelConfigurationEntity(ZHANumberConfigurationEntity):
     """Representation of a ZHA on level configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "on_level"
+    _unique_id_suffix = "on_level"
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFF
     _zcl_attribute: str = "on_level"
@@ -491,7 +491,7 @@ class OnLevelConfigurationEntity(ZHANumberConfigurationEntity):
 class OnTransitionTimeConfigurationEntity(ZHANumberConfigurationEntity):
     """Representation of a ZHA on transition time configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "on_transition_time"
+    _unique_id_suffix = "on_transition_time"
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFE
     _zcl_attribute: str = "on_transition_time"
@@ -503,7 +503,7 @@ class OnTransitionTimeConfigurationEntity(ZHANumberConfigurationEntity):
 class OffTransitionTimeConfigurationEntity(ZHANumberConfigurationEntity):
     """Representation of a ZHA off transition time configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "off_transition_time"
+    _unique_id_suffix = "off_transition_time"
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFE
     _zcl_attribute: str = "off_transition_time"
@@ -515,7 +515,7 @@ class OffTransitionTimeConfigurationEntity(ZHANumberConfigurationEntity):
 class DefaultMoveRateConfigurationEntity(ZHANumberConfigurationEntity):
     """Representation of a ZHA default move rate configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "default_move_rate"
+    _unique_id_suffix = "default_move_rate"
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFE
     _zcl_attribute: str = "default_move_rate"
@@ -527,7 +527,7 @@ class DefaultMoveRateConfigurationEntity(ZHANumberConfigurationEntity):
 class StartUpCurrentLevelConfigurationEntity(ZHANumberConfigurationEntity):
     """Representation of a ZHA startup current level configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "start_up_current_level"
+    _unique_id_suffix = "start_up_current_level"
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFF
     _zcl_attribute: str = "start_up_current_level"
@@ -539,7 +539,7 @@ class StartUpCurrentLevelConfigurationEntity(ZHANumberConfigurationEntity):
 class StartUpColorTemperatureConfigurationEntity(ZHANumberConfigurationEntity):
     """Representation of a ZHA startup color temperature configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "start_up_color_temperature"
+    _unique_id_suffix = "start_up_color_temperature"
     _attr_native_min_value: float = 153
     _attr_native_max_value: float = 500
     _zcl_attribute: str = "start_up_color_temperature"
@@ -569,7 +569,7 @@ class StartUpColorTemperatureConfigurationEntity(ZHANumberConfigurationEntity):
 class TimerDurationMinutes(ZHANumberConfigurationEntity):
     """Representation of a ZHA timer duration configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "timer_duration"
+    _unique_id_suffix = "timer_duration"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0x00
@@ -584,7 +584,7 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity):
 class FilterLifeTime(ZHANumberConfigurationEntity):
     """Representation of a ZHA filter lifetime configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "filter_life_time"
+    _unique_id_suffix = "filter_life_time"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0x00
@@ -603,7 +603,7 @@ class FilterLifeTime(ZHANumberConfigurationEntity):
 class TiRouterTransmitPower(ZHANumberConfigurationEntity):
     """Representation of a ZHA TI transmit power configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "transmit_power"
+    _unique_id_suffix = "transmit_power"
     _attr_native_min_value: float = -20
     _attr_native_max_value: float = 20
     _zcl_attribute: str = "transmit_power"
@@ -615,7 +615,7 @@ class TiRouterTransmitPower(ZHANumberConfigurationEntity):
 class InovelliRemoteDimmingUpSpeed(ZHANumberConfigurationEntity):
     """Inovelli remote dimming up speed configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "dimming_speed_up_remote"
+    _unique_id_suffix = "dimming_speed_up_remote"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
@@ -629,7 +629,7 @@ class InovelliRemoteDimmingUpSpeed(ZHANumberConfigurationEntity):
 class InovelliButtonDelay(ZHANumberConfigurationEntity):
     """Inovelli button delay configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "dimming_speed_up_local"
+    _unique_id_suffix = "dimming_speed_up_local"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
@@ -643,7 +643,7 @@ class InovelliButtonDelay(ZHANumberConfigurationEntity):
 class InovelliLocalDimmingUpSpeed(ZHANumberConfigurationEntity):
     """Inovelli local dimming up speed configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "dimming_speed_up_local"
+    _unique_id_suffix = "dimming_speed_up_local"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
@@ -657,7 +657,7 @@ class InovelliLocalDimmingUpSpeed(ZHANumberConfigurationEntity):
 class InovelliLocalRampRateOffToOn(ZHANumberConfigurationEntity):
     """Inovelli off to on local ramp rate configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "ramp_rate_off_to_on_local"
+    _unique_id_suffix = "ramp_rate_off_to_on_local"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
@@ -671,7 +671,7 @@ class InovelliLocalRampRateOffToOn(ZHANumberConfigurationEntity):
 class InovelliRemoteDimmingSpeedOffToOn(ZHANumberConfigurationEntity):
     """Inovelli off to on remote ramp rate configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "ramp_rate_off_to_on_remote"
+    _unique_id_suffix = "ramp_rate_off_to_on_remote"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
@@ -685,7 +685,7 @@ class InovelliRemoteDimmingSpeedOffToOn(ZHANumberConfigurationEntity):
 class InovelliRemoteDimmingDownSpeed(ZHANumberConfigurationEntity):
     """Inovelli remote dimming down speed configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "dimming_speed_down_remote"
+    _unique_id_suffix = "dimming_speed_down_remote"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
@@ -699,7 +699,7 @@ class InovelliRemoteDimmingDownSpeed(ZHANumberConfigurationEntity):
 class InovelliLocalDimmingDownSpeed(ZHANumberConfigurationEntity):
     """Inovelli local dimming down speed configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "dimming_speed_down_local"
+    _unique_id_suffix = "dimming_speed_down_local"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
@@ -713,7 +713,7 @@ class InovelliLocalDimmingDownSpeed(ZHANumberConfigurationEntity):
 class InovelliLocalRampRateOnToOff(ZHANumberConfigurationEntity):
     """Inovelli local on to off ramp rate configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "ramp_rate_on_to_off_local"
+    _unique_id_suffix = "ramp_rate_on_to_off_local"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
@@ -727,7 +727,7 @@ class InovelliLocalRampRateOnToOff(ZHANumberConfigurationEntity):
 class InovelliRemoteDimmingSpeedOnToOff(ZHANumberConfigurationEntity):
     """Inovelli remote on to off ramp rate configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "ramp_rate_on_to_off_remote"
+    _unique_id_suffix = "ramp_rate_on_to_off_remote"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
@@ -741,7 +741,7 @@ class InovelliRemoteDimmingSpeedOnToOff(ZHANumberConfigurationEntity):
 class InovelliMinimumLoadDimmingLevel(ZHANumberConfigurationEntity):
     """Inovelli minimum load dimming level configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "minimum_level"
+    _unique_id_suffix = "minimum_level"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 1
@@ -755,7 +755,7 @@ class InovelliMinimumLoadDimmingLevel(ZHANumberConfigurationEntity):
 class InovelliMaximumLoadDimmingLevel(ZHANumberConfigurationEntity):
     """Inovelli maximum load dimming level configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "maximum_level"
+    _unique_id_suffix = "maximum_level"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 2
@@ -769,7 +769,7 @@ class InovelliMaximumLoadDimmingLevel(ZHANumberConfigurationEntity):
 class InovelliAutoShutoffTimer(ZHANumberConfigurationEntity):
     """Inovelli automatic switch shutoff timer configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "auto_off_timer"
+    _unique_id_suffix = "auto_off_timer"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0
@@ -783,7 +783,7 @@ class InovelliAutoShutoffTimer(ZHANumberConfigurationEntity):
 class InovelliLoadLevelIndicatorTimeout(ZHANumberConfigurationEntity):
     """Inovelli load level indicator timeout configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "load_level_indicator_timeout"
+    _unique_id_suffix = "load_level_indicator_timeout"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0
@@ -797,7 +797,7 @@ class InovelliLoadLevelIndicatorTimeout(ZHANumberConfigurationEntity):
 class InovelliDefaultAllLEDOnColor(ZHANumberConfigurationEntity):
     """Inovelli default all led color when on configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "led_color_when_on"
+    _unique_id_suffix = "led_color_when_on"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
@@ -811,7 +811,7 @@ class InovelliDefaultAllLEDOnColor(ZHANumberConfigurationEntity):
 class InovelliDefaultAllLEDOffColor(ZHANumberConfigurationEntity):
     """Inovelli default all led color when off configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "led_color_when_off"
+    _unique_id_suffix = "led_color_when_off"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
@@ -825,7 +825,7 @@ class InovelliDefaultAllLEDOffColor(ZHANumberConfigurationEntity):
 class InovelliDefaultAllLEDOnIntensity(ZHANumberConfigurationEntity):
     """Inovelli default all led intensity when on configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "led_intensity_when_on"
+    _unique_id_suffix = "led_intensity_when_on"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
@@ -839,7 +839,7 @@ class InovelliDefaultAllLEDOnIntensity(ZHANumberConfigurationEntity):
 class InovelliDefaultAllLEDOffIntensity(ZHANumberConfigurationEntity):
     """Inovelli default all led intensity when off configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "led_intensity_when_off"
+    _unique_id_suffix = "led_intensity_when_off"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
@@ -853,7 +853,7 @@ class InovelliDefaultAllLEDOffIntensity(ZHANumberConfigurationEntity):
 class InovelliDoubleTapUpLevel(ZHANumberConfigurationEntity):
     """Inovelli double tap up level configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "double_tap_up_level"
+    _unique_id_suffix = "double_tap_up_level"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 2
@@ -867,7 +867,7 @@ class InovelliDoubleTapUpLevel(ZHANumberConfigurationEntity):
 class InovelliDoubleTapDownLevel(ZHANumberConfigurationEntity):
     """Inovelli double tap down level configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "double_tap_down_level"
+    _unique_id_suffix = "double_tap_down_level"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
@@ -883,7 +883,7 @@ class InovelliDoubleTapDownLevel(ZHANumberConfigurationEntity):
 class AqaraPetFeederServingSize(ZHANumberConfigurationEntity):
     """Aqara pet feeder serving size configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "serving_size"
+    _unique_id_suffix = "serving_size"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_min_value: float = 1
     _attr_native_max_value: float = 10
@@ -900,7 +900,7 @@ class AqaraPetFeederServingSize(ZHANumberConfigurationEntity):
 class AqaraPetFeederPortionWeight(ZHANumberConfigurationEntity):
     """Aqara pet feeder portion weight configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "portion_weight"
+    _unique_id_suffix = "portion_weight"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_min_value: float = 1
     _attr_native_max_value: float = 100
@@ -918,7 +918,7 @@ class AqaraPetFeederPortionWeight(ZHANumberConfigurationEntity):
 class AqaraThermostatAwayTemp(ZHANumberConfigurationEntity):
     """Aqara away preset temperature configuration entity."""
 
-    UNIQUE_ID_SUFFIX = "away_preset_temperature"
+    _unique_id_suffix = "away_preset_temperature"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_min_value: float = 5
     _attr_native_max_value: float = 30

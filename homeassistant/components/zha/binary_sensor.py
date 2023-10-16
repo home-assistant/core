@@ -256,7 +256,7 @@ class FrostLock(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "frost_lock"
-    UNIQUE_ID_SUFFIX = "frost_lock"
+    _unique_id_suffix = "frost_lock"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.LOCK
     _attr_name: str = "Frost lock"
 
@@ -266,7 +266,7 @@ class ReplaceFilter(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "replace_filter"
-    UNIQUE_ID_SUFFIX = "replace_filter"
+    _unique_id_suffix = "replace_filter"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
     _attr_name: str = "Replace filter"
@@ -277,7 +277,7 @@ class AqaraPetFeederErrorDetected(BinarySensor):
     """ZHA aqara pet feeder error detected binary sensor."""
 
     SENSOR_ATTR = "error_detected"
-    UNIQUE_ID_SUFFIX = "error_detected"
+    _unique_id_suffix = "error_detected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
     _attr_name: str = "Error detected"
 
@@ -290,7 +290,7 @@ class XiaomiPlugConsumerConnected(BinarySensor):
     """ZHA Xiaomi plug consumer connected binary sensor."""
 
     SENSOR_ATTR = "consumer_connected"
-    UNIQUE_ID_SUFFIX = "consumer_connected"
+    _unique_id_suffix = "consumer_connected"
     _attr_name: str = "Consumer connected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PLUG
 
@@ -300,7 +300,7 @@ class AqaraThermostatWindowOpen(BinarySensor):
     """ZHA Aqara thermostat window open binary sensor."""
 
     SENSOR_ATTR = "window_open"
-    UNIQUE_ID_SUFFIX = "window_open"
+    _unique_id_suffix = "window_open"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.WINDOW
     _attr_name: str = "Window open"
 
@@ -310,7 +310,7 @@ class AqaraThermostatValveAlarm(BinarySensor):
     """ZHA Aqara thermostat valve alarm binary sensor."""
 
     SENSOR_ATTR = "valve_alarm"
-    UNIQUE_ID_SUFFIX = "valve_alarm"
+    _unique_id_suffix = "valve_alarm"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
     _attr_name: str = "Valve alarm"
 
@@ -322,7 +322,7 @@ class AqaraThermostatCalibrated(BinarySensor):
     """ZHA Aqara thermostat calibrated binary sensor."""
 
     SENSOR_ATTR = "calibrated"
-    UNIQUE_ID_SUFFIX = "calibrated"
+    _unique_id_suffix = "calibrated"
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
     _attr_name: str = "Calibrated"
 
@@ -334,7 +334,7 @@ class AqaraThermostatExternalSensor(BinarySensor):
     """ZHA Aqara thermostat external sensor binary sensor."""
 
     SENSOR_ATTR = "sensor"
-    UNIQUE_ID_SUFFIX = "sensor"
+    _unique_id_suffix = "sensor"
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
     _attr_name: str = "External sensor"
 
@@ -344,6 +344,6 @@ class AqaraLinkageAlarmState(BinarySensor):
     """ZHA Aqara linkage alarm state binary sensor."""
 
     SENSOR_ATTR = "linkage_alarm_state"
-    UNIQUE_ID_SUFFIX = "linkage_alarm_state"
+    _unique_id_suffix = "linkage_alarm_state"
     _attr_name: str = "Linkage alarm state"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.SMOKE

@@ -46,7 +46,7 @@ DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY = 0.5
 class BaseZhaEntity(LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
-    UNIQUE_ID_SUFFIX: str | None = None
+    _unique_id_suffix: str | None = None
     """suffix to add to the unique_id of the entity. Used for multi
        entities using the same cluster handler/cluster id for the entity."""
 
@@ -56,8 +56,8 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     def __init__(self, unique_id: str, zha_device: ZHADevice, **kwargs: Any) -> None:
         """Init ZHA entity."""
         self._unique_id: str = unique_id
-        if self.UNIQUE_ID_SUFFIX:
-            self._unique_id += f"-{self.UNIQUE_ID_SUFFIX}"
+        if self._unique_id_suffix:
+            self._unique_id += f"-{self._unique_id_suffix}"
         self._state: Any = None
         self._extra_state_attributes: dict[str, Any] = {}
         self._zha_device = zha_device
