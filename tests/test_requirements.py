@@ -42,7 +42,6 @@ async def test_requirement_installed_in_venv(hass: HomeAssistant) -> None:
             "package==0.0.1",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
             timeout=60,
-            no_cache_dir=False,
         )
 
 
@@ -64,7 +63,6 @@ async def test_requirement_installed_in_deps(hass: HomeAssistant) -> None:
             target=hass.config.path("deps"),
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
             timeout=60,
-            no_cache_dir=False,
         )
 
 
@@ -379,10 +377,8 @@ async def test_install_with_wheels_index(hass: HomeAssistant) -> None:
 
         assert mock_inst.call_args == call(
             "hello==1.0.0",
-            find_links="https://wheels.hass.io/test",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
             timeout=60,
-            no_cache_dir=True,
         )
 
 
@@ -406,7 +402,6 @@ async def test_install_on_docker(hass: HomeAssistant) -> None:
             "hello==1.0.0",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
             timeout=60,
-            no_cache_dir=True,
         )
 
 
