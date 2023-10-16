@@ -12,7 +12,11 @@ from zwave_js_server.const import SET_VALUE_SUCCESS, CommandClass, CommandStatus
 from zwave_js_server.exceptions import FailedZWaveCommand, SetValueFailed
 from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.model.value import ValueDataType, get_value_id_str
+from zwave_js_server.model.value import (
+    ConfigurationValueFormat,
+    ValueDataType,
+    get_value_id_str,
+)
 from zwave_js_server.util.multicast import async_multicast_set_value
 from zwave_js_server.util.node import (
     async_bulk_set_partial_config_parameters,
@@ -217,10 +221,12 @@ class ZWaveServices:
                         vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
                             vol.Coerce(int), BITMASK_SCHEMA, cv.string
                         ),
-                        vol.Optional(const.ATTR_VALUE_SIZE): vol.All(
+                        vol.Inclusive(const.ATTR_VALUE_SIZE): vol.All(
                             vol.Coerce(int), vol.Range(min=1, max=4)
                         ),
-                        vol.Optional(const.ATTR_VALUE_FORMAT): cv.boolean,
+                        vol.Inclusive(const.ATTR_VALUE_FORMAT): vol.Coerce(
+                            ConfigurationValueFormat
+                        ),
                     },
                     cv.has_at_least_one_key(
                         ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
