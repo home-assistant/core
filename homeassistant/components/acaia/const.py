@@ -1,10 +1,12 @@
 """Constants for component."""
-DOMAIN = "acaia"
-CONF_IS_NEW_STYLE_SCALE = "is_new_style_scale"
+from typing import Final
 
-BATTERY_LEVEL = "battery_level"
-WEIGHT = "weight"
-UNITS = "units"
+DOMAIN: Final = "acaia"
+CONF_IS_NEW_STYLE_SCALE: Final = "is_new_style_scale"
 
-GRAMS = "grams"
-OUNCES = "ounces"
+BATTERY_LEVEL: Final = "battery_level"
+WEIGHT: Final = "weight"
+UNITS: Final = "units"
+
+GRAMS: Final = "grams"
+OUNCES: Final = "ounces"
