@@ -28,7 +28,7 @@ async def test_loading_sensors(hass: HomeAssistant, init_integration) -> None:
 
 async def test_srp_entity(hass: HomeAssistant, init_integration) -> None:
     """Test the SrpEntity."""
-    usage_state = hass.states.get("sensor.test_home_energy_consumption_energy")
+    usage_state = hass.states.get("sensor.srp_energy_energy_usage")
     assert usage_state.state == "150.8"
 
     # Validate attributions
