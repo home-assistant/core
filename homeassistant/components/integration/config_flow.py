@@ -27,7 +27,6 @@ from .const import (
 )
 
 UNIT_PREFIXES = [
-    selector.SelectOptionDict(value="none", label="none"),
     selector.SelectOptionDict(value="k", label="k (kilo)"),
     selector.SelectOptionDict(value="M", label="M (mega)"),
     selector.SelectOptionDict(value="G", label="G (giga)"),
@@ -74,7 +73,7 @@ CONFIG_SCHEMA = vol.Schema(
                 unit_of_measurement="decimals",
             ),
         ),
-        vol.Required(CONF_UNIT_PREFIX, default="none"): selector.SelectSelector(
+        vol.Optional(CONF_UNIT_PREFIX): selector.SelectSelector(
             selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
         vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(
