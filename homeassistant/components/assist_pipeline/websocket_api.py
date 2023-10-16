@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import language as language_util
 
-from .const import DOMAIN
+from .const import DEFAULT_PIPELINE_TIMEOUT, DEFAULT_WAKE_WORD_TIMEOUT, DOMAIN
 from .error import PipelineNotFound
 from .pipeline import (
     AudioSettings,
@@ -29,9 +29,6 @@ from .pipeline import (
     WakeWordSettings,
     async_get_pipeline,
 )
-
-DEFAULT_TIMEOUT = 60 * 5  # seconds
-DEFAULT_WAKE_WORD_TIMEOUT = 3  # seconds
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,7 +114,7 @@ async def websocket_run(
         )
         return
 
-    timeout = msg.get("timeout", DEFAULT_TIMEOUT)
+    timeout = msg.get("timeout", DEFAULT_PIPELINE_TIMEOUT)
     start_stage = PipelineStage(msg["start_stage"])
     end_stage = PipelineStage(msg["end_stage"])
     handler_id: int | None = None
