@@ -14,7 +14,7 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -56,19 +56,27 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
         await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
         return True
 
+    async def async_setup_unload_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+    ) -> bool:
+        return True
+
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(
         hass,
         MockModule(
             TEST_DOMAIN,
             async_setup_entry=async_setup_entry_init,
+            async_unload_entry=async_setup_unload_entry,
         ),
     )
 
 
 async def create_mock_platform(
-    hass: HomeAssistant, entities: list[TodoListEntity]
-) -> None:
+    hass: HomeAssistant,
+    entities: list[TodoListEntity],
+) -> MockConfigEntry:
     """Create a todo platform with the specified entities."""
 
     async def async_setup_entry_platform(
@@ -89,6 +97,8 @@ async def create_mock_platform(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+    return config_entry
 
 
 @pytest.fixture(name="test_entity")
@@ -111,6 +121,19 @@ def mock_test_entity() -> TodoListEntity:
     entity1.async_delete_todo_items = AsyncMock()
     entity1.async_move_todo_item = AsyncMock()
     return entity1
+
+
+async def test_unload_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test listing items in a To-do list."""
+
+    config_entry = await create_mock_platform(hass, [])
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
 async def test_list_todo_items(
@@ -579,11 +602,24 @@ async def test_move_todo_item_service_raises(
 
 
 @pytest.mark.parametrize(
-    ("item_data", "expected_error"),
+    ("item_data", "expected_status", "expected_error"),
     [
-        ({}, "required key not provided"),
-        ({"pos": "2"}, "required key not provided"),
-        ({"uid": "item-1", "pos": "-2"}, "value must be at least 0"),
+        (
+            {"entity_id": "todo.unknown", "uid": "item-1"},
+            "not_found",
+            "Entity not found",
+        ),
+        ({"entity_id": "todo.entity1"}, "invalid_format", "required key not provided"),
+        (
+            {"entity_id": "todo.entity1", "pos": "2"},
+            "invalid_format",
+            "required key not provided",
+        ),
+        (
+            {"entity_id": "todo.entity1", "uid": "item-1", "pos": "-2"},
+            "invalid_format",
+            "value must be at least 0",
+        ),
     ],
 )
 async def test_move_todo_item_service_invalid_input(
@@ -591,6 +627,7 @@ async def test_move_todo_item_service_invalid_input(
     test_entity: TodoListEntity,
     hass_ws_client: WebSocketGenerator,
     item_data: dict[str, Any],
+    expected_status: str,
     expected_error: str,
 ) -> None:
     """Test invalid input for the move item service."""
@@ -602,13 +639,12 @@ async def test_move_todo_item_service_invalid_input(
         {
             "id": 1,
             "type": "todo/item/move",
-            "entity_id": "todo.entity1",
             **item_data,
         }
     )
     resp = await client.receive_json()
     assert resp.get("id") == 1
-    assert resp.get("error", {}).get("code") == "invalid_format"
+    assert resp.get("error", {}).get("code") == expected_status
     assert expected_error in resp.get("error", {}).get("message")
 
 
