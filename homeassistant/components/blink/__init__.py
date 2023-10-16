@@ -183,11 +183,12 @@ async def async_handle_save_video_service(
         return
     try:
         all_cameras = hass.data[DOMAIN][entry.entry_id].api.cameras
-        if camera_name in all_cameras:
-            await all_cameras[camera_name].video_to_file(video_path)
 
     except OSError as err:
         _LOGGER.error("Can't write image to file: %s", err)
+
+    if camera_name in all_cameras:
+        await all_cameras[camera_name].video_to_file(video_path)
 
 
 async def async_handle_save_recent_clips_service(
@@ -202,7 +203,8 @@ async def async_handle_save_recent_clips_service(
 
     try:
         all_cameras = hass.data[DOMAIN][entry.entry_id].api.cameras
-        if camera_name in all_cameras:
-            await all_cameras[camera_name].save_recent_clips(output_dir=clips_dir)
     except OSError as err:
         _LOGGER.error("Can't write recent clips to directory: %s", err)
+
+    if camera_name in all_cameras:
+        await all_cameras[camera_name].save_recent_clips(output_dir=clips_dir)
