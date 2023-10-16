@@ -55,7 +55,7 @@ BURNER_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ViCareBinarySensorEntityDescription(
         key="burner_active",
         name="Burner",
-        icon="mdi:fire",
+        icon="mdi:gas-burner",
         device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getActive(),
     ),
