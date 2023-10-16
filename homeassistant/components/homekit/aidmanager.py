@@ -130,11 +130,10 @@ class AccessoryAidStorage:
         ):
             return
         old_system_unique_id = get_system_unique_id(new_entry, old_unique_id)
-        if not (old_aid := self.allocations.pop(old_system_unique_id, None)):
-            return
-        new_system_unique_id = get_system_unique_id(new_entry, new_entry.unique_id)
-        self.allocations[new_system_unique_id] = old_aid
-        self.async_schedule_save()
+        if old_aid := self.allocations.pop(old_system_unique_id, None):
+            new_system_unique_id = get_system_unique_id(new_entry, new_entry.unique_id)
+            self.allocations[new_system_unique_id] = old_aid
+            self.async_schedule_save()
 
     def get_or_allocate_aid(self, unique_id: str | None, entity_id: str) -> int:
         """Allocate (and return) a new aid for an accessory."""

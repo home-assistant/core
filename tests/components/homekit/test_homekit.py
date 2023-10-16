@@ -2265,6 +2265,7 @@ async def test_handle_unique_id_change(
         await homekit.async_start()
         await hass.async_block_till_done()
     assert homekit.aid_storage.allocations == {"demo.light.unique": 176109313}
+    entity_registry.async_update_entity(light.entity_id, device_class="any")
     entity_registry.async_update_entity(light.entity_id, new_unique_id="new_unique")
     await hass.async_block_till_done()
     # Verify that the old unique id is removed from the allocations
