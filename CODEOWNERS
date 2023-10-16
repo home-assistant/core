@@ -1019,6 +1019,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/rejseplanen/ @DarkFox
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
+/homeassistant/components/remote_rpi_gpio/ @antonverburg
 /homeassistant/components/renault/ @epenet
 /tests/components/renault/ @epenet
 /homeassistant/components/renson/ @jimmyd-be
