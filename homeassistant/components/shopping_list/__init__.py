@@ -328,7 +328,6 @@ class ShoppingData:
 
     async def async_move_item(self, uid: str, pos: int) -> None:
         """Re-order a shopping list item."""
-        # Build a map of each item id to its position within the list
         found_item: dict[str, Any] | None = None
         for idx, itm in enumerate(self.items):
             if cast(str, itm["id"]) == uid:
