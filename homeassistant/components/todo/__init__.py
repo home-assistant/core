@@ -183,44 +183,6 @@ async def websocket_handle_todo_item_list(
     )
 
 
-def _find_by_summary(summary: str, items: list[TodoItem] | None) -> TodoItem | None:
-    """Find a To-do List item by summary name."""
-    for item in items or ():
-        if item.summary == summary:
-            return item
-    return None
-
-
-async def _async_create_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
-    """Add an item to the To-do list."""
-    await entity.async_create_todo_item(item=TodoItem.from_dict(call.data))
-
-
-async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
-    """Update an item in the To-do list."""
-    item = TodoItem.from_dict(call.data)
-    if not item.uid:
-        found = _find_by_summary(call.data["summary"], entity.todo_items)
-        if not found:
-            raise ValueError(f"Unable to find To-do item with summary '{item.summary}'")
-        item.uid = found.uid
-
-    await entity.async_update_todo_item(item=item)
-
-
-async def _async_delete_todo_items(entity: TodoListEntity, call: ServiceCall) -> None:
-    """Delete an item in the To-do list."""
-    uids = call.data.get("uid", [])
-    if not uids:
-        summaries = call.data.get("summary", [])
-        for summary in summaries:
-            item = _find_by_summary(summary, entity.todo_items)
-            if not item:
-                raise ValueError(f"Unable to find To-do item with summary '{summary}")
-            uids.append(item.uid)
-    await entity.async_delete_todo_items(uids=uids)
-
-
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "todo/item/move",
@@ -258,3 +220,41 @@ async def websocket_handle_todo_item_move(
         connection.send_error(msg["id"], "failed", str(ex))
     else:
         connection.send_result(msg["id"])
+
+
+def _find_by_summary(summary: str, items: list[TodoItem] | None) -> TodoItem | None:
+    """Find a To-do List item by summary name."""
+    for item in items or ():
+        if item.summary == summary:
+            return item
+    return None
+
+
+async def _async_create_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
+    """Add an item to the To-do list."""
+    await entity.async_create_todo_item(item=TodoItem.from_dict(call.data))
+
+
+async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
+    """Update an item in the To-do list."""
+    item = TodoItem.from_dict(call.data)
+    if not item.uid:
+        found = _find_by_summary(call.data["summary"], entity.todo_items)
+        if not found:
+            raise ValueError(f"Unable to find To-do item with summary '{item.summary}'")
+        item.uid = found.uid
+
+    await entity.async_update_todo_item(item=item)
+
+
+async def _async_delete_todo_items(entity: TodoListEntity, call: ServiceCall) -> None:
+    """Delete an item in the To-do list."""
+    uids = call.data.get("uid", [])
+    if not uids:
+        summaries = call.data.get("summary", [])
+        for summary in summaries:
+            item = _find_by_summary(summary, entity.todo_items)
+            if not item:
+                raise ValueError(f"Unable to find To-do item with summary '{summary}")
+            uids.append(item.uid)
+    await entity.async_delete_todo_items(uids=uids)
