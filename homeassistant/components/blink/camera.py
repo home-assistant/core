@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+import contextlib
 import logging
 from typing import Any
 
@@ -32,7 +33,7 @@ async def async_setup_entry(
         BlinkCamera(data, name, camera) for name, camera in data.cameras.items()
     ]
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
@@ -44,7 +45,7 @@ class BlinkCamera(Camera):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, data, name, camera):
+    def __init__(self, data, name, camera) -> None:
         """Initialize a camera."""
         super().__init__()
         self.data = data
@@ -91,11 +92,9 @@ class BlinkCamera(Camera):
 
     async def trigger_camera(self) -> None:
         """Trigger camera to take a snapshot."""
-        try:
+        with contextlib.suppress(asyncio.TimeoutError):
             await self._camera.snap_picture()
-            self.async_schedule_update_ha_state(force_refresh=True)
-        except asyncio.TimeoutError:
-            pass
+        self.async_write_ha_state()
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
