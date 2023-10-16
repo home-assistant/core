@@ -373,6 +373,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
         """Add battery service if available"""
         state = self.hass.states.get(self.entity_id)
+        self._update_available_from_state(state)
         assert state is not None
         entity_attributes = state.attributes
         battery_found = entity_attributes.get(ATTR_BATTERY_LEVEL)
@@ -415,16 +416,20 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             CHAR_STATUS_LOW_BATTERY, value=0
         )
 
+    def _update_available_from_state(self, new_state: State | None) -> None:
+        """Update the available property based on the state."""
+        self._available = new_state is not None and new_state.state != STATE_UNAVAILABLE
+
     @property
     def available(self) -> bool:
         """Return if accessory is available."""
-        state = self.hass.states.get(self.entity_id)
-        return state is not None and state.state != STATE_UNAVAILABLE
+        return self._available
 
     async def run(self) -> None:
         """Handle accessory driver started event."""
         if state := self.hass.states.get(self.entity_id):
             self.async_update_state_callback(state)
+        self._update_available_from_state(state)
         self._subscriptions.append(
             async_track_state_change_event(
                 self.hass, [self.entity_id], self.async_update_event_state_callback
@@ -474,6 +479,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         """Handle state change event listener callback."""
         new_state = event.data["new_state"]
         old_state = event.data["old_state"]
+        self._update_available_from_state(new_state)
         if (
             new_state
             and old_state

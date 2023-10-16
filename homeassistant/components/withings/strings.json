@@ -72,6 +72,18 @@
       "pulse_wave_velocity": {
         "name": "Pulse wave velocity"
       },
+      "vo2_max": {
+        "name": "VO2 max"
+      },
+      "extracellular_water": {
+        "name": "Extracellular water"
+      },
+      "intracellular_water": {
+        "name": "Intracellular water"
+      },
+      "vascular_age": {
+        "name": "Vascular age"
+      },
       "breathing_disturbances_intensity": {
         "name": "Breathing disturbances intensity"
       },

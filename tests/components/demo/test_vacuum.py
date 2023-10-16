@@ -1,5 +1,6 @@
 """The tests for the Demo vacuum platform."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -35,6 +36,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -52,8 +54,18 @@ ENTITY_VACUUM_NONE = f"{DOMAIN}.{DEMO_VACUUM_NONE}".lower()
 ENTITY_VACUUM_STATE = f"{DOMAIN}.{DEMO_VACUUM_STATE}".lower()
 
 
+@pytest.fixture
+async def vacuum_only() -> None:
+    """Enable only the datetime platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.VACUUM],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_demo_vacuum(hass, disable_platforms):
+async def setup_demo_vacuum(hass: HomeAssistant, vacuum_only: None):
     """Initialize setup demo vacuum."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "demo"}})
     await hass.async_block_till_done()
