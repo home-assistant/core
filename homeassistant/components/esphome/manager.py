@@ -450,7 +450,9 @@ class ESPHomeManager:
 
         try:
             entity_infos, services = await cli.list_entities_services()
-            await entry_data.async_update_static_infos(hass, entry, entity_infos)
+            await entry_data.async_update_static_infos(
+                hass, entry, entity_infos, device_info.mac_address
+            )
             await _setup_services(hass, entry_data, services)
             await cli.subscribe_states(entry_data.async_update_state)
             await cli.subscribe_service_calls(self.async_on_service_call)
@@ -544,7 +546,10 @@ class ESPHomeManager:
         self.reconnect_logic = reconnect_logic
 
         infos, services = await entry_data.async_load_from_store()
-        await entry_data.async_update_static_infos(hass, entry, infos)
+        if entry.unique_id:
+            await entry_data.async_update_static_infos(
+                hass, entry, infos, entry.unique_id.upper()
+            )
         await _setup_services(hass, entry_data, services)
 
         if entry_data.device_info is not None and entry_data.device_info.name:
