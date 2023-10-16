@@ -150,7 +150,7 @@ class TodoListEntity(Entity):
         """Delete an item in the To-do list."""
         raise NotImplementedError()
 
-    async def async_move_todo_item(self, uid: str, previous_uid: str | None) -> None:
+    async def async_move_todo_item(self, uid: str, pos: int) -> None:
         """Move an item in the To-do list."""
         raise NotImplementedError()
 
@@ -226,7 +226,7 @@ async def _async_delete_todo_items(entity: TodoListEntity, call: ServiceCall) ->
         vol.Required("type"): "todo/item/move",
         vol.Required("entity_id"): cv.entity_id,
         vol.Required("uid"): cv.string,
-        vol.Optional("previous_uid"): cv.string,
+        vol.Optional("pos", default=0): cv.positive_int,
     }
 )
 @websocket_api.async_response
@@ -253,9 +253,7 @@ async def websocket_handle_todo_item_move(
         return
 
     try:
-        await entity.async_move_todo_item(
-            uid=msg["uid"], previous_uid=msg.get("previous_uid")
-        )
+        await entity.async_move_todo_item(uid=msg["uid"], pos=msg["pos"])
     except HomeAssistantError as ex:
         connection.send_error(msg["id"], "failed", str(ex))
     else:

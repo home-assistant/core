@@ -326,27 +326,18 @@ class ShoppingData:
             context=context,
         )
 
-    async def async_move_item(self, uid: str, previous: str | None = None) -> None:
+    async def async_move_item(self, uid: str, pos: int) -> None:
         """Re-order a shopping list item."""
-        if uid == previous:
-            return
         # Build a map of each item id to its position within the list
-        item_idx: dict[str, int] = {}
+        found_item: dict[str, Any] | None = None
         for idx, itm in enumerate(self.items):
-            item_id = cast(str, itm["id"])
-            item_idx[item_id] = idx
-        if uid not in item_idx:
+            if cast(str, itm["id"]) == uid:
+                found_item = itm
+                self.items.pop(idx)
+                break
+        if not found_item:
             raise NoMatchingShoppingListItem(f"Item '{uid}' not found in shopping list")
-        if previous and previous not in item_idx:
-            raise NoMatchingShoppingListItem(
-                f"Item '{previous}' not found in shopping list"
-            )
-        dst_idx = item_idx[previous] + 1 if previous else 0
-        src_idx = item_idx[uid]
-        src_item = self.items.pop(src_idx)
-        if dst_idx > src_idx:
-            dst_idx -= 1
-        self.items.insert(dst_idx, src_item)
+        self.items.insert(pos, found_item)
         await self.hass.async_add_executor_job(self.save)
         self._async_notify()
         self.hass.bus.async_fire(

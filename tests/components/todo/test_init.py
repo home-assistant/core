@@ -539,7 +539,7 @@ async def test_move_todo_item_service_by_id(
             "type": "todo/item/move",
             "entity_id": "todo.entity1",
             "uid": "item-1",
-            "previous_uid": "item-2",
+            "pos": "1",
         }
     )
     resp = await client.receive_json()
@@ -549,7 +549,7 @@ async def test_move_todo_item_service_by_id(
     args = test_entity.async_move_todo_item.call_args
     assert args
     assert args.kwargs.get("uid") == "item-1"
-    assert args.kwargs.get("previous_uid") == "item-2"
+    assert args.kwargs.get("pos") == 1
 
 
 async def test_move_todo_item_service_raises(
@@ -569,7 +569,7 @@ async def test_move_todo_item_service_raises(
             "type": "todo/item/move",
             "entity_id": "todo.entity1",
             "uid": "item-1",
-            "previous_uid": "item-2",
+            "pos": "1",
         }
     )
     resp = await client.receive_json()
@@ -582,7 +582,8 @@ async def test_move_todo_item_service_raises(
     ("item_data", "expected_error"),
     [
         ({}, "required key not provided"),
-        ({"previous_uid": "2"}, "required key not provided"),
+        ({"pos": "2"}, "required key not provided"),
+        ({"uid": "item-1", "pos": "-2"}, "value must be at least 0"),
     ],
 )
 async def test_move_todo_item_service_invalid_input(
@@ -676,7 +677,7 @@ async def test_move_item_unsupported(
             "type": "todo/item/move",
             "entity_id": "todo.entity1",
             "uid": "item-1",
-            "previous_uid": "item-2",
+            "pos": "1",
         }
     )
     resp = await client.receive_json()
