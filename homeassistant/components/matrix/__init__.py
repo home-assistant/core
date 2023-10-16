@@ -55,8 +55,8 @@ CONF_COMMANDS = "commands"
 CONF_WORD = "word"
 CONF_EXPRESSION = "expression"
 
-CONF_USERNAME_REGEX = "@[^:]*:.*"
-CONF_ROOMS_REGEX = "[!|#][^:]*:.*"
+CONF_USERNAME_REGEX = "^@[^:]*:.*"
+CONF_ROOMS_REGEX = "^[!|#][^:]*:.*"
 
 EVENT_MATRIX_COMMAND = "matrix_command"
 
