@@ -1079,6 +1079,7 @@ class EntityRegistry:
                     supported_features=entity["supported_features"],
                     translation_key=entity["translation_key"],
                     unique_id=entity["unique_id"],
+                    previous_unique_id=entity["previous_unique_id"],
                     unit_of_measurement=entity["unit_of_measurement"],
                 )
             for entity in data["deleted_entities"]:
@@ -1134,6 +1135,7 @@ class EntityRegistry:
                 "supported_features": entry.supported_features,
                 "translation_key": entry.translation_key,
                 "unique_id": entry.unique_id,
+                "previous_unique_id": entry.previous_unique_id,
                 "unit_of_measurement": entry.unit_of_measurement,
             }
             for entry in self.entities.values()
