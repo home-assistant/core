@@ -1,6 +1,7 @@
 """Test shopping list todo platform."""
 
 from collections.abc import Awaitable, Callable
+from typing import Any
 
 import pytest
 
@@ -50,6 +51,33 @@ async def ws_get_items(
         return resp.get("result", {}).get("items", [])
 
     return get
+
+
+@pytest.fixture
+async def ws_move_item(
+    hass_ws_client: WebSocketGenerator,
+    ws_req_id: Callable[[], int],
+) -> Callable[[str, str | None], Awaitable[None]]:
+    """Fixture to move an item in the todo list."""
+
+    async def move(uid: str, previous: str | None) -> dict[str, Any]:
+        # Fetch items using To-do platform
+        client = await hass_ws_client()
+        id = ws_req_id()
+        data = {
+            "id": id,
+            "type": "todo/item/move",
+            "entity_id": TEST_ENTITY,
+            "uid": uid,
+        }
+        if previous is not None:
+            data["previous_uid"] = previous
+        await client.send_json(data)
+        resp = await client.receive_json()
+        assert resp.get("id") == id
+        return resp
+
+    return move
 
 
 async def test_get_items(
@@ -405,6 +433,7 @@ async def test_move_item(
     sl_setup: None,
     ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_move_item: Callable[[str, str | None], Awaitable[dict[str, Any]]],
     src_idx: int,
     dst_idx: int | None,
     expected_items: list[str],
@@ -429,19 +458,12 @@ async def test_move_item(
     assert summaries == ["item 1", "item 2", "item 3", "item 4"]
 
     # Prepare items for moving
-    data = {
-        "uid": uids[src_idx],
-    }
+    previous: str | None = None
     if dst_idx is not None:
-        data["previous_uid"] = uids[dst_idx]
+        previous = uids[dst_idx]
 
-    await hass.services.async_call(
-        TODO_DOMAIN,
-        "move_item",
-        data,
-        target={"entity_id": TEST_ENTITY},
-        blocking=True,
-    )
+    resp = await ws_move_item(uids[src_idx], previous)
+    assert resp.get("success")
 
     items = await ws_get_items()
     assert len(items) == 4
@@ -452,8 +474,8 @@ async def test_move_item(
 async def test_move_invalid_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_move_item: Callable[[str, str | None], Awaitable[dict[str, Any]]],
 ) -> None:
     """Test moving a todo item within the list."""
 
@@ -471,26 +493,12 @@ async def test_move_invalid_item(
     assert item["summary"] == "soda"
     uid = item["uid"]
 
-    with pytest.raises(HomeAssistantError, match="could not be re-ordered"):
-        await hass.services.async_call(
-            TODO_DOMAIN,
-            "move_item",
-            {
-                "uid": uid,
-                "previous_uid": "unknown",
-            },
-            target={"entity_id": TEST_ENTITY},
-            blocking=True,
-        )
+    resp = await ws_move_item(uid, "unknown")
+    assert not resp.get("success")
+    assert resp.get("error", {}).get("code") == "failed"
+    assert "could not be re-ordered" in resp.get("error", {}).get("message")
 
-    with pytest.raises(HomeAssistantError, match="could not be re-ordered"):
-        await hass.services.async_call(
-            TODO_DOMAIN,
-            "move_item",
-            {
-                "uid": "unknown",
-                "previous_uid": uid,
-            },
-            target={"entity_id": TEST_ENTITY},
-            blocking=True,
-        )
+    resp = await ws_move_item("unknown", uid)
+    assert not resp.get("success")
+    assert resp.get("error", {}).get("code") == "failed"
+    assert "could not be re-ordered" in resp.get("error", {}).get("message")

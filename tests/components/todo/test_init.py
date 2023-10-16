@@ -526,21 +526,25 @@ async def test_delete_todo_item_service_by_summary_not_found(
 async def test_move_todo_item_service_by_id(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test moving an item in a To-do list."""
 
     await create_mock_platform(hass, [test_entity])
 
-    await hass.services.async_call(
-        DOMAIN,
-        "move_item",
+    client = await hass_ws_client()
+    await client.send_json(
         {
+            "id": 1,
+            "type": "todo/item/move",
+            "entity_id": "todo.entity1",
             "uid": "item-1",
             "previous_uid": "item-2",
-        },
-        target={"entity_id": "todo.entity1"},
-        blocking=True,
+        }
     )
+    resp = await client.receive_json()
+    assert resp.get("id") == 1
+    assert resp.get("success")
 
     args = test_entity.async_move_todo_item.call_args
     assert args
@@ -551,41 +555,40 @@ async def test_move_todo_item_service_by_id(
 async def test_move_todo_item_service_raises(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test moving an item in a To-do list that raises an error."""
 
     await create_mock_platform(hass, [test_entity])
 
     test_entity.async_move_todo_item.side_effect = HomeAssistantError("Ooops")
-    with pytest.raises(HomeAssistantError, match="Ooops"):
-        await hass.services.async_call(
-            DOMAIN,
-            "move_item",
-            {
-                "uid": "item-1",
-                "previous_uid": "item-2",
-            },
-            target={"entity_id": "todo.entity1"},
-            blocking=True,
-        )
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "todo/item/move",
+            "entity_id": "todo.entity1",
+            "uid": "item-1",
+            "previous_uid": "item-2",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp.get("id") == 1
+    assert resp.get("error", {}).get("code") == "failed"
+    assert resp.get("error", {}).get("message") == "Ooops"
 
 
 @pytest.mark.parametrize(
     ("item_data", "expected_error"),
     [
-        ({}, "must contain at least one"),
-        ({"uid": "1", "summary": "Item #1"}, "must contain at most one of"),
-        (
-            {"uid": "1", "previous_uid": "2", "previous_summary": "Item #2"},
-            "must contain at most one of",
-        ),
-        ({"uid": "1", "previous_summary": "Item #2"}, "must contain at most one of"),
-        ({"summary": "1", "previous_uid": "Item #2"}, "must contain at most one of"),
+        ({}, "required key not provided"),
+        ({"previous_uid": "2"}, "required key not provided"),
     ],
 )
 async def test_move_todo_item_service_invalid_input(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
+    hass_ws_client: WebSocketGenerator,
     item_data: dict[str, Any],
     expected_error: str,
 ) -> None:
@@ -593,96 +596,19 @@ async def test_move_todo_item_service_invalid_input(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(vol.Invalid, match=expected_error):
-        await hass.services.async_call(
-            DOMAIN,
-            "move_item",
-            item_data,
-            target={"entity_id": "todo.entity1"},
-            blocking=True,
-        )
-
-
-async def test_move_todo_item_service_by_summary(
-    hass: HomeAssistant,
-    test_entity: TodoListEntity,
-) -> None:
-    """Test moving an item in a To-do-list by summary."""
-
-    await create_mock_platform(hass, [test_entity])
-
-    await hass.services.async_call(
-        DOMAIN,
-        "move_item",
+    client = await hass_ws_client()
+    await client.send_json(
         {
-            "summary": "Item #1",
-        },
-        target={"entity_id": "todo.entity1"},
-        blocking=True,
+            "id": 1,
+            "type": "todo/item/move",
+            "entity_id": "todo.entity1",
+            **item_data,
+        }
     )
-
-    args = test_entity.async_move_todo_item.call_args
-    assert args
-    assert args.kwargs.get("uid") == "1"
-    assert args.kwargs.get("previous_uid") is None
-
-    await hass.services.async_call(
-        DOMAIN,
-        "move_item",
-        {
-            "summary": "Item #1",
-            "previous_summary": "Item #2",
-        },
-        target={"entity_id": "todo.entity1"},
-        blocking=True,
-    )
-
-    args = test_entity.async_move_todo_item.call_args
-    assert args
-    assert args
-    assert args.kwargs.get("uid") == "1"
-    assert args.kwargs.get("previous_uid") == "2"
-
-
-async def test_move_todo_item_service_by_name_not_found(
-    hass: HomeAssistant,
-    test_entity: TodoListEntity,
-) -> None:
-    """Test moving an item in a To-do-list by summary which is not found."""
-
-    await create_mock_platform(hass, [test_entity])
-
-    with pytest.raises(ValueError, match="Unable to find"):
-        await hass.services.async_call(
-            DOMAIN,
-            "move_item",
-            {
-                "summary": "Item #7",
-            },
-            target={"entity_id": "todo.entity1"},
-            blocking=True,
-        )
-
-
-async def test_move_todo_item_service_by_name_previous_not_found(
-    hass: HomeAssistant,
-    test_entity: TodoListEntity,
-) -> None:
-    """Test moving an item in a To-do-list by summary where the previous is not found."""
-
-    await create_mock_platform(hass, [test_entity])
-
-    with pytest.raises(ValueError, match="Unable to find"):
-        await hass.services.async_call(
-            DOMAIN,
-            "move_item",
-            {
-                "summary": "Item #1",
-                "previous_summary": "Item #7",
-            },
-            target={"entity_id": "todo.entity1"},
-            blocking=True,
-        )
+    resp = await client.receive_json()
+    assert resp.get("id") == 1
+    assert resp.get("error", {}).get("code") == "invalid_format"
+    assert expected_error in resp.get("error", {}).get("message")
 
 
 @pytest.mark.parametrize(
@@ -705,13 +631,6 @@ async def test_move_todo_item_service_by_name_previous_not_found(
             {
                 "uid": "1",
                 "summary": "Updated item",
-            },
-        ),
-        (
-            "move_item",
-            {
-                "uid": "12345",
-                "previous_uid": "54321",
             },
         ),
     ],
@@ -738,3 +657,28 @@ async def test_unsupported_service(
             target={"entity_id": "todo.entity1"},
             blocking=True,
         )
+
+
+async def test_move_item_unsupported(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test invalid input for the move item service."""
+
+    entity1 = TodoListEntity()
+    entity1.entity_id = "todo.entity1"
+    await create_mock_platform(hass, [entity1])
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "todo/item/move",
+            "entity_id": "todo.entity1",
+            "uid": "item-1",
+            "previous_uid": "item-2",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp.get("id") == 1
+    assert resp.get("error", {}).get("code") == "not_supported"

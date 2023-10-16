@@ -8,10 +8,11 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api import ERR_NOT_FOUND
+from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -37,6 +38,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     websocket_api.async_register_command(hass, websocket_handle_todo_item_list)
+    websocket_api.async_register_command(hass, websocket_handle_todo_item_move)
 
     component.async_register_entity_service(
         "create_item",
@@ -79,27 +81,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
         _async_delete_todo_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
-    )
-    component.async_register_entity_service(
-        "move_item",
-        vol.All(
-            cv.make_entity_service_schema(
-                {
-                    vol.Optional("uid"): cv.string,
-                    vol.Optional("summary"): cv.string,
-                    vol.Optional("previous_uid"): cv.string,
-                    vol.Optional("previous_summary"): cv.string,
-                }
-            ),
-            cv.has_at_least_one_key("uid", "summary"),
-            cv.has_at_most_one_key("uid", "summary"),
-            cv.has_at_most_one_key("previous_uid", "previous_summary"),
-            # Don't mix and match uid and summary across items
-            cv.has_at_most_one_key("uid", "previous_summary"),
-            cv.has_at_most_one_key("previous_uid", "summary"),
-        ),
-        _async_move_todo_item,
-        required_features=[TodoListEntityFeature.MOVE_TODO_ITEM],
     )
 
     await component.async_setup(config)
@@ -240,21 +221,42 @@ async def _async_delete_todo_items(entity: TodoListEntity, call: ServiceCall) ->
     await entity.async_delete_todo_items(uids=uids)
 
 
-async def _async_move_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
-    """Move an item in the To-do list."""
-    uid = call.data.get("uid", "")
-    if not uid:
-        summary = call.data["summary"]
-        item = _find_by_summary(summary, entity.todo_items)
-        if not item:
-            raise ValueError(f"Unable to find To-do item with summary '{summary}'")
-        uid = item.uid
-    previous_uid = call.data.get("previous_uid")
-    if not previous_uid and (previous_summary := call.data.get("previous_summary")):
-        item = _find_by_summary(previous_summary, entity.todo_items)
-        if not item:
-            raise ValueError(
-                f"Unable to find To-do item with summary '{previous_summary}'"
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "todo/item/move",
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required("uid"): cv.string,
+        vol.Optional("previous_uid"): cv.string,
+    }
+)
+@websocket_api.async_response
+async def websocket_handle_todo_item_move(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle move of a To-do item within a To-do list."""
+    component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
+    if not (entity := component.get_entity(msg["entity_id"])):
+        connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
+        return
+
+    if (
+        not entity.supported_features
+        or not entity.supported_features & TodoListEntityFeature.MOVE_TODO_ITEM
+    ):
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"],
+                ERR_NOT_SUPPORTED,
+                "To-do list does not support To-do item reordering",
             )
-        previous_uid = item.uid
-    await entity.async_move_todo_item(uid=uid, previous_uid=previous_uid)
+        )
+        return
+
+    try:
+        await entity.async_move_todo_item(
+            uid=msg["uid"], previous_uid=msg.get("previous_uid")
+        )
+    except HomeAssistantError as ex:
+        connection.send_error(msg["id"], "failed", str(ex))
+    else:
+        connection.send_result(msg["id"])

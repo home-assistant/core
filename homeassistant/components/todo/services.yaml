@@ -53,22 +53,3 @@ delete_item:
     summary:
       selector:
         object:
-move_item:
-  target:
-    entity:
-      domain: todo
-      supported_features:
-        - todo.TodoListEntityFeature.MOVE_TODO_ITEM
-  fields:
-    uid:
-      selector:
-        text:
-    summary:
-      selector:
-        text:
-    previous_uid:
-      selector:
-        text:
-    previous_summary:
-      selector:
-        text:

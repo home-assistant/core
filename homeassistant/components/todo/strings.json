@@ -51,28 +51,6 @@
           "description": "The short summary that represents the To-do item."
         }
       }
-    },
-    "move_item": {
-      "name": "Re-order a To-do List Item",
-      "description": "Re-orde an existing To-do List Item within the To-do List either by its Unique Id or Summary. The item is either moved to the first position in the list or immediately following the item identified by the Previous Unique Id or Summary.",
-      "fields": {
-        "uid": {
-          "name": "To-do Item Unique Id",
-          "description": "Unique Identifier for the To-do List Item to move."
-        },
-        "summary": {
-          "name": "Summary",
-          "description": "The summary of the To-do represents the To-do item."
-        },
-        "previous_uid": {
-          "name": "Previous To-do Item Unique Id",
-          "description": "Move the To-do Item after the To-do Item with this Unique Identifier."
-        },
-        "previous_summary": {
-          "name": "Previous To-do Item Summary",
-          "description": "Move the To-do Item after the To-do Item with this Summary."
-        }
-      }
     }
   },
   "selector": {
