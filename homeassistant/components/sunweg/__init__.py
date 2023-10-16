@@ -29,7 +29,7 @@ async def async_setup_entry(
     if not await hass.async_add_executor_job(api.authenticate):
         _LOGGER.error("Username or Password may be incorrect!")
         return False
-    if DOMAIN not in hass.data.keys():
+    if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = SunWEGData(api, entry.data[CONF_PLANT_ID])
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
