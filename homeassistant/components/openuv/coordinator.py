@@ -85,6 +85,7 @@ class ProtectionWindowCoordinator(OpenUvCoordinator):
         if self.window_calculated:
             # If the window has already been calculated, return the existing data
             # (which, by default, won't call listeners) and save an API call:
+            LOGGER.debug("Protection window already calculated")
             return self.data
 
         low = self._entry.options.get(CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW)
@@ -103,6 +104,7 @@ class ProtectionWindowCoordinator(OpenUvCoordinator):
             # The OpenUV API can sometimes return a successful response that's missing
             # the protection window data; if the appropriate keys exist, mark the data
             # as valid:
+            LOGGER.debug("Protection window calculated")
             self.window_calculated = True
 
         return data
@@ -113,6 +115,7 @@ class ProtectionWindowCoordinator(OpenUvCoordinator):
         @callback
         def async_reset_window_check(_: datetime) -> None:
             """Reset the flag that indicates if the window has been calculated."""
+            LOGGER.debug("Resetting protection window check flag")
             self.window_calculated = False
 
         self._entry.async_on_unload(
