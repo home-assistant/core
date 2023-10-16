@@ -74,6 +74,7 @@ class ElectricalMeasurementClusterHandler(ClusterHandler):
         AttrReportConfig(attr="rms_voltage_max", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="ac_frequency", config=REPORT_CONFIG_OP),
         AttrReportConfig(attr="ac_frequency_max", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="power_factor", config=REPORT_CONFIG_OP),
     )
     ZCL_INIT_ATTRS = {
         "ac_current_divisor": True,
@@ -87,7 +88,6 @@ class ElectricalMeasurementClusterHandler(ClusterHandler):
         "measurement_type": True,
         "power_divisor": True,
         "power_multiplier": True,
-        "power_factor": True,
     }
 
     async def async_update(self):
