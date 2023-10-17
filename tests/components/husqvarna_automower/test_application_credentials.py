@@ -18,7 +18,6 @@ from .const import AUTOMER_DM_CONFIG, AUTOMOWER_CONFIG_DATA, AUTOMOWER_SM_SESSIO
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.asyncio
 async def setup_entity(hass: HomeAssistant):
     """Set up entity and config entry."""
 
