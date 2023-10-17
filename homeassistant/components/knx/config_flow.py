@@ -237,7 +237,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 tunnel_endpoint_ia=None,
             )
             if connection_type == CONF_KNX_TUNNELING_TCP_SECURE:
-                return await self.async_step_secure_key_source_menu_1()
+                return await self.async_step_secure_key_source_menu_tunnel()
             self.new_title = f"Tunneling @ {self._selected_tunnel}"
             return self.finish_flow()
 
@@ -314,7 +314,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 )
 
                 if selected_tunnelling_type == CONF_KNX_TUNNELING_TCP_SECURE:
-                    return await self.async_step_secure_key_source_menu_1()
+                    return await self.async_step_secure_key_source_menu_tunnel()
                 self.new_title = (
                     "Tunneling "
                     f"{'UDP' if selected_tunnelling_type == CONF_KNX_TUNNELING else 'TCP'} "
@@ -674,7 +674,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 )
                 if connection_type == CONF_KNX_ROUTING_SECURE:
                     self.new_title = f"Secure Routing as {_individual_address}"
-                    return await self.async_step_secure_key_source_menu_2()
+                    return await self.async_step_secure_key_source_menu_routing()
                 self.new_title = f"Routing as {_individual_address}"
                 return self.finish_flow()
 
@@ -703,21 +703,21 @@ class KNXCommonFlow(ABC, FlowHandler):
             step_id="routing", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_secure_key_source_menu_1(
+    async def async_step_secure_key_source_menu_tunnel(
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Show the key source menu."""
         return self.async_show_menu(
-            step_id="secure_key_source_menu_1",
+            step_id="secure_key_source_menu_tunnel",
             menu_options=["secure_knxkeys", "secure_tunnel_manual"],
         )
 
-    async def async_step_secure_key_source_menu_2(
+    async def async_step_secure_key_source_menu_routing(
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Show the key source menu."""
         return self.async_show_menu(
-            step_id="secure_key_source_menu_2",
+            step_id="secure_key_source_menu_routing",
             menu_options=["secure_knxkeys", "secure_routing_manual"],
         )
 

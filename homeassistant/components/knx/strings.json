@@ -32,7 +32,7 @@
           "local_ip": "Local IP or interface name used for the connection from Home Assistant. Leave blank to use auto-discovery."
         }
       },
-      "secure_key_source_menu_1": {
+      "secure_key_source_menu_tunnel": {
         "title": "KNX IP-Secure",
         "description": "Select how you want to configure KNX/IP Secure.",
         "menu_options": {
@@ -40,11 +40,11 @@
           "secure_tunnel_manual": "Configure IP secure credentials manually"
         }
       },
-      "secure_key_source_menu_2": {
-        "title": "[%key:component::knx::config::step::secure_key_source_menu_1::title%]",
-        "description": "[%key:component::knx::config::step::secure_key_source_menu_1::description%]",
+      "secure_key_source_menu_routing": {
+        "title": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::title%]",
+        "description": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::description%]",
         "menu_options": {
-          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_1::menu_options::secure_knxkeys%]",
+          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::menu_options::secure_knxkeys%]",
           "secure_routing_manual": "Configure IP secure backbone key manually"
         }
       },
@@ -180,20 +180,20 @@
           "local_ip": "[%key:component::knx::config::step::manual_tunnel::data_description::local_ip%]"
         }
       },
-      "secure_key_source_menu_1": {
-        "title": "[%key:component::knx::config::step::secure_key_source_menu_1::title%]",
-        "description": "[%key:component::knx::config::step::secure_key_source_menu_1::description%]",
+      "secure_key_source_menu_tunnel": {
+        "title": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::title%]",
+        "description": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::description%]",
         "menu_options": {
-          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_1::menu_options::secure_knxkeys%]",
-          "secure_tunnel_manual": "[%key:component::knx::config::step::secure_key_source_menu_1::menu_options::secure_tunnel_manual%]"
+          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::menu_options::secure_knxkeys%]",
+          "secure_tunnel_manual": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::menu_options::secure_tunnel_manual%]"
         }
       },
-      "secure_key_source_menu_2": {
-        "title": "[%key:component::knx::config::step::secure_key_source_menu_2::title%]",
-        "description": "[%key:component::knx::config::step::secure_key_source_menu_2::description%]",
+      "secure_key_source_menu_routing": {
+        "title": "[%key:component::knx::config::step::secure_key_source_menu_routing::title%]",
+        "description": "[%key:component::knx::config::step::secure_key_source_menu_routing::description%]",
         "menu_options": {
-          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_2::menu_options::secure_knxkeys%]",
-          "secure_routing_manual": "[%key:component::knx::config::step::secure_key_source_menu_2::menu_options::secure_routing_manual%]"
+          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_routing::menu_options::secure_knxkeys%]",
+          "secure_routing_manual": "[%key:component::knx::config::step::secure_key_source_menu_routing::menu_options::secure_routing_manual%]"
         }
       },
       "secure_knxkeys": {
