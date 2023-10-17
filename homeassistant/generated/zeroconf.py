@@ -364,6 +364,11 @@ ZEROCONF = {
             "domain": "forked_daapd",
         },
     ],
+    "_deako._tcp.local.": [
+        {
+            "domain": "deako",
+        },
+    ],
     "_dkapi._tcp.local.": [
         {
             "domain": "daikin",
