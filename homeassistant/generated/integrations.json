@@ -1109,6 +1109,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "deako": {
+      "name": "Deako",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "debugpy": {
       "name": "Remote Python Debugger",
       "integration_type": "service",

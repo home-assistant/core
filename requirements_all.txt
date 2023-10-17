@@ -1791,6 +1791,9 @@ pydaikin==2.13.1
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
 
+# homeassistant.components.deako
+pydeako==0.4.0
+
 # homeassistant.components.deconz
 pydeconz==116
 

@@ -415,6 +415,11 @@ ZEROCONF = {
             "domain": "forked_daapd",
         },
     ],
+    "_deako._tcp.local.": [
+        {
+            "domain": "deako",
+        },
+    ],
     "_devialet-http._tcp.local.": [
         {
             "domain": "devialet",
