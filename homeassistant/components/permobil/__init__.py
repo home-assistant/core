@@ -42,8 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         p_api.self_authenticate()
     except MyPermobilClientException as err:
-        _LOGGER.error("Permobil: %s", err)
-        raise ConfigEntryAuthFailed(f"Permobil Config error for {p_api.email}") from err
+        _LOGGER.error("Error authenticating  %s", err)
+        raise ConfigEntryAuthFailed(f"Config error for {p_api.email}") from err
 
     # create the coordinator with the API object
     coordinator = MyPermobilCoordinator(hass, p_api)

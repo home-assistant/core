@@ -132,9 +132,6 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             if user_input is not None:
-                if not user_input.get(CONF_CODE):
-                    raise InvalidAuth("empty code")
-
                 self.p_api.set_code(user_input[CONF_CODE])
                 self.data.update(user_input)
                 token, ttl = await self.p_api.request_application_token()
@@ -146,9 +143,6 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # or the backend returned an error when trying to validate the code
             _LOGGER.error("Error verifying code: %s", err)
             errors["base"] = "invalid_code"
-        except InvalidAuth as err:
-            _LOGGER.error("Error verifying code: %s", err)
-            errors["base"] = "empty_code"
 
         if errors or user_input is None:
             return self.async_show_form(

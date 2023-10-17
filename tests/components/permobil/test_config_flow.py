@@ -92,19 +92,6 @@ async def test_flow_init(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
 
-async def test_form_empty_code(hass: HomeAssistant) -> None:
-    """Test we handle empty code."""
-    _result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "email_code"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        _result["flow_id"],
-        user_input={CONF_CODE: EMPTY},
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"].get("base") == "empty_code"
-
-
 async def test_form_invalid_region_api(hass: HomeAssistant) -> None:
     """Test we handle invalid region."""
     with patch(
