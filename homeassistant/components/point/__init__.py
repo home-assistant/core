@@ -277,7 +277,8 @@ class MinutPointEntity(Entity):
             sw_version=device["firmware"]["installed"],
             via_device=(DOMAIN, device["home"]),
         )
-        self._attr_name = f"{self._name} {device_class.capitalize()}"
+        if device_class:
+            self._attr_name = f"{self._name} {device_class.capitalize()}"
 
     def __str__(self):
         """Return string representation of device."""

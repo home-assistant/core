@@ -181,8 +181,7 @@ class MockWakeWordEntity(wake_word.WakeWordDetectionEntity):
     url_path = "wake_word.test"
     _attr_name = "test"
 
-    @property
-    def supported_wake_words(self) -> list[wake_word.WakeWord]:
+    async def get_supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
         return [wake_word.WakeWord(id="test_ww", name="Test Wake Word")]
 
@@ -191,7 +190,7 @@ class MockWakeWordEntity(wake_word.WakeWordDetectionEntity):
     ) -> wake_word.DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps."""
         if wake_word_id is None:
-            wake_word_id = self.supported_wake_words[0].id
+            wake_word_id = (await self.get_supported_wake_words())[0].id
         async for chunk, timestamp in stream:
             if chunk.startswith(b"wake word"):
                 return wake_word.DetectionResult(

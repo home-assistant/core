@@ -11,7 +11,7 @@ METHODS = {
 }
 
 
-class HassEnforceSuperCallChecker(BaseChecker):  # type: ignore[misc]
+class HassEnforceSuperCallChecker(BaseChecker):
     """Checker for super calls."""
 
     name = "hass_enforce_super_call"

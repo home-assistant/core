@@ -72,7 +72,7 @@ async def test_legacy_migration_already_imported(
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.waqi_de_jongweg_utrecht")
+    state = hass.states.get("sensor.de_jongweg_utrecht")
     assert state.state == "29"
 
     hass.async_create_task(
@@ -116,7 +116,7 @@ async def test_sensor_id_migration(
     )
     assert len(entities) == 1
     assert hass.states.get("sensor.waqi_4584")
-    assert hass.states.get("sensor.waqi_de_jongweg_utrecht") is None
+    assert hass.states.get("sensor.de_jongweg_utrecht") is None
     assert entities[0].unique_id == "4584_air_quality"
 
 
@@ -132,7 +132,7 @@ async def test_sensor(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.waqi_de_jongweg_utrecht")
+    state = hass.states.get("sensor.de_jongweg_utrecht")
     assert state.state == "29"
 
 

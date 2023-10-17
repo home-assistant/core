@@ -211,11 +211,15 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 return
 
         try:
-            available_firmware_updates = (
-                await self.driver.controller.async_get_available_firmware_updates(
-                    self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
+            # Retrieve all firmware updates including non-stable ones but filter
+            # non-stable channels out
+            available_firmware_updates = [
+                update
+                for update in await self.driver.controller.async_get_available_firmware_updates(
+                    self.node, API_KEY_FIRMWARE_UPDATE_SERVICE, True
                 )
-            )
+                if update.channel == "stable"
+            ]
         except FailedZWaveCommand as err:
             LOGGER.debug(
                 "Failed to get firmware updates for node %s: %s",

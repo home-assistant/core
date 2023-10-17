@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.comelit.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PIN
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -39,7 +39,8 @@ async def test_user(hass: HomeAssistant) -> None:
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_HOST] == "fake_host"
-        assert result["data"][CONF_PIN] == "1234"
+        assert result["data"][CONF_PORT] == 80
+        assert result["data"][CONF_PIN] == 1234
         assert not result["result"].unique_id
         await hass.async_block_till_done()
 
@@ -66,6 +67,10 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
     with patch(
         "aiocomelit.api.ComeliteSerialBridgeApi.login",
         side_effect=side_effect,
+    ), patch(
+        "aiocomelit.api.ComeliteSerialBridgeApi.logout",
+    ), patch(
+        "homeassistant.components.comelit.async_setup_entry"
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
