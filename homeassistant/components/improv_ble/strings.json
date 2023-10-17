@@ -18,11 +18,11 @@
         "description": "Choose next step.",
         "menu_options": {
           "identify": "Identify device",
-          "provision": "Connect device to WiFi"
+          "provision": "Connect device to a Wi-Fi network"
         }
       },
       "provision": {
-        "description": "Enter WiFi credentials to connect the device to your network.",
+        "description": "Enter Wi-Fi credentials to connect the device to your network.",
         "data": {
           "password": "Password",
           "ssid": "SSID"
@@ -31,18 +31,18 @@
     },
     "progress": {
       "authorize": "The device requires authorization, please press its authorization button or consult the device's manual for how to proceed.",
-      "provisioning": "The device is connecting to the WiFi network."
+      "provisioning": "The device is connecting to the Wi-Fi network."
     },
     "error": {
-      "unable_to_connect": "The device could not connect to the WiFi network. Check that the SSID and password are correct and try again."
+      "unable_to_connect": "The device could not connect to the Wi-Fi network. Check that the SSID and password are correct and try again."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "characteristic_missing": "The device can't be connected to a WiFi network, it may already be connected.",
+      "characteristic_missing": "The device is either already connected to Wi-Fi, or no longer able to connect to Wi-Fi. If you want to connect it to another network, try factory resetting it first.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "provision_successful": "The device has successfully connected to WiFi.",
-      "provision_successful_url": "The device has successfully connected to WiFi.\n\nPlease visit {url} to finish setup.",
+      "provision_successful": "The device has successfully connected to the Wi-Fi network.",
+      "provision_successful_url": "The device has successfully connected to the Wi-Fi netowrk.\n\nPlease visit {url} to finish setup.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
