@@ -163,7 +163,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         try:
             event_type = _VOICE_ASSISTANT_EVENT_TYPES.from_hass(event.type)
         except KeyError:
-            _LOGGER.warning("Received unknown pipeline event type: %s", event.type)
+            _LOGGER.debug("Received unknown pipeline event type: %s", event.type)
             return
 
         data_to_send = None
