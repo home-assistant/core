@@ -435,7 +435,7 @@ class FlowManager(abc.ABC):
         """Raise if the step does not exist."""
         method = f"async_step_{step_id}"
 
-        if not hasattr(self, method):
+        if not hasattr(flow, method):
             self._async_remove_flow_progress(flow.flow_id)
             raise UnknownStep(
                 f"Handler {self.__class__.__name__} doesn't support step {step_id}"
