@@ -58,7 +58,6 @@ async def setup_entity(hass: HomeAssistant):
     return config_entry
 
 
-@pytest.mark.asyncio
 async def test_application_credentials(hass: HomeAssistant):
     """Test application credentials."""
     await setup_entity(hass)
