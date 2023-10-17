@@ -50,7 +50,9 @@ async def test_fan_add_feature_at_runtime_at_runtime(hass: HomeAssistant) -> Non
     fan_state = hass.states.get("fan.living_room_fan")
     assert (
         fan_state.attributes[ATTR_SUPPORTED_FEATURES]
-        is FanEntityFeature.SET_SPEED | FanEntityFeature.DIRECTION
+        is FanEntityFeature.SET_SPEED
+        | FanEntityFeature.DIRECTION
+        | FanEntityFeature.OSCILLATE
     )
     fan_state = hass.states.get("fan.ceiling_fan")
     assert fan_state.attributes[ATTR_SUPPORTED_FEATURES] is FanEntityFeature.SET_SPEED
