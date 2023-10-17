@@ -8,6 +8,7 @@ from aiovodafone import VodafoneStationApi, VodafoneStationDevice, exceptions
 from homeassistant.components.device_tracker import DEFAULT_CONSIDER_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -122,3 +123,22 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     def signal_device_new(self) -> str:
         """Event specific per Vodafone Station entry to signal new device."""
         return f"{DOMAIN}-device-new-{self._id}"
+
+    @property
+    def serial_number(self) -> str:
+        """Device serial number."""
+        return self.data.sensors["sys_serial_number"]
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Set device info."""
+        sensors_data = self.data.sensors
+        return DeviceInfo(
+            configuration_url=self.api.base_url,
+            identifiers={(DOMAIN, self.serial_number)},
+            name=f"Vodafone Station ({self.serial_number})",
+            manufacturer="Vodafone",
+            model=sensors_data.get("sys_model_name"),
+            hw_version=sensors_data["sys_hardware_version"],
+            sw_version=sensors_data["sys_firmware_version"],
+        )

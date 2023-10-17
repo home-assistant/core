@@ -1,11 +1,12 @@
 """The ViCare integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
 import os
+from typing import Any
 
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device
@@ -59,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def vicare_login(hass, entry_data):
+def vicare_login(hass: HomeAssistant, entry_data: Mapping[str, Any]) -> PyViCare:
     """Login via PyVicare API."""
     vicare_api = PyViCare()
     vicare_api.setCacheDuration(DEFAULT_SCAN_INTERVAL)
@@ -72,7 +73,7 @@ def vicare_login(hass, entry_data):
     return vicare_api
 
 
-def setup_vicare_api(hass, entry):
+def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
     vicare_api = vicare_login(hass, entry.data)
 

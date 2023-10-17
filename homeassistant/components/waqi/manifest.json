@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/waqi",
   "iot_class": "cloud_polling",
-  "loggers": ["waqiasync"],
-  "requirements": ["aiowaqi==0.2.1"]
+  "loggers": ["aiowaqi"],
+  "requirements": ["aiowaqi==2.0.0"]
 }

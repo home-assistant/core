@@ -77,7 +77,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
             vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
-            vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
+            vol.Optional(CONF_UNIT_PREFIX): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
@@ -169,17 +169,13 @@ async def async_setup_entry(
     else:
         device_info = None
 
-    unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
-    if unit_prefix == "none":
-        unit_prefix = None
-
     integral = IntegrationSensor(
         integration_method=config_entry.options[CONF_METHOD],
         name=config_entry.title,
         round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
         source_entity=source_entity_id,
         unique_id=config_entry.entry_id,
-        unit_prefix=unit_prefix,
+        unit_prefix=config_entry.options.get(CONF_UNIT_PREFIX),
         unit_time=config_entry.options[CONF_UNIT_TIME],
         device_info=device_info,
     )
@@ -200,7 +196,7 @@ async def async_setup_platform(
         round_digits=config[CONF_ROUND_DIGITS],
         source_entity=config[CONF_SOURCE_SENSOR],
         unique_id=config.get(CONF_UNIQUE_ID),
-        unit_prefix=config[CONF_UNIT_PREFIX],
+        unit_prefix=config.get(CONF_UNIT_PREFIX),
         unit_time=config[CONF_UNIT_TIME],
     )
 

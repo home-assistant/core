@@ -65,9 +65,13 @@ from .const import (
     DEFAULT_OPTIMISTIC,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
-from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -190,18 +194,6 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
     _entity_id_format = water_heater.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the water heater device."""
-        MqttTemperatureControlEntity.__init__(
-            self, hass, config, config_entry, discovery_data
-        )
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""
@@ -292,10 +284,10 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
                 _LOGGER.error("Invalid %s mode: %s", mode_list, payload)
             else:
                 setattr(self, attr, payload)
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_current_operation"})
         def handle_current_mode_received(msg: ReceiveMessage) -> None:
             """Handle receiving operation mode via MQTT."""
             handle_mode_received(

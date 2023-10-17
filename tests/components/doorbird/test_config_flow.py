@@ -1,4 +1,5 @@
 """Test the DoorBird config flow."""
+from ipaddress import ip_address
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -84,8 +85,8 @@ async def test_form_zeroconf_wrong_oui(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.8",
-            addresses=["192.168.1.8"],
+            ip_address=ip_address("192.168.1.8"),
+            ip_addresses=[ip_address("192.168.1.8")],
             hostname="mock_hostname",
             name="Doorstation - abc123._axis-video._tcp.local.",
             port=None,
@@ -104,8 +105,8 @@ async def test_form_zeroconf_link_local_ignored(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="169.254.103.61",
-            addresses=["169.254.103.61"],
+            ip_address=ip_address("169.254.103.61"),
+            ip_addresses=[ip_address("169.254.103.61")],
             hostname="mock_hostname",
             name="Doorstation - abc123._axis-video._tcp.local.",
             port=None,
@@ -131,8 +132,8 @@ async def test_form_zeroconf_ipv4_address(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="4.4.4.4",
-            addresses=["4.4.4.4"],
+            ip_address=ip_address("4.4.4.4"),
+            ip_addresses=[ip_address("4.4.4.4")],
             hostname="mock_hostname",
             name="Doorstation - abc123._axis-video._tcp.local.",
             port=None,
@@ -152,8 +153,8 @@ async def test_form_zeroconf_non_ipv4_ignored(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="fd00::b27c:63bb:cc85:4ea0",
-            addresses=["fd00::b27c:63bb:cc85:4ea0"],
+            ip_address=ip_address("fd00::b27c:63bb:cc85:4ea0"),
+            ip_addresses=[ip_address("fd00::b27c:63bb:cc85:4ea0")],
             hostname="mock_hostname",
             name="Doorstation - abc123._axis-video._tcp.local.",
             port=None,
@@ -179,8 +180,8 @@ async def test_form_zeroconf_correct_oui(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.1.5",
-                addresses=["192.168.1.5"],
+                ip_address=ip_address("192.168.1.5"),
+                ip_addresses=[ip_address("192.168.1.5")],
                 hostname="mock_hostname",
                 name="Doorstation - abc123._axis-video._tcp.local.",
                 port=None,
@@ -244,8 +245,8 @@ async def test_form_zeroconf_correct_oui_wrong_device(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.1.5",
-                addresses=["192.168.1.5"],
+                ip_address=ip_address("192.168.1.5"),
+                ip_addresses=[ip_address("192.168.1.5")],
                 hostname="mock_hostname",
                 name="Doorstation - abc123._axis-video._tcp.local.",
                 port=None,

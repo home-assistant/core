@@ -12,8 +12,8 @@ from renson_endura_delta.renson import RensonVentilation
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import RensonCoordinator
 from .const import DOMAIN
+from .coordinator import RensonCoordinator
 
 
 class RensonEntity(CoordinatorEntity[RensonCoordinator]):

@@ -73,16 +73,6 @@ class MqttButton(MqttEntity, ButtonEntity):
     _default_name = DEFAULT_NAME
     _entity_id_format = button.ENTITY_ID_FORMAT
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT button."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""

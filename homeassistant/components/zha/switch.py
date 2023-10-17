@@ -270,11 +270,10 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         "_TZE200_b6wax7g0",
     },
 )
-class OnOffWindowDetectionFunctionConfigurationEntity(
-    ZHASwitchConfigurationEntity, id_suffix="on_off_window_opened_detection"
-):
+class OnOffWindowDetectionFunctionConfigurationEntity(ZHASwitchConfigurationEntity):
     """Representation of a ZHA window detection configuration entity."""
 
+    _unique_id_suffix = "on_off_window_opened_detection"
     _zcl_attribute: str = "window_detection_function"
     _zcl_inverter_attribute: str = "window_detection_function_inverter"
     _attr_name: str = "Invert window detection"
@@ -283,11 +282,10 @@ class OnOffWindowDetectionFunctionConfigurationEntity(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.motion.ac02"}
 )
-class P1MotionTriggerIndicatorSwitch(
-    ZHASwitchConfigurationEntity, id_suffix="trigger_indicator"
-):
+class P1MotionTriggerIndicatorSwitch(ZHASwitchConfigurationEntity):
     """Representation of a ZHA motion triggering configuration entity."""
 
+    _unique_id_suffix = "trigger_indicator"
     _zcl_attribute: str = "trigger_indicator"
     _attr_name = "LED trigger indicator"
 
@@ -296,11 +294,10 @@ class P1MotionTriggerIndicatorSwitch(
     cluster_handler_names="opple_cluster",
     models={"lumi.plug.mmeu01", "lumi.plug.maeu01"},
 )
-class XiaomiPlugPowerOutageMemorySwitch(
-    ZHASwitchConfigurationEntity, id_suffix="power_outage_memory"
-):
+class XiaomiPlugPowerOutageMemorySwitch(ZHASwitchConfigurationEntity):
     """Representation of a ZHA power outage memory configuration entity."""
 
+    _unique_id_suffix = "power_outage_memory"
     _zcl_attribute: str = "power_outage_memory"
     _attr_name = "Power outage memory"
 
@@ -310,11 +307,10 @@ class XiaomiPlugPowerOutageMemorySwitch(
     manufacturers={"Philips", "Signify Netherlands B.V."},
     models={"SML001", "SML002", "SML003", "SML004"},
 )
-class HueMotionTriggerIndicatorSwitch(
-    ZHASwitchConfigurationEntity, id_suffix="trigger_indicator"
-):
+class HueMotionTriggerIndicatorSwitch(ZHASwitchConfigurationEntity):
     """Representation of a ZHA motion triggering configuration entity."""
 
+    _unique_id_suffix = "trigger_indicator"
     _zcl_attribute: str = "trigger_indicator"
     _attr_name = "LED trigger indicator"
 
@@ -323,9 +319,10 @@ class HueMotionTriggerIndicatorSwitch(
     cluster_handler_names="ikea_airpurifier",
     models={"STARKVIND Air purifier", "STARKVIND Air purifier table"},
 )
-class ChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+class ChildLock(ZHASwitchConfigurationEntity):
     """ZHA BinarySensor."""
 
+    _unique_id_suffix = "child_lock"
     _zcl_attribute: str = "child_lock"
     _attr_name = "Child lock"
 
@@ -334,9 +331,10 @@ class ChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     cluster_handler_names="ikea_airpurifier",
     models={"STARKVIND Air purifier", "STARKVIND Air purifier table"},
 )
-class DisableLed(ZHASwitchConfigurationEntity, id_suffix="disable_led"):
+class DisableLed(ZHASwitchConfigurationEntity):
     """ZHA BinarySensor."""
 
+    _unique_id_suffix = "disable_led"
     _zcl_attribute: str = "disable_led"
     _attr_name = "Disable LED"
 
@@ -344,9 +342,10 @@ class DisableLed(ZHASwitchConfigurationEntity, id_suffix="disable_led"):
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
-class InovelliInvertSwitch(ZHASwitchConfigurationEntity, id_suffix="invert_switch"):
+class InovelliInvertSwitch(ZHASwitchConfigurationEntity):
     """Inovelli invert switch control."""
 
+    _unique_id_suffix = "invert_switch"
     _zcl_attribute: str = "invert_switch"
     _attr_name: str = "Invert switch"
 
@@ -354,9 +353,10 @@ class InovelliInvertSwitch(ZHASwitchConfigurationEntity, id_suffix="invert_switc
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
-class InovelliSmartBulbMode(ZHASwitchConfigurationEntity, id_suffix="smart_bulb_mode"):
+class InovelliSmartBulbMode(ZHASwitchConfigurationEntity):
     """Inovelli smart bulb mode control."""
 
+    _unique_id_suffix = "smart_bulb_mode"
     _zcl_attribute: str = "smart_bulb_mode"
     _attr_name: str = "Smart bulb mode"
 
@@ -364,11 +364,10 @@ class InovelliSmartBulbMode(ZHASwitchConfigurationEntity, id_suffix="smart_bulb_
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
-class InovelliDoubleTapUpEnabled(
-    ZHASwitchConfigurationEntity, id_suffix="double_tap_up_enabled"
-):
+class InovelliDoubleTapUpEnabled(ZHASwitchConfigurationEntity):
     """Inovelli double tap up enabled."""
 
+    _unique_id_suffix = "double_tap_up_enabled"
     _zcl_attribute: str = "double_tap_up_enabled"
     _attr_name: str = "Double tap up enabled"
 
@@ -376,11 +375,10 @@ class InovelliDoubleTapUpEnabled(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
-class InovelliDoubleTapDownEnabled(
-    ZHASwitchConfigurationEntity, id_suffix="double_tap_down_enabled"
-):
+class InovelliDoubleTapDownEnabled(ZHASwitchConfigurationEntity):
     """Inovelli double tap down enabled."""
 
+    _unique_id_suffix = "double_tap_down_enabled"
     _zcl_attribute: str = "double_tap_down_enabled"
     _attr_name: str = "Double tap down enabled"
 
@@ -388,11 +386,10 @@ class InovelliDoubleTapDownEnabled(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
-class InovelliAuxSwitchScenes(
-    ZHASwitchConfigurationEntity, id_suffix="aux_switch_scenes"
-):
+class InovelliAuxSwitchScenes(ZHASwitchConfigurationEntity):
     """Inovelli unique aux switch scenes."""
 
+    _unique_id_suffix = "aux_switch_scenes"
     _zcl_attribute: str = "aux_switch_scenes"
     _attr_name: str = "Aux switch scenes"
 
@@ -400,11 +397,10 @@ class InovelliAuxSwitchScenes(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
-class InovelliBindingOffToOnSyncLevel(
-    ZHASwitchConfigurationEntity, id_suffix="binding_off_to_on_sync_level"
-):
+class InovelliBindingOffToOnSyncLevel(ZHASwitchConfigurationEntity):
     """Inovelli send move to level with on/off to bound devices."""
 
+    _unique_id_suffix = "binding_off_to_on_sync_level"
     _zcl_attribute: str = "binding_off_to_on_sync_level"
     _attr_name: str = "Binding off to on sync level"
 
@@ -412,11 +408,10 @@ class InovelliBindingOffToOnSyncLevel(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
-class InovelliLocalProtection(
-    ZHASwitchConfigurationEntity, id_suffix="local_protection"
-):
+class InovelliLocalProtection(ZHASwitchConfigurationEntity):
     """Inovelli local protection control."""
 
+    _unique_id_suffix = "local_protection"
     _zcl_attribute: str = "local_protection"
     _attr_name: str = "Local protection"
 
@@ -424,9 +419,10 @@ class InovelliLocalProtection(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
-class InovelliOnOffLEDMode(ZHASwitchConfigurationEntity, id_suffix="on_off_led_mode"):
+class InovelliOnOffLEDMode(ZHASwitchConfigurationEntity):
     """Inovelli only 1 LED mode control."""
 
+    _unique_id_suffix = "on_off_led_mode"
     _zcl_attribute: str = "on_off_led_mode"
     _attr_name: str = "Only 1 LED mode"
 
@@ -434,11 +430,10 @@ class InovelliOnOffLEDMode(ZHASwitchConfigurationEntity, id_suffix="on_off_led_m
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
-class InovelliFirmwareProgressLED(
-    ZHASwitchConfigurationEntity, id_suffix="firmware_progress_led"
-):
+class InovelliFirmwareProgressLED(ZHASwitchConfigurationEntity):
     """Inovelli firmware progress LED control."""
 
+    _unique_id_suffix = "firmware_progress_led"
     _zcl_attribute: str = "firmware_progress_led"
     _attr_name: str = "Firmware progress LED"
 
@@ -446,11 +441,10 @@ class InovelliFirmwareProgressLED(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
-class InovelliRelayClickInOnOffMode(
-    ZHASwitchConfigurationEntity, id_suffix="relay_click_in_on_off_mode"
-):
+class InovelliRelayClickInOnOffMode(ZHASwitchConfigurationEntity):
     """Inovelli relay click in on off mode control."""
 
+    _unique_id_suffix = "relay_click_in_on_off_mode"
     _zcl_attribute: str = "relay_click_in_on_off_mode"
     _attr_name: str = "Disable relay click in on off mode"
 
@@ -458,11 +452,10 @@ class InovelliRelayClickInOnOffMode(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
-class InovelliDisableDoubleTapClearNotificationsMode(
-    ZHASwitchConfigurationEntity, id_suffix="disable_clear_notifications_double_tap"
-):
+class InovelliDisableDoubleTapClearNotificationsMode(ZHASwitchConfigurationEntity):
     """Inovelli disable clear notifications double tap control."""
 
+    _unique_id_suffix = "disable_clear_notifications_double_tap"
     _zcl_attribute: str = "disable_clear_notifications_double_tap"
     _attr_name: str = "Disable config 2x tap to clear notifications"
 
@@ -470,11 +463,10 @@ class InovelliDisableDoubleTapClearNotificationsMode(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"}
 )
-class AqaraPetFeederLEDIndicator(
-    ZHASwitchConfigurationEntity, id_suffix="disable_led_indicator"
-):
+class AqaraPetFeederLEDIndicator(ZHASwitchConfigurationEntity):
     """Representation of a LED indicator configuration entity."""
 
+    _unique_id_suffix = "disable_led_indicator"
     _zcl_attribute: str = "disable_led_indicator"
     _attr_name = "LED indicator"
     _force_inverted = True
@@ -484,9 +476,10 @@ class AqaraPetFeederLEDIndicator(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"}
 )
-class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity):
     """Representation of a child lock configuration entity."""
 
+    _unique_id_suffix = "child_lock"
     _zcl_attribute: str = "child_lock"
     _attr_name = "Child lock"
     _attr_icon: str = "mdi:account-lock"
@@ -496,9 +489,10 @@ class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity, id_suffix="child_loc
     cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
     models={"TS011F"},
 )
-class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+class TuyaChildLockSwitch(ZHASwitchConfigurationEntity):
     """Representation of a child lock configuration entity."""
 
+    _unique_id_suffix = "child_lock"
     _zcl_attribute: str = "child_lock"
     _attr_name = "Child lock"
     _attr_icon: str = "mdi:account-lock"
@@ -507,11 +501,10 @@ class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"}
 )
-class AqaraThermostatWindowDetection(
-    ZHASwitchConfigurationEntity, id_suffix="window_detection"
-):
+class AqaraThermostatWindowDetection(ZHASwitchConfigurationEntity):
     """Representation of an Aqara thermostat window detection configuration entity."""
 
+    _unique_id_suffix = "window_detection"
     _zcl_attribute: str = "window_detection"
     _attr_name = "Window detection"
 
@@ -519,11 +512,10 @@ class AqaraThermostatWindowDetection(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"}
 )
-class AqaraThermostatValveDetection(
-    ZHASwitchConfigurationEntity, id_suffix="valve_detection"
-):
+class AqaraThermostatValveDetection(ZHASwitchConfigurationEntity):
     """Representation of an Aqara thermostat valve detection configuration entity."""
 
+    _unique_id_suffix = "valve_detection"
     _zcl_attribute: str = "valve_detection"
     _attr_name = "Valve detection"
 
@@ -531,9 +523,10 @@ class AqaraThermostatValveDetection(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"}
 )
-class AqaraThermostatChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+class AqaraThermostatChildLock(ZHASwitchConfigurationEntity):
     """Representation of an Aqara thermostat child lock configuration entity."""
 
+    _unique_id_suffix = "child_lock"
     _zcl_attribute: str = "child_lock"
     _attr_name = "Child lock"
     _attr_icon: str = "mdi:account-lock"
@@ -542,11 +535,10 @@ class AqaraThermostatChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lo
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
 )
-class AqaraHeartbeatIndicator(
-    ZHASwitchConfigurationEntity, id_suffix="heartbeat_indicator"
-):
+class AqaraHeartbeatIndicator(ZHASwitchConfigurationEntity):
     """Representation of a heartbeat indicator configuration entity for Aqara smoke sensors."""
 
+    _unique_id_suffix = "heartbeat_indicator"
     _zcl_attribute: str = "heartbeat_indicator"
     _attr_name = "Heartbeat indicator"
     _attr_icon: str = "mdi:heart-flash"
@@ -555,9 +547,10 @@ class AqaraHeartbeatIndicator(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
 )
-class AqaraLinkageAlarm(ZHASwitchConfigurationEntity, id_suffix="linkage_alarm"):
+class AqaraLinkageAlarm(ZHASwitchConfigurationEntity):
     """Representation of a linkage alarm configuration entity for Aqara smoke sensors."""
 
+    _unique_id_suffix = "linkage_alarm"
     _zcl_attribute: str = "linkage_alarm"
     _attr_name = "Linkage alarm"
     _attr_icon: str = "mdi:shield-link-variant"
@@ -566,11 +559,10 @@ class AqaraLinkageAlarm(ZHASwitchConfigurationEntity, id_suffix="linkage_alarm")
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
 )
-class AqaraBuzzerManualMute(
-    ZHASwitchConfigurationEntity, id_suffix="buzzer_manual_mute"
-):
+class AqaraBuzzerManualMute(ZHASwitchConfigurationEntity):
     """Representation of a buzzer manual mute configuration entity for Aqara smoke sensors."""
 
+    _unique_id_suffix = "buzzer_manual_mute"
     _zcl_attribute: str = "buzzer_manual_mute"
     _attr_name = "Buzzer manual mute"
     _attr_icon: str = "mdi:volume-off"
@@ -579,11 +571,10 @@ class AqaraBuzzerManualMute(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
 )
-class AqaraBuzzerManualAlarm(
-    ZHASwitchConfigurationEntity, id_suffix="buzzer_manual_alarm"
-):
+class AqaraBuzzerManualAlarm(ZHASwitchConfigurationEntity):
     """Representation of a buzzer manual mute configuration entity for Aqara smoke sensors."""
 
+    _unique_id_suffix = "buzzer_manual_alarm"
     _zcl_attribute: str = "buzzer_manual_alarm"
     _attr_name = "Buzzer manual alarm"
     _attr_icon: str = "mdi:bullhorn"
