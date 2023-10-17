@@ -302,33 +302,3 @@ async def test_form_reauth_api_success(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
     assert config_flow.PermobilConfigFlow.data.get(CONF_REGION) == MOCK_URL
     assert config_flow.PermobilConfigFlow.data.get(CONF_EMAIL) == MOCK_EMAIL
-
-
-async def test_validate_input() -> None:
-    """Test validate input."""
-    p_api = MagicMock()
-    data = {
-        "email": "test@example.com",
-        "code": "123456",
-        "token": "abcdef",
-    }
-
-    await config_flow.validate_input(p_api, data)
-
-    p_api.set_email.assert_called_once_with("test@example.com")
-    p_api.set_code.assert_called_once_with("123456")
-    p_api.set_token.assert_called_once_with("abcdef")
-
-
-async def test_validate_input_missing_values() -> None:
-    """Test validate input."""
-    p_api = MagicMock()
-    data = {
-        "email": "test@example.com",
-    }
-
-    await config_flow.validate_input(p_api, data)
-
-    p_api.set_email.assert_called_once_with("test@example.com")
-    assert not p_api.set_code.called
-    assert not p_api.set_token.called

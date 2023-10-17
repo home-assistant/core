@@ -39,22 +39,12 @@ class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-async def validate_input(p_api: MyPermobil, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect."""
-    if email := data.get(CONF_EMAIL):
-        p_api.set_email(email)
-    if code := data.get(CONF_CODE):
-        p_api.set_code(code)
-    if token := data.get(CONF_TOKEN):
-        p_api.set_token(token)
-
-
 class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Permobil config flow."""
 
     VERSION = 1
     p_api: MyPermobil = None
-    region_names: dict[str, str] = {"Failed to load regions": ""}
+    region_names: dict[str, str] = {}
     data: dict[str, str] = {}
 
     async def async_step_user(
@@ -66,14 +56,13 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.p_api = MyPermobil(APPLICATION, session=session)
 
         if user_input is not None:
-            user_input[CONF_EMAIL] = user_input[CONF_EMAIL]
             try:
-                await validate_input(self.p_api, user_input)
+                self.p_api.set_email(user_input[CONF_EMAIL])
             except MyPermobilClientException as err:
                 _LOGGER.error("Error validating email: %s", err)
                 errors["base"] = "invalid_email"
 
-            self.data[CONF_EMAIL] = user_input[CONF_EMAIL]
+            self.data.update(user_input)
 
             await self.async_set_unique_id(self.data[CONF_EMAIL])
             self._abort_if_unique_id_configured()
@@ -85,12 +74,14 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_region()
 
-    async def async_step_region(self, user_input=None) -> FlowResult:
+    async def async_step_region(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Invoke when a user initiates a flow via the user interface."""
         errors: dict[str, str] = {}
         if user_input is None:
             # fetch the list of regions names and urls from the api
-            # for the user to select from. [("name","url"),("name","url"),...]
+            # for the user to select from.
             try:
                 self.region_names = await self.p_api.request_region_names()
                 _LOGGER.debug(
@@ -133,7 +124,9 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_email_code()
 
-    async def async_step_email_code(self, user_input=None) -> FlowResult:
+    async def async_step_email_code(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Second step in config flow to enter the email code."""
         errors: dict[str, str] = {}
 
@@ -142,8 +135,8 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not user_input.get(CONF_CODE):
                     raise InvalidAuth("empty code")
 
-                await validate_input(self.p_api, user_input)
-                self.data[CONF_CODE] = user_input[CONF_CODE]
+                self.p_api.set_code(user_input[CONF_CODE])
+                self.data.update(user_input)
                 token, ttl = await self.p_api.request_application_token()
                 self.data[CONF_TOKEN] = token
                 self.data[CONF_TTL] = ttl
