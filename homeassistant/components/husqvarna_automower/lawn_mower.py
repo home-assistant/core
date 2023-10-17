@@ -11,6 +11,7 @@ from homeassistant.components.lawn_mower import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -102,18 +103,24 @@ class AutomowerLawnMowerEntity(LawnMowerEntity, AutomowerBaseEntity):
         try:
             await self.coordinator.api.resume_schedule(self.mower_id)
         except ApiException as exception:
-            _LOGGER.error("Command couldn't be sent to the command que: %s", exception)
+            raise HomeAssistantError(
+                f"Command couldn't be sent to the command que: {exception}"
+            ) from exception
 
     async def async_pause(self) -> None:
         """Pauses the mower."""
         try:
             await self.coordinator.api.pause_mowing(self.mower_id)
         except ApiException as exception:
-            _LOGGER.error("Command couldn't be sent to the command que: %s", exception)
+            raise HomeAssistantError(
+                f"Command couldn't be sent to the command que: {exception}"
+            ) from exception
 
     async def async_dock(self) -> None:
         """Parks the mower until next schedule."""
         try:
             await self.coordinator.api.park_until_next_schedule(self.mower_id)
         except ApiException as exception:
-            _LOGGER.error("Command couldn't be sent to the command que: %s", exception)
+            raise HomeAssistantError(
+                f"Command couldn't be sent to the command que: {exception}"
+            ) from exception
