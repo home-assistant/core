@@ -14,7 +14,8 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -56,12 +57,20 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
         await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
         return True
 
+    async def async_unload_entry_init(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+    ) -> bool:
+        await hass.config_entries.async_unload_platforms(config_entry, [Platform.TODO])
+        return True
+
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(
         hass,
         MockModule(
             TEST_DOMAIN,
             async_setup_entry=async_setup_entry_init,
+            async_unload_entry=async_unload_entry_init,
         ),
     )
 
@@ -114,6 +123,26 @@ def mock_test_entity() -> TodoListEntity:
     entity1.async_delete_todo_items = AsyncMock()
     entity1.async_move_todo_item = AsyncMock()
     return entity1
+
+
+async def test_unload_entry(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test unloading a config entry with a todo entity."""
+
+    config_entry = await create_mock_platform(hass, [test_entity])
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    state = hass.states.get("todo.entity1")
+    assert state
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+
+    state = hass.states.get("todo.entity1")
+    assert not state
 
 
 async def test_list_todo_items(
