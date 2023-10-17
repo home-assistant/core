@@ -1,4 +1,6 @@
 """Test cases around the demo fan platform."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import fan
@@ -15,6 +17,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -31,8 +34,18 @@ FANS_WITH_PRESET_MODES = FULL_FAN_ENTITY_IDS + [
 PERCENTAGE_MODEL_FANS = ["fan.percentage_full_fan", "fan.percentage_limited_fan"]
 
 
+@pytest.fixture
+async def fan_only() -> None:
+    """Enable only the datetime platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.FAN],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_comp(hass, disable_platforms):
+async def setup_comp(hass: HomeAssistant, fan_only: None):
     """Initialize components."""
     assert await async_setup_component(hass, fan.DOMAIN, {"fan": {"platform": "demo"}})
     await hass.async_block_till_done()
