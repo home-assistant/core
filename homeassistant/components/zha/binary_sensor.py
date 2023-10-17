@@ -72,7 +72,7 @@ async def async_setup_entry(
 class BinarySensor(ZhaEntity, BinarySensorEntity):
     """ZHA BinarySensor."""
 
-    SENSOR_ATTR: str | None = None
+    _attribute_name: str
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize the ZHA binary sensor."""
@@ -89,7 +89,7 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the switch is on based on the state machine."""
-        raw_state = self._cluster_handler.cluster.get(self.SENSOR_ATTR)
+        raw_state = self._cluster_handler.cluster.get(self._attribute_name)
         if raw_state is None:
             return False
         return self.parse(raw_state)
@@ -109,7 +109,7 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
 class Accelerometer(BinarySensor):
     """ZHA BinarySensor."""
 
-    SENSOR_ATTR = "acceleration"
+    _attribute_name = "acceleration"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOVING
     _attr_translation_key: str = "accelerometer"
 
@@ -118,7 +118,7 @@ class Accelerometer(BinarySensor):
 class Occupancy(BinarySensor):
     """ZHA BinarySensor."""
 
-    SENSOR_ATTR = "occupancy"
+    _attribute_name = "occupancy"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OCCUPANCY
 
 
@@ -133,7 +133,7 @@ class HueOccupancy(Occupancy):
 class Opening(BinarySensor):
     """ZHA OnOff BinarySensor."""
 
-    SENSOR_ATTR = "on_off"
+    _attribute_name = "on_off"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
 
     # Client/out cluster attributes aren't stored in the zigpy database, but are properly stored in the runtime cache.
@@ -142,7 +142,7 @@ class Opening(BinarySensor):
     def async_restore_last_state(self, last_state):
         """Restore previous state to zigpy cache."""
         self._cluster_handler.cluster.update_attribute(
-            OnOff.attributes_by_name[self.SENSOR_ATTR].id,
+            OnOff.attributes_by_name[self._attribute_name].id,
             t.Bool.true if last_state.state == STATE_ON else t.Bool.false,
         )
 
@@ -151,7 +151,7 @@ class Opening(BinarySensor):
 class BinaryInput(BinarySensor):
     """ZHA BinarySensor."""
 
-    SENSOR_ATTR = "present_value"
+    _attribute_name = "present_value"
     _attr_translation_key: str = "binary_input"
 
 
@@ -177,7 +177,7 @@ class Motion(Opening):
 class IASZone(BinarySensor):
     """ZHA IAS BinarySensor."""
 
-    SENSOR_ATTR = "zone_status"
+    _attribute_name = "zone_status"
 
     @property
     def translation_key(self) -> str | None:
@@ -225,7 +225,7 @@ class IASZone(BinarySensor):
             migrated_state = IasZone.ZoneStatus(0)
 
         self._cluster_handler.cluster.update_attribute(
-            IasZone.attributes_by_name[self.SENSOR_ATTR].id, migrated_state
+            IasZone.attributes_by_name[self._attribute_name].id, migrated_state
         )
 
 
@@ -233,7 +233,7 @@ class IASZone(BinarySensor):
 class SinopeLeakStatus(BinarySensor):
     """Sinope water leak sensor."""
 
-    SENSOR_ATTR = "leak_status"
+    _attribute_name = "leak_status"
     _attr_device_class = BinarySensorDeviceClass.MOISTURE
 
 
@@ -246,7 +246,7 @@ class SinopeLeakStatus(BinarySensor):
 class FrostLock(BinarySensor):
     """ZHA BinarySensor."""
 
-    SENSOR_ATTR = "frost_lock"
+    _attribute_name = "frost_lock"
     _unique_id_suffix = "frost_lock"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.LOCK
     _attr_translation_key: str = "frost_lock"
@@ -256,7 +256,7 @@ class FrostLock(BinarySensor):
 class ReplaceFilter(BinarySensor):
     """ZHA BinarySensor."""
 
-    SENSOR_ATTR = "replace_filter"
+    _attribute_name = "replace_filter"
     _unique_id_suffix = "replace_filter"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
@@ -267,7 +267,7 @@ class ReplaceFilter(BinarySensor):
 class AqaraPetFeederErrorDetected(BinarySensor):
     """ZHA aqara pet feeder error detected binary sensor."""
 
-    SENSOR_ATTR = "error_detected"
+    _attribute_name = "error_detected"
     _unique_id_suffix = "error_detected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
 
@@ -279,7 +279,7 @@ class AqaraPetFeederErrorDetected(BinarySensor):
 class XiaomiPlugConsumerConnected(BinarySensor):
     """ZHA Xiaomi plug consumer connected binary sensor."""
 
-    SENSOR_ATTR = "consumer_connected"
+    _attribute_name = "consumer_connected"
     _unique_id_suffix = "consumer_connected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PLUG
     _attr_translation_key: str = "consumer_connected"
@@ -289,7 +289,7 @@ class XiaomiPlugConsumerConnected(BinarySensor):
 class AqaraThermostatWindowOpen(BinarySensor):
     """ZHA Aqara thermostat window open binary sensor."""
 
-    SENSOR_ATTR = "window_open"
+    _attribute_name = "window_open"
     _unique_id_suffix = "window_open"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.WINDOW
 
@@ -298,7 +298,7 @@ class AqaraThermostatWindowOpen(BinarySensor):
 class AqaraThermostatValveAlarm(BinarySensor):
     """ZHA Aqara thermostat valve alarm binary sensor."""
 
-    SENSOR_ATTR = "valve_alarm"
+    _attribute_name = "valve_alarm"
     _unique_id_suffix = "valve_alarm"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
     _attr_translation_key: str = "valve_alarm"
@@ -310,7 +310,7 @@ class AqaraThermostatValveAlarm(BinarySensor):
 class AqaraThermostatCalibrated(BinarySensor):
     """ZHA Aqara thermostat calibrated binary sensor."""
 
-    SENSOR_ATTR = "calibrated"
+    _attribute_name = "calibrated"
     _unique_id_suffix = "calibrated"
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
     _attr_translation_key: str = "calibrated"
@@ -322,7 +322,7 @@ class AqaraThermostatCalibrated(BinarySensor):
 class AqaraThermostatExternalSensor(BinarySensor):
     """ZHA Aqara thermostat external sensor binary sensor."""
 
-    SENSOR_ATTR = "sensor"
+    _attribute_name = "sensor"
     _unique_id_suffix = "sensor"
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
     _attr_translation_key: str = "external_sensor"
@@ -332,7 +332,7 @@ class AqaraThermostatExternalSensor(BinarySensor):
 class AqaraLinkageAlarmState(BinarySensor):
     """ZHA Aqara linkage alarm state binary sensor."""
 
-    SENSOR_ATTR = "linkage_alarm_state"
+    _attribute_name = "linkage_alarm_state"
     _unique_id_suffix = "linkage_alarm_state"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.SMOKE
     _attr_translation_key: str = "linkage_alarm_state"
