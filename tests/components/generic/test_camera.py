@@ -1,6 +1,7 @@
 """The tests for generic camera component."""
 import asyncio
 from http import HTTPStatus
+import sys
 from unittest.mock import patch
 
 import aiohttp
@@ -163,10 +164,17 @@ async def test_limit_refetch(
 
     hass.states.async_set("sensor.temp", "5")
 
-    with pytest.raises(aiohttp.ServerTimeoutError), patch(
-        "async_timeout.timeout", side_effect=asyncio.TimeoutError()
-    ):
-        resp = await client.get("/api/camera_proxy/camera.config_test")
+    # TODO: Remove version check with aiohttp 3.9.0
+    if sys.version_info >= (3, 12):
+        with pytest.raises(aiohttp.ServerTimeoutError), patch(
+            "asyncio.timeout", side_effect=asyncio.TimeoutError()
+        ):
+            resp = await client.get("/api/camera_proxy/camera.config_test")
+    else:
+        with pytest.raises(aiohttp.ServerTimeoutError), patch(
+            "async_timeout.timeout", side_effect=asyncio.TimeoutError()
+        ):
+            resp = await client.get("/api/camera_proxy/camera.config_test")
 
     assert respx.calls.call_count == 1
     assert resp.status == HTTPStatus.OK
