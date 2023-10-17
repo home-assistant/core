@@ -56,6 +56,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         GetStateIntentHandler(),
     )
+    intent.async_register(
+        hass,
+        NevermindIntentHandler(),
+    )
 
     return True
 
@@ -204,6 +208,16 @@ class GetStateIntentHandler(intent.IntentHandler):
         response.async_set_states(matched_states, unmatched_states)
 
         return response
+
+
+class NevermindIntentHandler(intent.IntentHandler):
+    """Takes no action."""
+
+    intent_type = intent.INTENT_NEVERMIND
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Doe not do anything, and produces an empty response."""
+        return intent_obj.create_response()
 
 
 async def _async_process_intent(hass: HomeAssistant, domain: str, platform):
