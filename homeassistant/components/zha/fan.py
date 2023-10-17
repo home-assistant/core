@@ -28,12 +28,8 @@ from homeassistant.util.percentage import (
 
 from .core import discovery
 from .core.cluster_handlers import wrap_zigpy_exceptions
-from .core.const import (
-    CLUSTER_HANDLER_FAN,
-    DATA_ZHA,
-    SIGNAL_ADD_ENTITIES,
-    SIGNAL_ATTR_UPDATED,
-)
+from .core.const import CLUSTER_HANDLER_FAN, SIGNAL_ADD_ENTITIES, SIGNAL_ATTR_UPDATED
+from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity, ZhaGroupEntity
 
@@ -65,7 +61,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation fan from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.FAN]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.FAN]
 
     unsub = async_dispatcher_connect(
         hass,

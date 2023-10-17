@@ -17,7 +17,12 @@ from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
-from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_THEMES_UPDATED
+from homeassistant.const import (
+    CONF_MODE,
+    CONF_NAME,
+    EVENT_PANELS_UPDATED,
+    EVENT_THEMES_UPDATED,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
@@ -40,7 +45,6 @@ CONF_EXTRA_MODULE_URL = "extra_module_url"
 CONF_EXTRA_JS_URL_ES5 = "extra_js_url_es5"
 CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
-EVENT_PANELS_UPDATED = "panels_updated"
 
 DEFAULT_THEME_COLOR = "#03A9F4"
 
@@ -156,9 +160,18 @@ MANIFEST_JSON = Manifest(
                 "src": f"/static/icons/favicon-{size}x{size}.png",
                 "sizes": f"{size}x{size}",
                 "type": "image/png",
-                "purpose": "maskable any",
+                "purpose": "any",
             }
             for size in (192, 384, 512, 1024)
+        ]
+        + [
+            {
+                "src": f"/static/icons/maskable_icon-{size}x{size}.png",
+                "sizes": f"{size}x{size}",
+                "type": "image/png",
+                "purpose": "maskable",
+            }
+            for size in (48, 72, 96, 128, 192, 384, 512)
         ],
         "screenshots": [
             {
@@ -171,6 +184,7 @@ MANIFEST_JSON = Manifest(
         "name": "Home Assistant",
         "short_name": "Assistant",
         "start_url": "/?homescreen=1",
+        "id": "/?homescreen=1",
         "theme_color": DEFAULT_THEME_COLOR,
         "prefer_related_applications": True,
         "related_applications": [

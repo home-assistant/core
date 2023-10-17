@@ -73,7 +73,7 @@ ALL_SERVICE_DESCRIPTIONS_CACHE = "all_service_descriptions_cache"
 @cache
 def _base_components() -> dict[str, ModuleType]:
     """Return a cached lookup of base components."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import (
         alarm_control_panel,
         calendar,
