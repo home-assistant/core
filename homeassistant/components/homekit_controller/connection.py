@@ -144,6 +144,7 @@ class HKDevice:
         )
 
         self._availability_callbacks: set[CALLBACK_TYPE] = set()
+        self._config_changed_callbacks: set[CALLBACK_TYPE] = set()
         self._subscriptions: dict[tuple[int, int], set[CALLBACK_TYPE]] = {}
 
     @property
@@ -605,6 +606,8 @@ class HKDevice:
         await self.async_process_entity_map()
         if self.watchable_characteristics:
             await self.pairing.subscribe(self.watchable_characteristics)
+        for callback_ in self._config_changed_callbacks:
+            callback_()
         await self.async_update()
         await self.async_add_new_entities()
 
@@ -828,6 +831,16 @@ class HKDevice:
 
         def _unsub():
             self._availability_callbacks.remove(callback_)
+
+        return _unsub
+
+    @callback
+    def async_subscribe_config_changed(self, callback_: CALLBACK_TYPE) -> CALLBACK_TYPE:
+        """Add characteristics to the watch list."""
+        self._config_changed_callbacks.add(callback_)
+
+        def _unsub():
+            self._config_changed_callbacks.remove(callback_)
 
         return _unsub
 
