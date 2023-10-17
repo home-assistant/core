@@ -153,6 +153,7 @@ SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ("relay", "power"): BlockSensorDescription(
         key="relay|power",
@@ -418,6 +419,7 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "b_aprt_power": RpcSensorDescription(
         key="em",
@@ -426,6 +428,7 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "c_aprt_power": RpcSensorDescription(
         key="em",
@@ -434,6 +437,7 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "aprt_power_em1": RpcSensorDescription(
         key="em1",
@@ -442,6 +446,7 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "total_aprt_power": RpcSensorDescription(
         key="em",
@@ -457,6 +462,7 @@ RPC_SENSORS: Final = {
         name="Power factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "a_pf": RpcSensorDescription(
         key="em",
@@ -464,6 +470,7 @@ RPC_SENSORS: Final = {
         name="Phase A power factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "b_pf": RpcSensorDescription(
         key="em",
@@ -471,6 +478,7 @@ RPC_SENSORS: Final = {
         name="Phase B power factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "c_pf": RpcSensorDescription(
         key="em",
@@ -478,6 +486,7 @@ RPC_SENSORS: Final = {
         name="Phase C power factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "voltage": RpcSensorDescription(
         key="switch",
