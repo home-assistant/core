@@ -1,4 +1,5 @@
 """La Marzocco Cloud API client."""
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -8,7 +9,7 @@ from homeassistant.components import bluetooth
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import DEFAULT_PORT_CLOUD, MODEL_GS3_AV, MODEL_GS3_MP, MODEL_LM, MODEL_LMU
+from .const import DEFAULT_PORT_LOCAL, MODEL_GS3_AV, MODEL_GS3_MP, MODEL_LM, MODEL_LMU
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,12 +19,12 @@ MODELS = [MODEL_GS3_AV, MODEL_GS3_MP, MODEL_LM, MODEL_LMU]
 class LaMarzoccoClient(LMCloud):
     """Keep data for La Marzocco entities."""
 
-    def __init__(self, hass: HomeAssistant, hass_config) -> None:
+    def __init__(self, hass: HomeAssistant, entry_data: Mapping[str, Any]) -> None:
         """Initialise the LaMarzocco entity data."""
         super().__init__()
 
-        self._device_version = None
-        self._hass_config = hass_config
+        self._device_version: str | None = None
+        self._entry_data = entry_data
         self.hass = hass
         self._brew_active = False
         self._bt_disconnected = False
@@ -57,15 +58,15 @@ class LaMarzoccoClient(LMCloud):
         """Return serial number."""
         return self.machine_info["serial_number"]
 
-    async def hass_init(self) -> None:
-        """Initialize the client with the Home Assistant config."""
+    async def connect(self) -> None:
+        """Connect to the machine."""
         _LOGGER.debug("Initializing Cloud API")
-        await self._init_cloud_api(self._hass_config)
+        await self._init_cloud_api(self._entry_data)
         _LOGGER.debug("Model name: %s", self.model_name)
 
-        username = self._hass_config.get(CONF_USERNAME)
-        mac_address = self._hass_config.get(CONF_MAC)
-        name = self._hass_config.get(CONF_NAME)
+        username = self._entry_data.get(CONF_USERNAME)
+        mac_address = self._entry_data.get(CONF_MAC)
+        name = self._entry_data.get(CONF_NAME)
 
         if mac_address is not None and name is not None:
             # coming from discovery
@@ -86,51 +87,53 @@ class LaMarzoccoClient(LMCloud):
             _LOGGER.debug("Connecting to machine with Bluetooth")
             await self.get_hass_bt_client()
 
-        ip = self._hass_config.get(CONF_HOST)
+        ip = self._entry_data.get(CONF_HOST)
         if ip is not None:
             _LOGGER.debug("Initializing local API")
             await self._init_local_api(
-                ip=self._hass_config.get(CONF_HOST), port=DEFAULT_PORT_CLOUD
+                ip=self._entry_data.get(CONF_HOST), port=DEFAULT_PORT_LOCAL
             )
 
     async def try_connect(self, data: dict[str, Any]) -> dict[str, Any]:
-        """Try to connect to the machine."""
+        """Try to connect to the machine, used for validation."""
         self.client = await self._connect(data)
         machine_info = await self._get_machine_info()
         return machine_info
 
-    async def set_power(self, enabled) -> None:
+    async def set_power(self, enabled: bool) -> None:
         """Set the power state of the machine."""
         await self.get_hass_bt_client()
         await super().set_power(enabled)
 
-    async def set_steam_boiler_enable(self, enable) -> None:
+    async def set_steam_boiler_enable(self, enable: bool) -> None:
         """Set the steam boiler state of the machine."""
         await self.get_hass_bt_client()
         await self.set_steam(enable)
 
-    async def set_auto_on_off_global(self, enable) -> None:
+    async def set_auto_on_off_global(self, enable: bool) -> None:
         """Set the auto on/off state of the machine."""
         await self.configure_schedule(enable, self.schedule)
 
-    async def set_prebrew_times(self, key, seconds_on, seconds_off) -> None:
+    async def set_prebrew_times(
+        self, key: str, seconds_on: float, seconds_off: float
+    ) -> None:
         """Set the prebrew times of the machine."""
         await self.configure_prebrew(
             prebrewOnTime=seconds_on * 1000, prebrewOffTime=seconds_off * 1000, key=key
         )
 
-    async def set_preinfusion_time(self, key, seconds) -> None:
+    async def set_preinfusion_time(self, key: str, seconds: float) -> None:
         """Set the preinfusion time of the machine."""
         await self.configure_prebrew(
             prebrewOnTime=0, prebrewOffTime=seconds * 1000, key=key
         )
 
-    async def set_coffee_temp(self, temperature) -> None:
+    async def set_coffee_temp(self, temperature: float) -> None:
         """Set the coffee temperature of the machine."""
         await self.get_hass_bt_client()
         await super().set_coffee_temp(temperature)
 
-    async def set_steam_temp(self, temperature) -> None:
+    async def set_steam_temp(self, temperature: float) -> None:
         """Set the steam temperature of the machine."""
         possible_temps = [126, 128, 131]
         min(possible_temps, key=lambda x: abs(x - temperature))

@@ -12,15 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    BREW_ACTIVE,
-    CONF_USE_WEBSOCKET,
-    DOMAIN,
-    MODEL_GS3_AV,
-    MODEL_GS3_MP,
-    MODEL_LM,
-    MODEL_LMU,
-)
+from .const import BREW_ACTIVE, DOMAIN, MODEL_GS3_AV, MODEL_GS3_MP, MODEL_LM, MODEL_LMU
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 from .lm_client import LaMarzoccoClient
 
@@ -88,13 +80,9 @@ async def async_setup_entry(
     """Set up binary sensor entities."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    use_websocket = config_entry.options.get(CONF_USE_WEBSOCKET, True)
-
     entities = []
     for description in ENTITIES:
         if coordinator.lm.model_name in description.extra_attributes:
-            if description.key == BREW_ACTIVE and not use_websocket:
-                continue
             entities.append(
                 LaMarzoccoBinarySensorEntity(coordinator, hass, description)
             )

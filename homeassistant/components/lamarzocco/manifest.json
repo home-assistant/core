@@ -18,11 +18,10 @@
   "codeowners": ["@rccoleman", "@zweckj"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
-  "documentation": "https://github.com/zweckj/lamarzocco",
+  "documentation": "https://www.home-assistant.io/integrations/lamarzocco",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/zweckj/lamarzocco/issues",
   "loggers": ["lmcloud"],
-  "requirements": ["lmcloud==0.3.35"],
+  "requirements": ["lmcloud==0.3.36b3"],
   "ssdp": []
 }

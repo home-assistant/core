@@ -1,37 +1,32 @@
 """Constants for the La Marzocco integration."""
 
-DOMAIN = "lamarzocco"
+from typing import Final
 
-"""Set polling interval at 20s."""
-POLLING_INTERVAL = 30
+DOMAIN: Final = "lamarzocco"
 
-""" Delay to wait before refreshing state"""
-UPDATE_DELAY = 3
+POLLING_INTERVAL: Final = 30
+UPDATE_DELAY: Final = 3
 
-"""Configuration parameters"""
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
-CONF_USE_WEBSOCKET = "use_websocket"
-DEFAULT_CLIENT_ID = "7_1xwei9rtkuckso44ks4o8s0c0oc4swowo00wgw0ogsok84kosg"
-DEFAULT_CLIENT_SECRET = "2mgjqpikbfuok8g4s44oo4gsw0ks44okk4kc4kkkko0c8soc8s"
+DEFAULT_CLIENT_ID: Final = "7_1xwei9rtkuckso44ks4o8s0c0oc4swowo00wgw0ogsok84kosg"
+DEFAULT_CLIENT_SECRET: Final = "2mgjqpikbfuok8g4s44oo4gsw0ks44okk4kc4kkkko0c8soc8s"
 
-DEFAULT_PORT_CLOUD = 8081
+DEFAULT_PORT_LOCAL: Final = 8081
 
-MODEL_GS3_AV = "GS3 AV"
-MODEL_GS3_MP = "GS3 MP"
-MODEL_LM = "Linea Mini"
-MODEL_LMU = "Micra"
+MODEL_GS3_AV: Final = "GS3 AV"
+MODEL_GS3_MP: Final = "GS3 MP"
+MODEL_LM: Final = "Linea Mini"
+MODEL_LMU: Final = "Micra"
 
-DATE_RECEIVED = "date_received"
-BREW_ACTIVE = "brew_active"
+DATE_RECEIVED: Final = "date_received"
+BREW_ACTIVE: Final = "brew_active"
 
-GLOBAL = "global"
-MON = "mon"
-TUE = "tue"
-WED = "wed"
-THU = "thu"
-FRI = "fri"
-SAT = "sat"
-SUN = "sun"
+GLOBAL: Final = "global"
+MON: Final = "mon"
+TUE: Final = "tue"
+WED: Final = "wed"
+THU: Final = "thu"
+FRI: Final = "fri"
+SAT: Final = "sat"
+SUN: Final = "sun"
 
-DAYS = [MON, TUE, WED, THU, FRI, SAT, SUN]
+DAYS: Final = [MON, TUE, WED, THU, FRI, SAT, SUN]

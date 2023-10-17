@@ -10,6 +10,8 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
@@ -20,14 +22,7 @@ from homeassistant.const import (
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    DEFAULT_CLIENT_ID,
-    DEFAULT_CLIENT_SECRET,
-    DEFAULT_PORT_CLOUD,
-    DOMAIN,
-)
+from .const import DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET, DEFAULT_PORT_LOCAL, DOMAIN
 from .lm_client import LaMarzoccoClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,7 +75,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for La Marzocco."""
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self) -> None:
         """Init config flow."""
@@ -106,7 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             data = user_input.copy()
             data |= self._discovered
-            data[CONF_PORT] = DEFAULT_PORT_CLOUD
+            data[CONF_PORT] = DEFAULT_PORT_LOCAL
             data[CONF_CLIENT_ID] = DEFAULT_CLIENT_ID
             data[CONF_CLIENT_SECRET] = DEFAULT_CLIENT_SECRET
 
