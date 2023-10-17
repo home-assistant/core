@@ -2,7 +2,8 @@
 import asyncio
 from typing import Any
 
-import voluptuous as vol
+from olarm_api_rainepretorius import OlarmSetupApi  # type: ignore[import-untyped]
+import voluptuous as vol  # type: ignore[import-untyped]
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
@@ -23,7 +24,6 @@ from .const import (
 )
 from .coordinator import OlarmCoordinator
 from .exceptions import APIForbiddenError
-from .olarm_api import OlarmSetupApi
 
 
 class OlarmSensorsConfigFlow(ConfigFlow, domain=DOMAIN):
