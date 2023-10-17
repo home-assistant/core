@@ -5,6 +5,8 @@ import contextlib
 from datetime import datetime, timedelta
 import time
 
+from olarm_api_rainepretorius import OlarmApi, OlarmUpdateAPI
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -12,7 +14,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER, TempEntry
 from .exceptions import APIContentTypeError, ClientConnectorError
-from .olarm_api import OlarmApi, OlarmUpdateAPI
 
 
 class OlarmCoordinator(DataUpdateCoordinator):
