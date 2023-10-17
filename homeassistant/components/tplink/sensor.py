@@ -18,6 +18,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -41,7 +43,7 @@ from .entity import CoordinatedTPLinkEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-AcceptedValueFnReturnValues = float | datetime.datetime | None
+AcceptedValueFnReturnValues = float | datetime.datetime | int | None
 
 
 @dataclass
@@ -93,6 +95,22 @@ def async_handle_timestamp(
     """
     if (value := getattr(device, description.attribute_name)) is not None:
         return dt_util.as_local(value)
+
+    return None
+
+
+def async_handle_int_value(
+    device: SmartDevice, description: TPLinkSensorEntityDescription
+) -> int | None:
+    """Return value for the attribute defined in the description.
+
+    This should be converted to use generics to pass the expected type.
+    """
+    if (
+        description.attribute_name is not None
+        and (value := getattr(device, description.attribute_name)) is not None
+    ):
+        return cast(int, value)
 
     return None
 
@@ -153,6 +171,18 @@ SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         attribute_name="on_since",
         value_fn=async_handle_timestamp,
+        precision=None,
+    ),
+    TPLinkSensorEntityDescription(
+        key="wifi_rssi",
+        translation_key="wifi_signal",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        attribute_name="rssi",
+        value_fn=async_handle_int_value,
         precision=None,
     ),
 )
