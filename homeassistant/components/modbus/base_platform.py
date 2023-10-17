@@ -382,7 +382,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         self._lazy_errors = self._lazy_error_count
         self._attr_available = True
         if self._verify_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
-            self._attr_is_on = bool(result.bits[0] & 1)
+            self._attr_is_on = bool(result.bits[0] & 1) == bool(self._state_on)
         else:
             value = int(result.registers[0])
             if value == self._state_on:

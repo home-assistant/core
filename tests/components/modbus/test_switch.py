@@ -440,3 +440,64 @@ async def test_no_discovery_info_switch(
     )
     await hass.async_block_till_done()
     assert SWITCH_DOMAIN in hass.config.components
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_COMMAND_OFF: 0x01,
+                    CONF_COMMAND_ON: 0x00,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_VERIFY: {},
+                },
+                {
+                    CONF_NAME: f"{TEST_ENTITY_NAME} 2",
+                    CONF_ADDRESS: 1234,
+                    CONF_COMMAND_OFF: 0x01,
+                    CONF_COMMAND_ON: 0x00,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                    CONF_VERIFY: {},
+                },
+            ]
+        },
+    ],
+)
+async def test_inversed_switch_service_turn(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_modbus,
+    mock_pymodbus_return,
+) -> None:
+    """Run test for turn_on/turn_off for inversed registers."""
+
+    mock_modbus.read_holding_registers.return_value = ReadResult([0x00])
+    await hass.services.async_call(
+        "switch", "turn_on", service_data={"entity_id": ENTITY_ID}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
+    await hass.services.async_call(
+        "switch", "turn_off", service_data={"entity_id": ENTITY_ID}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+    mock_modbus.read_coils.return_value = ReadResult([0x00])
+    await hass.services.async_call(
+        "switch", "turn_on", service_data={"entity_id": ENTITY_ID2}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID2).state == STATE_ON
+    mock_modbus.read_coils.return_value = ReadResult([0x01])
+    await hass.services.async_call(
+        "switch", "turn_off", service_data={"entity_id": ENTITY_ID2}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID2).state == STATE_OFF
