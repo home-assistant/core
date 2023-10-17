@@ -5,8 +5,7 @@ from collections.abc import Mapping, Sequence
 import dataclasses
 import functools
 
-from homeassistant.components import recorder
-from .. import sensor
+from homeassistant.components import recorder, sensor
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     STATE_UNAVAILABLE,

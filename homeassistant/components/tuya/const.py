@@ -8,7 +8,7 @@ import logging
 
 from tuya_iot import TuyaCloudOpenAPIEndpoint
 
-from ..sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
