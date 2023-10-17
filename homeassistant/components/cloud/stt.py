@@ -86,7 +86,9 @@ class CloudProviderEntity(SpeechToTextEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity is about to be added to hass."""
         # Migrate existing pipelines with cloud stt to use new cloud stt engine id.
-        # Added in 2023.10.0.
+        # Added in 2023.11.0. Can be removed in 2024.11.0.
+        # Make sure the pipeline store is loaded, needed because assist_pipeline
+        # is an after dependency of cloud
         await async_setup_pipeline_store(self.hass)
         pipelines = async_get_pipelines(self.hass)
         for pipeline in pipelines:
