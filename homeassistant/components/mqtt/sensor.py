@@ -277,7 +277,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 )
 
         @callback
-        @write_state_on_attr_change(self, {"_attr_native_value", "_attr_last_reset"})
+        @write_state_on_attr_change(
+            self, {"_attr_native_value", "_attr_last_reset", "_expired"}
+        )
         @log_messages(self.hass, self.entity_id)
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""

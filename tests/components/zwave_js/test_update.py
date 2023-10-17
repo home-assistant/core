@@ -87,6 +87,24 @@ FIRMWARE_UPDATES = {
                 "rfRegion": 1,
             },
         },
+        # This firmware update should never show because it's in the beta channel
+        {
+            "version": "999.999.999",
+            "changelog": "blah 3",
+            "channel": "beta",
+            "files": [
+                {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
+            ],
+            "downgrade": True,
+            "normalizedVersion": "999.999.999",
+            "device": {
+                "manufacturerId": 1,
+                "productType": 2,
+                "productId": 3,
+                "firmwareVersion": "0.4.4",
+                "rfRegion": 1,
+            },
+        },
     ]
 }
 
