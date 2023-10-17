@@ -5423,6 +5423,287 @@
     }),
   ])
 # ---
+# name: test_snapshots[home_assistant_bridge_basic_fan]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:766313939',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'Home Assistant',
+        'model': 'Fan',
+        'name': 'Ceiling Fan',
+        'name_by_user': None,
+        'suggested_area': None,
+        'sw_version': '0.104.0.dev0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.ceiling_fan_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Ceiling Fan Identify',
+            'platform': 'homekit_controller',
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_766313939_1_2',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Ceiling Fan Identify',
+            }),
+            'entity_id': 'button.ceiling_fan_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'preset_modes': None,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'fan',
+            'entity_category': None,
+            'entity_id': 'fan.ceiling_fan',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Ceiling Fan',
+            'platform': 'homekit_controller',
+            'supported_features': <FanEntityFeature: 1>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_766313939_8',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Ceiling Fan',
+              'percentage': 0,
+              'percentage_step': 1.0,
+              'preset_mode': None,
+              'preset_modes': None,
+              'supported_features': <FanEntityFeature: 1>,
+            }),
+            'entity_id': 'fan.ceiling_fan',
+            'state': 'off',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'Home Assistant',
+        'model': 'Bridge',
+        'name': 'Home Assistant Bridge',
+        'name_by_user': None,
+        'suggested_area': None,
+        'sw_version': '0.104.0.dev0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.home_assistant_bridge_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Home Assistant Bridge Identify',
+            'platform': 'homekit_controller',
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_2',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Home Assistant Bridge Identify',
+            }),
+            'entity_id': 'button.home_assistant_bridge_identify',
+            'state': 'unknown',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1256851357',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'Home Assistant',
+        'model': 'Fan',
+        'name': 'Living Room Fan',
+        'name_by_user': None,
+        'suggested_area': None,
+        'sw_version': '0.104.0.dev0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.living_room_fan_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Living Room Fan Identify',
+            'platform': 'homekit_controller',
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1256851357_1_2',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Living Room Fan Identify',
+            }),
+            'entity_id': 'button.living_room_fan_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'preset_modes': None,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'fan',
+            'entity_category': None,
+            'entity_id': 'fan.living_room_fan',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Living Room Fan',
+            'platform': 'homekit_controller',
+            'supported_features': <FanEntityFeature: 5>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1256851357_8',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'direction': 'forward',
+              'friendly_name': 'Living Room Fan',
+              'percentage': 0,
+              'percentage_step': 1.0,
+              'preset_mode': None,
+              'preset_modes': None,
+              'supported_features': <FanEntityFeature: 5>,
+            }),
+            'entity_id': 'fan.living_room_fan',
+            'state': 'off',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
 # name: test_snapshots[home_assistant_bridge_fan]
   list([
     dict({
