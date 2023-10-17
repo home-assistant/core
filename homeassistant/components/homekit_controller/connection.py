@@ -836,7 +836,7 @@ class HKDevice:
 
     @callback
     def async_subscribe_config_changed(self, callback_: CALLBACK_TYPE) -> CALLBACK_TYPE:
-        """Add characteristics to the watch list."""
+        """Subscribe to config of the accessory being changed aka c# changes."""
         self._config_changed_callbacks.add(callback_)
 
         def _unsub():
