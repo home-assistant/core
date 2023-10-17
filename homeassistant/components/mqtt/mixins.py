@@ -431,7 +431,6 @@ async def async_mqtt_entry_helper(
                     },
                     translation_key="invalid_platform_config",
                 )
-                mqtt_data.open_config_issues.add(issue_id)
                 _LOGGER.error(
                     "%s for manual configured MQTT %s item, in %s, line %s Got %s",
                     error,

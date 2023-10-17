@@ -1291,8 +1291,6 @@ async def test_reload_after_invalid_config(
 ) -> None:
     """Test reloading yaml config fails."""
     with patch(
-        "homeassistant.components.mqtt.mixins.async_create_issue"
-    ) as mock_async_create_issue, patch(
         "homeassistant.components.mqtt.async_delete_issue"
     ) as mock_async_remove_issue:
         assert await mqtt_mock_entry()
@@ -1303,8 +1301,6 @@ async def test_reload_after_invalid_config(
             "in ?, line ? Got {'name': 'test', 'invalid_topic': 'test-topic'}"
             in caplog.text
         )
-        assert mock_async_create_issue.call_count == 1
-        assert mock_async_remove_issue.call_count == 0
 
         # Reload with an valid config
         valid_config = {
@@ -1329,9 +1325,8 @@ async def test_reload_after_invalid_config(
             )
             await hass.async_block_till_done()
 
-        # Make sure the config is loaded now
+        # Test the config is loaded now and that the existing issue is removed
         assert hass.states.get("alarm_control_panel.test") is not None
-        assert mock_async_create_issue.call_count == 1
         assert mock_async_remove_issue.call_count == 1
 
         # Reload with an invalid config
@@ -1359,6 +1354,3 @@ async def test_reload_after_invalid_config(
 
         # Make sure the config is loaded now
         assert hass.states.get("alarm_control_panel.test") is not None
-        # Existing items are not effected and
-        # no new issues are created at this time
-        assert mock_async_create_issue.call_count == 1

@@ -29,7 +29,10 @@ from homeassistant.helpers import config_validation as cv, event as ev, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.issue_registry import async_delete_issue
+from homeassistant.helpers.issue_registry import (
+    async_delete_issue,
+    async_get as async_get_issue_registry,
+)
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -214,14 +217,20 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 @callback
 def _async_remove_mqtt_issues(hass: HomeAssistant, mqtt_data: MqttData) -> None:
     """Unregister open config issues."""
-    while open_config_issues := mqtt_data.open_config_issues:
-        async_delete_issue(hass, DOMAIN, open_config_issues.pop())
+    issue_registry = async_get_issue_registry(hass)
+    open_issues = [
+        issue_id
+        for (domain, issue_id), issue_entry in issue_registry.issues.items()
+        if domain == DOMAIN and issue_entry.translation_key == "invalid_platform_config"
+    ]
+    while open_issues:
+        async_delete_issue(hass, DOMAIN, open_issues.pop())
 
 
 async def async_check_config_schema(
     hass: HomeAssistant, config_yaml: ConfigType
 ) -> None:
-    """Validate the manual configured mqtt items against the platform config."""
+    """Validate manually configured MQTT items."""
     mqtt_data = get_mqtt_data(hass)
     mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml[DOMAIN]
     for mqtt_config_item in mqtt_config:
@@ -407,7 +416,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Check the schema before continuing reload
             await async_check_config_schema(hass, config_yaml)
 
-            # Unregister open config issues
+            # Remove repair issues
             _async_remove_mqtt_issues(hass, mqtt_data)
 
             mqtt_data.config = config_yaml.get(DOMAIN, {})
@@ -631,7 +640,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if subscriptions := mqtt_client.subscriptions:
         mqtt_data.subscriptions_to_restore = subscriptions
 
-    # Unregister open config issues
+    # Remove repair issues
     _async_remove_mqtt_issues(hass, mqtt_data)
 
     return True
