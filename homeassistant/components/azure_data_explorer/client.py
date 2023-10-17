@@ -1,8 +1,10 @@
 """Setting up the ingest client."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import io
 import logging
+from typing import Any
 
 from azure.kusto.data import KustoClient, KustoConnectionStringBuilder
 from azure.kusto.data.data_format import DataFormat
@@ -11,6 +13,16 @@ from azure.kusto.ingest import (
     ManagedStreamingIngestClient,
     QueuedIngestClient,
     StreamDescriptor,
+)
+
+from .const import (
+    CONF_ADX_CLUSTER_INGEST_URI,
+    CONF_ADX_DATABASE_NAME,
+    CONF_ADX_TABLE_NAME,
+    CONF_APP_REG_ID,
+    CONF_APP_REG_SECRET,
+    CONF_AUTHORITY_ID,
+    CONF_USE_FREE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,16 +35,16 @@ logger.setLevel(logging.WARNING)
 class AzureDataExplorerClient:
     """Class for Azure Data Explorer Client."""
 
-    def __init__(self, **data) -> None:
+    def __init__(self, data: Mapping[str, Any]) -> None:
         """Create the right class."""
 
-        self.cluster_ingest_uri = data["cluster_ingest_uri"]
-        self.database = data["database"]
-        self.table = data["table"]
-        self.client_id = data["client_id"]
-        self.client_secret = data["client_secret"]
-        self.authority_id = data["authority_id"]
-        self.use_queued_ingestion = data["use_queued_ingestion"]
+        self.cluster_ingest_uri = data[CONF_ADX_CLUSTER_INGEST_URI]
+        self.database = data[CONF_ADX_DATABASE_NAME]
+        self.table = data[CONF_ADX_TABLE_NAME]
+        self.client_id = data[CONF_APP_REG_ID]
+        self.client_secret = data[CONF_APP_REG_SECRET]
+        self.authority_id = data[CONF_AUTHORITY_ID]
+        self.use_queued_ingestion = data[CONF_USE_FREE]
 
         self.cluster_query_uri = self.cluster_ingest_uri.replace(
             "https://ingest-", "https://"

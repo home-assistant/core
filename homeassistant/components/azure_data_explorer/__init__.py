@@ -108,15 +108,13 @@ class AzureDataExplorer:
         self._entry = entry
         self._entities_filter = hass.data[DOMAIN][DATA_FILTER]
 
-        self._client = AzureDataExplorerClient(**entry.data)
+        self._client = AzureDataExplorerClient(entry.data)
 
         self._send_interval = entry.options[CONF_SEND_INTERVAL]
         self._max_delay = DEFAULT_MAX_DELAY
 
         self._shutdown = False
-        self._queue: asyncio.PriorityQueue[
-            tuple[int, tuple[datetime, State | None]]
-        ] = asyncio.PriorityQueue()
+        self._queue: asyncio.Queue[tuple[datetime, State]] = asyncio.Queue()
         self._listener_remover: Callable[[], None] | None = None
         self._next_send_remover: Callable[[], None] | None = None
 
@@ -161,7 +159,7 @@ class AzureDataExplorer:
     async def async_listen(self, event: Event) -> None:
         """Listen for new messages on the bus and queue them for ADX."""
         if state := event.data.get("new_state"):
-            await self._queue.put((2, (event.time_fired, state)))
+            await self._queue.put((event.time_fired, state))
 
     async def async_send(self, _) -> None:
         """Write preprocessed events to Azure Data Explorer."""
@@ -169,8 +167,8 @@ class AzureDataExplorer:
         adx_events = []
         dropped = 0
         while not self._queue.empty():
-            _, event = self._queue.get_nowait()
-            adx_event, dropped = self._parse_event(*event, dropped)
+            (time_fired, event) = self._queue.get_nowait()
+            adx_event, dropped = self._parse_event(time_fired, event, dropped)
             self._queue.task_done()
             if adx_event is not None:
                 adx_events.append(adx_event)
@@ -198,16 +196,16 @@ class AzureDataExplorer:
     def _parse_event(
         self,
         time_fired: datetime,
-        state: State | None,
+        state: State,
         dropped: int,
     ) -> tuple[str | None, int]:
         """Parse event by checking if it needs to be sent, and format it."""
 
-        if state.state in FILTER_STATES or not self._entities_filter(state.entity_id):  # type: ignore[union-attr]
+        if state.state in FILTER_STATES or not self._entities_filter(state.entity_id):
             return None, dropped
         if (utcnow() - time_fired).seconds > DEFAULT_MAX_DELAY + self._send_interval:
             return None, dropped + 1
-        if "\n" in state.state:  # type: ignore[union-attr]
+        if "\n" in state.state:
             return None, dropped + 1
 
         json_event = str(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
