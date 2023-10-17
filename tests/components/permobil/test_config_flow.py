@@ -121,7 +121,7 @@ async def test_form_invalid_region_api(hass: HomeAssistant) -> None:
             data={CONF_REGION: MOCK_REGION},
         )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"].get("base") == "region_connection_error"
+    assert result["errors"].get("base") == "code_request_error"
 
 
 async def test_form_invalid_email(hass: HomeAssistant) -> None:
@@ -261,7 +261,7 @@ async def test_form_reauth_api_fail(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth"
-    assert result["errors"].get("base") == "region_connection_error"
+    assert result["errors"].get("base") == "code_request_error"
 
 
 async def test_form_reauth_context_fail(hass: HomeAssistant) -> None:

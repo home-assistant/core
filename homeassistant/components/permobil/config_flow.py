@@ -8,7 +8,7 @@ from typing import Any
 from mypermobil import MyPermobil, MyPermobilAPIException, MyPermobilClientException
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_REGION, CONF_TOKEN, CONF_TTL
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.data_entry_flow import FlowResult
@@ -36,15 +36,10 @@ GET_EMAIL_SCHEMA = vol.Schema(
 GET_TOKEN_SCHEMA = vol.Schema({vol.Required(CONF_CODE): cv.string})
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
 class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Permobil config flow."""
 
     VERSION = 1
-    p_api: MyPermobil = None
     region_names: dict[str, str] = {}
     data: dict[str, str] = {}
 
@@ -63,8 +58,8 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 self.p_api.set_email(user_input[CONF_EMAIL])
-            except MyPermobilClientException as err:
-                _LOGGER.exception("Error validating email: %s", err)
+            except MyPermobilClientException:
+                _LOGGER.exception("Error validating email")
                 errors["base"] = "invalid_email"
 
             self.data.update(user_input)
@@ -93,8 +88,8 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "region names %s",
                     ",".join(list(self.region_names.keys())),
                 )
-            except MyPermobilAPIException as err:
-                _LOGGER.exception("Error requesting regions: %s", err)
+            except MyPermobilAPIException:
+                _LOGGER.exception("Error requesting regions")
                 errors["base"] = "region_fetch_error"
 
         else:
@@ -106,9 +101,9 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 # tell backend to send code to the users email
                 await self.p_api.request_application_code()
-            except MyPermobilAPIException as err:
-                _LOGGER.exception("Error requesting code: %s", err)
-                errors["base"] = "region_connection_error"
+            except MyPermobilAPIException:
+                _LOGGER.exception("Error requesting code")
+                errors["base"] = "code_request_error"
 
         if errors or user_input is None:
             # the error could either be that the fetch region did not pass
@@ -143,10 +138,10 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.data[CONF_TOKEN] = token
                 self.data[CONF_TTL] = ttl
                 _LOGGER.debug("Success")
-        except (MyPermobilAPIException, MyPermobilClientException) as err:
+        except (MyPermobilAPIException, MyPermobilClientException):
             # the code did not pass validation by the api client
             # or the backend returned an error when trying to validate the code
-            _LOGGER.exception("Error verifying code: %s", err)
+            _LOGGER.exception("Error verifying code")
             errors["base"] = "invalid_code"
 
         if errors or user_input is None:
@@ -176,9 +171,9 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.p_api.request_application_code()
-            except MyPermobilAPIException as err:
-                _LOGGER.exception("Error requesting code: %s", err)
-                errors["base"] = "region_connection_error"
+            except MyPermobilAPIException:
+                _LOGGER.exception("Error requesting code")
+                errors["base"] = "code_request_error"
         else:
             errors["base"] = "unknown"
 

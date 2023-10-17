@@ -23,12 +23,9 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect",
-      "invalid_auth": "Invalid authentication",
       "unknown": "Unexpected error",
       "region_fetch_error": "Error fetching regions",
-      "region_connection_error": "Error requesting application code",
-      "empty_code": "You must enter a code",
+      "code_request_error": "Error requesting application code",
       "invalid_email": "Invalid email",
       "invalid_code": "The code you gave is incorrect"
     }
