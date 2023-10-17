@@ -154,14 +154,9 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         if self.service.has(CharacteristicsTypes.POSITION_HOLD):
             features |= CoverEntityFeature.STOP
 
-        supports_tilt = any(
-            (
-                self.service.has(CharacteristicsTypes.VERTICAL_TILT_CURRENT),
-                self.service.has(CharacteristicsTypes.HORIZONTAL_TILT_CURRENT),
-            )
-        )
-
-        if supports_tilt:
+        if self.service.has(
+            CharacteristicsTypes.VERTICAL_TILT_CURRENT
+        ) or self.service.has(CharacteristicsTypes.HORIZONTAL_TILT_CURRENT):
             features |= (
                 CoverEntityFeature.OPEN_TILT
                 | CoverEntityFeature.CLOSE_TILT
