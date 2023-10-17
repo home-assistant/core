@@ -1,7 +1,9 @@
 """A local todo list todo platform."""
 
+from collections.abc import Iterable
 import dataclasses
 import logging
+from typing import Any
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
@@ -35,6 +37,10 @@ ICS_TODO_STATUS_MAP = {
     TodoStatus.COMPLETED: TodoItemStatus.COMPLETED,
     TodoStatus.CANCELLED: TodoItemStatus.COMPLETED,
 }
+ICS_TODO_STATUS_MAP_INV = {
+    TodoItemStatus.COMPLETED: TodoStatus.COMPLETED,
+    TodoItemStatus.NEEDS_ACTION: TodoStatus.NEEDS_ACTION,
+}
 
 
 async def async_setup_entry(
@@ -54,6 +60,17 @@ async def async_setup_entry(
     async_add_entities([entity], True)
 
 
+def _todo_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
+    """Convert TodoItem dataclass items to dictionary of attributes for ical consumption."""
+    result: dict[str, str] = {}
+    for name, value in obj:
+        if name == "status":
+            result[name] = ICS_TODO_STATUS_MAP_INV[value]
+        elif value is not None:
+            result[name] = value
+    return result
+
+
 class LocalTodoListEntity(TodoListEntity):
     """A To-do List representation of the Shopping List."""
 
@@ -64,6 +81,7 @@ class LocalTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
     )
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -77,103 +95,72 @@ class LocalTodoListEntity(TodoListEntity):
         self._calendar = calendar
         self._attr_name = name.capitalize()
         self._attr_unique_id = unique_id
-        self._compute_state()
 
-    async def async_get_todo_items(self) -> list[TodoItem]:
-        """Get items in the To-do list."""
-        return self._todo_items
+    async def async_update(self) -> None:
+        """Update entity state based on the local To-do items."""
+        self._attr_todo_items = [
+            TodoItem(
+                uid=item.uid,
+                summary=item.summary or "",
+                status=ICS_TODO_STATUS_MAP.get(
+                    item.status or TodoStatus.NEEDS_ACTION, TodoItemStatus.NEEDS_ACTION
+                ),
+            )
+            for item in self._calendar.todos
+        ]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         try:
             todo = Todo.parse_obj(
-                {k: v for k, v in dataclasses.asdict(item).items() if v is not None}
+                dataclasses.asdict(item, dict_factory=_todo_dict_factory)
             )
         except ValidationError as err:
             _LOGGER.debug("Error parsing todo input fields: %s (%s)", item, str(err))
             raise vol.Invalid("Error parsing todo input fields") from err
         TodoStore(self._calendar).add(todo)
-        await self._async_store()
-        self._compute_state()
+        await self._async_save()
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item to the To-do list."""
         try:
             todo = Todo.parse_obj(
-                {k: v for k, v in dataclasses.asdict(item).items() if v is not None}
+                dataclasses.asdict(item, dict_factory=_todo_dict_factory)
             )
         except ValidationError as err:
             _LOGGER.debug("Error parsing todo input fields: %s (%s)", item, str(err))
             raise vol.Invalid("Error parsing todo input fields") from err
         TodoStore(self._calendar).edit(todo.uid, todo)
-        await self._async_store()
-        self._compute_state()
+        await self._async_save()
         await self.async_update_ha_state(force_refresh=True)
 
-    async def async_delete_todo_items(self, uids: set[str]) -> None:
+    async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Add an item to the To-do list."""
         store = TodoStore(self._calendar)
         for uid in uids:
             store.delete(uid)
-        await self._async_store()
-        self._compute_state()
+        await self._async_save()
         await self.async_update_ha_state(force_refresh=True)
 
-    async def async_move_todo_item(self, uid: str, previous: str | None = None) -> None:
+    async def async_move_todo_item(self, uid: str, pos: int) -> None:
         """Re-order an item to the To-do list."""
-        if uid == previous:
-            return
-        # Build a map of each item id to its position within the list
-        item_idx: dict[str, int] = {}
         todos = self._calendar.todos
+        found_item: Todo | None = None
         for idx, itm in enumerate(todos):
-            item_idx[itm.uid] = idx
-        if uid not in item_idx:
+            if itm.uid == uid:
+                found_item = itm
+                todos.pop(idx)
+                break
+        if found_item is None:
             raise HomeAssistantError(
-                "Item '{uid}' not found in todo list {self.entity_id}"
+                f"Item '{uid}' not found in todo list {self.entity_id}"
             )
-        if previous and previous not in item_idx:
-            raise HomeAssistantError(
-                "Item '{previous}' not found in todo list {self.entity_id}"
-            )
-        dst_idx = item_idx[previous] + 1 if previous else 0
-        src_idx = item_idx[uid]
-        src_item = todos.pop(src_idx)
-        if dst_idx > src_idx:
-            dst_idx -= 1
-        todos.insert(dst_idx, src_item)
-        self._calendar.todos = todos
-        await self._async_store()
-        self._compute_state()
+        todos.insert(pos, found_item)
+        await self._async_save()
         await self.async_update_ha_state(force_refresh=True)
 
-    async def _async_store(self) -> None:
+    async def _async_save(self) -> None:
         """Persist the todo list to disk."""
         content = IcsCalendarStream.calendar_to_ics(self._calendar)
         await self._store.async_store(content)
-
-    @property
-    def _todo_items(self) -> list[TodoItem]:
-        """Get the current set of To-do items."""
-        results = []
-        for item in self._calendar.todos:
-            if item.status:
-                status = ICS_TODO_STATUS_MAP.get(
-                    item.status, TodoItemStatus.NEEDS_ACTION
-                )
-            else:
-                status = TodoItemStatus.NEEDS_ACTION
-            results.append(
-                TodoItem(
-                    summary=item.summary or "",
-                    uid=item.uid,
-                    status=status,
-                )
-            )
-        return results
-
-    def _compute_state(self) -> None:
-        self._attr_incomplete_count = sum(
-            item.status == TodoItemStatus.NEEDS_ACTION for item in self._todo_items
-        )
