@@ -41,10 +41,10 @@
         }
       },
       "secure_key_source_menu_2": {
-        "title": "[%key:component::knx::config::step::secure_key_source_menu_1::title]",
-        "description": "[%key:component::knx::config::step::secure_key_source_menu_1::description]",
+        "title": "[%key:component::knx::config::step::secure_key_source_menu_1::title%]",
+        "description": "[%key:component::knx::config::step::secure_key_source_menu_1::description%]",
         "menu_options": {
-          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_1::menu_options::secure_knxkeys]",
+          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_1::menu_options::secure_knxkeys%]",
           "secure_routing_manual": "Configure IP secure backbone key manually"
         }
       },
