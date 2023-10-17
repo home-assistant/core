@@ -142,9 +142,8 @@ async def test_strip(hass: HomeAssistant) -> None:
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    # Verify we only create entities for the children
-    # since this is what the previous version did
-    assert hass.states.get("switch.my_strip") is None
+    main_entity = hass.states.get("switch.my_strip")
+    assert main_entity.state == STATE_ON
 
     entity_id = "switch.my_strip_plug0"
     state = hass.states.get(entity_id)
