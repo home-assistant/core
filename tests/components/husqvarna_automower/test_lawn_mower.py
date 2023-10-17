@@ -2,7 +2,7 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aioautomower import AutomowerSession
+from aioautomower.session import AutomowerSession
 import pytest
 
 from homeassistant.components.husqvarna_automower import DOMAIN
@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import AUTOMOWER_CONFIG_DATA, AUTOMOWER_SM_SESSION_DATA, MWR_ONE_ID
-from .test_common import make_mower_data
+from .utils import make_mower_data
 
 from tests.common import MockConfigEntry
 

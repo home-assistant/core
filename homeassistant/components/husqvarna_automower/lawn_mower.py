@@ -1,6 +1,7 @@
 """Husqvarna Automower lawn mower entity."""
 import logging
 
+from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerActivities, MowerStates
 
 from homeassistant.components.lawn_mower import (
@@ -98,12 +99,21 @@ class AutomowerLawnMowerEntity(LawnMowerEntity, AutomowerBaseEntity):
 
     async def async_start_mowing(self) -> None:
         """Resume schedule."""
-        await self.coordinator.api.resume_schedule(self.mower_id)
+        try:
+            await self.coordinator.api.resume_schedule(self.mower_id)
+        except ApiException as exception:
+            _LOGGER.error("Command couldn't be sent to the command que: %s", exception)
 
     async def async_pause(self) -> None:
         """Pauses the mower."""
-        await self.coordinator.api.pause_mowing(self.mower_id)
+        try:
+            await self.coordinator.api.pause_mowing(self.mower_id)
+        except ApiException as exception:
+            _LOGGER.error("Command couldn't be sent to the command que: %s", exception)
 
     async def async_dock(self) -> None:
         """Parks the mower until next schedule."""
-        await self.coordinator.api.park_until_next_schedule(self.mower_id)
+        try:
+            await self.coordinator.api.park_until_next_schedule(self.mower_id)
+        except ApiException as exception:
+            _LOGGER.error("Command couldn't be sent to the command que: %s", exception)

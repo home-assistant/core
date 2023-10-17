@@ -1,6 +1,7 @@
 """Data UpdateCoordinator for the Husqvarna Automower integration."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aioautomower.model import MowerAttributes, MowerList
 from aioautomower.session import AutomowerSession
@@ -32,9 +33,13 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         """Subscribe for websocket and poll data from the API."""
         if not self.ws_connected:
             await self.api.connect()
-            self.api.register_data_callback(self.callback, schedule_immediately=True)
+            self.api.register_data_callback(self.callback)
             self.ws_connected = True
         return await self.api.get_status()
+
+    async def shutdown(self, *_: Any) -> None:
+        """Close resources."""
+        await self.api.close()
 
     @callback
     def callback(self, ws_data: MowerList):
