@@ -41,7 +41,7 @@ def v1_mock_config_entry() -> MockConfigEntry:
     """Create mock config entry with version 1."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=f"{TEST_HOST}-{TEST_PORT}",
+        unique_id=TEST_UNIQUE_ID,
         entry_id=TEST_CONFIG_ENTRY_ID,
         data={
             CONF_NAME: DEFAULT_NAME,
