@@ -53,28 +53,43 @@ async def test_logging_with_queue_handler() -> None:
 
 
 @pytest.mark.parametrize(
-    ("version", "exc", "exc_info"),
+    ("version", "level", "exc", "exc_info"),
     [
-        ("2023.10.0", HomeAssistantError, NoneType),
-        ("2023.10.0b0", HomeAssistantError, tuple),
-        ("2023.10.0", ConfigError, NoneType),
-        ("2023.10.0b0", ConfigError, tuple),
-        ("2023.10.0", KeyError, tuple),
-        ("2023.10.0b0", KeyError, tuple),
+        ("2023.10.0", logging.INFO, HomeAssistantError, NoneType),
+        ("2023.10.0b0", logging.INFO, HomeAssistantError, tuple),
+        ("2023.10.0", logging.INFO, ConfigError, NoneType),
+        ("2023.10.0b0", logging.INFO, ConfigError, tuple),
+        ("2023.10.0", logging.INFO, KeyError, tuple),
+        ("2023.10.0b0", logging.INFO, KeyError, tuple),
+        ("2023.10.0", logging.WARNING, HomeAssistantError, NoneType),
+        ("2023.10.0", logging.WARNING, ConfigError, NoneType),
+        ("2023.10.0", logging.WARNING, KeyError, tuple),
+        ("2023.10.0", logging.ERROR, HomeAssistantError, NoneType),
+        ("2023.10.0", logging.ERROR, ConfigError, NoneType),
+        ("2023.10.0", logging.ERROR, KeyError, tuple),
+        ("2023.10.0", logging.CRITICAL, HomeAssistantError, NoneType),
+        ("2023.10.0", logging.CRITICAL, ConfigError, NoneType),
+        ("2023.10.0", logging.CRITICAL, KeyError, tuple),
+        ("2023.10.0", logging.DEBUG, HomeAssistantError, tuple),
+        ("2023.10.0", logging.DEBUG, ConfigError, tuple),
+        ("2023.10.0", logging.DEBUG, KeyError, tuple),
     ],
 )
 async def test_suppressed_logging_stack_trace(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     version: str,
+    level: int,
     exc: Exception,
     exc_info: type[tuple] | NoneType,
 ) -> None:
     """Test logging stack trace on stable builds.
 
-    Stack traces for HomeAssistantError should be suppressed for stable builds.
+    Stack traces for HomeAssistantError should be suppressed for stable builds,
+    except when debug logging is enabled.
     """
-    logger = logging.getLogger("")
+    logger = logging.getLogger("test.util.logging")
+    logger.setLevel(level)
     with patch("homeassistant.core.__version__", version):
         log_filter = logging_util.SuppressHomeAssistantErrorStackTrace()
         logger.addFilter(log_filter)

@@ -28,10 +28,11 @@ class SuppressHomeAssistantErrorStackTrace(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         """Conditionally suppress stack trace for HomeAssistantError."""
         if (
-            not self.stable_channel
-            or not record.exc_info
+            not record.exc_info
             or not record.exc_info[0]
+            or not self.stable_channel
             or not issubclass(record.exc_info[0], HomeAssistantError)
+            or logging.getLogger(record.name).isEnabledFor(logging.DEBUG)
         ):
             return True
 
