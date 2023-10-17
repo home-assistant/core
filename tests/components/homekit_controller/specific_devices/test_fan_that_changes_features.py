@@ -1,7 +1,4 @@
-"""Regression tests for Ecobee 3.
-
-https://github.com/home-assistant/core/issues/15336
-"""
+"""Test for a Home Assistant bridge that changes fan features at runtime."""
 
 
 from homeassistant.components.fan import FanEntityFeature
