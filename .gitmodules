@@ -1,3 +1,0 @@
-[submodule "config/deps/aioautomower"]
-	path = config/deps/aioautomower
-	url = https://github.com/Thomas55555/aioautomower.git
