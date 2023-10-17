@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import timedelta
-from json import JSONDecodeError
 import logging
 from typing import Any, cast
 
 import CO2Signal
+from requests.exceptions import JSONDecodeError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE

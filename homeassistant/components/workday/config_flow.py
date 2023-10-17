@@ -16,6 +16,8 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
+    CountrySelector,
+    CountrySelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -43,23 +45,23 @@ from .const import (
     LOGGER,
 )
 
-NONE_SENTINEL = "none"
-
 
 def add_province_to_schema(
     schema: vol.Schema,
-    country: str,
+    country: str | None,
 ) -> vol.Schema:
     """Update schema with province from country."""
+    if not country:
+        return schema
+
     all_countries = list_supported_countries()
     if not all_countries.get(country):
         return schema
 
-    province_list = [NONE_SENTINEL, *all_countries[country]]
     add_schema = {
-        vol.Optional(CONF_PROVINCE, default=NONE_SENTINEL): SelectSelector(
+        vol.Optional(CONF_PROVINCE): SelectSelector(
             SelectSelectorConfig(
-                options=province_list,
+                options=all_countries[country],
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_PROVINCE,
             )
@@ -90,7 +92,7 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
             raise AddDatesError("Incorrect date")
 
     year: int = dt_util.now().year
-    if country := user_input[CONF_COUNTRY]:
+    if country := user_input.get(CONF_COUNTRY):
         cls = country_holidays(country)
         obj_holidays = country_holidays(
             country=country,
@@ -113,11 +115,9 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
 DATA_SCHEMA_SETUP = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Optional(CONF_COUNTRY, default=NONE_SENTINEL): SelectSelector(
-            SelectSelectorConfig(
-                options=[NONE_SENTINEL, *list(list_supported_countries())],
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_COUNTRY,
+        vol.Optional(CONF_COUNTRY): CountrySelector(
+            CountrySelectorConfig(
+                countries=list(list_supported_countries()),
             )
         ),
     }
@@ -179,33 +179,6 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return WorkdayOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a configuration from config.yaml."""
-
-        abort_match = {
-            CONF_COUNTRY: config[CONF_COUNTRY],
-            CONF_EXCLUDES: config[CONF_EXCLUDES],
-            CONF_OFFSET: config[CONF_OFFSET],
-            CONF_WORKDAYS: config[CONF_WORKDAYS],
-            CONF_ADD_HOLIDAYS: config[CONF_ADD_HOLIDAYS],
-            CONF_REMOVE_HOLIDAYS: config[CONF_REMOVE_HOLIDAYS],
-            CONF_PROVINCE: config.get(CONF_PROVINCE),
-        }
-        new_config = config.copy()
-        new_config[CONF_PROVINCE] = config.get(CONF_PROVINCE)
-        LOGGER.debug("Importing with %s", new_config)
-
-        self._async_abort_entries_match(abort_match)
-
-        self.data[CONF_NAME] = config.get(CONF_NAME, DEFAULT_NAME)
-        self.data[CONF_COUNTRY] = config[CONF_COUNTRY]
-        LOGGER.debug(
-            "No duplicate, next step with name %s for country %s",
-            self.data[CONF_NAME],
-            self.data[CONF_COUNTRY],
-        )
-        return await self.async_step_options(user_input=new_config)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -229,11 +202,6 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
 
-            if combined_input.get(CONF_COUNTRY, NONE_SENTINEL) == NONE_SENTINEL:
-                combined_input[CONF_COUNTRY] = None
-            if combined_input.get(CONF_PROVINCE, NONE_SENTINEL) == NONE_SENTINEL:
-                combined_input[CONF_PROVINCE] = None
-
             try:
                 await self.hass.async_add_executor_job(
                     validate_custom_dates, combined_input
@@ -246,17 +214,15 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["remove_holidays"] = "remove_holiday_error"
             except RemoveDateRangeError:
                 errors["remove_holidays"] = "remove_holiday_range_error"
-            except NotImplementedError:
-                self.async_abort(reason="incorrect_province")
 
             abort_match = {
-                CONF_COUNTRY: combined_input[CONF_COUNTRY],
+                CONF_COUNTRY: combined_input.get(CONF_COUNTRY),
                 CONF_EXCLUDES: combined_input[CONF_EXCLUDES],
                 CONF_OFFSET: combined_input[CONF_OFFSET],
                 CONF_WORKDAYS: combined_input[CONF_WORKDAYS],
                 CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
                 CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
-                CONF_PROVINCE: combined_input[CONF_PROVINCE],
+                CONF_PROVINCE: combined_input.get(CONF_PROVINCE),
             }
             LOGGER.debug("abort_check in options with %s", combined_input)
             self._async_abort_entries_match(abort_match)
@@ -271,7 +237,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.data[CONF_COUNTRY]
+            add_province_to_schema, DATA_SCHEMA_OPT, self.data.get(CONF_COUNTRY)
         )
         new_schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(
@@ -280,7 +246,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "name": self.data[CONF_NAME],
-                "country": self.data[CONF_COUNTRY],
+                "country": self.data.get(CONF_COUNTRY),
             },
         )
 
@@ -296,8 +262,9 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.options, **user_input}
-            if combined_input.get(CONF_PROVINCE, NONE_SENTINEL) == NONE_SENTINEL:
-                combined_input[CONF_PROVINCE] = None
+            if CONF_PROVINCE not in user_input:
+                # Province not present, delete old value (if present) too
+                combined_input.pop(CONF_PROVINCE, None)
 
             try:
                 await self.hass.async_add_executor_job(
@@ -316,13 +283,13 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 try:
                     self._async_abort_entries_match(
                         {
-                            CONF_COUNTRY: self._config_entry.options[CONF_COUNTRY],
+                            CONF_COUNTRY: self._config_entry.options.get(CONF_COUNTRY),
                             CONF_EXCLUDES: combined_input[CONF_EXCLUDES],
                             CONF_OFFSET: combined_input[CONF_OFFSET],
                             CONF_WORKDAYS: combined_input[CONF_WORKDAYS],
                             CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
                             CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
-                            CONF_PROVINCE: combined_input[CONF_PROVINCE],
+                            CONF_PROVINCE: combined_input.get(CONF_PROVINCE),
                         }
                     )
                 except AbortFlow as err:
@@ -331,7 +298,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                     return self.async_create_entry(data=combined_input)
 
         schema: vol.Schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.options[CONF_COUNTRY]
+            add_province_to_schema, DATA_SCHEMA_OPT, self.options.get(CONF_COUNTRY)
         )
 
         new_schema = self.add_suggested_values_to_schema(
@@ -344,7 +311,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
             errors=errors,
             description_placeholders={
                 "name": self.options[CONF_NAME],
-                "country": self.options[CONF_COUNTRY],
+                "country": self.options.get(CONF_COUNTRY),
             },
         )
 

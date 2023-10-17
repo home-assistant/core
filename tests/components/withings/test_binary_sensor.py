@@ -2,13 +2,14 @@
 from unittest.mock import AsyncMock
 
 from aiohttp.client_exceptions import ClientResponseError
+from aiowithings import NotificationCategory
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from withings_api.common import NotifyAppli
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from . import call_webhook, setup_integration
+from . import call_webhook, prepare_webhook_setup, setup_integration
 from .conftest import USER_ID, WEBHOOK_ID
 
 from tests.common import MockConfigEntry
@@ -20,9 +21,11 @@ async def test_binary_sensor(
     withings: AsyncMock,
     webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test binary sensor."""
     await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
 
     client = await hass_client_no_auth()
 
@@ -33,7 +36,7 @@ async def test_binary_sensor(
     resp = await call_webhook(
         hass,
         WEBHOOK_ID,
-        {"userid": USER_ID, "appli": NotifyAppli.BED_IN},
+        {"userid": USER_ID, "appli": NotificationCategory.IN_BED},
         client,
     )
     assert resp.message_code == 0
@@ -43,7 +46,7 @@ async def test_binary_sensor(
     resp = await call_webhook(
         hass,
         WEBHOOK_ID,
-        {"userid": USER_ID, "appli": NotifyAppli.BED_OUT},
+        {"userid": USER_ID, "appli": NotificationCategory.OUT_BED},
         client,
     )
     assert resp.message_code == 0
@@ -70,6 +73,6 @@ async def test_polling_binary_sensor(
         await call_webhook(
             hass,
             WEBHOOK_ID,
-            {"userid": USER_ID, "appli": NotifyAppli.BED_IN},
+            {"userid": USER_ID, "appli": NotificationCategory.IN_BED},
             client,
         )

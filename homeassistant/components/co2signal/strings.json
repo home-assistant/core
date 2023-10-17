@@ -34,10 +34,29 @@
   "entity": {
     "sensor": {
       "carbon_intensity": {
-        "name": "CO2 intensity"
+        "name": "CO2 intensity",
+        "state_attributes": {
+          "country_code": {
+            "name": "Country code"
+          }
+        }
       },
       "fossil_fuel_percentage": {
-        "name": "Grid fossil fuel percentage"
+        "name": "Grid fossil fuel percentage",
+        "state_attributes": {
+          "country_code": {
+            "name": "[%key:component::co2signal::entity::sensor::carbon_intensity::state_attributes::country_code::name%]"
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "location": {
+      "options": {
+        "use_home_location": "Use home location",
+        "specify_coordinates": "Specify coordinates",
+        "specify_country_code": "Specify country code"
       }
     }
   }

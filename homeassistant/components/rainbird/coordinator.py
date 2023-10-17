@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
+from .const import DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
 
 UPDATE_INTERVAL = datetime.timedelta(minutes=1)
 # The calendar data requires RPCs for each program/zone, and the data rarely
@@ -51,7 +51,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
         hass: HomeAssistant,
         name: str,
         controller: AsyncRainbirdController,
-        serial_number: str,
+        unique_id: str | None,
         model_info: ModelAndVersion,
     ) -> None:
         """Initialize RainbirdUpdateCoordinator."""
@@ -62,7 +62,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
             update_interval=UPDATE_INTERVAL,
         )
         self._controller = controller
-        self._serial_number = serial_number
+        self._unique_id = unique_id
         self._zones: set[int] | None = None
         self._model_info = model_info
 
@@ -72,16 +72,23 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
         return self._controller
 
     @property
-    def serial_number(self) -> str:
-        """Return the device serial number."""
-        return self._serial_number
+    def unique_id(self) -> str | None:
+        """Return the config entry unique id."""
+        return self._unique_id
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_name(self) -> str:
+        """Device name for the rainbird controller."""
+        return f"{MANUFACTURER} Controller"
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
         """Return information about the device."""
+        if self._unique_id is None:
+            return None
         return DeviceInfo(
-            name=f"{MANUFACTURER} Controller",
-            identifiers={(DOMAIN, self._serial_number)},
+            name=self.device_name,
+            identifiers={(DOMAIN, self._unique_id)},
             manufacturer=MANUFACTURER,
             model=self._model_info.model_name,
             sw_version=f"{self._model_info.major}.{self._model_info.minor}",
@@ -164,7 +171,7 @@ class RainbirdData:
             self.hass,
             name=self.entry.title,
             controller=self.controller,
-            serial_number=self.entry.data[CONF_SERIAL_NUMBER],
+            unique_id=self.entry.unique_id,
             model_info=self.model_info,
         )
 

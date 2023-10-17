@@ -246,7 +246,7 @@ class RegistryEntry:
 
         return None
 
-    @property
+    @cached_property
     def as_partial_dict(self) -> dict[str, Any]:
         """Return a partial dict representation of the entry."""
         return {
@@ -266,6 +266,18 @@ class RegistryEntry:
             "platform": self.platform,
             "translation_key": self.translation_key,
             "unique_id": self.unique_id,
+        }
+
+    @cached_property
+    def extended_dict(self) -> dict[str, Any]:
+        """Return a extended dict representation of the entry."""
+        return {
+            **self.as_partial_dict,
+            "aliases": self.aliases,
+            "capabilities": self.capabilities,
+            "device_class": self.device_class,
+            "original_device_class": self.original_device_class,
+            "original_icon": self.original_icon,
         }
 
     @cached_property
@@ -1323,11 +1335,17 @@ async def async_migrate_entries(
     config_entry_id: str,
     entry_callback: Callable[[RegistryEntry], dict[str, Any] | None],
 ) -> None:
-    """Migrator of unique IDs."""
+    """Migrate entity registry entries which belong to a config entry.
+
+    Can be used as a migrator of unique_ids or to update other entity registry data.
+    Can also be used to remove duplicated entity registry entries.
+    """
     ent_reg = async_get(hass)
 
-    for entry in ent_reg.entities.values():
+    for entry in list(ent_reg.entities.values()):
         if entry.config_entry_id != config_entry_id:
+            continue
+        if not ent_reg.entities.get_entry(entry.id):
             continue
 
         updates = entry_callback(entry)
