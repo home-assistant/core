@@ -129,8 +129,8 @@ async def async_setup_entry(
         # Historically we only add the children if the device is a strip
         for child in parent.children:
             entities.extend(_async_sensors_for_device(child))
-    else:
-        entities.extend(_async_sensors_for_device(parent))
+
+    entities.extend(_async_sensors_for_device(parent))
 
     async_add_entities(entities)
 

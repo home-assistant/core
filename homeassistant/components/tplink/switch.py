@@ -36,8 +36,8 @@ async def async_setup_entry(
         _LOGGER.debug("Initializing strip with %s sockets", len(device.children))
         for child in device.children:
             entities.append(SmartPlugSwitchChild(device, coordinator, child))
-    elif device.is_plug:
-        entities.append(SmartPlugSwitch(device, coordinator))
+
+    entities.append(SmartPlugSwitch(device, coordinator))
 
     entities.append(SmartPlugLedSwitch(device, coordinator))
 
