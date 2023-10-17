@@ -70,7 +70,6 @@ SELECT_ENTITIES = (
         key="ptz_preset",
         translation_key="ptz_preset",
         icon="mdi:pan",
-        entity_category=EntityCategory.CONFIG,
         get_options=lambda api, ch: list(api.ptz_presets(ch)),
         supported=lambda api, ch: api.supported(ch, "ptz_presets"),
         method=lambda api, ch, name: api.set_ptz_command(ch, preset=name),
