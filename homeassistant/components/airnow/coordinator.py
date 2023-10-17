@@ -20,6 +20,7 @@ from .const import (
     ATTR_API_POLLUTANT,
     ATTR_API_REPORT_DATE,
     ATTR_API_REPORT_HOUR,
+    ATTR_API_REPORT_TZ,
     ATTR_API_STATE,
     ATTR_API_STATION,
     ATTR_API_STATION_LATITUDE,
@@ -83,6 +84,7 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator):
                 # Copy Report Details
                 data[ATTR_API_REPORT_DATE] = obv[ATTR_API_REPORT_DATE]
                 data[ATTR_API_REPORT_HOUR] = obv[ATTR_API_REPORT_HOUR]
+                data[ATTR_API_REPORT_TZ] = obv[ATTR_API_REPORT_TZ]
 
                 # Copy Station Details
                 data[ATTR_API_STATE] = obv[ATTR_API_STATE]
