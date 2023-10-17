@@ -519,6 +519,7 @@ class FlowHandler:
         preview: str | None = None,
     ) -> FlowResult:
         """Return the definition of a form to gather user input."""
+        self._raise_if_not_has_step(step_id)
         return FlowResult(
             type=FlowResultType.FORM,
             flow_id=self.flow_id,
@@ -576,6 +577,7 @@ class FlowHandler:
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Return the definition of an external step for the user to take."""
+        self._raise_if_not_has_step(step_id)
         return FlowResult(
             type=FlowResultType.EXTERNAL_STEP,
             flow_id=self.flow_id,
@@ -588,6 +590,7 @@ class FlowHandler:
     @callback
     def async_external_step_done(self, *, next_step_id: str) -> FlowResult:
         """Return the definition of an external step for the user to take."""
+        self._raise_if_not_has_step(next_step_id)
         return FlowResult(
             type=FlowResultType.EXTERNAL_STEP_DONE,
             flow_id=self.flow_id,
@@ -604,6 +607,7 @@ class FlowHandler:
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Show a progress message to the user, without user input allowed."""
+        self._raise_if_not_has_step(step_id)
         return FlowResult(
             type=FlowResultType.SHOW_PROGRESS,
             flow_id=self.flow_id,
@@ -616,6 +620,7 @@ class FlowHandler:
     @callback
     def async_show_progress_done(self, *, next_step_id: str) -> FlowResult:
         """Mark the progress done."""
+        self._raise_if_not_has_step(next_step_id)
         return FlowResult(
             type=FlowResultType.SHOW_PROGRESS_DONE,
             flow_id=self.flow_id,
@@ -635,6 +640,7 @@ class FlowHandler:
 
         Options dict maps step_id => i18n label
         """
+        self._raise_if_not_has_step(step_id)
         return FlowResult(
             type=FlowResultType.MENU,
             flow_id=self.flow_id,
@@ -652,6 +658,15 @@ class FlowHandler:
     @staticmethod
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview."""
+
+    def _raise_if_not_has_step(self, step_id: str) -> None:
+        """Raise if the step does not exist."""
+        method = f"async_step_{step_id}"
+
+        if not hasattr(self, method):
+            raise UnknownStep(
+                f"Handler {self.__class__.__name__} doesn't support step {step_id}"
+            )
 
 
 @callback
