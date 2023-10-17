@@ -26,7 +26,6 @@ class ColorClusterHandler(ClusterHandler):
     """Color cluster handler."""
 
     CAPABILITIES_COLOR_XY = 0x08
-    CAPABILITIES_COLOR_TEMP = 0x10
     REPORT_CONFIG = (
         AttrReportConfig(attr="current_x", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="current_y", config=REPORT_CONFIG_DEFAULT),
