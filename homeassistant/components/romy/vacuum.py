@@ -5,7 +5,7 @@ https://home-assistant.io/components/vacuum.romy/.
 """
 
 
-from typing import Any
+from typing import Any, Optional
 
 from romy import RomyRobot
 
@@ -75,7 +75,7 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
     _attr_supported_features = SUPPORT_ROMY_ROBOT
     _attr_fan_speed_list = FAN_SPEEDS
     _attr_icon = ICON
-    _attr_name = None
+    _attr_name: Optional[str] = None
 
     def __init__(
         self,
