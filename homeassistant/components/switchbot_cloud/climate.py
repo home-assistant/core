@@ -28,12 +28,16 @@ _SWITCHBOT_HVAC_MODES: dict[HVACMode, int] = {
     HVACMode.HEAT: 5,
 }
 
+_DEFAULT_SWITCHBOT_HVAC_MODE = _SWITCHBOT_HVAC_MODES[HVACMode.FAN_ONLY]
+
 _SWITCHBOT_FAN_MODES: dict[str, int] = {
     FanState.FAN_AUTO: 1,
     FanState.FAN_LOW: 2,
     FanState.FAN_MEDIUM: 3,
     FanState.FAN_HIGH: 4,
 }
+
+_DEFAULT_SWITCHBOT_FAN_MODE = _SWITCHBOT_FAN_MODES[FanState.FAN_AUTO]
 
 
 async def async_setup_entry(
@@ -51,8 +55,9 @@ async def async_setup_entry(
 
 
 class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
-    """Representation of a SwitchBot air conditionner."""
+    """Representation of a SwitchBot air conditionner, as it is an IR device, we don't know the actual state."""
 
+    _attr_assumed_state = True
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
@@ -82,8 +87,12 @@ class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
         temperature: float | None = None,
     ) -> None:
         new_temperature = temperature or self._attr_target_temperature
-        new_mode = _SWITCHBOT_HVAC_MODES.get(hvac_mode or self._attr_hvac_mode, 4)
-        new_fan_speed = _SWITCHBOT_FAN_MODES.get(fan_mode or self._attr_fan_mode, 1)
+        new_mode = _SWITCHBOT_HVAC_MODES.get(
+            hvac_mode or self._attr_hvac_mode, _DEFAULT_SWITCHBOT_HVAC_MODE
+        )
+        new_fan_speed = _SWITCHBOT_FAN_MODES.get(
+            fan_mode or self._attr_fan_mode, _DEFAULT_SWITCHBOT_FAN_MODE
+        )
         await self.send_command(
             AirConditionerCommands.SET_ALL,
             parameters=f"{new_temperature},{new_mode},{new_fan_speed},on",
