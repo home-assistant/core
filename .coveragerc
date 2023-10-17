@@ -865,6 +865,15 @@ omit =
     homeassistant/components/octoprint/coordinator.py
     homeassistant/components/oem/climate.py
     homeassistant/components/ohmconnect/sensor.py
+    homeassistant/components/olarm_sensors/__init__.py
+    homeassistant/components/olarm_sensors/alarm_control_panel.py
+    homeassistant/components/olarm_sensors/binary_sensor.py
+    homeassistant/components/olarm_sensors/button.py
+    homeassistant/components/olarm_sensors/const.py
+    homeassistant/components/olarm_sensors/coordinator.py
+    homeassistant/components/olarm_sensors/exceptions.py
+    homeassistant/components/olarm_sensors/switch.py
+    homeassistant/components/olarm_sensors/update.py
     homeassistant/components/ombi/*
     homeassistant/components/omnilogic/__init__.py
     homeassistant/components/omnilogic/common.py
