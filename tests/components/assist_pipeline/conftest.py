@@ -217,10 +217,45 @@ class MockWakeWordEntity(wake_word.WakeWordDetectionEntity):
         return None
 
 
+class MockWakeWordEntity2(wake_word.WakeWordDetectionEntity):
+    """Second mock wake word entity to test cooldown."""
+
+    fail_process_audio = False
+    url_path = "wake_word.test2"
+    _attr_name = "test2"
+
+    async def get_supported_wake_words(self) -> list[wake_word.WakeWord]:
+        """Return a list of supported wake words."""
+        return [wake_word.WakeWord(id="test_ww", name="Test Wake Word")]
+
+    async def _async_process_audio_stream(
+        self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str | None
+    ) -> wake_word.DetectionResult | None:
+        """Try to detect wake word(s) in an audio stream with timestamps."""
+        wake_words = await self.get_supported_wake_words()
+
+        async for chunk, timestamp in stream:
+            if chunk.startswith(b"wake word"):
+                return wake_word.DetectionResult(
+                    wake_word_id=wake_words[0].id,
+                    timestamp=timestamp,
+                    queued_audio=[(b"queued audio", 0)],
+                )
+
+        # Not detected
+        return None
+
+
 @pytest.fixture
 async def mock_wake_word_provider_entity(hass) -> MockWakeWordEntity:
     """Mock wake word provider."""
     return MockWakeWordEntity()
+
+
+@pytest.fixture
+async def mock_wake_word_provider_entity2(hass) -> MockWakeWordEntity2:
+    """Mock wake word provider."""
+    return MockWakeWordEntity2()
 
 
 class MockFlow(ConfigFlow):
@@ -243,6 +278,7 @@ async def init_supporting_components(
     mock_stt_provider_entity: MockSttProviderEntity,
     mock_tts_provider: MockTTSProvider,
     mock_wake_word_provider_entity: MockWakeWordEntity,
+    mock_wake_word_provider_entity2: MockWakeWordEntity2,
     config_flow_fixture,
 ):
     """Initialize relevant components with empty configs."""
@@ -279,7 +315,9 @@ async def init_supporting_components(
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Set up test wake word platform via config entry."""
-        async_add_entities([mock_wake_word_provider_entity])
+        async_add_entities(
+            [mock_wake_word_provider_entity, mock_wake_word_provider_entity2]
+        )
 
     mock_integration(
         hass,
