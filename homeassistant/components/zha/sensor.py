@@ -920,6 +920,7 @@ class LQISensor(RSSISensor):
     _unique_id_suffix = "lqi"
     _attr_device_class = None
     _attr_native_unit_of_measurement = None
+    _attr_translation_key = "lqi"
 
 
 @MULTI_MATCH(
