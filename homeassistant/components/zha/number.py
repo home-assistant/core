@@ -665,8 +665,6 @@ class InovelliLocalRampRateOffToOn(ZHANumberConfigurationEntity):
     _zcl_attribute: str = "ramp_rate_off_to_on_local"
     _attr_translation_key: str = "ramp_rate_off_to_on_local"
 
-    _attr_name: str = "Local ramp rate off to on"
-
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
