@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from urllib.parse import urlparse
 
+from aiohttp.hdrs import METH_HEAD
 from aiowithings import (
     NotificationCategory,
     WithingsAuthenticationFailedError,
@@ -130,7 +131,7 @@ async def test_data_manager_webhook_subscription(
 
     assert withings.subscribe_notification.call_count == 6
 
-    webhook_url = "https://example.local:8123/api/webhook/55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
+    webhook_url = "https://example.com/api/webhook/55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
 
     withings.subscribe_notification.assert_any_call(
         webhook_url, NotificationCategory.WEIGHT
@@ -173,27 +174,19 @@ async def test_webhook_subscription_polling_config(
     assert withings.list_notification_configurations.call_count == 0
 
 
-@pytest.mark.parametrize(
-    "method",
-    [
-        "PUT",
-        "HEAD",
-    ],
-)
-async def test_requests(
+async def test_head_request(
     hass: HomeAssistant,
     withings: AsyncMock,
     webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
-    method: str,
 ) -> None:
-    """Test we handle request methods Withings sends."""
+    """Test we handle head requests Withings sends."""
     await setup_integration(hass, webhook_config_entry)
     client = await hass_client_no_auth()
     webhook_url = async_generate_url(hass, WEBHOOK_ID)
 
     response = await client.request(
-        method=method,
+        method=METH_HEAD,
         path=urlparse(webhook_url).path,
     )
     assert response.status == 200
@@ -428,12 +421,14 @@ async def test_setup_with_cloud(
         assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_setup_without_https(
+@pytest.mark.parametrize("url", ["http://example.com", "https://example.com:444"])
+async def test_setup_no_webhook(
     hass: HomeAssistant,
     webhook_config_entry: MockConfigEntry,
     withings: AsyncMock,
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
+    url: str,
 ) -> None:
     """Test if set up with cloud link and without https."""
     hass.config.components.add("cloud")
@@ -445,7 +440,7 @@ async def test_setup_without_https(
     ), patch(
         "homeassistant.components.withings.webhook_generate_url"
     ) as mock_async_generate_url:
-        mock_async_generate_url.return_value = "http://example.com"
+        mock_async_generate_url.return_value = url
         await setup_integration(hass, webhook_config_entry)
         await prepare_webhook_setup(hass, freezer)
 

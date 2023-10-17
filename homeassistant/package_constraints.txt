@@ -23,7 +23,7 @@ hass-nabucasa==0.73.0
 hassil==1.2.5
 home-assistant-bluetooth==1.10.3
 home-assistant-frontend==20231005.0
-home-assistant-intents==2023.10.2
+home-assistant-intents==2023.10.16
 httpx==0.25.0
 ifaddr==0.2.0
 janus==1.0.0
@@ -46,14 +46,14 @@ pyudev==0.23.2
 PyYAML==6.0.1
 requests==2.31.0
 scapy==2.5.0
-SQLAlchemy==2.0.21
+SQLAlchemy==2.0.22
 typing-extensions>=4.8.0,<5.0
 ulid-transform==0.8.1
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtc-noise-gain==1.2.3
 yarl==1.9.2
-zeroconf==0.116.0
+zeroconf==0.118.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -112,7 +112,7 @@ httpcore==0.18.0
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.26.1
+numpy==1.26.0
 
 # Prevent dependency conflicts between sisyphus-control and aioambient
 # until upper bounds for sisyphus-control have been updated
