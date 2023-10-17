@@ -956,16 +956,10 @@ async def test_entity_description_fallback() -> None:
 
 async def _test_friendly_name(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     ent: entity.Entity,
     expected_friendly_name: str | None,
-    warn_implicit_name: bool,
 ) -> None:
     """Test friendly name."""
-
-    expected_warning = (
-        f"Entity {ent.entity_id} ({type(ent)}) is implicitly using device name"
-    )
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""
@@ -985,7 +979,6 @@ async def _test_friendly_name(
     assert len(hass.states.async_entity_ids()) == 1
     state = hass.states.async_all()[0]
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
-    assert (expected_warning in caplog.text) is warn_implicit_name
 
     await async_update_entity(hass, ent.entity_id)
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
@@ -997,25 +990,22 @@ async def _test_friendly_name(
         "entity_name",
         "device_name",
         "expected_friendly_name",
-        "warn_implicit_name",
     ),
     (
-        (False, "Entity Blu", "Device Bla", "Entity Blu", False),
-        (False, None, "Device Bla", None, False),
-        (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu", False),
-        (True, None, "Device Bla", "Device Bla", False),
-        (True, "Entity Blu", UNDEFINED, "Entity Blu", False),
-        (True, "Entity Blu", None, "Mock Title Entity Blu", False),
+        (False, "Entity Blu", "Device Bla", "Entity Blu"),
+        (False, None, "Device Bla", None),
+        (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
+        (True, None, "Device Bla", "Device Bla"),
+        (True, "Entity Blu", UNDEFINED, "Entity Blu"),
+        (True, "Entity Blu", None, "Mock Title Entity Blu"),
     ),
 )
 async def test_friendly_name_attr(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     has_entity_name: bool,
     entity_name: str | None,
     device_name: str | None | UndefinedType,
     expected_friendly_name: str | None,
-    warn_implicit_name: bool,
 ) -> None:
     """Test friendly name when the entity uses _attr_*."""
 
@@ -1031,31 +1021,27 @@ async def test_friendly_name_attr(
     ent._attr_name = entity_name
     await _test_friendly_name(
         hass,
-        caplog,
         ent,
         expected_friendly_name,
-        warn_implicit_name,
     )
 
 
 @pytest.mark.parametrize(
-    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    ("has_entity_name", "entity_name", "expected_friendly_name"),
     (
-        (False, "Entity Blu", "Entity Blu", False),
-        (False, None, None, False),
-        (False, UNDEFINED, None, False),
-        (True, "Entity Blu", "Device Bla Entity Blu", False),
-        (True, None, "Device Bla", False),
-        (True, UNDEFINED, "Device Bla", True),
+        (False, "Entity Blu", "Entity Blu"),
+        (False, None, None),
+        (False, UNDEFINED, None),
+        (True, "Entity Blu", "Device Bla Entity Blu"),
+        (True, None, "Device Bla"),
+        (True, UNDEFINED, "Device Bla None"),
     ),
 )
 async def test_friendly_name_description(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     has_entity_name: bool,
     entity_name: str | None,
     expected_friendly_name: str | None,
-    warn_implicit_name: bool,
 ) -> None:
     """Test friendly name when the entity has an entity description."""
 
@@ -1072,31 +1058,27 @@ async def test_friendly_name_description(
     )
     await _test_friendly_name(
         hass,
-        caplog,
         ent,
         expected_friendly_name,
-        warn_implicit_name,
     )
 
 
 @pytest.mark.parametrize(
-    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    ("has_entity_name", "entity_name", "expected_friendly_name"),
     (
-        (False, "Entity Blu", "Entity Blu", False),
-        (False, None, None, False),
-        (False, UNDEFINED, None, False),
-        (True, "Entity Blu", "Device Bla Entity Blu", False),
-        (True, None, "Device Bla", False),
-        (True, UNDEFINED, "Device Bla English cls", False),
+        (False, "Entity Blu", "Entity Blu"),
+        (False, None, None),
+        (False, UNDEFINED, None),
+        (True, "Entity Blu", "Device Bla Entity Blu"),
+        (True, None, "Device Bla"),
+        (True, UNDEFINED, "Device Bla English cls"),
     ),
 )
 async def test_friendly_name_description_device_class_name(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     has_entity_name: bool,
     entity_name: str | None,
     expected_friendly_name: str | None,
-    warn_implicit_name: bool,
 ) -> None:
     """Test friendly name when the entity has an entity description."""
 
@@ -1139,31 +1121,27 @@ async def test_friendly_name_description_device_class_name(
     ):
         await _test_friendly_name(
             hass,
-            caplog,
             ent,
             expected_friendly_name,
-            warn_implicit_name,
         )
 
 
 @pytest.mark.parametrize(
-    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    ("has_entity_name", "entity_name", "expected_friendly_name"),
     (
-        (False, "Entity Blu", "Entity Blu", False),
-        (False, None, None, False),
-        (False, UNDEFINED, None, False),
-        (True, "Entity Blu", "Device Bla Entity Blu", False),
-        (True, None, "Device Bla", False),
-        (True, UNDEFINED, "Device Bla", True),
+        (False, "Entity Blu", "Entity Blu"),
+        (False, None, None),
+        (False, UNDEFINED, None),
+        (True, "Entity Blu", "Device Bla Entity Blu"),
+        (True, None, "Device Bla"),
+        (True, UNDEFINED, "Device Bla None"),
     ),
 )
 async def test_friendly_name_property(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     has_entity_name: bool,
     entity_name: str | None,
     expected_friendly_name: str | None,
-    warn_implicit_name: bool,
 ) -> None:
     """Test friendly name when the entity has overridden the name property."""
 
@@ -1179,32 +1157,28 @@ async def test_friendly_name_property(
     )
     await _test_friendly_name(
         hass,
-        caplog,
         ent,
         expected_friendly_name,
-        warn_implicit_name,
     )
 
 
 @pytest.mark.parametrize(
-    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    ("has_entity_name", "entity_name", "expected_friendly_name"),
     (
-        (False, "Entity Blu", "Entity Blu", False),
-        (False, None, None, False),
-        (False, UNDEFINED, None, False),
-        (True, "Entity Blu", "Device Bla Entity Blu", False),
-        (True, None, "Device Bla", False),
+        (False, "Entity Blu", "Entity Blu"),
+        (False, None, None),
+        (False, UNDEFINED, None),
+        (True, "Entity Blu", "Device Bla Entity Blu"),
+        (True, None, "Device Bla"),
         # Won't use the device class name because the entity overrides the name property
-        (True, UNDEFINED, "Device Bla None", False),
+        (True, UNDEFINED, "Device Bla None"),
     ),
 )
 async def test_friendly_name_property_device_class_name(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     has_entity_name: bool,
     entity_name: str | None,
     expected_friendly_name: str | None,
-    warn_implicit_name: bool,
 ) -> None:
     """Test friendly name when the entity has overridden the name property."""
 
@@ -1244,26 +1218,22 @@ async def test_friendly_name_property_device_class_name(
     ):
         await _test_friendly_name(
             hass,
-            caplog,
             ent,
             expected_friendly_name,
-            warn_implicit_name,
         )
 
 
 @pytest.mark.parametrize(
-    ("has_entity_name", "expected_friendly_name", "warn_implicit_name"),
+    ("has_entity_name", "expected_friendly_name"),
     (
-        (False, None, False),
-        (True, "Device Bla English cls", False),
+        (False, None),
+        (True, "Device Bla English cls"),
     ),
 )
 async def test_friendly_name_device_class_name(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     has_entity_name: bool,
     expected_friendly_name: str | None,
-    warn_implicit_name: bool,
 ) -> None:
     """Test friendly name when the entity has not set the name in any way."""
 
@@ -1302,10 +1272,8 @@ async def test_friendly_name_device_class_name(
     ):
         await _test_friendly_name(
             hass,
-            caplog,
             ent,
             expected_friendly_name,
-            warn_implicit_name,
         )
 
 
