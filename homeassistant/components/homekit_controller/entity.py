@@ -3,15 +3,15 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import (
     EVENT_CHARACTERISTICS,
     Characteristic,
     CharacteristicPermissions,
     CharacteristicsTypes,
 )
-from aiohomekit.model.services import Service, ServicesTypes
+from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
@@ -32,41 +32,43 @@ class HomeKitEntity(Entity):
         self._iid = devinfo["iid"]
         self._char_name: str | None = None
         self.all_characteristics: set[tuple[int, int]] = set()
+        self._async_set_accessory_and_service()
         self.setup()
 
         super().__init__()
 
-    @property
-    def accessory(self) -> Accessory:
-        """Return an Accessory model that this entity is attached to."""
-        return self._accessory.entity_map.aid(self._aid)
-
-    @property
-    def accessory_info(self) -> Service:
-        """Information about the make and model of an accessory."""
-        return self.accessory.services.first(
+    @callback
+    def _async_set_accessory_and_service(self) -> None:
+        """Set the accessory and service for this entity."""
+        accessory = self._accessory
+        self.accessory = accessory.entity_map.aid(self._aid)
+        self.service = self.accessory.services.iid(self._iid)
+        self.accessory_info = self.accessory.services.first(
             service_type=ServicesTypes.ACCESSORY_INFORMATION
         )
 
-    @property
-    def service(self) -> Service:
-        """Return a Service model that this entity is attached to."""
-        return self.accessory.services.iid(self._iid)
+    @callback
+    def _async_config_changed(self) -> None:
+        """Handle accessory discovery changes."""
+        self._async_set_accessory_and_service()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
+        accessory = self._accessory
         self.async_on_remove(
-            self._accessory.async_subscribe(
+            accessory.async_subscribe(
                 self.all_characteristics, self._async_write_ha_state
             )
         )
         self.async_on_remove(
-            self._accessory.async_subscribe_availability(self._async_write_ha_state)
+            accessory.async_subscribe_availability(self._async_write_ha_state)
         )
-        self._accessory.add_pollable_characteristics(self.pollable_characteristics)
-        await self._accessory.add_watchable_characteristics(
-            self.watchable_characteristics
+        self.async_on_remove(
+            accessory.async_subscribe_config_changed(self._async_config_changed)
         )
+        accessory.add_pollable_characteristics(self.pollable_characteristics)
+        await accessory.add_watchable_characteristics(self.watchable_characteristics)
 
     async def async_will_remove_from_hass(self) -> None:
         """Prepare to be removed from hass."""
