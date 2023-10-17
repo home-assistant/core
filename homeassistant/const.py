@@ -1104,6 +1104,11 @@ SERVICE_STOP_COVER: Final = "stop_cover"
 SERVICE_STOP_COVER_TILT: Final = "stop_cover_tilt"
 SERVICE_TOGGLE_COVER_TILT: Final = "toggle_cover_tilt"
 
+SERVICE_CLOSE_VALVE: Final = "close_valve"
+SERVICE_OPEN_VALVE: Final = "open_valve"
+SERVICE_SET_VALVE_POSITION: Final = "set_valve_position"
+SERVICE_STOP_VALVE: Final = "stop_valve"
+
 SERVICE_SELECT_OPTION: Final = "select_option"
 
 # #### API / REMOTE ####
