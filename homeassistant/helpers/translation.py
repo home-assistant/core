@@ -190,6 +190,8 @@ async def _async_get_component_strings(
 class _TranslationCache:
     """Cache for flattened translations."""
 
+    __slots__ = ("hass", "loaded", "cache")
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""
         self.hass = hass

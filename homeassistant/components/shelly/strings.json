@@ -98,6 +98,28 @@
         }
       }
     },
+    "event": {
+      "input": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "btn_down": "Button down",
+              "btn_up": "Button up",
+              "double_push": "Double push",
+              "double": "Double push",
+              "long_push": "Long push",
+              "long_single": "Long push and then short push",
+              "long": "Long push",
+              "single_long": "Short push and then long push",
+              "single_push": "Single push",
+              "single": "Single push",
+              "triple_push": "Triple push",
+              "triple": "Triple push"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "operation": {
         "state": {
@@ -120,7 +142,7 @@
       "valve_status": {
         "state": {
           "checking": "Checking",
-          "closed": "Closed",
+          "closed": "[%key:common::state::closed%]",
           "closing": "Closing",
           "failure": "Failure",
           "opened": "Opened",

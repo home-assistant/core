@@ -9,7 +9,7 @@ LOGGER_NAMES = ("LOGGER", "_LOGGER")
 LOG_LEVEL_ALLOWED_LOWER_START = ("debug",)
 
 
-class HassLoggerFormatChecker(BaseChecker):  # type: ignore[misc]
+class HassLoggerFormatChecker(BaseChecker):
     """Checker for logger invocations."""
 
     name = "hass_logger"

@@ -1,6 +1,8 @@
 """A entity class for mobile_app."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, CONF_NAME, CONF_UNIQUE_ID, STATE_UNAVAILABLE
 from homeassistant.core import callback
@@ -36,7 +38,9 @@ class MobileAppEntity(RestoreEntity):
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_SENSOR_UPDATE, self._handle_update
+                self.hass,
+                f"{SIGNAL_SENSOR_UPDATE}-{self._attr_unique_id}",
+                self._handle_update,
             )
         )
 
@@ -96,10 +100,7 @@ class MobileAppEntity(RestoreEntity):
         return self._config.get(ATTR_SENSOR_STATE) != STATE_UNAVAILABLE
 
     @callback
-    def _handle_update(self, incoming_id, data):
+    def _handle_update(self, data: dict[str, Any]) -> None:
         """Handle async event updates."""
-        if incoming_id != self._attr_unique_id:
-            return
-
-        self._config = {**self._config, **data}
+        self._config.update(data)
         self.async_write_ha_state()

@@ -35,11 +35,10 @@ from .core.const import (
     CONF_ALARM_ARM_REQUIRES_CODE,
     CONF_ALARM_FAILED_TRIES,
     CONF_ALARM_MASTER_CODE,
-    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     ZHA_ALARM_OPTIONS,
 )
-from .core.helpers import async_get_zha_config_value
+from .core.helpers import async_get_zha_config_value, get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -65,7 +64,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation alarm control panel from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.ALARM_CONTROL_PANEL]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.ALARM_CONTROL_PANEL]
 
     unsub = async_dispatcher_connect(
         hass,

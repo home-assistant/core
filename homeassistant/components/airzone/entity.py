@@ -106,6 +106,22 @@ class AirzoneHotWaterEntity(AirzoneEntity):
         """Return DHW value by key."""
         return self.coordinator.data[AZD_HOT_WATER].get(key)
 
+    async def _async_update_dhw_params(self, params: dict[str, Any]) -> None:
+        """Send DHW parameters to API."""
+        _params = {
+            API_SYSTEM_ID: 0,
+            **params,
+        }
+        _LOGGER.debug("update_dhw_params=%s", _params)
+        try:
+            await self.coordinator.airzone.set_dhw_parameters(_params)
+        except AirzoneError as error:
+            raise HomeAssistantError(
+                f"Failed to set dhw {self.name}: {error}"
+            ) from error
+
+        self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
+
 
 class AirzoneWebServerEntity(AirzoneEntity):
     """Define an Airzone WebServer entity."""

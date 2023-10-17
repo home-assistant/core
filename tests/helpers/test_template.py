@@ -4466,15 +4466,25 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         assert template.Template(tpl, hass).async_render() == result
 
 
-async def test_undefined_variable(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    "template_string",
+    [
+        "{{ no_such_variable }}",
+        "{{ no_such_variable and True }}",
+        "{{ no_such_variable | join(', ') }}",
+    ],
+)
+async def test_undefined_symbol_warnings(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    template_string: str,
 ) -> None:
     """Test a warning is logged on undefined variables."""
-    tpl = template.Template("{{ no_such_variable }}", hass)
+    tpl = template.Template(template_string, hass)
     assert tpl.async_render() == ""
     assert (
         "Template variable warning: 'no_such_variable' is undefined when rendering "
-        "'{{ no_such_variable }}'" in caplog.text
+        f"'{template_string}'" in caplog.text
     )
 
 

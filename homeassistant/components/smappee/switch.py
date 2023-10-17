@@ -74,10 +74,17 @@ class SmappeeActuator(SwitchEntity):
         self._actuator_type = actuator_type
         self._actuator_serialnumber = actuator_serialnumber
         self._actuator_state_option = actuator_state_option
-        self._state = self._service_location.actuators.get(actuator_id).state
-        self._connection_state = self._service_location.actuators.get(
+        self._state = service_location.actuators.get(actuator_id).state
+        self._connection_state = service_location.actuators.get(
             actuator_id
         ).connection_state
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, service_location.device_serial_number)},
+            manufacturer="Smappee",
+            model=service_location.device_model,
+            name=service_location.service_location_name,
+            sw_version=service_location.firmware_version,
+        )
 
     @property
     def name(self):
@@ -151,17 +158,6 @@ class SmappeeActuator(SwitchEntity):
             f"{self._service_location.device_serial_number}-"
             f"{self._service_location.service_location_id}-actuator-"
             f"{self._actuator_id}"
-        )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info for this switch."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._service_location.device_serial_number)},
-            manufacturer="Smappee",
-            model=self._service_location.device_model,
-            name=self._service_location.service_location_name,
-            sw_version=self._service_location.firmware_version,
         )
 
     async def async_update(self) -> None:

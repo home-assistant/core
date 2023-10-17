@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfInformation
@@ -80,6 +81,15 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
         native_unit_of_measurement="Movies",
         icon="mdi:television",
         entity_registry_enabled_default=False,
+        value_fn=lambda data, _: data,
+    ),
+    "queue": RadarrSensorEntityDescription[int](
+        key="queue",
+        translation_key="queue",
+        native_unit_of_measurement="Movies",
+        icon="mdi:download",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL,
         value_fn=lambda data, _: data,
     ),
     "status": RadarrSensorEntityDescription[SystemStatus](

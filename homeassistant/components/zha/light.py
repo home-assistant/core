@@ -47,13 +47,12 @@ from .core.const import (
     CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
     CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
     CONF_GROUP_MEMBERS_ASSUME_STATE,
-    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
     ZHA_OPTIONS,
 )
-from .core.helpers import LogMixin, async_get_zha_config_value
+from .core.helpers import LogMixin, async_get_zha_config_value, get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity, ZhaGroupEntity
 
@@ -97,7 +96,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation light from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.LIGHT]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.LIGHT]
 
     unsub = async_dispatcher_connect(
         hass,

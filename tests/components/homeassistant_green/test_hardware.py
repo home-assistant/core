@@ -54,7 +54,7 @@ async def test_hardware_info(
                 "config_entries": [config_entry.entry_id],
                 "dongle": None,
                 "name": "Home Assistant Green",
-                "url": None,
+                "url": "https://green.home-assistant.io/documentation/",
             }
         ]
     }

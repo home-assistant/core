@@ -49,16 +49,17 @@ class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
     """Neato Connected Switches."""
 
     _attr_translation_key = "schedule"
+    _attr_available = False
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, neato: NeatoHub, robot: Robot, switch_type: str) -> None:
         """Initialize the Neato Connected switches."""
         super().__init__(robot)
         self.type = switch_type
-        self._available = False
         self._state: dict[str, Any] | None = None
         self._schedule_state: str | None = None
         self._clean_state = None
-        self._robot_serial: str = self.robot.serial
+        self._attr_unique_id = self.robot.serial
 
     def update(self) -> None:
         """Update the states of Neato switches."""
@@ -66,15 +67,15 @@ class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
         try:
             self._state = self.robot.state
         except NeatoRobotException as ex:
-            if self._available:  # Print only once when available
+            if self._attr_available:  # Print only once when available
                 _LOGGER.error(
                     "Neato switch connection error for '%s': %s", self.entity_id, ex
                 )
             self._state = None
-            self._available = False
+            self._attr_available = False
             return
 
-        self._available = True
+        self._attr_available = True
         _LOGGER.debug("self._state=%s", self._state)
         if self.type == SWITCH_TYPE_SCHEDULE:
             _LOGGER.debug("State: %s", self._state)
@@ -87,26 +88,11 @@ class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
             )
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._robot_serial
-
-    @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return bool(
             self.type == SWITCH_TYPE_SCHEDULE and self._schedule_state == STATE_ON
         )
-
-    @property
-    def entity_category(self) -> EntityCategory:
-        """Device entity category."""
-        return EntityCategory.CONFIG
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
