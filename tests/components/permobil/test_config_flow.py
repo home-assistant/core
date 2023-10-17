@@ -50,6 +50,9 @@ class MockApiAPIError:
     def set_code(self):
         """Pass."""
 
+    def set_email(self):
+        """Pass."""
+
     async def request_application_code():
         """Raise MyPermobilAPIException."""
         raise config_flow.MyPermobilAPIException
@@ -74,6 +77,13 @@ class MockApiSuccess:
     def set_code(self):
         """Pass."""
 
+    def set_email(self):
+        """Pass."""
+
+    async def request_region_names():
+        """Fake a request for regions."""
+        return MOCK_REGIONS
+
     async def request_application_code():
         """Fake a request for application code."""
 
@@ -84,9 +94,13 @@ class MockApiSuccess:
 
 async def test_flow_init(hass: HomeAssistant) -> None:
     """Test config flow init."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    with patch(
+        "homeassistant.components.permobil.config_flow.MyPermobil",
+        lambda x, session: MockApiSuccess,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
@@ -95,8 +109,8 @@ async def test_flow_init(hass: HomeAssistant) -> None:
 async def test_form_invalid_region_api(hass: HomeAssistant) -> None:
     """Test we handle invalid region."""
     with patch(
-        "homeassistant.components.permobil.config_flow.PermobilConfigFlow.p_api",
-        MockApiAPIError,
+        "homeassistant.components.permobil.config_flow.MyPermobil",
+        lambda x, session: MockApiAPIError,
     ), patch(
         "homeassistant.components.permobil.config_flow.PermobilConfigFlow.region_names",
         MOCK_REGIONS,
@@ -128,8 +142,8 @@ async def test_form_invalid_email(hass: HomeAssistant) -> None:
 async def test_form_invalid_code(hass: HomeAssistant) -> None:
     """Test we handle invalid code."""
     with patch(
-        "homeassistant.components.permobil.config_flow.PermobilConfigFlow.p_api",
-        MockApiClientError,
+        "homeassistant.components.permobil.config_flow.MyPermobil",
+        lambda x, session: MockApiClientError,
     ):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -143,9 +157,9 @@ async def test_form_invalid_code(hass: HomeAssistant) -> None:
 async def test_form_valid_email(hass: HomeAssistant) -> None:
     """Test we handle a valid email."""
     with patch(
-        "homeassistant.components.permobil.config_flow.MyPermobil.request_region_names",
-        return_value=MOCK_REGIONS,
-    ) as mock:
+        "homeassistant.components.permobil.config_flow.MyPermobil",
+        lambda x, session: MockApiSuccess,
+    ):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
             context={"source": "user"},
@@ -154,15 +168,14 @@ async def test_form_valid_email(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "region"
     assert result["errors"] == {}
-    assert len(mock.mock_calls) == 1
     assert config_flow.PermobilConfigFlow.data.get(CONF_EMAIL) == MOCK_EMAIL
 
 
 async def test_form_valid_region(hass: HomeAssistant) -> None:
     """Test we handle a valid region."""
     with patch(
-        "homeassistant.components.permobil.config_flow.PermobilConfigFlow.p_api",
-        MockApiSuccess,
+        "homeassistant.components.permobil.config_flow.MyPermobil",
+        lambda x, session: MockApiSuccess,
     ), patch(
         "homeassistant.components.permobil.config_flow.PermobilConfigFlow.region_names",
         MOCK_REGIONS,
@@ -183,8 +196,8 @@ async def test_form_valid_region(hass: HomeAssistant) -> None:
 async def test_form_valid_code(hass: HomeAssistant) -> None:
     """Test we handle a valid email."""
     with patch(
-        "homeassistant.components.permobil.config_flow.PermobilConfigFlow.p_api",
-        MockApiSuccess,
+        "homeassistant.components.permobil.config_flow.MyPermobil",
+        lambda x, session: MockApiSuccess,
     ):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -201,8 +214,8 @@ async def test_form_valid_code(hass: HomeAssistant) -> None:
 async def test_form_connection_error_region(hass: HomeAssistant) -> None:
     """Test we handle a connection error."""
     with patch(
-        "homeassistant.components.permobil.config_flow.MyPermobil.request_region_names",
-        side_effect=config_flow.MyPermobilAPIException,
+        "homeassistant.components.permobil.config_flow.MyPermobil",
+        lambda x, session: MockApiAPIError,
     ):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -218,8 +231,8 @@ async def test_form_connection_error_region(hass: HomeAssistant) -> None:
 async def test_form_connection_error_token(hass: HomeAssistant) -> None:
     """Test we handle a connection error."""
     with patch(
-        "homeassistant.components.permobil.config_flow.PermobilConfigFlow.p_api",
-        MockApiAPIError,
+        "homeassistant.components.permobil.config_flow.MyPermobil",
+        lambda x, session: MockApiAPIError,
     ):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -235,8 +248,8 @@ async def test_form_connection_error_token(hass: HomeAssistant) -> None:
 async def test_form_reauth_api_fail(hass: HomeAssistant) -> None:
     """Test we handle a connection error. in the reauth flow."""
     with patch(
-        "homeassistant.components.permobil.config_flow.MyPermobil.request_application_code",
-        side_effect=config_flow.MyPermobilAPIException,
+        "homeassistant.components.permobil.config_flow.MyPermobil",
+        lambda x, session: MockApiAPIError,
     ), patch(
         "homeassistant.config_entries.ConfigEntries.async_get_entry",
         return_value=MOCK_REENTRY,
@@ -254,8 +267,8 @@ async def test_form_reauth_api_fail(hass: HomeAssistant) -> None:
 async def test_form_reauth_context_fail(hass: HomeAssistant) -> None:
     """Test we handle a connection error. in the reauth flow."""
     with patch(
-        "homeassistant.components.permobil.config_flow.MyPermobil.request_application_code",
-        side_effect=config_flow.MyPermobilAPIException,
+        "homeassistant.components.permobil.config_flow.MyPermobil",
+        lambda x, session: MockApiAPIError,
     ), patch(
         "homeassistant.config_entries.ConfigEntries.async_get_entry",
         return_value=None,
@@ -273,8 +286,8 @@ async def test_form_reauth_context_fail(hass: HomeAssistant) -> None:
 async def test_form_reauth_api_success(hass: HomeAssistant) -> None:
     """Test we handle a reauth."""
     with patch(
-        "homeassistant.components.permobil.config_flow.MyPermobil.request_application_code",
-        return_value=True,
+        "homeassistant.components.permobil.config_flow.MyPermobil",
+        lambda x, session: MockApiSuccess,
     ), patch(
         "homeassistant.config_entries.ConfigEntries.async_get_entry",
         return_value=MOCK_REENTRY,

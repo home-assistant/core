@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_REGION, CONF_TOKEN, CONF_TTL
+from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -47,19 +48,23 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     region_names: dict[str, str] = {}
     data: dict[str, str] = {}
 
+    def __init__(self) -> None:
+        """Initialize flow."""
+        hass: HomeAssistant = async_get_hass()
+        session = async_get_clientsession(hass)
+        self.p_api = MyPermobil(APPLICATION, session=session)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Invoke when a user initiates a flow via the user interface."""
         errors: dict[str, str] = {}
-        session = async_get_clientsession(self.hass)
-        self.p_api = MyPermobil(APPLICATION, session=session)
 
         if user_input is not None:
             try:
                 self.p_api.set_email(user_input[CONF_EMAIL])
             except MyPermobilClientException as err:
-                _LOGGER.error("Error validating email: %s", err)
+                _LOGGER.exception("Error validating email: %s", err)
                 errors["base"] = "invalid_email"
 
             self.data.update(user_input)
@@ -89,7 +94,7 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ",".join(list(self.region_names.keys())),
                 )
             except MyPermobilAPIException as err:
-                _LOGGER.error("Error requesting regions: %s", err)
+                _LOGGER.exception("Error requesting regions: %s", err)
                 errors["base"] = "region_fetch_error"
 
         else:
@@ -102,7 +107,7 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # tell backend to send code to the users email
                 await self.p_api.request_application_code()
             except MyPermobilAPIException as err:
-                _LOGGER.error("Error requesting code: %s", err)
+                _LOGGER.exception("Error requesting code: %s", err)
                 errors["base"] = "region_connection_error"
 
         if errors or user_input is None:
@@ -141,7 +146,7 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except (MyPermobilAPIException, MyPermobilClientException) as err:
             # the code did not pass validation by the api client
             # or the backend returned an error when trying to validate the code
-            _LOGGER.error("Error verifying code: %s", err)
+            _LOGGER.exception("Error verifying code: %s", err)
             errors["base"] = "invalid_code"
 
         if errors or user_input is None:
@@ -154,9 +159,6 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         errors: dict[str, str] = {}
-        if not self.p_api:
-            session = async_get_clientsession(self.hass)
-            self.p_api = MyPermobil(APPLICATION, session=session)
 
         reauth_entry = self.hass.config_entries.async_get_entry(
             self.context.get("entry_id", "")
@@ -175,7 +177,7 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self.p_api.request_application_code()
             except MyPermobilAPIException as err:
-                _LOGGER.error("Error requesting code: %s", err)
+                _LOGGER.exception("Error requesting code: %s", err)
                 errors["base"] = "region_connection_error"
         else:
             errors["base"] = "unknown"
