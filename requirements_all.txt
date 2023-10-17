@@ -237,7 +237,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.0.3
+aioesphomeapi==18.0.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -539,7 +539,7 @@ bleak==0.21.1
 blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
-blinkpy==0.21.0
+blinkpy==0.22.2
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -918,7 +918,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.23.0
+govee-ble==0.24.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1009,7 +1009,7 @@ holidays==0.28
 home-assistant-frontend==20231005.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.10.2
+home-assistant-intents==2023.10.16
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1392,7 +1392,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.35
+opower==0.0.36
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2660,7 +2660,7 @@ vallox-websocket-api==3.3.0
 vehicle==1.0.1
 
 # homeassistant.components.velbus
-velbus-aio==2023.2.0
+velbus-aio==2023.10.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2793,7 +2793,7 @@ zeroconf==0.118.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.104
+zha-quirks==0.0.105
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.9

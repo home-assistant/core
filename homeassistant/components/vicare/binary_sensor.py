@@ -38,14 +38,15 @@ class ViCareBinarySensorEntityDescription(
 CIRCUIT_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ViCareBinarySensorEntityDescription(
         key="circulationpump_active",
-        name="Circulation pump active",
-        device_class=BinarySensorDeviceClass.POWER,
+        name="Circulation pump",
+        icon="mdi:pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getCirculationPumpActive(),
     ),
     ViCareBinarySensorEntityDescription(
         key="frost_protection_active",
-        name="Frost protection active",
-        device_class=BinarySensorDeviceClass.POWER,
+        name="Frost protection",
+        icon="mdi:snowflake",
         value_getter=lambda api: api.getFrostProtectionActive(),
     ),
 )
@@ -53,8 +54,9 @@ CIRCUIT_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 BURNER_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ViCareBinarySensorEntityDescription(
         key="burner_active",
-        name="Burner active",
-        device_class=BinarySensorDeviceClass.POWER,
+        name="Burner",
+        icon="mdi:gas-burner",
+        device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getActive(),
     ),
 )
@@ -62,8 +64,8 @@ BURNER_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 COMPRESSOR_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ViCareBinarySensorEntityDescription(
         key="compressor_active",
-        name="Compressor active",
-        device_class=BinarySensorDeviceClass.POWER,
+        name="Compressor",
+        device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getActive(),
     ),
 )
@@ -71,26 +73,29 @@ COMPRESSOR_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ViCareBinarySensorEntityDescription(
         key="solar_pump_active",
-        name="Solar pump active",
-        device_class=BinarySensorDeviceClass.POWER,
+        name="Solar pump",
+        icon="mdi:pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getSolarPumpActive(),
     ),
     ViCareBinarySensorEntityDescription(
         key="charging_active",
-        name="DHW Charging active",
+        name="DHW Charging",
         device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getDomesticHotWaterChargingActive(),
     ),
     ViCareBinarySensorEntityDescription(
         key="dhw_circulationpump_active",
-        name="DHW Circulation Pump Active",
-        device_class=BinarySensorDeviceClass.POWER,
+        name="DHW Circulation Pump",
+        icon="mdi:pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getDomesticHotWaterCirculationPumpActive(),
     ),
     ViCareBinarySensorEntityDescription(
         key="dhw_pump_active",
-        name="DHW Pump Active",
-        device_class=BinarySensorDeviceClass.POWER,
+        name="DHW Pump",
+        icon="mdi:pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getDomesticHotWaterPumpActive(),
     ),
 )
