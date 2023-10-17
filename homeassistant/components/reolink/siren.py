@@ -15,6 +15,7 @@ from homeassistant.components.siren import (
     SirenEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -35,6 +36,7 @@ SIREN_ENTITIES = (
         key="siren",
         translation_key="siren",
         icon="mdi:alarm-light",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "siren_play"),
     ),
 )
