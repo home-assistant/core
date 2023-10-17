@@ -9,6 +9,7 @@ import logging
 from tuya_iot import TuyaCloudOpenAPIEndpoint
 
 from ..sensor import SensorDeviceClass
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
@@ -52,6 +53,11 @@ TUYA_RESPONSE_PLATFORM_URL = "platform_url"
 
 TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
+
+class VirtualStates(StrEnum):
+    """Virtual states"""
+    STATE_UPDATED_ONLY_IF_IN_REPORTING_PAYLOAD = "+_",
+
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
@@ -372,6 +378,15 @@ class DPCode(StrEnum):
     WORK_MODE = "work_mode"  # Working mode
     WORK_POWER = "work_power"
 
+@dataclass
+class PrefixedEntityDescriptionKey:
+    """Describes a DPCode that uses a VirtualState prefix."""
+    
+    prefixed_key: str
+    original_key: str
+    prefix_name: str
+    prefix_value: str
+    entity_description: EntityDescription
 
 @dataclass
 class UnitOfMeasurement:

@@ -14,6 +14,11 @@ from tuya_iot import (
     TuyaOpenMQ,
 )
 
+from tuya_iot.device import (
+    TuyaDeviceFunction,
+    TuyaDeviceStatusRange,
+)
+
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -38,6 +43,8 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
     DPCode,
+    VirtualStates,
+    PrefixedEntityDescriptionKey,
 )
 
 
@@ -48,6 +55,9 @@ class HomeAssistantTuyaData(NamedTuple):
     device_manager: TuyaDeviceManager
     home_manager: TuyaHomeManager
 
+from .sensor import (
+    SENSORS,
+)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
@@ -93,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tuya_mq.start()
 
     device_ids: set[str] = set()
-    device_manager = TuyaDeviceManager(api, tuya_mq)
+    device_manager = DeviceManager(api, tuya_mq)
     home_manager = TuyaHomeManager(api, tuya_mq, device_manager)
     listener = DeviceListener(hass, device_manager, device_ids)
     device_manager.add_device_listener(listener)
@@ -230,6 +240,52 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     return unload
 
+
+
+
+class DeviceManager(TuyaDeviceManager):
+    def __init__(
+        self,
+        api: TuyaOpenAPI, 
+        mq: TuyaOpenMQ
+    ) -> None:
+        super().__init__(api, mq)
+    
+    @staticmethod
+    def get_prefixed_dpcodes(category: str) -> list[PrefixedEntityDescriptionKey]:
+        to_return = []
+        all_dpcode = [member.value for member in DPCode]
+        for prefix in VirtualStates:
+            if (descriptions := SENSORS.get(category)):
+                for description in descriptions:
+                    if (
+                        description.key.startswith(prefix.value)
+                        and description.key.removeprefix(prefix.value) in all_dpcode
+                    ):
+                        # This Entity Description is prefixed, return it
+                        prefixed_key = PrefixedEntityDescriptionKey(description.key, description.key.removeprefix(prefix.value), prefix.name, prefix.value, description)
+                        to_return.append(prefixed_key)
+        
+        return to_return
+    
+    def _on_device_report(self, device_id: str, status: list):
+        device = self.device_map.get(device_id, None)
+        if not device:
+            return
+
+        prefixed_dpcodes = DeviceManager.get_prefixed_dpcodes(device.category)
+        for prefixed_dpcode in prefixed_dpcodes:
+            if prefixed_dpcode.prefix_value == VirtualStates.STATE_UPDATED_ONLY_IF_IN_REPORTING_PAYLOAD:
+                if prefixed_dpcode.original_key in device.status:
+                    device.status[prefixed_dpcode.original_key] = 0
+        
+        for item in status:
+            if "code" in item and "value" in item:
+                code = item["code"]
+                value = item["value"]
+                device.status[code] = value
+        LOGGER.debug(f"mq device_id -> {device_id} device_status-> {device.status} status-> {status}")
+        super()._on_device_report(device_id, [])
 
 class DeviceListener(TuyaDeviceListener):
     """Device Update Listener."""

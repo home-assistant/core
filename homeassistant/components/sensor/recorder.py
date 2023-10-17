@@ -644,6 +644,10 @@ def _compile_statistics(  # noqa: C901
                 # No valid updates
                 continue
             
+            if state_class == SensorStateClass.SUM_OF_STATE and old_state == new_state and new_state == 0.0:
+                # Don't record the multiple zeros that are provided by the implementation
+                continue
+            
             # Update the sum with the last state
             if state_class == SensorStateClass.SUM_OF_STATE or state_class == SensorStateClass.SUM_OF_STATE_IF_DIFFERENT:
                 _sum += new_state
