@@ -82,6 +82,9 @@ class ShoppingTodoListEntity(TodoListEntity):
 
     async def async_added_to_hass(self) -> None:
         """Entity has been added to hass."""
+        # Shopping list integration doesn't currently support config entry unload
+        # so this code may not be used in practice, however it is here in case
+        # this changes in the future.
         self.async_on_remove(self._data.async_add_listener(self.async_write_ha_state))
 
     @property
