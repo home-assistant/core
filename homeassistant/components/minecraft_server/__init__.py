@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     except MinecraftServerAddressError as error:
         raise ConfigEntryError(
-            f"Server address in configuration entry is invalid ({repr(error)}: {error})"
+            f"Server address in configuration entry is invalid: {error}"
         ) from error
 
     # Create coordinator instance.
@@ -109,8 +109,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         except MinecraftServerAddressError as error:
             host_only_lookup_success = False
             _LOGGER.debug(
-                "Hostname (without port) cannot be parsed (%s: %s), trying again with port",
-                repr(error),
+                "Hostname (without port) cannot be parsed, trying again with port: %s",
                 error,
             )
 
@@ -120,8 +119,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 MinecraftServer(MinecraftServerType.JAVA_EDITION, address)
             except MinecraftServerAddressError as error:
                 _LOGGER.exception(
-                    "Can't migrate configuration entry due to error while parsing server address (%s: %s), try again later",
-                    repr(error),
+                    "Can't migrate configuration entry due to error while parsing server address, try again later: %s",
                     error,
                 )
                 return False

@@ -12,7 +12,7 @@ from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
 _LOGGER = logging.getLogger(__name__)
 
 LOOKUP_TIMEOUT: float = 10
-DATA_UPDATE_TIMEOUT: float = 3.33
+DATA_UPDATE_TIMEOUT: float = 10
 DATA_UPDATE_RETRIES: int = 3
 
 
@@ -66,7 +66,7 @@ class MinecraftServer:
                 self._server = BedrockServer.lookup(address, timeout=LOOKUP_TIMEOUT)
         except (ValueError, LifetimeTimeout) as error:
             raise MinecraftServerAddressError(
-                f"{server_type} server address '{address}' is invalid ({repr(error)}: {error})"
+                f"Lookup of '{address}' failed: {self._get_error_message(error)}"
             ) from error
 
         self._server.timeout = DATA_UPDATE_TIMEOUT
@@ -89,22 +89,12 @@ class MinecraftServer:
         """Get updated data from the server, supporting both Java and Bedrock Edition servers."""
         status_response: BedrockStatusResponse | JavaStatusResponse
 
-        for trial in range(DATA_UPDATE_RETRIES):
-            try:
-                status_response = await self._server.async_status(tries=1)
-                break
-            except OSError as error:
-                _LOGGER.debug(
-                    "Fetching data from '%s' failed, trial %s/%s (%s: %s)",
-                    self._address,
-                    (trial + 1),
-                    DATA_UPDATE_RETRIES,
-                    repr(error),
-                    error,
-                )
-
-        if trial >= (DATA_UPDATE_RETRIES - 1):
-            raise MinecraftServerConnectionError("Fetching data from the server failed")
+        try:
+            status_response = await self._server.async_status(tries=DATA_UPDATE_RETRIES)
+        except OSError as error:
+            raise MinecraftServerConnectionError(
+                f"Status request to '{self._address}' failed: {self._get_error_message(error)}"
+            ) from error
 
         if isinstance(status_response, JavaStatusResponse):
             data = self._extract_java_data(status_response)
@@ -149,3 +139,11 @@ class MinecraftServer:
             game_mode=status_response.gamemode,
             map_name=status_response.map_name,
         )
+
+    def _get_error_message(self, error: BaseException) -> str:
+        """Get error message of an exception."""
+        if not str(error):
+            # Fallback to error type in case of an empty error message.
+            return repr(error)
+
+        return str(error)
