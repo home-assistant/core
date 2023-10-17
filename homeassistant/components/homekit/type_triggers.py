@@ -51,7 +51,9 @@ class DeviceTriggerAccessory(HomeAccessory):
             if (entity_id_or_uuid := trigger.get("entity_id")) and (
                 entry := ent_reg.async_get(entity_id_or_uuid)
             ):
-                unique_id += f"-entity_unique_id:{get_system_unique_id(entry)}"
+                unique_id += (
+                    f"-entity_unique_id:{get_system_unique_id(entry, entry.unique_id)}"
+                )
                 entity_id = entry.entity_id
             trigger_name_parts = []
             if entity_id and (state := self.hass.states.get(entity_id)):
