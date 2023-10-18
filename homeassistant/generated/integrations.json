@@ -3268,12 +3268,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "mazda": {
-      "name": "Mazda Connected Services",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "meater": {
       "name": "Meater",
       "integration_type": "hub",
@@ -5641,6 +5635,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "tami4": {
+      "name": "Tami4 Edge / Edge+",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "tank_utility": {
       "name": "Tank Utility",
       "integration_type": "hub",
@@ -6418,7 +6418,7 @@
       "name": "Withings",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "wiz": {
       "name": "WiZ",
