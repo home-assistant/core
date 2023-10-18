@@ -9,11 +9,13 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.components import media_source
 
 from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
 
@@ -26,6 +28,7 @@ DUNEHD_PLAYER_SUPPORT: Final[MediaPlayerEntityFeature] = (
     | MediaPlayerEntityFeature.PREVIOUS_TRACK
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
 
@@ -115,7 +118,7 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         self._state = self._player.turn_off()
 
     def turn_on(self) -> None:
-        """Turn off media player."""
+        """Turn on media player."""
         self._state = self._player.turn_on()
 
     def media_play(self) -> None:
@@ -125,6 +128,22 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
     def media_pause(self) -> None:
         """Pause media player."""
         self._state = self._player.pause()
+
+    def play_media(self,  media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
+        """Play media from a URL or file."""
+        # Handle media_source
+        if media_source.is_media_source_id(media_id):
+            sourced_media = media_source.resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = sourced_media.url
+
+        # If media ID is a relative URL, we serve it from HA.
+        media_id = async_process_play_media_url(
+            self.hass, media_id
+        )
+
+        self._state = self._player.launch_media_url(media_id)
 
     @property
     def media_title(self) -> str | None:
