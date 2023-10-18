@@ -827,7 +827,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ADD_ELE,
-            name="add ele",
+            translation_key="add_ele",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -835,21 +835,21 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
-            name="Current",
+            translation_key="current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=True,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_POWER,
-            name="Power",
+            translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=True,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_VOLTAGE,
-            name="Voltage",
+            translation_key="voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=True,
