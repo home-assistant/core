@@ -11,6 +11,7 @@ from itertools import chain, repeat
 from unittest.mock import DEFAULT, MagicMock
 
 from homeassistant import config_entries
+from homeassistant.components.dsmr.const import BELGIUM_5MIN_GAS_METER_READING
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -59,14 +60,18 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
 
     telegram = {
         CURRENT_ELECTRICITY_USAGE: CosemObject(
-            [{"value": Decimal("0.0"), "unit": UnitOfPower.WATT}]
+            CURRENT_ELECTRICITY_USAGE,
+            [{"value": Decimal("0.0"), "unit": UnitOfPower.WATT}],
         ),
-        ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0001", "unit": ""}]
+        ),
         GAS_METER_READING: MBusObject(
+            GAS_METER_READING,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": UnitOfVolume.CUBIC_METERS},
-            ]
+            ],
         ),
     }
 
@@ -199,12 +204,15 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
 
     telegram = {
         HOURLY_GAS_METER_READING: MBusObject(
+            HOURLY_GAS_METER_READING,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
-            ]
+            ],
         ),
-        ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0001", "unit": ""}]
+        ),
     }
 
     mock_entry = MockConfigEntry(
@@ -275,12 +283,15 @@ async def test_v5_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
 
     telegram = {
         HOURLY_GAS_METER_READING: MBusObject(
+            HOURLY_GAS_METER_READING,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
-            ]
+            ],
         ),
-        ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0001", "unit": ""}]
+        ),
     }
 
     mock_entry = MockConfigEntry(
@@ -348,16 +359,19 @@ async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) ->
 
     telegram = {
         HOURLY_GAS_METER_READING: MBusObject(
+            HOURLY_GAS_METER_READING,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
-            ]
+            ],
         ),
         ELECTRICITY_IMPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(123.456), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
+            ELECTRICITY_IMPORTED_TOTAL,
+            [{"value": Decimal(123.456), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
         ELECTRICITY_EXPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(654.321), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
+            ELECTRICITY_EXPORTED_TOTAL,
+            [{"value": Decimal(654.321), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
     }
 
@@ -416,10 +430,7 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
-    from dsmr_parser.obis_references import (
-        BELGIUM_5MIN_GAS_METER_READING,
-        ELECTRICITY_ACTIVE_TARIFF,
-    )
+    from dsmr_parser.obis_references import ELECTRICITY_ACTIVE_TARIFF
     from dsmr_parser.objects import CosemObject, MBusObject
 
     entry_data = {
@@ -436,12 +447,15 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
 
     telegram = {
         BELGIUM_5MIN_GAS_METER_READING: MBusObject(
+            BELGIUM_5MIN_GAS_METER_READING,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
-            ]
+            ],
         ),
-        ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0001", "unit": ""}]
+        ),
     }
 
     mock_entry = MockConfigEntry(
@@ -503,7 +517,11 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
         "time_between_update": 0,
     }
 
-    telegram = {ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0002", "unit": ""}])}
+    telegram = {
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0002", "unit": ""}]
+        )
+    }
 
     mock_entry = MockConfigEntry(
         domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
@@ -556,10 +574,12 @@ async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
 
     telegram = {
         ELECTRICITY_IMPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(123.456), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
+            ELECTRICITY_IMPORTED_TOTAL,
+            [{"value": Decimal(123.456), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
         ELECTRICITY_EXPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(654.321), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
+            ELECTRICITY_EXPORTED_TOTAL,
+            [{"value": Decimal(654.321), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
     }
 
@@ -629,10 +649,12 @@ async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
 
     telegram = {
         ELECTRICITY_IMPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(54184.6316), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
+            ELECTRICITY_IMPORTED_TOTAL,
+            [{"value": Decimal(54184.6316), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
         ELECTRICITY_EXPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(19981.1069), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
+            ELECTRICITY_EXPORTED_TOTAL,
+            [{"value": Decimal(19981.1069), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
     }
 
@@ -856,10 +878,11 @@ async def test_gas_meter_providing_energy_reading(
 
     telegram = {
         GAS_METER_READING: MBusObject(
+            GAS_METER_READING,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(123.456), "unit": UnitOfEnergy.GIGA_JOULE},
-            ]
+            ],
         ),
     }
 

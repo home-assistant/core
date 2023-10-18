@@ -1646,11 +1646,16 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Aqara Hub-1563 Lightbulb-1563',
+              'hs_color': None,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.aqara_hub_1563_lightbulb_1563',
             'state': 'off',
@@ -2027,11 +2032,16 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'ArloBabyA0 Nightlight',
+              'hs_color': None,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.arlobabya0_nightlight',
             'state': 'off',
@@ -3929,6 +3939,656 @@
             }),
             'entity_id': 'sensor.homew_current_temperature',
             'state': '21.8',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
+# name: test_snapshots[ecobee3_service_removed]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:4',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'ecobee Inc.',
+        'model': 'REMOTE SENSOR',
+        'name': 'Basement',
+        'name_by_user': None,
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.basement',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Basement',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Basement',
+            }),
+            'entity_id': 'binary_sensor.basement',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.basement_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Basement Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4_1_4101',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Basement Identify',
+            }),
+            'entity_id': 'button.basement_identify',
+            'state': 'unknown',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'ecobee Inc.',
+        'model': 'ecobee3',
+        'name': 'HomeW',
+        'name_by_user': None,
+        'suggested_area': None,
+        'sw_version': '4.2.394',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.homew_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'HomeW Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'HomeW Identify',
+            }),
+            'entity_id': 'button.homew_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'hvac_modes': list([
+                <HVACMode.OFF: 'off'>,
+                <HVACMode.HEAT: 'heat'>,
+                <HVACMode.COOL: 'cool'>,
+                <HVACMode.HEAT_COOL: 'heat_cool'>,
+              ]),
+              'max_humidity': 50,
+              'max_temp': 33.3,
+              'min_humidity': 20,
+              'min_temp': 7.2,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'climate',
+            'entity_category': None,
+            'entity_id': 'climate.homew',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'HomeW',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <ClimateEntityFeature: 7>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_16',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'current_humidity': 34,
+              'current_temperature': 21.8,
+              'friendly_name': 'HomeW',
+              'humidity': 36,
+              'hvac_action': <HVACAction.HEATING: 'heating'>,
+              'hvac_modes': list([
+                <HVACMode.OFF: 'off'>,
+                <HVACMode.HEAT: 'heat'>,
+                <HVACMode.COOL: 'cool'>,
+                <HVACMode.HEAT_COOL: 'heat_cool'>,
+              ]),
+              'max_humidity': 50,
+              'max_temp': 33.3,
+              'min_humidity': 20,
+              'min_temp': 7.2,
+              'supported_features': <ClimateEntityFeature: 7>,
+              'target_temp_high': None,
+              'target_temp_low': None,
+              'temperature': 22.2,
+            }),
+            'entity_id': 'climate.homew',
+            'state': 'heat',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'options': list([
+                'celsius',
+                'fahrenheit',
+              ]),
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'select',
+            'entity_category': <EntityCategory.CONFIG: 'config'>,
+            'entity_id': 'select.homew_temperature_display_units',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': 'mdi:thermometer',
+            'original_name': 'HomeW Temperature Display Units',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': 'temperature_display_units',
+            'unique_id': '00:00:00:00:00:00_1_16_21',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'HomeW Temperature Display Units',
+              'icon': 'mdi:thermometer',
+              'options': list([
+                'celsius',
+                'fahrenheit',
+              ]),
+            }),
+            'entity_id': 'select.homew_temperature_display_units',
+            'state': 'fahrenheit',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.homew_current_humidity',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+            'original_icon': None,
+            'original_name': 'HomeW Current Humidity',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_16_24',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'humidity',
+              'friendly_name': 'HomeW Current Humidity',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.homew_current_humidity',
+            'state': '34',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.homew_current_temperature',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+            'original_icon': None,
+            'original_name': 'HomeW Current Temperature',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_16_19',
+            'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'temperature',
+              'friendly_name': 'HomeW Current Temperature',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+            }),
+            'entity_id': 'sensor.homew_current_temperature',
+            'state': '21.8',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:2',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'ecobee Inc.',
+        'model': 'REMOTE SENSOR',
+        'name': 'Kitchen',
+        'name_by_user': None,
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.kitchen',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Kitchen',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_2_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Kitchen',
+            }),
+            'entity_id': 'binary_sensor.kitchen',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.kitchen_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Kitchen Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_2_1_2053',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Kitchen Identify',
+            }),
+            'entity_id': 'button.kitchen_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.kitchen_temperature',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+            'original_icon': None,
+            'original_name': 'Kitchen Temperature',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_2_55',
+            'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'temperature',
+              'friendly_name': 'Kitchen Temperature',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+            }),
+            'entity_id': 'sensor.kitchen_temperature',
+            'state': '21.5',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:3',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'ecobee Inc.',
+        'model': 'REMOTE SENSOR',
+        'name': 'Porch',
+        'name_by_user': None,
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.porch',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Porch',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_3_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Porch',
+            }),
+            'entity_id': 'binary_sensor.porch',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.porch_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Porch Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_3_1_3077',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Porch Identify',
+            }),
+            'entity_id': 'button.porch_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.porch_temperature',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+            'original_icon': None,
+            'original_name': 'Porch Temperature',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_3_55',
+            'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'temperature',
+              'friendly_name': 'Porch Temperature',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+            }),
+            'entity_id': 'sensor.porch_temperature',
+            'state': '21',
           }),
         }),
       ]),
@@ -6117,6 +6777,185 @@
     }),
   ])
 # ---
+# name: test_snapshots[home_assistant_bridge_fan_one_removed]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'Home Assistant',
+        'model': 'Bridge',
+        'name': 'Home Assistant Bridge',
+        'name_by_user': None,
+        'suggested_area': None,
+        'sw_version': '0.104.0.dev0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.home_assistant_bridge_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Home Assistant Bridge Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_2',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Home Assistant Bridge Identify',
+            }),
+            'entity_id': 'button.home_assistant_bridge_identify',
+            'state': 'unknown',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1256851357',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'Home Assistant',
+        'model': 'Fan',
+        'name': 'Living Room Fan',
+        'name_by_user': None,
+        'suggested_area': None,
+        'sw_version': '0.104.0.dev0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.living_room_fan_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Living Room Fan Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1256851357_1_2',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Living Room Fan Identify',
+            }),
+            'entity_id': 'button.living_room_fan_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'preset_modes': None,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'fan',
+            'entity_category': None,
+            'entity_id': 'fan.living_room_fan',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Living Room Fan',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <FanEntityFeature: 7>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1256851357_8',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'direction': 'forward',
+              'friendly_name': 'Living Room Fan',
+              'oscillating': False,
+              'percentage': 0,
+              'percentage_step': 1.0,
+              'preset_mode': None,
+              'preset_modes': None,
+              'supported_features': <FanEntityFeature: 7>,
+            }),
+            'entity_id': 'fan.living_room_fan',
+            'state': 'off',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
 # name: test_snapshots[homespan_daikin_bridge]
   list([
     dict({
@@ -6402,15 +7241,22 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
+              'hs_color': None,
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
               'min_mireds': 153,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.hue_ambiance_candle_4',
             'state': 'off',
@@ -6519,15 +7365,22 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
+              'hs_color': None,
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
               'min_mireds': 153,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.hue_ambiance_candle_3',
             'state': 'off',
@@ -6636,15 +7489,22 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
+              'hs_color': None,
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
               'min_mireds': 153,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.hue_ambiance_candle_2',
             'state': 'off',
@@ -6753,15 +7613,22 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
+              'hs_color': None,
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
               'min_mireds': 153,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.hue_ambiance_candle',
             'state': 'off',
@@ -7421,6 +8288,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -7530,6 +8399,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -7639,6 +8510,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -7748,6 +8621,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -7857,6 +8732,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -7966,6 +8843,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -8075,6 +8954,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -8253,11 +9134,16 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Koogeek-LS1-20833F Light Strip',
+              'hs_color': None,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.koogeek_ls1_20833f_light_strip',
             'state': 'off',
@@ -9715,6 +10601,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Mysa-85dda9 Display',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -9999,6 +10887,8 @@
             'attributes': dict({
               'brightness': 255.0,
               'color_mode': <ColorMode.HS: 'hs'>,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'Nanoleaf Strip 3B32 Nanoleaf Light Strip',
               'hs_color': tuple(
                 30.0,
