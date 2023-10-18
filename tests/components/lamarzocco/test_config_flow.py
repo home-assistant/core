@@ -1,5 +1,5 @@
 """Test the La Marzocco config flow."""
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 
@@ -32,7 +32,7 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_form(hass: HomeAssistant, mock_lamarzocco: AsyncMock) -> None:
+async def test_form(hass: HomeAssistant, mock_lamarzocco: MagicMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -51,11 +51,11 @@ async def test_form(hass: HomeAssistant, mock_lamarzocco: AsyncMock) -> None:
     assert result2["title"] == MACHINE_NAME
     assert result2["data"] == USER_INPUT | DEFAULT_CONF
 
-    len(mock_lamarzocco.try_connect.mock_calls) == 1
+    assert len(mock_lamarzocco.try_connect.mock_calls) == 1
 
 
 async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_lamarzocco: AsyncMock
+    hass: HomeAssistant, mock_lamarzocco: MagicMock
 ) -> None:
     """Test invalid auth error."""
 
@@ -71,11 +71,11 @@ async def test_form_invalid_auth(
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
-    len(mock_lamarzocco.try_connect.mock_calls) == 1
+    assert len(mock_lamarzocco.try_connect.mock_calls) == 1
 
 
 async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_lamarzocco: AsyncMock
+    hass: HomeAssistant, mock_lamarzocco: MagicMock
 ) -> None:
     """Test cannot connect error."""
 
@@ -92,7 +92,7 @@ async def test_form_cannot_connect(
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
-    len(mock_lamarzocco.try_connect.mock_calls) == 1
+    assert len(mock_lamarzocco.try_connect.mock_calls) == 1
 
 
 async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
@@ -128,7 +128,7 @@ async def test_show_reauth(
 
 
 async def test_reauth_flow(
-    hass: HomeAssistant, mock_lamarzocco: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_lamarzocco: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that the reauth flow."""
 
@@ -152,11 +152,11 @@ async def test_reauth_flow(
     assert result2["type"] == FlowResultType.ABORT
     await hass.async_block_till_done()
     assert result2["reason"] == "reauth_successful"
-    len(mock_lamarzocco.try_connect.mock_calls) == 1
+    assert len(mock_lamarzocco.try_connect.mock_calls) == 1
 
 
 async def test_reauth_errors(
-    hass: HomeAssistant, mock_lamarzocco: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_lamarzocco: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the reauth flow errors."""
     mock_config_entry.add_to_hass(hass)
@@ -181,7 +181,7 @@ async def test_reauth_errors(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
-    len(mock_lamarzocco.try_connect.mock_calls) == 1
+    assert len(mock_lamarzocco.try_connect.mock_calls) == 1
 
     mock_lamarzocco.try_connect.side_effect = RequestNotSuccessful("")
 
@@ -193,4 +193,4 @@ async def test_reauth_errors(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    len(mock_lamarzocco.try_connect.mock_calls) == 1
+    assert len(mock_lamarzocco.try_connect.mock_calls) == 2

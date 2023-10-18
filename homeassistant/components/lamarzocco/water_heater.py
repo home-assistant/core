@@ -49,7 +49,7 @@ ENTITIES: tuple[LaMarzoccoWaterHeaterEntityDescription, ...] = (
     LaMarzoccoWaterHeaterEntityDescription(
         key="coffee",
         translation_key="coffee",
-        icon="mdi:water-boiler",
+        icon="mdi:coffee-maker",
         min_temp=85,
         max_temp=104,
         set_temp_fn=lambda client, temp: client.set_coffee_temp(temp),

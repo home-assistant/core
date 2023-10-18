@@ -123,7 +123,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     LaMarzoccoSwitchEntityDescription(
         key="main",
         translation_key="main",
-        icon="mdi:coffee-maker",
+        icon="mdi:power-cycle",
         control_fn=lambda client, state: client.set_power(state),
         is_on_fn=lambda client: client.current_status["power"],
         extra_attributes={
@@ -150,7 +150,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         key="prebrew",
         translation_key="prebrew",
         icon="mdi:location-enter",
-        control_fn=lambda client, state: client.set_prebrewing_enable(state),
+        control_fn=lambda client, state: client.set_prebrew(state),
         is_on_fn=lambda client: client.current_status["enable_prebrewing"],
         extra_attributes={
             MODEL_GS3_AV: ATTR_MAP_PREBREW_GS3_AV,
@@ -162,7 +162,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         key="preinfusion",
         translation_key="preinfusion",
         icon="mdi:location-enter",
-        control_fn=lambda client, state: client.set_preinfusion_enable(state),
+        control_fn=lambda client, state: client.set_preinfusion(state),
         is_on_fn=lambda client: client.current_status["enable_preinfusion"],
         extra_attributes={
             MODEL_GS3_AV: ATTR_MAP_PREINFUSION_GS3_AV,
@@ -173,7 +173,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
         translation_key="steam_boiler_enable",
-        icon="mdi:water-boiler",
+        icon="mdi:kettle-steam",
         control_fn=lambda client, state: client.set_steam_boiler_enable(state),
         is_on_fn=lambda client: client.current_status["steam_boiler_enable"],
         extra_attributes={

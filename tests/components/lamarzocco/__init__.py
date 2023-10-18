@@ -7,7 +7,7 @@ from homeassistant.components.lamarzocco.const import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-MACHINE_NAME = "MyMachine"
+MACHINE_NAME = "GS01234"
 UNIQUE_ID = "1234"
 
 DEFAULT_CONF = {
