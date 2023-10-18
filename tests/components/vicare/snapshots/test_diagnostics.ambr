@@ -4694,7 +4694,7 @@
           }),
         ]),
       }),
-    }),
+    ]),
     'entry': dict({
       'data': dict({
         'client_id': '**REDACTED**',
