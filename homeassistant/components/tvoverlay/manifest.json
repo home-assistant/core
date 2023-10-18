@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/tvoverlay",
   "homekit": {},
   "iot_class": "local_push",
-  "requirements": ["tvoverlay==1.0.4"],
+  "requirements": ["tvoverlay==1.0.5"],
   "ssdp": [],
   "zeroconf": []
 }
