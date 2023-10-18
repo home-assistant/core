@@ -36,7 +36,7 @@ from . import ViCareRequiredKeysMixin, get_api
 from .const import (
     DOMAIN,
     VICARE_CUBIC_METER,
-    VICARE_DEVICE_LIST,
+    VICARE_DEVICE_CONFIG_LIST,
     VICARE_KWH,
     VICARE_UNIT_TO_UNIT_OF_MEASUREMENT,
 )
@@ -627,7 +627,7 @@ async def async_setup_entry(
     """Create the ViCare sensor devices."""
     entities = []
 
-    for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
+    for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG_LIST]:
         api = get_api(config_entry, device)
         for description in GLOBAL_SENSORS:
             entity = await hass.async_add_executor_job(
