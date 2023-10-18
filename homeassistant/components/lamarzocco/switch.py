@@ -164,11 +164,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         icon="mdi:water",
         control_fn=lambda client, state: client.set_preinfusion(state),
         is_on_fn=lambda client: client.current_status["enable_preinfusion"],
-        extra_attributes={
-            MODEL_GS3_AV: ATTR_MAP_PREINFUSION_GS3_AV,
-            MODEL_LM: ATTR_MAP_PREINFUSION_LM,
-            MODEL_LMU: ATTR_MAP_PREINFUSION_LM,
-        },
+        extra_attributes={},
     ),
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
@@ -176,12 +172,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         icon="mdi:water-boiler",
         control_fn=lambda client, state: client.set_steam_boiler_enable(state),
         is_on_fn=lambda client: client.current_status["steam_boiler_enable"],
-        extra_attributes={
-            MODEL_GS3_AV: None,
-            MODEL_GS3_MP: None,
-            MODEL_LM: None,
-            MODEL_LMU: None,
-        },
+        extra_attributes={},
     ),
 )
 
@@ -197,7 +188,8 @@ async def async_setup_entry(
     async_add_entities(
         LaMarzoccoSwitchEntity(coordinator, hass, description)
         for description in ENTITIES
-        if coordinator.lm.model_name in description.extra_attributes
+        if not description.extra_attributes
+        or coordinator.lm.model_name in description.extra_attributes
     )
 
 

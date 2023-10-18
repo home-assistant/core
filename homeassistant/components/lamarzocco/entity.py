@@ -62,7 +62,7 @@ class LaMarzoccoEntity(CoordinatorEntity):
             return key
 
         data = self._lm_client.current_status
-        attr = self.entity_description.extra_attributes[self._lm_client.model_name]
+        attr = self.entity_description.extra_attributes.get(self._lm_client.model_name)
         if attr is None:
             return {}
 

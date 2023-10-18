@@ -99,7 +99,8 @@ async def async_setup_entry(
     async_add_entities(
         LaMarzoccoSensorEntity(coordinator, hass, description)
         for description in ENTITIES
-        if coordinator.lm.model_name in description.extra_attributes
+        if not description.extra_attributes
+        or coordinator.lm.model_name in description.extra_attributes
     )
 
 
