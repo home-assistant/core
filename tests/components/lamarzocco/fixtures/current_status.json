@@ -3,5 +3,9 @@
   "global_auto": "Enabled",
   "enable_prebrewing": true,
   "enable_preinfusion": false,
-  "steam_boiler_enable": true
+  "steam_boiler_enable": true,
+  "steam_temp": 113,
+  "steam_temp_set": 128,
+  "coffee_temp": 93,
+  "coffee_temp_set": 95
 }

@@ -47,14 +47,14 @@ class LaMarzoccoWaterHeaterEntityDescription(
 
 ENTITIES: tuple[LaMarzoccoWaterHeaterEntityDescription, ...] = (
     LaMarzoccoWaterHeaterEntityDescription(
-        key="coffee",
-        translation_key="coffee",
+        key="coffee_boiler",
+        translation_key="coffee_boiler",
         icon="mdi:coffee-maker",
         min_temp=85,
         max_temp=104,
         set_temp_fn=lambda client, temp: client.set_coffee_temp(temp),
         current_op_fn=lambda client: client.current_status.get("power", False),
-        control_fn=lambda client, state: client.set_coffee_boiler_on(state),
+        control_fn=lambda client, state: client.set_power(state),
         current_temp_fn=lambda client: client.current_status.get("coffee_temp", 0),
         target_temp_fn=lambda client: client.current_status.get("coffee_temp_set", 0),
         extra_attributes={
@@ -65,8 +65,8 @@ ENTITIES: tuple[LaMarzoccoWaterHeaterEntityDescription, ...] = (
         },
     ),
     LaMarzoccoWaterHeaterEntityDescription(
-        key="steam",
-        translation_key="steam",
+        key="steam_boiler",
+        translation_key="steam_boiler",
         icon="mdi:water-boiler",
         min_temp=126,
         max_temp=131,
@@ -74,7 +74,7 @@ ENTITIES: tuple[LaMarzoccoWaterHeaterEntityDescription, ...] = (
         current_op_fn=lambda client: client.current_status.get(
             "steam_boiler_enable", False
         ),
-        control_fn=lambda client, state: client.set_steam_boiler_on(state),
+        control_fn=lambda client, state: client.set_steam_boiler_enable(state),
         current_temp_fn=lambda client: client.current_status.get("steam_temp", 0),
         target_temp_fn=lambda client: client.current_status.get("steam_temp_set", 0),
         extra_attributes={
