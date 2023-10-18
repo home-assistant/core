@@ -44,7 +44,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Transmission"
+    assert result2["title"] == "0.0.0.0:9091"
     assert result2["data"] == MOCK_CONFIG_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -69,27 +69,6 @@ async def test_device_already_configured(
 
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
-
-
-async def test_name_already_configured(hass: HomeAssistant) -> None:
-    """Test name is already configured."""
-    entry = MockConfigEntry(
-        domain=transmission.DOMAIN,
-        data=MOCK_CONFIG_DATA,
-        options={"scan_interval": 120},
-    )
-    entry.add_to_hass(hass)
-
-    mock_entry = MOCK_CONFIG_DATA.copy()
-    mock_entry["host"] = "1.1.1.1"
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=mock_entry,
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"name": "name_exists"}
 
 
 async def test_options(hass: HomeAssistant) -> None:

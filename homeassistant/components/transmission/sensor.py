@@ -8,7 +8,13 @@ from transmission_rpc.torrent import Torrent
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, STATE_IDLE, UnitOfDataRate
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    STATE_IDLE,
+    UnitOfDataRate,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -35,7 +41,10 @@ async def async_setup_entry(
     coordinator: TransmissionDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    name: str = config_entry.data[CONF_NAME]
+    # to be removed in 2024.1
+    name = config_entry.data.get(CONF_NAME)
+    if name is None:
+        name = f"{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}"
 
     dev = [
         TransmissionSpeedSensor(
