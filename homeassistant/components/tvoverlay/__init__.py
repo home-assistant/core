@@ -29,7 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     notifier = Notifications(entry.data[CONF_HOST])
 
     try:
-        # await hass.async_add_executor_job(notifier.async_connect)
         await notifier.async_connect()
     except ConnectError as ex:
         raise ConfigEntryNotReady(
