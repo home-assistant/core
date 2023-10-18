@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import CancelledError
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 from functools import partial
 
 from dsmr_parser import obis_references
@@ -34,6 +36,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
@@ -57,6 +63,8 @@ from .const import (
     DSMR_PROTOCOL,
     LOGGER,
 )
+
+EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
 
 UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
@@ -387,17 +395,58 @@ async def async_setup_entry(
 ) -> None:
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
-    entities = [
-        DSMREntity(description, entry)
-        for description in SENSORS
-        if (
-            description.dsmr_versions is None
-            or dsmr_version in description.dsmr_versions
-        )
-        and (not description.is_gas or CONF_SERIAL_ID_GAS in entry.data)
-    ]
-    async_add_entities(entities)
+    entities: list[DSMREntity] = []
+    initialized: bool = False
+    add_entities_handler: Callable[..., None] | None
 
+    @callback
+    def init_async_add_entities(telegram: dict[str, DSMRObject]) -> None:
+        """Add the sensor entities after the first datadram was received."""
+        nonlocal add_entities_handler
+        assert add_entities_handler is not None
+        add_entities_handler()
+        add_entities_handler = None
+
+        def device_class_and_uom(
+            telegram: dict[str, DSMRObject],
+            entity_description: DSMRSensorEntityDescription,
+        ) -> tuple[SensorDeviceClass | None, str | StrEnum | None]:
+            """Get native unit of measurement from telegram,."""
+            dsmr_object = telegram[entity_description.obis_reference]
+            uom: str | None = getattr(dsmr_object, "unit") or None
+            with suppress(ValueError):
+                if entity_description.device_class == SensorDeviceClass.GAS and (
+                    enery_uom := UnitOfEnergy(str(uom))
+                ):
+                    return (SensorDeviceClass.ENERGY, enery_uom)
+            if uom in UNIT_CONVERSION:
+                return (entity_description.device_class, UNIT_CONVERSION[uom])
+            return (entity_description.device_class, uom)
+
+        entities.extend(
+            [
+                DSMREntity(
+                    description,
+                    entry,
+                    telegram,
+                    *device_class_and_uom(
+                        telegram, description
+                    ),  # type: ignore[arg-type]
+                )
+                for description in SENSORS
+                if (
+                    description.dsmr_versions is None
+                    or dsmr_version in description.dsmr_versions
+                )
+                and (not description.is_gas or CONF_SERIAL_ID_GAS in entry.data)
+                and description.obis_reference in telegram
+            ]
+        )
+        async_add_entities(entities)
+
+    add_entities_handler = async_dispatcher_connect(
+        hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), init_async_add_entities
+    )
     min_time_between_updates = timedelta(
         seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
     )
@@ -405,9 +454,16 @@ async def async_setup_entry(
     @Throttle(min_time_between_updates)
     def update_entities_telegram(telegram: dict[str, DSMRObject] | None) -> None:
         """Update entities with latest telegram and trigger state update."""
+        nonlocal initialized
         # Make all device entities aware of new telegram
         for entity in entities:
             entity.update_data(telegram)
+
+        if not initialized and telegram:
+            initialized = True
+            async_dispatcher_send(
+                hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), telegram
+            )
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival
@@ -525,6 +581,8 @@ async def async_setup_entry(
 
     @callback
     async def _async_stop(_: Event) -> None:
+        if add_entities_handler is not None:
+            add_entities_handler()
         task.cancel()
 
     # Make sure task is cancelled on shutdown (or tests complete)
@@ -544,12 +602,19 @@ class DSMREntity(SensorEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, entity_description: DSMRSensorEntityDescription, entry: ConfigEntry
+        self,
+        entity_description: DSMRSensorEntityDescription,
+        entry: ConfigEntry,
+        telegram: dict[str, DSMRObject],
+        device_class: SensorDeviceClass,
+        native_unit_of_measurement: str | None,
     ) -> None:
         """Initialize entity."""
         self.entity_description = entity_description
+        self._attr_device_class = device_class
+        self._attr_native_unit_of_measurement = native_unit_of_measurement
         self._entry = entry
-        self.telegram: dict[str, DSMRObject] | None = {}
+        self.telegram: dict[str, DSMRObject] | None = telegram
 
         device_serial = entry.data[CONF_SERIAL_ID]
         device_name = DEVICE_NAME_ELECTRICITY
@@ -594,21 +659,6 @@ class DSMREntity(SensorEntity):
         return self.telegram is not None
 
     @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the device class of this entity."""
-        device_class = super().device_class
-
-        # Override device class for gas sensors providing energy units, like
-        # kWh, MWh, GJ, etc. In those cases, the class should be energy, not gas
-        with suppress(ValueError):
-            if device_class == SensorDeviceClass.GAS and UnitOfEnergy(
-                str(self.native_unit_of_measurement)
-            ):
-                return SensorDeviceClass.ENERGY
-
-        return device_class
-
-    @property
     def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
         value: StateType
@@ -627,14 +677,6 @@ class DSMREntity(SensorEntity):
             )
 
         return value
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity, if any."""
-        unit_of_measurement = self.get_dsmr_object_attr("unit")
-        if unit_of_measurement in UNIT_CONVERSION:
-            return UNIT_CONVERSION[unit_of_measurement]
-        return unit_of_measurement
 
     @staticmethod
     def translate_tariff(value: str, dsmr_version: str) -> str | None:
