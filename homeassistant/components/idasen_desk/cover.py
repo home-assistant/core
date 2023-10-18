@@ -53,7 +53,7 @@ class IdasenDeskCover(CoordinatorEntity, CoverEntity):
         """Initialize an Idasen Desk cover."""
         super().__init__(coordinator)
         self._desk = coordinator.desk
-        self._attr_name = device_info.get(ATTR_NAME)
+        self._attr_name = device_info[ATTR_NAME]
         self._attr_unique_id = address
         self._attr_device_info = device_info
 
