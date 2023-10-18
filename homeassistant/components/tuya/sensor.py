@@ -393,6 +393,15 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
         ),
+        TuyaSensorEntityDescription(
+            key=VirtualStates.STATE_UPDATED_ONLY_IF_IN_REPORTING_PAYLOAD+DPCode.ADD_ELE,
+            translation_key="add_ele",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.SUM_OF_STATE,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            entity_registry_enabled_default=True,
+            force_update=True,
+        ),
     ),
     # Luminance Sensor
     # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
