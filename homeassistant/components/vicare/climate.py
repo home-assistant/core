@@ -1,10 +1,13 @@
 """Viessmann ViCare climate device."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from contextlib import suppress
 import logging
 from typing import Any
 
+from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareInvalidDataError,
@@ -90,7 +93,7 @@ HA_TO_VICARE_PRESET_HEATING = {
 }
 
 
-def _get_circuits(vicare_api):
+def _get_circuits(vicare_api: Device) -> list[Any]:
     """Return the list of circuits."""
     try:
         return vicare_api.circuits
@@ -148,7 +151,9 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     _current_action: bool | None = None
     _current_mode: str | None = None
 
-    def __init__(self, name, api, circuit, device_config) -> None:
+    def __init__(
+        self, name: str, api: Device, circuit, device_config: PyViCareDeviceConfig
+    ) -> None:
         """Initialize the climate device."""
         super().__init__(device_config)
         self._attr_name = name
@@ -246,8 +251,8 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         _LOGGER.debug("Setting hvac mode to %s / %s", hvac_mode, vicare_mode)
         self._circuit.setMode(vicare_mode)
 
-    def vicare_mode_from_hvac_mode(self, hvac_mode):
-        """Return the corresponding vicare mode for an hvac_mode."""
+    def vicare_mode_from_hvac_mode(self, hvac_mode: HVACMode) -> str | None:
+        """Return the corresponding vicare mode for a hvac_mode."""
         if "vicare_modes" not in self._attributes:
             return None
 
@@ -286,8 +291,10 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             self._attr_target_temperature = temp
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
+        if not self._current_program:
+            return None
         return VICARE_TO_HA_PRESET_HEATING.get(self._current_program)
 
     def set_preset_mode(self, preset_mode: str) -> None:
@@ -310,11 +317,11 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             self._circuit.activateProgram(vicare_program)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Show Device Attributes."""
         return self._attributes
 
-    def set_vicare_mode(self, vicare_mode):
+    def set_vicare_mode(self, vicare_mode: str) -> None:
         """Service function to set vicare modes directly."""
         if vicare_mode not in self._attributes["vicare_modes"]:
             raise ValueError(f"Cannot set invalid vicare mode: {vicare_mode}.")

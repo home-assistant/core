@@ -3,6 +3,8 @@ from contextlib import suppress
 import logging
 from typing import Any
 
+from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
@@ -54,7 +56,7 @@ HA_TO_VICARE_HVAC_DHW = {
 }
 
 
-def _get_circuits(vicare_api):
+def _get_circuits(vicare_api: Device) -> list[Any]:
     """Return the list of circuits."""
     try:
         return vicare_api.circuits
@@ -99,7 +101,9 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _attr_max_temp = VICARE_TEMP_WATER_MAX
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
 
-    def __init__(self, name, api, circuit, device_config) -> None:
+    def __init__(
+        self, name: str, api: Device, circuit: Any, device_config: PyViCareDeviceConfig
+    ) -> None:
         """Initialize the DHW water_heater device."""
         super().__init__(device_config)
         self._attr_name = name
@@ -141,6 +145,8 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             self._attr_target_temperature = temp
 
     @property
-    def current_operation(self):
+    def current_operation(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
+        if not self._current_mode:
+            return None
         return VICARE_TO_HA_HVAC_DHW.get(self._current_mode)

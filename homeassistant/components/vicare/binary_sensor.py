@@ -4,7 +4,10 @@ from __future__ import annotations
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
+from typing import Any
 
+from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
@@ -102,7 +105,10 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 
 
 def _build_entity(
-    name: str, vicare_api, device_config, sensor: ViCareBinarySensorEntityDescription
+    name: str,
+    vicare_api: Device,
+    device_config: PyViCareDeviceConfig,
+    sensor: ViCareBinarySensorEntityDescription,
 ):
     """Create a ViCare binary sensor entity."""
     try:
@@ -127,7 +133,7 @@ async def _entities_from_descriptions(
     hass: HomeAssistant,
     entities: list[ViCareBinarySensor],
     sensor_descriptions: tuple[ViCareBinarySensorEntityDescription, ...],
-    iterables,
+    iterables: list[Any],
     config_entry: ConfigEntry,
 ) -> None:
     """Create entities from descriptions and list of burners/circuits."""
@@ -198,7 +204,11 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
     entity_description: ViCareBinarySensorEntityDescription
 
     def __init__(
-        self, name, api, device_config, description: ViCareBinarySensorEntityDescription
+        self,
+        name: str,
+        api: Device,
+        device_config: PyViCareDeviceConfig,
+        description: ViCareBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device_config)
@@ -208,7 +218,7 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
         self._device_config = device_config
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._attr_is_on is not None
 
@@ -222,7 +232,7 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
             return f"{tmp_id}-{self._api.id}"
         return tmp_id
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):

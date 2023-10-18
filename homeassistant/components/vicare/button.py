@@ -5,6 +5,8 @@ from contextlib import suppress
 from dataclasses import dataclass
 import logging
 
+from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
@@ -47,7 +49,10 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 
 
 def _build_entity(
-    name: str, vicare_api, device_config, description: ViCareButtonEntityDescription
+    name: str,
+    vicare_api: Device,
+    device_config: PyViCareDeviceConfig,
+    description: ViCareButtonEntityDescription,
 ):
     """Create a ViCare button entity."""
     _LOGGER.debug("Found device %s", name)
@@ -99,7 +104,11 @@ class ViCareButton(ViCareEntity, ButtonEntity):
     entity_description: ViCareButtonEntityDescription
 
     def __init__(
-        self, name, api, device_config, description: ViCareButtonEntityDescription
+        self,
+        name: str,
+        api: Device,
+        device_config: PyViCareDeviceConfig,
+        description: ViCareButtonEntityDescription,
     ) -> None:
         """Initialize the button."""
         super().__init__(device_config)
