@@ -101,6 +101,14 @@ class DeakoLightSwitch(LightEntity):
             color_modes.add(ColorMode.BRIGHTNESS)
         return color_modes
 
+    @property
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        state = self.client.get_state(self.uuid)
+        if state is not None and state.get("dim") is None:
+            return ColorMode.ONOFF
+        return ColorMode.BRIGHTNESS
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         dim = None

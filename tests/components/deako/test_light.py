@@ -110,6 +110,7 @@ async def test_light_initial_props(
     assert device_name == entity.original_name
     if mock_devices.get_state(device_uuid).get("dim") is not None:
         assert ColorMode.BRIGHTNESS in entity.capabilities.get("supported_color_modes")
+        assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     else:
         assert ColorMode.ONOFF in entity.capabilities.get("supported_color_modes")
 
