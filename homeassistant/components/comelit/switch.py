@@ -52,7 +52,7 @@ class ComelitSwitchEntity(CoordinatorEntity[ComelitSerialBridge], SwitchEntity):
         self._device = device
         super().__init__(coordinator)
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
-        self._attr_device_info = self.coordinator.platform_device_info(device)
+        self._attr_device_info = coordinator.platform_device_info(device)
         if device.type == OTHER:
             self._attr_device_class = SwitchDeviceClass.OUTLET
 
