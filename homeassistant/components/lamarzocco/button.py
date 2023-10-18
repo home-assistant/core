@@ -34,7 +34,7 @@ ENTITIES: tuple[LaMarzoccoButtonEntityDescription, ...] = (
     LaMarzoccoButtonEntityDescription(
         key="start_backflush",
         translation_key="start_backflush",
-        icon="mdi:coffee-maker",
+        icon="mdi:water-sync",
         press_fn=lambda client: client.start_backflush(),
         extra_attributes={
             MODEL_GS3_AV: None,

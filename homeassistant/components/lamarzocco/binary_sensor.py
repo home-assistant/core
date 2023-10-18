@@ -22,7 +22,6 @@ class LaMarzoccoBinarySensorEntityDescriptionMixin:
     """Description of an La Marzocco Binary Sensor."""
 
     is_on_fn: Callable[[LaMarzoccoClient], bool]
-    is_available_fn: Callable[[LaMarzoccoClient], bool]
 
 
 @dataclass
@@ -43,10 +42,6 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         is_on_fn=lambda client: not client.current_status.get(
             "water_reservoir_contact"
         ),
-        is_available_fn=lambda client: client.current_status.get(
-            "water_reservoir_contact"
-        )
-        is not None,
         extra_attributes={},
     ),
     LaMarzoccoBinarySensorEntityDescription(
@@ -55,8 +50,6 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.RUNNING,
         icon="mdi:cup-water",
         is_on_fn=lambda client: client.current_status.get(BREW_ACTIVE),
-        is_available_fn=lambda client: client.current_status.get(BREW_ACTIVE)
-        is not None,
         extra_attributes={},
     ),
 )
@@ -82,11 +75,6 @@ class LaMarzoccoBinarySensorEntity(LaMarzoccoEntity, BinarySensorEntity):
     """Binary Sensor representing espresso machine water reservoir status."""
 
     entity_description: LaMarzoccoBinarySensorEntityDescription
-
-    @property
-    def available(self) -> bool:
-        """Return if binary sensor is available."""
-        return self.entity_description.is_available_fn(self._lm_client)
 
     @property
     def is_on(self) -> bool:

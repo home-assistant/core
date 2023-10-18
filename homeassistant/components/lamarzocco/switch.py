@@ -9,7 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    DATE_RECEIVED,
     DOMAIN,
     FRI,
     MODEL_GS3_AV,
@@ -41,7 +40,6 @@ AUTO = "auto"
 TIME = "time"
 
 ATTR_MAP_AUTO_ON_OFF = [
-    DATE_RECEIVED,
     (MON, AUTO),
     (MON, ON, TIME),
     (MON, OFF, TIME),
@@ -71,7 +69,6 @@ PREBREWING = "prebrewing"
 PREINFUSION = "preinfusion"
 
 ATTR_MAP_PREBREW_GS3_AV = [
-    DATE_RECEIVED,
     (PREBREWING, TON, "k1"),
     (PREBREWING, TON, "k2"),
     (PREBREWING, TON, "k3"),
@@ -83,7 +80,6 @@ ATTR_MAP_PREBREW_GS3_AV = [
 ]
 
 ATTR_MAP_PREINFUSION_GS3_AV = [
-    DATE_RECEIVED,
     (PREINFUSION, "k1"),
     (PREINFUSION, "k2"),
     (PREINFUSION, "k3"),
@@ -91,12 +87,10 @@ ATTR_MAP_PREINFUSION_GS3_AV = [
 ]
 
 ATTR_MAP_PREINFUSION_LM = [
-    DATE_RECEIVED,
     (PREINFUSION, "k1"),
 ]
 
 ATTR_MAP_PREBREW_LM = [
-    DATE_RECEIVED,
     (PREBREWING, TON, "k1"),
     (PREBREWING, TOFF, "k1"),
 ]
@@ -164,7 +158,11 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         icon="mdi:water",
         control_fn=lambda client, state: client.set_preinfusion(state),
         is_on_fn=lambda client: client.current_status["enable_preinfusion"],
-        extra_attributes={},
+        extra_attributes={
+            MODEL_GS3_AV: ATTR_MAP_PREINFUSION_GS3_AV,
+            MODEL_LM: ATTR_MAP_PREINFUSION_LM,
+            MODEL_LMU: ATTR_MAP_PREINFUSION_LM,
+        },
     ),
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",

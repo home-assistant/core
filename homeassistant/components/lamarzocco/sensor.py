@@ -12,14 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DATE_RECEIVED,
-    DOMAIN,
-    MODEL_GS3_AV,
-    MODEL_GS3_MP,
-    MODEL_LM,
-    MODEL_LMU,
-)
+from .const import DOMAIN, MODEL_GS3_AV, MODEL_GS3_MP, MODEL_LM, MODEL_LMU
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 from .lm_client import LaMarzoccoClient
 
@@ -29,7 +22,6 @@ TOTAL_COFFEE = "total_coffee"
 TOTAL_FLUSHING = "total_flushing"
 
 ATTR_MAP_DRINK_STATS_GS3_AV = [
-    DATE_RECEIVED,
     (DRINKS, "k1"),
     (DRINKS, "k2"),
     (DRINKS, "k3"),
@@ -40,7 +32,6 @@ ATTR_MAP_DRINK_STATS_GS3_AV = [
 ]
 
 ATTR_MAP_DRINK_STATS_GS3_MP_LM = [
-    DATE_RECEIVED,
     (DRINKS, "k1"),
     TOTAL_FLUSHING,
     TOTAL_COFFEE,
@@ -68,7 +59,7 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     LaMarzoccoSensorEntityDescription(
         key="drink_stats",
         translation_key="drink_stats",
-        icon="mdi:coffee",
+        icon="mdi:chart-line",
         native_unit_of_measurement="drinks",
         state_class=SensorStateClass.MEASUREMENT,
         available_fn=lambda client: all(

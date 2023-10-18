@@ -44,7 +44,7 @@ async def init_integration(
 
 
 @pytest.fixture
-def mock_lamarzocco(request) -> Generator[MagicMock, None, None]:
+def mock_lamarzocco() -> Generator[MagicMock, None, None]:
     """Return a mocked LM client."""
     with patch(
         "homeassistant.components.lamarzocco.coordinator.LaMarzoccoClient",

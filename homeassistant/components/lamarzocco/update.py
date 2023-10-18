@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, MODEL_GS3_AV, MODEL_GS3_MP, MODEL_LM, MODEL_LMU
+from .const import DOMAIN
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 from .lm_client import LaMarzoccoClient
 
@@ -42,12 +42,7 @@ ENTITIES: tuple[LaMarzoccoUpdateEntityDescription, ...] = (
         icon="mdi:cloud-download",
         current_fw_fn=lambda client: client.firmware_version,
         latest_fw_fn=lambda client: client.latest_firmware_version,
-        extra_attributes={
-            MODEL_GS3_AV: None,
-            MODEL_GS3_MP: None,
-            MODEL_LM: None,
-            MODEL_LMU: None,
-        },
+        extra_attributes={},
     ),
     LaMarzoccoUpdateEntityDescription(
         key="gateway_firmware",
@@ -56,12 +51,7 @@ ENTITIES: tuple[LaMarzoccoUpdateEntityDescription, ...] = (
         icon="mdi:cloud-download",
         current_fw_fn=lambda client: client.gateway_version,
         latest_fw_fn=lambda client: client.latest_gateway_version,
-        extra_attributes={
-            MODEL_GS3_AV: None,
-            MODEL_GS3_MP: None,
-            MODEL_LM: None,
-            MODEL_LMU: None,
-        },
+        extra_attributes={},
     ),
 )
 
@@ -93,6 +83,6 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
         return self.entity_description.current_fw_fn(self._lm_client)
 
     @property
-    def available_version(self) -> str:
+    def latest_version(self) -> str:
         """Return the latest firmware version."""
         return self.entity_description.latest_fw_fn(self._lm_client)

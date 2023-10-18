@@ -11,11 +11,11 @@ from .coordinator import LmApiCoordinator
 from .services import async_setup_services
 
 PLATFORMS = [
-    # Platform.BINARY_SENSOR,
-    # Platform.BUTTON,
-    # Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
     Platform.SWITCH,
-    # Platform.UPDATE,
+    Platform.UPDATE,
     Platform.WATER_HEATER,
 ]
 
