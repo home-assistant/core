@@ -744,7 +744,6 @@ omit =
     homeassistant/components/mikrotik/hub.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/sensor.py
-    homeassistant/components/minecraft_server/__init__.py
     homeassistant/components/minecraft_server/api.py
     homeassistant/components/minecraft_server/binary_sensor.py
     homeassistant/components/minecraft_server/coordinator.py

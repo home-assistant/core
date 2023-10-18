@@ -218,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.0.3
+aioesphomeapi==18.0.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -731,7 +731,7 @@ google-nest-sdm==3.0.2
 googlemaps==2.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.23.0
+govee-ble==0.24.0
 
 # homeassistant.components.gree
 greeclimate==1.4.1
@@ -1070,7 +1070,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.35
+opower==0.0.36
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6

@@ -237,7 +237,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.0.3
+aioesphomeapi==18.0.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -918,7 +918,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.23.0
+govee-ble==0.24.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1392,7 +1392,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.35
+opower==0.0.36
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
