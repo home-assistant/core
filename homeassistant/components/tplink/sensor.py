@@ -45,14 +45,21 @@ AcceptedValueFnReturnValues = float | datetime.datetime | None
 
 
 @dataclass
-class TPLinkSensorEntityDescription(SensorEntityDescription):
+class TPLinkSensorEntityDescriptionMixin:
     """Describes TPLink sensor entity."""
 
-    attribute_name: str | None = None
+    attribute_name: str
     value_fn: Callable[
         [SmartDevice, TPLinkSensorEntityDescription], AcceptedValueFnReturnValues
-    ] | None = None
-    precision: int | None = None
+    ]
+    precision: int | None
+
+
+@dataclass
+class TPLinkSensorEntityDescription(
+    SensorEntityDescription, TPLinkSensorEntityDescriptionMixin
+):
+    """Describes TPLink sensor entity."""
 
 
 def async_handle_emeter_attr(
@@ -70,10 +77,7 @@ def async_handle_emeter_attr(
         # bulb's do not report this information, so filter it out
         return None if device.is_bulb else 0.0
 
-    if (
-        description.attribute_name is None
-        or (val := getattr(device.emeter_realtime, description.attribute_name)) is None
-    ):
+    if (val := getattr(device.emeter_realtime, description.attribute_name)) is None:
         return None
 
     return round(cast(float, val), description.precision)
@@ -87,10 +91,7 @@ def async_handle_timestamp(
     As the backend library does not currently provide the information about the local timezone
     in a sane manner, we consider all devices to be on the same timezone as the homeassistant instance.
     """
-    if (
-        description.attribute_name is not None
-        and (value := getattr(device, description.attribute_name)) is not None
-    ):
+    if (value := getattr(device, description.attribute_name)) is not None:
         return dt_util.as_local(value)
 
     return None
@@ -123,6 +124,7 @@ SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        attribute_name="emeter_today",
         precision=3,
         value_fn=async_handle_emeter_attr,
     ),
@@ -151,6 +153,7 @@ SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         attribute_name="on_since",
         value_fn=async_handle_timestamp,
+        precision=None,
     ),
 )
 
@@ -169,8 +172,7 @@ async def async_setup_entry(
         sensors = [
             SmartPlugSensor(device, coordinator, description)
             for description in SENSORS
-            if description.value_fn is not None
-            and description.value_fn(device, description) is not None
+            if description.value_fn(device, description) is not None
         ]
         return sensors
 
@@ -206,6 +208,4 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     @property
     def native_value(self) -> float | datetime.datetime | None:
         """Return the sensors state."""
-        if self.entity_description.value_fn is None:
-            return None
         return self.entity_description.value_fn(self.device, self.entity_description)
