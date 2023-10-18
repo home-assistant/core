@@ -5,7 +5,7 @@ from homeassistant.const import Platform
 
 DOMAIN = "climaveneta_imxw"
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [Platform.CLIMATE]
 
 DEFAULT_MODBUS_HUB = "modbus_hub"
 DEFAULT_SERIAL_SLAVE_ID = 1
