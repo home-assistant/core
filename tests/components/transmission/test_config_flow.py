@@ -44,7 +44,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Transmission"
+    assert result2["title"] == "0.0.0.0:9091"
     assert result2["data"] == MOCK_CONFIG_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 

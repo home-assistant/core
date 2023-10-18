@@ -16,7 +16,6 @@ from .const import (
     CONF_LIMIT,
     CONF_ORDER,
     DEFAULT_LIMIT,
-    DEFAULT_NAME,
     DEFAULT_ORDER,
     DEFAULT_PORT,
     DOMAIN,
