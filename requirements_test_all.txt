@@ -2033,7 +2033,7 @@ ttls==1.5.1
 tuya-iot-py-sdk==0.6.6
 
 # homeassistant.components.tvoverlay
-tvoverlay==1.0.5
+tvoverlay==1.0.7
 
 # homeassistant.components.twentemilieu
 twentemilieu==2.0.1
