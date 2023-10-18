@@ -201,96 +201,86 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
 
         # Assert that sensors are not set up
         assert (
-            self.hass.states.get(
-                "sensor.picnic_commonstreet_123a_max_order_time_of_selected_slot"
-            )
+            self.hass.states.get("sensor.mock_title_max_order_time_of_selected_slot")
             is None
         )
+        assert self.hass.states.get("sensor.mock_title_status_of_last_order") is None
         assert (
-            self.hass.states.get("sensor.picnic_commonstreet_123a_status_of_last_order")
-            is None
-        )
-        assert (
-            self.hass.states.get(
-                "sensor.picnic_commonstreet_123a_total_price_of_last_order"
-            )
-            is None
+            self.hass.states.get("sensor.mock_title_total_price_of_last_order") is None
         )
 
     async def test_sensors_setup(self):
         """Test the default sensor setup behaviour."""
         await self._setup_platform(use_default_responses=True)
 
-        self._assert_sensor("sensor.picnic_commonstreet_123a_cart_items_count", "10")
+        self._assert_sensor("sensor.mock_title_cart_items_count", "10")
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_cart_total_price",
+            "sensor.mock_title_cart_total_price",
             "25.35",
             unit=CURRENCY_EURO,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_start_of_selected_slot",
+            "sensor.mock_title_start_of_selected_slot",
             "2021-03-03T13:45:00+00:00",
             cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_end_of_selected_slot",
+            "sensor.mock_title_end_of_selected_slot",
             "2021-03-03T14:45:00+00:00",
             cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_max_order_time_of_selected_slot",
+            "sensor.mock_title_max_order_time_of_selected_slot",
             "2021-03-02T21:00:00+00:00",
             cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_minimum_order_value_for_selected_slot",
+            "sensor.mock_title_minimum_order_value_for_selected_slot",
             "35.0",
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_start_of_last_order_s_slot",
+            "sensor.mock_title_start_of_last_order_s_slot",
             "2021-02-26T19:15:00+00:00",
             cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_end_of_last_order_s_slot",
+            "sensor.mock_title_end_of_last_order_s_slot",
             "2021-02-26T20:15:00+00:00",
             cls=SensorDeviceClass.TIMESTAMP,
         )
+        self._assert_sensor("sensor.mock_title_status_of_last_order", "COMPLETED")
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_status_of_last_order", "COMPLETED"
-        )
-        self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_max_order_time_of_last_order",
+            "sensor.mock_title_max_order_time_of_last_order",
             "2021-02-25T21:00:00+00:00",
             cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_last_order_delivery_time",
+            "sensor.mock_title_last_order_delivery_time",
             "2021-02-26T19:54:05+00:00",
             cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_total_price_of_last_order",
+            "sensor.mock_title_total_price_of_last_order",
             "41.33",
             unit=CURRENCY_EURO,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_start_of_next_delivery",
+            "sensor.mock_title_expected_start_of_next_delivery",
             "unknown",
             cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_end_of_next_delivery",
+            "sensor.mock_title_expected_end_of_next_delivery",
             "unknown",
             cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_start_of_next_delivery_s_slot",
+            "sensor.mock_title_start_of_next_delivery_s_slot",
             "unknown",
             cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_end_of_next_delivery_s_slot",
+            "sensor.mock_title_end_of_next_delivery_s_slot",
             "unknown",
             cls=SensorDeviceClass.TIMESTAMP,
         )
@@ -299,27 +289,21 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         """Test that some sensors are disabled by default."""
         await self._setup_platform(use_default_responses=True, enable_all_sensors=False)
 
+        self._assert_sensor("sensor.mock_title_cart_items_count", disabled=True)
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_cart_items_count", disabled=True
+            "sensor.mock_title_start_of_last_order_s_slot", disabled=True
+        )
+        self._assert_sensor("sensor.mock_title_end_of_last_order_s_slot", disabled=True)
+        self._assert_sensor("sensor.mock_title_status_of_last_order", disabled=True)
+        self._assert_sensor(
+            "sensor.mock_title_total_price_of_last_order", disabled=True
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_start_of_last_order_s_slot", disabled=True
-        )
-        self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_end_of_last_order_s_slot", disabled=True
-        )
-        self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_status_of_last_order", disabled=True
-        )
-        self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_total_price_of_last_order", disabled=True
-        )
-        self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_start_of_next_delivery_s_slot",
+            "sensor.mock_title_start_of_next_delivery_s_slot",
             disabled=True,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_end_of_next_delivery_s_slot", disabled=True
+            "sensor.mock_title_end_of_next_delivery_s_slot", disabled=True
         )
 
     async def test_sensors_no_selected_time_slot(self):
@@ -338,18 +322,14 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform()
 
         # Assert sensors are unknown
+        self._assert_sensor("sensor.mock_title_start_of_selected_slot", STATE_UNKNOWN)
+        self._assert_sensor("sensor.mock_title_end_of_selected_slot", STATE_UNKNOWN)
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_start_of_selected_slot", STATE_UNKNOWN
-        )
-        self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_end_of_selected_slot", STATE_UNKNOWN
-        )
-        self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_max_order_time_of_selected_slot",
+            "sensor.mock_title_max_order_time_of_selected_slot",
             STATE_UNKNOWN,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_minimum_order_value_for_selected_slot",
+            "sensor.mock_title_minimum_order_value_for_selected_slot",
             STATE_UNKNOWN,
         )
 
@@ -368,23 +348,21 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform()
 
         # Assert delivery time is not available, but eta is
+        self._assert_sensor("sensor.mock_title_last_order_delivery_time", STATE_UNKNOWN)
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_last_order_delivery_time", STATE_UNKNOWN
-        )
-        self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_start_of_next_delivery",
+            "sensor.mock_title_expected_start_of_next_delivery",
             "2021-02-26T19:54:00+00:00",
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_end_of_next_delivery",
+            "sensor.mock_title_expected_end_of_next_delivery",
             "2021-02-26T20:14:00+00:00",
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_start_of_next_delivery_s_slot",
+            "sensor.mock_title_start_of_next_delivery_s_slot",
             "2021-02-26T19:15:00+00:00",
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_end_of_next_delivery_s_slot",
+            "sensor.mock_title_end_of_next_delivery_s_slot",
             "2021-02-26T20:15:00+00:00",
         )
 
@@ -406,11 +384,11 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
 
         # Assert eta times are not available due to malformed date strings
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_start_of_next_delivery",
+            "sensor.mock_title_expected_start_of_next_delivery",
             STATE_UNKNOWN,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_end_of_next_delivery",
+            "sensor.mock_title_expected_end_of_next_delivery",
             STATE_UNKNOWN,
         )
 
@@ -437,11 +415,11 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
             delivery_response["delivery_id"]
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_start_of_next_delivery",
+            "sensor.mock_title_expected_start_of_next_delivery",
             "2021-03-05T10:19:20+00:00",
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_end_of_next_delivery",
+            "sensor.mock_title_expected_end_of_next_delivery",
             "2021-03-05T10:39:20+00:00",
         )
 
@@ -459,37 +437,33 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
 
         # Assert all default-enabled sensors have STATE_UNAVAILABLE because the last update failed
         assert self._coordinator.last_update_success is False
+        self._assert_sensor("sensor.mock_title_cart_total_price", STATE_UNAVAILABLE)
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_cart_total_price", STATE_UNAVAILABLE
+            "sensor.mock_title_start_of_selected_slot", STATE_UNAVAILABLE
         )
+        self._assert_sensor("sensor.mock_title_end_of_selected_slot", STATE_UNAVAILABLE)
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_start_of_selected_slot", STATE_UNAVAILABLE
-        )
-        self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_end_of_selected_slot", STATE_UNAVAILABLE
-        )
-        self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_max_order_time_of_selected_slot",
+            "sensor.mock_title_max_order_time_of_selected_slot",
             STATE_UNAVAILABLE,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_minimum_order_value_for_selected_slot",
+            "sensor.mock_title_minimum_order_value_for_selected_slot",
             STATE_UNAVAILABLE,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_max_order_time_of_last_order",
+            "sensor.mock_title_max_order_time_of_last_order",
             STATE_UNAVAILABLE,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_last_order_delivery_time",
+            "sensor.mock_title_last_order_delivery_time",
             STATE_UNAVAILABLE,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_start_of_next_delivery",
+            "sensor.mock_title_expected_start_of_next_delivery",
             STATE_UNAVAILABLE,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_end_of_next_delivery",
+            "sensor.mock_title_expected_end_of_next_delivery",
             STATE_UNAVAILABLE,
         )
 
@@ -505,18 +479,16 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         # Assert all last-order sensors have STATE_UNAVAILABLE because the delivery info fetch failed
         assert self._coordinator.last_update_success is True
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_max_order_time_of_last_order",
+            "sensor.mock_title_max_order_time_of_last_order",
+            STATE_UNKNOWN,
+        )
+        self._assert_sensor("sensor.mock_title_last_order_delivery_time", STATE_UNKNOWN)
+        self._assert_sensor(
+            "sensor.mock_title_expected_start_of_next_delivery",
             STATE_UNKNOWN,
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_last_order_delivery_time", STATE_UNKNOWN
-        )
-        self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_start_of_next_delivery",
-            STATE_UNKNOWN,
-        )
-        self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_end_of_next_delivery",
+            "sensor.mock_title_expected_end_of_next_delivery",
             STATE_UNKNOWN,
         )
 
@@ -564,27 +536,27 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform()
 
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_start_of_last_order_s_slot",
+            "sensor.mock_title_start_of_last_order_s_slot",
             "2022-03-08T12:15:00+00:00",
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_end_of_last_order_s_slot",
+            "sensor.mock_title_end_of_last_order_s_slot",
             "2022-03-08T13:15:00+00:00",
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_start_of_next_delivery_s_slot",
+            "sensor.mock_title_start_of_next_delivery_s_slot",
             "2022-03-01T08:15:00+00:00",
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_end_of_next_delivery_s_slot",
+            "sensor.mock_title_end_of_next_delivery_s_slot",
             "2022-03-01T09:15:00+00:00",
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_start_of_next_delivery",
+            "sensor.mock_title_expected_start_of_next_delivery",
             "2022-03-01T08:30:00+00:00",
         )
         self._assert_sensor(
-            "sensor.picnic_commonstreet_123a_expected_end_of_next_delivery",
+            "sensor.mock_title_expected_end_of_next_delivery",
             "2022-03-01T08:45:00+00:00",
         )
 
