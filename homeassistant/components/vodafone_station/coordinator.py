@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
-from aiovodafone import VodafoneStationApi, VodafoneStationDevice, exceptions
+from aiovodafone import VodafoneStationDevice, VodafoneStationSercommApi, exceptions
 
 from homeassistant.components.device_tracker import DEFAULT_CONSIDER_HOME
 from homeassistant.core import HomeAssistant
@@ -48,7 +48,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Initialize the scanner."""
 
         self._host = host
-        self.api = VodafoneStationApi(host, username, password)
+        self.api = VodafoneStationSercommApi(host, username, password)
 
         # Last resort as no MAC or S/N can be retrieved via API
         self._id = config_entry_unique_id
