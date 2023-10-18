@@ -1,9 +1,10 @@
 """Support for the World Air Quality Index service."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from aiowaqi import (
     WAQIAirQuality,
@@ -22,6 +23,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    ATTR_TIME,
     CONF_API_KEY,
     CONF_NAME,
     CONF_TOKEN,
@@ -290,3 +293,27 @@ class WaqiSensor(CoordinatorEntity[WAQIDataUpdateCoordinator], SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the device."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return old state attributes if the entity is AQI entity."""
+        if self.entity_description.key != "air_quality":
+            return None
+        attrs: dict[str, Any] = {}
+        attrs[ATTR_TIME] = self.coordinator.data.measured_at
+        attrs[ATTR_DOMINENTPOL] = self.coordinator.data.dominant_pollutant
+
+        iaqi = self.coordinator.data.extended_air_quality
+
+        attribute = {
+            ATTR_PM2_5: iaqi.pm25,
+            ATTR_PM10: iaqi.pm10,
+            ATTR_HUMIDITY: iaqi.humidity,
+            ATTR_PRESSURE: iaqi.pressure,
+            ATTR_TEMPERATURE: iaqi.temperature,
+            ATTR_OZONE: iaqi.ozone,
+            ATTR_NITROGEN_DIOXIDE: iaqi.nitrogen_dioxide,
+            ATTR_SULFUR_DIOXIDE: iaqi.sulfur_dioxide,
+        }
+        res_attributes = {k: v for k, v in attribute.items() if v is not None}
+        return {**attrs, **res_attributes}
