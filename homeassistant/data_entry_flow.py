@@ -382,7 +382,7 @@ class FlowManager(abc.ABC):
         self, flow: FlowHandler, step_id: str, user_input: dict | BaseServiceInfo | None
     ) -> FlowResult:
         """Handle a step of a flow."""
-        self._raise_if_not_has_step(flow, step_id)
+        self._raise_if_step_does_not_exist(flow, step_id)
 
         method = f"async_step_{step_id}"
         try:
@@ -414,7 +414,7 @@ class FlowManager(abc.ABC):
             FlowResultType.SHOW_PROGRESS_DONE,
             FlowResultType.MENU,
         ):
-            self._raise_if_not_has_step(flow, result["step_id"])
+            self._raise_if_step_does_not_exist(flow, result["step_id"])
             flow.cur_step = result
             return result
 
@@ -431,7 +431,7 @@ class FlowManager(abc.ABC):
 
         return result
 
-    def _raise_if_not_has_step(self, flow: FlowHandler, step_id: str) -> None:
+    def _raise_if_step_does_not_exist(self, flow: FlowHandler, step_id: str) -> None:
         """Raise if the step does not exist."""
         method = f"async_step_{step_id}"
 
