@@ -8,6 +8,7 @@ import os
 from typing import Any, Final
 from unittest import mock
 
+from aiohomekit.controller.abstract import AbstractPairing
 from aiohomekit.hkjson import loads as hkloads
 from aiohomekit.model import (
     Accessories,
@@ -25,6 +26,7 @@ from homeassistant.components.homekit_controller.const import (
     DOMAIN,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
+    SUBSCRIBE_COOLDOWN,
 )
 from homeassistant.components.homekit_controller.utils import async_get_controller
 from homeassistant.config_entries import ConfigEntry
@@ -180,7 +182,7 @@ async def time_changed(hass, seconds):
     await hass.async_block_till_done()
 
 
-async def setup_accessories_from_file(hass, path):
+async def setup_accessories_from_file(hass: HomeAssistant, path: str) -> Accessories:
     """Load an collection of accessory defs from JSON data."""
     accessories_fixture = await hass.async_add_executor_job(
         load_fixture, os.path.join("homekit_controller", path)
@@ -237,16 +239,17 @@ async def setup_test_accessories_with_controller(
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
+    await time_changed(hass, SUBSCRIBE_COOLDOWN)
     await hass.async_block_till_done()
 
     return config_entry, pairing
 
 
-async def device_config_changed(hass, accessories):
+async def device_config_changed(hass: HomeAssistant, accessories: Accessories):
     """Discover new devices added to Home Assistant at runtime."""
     # Update the accessories our FakePairing knows about
     controller = hass.data[CONTROLLER]
-    pairing = controller.pairings["00:00:00:00:00:00"]
+    pairing: AbstractPairing = controller.pairings["00:00:00:00:00:00"]
 
     accessories_obj = Accessories()
     for accessory in accessories:
