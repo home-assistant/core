@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 from operator import attrgetter
 from types import MappingProxyType
@@ -144,6 +145,7 @@ class HKDevice:
         )
 
         self._availability_callbacks: set[CALLBACK_TYPE] = set()
+        self._config_changed_callbacks: set[CALLBACK_TYPE] = set()
         self._subscriptions: dict[tuple[int, int], set[CALLBACK_TYPE]] = {}
 
     @property
@@ -605,6 +607,8 @@ class HKDevice:
         await self.async_process_entity_map()
         if self.watchable_characteristics:
             await self.pairing.subscribe(self.watchable_characteristics)
+        for callback_ in self._config_changed_callbacks:
+            callback_()
         await self.async_update()
         await self.async_add_new_entities()
 
@@ -806,30 +810,47 @@ class HKDevice:
             callback_()
 
     @callback
+    def _remove_characteristics_callback(
+        self, characteristics: Iterable[tuple[int, int]], callback_: CALLBACK_TYPE
+    ) -> None:
+        """Remove a characteristics callback."""
+        for aid_iid in characteristics:
+            self._subscriptions[aid_iid].remove(callback_)
+            if not self._subscriptions[aid_iid]:
+                del self._subscriptions[aid_iid]
+
+    @callback
     def async_subscribe(
         self, characteristics: Iterable[tuple[int, int]], callback_: CALLBACK_TYPE
     ) -> CALLBACK_TYPE:
         """Add characteristics to the watch list."""
         for aid_iid in characteristics:
             self._subscriptions.setdefault(aid_iid, set()).add(callback_)
+        return partial(
+            self._remove_characteristics_callback, characteristics, callback_
+        )
 
-        def _unsub():
-            for aid_iid in characteristics:
-                self._subscriptions[aid_iid].remove(callback_)
-                if not self._subscriptions[aid_iid]:
-                    del self._subscriptions[aid_iid]
-
-        return _unsub
+    @callback
+    def _remove_availability_callback(self, callback_: CALLBACK_TYPE) -> None:
+        """Remove an availability callback."""
+        self._availability_callbacks.remove(callback_)
 
     @callback
     def async_subscribe_availability(self, callback_: CALLBACK_TYPE) -> CALLBACK_TYPE:
         """Add characteristics to the watch list."""
         self._availability_callbacks.add(callback_)
+        return partial(self._remove_availability_callback, callback_)
 
-        def _unsub():
-            self._availability_callbacks.remove(callback_)
+    @callback
+    def _remove_config_changed_callback(self, callback_: CALLBACK_TYPE) -> None:
+        """Remove an availability callback."""
+        self._config_changed_callbacks.remove(callback_)
 
-        return _unsub
+    @callback
+    def async_subscribe_config_changed(self, callback_: CALLBACK_TYPE) -> CALLBACK_TYPE:
+        """Subscribe to config of the accessory being changed aka c# changes."""
+        self._config_changed_callbacks.add(callback_)
+        return partial(self._remove_config_changed_callback, callback_)
 
     async def get_characteristics(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         """Read latest state from homekit accessory."""
