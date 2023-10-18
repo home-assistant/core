@@ -83,7 +83,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG_LIST] = vicare_api.devices
 
-def get_api(entry: ConfigEntry, device):
+def get_api(entry: ConfigEntry, device: PyViCareDeviceConfig) -> Device:
     """Get API for device."""
     return getattr(
         device,
