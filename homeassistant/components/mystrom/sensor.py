@@ -78,12 +78,12 @@ class MyStromSwitchSensor(SensorEntity):
         self.device = device
         self.entity_description = description
 
-        self._attr_unique_id = f"{self.device.mac}-{description.key}"
+        self._attr_unique_id = f"{device.mac}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device.mac)},
+            identifiers={(DOMAIN, device.mac)},
             name=name,
             manufacturer=MANUFACTURER,
-            sw_version=self.device.firmware,
+            sw_version=device.firmware,
         )
 
     @property
