@@ -870,7 +870,7 @@ async def entity_service_call(
         return None
 
     if len(entities) == 1:
-        # Single entity case avoids creating tasks and allows returning
+        # Single entity case avoids creating task
         # ServiceResponse
         entity = entities[0]
         response_data = await _handle_entity_call(
@@ -882,11 +882,6 @@ async def entity_service_call(
             entity.async_set_context(call.context)
             await entity.async_update_ha_state(True)
         return response_data if return_response else None
-
-    if return_response:
-        raise HomeAssistantError(
-            "Service call requested response data but matched more than one entity"
-        )
 
     done, pending = await asyncio.wait(
         [
@@ -900,8 +895,11 @@ async def entity_service_call(
     )
     assert not pending
 
+    response_data = {}
     for task in done:
-        task.result()  # pop exception if have
+        result = task.result()  # pop exception if have
+        if result is not None:
+            response_data.update(result)
 
     tasks: list[asyncio.Task[None]] = []
 
@@ -920,7 +918,7 @@ async def entity_service_call(
         for future in done:
             future.result()  # pop exception if have
 
-    return None
+    return response_data if return_response else None
 
 
 async def _handle_entity_call(
@@ -958,7 +956,7 @@ async def _handle_entity_call(
         )
         result = await result
 
-    return result
+    return {entity.entity_id: result}
 
 
 @bind_hass
