@@ -401,7 +401,7 @@ async def async_setup_entry(
 
     @callback
     def init_async_add_entities(telegram: dict[str, DSMRObject]) -> None:
-        """Add the sensor entities after the first datadram was received."""
+        """Add the sensor entities after the first telegram was received."""
         nonlocal add_entities_handler
         assert add_entities_handler is not None
         add_entities_handler()
