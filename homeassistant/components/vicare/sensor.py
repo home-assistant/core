@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -57,7 +57,7 @@ VICARE_UNIT_TO_DEVICE_CLASS = {
 class ViCareSensorEntityDescription(SensorEntityDescription, ViCareRequiredKeysMixin):
     """Describes ViCare sensor entity."""
 
-    unit_getter: Callable[[Device], str | None] | None = None
+    unit_getter: Callable[[PyViCareDevice], str | None] | None = None
 
 
 GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
@@ -577,7 +577,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 
 def _build_entity(
     name: str,
-    vicare_api: Device,
+    vicare_api: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
     sensor: ViCareSensorEntityDescription,
 ):
@@ -677,7 +677,7 @@ class ViCareSensor(ViCareEntity, SensorEntity):
     def __init__(
         self,
         name: str,
-        api: Device,
+        api: PyViCareDevice,
         device_config: PyViCareDeviceConfig,
         description: ViCareSensorEntityDescription,
     ) -> None:

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -106,7 +106,7 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 
 def _build_entity(
     name: str,
-    vicare_api: Device,
+    vicare_api: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
     sensor: ViCareBinarySensorEntityDescription,
 ):
@@ -206,7 +206,7 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
     def __init__(
         self,
         name: str,
-        api: Device,
+        api: PyViCareDevice,
         device_config: PyViCareDeviceConfig,
         description: ViCareBinarySensorEntityDescription,
     ) -> None:
