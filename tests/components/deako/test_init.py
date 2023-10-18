@@ -1,4 +1,4 @@
-"""Tests for the deako component."""
+"""Tests for the deako component init."""
 from unittest.mock import patch
 
 from pydeako.deako import FindDevicesTimeout
