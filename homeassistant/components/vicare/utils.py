@@ -16,11 +16,11 @@ def is_supported(
     """Check if the PyViCare device supports the requested sensor."""
     try:
         entity_description.value_getter(vicare_device)
-        _LOGGER.info("Found entity %s", name)
+        _LOGGER.debug("Found entity %s", name)
     except PyViCareNotSupportedFeatureError:
-        _LOGGER.debug("Feature not supported %s", name)
+        _LOGGER.info("Feature not supported %s", name)
         return False
     except AttributeError as error:
-        _LOGGER.error("Attribute Error %s: %s", name, error)
+        _LOGGER.debug("Attribute Error %s: %s", name, error)
         return False
     return True
