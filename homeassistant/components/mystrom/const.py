@@ -2,5 +2,3 @@
 DOMAIN = "mystrom"
 DEFAULT_NAME = "myStrom"
 MANUFACTURER = "myStrom"
-SENSOR_TYPE_CONSUMPTION = "consumption"
-SENSOR_TYPE_TEMPERATURE = "temperature"
