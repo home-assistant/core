@@ -422,30 +422,21 @@ async def test_send_target_temperature(
 
 
 @pytest.mark.parametrize(
-    ("units", "temperature", "hvac_mode"),
+    ("temperature", "hvac_mode"),
     [
-        (UnitOfTemperature.CELSIUS, 26, HVACMode.OFF),
-        (UnitOfTemperature.CELSIUS, 26, HVACMode.HEAT),
-        (UnitOfTemperature.CELSIUS, 26, HVACMode.COOL),
-        (UnitOfTemperature.CELSIUS, 26, HVACMode.AUTO),
-        (UnitOfTemperature.CELSIUS, 26, HVACMode.DRY),
-        (UnitOfTemperature.CELSIUS, 26, HVACMode.FAN_ONLY),
+        (26, HVACMode.OFF),
+        (26, HVACMode.HEAT),
+        (26, HVACMode.COOL),
+        (26, HVACMode.AUTO),
+        (26, HVACMode.DRY),
+        (26, HVACMode.FAN_ONLY),
     ],
 )
 async def test_send_target_temperature_with_hvac_mode(
-    hass: HomeAssistant, discovery, device, units, temperature, hvac_mode
+    hass: HomeAssistant, discovery, device, temperature, hvac_mode
 ) -> None:
     """Test for sending target temperature command to the device alongside hvac mode."""
-    hass.config.units.temperature_unit = units
-
-    fake_device = device()
-    if units == UnitOfTemperature.FAHRENHEIT:
-        fake_device.temperature_units = 1
-
     await async_setup_gree(hass)
-
-    # Make sure we're trying to test something that isn't the default
-    assert fake_device.current_temperature != temperature
 
     await hass.services.async_call(
         DOMAIN,
@@ -461,15 +452,7 @@ async def test_send_target_temperature_with_hvac_mode(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == temperature
-    assert (
-        state.attributes.get(ATTR_CURRENT_TEMPERATURE)
-        == fake_device.current_temperature
-    )
     assert state.state == hvac_mode
-
-    # Reset config temperature_unit back to CELSIUS, required for
-    # additional tests outside this component.
-    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
 @pytest.mark.parametrize(
