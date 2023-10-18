@@ -223,8 +223,8 @@ def _async_remove_mqtt_issues(hass: HomeAssistant, mqtt_data: MqttData) -> None:
         for (domain, issue_id), issue_entry in issue_registry.issues.items()
         if domain == DOMAIN and issue_entry.translation_key == "invalid_platform_config"
     ]
-    while open_issues:
-        async_delete_issue(hass, DOMAIN, open_issues.pop())
+    for issue in open_issues:
+        async_delete_issue(hass, DOMAIN, issue)
 
 
 async def async_check_config_schema(
