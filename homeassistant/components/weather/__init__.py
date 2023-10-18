@@ -219,7 +219,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             WeatherEntityFeature.FORECAST_HOURLY,
             WeatherEntityFeature.FORECAST_TWICE_DAILY,
         ],
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.ONLY_LEGACY,
     )
     async_setup_ws_api(hass)
     await component.async_setup(config)

@@ -304,7 +304,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_LIST_EVENTS,
         SERVICE_LIST_EVENTS_SCHEMA,
         async_list_events_service,
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.ONLY_LEGACY,
     )
     await component.async_setup(config)
     return True

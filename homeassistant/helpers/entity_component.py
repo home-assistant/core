@@ -232,6 +232,19 @@ class EntityComponent(Generic[_EntityT]):
 
         async def handle_service(call: ServiceCall) -> ServiceResponse:
             """Handle the service."""
+
+            if supports_response in [
+                SupportsResponse.ONLY_LEGACY,
+                SupportsResponse.OPTIONAL_LEGACY,
+            ]:
+                self.logger.warning(
+                    "Detect use of service %s. "
+                    "This is deprecated and will stop working in Home Assistant 2024.6",
+                    name,
+                )
+                return await service.legacy_entity_service_call(
+                    self.hass, self._platforms.values(), func, call, required_features
+                )
             return await service.entity_service_call(
                 self.hass, self._platforms.values(), func, call, required_features
             )
