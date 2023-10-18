@@ -1,5 +1,5 @@
 """Tests for the light module."""
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -233,3 +233,42 @@ async def test_light_brightness_change(
     pydeako_deako_mock.return_value.control_device.assert_called_once_with(
         device_uuid, True, expected_dim_value
     )
+
+
+@pytest.mark.asyncio
+async def test_light_on_update(
+    hass: HomeAssistant,
+    pydeako_deako_mock: MagicMock,
+    mock_devices: MockDeakoDevices,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test lights are setup with accurate initial properties if client fails somehow."""
+    pydeako_deako_mock.return_value.get_devices.return_value = mock_devices.devices
+
+    pydeako_deako_mock.return_value.get_name.side_effect = mock_devices.get_name
+    pydeako_deako_mock.return_value.get_state.side_effect = mock_devices.get_state
+
+    callbacks = {}
+
+    def set_state_callback(uuid: str, on_update):
+        callbacks[uuid] = on_update
+
+    pydeako_deako_mock.return_value.set_state_callback.side_effect = set_state_callback
+
+    with patch(
+        "homeassistant.components.deako.light.DeakoLightSwitch.schedule_update_ha_state"
+    ) as update_mock:
+        mock_config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        hass.data[DOMAIN][mock_config_entry.entry_id] = pydeako_deako_mock
+
+        pydeako_deako_mock.return_value.set_state_callback.assert_called()
+
+        assert len(callbacks) == len(mock_devices.devices)
+        for _key, callback in callbacks.items():
+            callback()
+            update_mock.assert_called_once()
+            update_mock.reset_mock()
