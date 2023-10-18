@@ -10,7 +10,7 @@ PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 DEFAULT_MODBUS_HUB = "modbus_hub"
 DEFAULT_SERIAL_SLAVE_ID = 1
 
-CONF_HUB_STRING = "Modbus hub name"
+CONF_HUB = "hub"
 
 TIMEOUT = 60
 

@@ -9,15 +9,9 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.modbus import (
-    CALL_TYPE_REGISTER_HOLDING,
-    CONF_HUB,
-)
+from homeassistant.components.modbus import CALL_TYPE_REGISTER_HOLDING, get_hub
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_SLAVE,
-)
+from homeassistant.const import CONF_NAME, CONF_SLAVE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -27,6 +21,7 @@ from .const import (
     ALARM_T1_REGISTER,
     ALARM_T3_REGISTER,
     ALARM_WATER_DRAIN_REGISTER,
+    CONF_HUB,
     DOMAIN,
     MODE_ON,
     MODE_SUMMER,
@@ -58,12 +53,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up platform from a ConfigEntry."""
 
-    hub = entry.data[CONF_HUB]
+    hub = get_hub(hass, entry.data[CONF_HUB])
     slave_id = entry.data[CONF_SLAVE]
     name = entry.data[CONF_NAME]
 
-    result = await hub.async_pymodbus_call(
-        slave_id, CALL_TYPE_REGISTER_HOLDING, 1, STATE_READ_ON_OFF_REGISTER
+    result = await hub.async_pb_call(
+        slave_id, STATE_READ_ON_OFF_REGISTER, 1, CALL_TYPE_REGISTER_HOLDING
     )
     if result is None:
         _LOGGER.error("Error reading value from Climaveneta iMXW modbus adapter")
@@ -79,8 +74,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload Climaveneta_imxw config entry."""
+
+    # our components don't have unload methods so no need to look at return values
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
+
+    return True
+
+
 class ClimavenetaIMXWCoordinator(DataUpdateCoordinator):
     """My custom coordinator."""
+
+    fan_mode = FAN_AUTO
+    hvac_mode = HVACMode.OFF
+    hvac_action = HVACAction.OFF
 
     def __init__(self, hass: HomeAssistant, hub, slaveid, name) -> None:
         """Initialize my coordinator."""
@@ -93,62 +102,75 @@ class ClimavenetaIMXWCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
         self.hub = hub
-        self.modbus_slave = slaveid
-        self.data = []
+        self.slave_id = slaveid
+        self.data_modbus = {"a": 1}
         self.name = name
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
 
+        if self.data_modbus is None:
+            self.data_modbus = {}
+
         # setpoint and actuals
-        self.data["summer_winter"] = await self._async_read_int16_from_register(
+        self.data_modbus["summer_winter"] = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_HOLDING, STATE_READ_SEASON_REGISTER
         )
 
-        if self.data["summer_winter"] == MODE_WINTER:  # winter
-            self.data["winter_temperature"] = await self._async_read_temp_from_register(
+        if self.data_modbus["summer_winter"] == MODE_WINTER:  # winter
+            self.data_modbus[
+                "winter_temperature"
+            ] = await self._async_read_temp_from_register(
                 CALL_TYPE_REGISTER_HOLDING, TARGET_TEMPERATURE_WINTER_REGISTER
             )
-            self.data["target_temperature"] = self.data["winter_temperature"]
+            self.data_modbus["target_temperature"] = self.data_modbus[
+                "winter_temperature"
+            ]
         else:  # summer
-            self.data["summer_temperature"] = await self._async_read_temp_from_register(
+            self.data_modbus[
+                "summer_temperature"
+            ] = await self._async_read_temp_from_register(
                 CALL_TYPE_REGISTER_HOLDING, TARGET_TEMPERATURE_SUMMER_REGISTER
             )
-            self.data["target_temperature"] = self.data["summer_temperature"]
+            self.data_modbus["target_temperature"] = self.data_modbus[
+                "summer_temperature"
+            ]
 
-        self.data["current_temperature"] = await self._async_read_temp_from_register(
+        self.data_modbus[
+            "current_temperature"
+        ] = await self._async_read_temp_from_register(
             CALL_TYPE_REGISTER_HOLDING, ACTUAL_AIR_TEMPERATURE_REGISTER
         )
 
         # state heating/cooling/fan only/off
-        self.data["on_off"] = await self._async_read_int16_from_register(
+        self.data_modbus["on_off"] = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_HOLDING, STATE_READ_ON_OFF_REGISTER
         )
-        if self.data["on_off"]:
-            self.data["fan_only"] = await self._async_read_int16_from_register(
+        if self.data_modbus["on_off"]:
+            self.data_modbus["fan_only"] = await self._async_read_int16_from_register(
                 CALL_TYPE_REGISTER_HOLDING, STATE_READ_FAN_ONLY_REGISTER
             )
-            self.data["ev_water"] = await self._async_read_int16_from_register(
+            self.data_modbus["ev_water"] = await self._async_read_int16_from_register(
                 CALL_TYPE_REGISTER_HOLDING, STATE_READ_EV_WATER_REGISTER
             )
-            if self.data["fan_only"] == MODE_ON:
-                self.data["hvac_mode"] = HVACMode.FAN_ONLY
-                self.data["hvac_action"] = HVACAction.FAN
-            elif self._summer_winter == MODE_SUMMER:
-                self.data["hvac_mode"] = HVACMode.COOL
-                if self.data["ev_water"] == WATER_CIRCULATING:
-                    self.data["hvac_action"] = HVACAction.COOLING
+            if self.data_modbus["fan_only"] == MODE_ON:
+                self.hvac_mode = HVACMode.FAN_ONLY
+                self.hvac_action = HVACAction.FAN
+            elif self.data_modbus["summer_winter"] == MODE_SUMMER:
+                self.hvac_mode = HVACMode.COOL
+                if self.data_modbus["ev_water"] == WATER_CIRCULATING:
+                    self.hvac_action = HVACAction.COOLING
                 else:
-                    self.data["hvac_action"] = HVACAction.IDLE
+                    self.hvac_action = HVACAction.IDLE
             else:
-                self.data["hvac_mode"] = HVACMode.HEAT
-                if self.data["ev_water"] == WATER_CIRCULATING:
-                    self.data["hvac_action"] = HVACAction.HEATING
+                self.hvac_mode = HVACMode.HEAT
+                if self.data_modbus["ev_water"] == WATER_CIRCULATING:
+                    self.hvac_action = HVACAction.HEATING
                 else:
-                    self.data["hvac_action"] = HVACAction.IDLE
+                    self.hvac_action = HVACAction.IDLE
         else:
-            self.data["hvac_mode"] = HVACMode.OFF
-            self.data["hvac_action"] = HVACAction.OFF
+            self.hvac_mode = HVACMode.OFF
+            self.hvac_action = HVACAction.OFF
 
         # fan speed
 
@@ -156,42 +178,44 @@ class ClimavenetaIMXWCoordinator(DataUpdateCoordinator):
             CALL_TYPE_REGISTER_HOLDING, STATE_READ_FAN_AUTO_REGISTER
         )
         if fan_auto == MODE_ON:
-            self.data["fan_mode"] = FAN_AUTO
+            self.fan_mode = FAN_AUTO
         else:
             fan_min = await self._async_read_int16_from_register(
                 CALL_TYPE_REGISTER_HOLDING, STATE_READ_FAN_MIN_SPEED_REGISTER
             )
             if fan_min == MODE_ON:
-                self.data["fan_mode"] = FAN_LOW
+                self.fan_mode = FAN_LOW
             else:
                 fan_med = await self._async_read_int16_from_register(
                     CALL_TYPE_REGISTER_HOLDING, STATE_READ_FAN_MED_SPEED_REGISTER
                 )
                 if fan_med == MODE_ON:
-                    self.data["fan_mode"] = FAN_MEDIUM
+                    self.fan_mode = FAN_MEDIUM
                 else:
                     fan_max = await self._async_read_int16_from_register(
                         CALL_TYPE_REGISTER_HOLDING,
                         STATE_READ_FAN_MAX_SPEED_REGISTER,
                     )
                     if fan_max == MODE_ON:
-                        self.data["fan_mode"] = FAN_HIGH
+                        self.fan_mode = FAN_HIGH
                     else:
-                        self.data["fan_mode"] = FAN_AUTO  # should never arrive here...
+                        self.fan_mode = FAN_AUTO  # should never arrive here...
 
-        self.data["t1_alarm"] = await self._async_read_int16_from_register(
+        self.data_modbus["t1_alarm"] = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_HOLDING, ALARM_T1_REGISTER
         )
 
-        self.data["t3_alarm"] = await self._async_read_int16_from_register(
+        self.data_modbus["t3_alarm"] = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_HOLDING, ALARM_T3_REGISTER
         )
 
-        self.data["water_drain"] = await self._async_read_int16_from_register(
+        self.data_modbus["water_drain"] = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_HOLDING, ALARM_WATER_DRAIN_REGISTER
         )
 
-        self.data["exchanger_temperature"] = await self._async_read_temp_from_register(
+        self.data_modbus[
+            "exchanger_temperature"
+        ] = await self._async_read_temp_from_register(
             CALL_TYPE_REGISTER_HOLDING, ACTUAL_WATER_TEMPERATURE_REGISTER
         )
 
@@ -201,9 +225,8 @@ class ClimavenetaIMXWCoordinator(DataUpdateCoordinator):
     ) -> int:
         """Read register using the Modbus hub slave."""
 
-        result = await self.hub.async_pymodbus_call(
-            self.modbus_slave, register, 1, register_type
-        )
+        result = await self.hub.async_pb_call(self.slave_id, register, 1, register_type)
+
         if result is None:
             _LOGGER.error("Error reading value from Climaveneta iMXW modbus adapter")
             return -1
@@ -216,6 +239,8 @@ class ClimavenetaIMXWCoordinator(DataUpdateCoordinator):
         result = float(
             await self._async_read_int16_from_register(register_type, register)
         )
+        result = 20.0
+
         if not result:
             return -1
         return result / 10.0

@@ -2,20 +2,22 @@
   "config": {
     "step": {
       "user": {
+        "title": "Configure Climaveneta iMXW",
+        "description": "Insert the Home Assistant modbus hub and the address ID of the iMXW",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "hub": "Modbus hub name",
+          "slave": "Address ID",
+          "name": "Name"
         }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "invalid_modbus_hub": "Invalid address ID",
+      "invalid_slave_id": "Invalid modbus hub",
+      "unknown": "Unknown error"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "Device is already configured"
     }
   }
 }

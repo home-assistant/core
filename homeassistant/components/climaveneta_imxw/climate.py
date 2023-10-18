@@ -4,8 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from climaveneta_imxw import ClimavenetaIMXWCoordinator
-
 from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
@@ -14,12 +12,10 @@ from homeassistant.components.climate import (
     SWING_OFF,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
-from homeassistant.components.modbus import (
-    CALL_TYPE_WRITE_REGISTER,
-    ModbusHub,
-)
+from homeassistant.components.modbus import ModbusHub
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -27,6 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import ClimavenetaIMXWCoordinator
 from .const import (
     DOMAIN,
     MODE_OFF,
@@ -40,6 +37,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+CALL_TYPE_WRITE_REGISTER = "write_register"
 
 
 async def async_setup_platform(
@@ -59,15 +58,15 @@ class ClimavenetaIMXWClimate(
 ):
     """Representation of a ClimavenetaIMXW fancoil unit."""
 
+    _attr_has_entity_name = True
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
     _attr_fan_mode = FAN_AUTO
 
-    _attr_hvac_mode = HVACMode.COOL
+    _attr_hvac_mode = HVACMode.OFF
     _attr_hvac_modes = [
         HVACMode.COOL,
         HVACMode.HEAT,
         HVACMode.FAN_ONLY,
-        HVACMode.HEAT_COOL,
         HVACMode.OFF,
     ]
 
@@ -83,6 +82,7 @@ class ClimavenetaIMXWClimate(
         self, coordinator, hub: ModbusHub, modbus_slave: int | None, name: str | None
     ) -> None:
         """Initialize the unit."""
+        super().__init__(coordinator)
         self._hub = hub
         self._attr_name = name
         self._slave = modbus_slave
@@ -108,19 +108,23 @@ class ClimavenetaIMXWClimate(
         self._attr_unique_id = f"{str(hub.name)}_{name}_{str(modbus_slave)}"
         self._attr_target_temperature = 0
         self._attr_current_temperature = 0
-        self._attr_hvac_action: None
+        self._attr_hvac_action = HVACAction.OFF
 
     async def async_update(self) -> None:
         """Update unit attributes."""
 
         # setpoint and actuals
-        self._attr_target_temperature = self.coordinator.data["target_temperature"]
-        self._attr_current_temperature = self.coordinator.data["current_temperature"]
-        self._attr_on_off = self.coordinator.data["on_off"]
-        self._attr_fan_only = self.coordinator.data["fan_only"]
-        self._attr_hvac_action = self.coordinator.data["hvac_action"]
-        self._attr_hvac_mode = self.coordinator.data["hvac_mode"]
-        self._attr_fan_mode = self.coordinator.data["fan_mode"]
+        self._attr_target_temperature = self.coordinator.data_modbus[
+            "target_temperature"
+        ]
+        self._attr_current_temperature = self.coordinator.data_modbus[
+            "current_temperature"
+        ]
+        self._attr_on_off = self.coordinator.data_modbus["on_off"]
+        self._attr_fan_only = self.coordinator.data_modbus["fan_only"]
+        self._attr_hvac_action = self.coordinator.hvac_action
+        self._attr_hvac_mode = self.coordinator.hvac_mode
+        self._attr_fan_mode = self.coordinator.fan_mode
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -128,7 +132,7 @@ class ClimavenetaIMXWClimate(
             _LOGGER.error("Received invalid temperature")
             return
 
-        if self.coordinator.data["summer_winter"] == MODE_SUMMER:
+        if self.coordinator.data_modbus["summer_winter"] == MODE_SUMMER:
             register = TARGET_TEMPERATURE_SUMMER_REGISTER
         else:
             register = TARGET_TEMPERATURE_WINTER_REGISTER
@@ -171,7 +175,7 @@ class ClimavenetaIMXWClimate(
                 _LOGGER.error("Modbus error setting fan mode to Climaveneta iMXW")
 
     async def _async_write_int16_to_register(self, register: int, value: int) -> bool:
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, register, value, CALL_TYPE_WRITE_REGISTER
         )
         if not result:
@@ -187,7 +191,7 @@ async def async_setup_entry(
     """Set up a config entry."""
     coordinator: ClimavenetaIMXWCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list = []
+    entities: list[ClimateEntity] = []
 
     entities.append(
         ClimavenetaIMXWClimate(
