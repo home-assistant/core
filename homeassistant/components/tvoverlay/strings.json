@@ -1,4 +1,24 @@
 {
+  "services": {
+    "notify": {
+      "name": "Send TVOverlay notification",
+      "description": "Sends a notification message to selected Android TV.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Message body of the notification."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Main Title for the notification."
+        },
+        "data": {
+          "name": "Data",
+          "description": "TVOverlay advanced notification features. For more details, refer to the TVOverlay integration documentation."
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
