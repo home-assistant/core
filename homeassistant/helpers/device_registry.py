@@ -10,7 +10,9 @@ from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
 from urllib.parse import urlparse
 
 import attr
+from yarl import URL
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -27,7 +29,6 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry
-    from .entity import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +49,8 @@ ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
 RUNTIME_ONLY_ATTRS = {"suggested_area"}
 
+CONFIGURATION_URL_SCHEMES = {"http", "https", "homeassistant"}
+
 
 class DeviceEntryDisabler(StrEnum):
     """What disabled a device entry."""
@@ -61,6 +64,26 @@ class DeviceEntryDisabler(StrEnum):
 DISABLED_CONFIG_ENTRY = DeviceEntryDisabler.CONFIG_ENTRY.value
 DISABLED_INTEGRATION = DeviceEntryDisabler.INTEGRATION.value
 DISABLED_USER = DeviceEntryDisabler.USER.value
+
+
+class DeviceInfo(TypedDict, total=False):
+    """Entity device information for device registry."""
+
+    configuration_url: str | URL | None
+    connections: set[tuple[str, str]]
+    default_manufacturer: str
+    default_model: str
+    default_name: str
+    entry_type: DeviceEntryType | None
+    identifiers: set[tuple[str, str]]
+    manufacturer: str | None
+    model: str | None
+    name: str | None
+    suggested_area: str | None
+    sw_version: str | None
+    hw_version: str | None
+    via_device: tuple[str, str]
+
 
 DEVICE_INFO_TYPES = {
     # Device info is categorized by finding the first device info type which has all
@@ -136,7 +159,7 @@ class DeviceInfoError(HomeAssistantError):
 
 
 def _validate_device_info(
-    config_entry: ConfigEntry | None,
+    config_entry: ConfigEntry,
     device_info: DeviceInfo,
 ) -> str:
     """Process a device info."""
@@ -145,7 +168,7 @@ def _validate_device_info(
     # If no keys or not enough info to match up, abort
     if not device_info.get("connections") and not device_info.get("identifiers"):
         raise DeviceInfoError(
-            config_entry.domain if config_entry else "unknown",
+            config_entry.domain,
             device_info,
             "device info must include at least one of identifiers or connections",
         )
@@ -160,7 +183,7 @@ def _validate_device_info(
 
     if device_info_type is None:
         raise DeviceInfoError(
-            config_entry.domain if config_entry else "unknown",
+            config_entry.domain,
             device_info,
             (
                 "device info needs to either describe a device, "
@@ -168,22 +191,28 @@ def _validate_device_info(
             ),
         )
 
-    if (config_url := device_info.get("configuration_url")) is not None:
-        if type(config_url) is not str or urlparse(config_url).scheme not in [
-            "http",
-            "https",
-            "homeassistant",
-        ]:
-            raise DeviceInfoError(
-                config_entry.domain if config_entry else "unknown",
-                device_info,
-                f"invalid configuration_url '{config_url}'",
-            )
-
     return device_info_type
 
 
-@attr.s(slots=True, frozen=True)
+def _validate_configuration_url(value: Any) -> str | None:
+    """Validate and convert configuration_url."""
+    if value is None:
+        return None
+    if (
+        isinstance(value, URL)
+        and (value.scheme not in CONFIGURATION_URL_SCHEMES or not value.host)
+    ) or (
+        (parsed_url := urlparse(str(value)))
+        and (
+            parsed_url.scheme not in CONFIGURATION_URL_SCHEMES
+            or not parsed_url.hostname
+        )
+    ):
+        raise ValueError(f"invalid configuration_url '{value}'")
+    return str(value)
+
+
+@attr.s(frozen=True)
 class DeviceEntry:
     """Device Registry Entry."""
 
@@ -205,8 +234,6 @@ class DeviceEntry:
     via_device_id: str | None = attr.ib(default=None)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
-
-    _json_repr: str | None = attr.ib(cmp=False, default=None, init=False, repr=False)
 
     @property
     def disabled(self) -> bool:
@@ -234,15 +261,12 @@ class DeviceEntry:
             "via_device_id": self.via_device_id,
         }
 
-    @property
+    @cached_property
     def json_repr(self) -> str | None:
         """Return a cached JSON representation of the entry."""
-        if self._json_repr is not None:
-            return self._json_repr
-
         try:
             dict_repr = self.dict_repr
-            object.__setattr__(self, "_json_repr", JSON_DUMP(dict_repr))
+            return JSON_DUMP(dict_repr)
         except (ValueError, TypeError):
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -251,7 +275,7 @@ class DeviceEntry:
                     find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
                 ),
             )
-        return self._json_repr
+        return None
 
 
 @attr.s(slots=True, frozen=True)
@@ -364,14 +388,14 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
 
     def __setitem__(self, key: str, entry: _EntryTypeT) -> None:
         """Add an item."""
-        if key in self:
-            old_entry = self[key]
+        data = self.data
+        if key in data:
+            old_entry = data[key]
             for connection in old_entry.connections:
                 del self._connections[connection]
             for identifier in old_entry.identifiers:
                 del self._identifiers[identifier]
-        # type ignore linked to mypy issue: https://github.com/python/mypy/issues/13596
-        super().__setitem__(key, entry)  # type: ignore[assignment]
+        data[key] = entry
         for connection in entry.connections:
             self._connections[connection] = entry
         for identifier in entry.identifiers:
@@ -453,7 +477,7 @@ class DeviceRegistry:
         self,
         *,
         config_entry_id: str,
-        configuration_url: str | None | UndefinedType = UNDEFINED,
+        configuration_url: str | URL | None | UndefinedType = UNDEFINED,
         connections: set[tuple[str, str]] | None | UndefinedType = UNDEFINED,
         default_manufacturer: str | None | UndefinedType = UNDEFINED,
         default_model: str | None | UndefinedType = UNDEFINED,
@@ -471,6 +495,8 @@ class DeviceRegistry:
         via_device: tuple[str, str] | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
+        if configuration_url is not UNDEFINED:
+            configuration_url = _validate_configuration_url(configuration_url)
 
         # Reconstruct a DeviceInfo dict from the arguments.
         # When we upgrade to Python 3.12, we can change this method to instead
@@ -497,6 +523,10 @@ class DeviceRegistry:
             device_info[key] = val  # type: ignore[literal-required]
 
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
+        if config_entry is None:
+            raise HomeAssistantError(
+                f"Can't link device to unknown config entry {config_entry_id}"
+            )
         device_info_type = _validate_device_info(config_entry, device_info)
 
         if identifiers is None or identifiers is UNDEFINED:
@@ -520,11 +550,7 @@ class DeviceRegistry:
                 )
             self.devices[device.id] = device
             # If creating a new device, default to the config entry name
-            if (
-                device_info_type == "primary"
-                and (not name or name is UNDEFINED)
-                and config_entry
-            ):
+            if device_info_type == "primary" and (not name or name is UNDEFINED):
                 name = config_entry.title
 
         if default_manufacturer is not UNDEFINED and device.manufacturer is None:
@@ -582,7 +608,7 @@ class DeviceRegistry:
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
-        configuration_url: str | None | UndefinedType = UNDEFINED,
+        configuration_url: str | URL | None | UndefinedType = UNDEFINED,
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         hw_version: str | None | UndefinedType = UNDEFINED,
@@ -669,6 +695,9 @@ class DeviceRegistry:
         if new_identifiers is not UNDEFINED:
             new_values["identifiers"] = new_identifiers
             old_values["identifiers"] = old.identifiers
+
+        if configuration_url is not UNDEFINED:
+            configuration_url = _validate_configuration_url(configuration_url)
 
         for attr_name, value in (
             ("area_id", area_id),

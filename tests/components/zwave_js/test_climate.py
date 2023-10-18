@@ -731,6 +731,8 @@ async def test_thermostat_raise_repair_issue_and_warning_when_setting_dry_preset
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test raise of repair issue and warning when setting Dry preset."""
+    client.async_send_command.return_value = {"result": {"status": 1}}
+
     state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
     assert state
 
@@ -765,6 +767,7 @@ async def test_thermostat_raise_repair_issue_and_warning_when_setting_fan_preset
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test raise of repair issue and warning when setting Fan preset."""
+    client.async_send_command.return_value = {"result": {"status": 1}}
     state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
     assert state
 

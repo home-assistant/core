@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_UNIQUE_ID,
+    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -30,7 +31,6 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
-    ACTIVE_SCAN_INTERVAL,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -42,19 +42,24 @@ from .const import (
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
+    CONF_NAN_VALUE,
     CONF_PRECISION,
     CONF_SCALE,
+    CONF_SLAVE_COUNT,
     CONF_STATE_OFF,
     CONF_STATE_ON,
     CONF_SWAP,
     CONF_SWAP_BYTE,
+    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_VERIFY,
+    CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
     SIGNAL_START_ENTITY,
@@ -73,11 +78,7 @@ class BasePlatform(Entity):
     def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
         """Initialize the Modbus binary sensor."""
         self._hub = hub
-        # temporary fix,
-        # make sure slave is always defined to avoid an error in pymodbus
-        # attr(in_waiting) not defined.
-        # see issue #657 and PR #660 in riptideio/pymodbus
-        self._slave = entry.get(CONF_SLAVE, 0)
+        self._slave = entry.get(CONF_SLAVE, None) or entry.get(CONF_DEVICE_ADDRESS, 0)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._value: str | None = None
@@ -105,6 +106,7 @@ class BasePlatform(Entity):
 
         self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
         self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
+        self._nan_value = entry.get(CONF_NAN_VALUE, None)
         self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
 
     @abstractmethod
@@ -115,8 +117,9 @@ class BasePlatform(Entity):
     def async_run(self) -> None:
         """Remote start entity."""
         self.async_hold(update=False)
-        if self._scan_interval == 0 or self._scan_interval > ACTIVE_SCAN_INTERVAL:
-            self._cancel_call = async_call_later(self.hass, 1, self.async_update)
+        self._cancel_call = async_call_later(
+            self.hass, timedelta(milliseconds=100), self.async_update
+        )
         if self._scan_interval > 0:
             self._cancel_timer = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
@@ -155,15 +158,29 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         """Initialize the switch."""
         super().__init__(hub, config)
         self._swap = config[CONF_SWAP]
+        if self._swap == CONF_SWAP_NONE:
+            self._swap = None
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
         self._precision = config[CONF_PRECISION]
         self._scale = config[CONF_SCALE]
+        if self._scale < 1 and not self._precision:
+            self._precision = 2
         self._offset = config[CONF_OFFSET]
-        self._count = config[CONF_COUNT]
+        self._slave_count = config.get(CONF_SLAVE_COUNT, None) or config.get(
+            CONF_VIRTUAL_COUNT, 0
+        )
+        self._slave_size = self._count = config[CONF_COUNT]
 
-    def _swap_registers(self, registers: list[int]) -> list[int]:
+    def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
         """Do swap as needed."""
+        if slave_count:
+            swapped = []
+            for i in range(0, self._slave_count + 1):
+                inx = i * self._slave_size
+                inx2 = inx + self._slave_size
+                swapped.extend(self._swap_registers(registers[inx:inx2], 0))
+            return swapped
         if self._swap in (CONF_SWAP_BYTE, CONF_SWAP_WORD_BYTE):
             # convert [12][34] --> [21][43]
             for i, register in enumerate(registers):
@@ -177,8 +194,14 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def __process_raw_value(self, entry: float | int) -> float | int:
-        """Process value from sensor with scaling, offset, min/max etc."""
+    def __process_raw_value(
+        self, entry: float | int | str | bytes
+    ) -> float | int | str | bytes | None:
+        """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
+        if self._nan_value and entry in (self._nan_value, -self._nan_value):
+            return None
+        if isinstance(entry, bytes):
+            return entry
         val: float | int = self._scale * entry + self._offset
         if self._min_value is not None and val < self._min_value:
             return self._min_value
@@ -191,7 +214,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
     def unpack_structure_result(self, registers: list[int]) -> str | None:
         """Convert registers to proper result."""
 
-        registers = self._swap_registers(registers)
+        if self._swap:
+            registers = self._swap_registers(registers, self._slave_count)
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DataType.STRING:
             return byte_string.decode()
@@ -217,9 +241,20 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
                 # the conversion only when it's absolutely necessary.
                 if isinstance(v_temp, int) and self._precision == 0:
                     v_result.append(str(v_temp))
+                elif v_temp is None:
+                    v_result.append("0")
+                elif v_temp != v_temp:  # noqa: PLR0124
+                    # NaN float detection replace with None
+                    v_result.append("0")
                 else:
                     v_result.append(f"{float(v_temp):.{self._precision}f}")
             return ",".join(map(str, v_result))
+
+        # NaN float detection replace with None
+        if val[0] != val[0]:  # noqa: PLR0124
+            return None
+        if byte_string == b"nan\x00":
+            return None
 
         # Apply scale, precision, limits to floats and ints
         val_result = self.__process_raw_value(val[0])
@@ -227,8 +262,13 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         # We could convert int to float, and the code would still work; however
         # we lose some precision, and unit tests will fail. Therefore, we do
         # the conversion only when it's absolutely necessary.
+
+        if val_result is None:
+            return None
         if isinstance(val_result, int) and self._precision == 0:
             return str(val_result)
+        if isinstance(val_result, bytes):
+            return val_result.decode()
         return f"{float(val_result):.{self._precision}f}"
 
 
@@ -283,11 +323,14 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
         if state := await self.async_get_last_state():
-            self._attr_is_on = state.state == STATE_ON
+            if state.state == STATE_ON:
+                self._attr_is_on = True
+            elif state.state == STATE_OFF:
+                self._attr_is_on = False
 
     async def async_turn(self, command: int) -> None:
         """Evaluate switch result."""
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._address, command, self._write_type
         )
         if result is None:
@@ -323,7 +366,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         if self._call_active:
             return
         self._call_active = True
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._verify_address, 1, self._verify_type
         )
         self._call_active = False

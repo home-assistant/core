@@ -11,7 +11,7 @@ from tests.common import load_fixture
 class MockYouTube:
     """Service which returns mock objects."""
 
-    _authenticated = False
+    _thrown_error: Exception | None = None
 
     def __init__(
         self,
@@ -28,7 +28,6 @@ class MockYouTube:
         self, token: str, scopes: list[AuthScope]
     ) -> None:
         """Authenticate the user."""
-        self._authenticated = True
 
     async def get_user_channels(self) -> AsyncGenerator[YouTubeChannel, None]:
         """Get channels for authenticated user."""
@@ -40,6 +39,8 @@ class MockYouTube:
         self, channel_ids: list[str]
     ) -> AsyncGenerator[YouTubeChannel, None]:
         """Get channels."""
+        if self._thrown_error is not None:
+            raise self._thrown_error
         channels = json.loads(load_fixture(self._channel_fixture))
         for item in channels["items"]:
             yield YouTubeChannel(**item)
@@ -57,3 +58,7 @@ class MockYouTube:
         channels = json.loads(load_fixture(self._subscriptions_fixture))
         for item in channels["items"]:
             yield YouTubeSubscription(**item)
+
+    def set_thrown_exception(self, exception: Exception) -> None:
+        """Set thrown exception for testing purposes."""
+        self._thrown_error = exception

@@ -6,7 +6,7 @@ from homeassistant.components.cover import CoverDeviceClass, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_OPEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -65,6 +65,8 @@ class SomfyShade(RestoreEntity, CoverEntity):
 
     _attr_should_poll = False
     _attr_assumed_state = True
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -78,7 +80,6 @@ class SomfyShade(RestoreEntity, CoverEntity):
         self.somfy_mylink = somfy_mylink
         self._target_id = target_id
         self._attr_unique_id = target_id
-        self._attr_name = name
         self._reverse = reverse
         self._attr_is_closed = None
         self._attr_device_class = device_class

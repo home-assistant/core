@@ -16,7 +16,6 @@ from homeassistant.components.recorder import (
     get_instance,
     history,
     statistics,
-    util as recorder_util,
 )
 from homeassistant.components.recorder.models import (
     StatisticData,
@@ -30,19 +29,14 @@ from homeassistant.const import (
     UnitOfSoundPressure,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from .const import (
-    ATTR_LAST_RESET,
-    ATTR_OPTIONS,
-    ATTR_STATE_CLASS,
-    DOMAIN,
-    SensorStateClass,
-)
+from .const import ATTR_LAST_RESET, ATTR_STATE_CLASS, DOMAIN, SensorStateClass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,7 +143,7 @@ def _equivalent_units(units: set[str | None]) -> bool:
 def _parse_float(state: str) -> float:
     """Parse a float string, throw on inf or nan."""
     fstate = float(state)
-    if math.isnan(fstate) or math.isinf(fstate):
+    if not math.isfinite(fstate):
         raise ValueError
     return fstate
 
@@ -262,20 +256,11 @@ def _normalize_states(
 
 def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
     """Suggest to report an issue."""
-    domain = entity_sources(hass).get(entity_id, {}).get("domain")
-    custom_component = entity_sources(hass).get(entity_id, {}).get("custom_component")
-    report_issue = ""
-    if custom_component:
-        report_issue = "report it to the custom integration author."
-    else:
-        report_issue = (
-            "create a bug report at "
-            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-        )
-        if domain:
-            report_issue += f"+label%3A%22integration%3A+{domain}%22"
+    entity_info = entity_sources(hass).get(entity_id)
 
-    return report_issue
+    return async_suggest_report_issue(
+        hass, integration_domain=entity_info["domain"] if entity_info else None
+    )
 
 
 def warn_dip(
@@ -296,7 +281,8 @@ def warn_dip(
         hass.data[WARN_DIP] = set()
     if entity_id not in hass.data[WARN_DIP]:
         hass.data[WARN_DIP].add(entity_id)
-        domain = entity_sources(hass).get(entity_id, {}).get("domain")
+        entity_info = entity_sources(hass).get(entity_id)
+        domain = entity_info["domain"] if entity_info else None
         if domain in ["energy", "growatt_server", "solaredge"]:
             return
         _LOGGER.warning(
@@ -320,7 +306,8 @@ def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
         hass.data[WARN_NEGATIVE] = set()
     if entity_id not in hass.data[WARN_NEGATIVE]:
         hass.data[WARN_NEGATIVE].add(entity_id)
-        domain = entity_sources(hass).get(entity_id, {}).get("domain")
+        entity_info = entity_sources(hass).get(entity_id)
+        domain = entity_info["domain"] if entity_info else None
         _LOGGER.warning(
             (
                 "Entity %s %shas state class total_increasing, but its state is "
@@ -386,27 +373,7 @@ def _timestamp_to_isoformat_or_none(timestamp: float | None) -> str | None:
     return dt_util.utc_from_timestamp(timestamp).isoformat()
 
 
-def compile_statistics(
-    hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
-) -> statistics.PlatformCompiledStatistics:
-    """Compile statistics for all entities during start-end.
-
-    Note: This will query the database and must not be run in the event loop
-    """
-    # There is already an active session when this code is called since
-    # it is called from the recorder statistics. We need to make sure
-    # this session never gets committed since it would be out of sync
-    # with the recorder statistics session so we mark it as read only.
-    #
-    # If we ever need to write to the database from this function we
-    # will need to refactor the recorder statistics to use a single
-    # session.
-    with recorder_util.session_scope(hass=hass, read_only=True) as session:
-        compiled = _compile_statistics(hass, session, start, end)
-    return compiled
-
-
-def _compile_statistics(  # noqa: C901
+def compile_statistics(  # noqa: C901
     hass: HomeAssistant,
     session: Session,
     start: datetime.datetime,
@@ -483,8 +450,8 @@ def _compile_statistics(  # noqa: C901
         if "sum" in wanted_statistics[entity_id]:
             to_query.add(entity_id)
 
-    last_stats = statistics.get_latest_short_term_statistics(
-        hass, to_query, {"last_reset", "state", "sum"}, metadata=old_metadatas
+    last_stats = statistics.get_latest_short_term_statistics_with_session(
+        hass, session, to_query, {"last_reset", "state", "sum"}, metadata=old_metadatas
     )
     for (  # pylint: disable=too-many-nested-blocks
         entity_id,
@@ -787,9 +754,3 @@ def validate_statistics(
         )
 
     return validation_result
-
-
-@callback
-def exclude_attributes(hass: HomeAssistant) -> set[str]:
-    """Exclude attributes from being recorded in the database."""
-    return {ATTR_OPTIONS}

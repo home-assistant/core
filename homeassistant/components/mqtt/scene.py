@@ -17,11 +17,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .util import valid_publish_topic
 
 DEFAULT_NAME = "MQTT Scene"
@@ -72,16 +68,6 @@ class MqttScene(
 
     _default_name = DEFAULT_NAME
     _entity_id_format = scene.DOMAIN + ".{}"
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT scene."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:

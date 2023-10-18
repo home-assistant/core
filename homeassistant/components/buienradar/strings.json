@@ -84,17 +84,8 @@
       "feeltemperature": {
         "name": "Feel temperature"
       },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
       "groundtemperature": {
         "name": "Ground temperature"
-      },
-      "windspeed": {
-        "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
       },
       "windforce": {
         "name": "Wind force"
@@ -105,20 +96,11 @@
       "windazimuth": {
         "name": "Wind direction azimuth"
       },
-      "pressure": {
-        "name": "[%key:component::sensor::entity_component::pressure::name%]"
-      },
       "visibility": {
         "name": "[%key:component::weather::entity_component::_::state_attributes::visibility::name%]"
       },
       "windgust": {
         "name": "Wind gust"
-      },
-      "precipitation": {
-        "name": "[%key:component::sensor::entity_component::precipitation::name%]"
-      },
-      "irradiance": {
-        "name": "[%key:component::sensor::entity_component::irradiance::name%]"
       },
       "precipitation_forecast_average": {
         "name": "Precipitation forecast average"

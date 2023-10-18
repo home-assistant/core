@@ -5,10 +5,7 @@ from unittest.mock import call
 
 from aioesphomeapi import APIClient, ButtonInfo
 
-from homeassistant.components.button import (
-    DOMAIN as BUTTON_DOMAIN,
-    SERVICE_PRESS,
-)
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 

@@ -1,6 +1,7 @@
 """Provide an OpenExchangeRates data coordinator."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 
 from aiohttp import ClientSession
@@ -10,7 +11,6 @@ from aioopenexchangerates import (
     OpenExchangeRatesAuthError,
     OpenExchangeRatesClientError,
 )
-import async_timeout
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -40,7 +40,7 @@ class OpenexchangeratesCoordinator(DataUpdateCoordinator[Latest]):
     async def _async_update_data(self) -> Latest:
         """Update data from Open Exchange Rates."""
         try:
-            async with async_timeout.timeout(CLIENT_TIMEOUT):
+            async with asyncio.timeout(CLIENT_TIMEOUT):
                 latest = await self.client.get_latest(base=self.base)
         except OpenExchangeRatesAuthError as err:
             raise ConfigEntryAuthFailed(err) from err

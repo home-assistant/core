@@ -27,9 +27,10 @@ DOMAIN = "kitchen_sink"
 
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
-    Platform.SENSOR,
-    Platform.LOCK,
     Platform.IMAGE,
+    Platform.LAWN_MOWER,
+    Platform.LOCK,
+    Platform.SENSOR,
     Platform.WEATHER,
 ]
 

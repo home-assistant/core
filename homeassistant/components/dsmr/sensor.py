@@ -33,7 +33,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
@@ -325,7 +325,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         translation_key="max_current_per_phase",
         obis_reference=obis_references.BELGIUM_MAX_CURRENT_PER_PHASE,
         dsmr_versions={"5B"},
-        device_class=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -509,7 +509,7 @@ async def async_setup_entry(
                 if stop_listener and (
                     hass.state == CoreState.not_running or hass.is_running
                 ):
-                    stop_listener()  # pylint: disable=not-callable
+                    stop_listener()
 
                 if transport:
                     transport.close()

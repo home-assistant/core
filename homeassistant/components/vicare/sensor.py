@@ -30,7 +30,6 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareRequiredKeysMixin
@@ -40,9 +39,9 @@ from .const import (
     VICARE_CUBIC_METER,
     VICARE_DEVICE_CONFIG,
     VICARE_KWH,
-    VICARE_NAME,
     VICARE_UNIT_TO_UNIT_OF_MEASUREMENT,
 )
+from .entity import ViCareEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -225,6 +224,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         name="Heating gas consumption current year",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         value_getter=lambda api: api.getGasSummaryConsumptionHeatingCurrentYear(),
+        unit_getter=lambda api: api.getGasSummaryConsumptionHeatingUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="gas_summary_consumption_heating_lastsevendays",
+        name="Heating gas consumption last seven days",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        value_getter=lambda api: api.getGasSummaryConsumptionHeatingLastSevenDays(),
         unit_getter=lambda api: api.getGasSummaryConsumptionHeatingUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -566,7 +573,9 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 )
 
 
-def _build_entity(name, vicare_api, device_config, sensor):
+def _build_entity(
+    name: str, vicare_api, device_config, sensor: ViCareSensorEntityDescription
+):
     """Create a ViCare sensor entity."""
     _LOGGER.debug("Found device %s", name)
     try:
@@ -588,8 +597,12 @@ def _build_entity(name, vicare_api, device_config, sensor):
 
 
 async def _entities_from_descriptions(
-    hass, name, entities, sensor_descriptions, iterables, config_entry
-):
+    hass: HomeAssistant,
+    entities: list[ViCareSensor],
+    sensor_descriptions: tuple[ViCareSensorEntityDescription, ...],
+    iterables,
+    config_entry: ConfigEntry,
+) -> None:
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
         for current in iterables:
@@ -598,7 +611,7 @@ async def _entities_from_descriptions(
                 suffix = f" {current.id}"
             entity = await hass.async_add_executor_job(
                 _build_entity,
-                f"{name} {description.name}{suffix}",
+                f"{description.name}{suffix}",
                 current,
                 hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
                 description,
@@ -613,14 +626,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare sensor devices."""
-    name = VICARE_NAME
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
 
     entities = []
     for description in GLOBAL_SENSORS:
         entity = await hass.async_add_executor_job(
             _build_entity,
-            f"{name} {description.name}",
+            description.name,
             api,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             description,
@@ -630,21 +642,21 @@ async def async_setup_entry(
 
     try:
         await _entities_from_descriptions(
-            hass, name, entities, CIRCUIT_SENSORS, api.circuits, config_entry
+            hass, entities, CIRCUIT_SENSORS, api.circuits, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No circuits found")
 
     try:
         await _entities_from_descriptions(
-            hass, name, entities, BURNER_SENSORS, api.burners, config_entry
+            hass, entities, BURNER_SENSORS, api.burners, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No burners found")
 
     try:
         await _entities_from_descriptions(
-            hass, name, entities, COMPRESSOR_SENSORS, api.compressors, config_entry
+            hass, entities, COMPRESSOR_SENSORS, api.compressors, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No compressors found")
@@ -652,7 +664,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViCareSensor(SensorEntity):
+class ViCareSensor(ViCareEntity, SensorEntity):
     """Representation of a ViCare sensor."""
 
     entity_description: ViCareSensorEntityDescription
@@ -661,27 +673,16 @@ class ViCareSensor(SensorEntity):
         self, name, api, device_config, description: ViCareSensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(device_config)
         self.entity_description = description
         self._attr_name = name
         self._api = api
         self._device_config = device_config
-        self._state = None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_config.getConfig().serial)},
-            name=self._device_config.getModel(),
-            manufacturer="Viessmann",
-            model=self._device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._state is not None
+        return self._attr_native_value is not None
 
     @property
     def unique_id(self) -> str:
@@ -693,16 +694,13 @@ class ViCareSensor(SensorEntity):
             return f"{tmp_id}-{self._api.id}"
         return tmp_id
 
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
     def update(self):
         """Update state of sensor."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
-                self._state = self.entity_description.value_getter(self._api)
+                self._attr_native_value = self.entity_description.value_getter(
+                    self._api
+                )
 
                 if self.entity_description.unit_getter:
                     vicare_unit = self.entity_description.unit_getter(self._api)

@@ -169,6 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name="Powerwall site",
         update_method=manager.async_update_data,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
+        always_update=False,
     )
 
     await coordinator.async_config_entry_first_refresh()

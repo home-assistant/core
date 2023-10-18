@@ -29,7 +29,6 @@ class AddItemIntent(intent.IntentHandler):
         await intent_obj.hass.data[DOMAIN].async_add(item)
 
         response = intent_obj.create_response()
-        response.async_set_speech(f"I've added {item} to your shopping list")
         intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
         return response
 

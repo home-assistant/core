@@ -785,6 +785,17 @@ class LightEntityDescription(ToggleEntityDescription):
 class LightEntity(ToggleEntity):
     """Base class for light entities."""
 
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            ATTR_SUPPORTED_COLOR_MODES,
+            ATTR_EFFECT_LIST,
+            ATTR_MIN_MIREDS,
+            ATTR_MAX_MIREDS,
+            ATTR_MIN_COLOR_TEMP_KELVIN,
+            ATTR_MAX_COLOR_TEMP_KELVIN,
+        }
+    )
+
     entity_description: LightEntityDescription
     _attr_brightness: int | None = None
     _attr_color_mode: ColorMode | str | None = None

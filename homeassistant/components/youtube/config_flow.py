@@ -145,6 +145,8 @@ class OAuth2FlowHandler(
             )
             async for subscription in youtube.get_user_subscriptions()
         ]
+        if not selectable_channels:
+            return self.async_abort(reason="no_subscriptions")
         return self.async_show_form(
             step_id="channels",
             data_schema=vol.Schema(

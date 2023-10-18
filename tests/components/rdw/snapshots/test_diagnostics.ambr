@@ -1,0 +1,30 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'apk_expiration': '2022-01-04',
+    'ascription_date': '2021-11-04',
+    'ascription_possible': True,
+    'brand': 'Skoda',
+    'energy_label': 'A',
+    'engine_capacity': 999,
+    'exported': False,
+    'first_admission': '2013-01-04',
+    'interior': 'hatchback',
+    'last_odometer_registration_year': 2021,
+    'liability_insured': False,
+    'license_plate': '11ZKZ3',
+    'list_price': 10697,
+    'mass_driveable': 940,
+    'mass_empty': 840,
+    'model': 'Citigo',
+    'number_of_cylinders': 3,
+    'number_of_doors': 0,
+    'number_of_seats': 4,
+    'number_of_wheelchair_seats': 0,
+    'number_of_wheels': 4,
+    'odometer_judgement': 'Logisch',
+    'pending_recall': False,
+    'taxi': None,
+    'vehicle_type': 'Personenauto',
+  })
+# ---

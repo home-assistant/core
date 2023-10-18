@@ -7,7 +7,6 @@ import logging
 from typing import Any
 
 import aiohttp
-from async_timeout import timeout
 from serial.tools import list_ports
 import voluptuous as vol
 from zwave_js_server.version import VersionInfo, get_server_version
@@ -115,7 +114,7 @@ async def validate_input(hass: HomeAssistant, user_input: dict) -> VersionInfo:
 async def async_get_version_info(hass: HomeAssistant, ws_address: str) -> VersionInfo:
     """Return Z-Wave JS version info."""
     try:
-        async with timeout(SERVER_VERSION_TIMEOUT):
+        async with asyncio.timeout(SERVER_VERSION_TIMEOUT):
             version_info: VersionInfo = await get_server_version(
                 ws_address, async_get_clientsession(hass)
             )
