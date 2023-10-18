@@ -2,7 +2,7 @@
 # name: test_diagnostics
   dict({
     'data': list([
-      'data': dict({
+      dict({
         'data': list([
           dict({
             'apiVersion': 1,
