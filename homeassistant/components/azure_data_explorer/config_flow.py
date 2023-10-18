@@ -100,7 +100,7 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def create_title(self, ingestURI):
         """Build the Cluster Title from the URL."""
-        url_no_https = ingestURI.split("//")[1]
+        url_no_https = ingestURI.split("//", maxsplit=1)[-1]
         return str(url_no_https.split(".")[0])
 
 

@@ -38,34 +38,34 @@ class AzureDataExplorerClient:
     def __init__(self, data: Mapping[str, Any]) -> None:
         """Create the right class."""
 
-        self.cluster_ingest_uri = data[CONF_ADX_CLUSTER_INGEST_URI]
-        self.database = data[CONF_ADX_DATABASE_NAME]
-        self.table = data[CONF_ADX_TABLE_NAME]
-        self.client_id = data[CONF_APP_REG_ID]
-        self.client_secret = data[CONF_APP_REG_SECRET]
-        self.authority_id = data[CONF_AUTHORITY_ID]
-        self.use_queued_ingestion = data[CONF_USE_FREE]
+        self._cluster_ingest_uri = data[CONF_ADX_CLUSTER_INGEST_URI]
+        self._database = data[CONF_ADX_DATABASE_NAME]
+        self._table = data[CONF_ADX_TABLE_NAME]
+        self._client_id = data[CONF_APP_REG_ID]
+        self._client_secret = data[CONF_APP_REG_SECRET]
+        self._authority_id = data[CONF_AUTHORITY_ID]
+        self._use_queued_ingestion = data[CONF_USE_FREE]
 
-        self.cluster_query_uri = self.cluster_ingest_uri.replace(
+        self._cluster_query_uri = self._cluster_ingest_uri.replace(
             "https://ingest-", "https://"
         )
 
-        self.ingestion_properties = IngestionProperties(
-            database=self.database,
-            table=self.table,
+        self._ingestion_properties = IngestionProperties(
+            database=self._database,
+            table=self._table,
             data_format=DataFormat.MULTIJSON,
             ingestion_mapping_reference="ha_json_mapping",
         )
 
         # Create cLients for ingesting and querying data
         kcsb = KustoConnectionStringBuilder.with_aad_application_key_authentication(
-            self.cluster_ingest_uri,
-            self.client_id,
-            self.client_secret,
-            self.authority_id,
+            self._cluster_ingest_uri,
+            self._client_id,
+            self._client_secret,
+            self._authority_id,
         )
 
-        if self.use_queued_ingestion is True:
+        if self._use_queued_ingestion is True:
             # Queded is the only option supported on free tear of ADX
             self.write_client = QueuedIngestClient(kcsb)
         else:
@@ -76,9 +76,9 @@ class AzureDataExplorerClient:
     def test_connection(self) -> None:
         """Test connection, will throw Exception when it cannot connect."""
 
-        query = f"{self.table} | take 1"
+        query = f"{self._table} | take 1"
 
-        self.query_client.execute_query(self.database, query)
+        self.query_client.execute_query(self._database, query)
 
     def ingest_data(self, adx_events: str) -> None:
         """Send data to Axure Data Explorer."""
@@ -87,5 +87,5 @@ class AzureDataExplorerClient:
         stream_descriptor = StreamDescriptor(bytes_stream)
 
         self.write_client.ingest_from_stream(
-            stream_descriptor, ingestion_properties=self.ingestion_properties
+            stream_descriptor, ingestion_properties=self._ingestion_properties
         )
