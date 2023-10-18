@@ -29,6 +29,9 @@ DUNEHD_PLAYER_SUPPORT: Final[MediaPlayerEntityFeature] = (
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.BROWSE_MEDIA
 )
 
 
@@ -129,11 +132,11 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         """Pause media player."""
         self._state = self._player.pause()
 
-    def play_media(self,  media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
+    async def async_play_media(self,  media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
         """Play media from a URL or file."""
         # Handle media_source
         if media_source.is_media_source_id(media_id):
-            sourced_media = media_source.resolve_media(
+            sourced_media = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
             media_id = sourced_media.url
@@ -143,7 +146,15 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
             self.hass, media_id
         )
 
-        self._state = self._player.launch_media_url(media_id)
+        self._state = await self.hass.async_add_executor_job(self._player.launch_media_url,media_id)
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(self.hass, media_content_id)
 
     @property
     def media_title(self) -> str | None:
