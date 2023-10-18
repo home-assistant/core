@@ -46,6 +46,7 @@ GAS_USAGE_UNITS = {
         UnitOfEnergy.WATT_HOUR,
     ),
     sensor.SensorDeviceClass.GAS: (
+        UnitOfVolume.LITERS,
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CUBIC_METERS,
