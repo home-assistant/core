@@ -36,8 +36,7 @@ async def async_setup_entry(
             ProtectionWindowBinarySensor(
                 coordinators[DATA_PROTECTION_WINDOW],
                 # We inline a simple entity description here because this entity will
-                # still inherit from OpenUvEntity, which requires an entity description
-                # to be defined:
+                # still inherit from OpenUvEntity (which requires a descsription):
                 BinarySensorEntityDescription(key=TYPE_PROTECTION_WINDOW),
             )
         ]
