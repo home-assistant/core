@@ -12,7 +12,11 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
-from . import IMPROV_BLE_DISCOVERY_INFO, NOT_IMPROV_BLE_DISCOVERY_INFO
+from . import (
+    IMPROV_BLE_DISCOVERY_INFO,
+    NOT_IMPROV_BLE_DISCOVERY_INFO,
+    PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
+)
 
 IMPROV_BLE = "homeassistant.components.improv_ble"
 
@@ -69,7 +73,10 @@ async def test_user_step_no_devices_found(hass: HomeAssistant) -> None:
     """Test user step with no devices found."""
     with patch(
         f"{IMPROV_BLE}.config_flow.async_discovered_service_info",
-        return_value=[NOT_IMPROV_BLE_DISCOVERY_INFO],
+        return_value=[
+            PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
+            NOT_IMPROV_BLE_DISCOVERY_INFO,
+        ],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -106,6 +113,17 @@ async def test_async_step_user_takes_precedence_over_discovery(
 
     # Verify the discovery flow was aborted
     assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+
+async def test_bluetooth_step_provisioned_device(hass: HomeAssistant) -> None:
+    """Test bluetooth step when device is already provisioned."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_provisioned"
 
 
 async def test_bluetooth_step_success(hass: HomeAssistant) -> None:

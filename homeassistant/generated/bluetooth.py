@@ -219,6 +219,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "improv_ble",
+        "service_data_uuid": "00004677-0000-1000-8000-00805f9b34fb",
         "service_uuid": "00467768-6228-2272-4663-277478268000",
     },
     {

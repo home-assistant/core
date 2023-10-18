@@ -1,6 +1,6 @@
 """Tests for the Improv via BLE integration."""
 
-from improv_ble_client import SERVICE_UUID
+from improv_ble_client import SERVICE_DATA_UUID, SERVICE_UUID
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
@@ -12,10 +12,31 @@ IMPROV_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     rssi=-60,
     manufacturer_data={},
     service_uuids=[SERVICE_UUID],
-    service_data={},
+    service_data={SERVICE_DATA_UUID: b"\x01\x00\x00\x00\x00\x00"},
     source="local",
     device=generate_ble_device(address="AA:BB:CC:DD:EE:F0", name="00123456"),
-    advertisement=generate_advertisement_data(service_uuids=[SERVICE_UUID]),
+    advertisement=generate_advertisement_data(
+        service_uuids=[SERVICE_UUID],
+        service_data={SERVICE_DATA_UUID: b"\x01\x00\x00\x00\x00\x00"},
+    ),
+    time=0,
+    connectable=True,
+)
+
+
+PROVISIONED_IMPROV_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
+    name="00123456",
+    address="AA:BB:CC:DD:EE:F0",
+    rssi=-60,
+    manufacturer_data={},
+    service_uuids=[SERVICE_UUID],
+    service_data={SERVICE_DATA_UUID: b"\x04\x00\x00\x00\x00\x00"},
+    source="local",
+    device=generate_ble_device(address="AA:BB:CC:DD:EE:F0", name="00123456"),
+    advertisement=generate_advertisement_data(
+        service_uuids=[SERVICE_UUID],
+        service_data={SERVICE_DATA_UUID: b"\x04\x00\x00\x00\x00\x00"},
+    ),
     time=0,
     connectable=True,
 )

@@ -9,8 +9,10 @@ from typing import Any, TypeVar
 
 from bleak import BleakError
 from improv_ble_client import (
+    SERVICE_DATA_UUID,
     Error,
     ImprovBLEClient,
+    ImprovServiceData,
     State,
     device_filter,
     errors as improv_ble_errors,
@@ -128,6 +130,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the Bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
+        service_data = discovery_info.service_data
+        improv_service_data = ImprovServiceData.from_bytes(
+            service_data[SERVICE_DATA_UUID]
+        )
+        if improv_service_data.state in (State.PROVISIONING, State.PROVISIONED):
+            _LOGGER.debug(
+                "Device is already provisioned: %s", improv_service_data.state
+            )
+            return self.async_abort(reason="already_provisioned")
         self._discovery_info = discovery_info
         name = self._discovery_info.name or self._discovery_info.address
         self.context["title_placeholders"] = {"name": name}
