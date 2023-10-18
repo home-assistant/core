@@ -7,7 +7,6 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import StrEnum
 from functools import partial
 
 from dsmr_parser import obis_references
@@ -410,7 +409,7 @@ async def async_setup_entry(
         def device_class_and_uom(
             telegram: dict[str, DSMRObject],
             entity_description: DSMRSensorEntityDescription,
-        ) -> tuple[SensorDeviceClass | None, str | StrEnum | None]:
+        ) -> tuple[SensorDeviceClass | None, str | None]:
             """Get native unit of measurement from telegram,."""
             dsmr_object = telegram[entity_description.obis_reference]
             uom: str | None = getattr(dsmr_object, "unit") or None
