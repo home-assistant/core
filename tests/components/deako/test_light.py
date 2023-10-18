@@ -127,6 +127,34 @@ async def test_light_initial_props(
     assert (DOMAIN, device_uuid) in device.identifiers
 
 
+@pytest.mark.parametrize(("device_name", "device_uuid"), MockDeakoDevices().get_names())
+@pytest.mark.asyncio
+async def test_light_initial_props_default_state(
+    hass: HomeAssistant,
+    pydeako_deako_mock: MagicMock,
+    mock_devices: MockDeakoDevices,
+    mock_config_entry: MockConfigEntry,
+    device_name: str,
+    device_uuid: str,
+) -> None:
+    """Test lights are setup with accurate initial properties if client fails somehow."""
+    pydeako_deako_mock.return_value.get_devices.return_value = mock_devices.devices
+
+    pydeako_deako_mock.return_value.get_name.side_effect = mock_devices.get_name
+    pydeako_deako_mock.return_value.get_state.return_value = None
+
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.data[DOMAIN][mock_config_entry.entry_id] = pydeako_deako_mock
+
+    # make sure our initial state exists
+    assert (state := hass.states.get(f"{LIGHT_DOMAIN}.{device_name}"))
+    assert state.state == STATE_OFF
+
+
 @pytest.mark.usefixtures("mock_deako_devices", "init_integration")
 @pytest.mark.asyncio
 async def test_light_power_change_on(
