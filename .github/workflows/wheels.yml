@@ -99,7 +99,7 @@ jobs:
           name: requirements_diff
 
       - name: Build wheels
-        uses: home-assistant/wheels@2023.10.4
+        uses: home-assistant/wheels@2023.10.5
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -190,7 +190,7 @@ jobs:
           sed -i "/numpy/d" homeassistant/package_constraints.txt
 
       - name: Build wheels (old cython)
-        uses: home-assistant/wheels@2023.10.4
+        uses: home-assistant/wheels@2023.10.5
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -205,7 +205,7 @@ jobs:
           pip: "'cython<3'"
 
       - name: Build wheels (part 1)
-        uses: home-assistant/wheels@2023.10.4
+        uses: home-assistant/wheels@2023.10.5
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -219,7 +219,7 @@ jobs:
           requirements: "requirements_all.txtaa"
 
       - name: Build wheels (part 2)
-        uses: home-assistant/wheels@2023.10.4
+        uses: home-assistant/wheels@2023.10.5
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -233,7 +233,7 @@ jobs:
           requirements: "requirements_all.txtab"
 
       - name: Build wheels (part 3)
-        uses: home-assistant/wheels@2023.10.4
+        uses: home-assistant/wheels@2023.10.5
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2

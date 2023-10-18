@@ -744,7 +744,6 @@ omit =
     homeassistant/components/mikrotik/hub.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/sensor.py
-    homeassistant/components/minecraft_server/__init__.py
     homeassistant/components/minecraft_server/api.py
     homeassistant/components/minecraft_server/binary_sensor.py
     homeassistant/components/minecraft_server/coordinator.py
@@ -790,6 +789,7 @@ omit =
     homeassistant/components/mystrom/binary_sensor.py
     homeassistant/components/mystrom/light.py
     homeassistant/components/mystrom/switch.py
+    homeassistant/components/mystrom/sensor.py
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/__init__.py
     homeassistant/components/nanoleaf/button.py
@@ -1514,7 +1514,6 @@ omit =
     homeassistant/components/wiffi/sensor.py
     homeassistant/components/wiffi/wiffi_strings.py
     homeassistant/components/wirelesstag/*
-    homeassistant/components/withings/api.py
     homeassistant/components/wolflink/__init__.py
     homeassistant/components/wolflink/sensor.py
     homeassistant/components/worldtidesinfo/sensor.py

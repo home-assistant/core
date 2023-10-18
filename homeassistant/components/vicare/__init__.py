@@ -22,7 +22,7 @@ from .const import (
     DOMAIN,
     HEATING_TYPE_TO_CREATOR_METHOD,
     PLATFORMS,
-    VICARE_DEVICE_LIST,
+    VICARE_DEVICE_CONFIG_LIST,
     HeatingType,
 )
 
@@ -81,8 +81,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
         )
 
-    hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_LIST] = vicare_api.devices
-
+    hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG_LIST] = vicare_api.devices
 
 def get_api(entry: ConfigEntry, device):
     """Get API for device."""
