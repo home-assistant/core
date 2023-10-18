@@ -40,8 +40,13 @@ class HomeKitEntity(Entity):
     def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
         """Initialise a generic HomeKit device."""
         self._accessory = accessory
-        self._aid = devinfo["aid"]
-        self._iid = devinfo["iid"]
+        self._aid: int = devinfo["aid"]
+        self._iid: int = devinfo["iid"]
+        self._entity_key: tuple[int, int | None, int | None] = (
+            self._aid,
+            None,
+            self._iid,
+        )
         self._char_name: str | None = None
         self._char_subscription: CALLBACK_TYPE | None = None
         self.async_setup()
@@ -96,6 +101,7 @@ class HomeKitEntity(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Prepare to be removed from hass."""
         self._async_unsubscribe_chars()
+        self._accessory.async_entity_key_removed(self._entity_key)
 
     @callback
     def _async_unsubscribe_chars(self):
@@ -268,6 +274,7 @@ class BaseCharacteristicEntity(HomeKitEntity):
         """Initialise a generic single characteristic HomeKit entity."""
         self._char = char
         super().__init__(accessory, devinfo)
+        self._entity_key = (self._aid, self._iid, char.iid)
 
     @callback
     def _async_remove_entity_if_characteristics_disappeared(self) -> bool:
