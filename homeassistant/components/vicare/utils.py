@@ -9,13 +9,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_supported(
-    api,
-    sensor: ViCareRequiredKeysMixin,
+    vicare_device,
+    entity_description: ViCareRequiredKeysMixin,
     name: str,
 ) -> bool:
     """Check if the PyViCare device supports the requested sensor."""
     try:
-        sensor.value_getter(api)
+        entity_description.value_getter(vicare_device)
         _LOGGER.info("Found entity %s", name)
     except PyViCareNotSupportedFeatureError:
         _LOGGER.debug("Feature not supported %s", name)
@@ -23,5 +23,4 @@ def is_supported(
     except AttributeError as error:
         _LOGGER.error("Attribute Error %s: %s", name, error)
         return False
-
     return True
