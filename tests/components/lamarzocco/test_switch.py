@@ -36,7 +36,7 @@ async def test_main(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "GS01234 Main"
-    assert state.attributes.get(ATTR_ICON) == "mdi:power-cycle"
+    assert state.attributes.get(ATTR_ICON) == "mdi:power"
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get(state.entity_id)
@@ -148,7 +148,7 @@ async def test_prebrew(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "GS01234 Prebrew"
-    assert state.attributes.get(ATTR_ICON) == "mdi:location-enter"
+    assert state.attributes.get(ATTR_ICON) == "mdi:water"
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get(state.entity_id)
@@ -204,7 +204,7 @@ async def test_preinfusion(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "GS01234 Preinfusion"
-    assert state.attributes.get(ATTR_ICON) == "mdi:location-enter"
+    assert state.attributes.get(ATTR_ICON) == "mdi:water"
     assert state.state == STATE_OFF
 
     entry = entity_registry.async_get(state.entity_id)
@@ -260,7 +260,7 @@ async def test_steam_boiler_enable(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "GS01234 Steam Boiler Enable"
-    assert state.attributes.get(ATTR_ICON) == "mdi:kettle-steam"
+    assert state.attributes.get(ATTR_ICON) == "mdi:water-boiler"
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get(state.entity_id)

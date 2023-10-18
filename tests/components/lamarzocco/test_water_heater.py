@@ -152,7 +152,7 @@ async def test_steam_boiler(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "GS01234 Steam Boiler"
-    assert state.attributes.get(ATTR_ICON) == "mdi:water-boiler"
+    assert state.attributes.get(ATTR_ICON) == "mdi:kettle-steam"
     assert state.attributes.get(ATTR_TEMPERATURE) == 128.0
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 113.0
     assert state.attributes.get(ATTR_MIN_TEMP) == 126

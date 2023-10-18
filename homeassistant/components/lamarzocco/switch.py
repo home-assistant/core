@@ -123,7 +123,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     LaMarzoccoSwitchEntityDescription(
         key="main",
         translation_key="main",
-        icon="mdi:power-cycle",
+        icon="mdi:power",
         control_fn=lambda client, state: client.set_power(state),
         is_on_fn=lambda client: client.current_status["power"],
         extra_attributes={
@@ -149,7 +149,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     LaMarzoccoSwitchEntityDescription(
         key="prebrew",
         translation_key="prebrew",
-        icon="mdi:location-enter",
+        icon="mdi:water",
         control_fn=lambda client, state: client.set_prebrew(state),
         is_on_fn=lambda client: client.current_status["enable_prebrewing"],
         extra_attributes={
@@ -161,7 +161,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     LaMarzoccoSwitchEntityDescription(
         key="preinfusion",
         translation_key="preinfusion",
-        icon="mdi:location-enter",
+        icon="mdi:water",
         control_fn=lambda client, state: client.set_preinfusion(state),
         is_on_fn=lambda client: client.current_status["enable_preinfusion"],
         extra_attributes={
@@ -173,7 +173,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
         translation_key="steam_boiler_enable",
-        icon="mdi:kettle-steam",
+        icon="mdi:water-boiler",
         control_fn=lambda client, state: client.set_steam_boiler_enable(state),
         is_on_fn=lambda client: client.current_status["steam_boiler_enable"],
         extra_attributes={
