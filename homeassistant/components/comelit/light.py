@@ -61,10 +61,10 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
         await self._light_set_state(STATE_ON)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the entity off."""
+        """Turn the light off."""
         await self._light_set_state(STATE_OFF)
 
     @property
     def is_on(self) -> bool:
-        """Return True if entity is on."""
+        """Return True if light is on."""
         return self.coordinator.data[LIGHT][self._device.index].status == STATE_ON

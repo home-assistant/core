@@ -47,7 +47,7 @@ class ComelitSwitchEntity(CoordinatorEntity[ComelitSerialBridge], SwitchEntity):
         device: ComelitSerialBridgeObject,
         config_entry_entry_id: str,
     ) -> None:
-        """Init light entity."""
+        """Init switch entity."""
         self._api = coordinator.api
         self._device = device
         super().__init__(coordinator)
@@ -57,23 +57,23 @@ class ComelitSwitchEntity(CoordinatorEntity[ComelitSerialBridge], SwitchEntity):
             self._attr_device_class = SwitchDeviceClass.OUTLET
 
     async def _switch_set_state(self, state: int) -> None:
-        """Set desired light state."""
+        """Set desired switch state."""
         await self.coordinator.api.set_device_status(
             self._device.type, self._device.index, state
         )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the light on."""
+        """Turn the switch on."""
         await self._switch_set_state(STATE_ON)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the entity off."""
+        """Turn the switch off."""
         await self._switch_set_state(STATE_OFF)
 
     @property
     def is_on(self) -> bool:
-        """Return True if entity is on."""
+        """Return True if switch is on."""
         return (
             self.coordinator.data[self._device.type][self._device.index].status
             == STATE_ON
