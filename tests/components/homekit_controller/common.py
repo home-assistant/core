@@ -26,6 +26,7 @@ from homeassistant.components.homekit_controller.const import (
     DOMAIN,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
+    SUBSCRIBE_COOLDOWN,
 )
 from homeassistant.components.homekit_controller.utils import async_get_controller
 from homeassistant.config_entries import ConfigEntry
@@ -238,6 +239,7 @@ async def setup_test_accessories_with_controller(
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
+    await time_changed(hass, SUBSCRIBE_COOLDOWN)
     await hass.async_block_till_done()
 
     return config_entry, pairing
