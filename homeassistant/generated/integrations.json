@@ -6350,6 +6350,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "tvoverlay": {
+      "name": "TVOverlay Notifications for Android TV",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "twentemilieu": {
       "name": "Twente Milieu",
       "integration_type": "service",
