@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Coroutine
+import functools
 from functools import partial, wraps
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast, final
@@ -273,6 +274,38 @@ def async_handle_schema_error(
     )
 
 
+async def async_discover(
+    hass: HomeAssistant,
+    domain: str,
+    async_setup: partial[Coroutine[Any, Any, None]],
+    discovery_payload: MQTTDiscoveryPayload,
+) -> None:
+    """Discover and add an MQTT entity, automation or tag."""
+    if not mqtt_config_entry_enabled(hass):
+        _LOGGER.warning(
+            (
+                "MQTT integration is disabled, skipping setup of discovered item "
+                "MQTT %s, payload %s"
+            ),
+            domain,
+            discovery_payload,
+        )
+        return
+    discovery_data = discovery_payload.discovery_data
+    try:
+        await async_setup(discovery_payload)
+    except vol.Invalid as err:
+        discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+        clear_discovery_hash(hass, discovery_hash)
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+        async_handle_schema_error(discovery_payload, err)
+    except Exception:
+        discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+        clear_discovery_hash(hass, discovery_hash)
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+        raise
+
+
 async def async_setup_entry_helper(
     hass: HomeAssistant,
     domain: str,
@@ -282,43 +315,23 @@ async def async_setup_entry_helper(
     """Set up entity, automation or tag creation dynamically through MQTT discovery."""
     mqtt_data = get_mqtt_data(hass)
 
-    async def async_discover(discovery_payload: MQTTDiscoveryPayload) -> None:
-        """Discover and add an MQTT entity, automation or tag."""
-        if not mqtt_config_entry_enabled(hass):
-            _LOGGER.warning(
-                (
-                    "MQTT integration is disabled, skipping setup of discovered item "
-                    "MQTT %s, payload %s"
-                ),
-                domain,
-                discovery_payload,
-            )
-            return
-        discovery_data = discovery_payload.discovery_data
-        try:
-            config: DiscoveryInfoType = discovery_schema(discovery_payload)
-            await async_setup(config, discovery_data=discovery_data)
-        except vol.Invalid as err:
-            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-            clear_discovery_hash(hass, discovery_hash)
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
-            async_handle_schema_error(discovery_payload, err)
-        except Exception:
-            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-            clear_discovery_hash(hass, discovery_hash)
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
-            raise
+    async def async_setup_from_discovery(
+        discovery_payload: MQTTDiscoveryPayload,
+    ) -> None:
+        """Set up an MQTT entity, automation or tag from discovery."""
+        config: DiscoveryInfoType = discovery_schema(discovery_payload)
+        await async_setup(config, discovery_data=discovery_payload.discovery_data)
 
     mqtt_data.reload_dispatchers.append(
         async_dispatcher_connect(
-            hass, MQTT_DISCOVERY_NEW.format(domain, "mqtt"), async_discover
+            hass,
+            MQTT_DISCOVERY_NEW.format(domain, "mqtt"),
+            functools.partial(async_discover, hass, domain, async_setup_from_discovery),
         )
     )
 
+    # The setup of manual configured MQTT entities will be migrated to async_mqtt_entry_helper.
+    # The following setup code will be cleaned up after the last entity platform has been migrated.
     async def _async_setup_entities() -> None:
         """Set up MQTT items from configuration.yaml."""
         mqtt_data = get_mqtt_data(hass)
@@ -353,45 +366,25 @@ async def async_mqtt_entry_helper(
     """Set up entity, automation or tag creation dynamically through MQTT discovery."""
     mqtt_data = get_mqtt_data(hass)
 
-    async def async_discover(discovery_payload: MQTTDiscoveryPayload) -> None:
-        """Discover and add an MQTT entity, automation or tag."""
+    async def async_setup_from_discovery(
+        discovery_payload: MQTTDiscoveryPayload,
+    ) -> None:
+        """Set up an MQTT entity from discovery."""
         nonlocal entity_class
-        if not mqtt_config_entry_enabled(hass):
-            _LOGGER.warning(
-                (
-                    "MQTT integration is disabled, skipping setup of discovered item "
-                    "MQTT %s, payload %s"
-                ),
-                domain,
-                discovery_payload,
-            )
-            return
-        discovery_data = discovery_payload.discovery_data
-        try:
-            config: DiscoveryInfoType = discovery_schema(discovery_payload)
-            if schema_class_mapping is not None:
-                entity_class = schema_class_mapping[config[CONF_SCHEMA]]
-            if TYPE_CHECKING:
-                assert entity_class is not None
-            async_add_entities([entity_class(hass, config, entry, discovery_data)])
-        except vol.Invalid as err:
-            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-            clear_discovery_hash(hass, discovery_hash)
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
-            async_handle_schema_error(discovery_payload, err)
-        except Exception:
-            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-            clear_discovery_hash(hass, discovery_hash)
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
-            raise
+        config: DiscoveryInfoType = discovery_schema(discovery_payload)
+        if schema_class_mapping is not None:
+            entity_class = schema_class_mapping[config[CONF_SCHEMA]]
+        if TYPE_CHECKING:
+            assert entity_class is not None
+        async_add_entities(
+            [entity_class(hass, config, entry, discovery_payload.discovery_data)]
+        )
 
     mqtt_data.reload_dispatchers.append(
         async_dispatcher_connect(
-            hass, MQTT_DISCOVERY_NEW.format(domain, "mqtt"), async_discover
+            hass,
+            MQTT_DISCOVERY_NEW.format(domain, "mqtt"),
+            functools.partial(async_discover, hass, domain, async_setup_from_discovery),
         )
     )
 
