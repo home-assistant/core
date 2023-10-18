@@ -118,7 +118,4 @@ class DeakoLightSwitch(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
-        dim = None
-        if ATTR_BRIGHTNESS in kwargs:
-            dim = round(kwargs[ATTR_BRIGHTNESS] / 2.55, 0)
-        await self.client.control_device(self.uuid, False, dim)
+        await self.client.control_device(self.uuid, False)

@@ -127,31 +127,48 @@ async def test_light_initial_props(
     assert (DOMAIN, device_uuid) in device.identifiers
 
 
-@pytest.mark.parametrize(
-    ("service", "expected_power_value"),
-    [(SERVICE_TURN_ON, True), (SERVICE_TURN_OFF, False)],
-)
 @pytest.mark.usefixtures("mock_deako_devices", "init_integration")
 @pytest.mark.asyncio
-async def test_light_power_change(
+async def test_light_power_change_on(
     hass: HomeAssistant,
     pydeako_deako_mock: MagicMock,
     mock_devices: MockDeakoDevices,
-    service: str,
-    expected_power_value: bool,
 ) -> None:
     """Test turing on a deako device."""
     pydeako_deako_mock.reset_mock()
     device_name, device_uuid = mock_devices.get_names()[0]
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        service,
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: f"light.{device_name}"},
         blocking=True,
     )
 
     pydeako_deako_mock.return_value.control_device.assert_called_once_with(
-        device_uuid, expected_power_value, None
+        device_uuid, True, None
+    )
+
+
+@pytest.mark.usefixtures("mock_deako_devices", "init_integration")
+@pytest.mark.asyncio
+async def test_light_power_change_off(
+    hass: HomeAssistant,
+    pydeako_deako_mock: MagicMock,
+    mock_devices: MockDeakoDevices,
+) -> None:
+    """Test turing on a deako device."""
+    pydeako_deako_mock.reset_mock()
+    device_name, device_uuid = mock_devices.get_names()[0]
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: f"light.{device_name}"},
+        blocking=True,
+    )
+
+    pydeako_deako_mock.return_value.control_device.assert_called_once_with(
+        device_uuid,
+        False,
     )
 
 
