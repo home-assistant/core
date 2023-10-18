@@ -47,7 +47,7 @@ class IdasenDeskCoordinator(DataUpdateCoordinator):
 
         self.desk = Desk(self.async_set_updated_data)
 
-    async def connect(self) -> bool:
+    async def async_connect(self) -> bool:
         """Connect to desk."""
         _LOGGER.debug("Trying to connect %s", self._address)
         ble_device = bluetooth.async_ble_device_from_address(
@@ -59,7 +59,7 @@ class IdasenDeskCoordinator(DataUpdateCoordinator):
         await self.desk.connect(ble_device)
         return True
 
-    async def disconnect(self) -> None:
+    async def async_disconnect(self) -> None:
         """Disconnect from desk."""
         _LOGGER.debug("Disconnecting from %s", self._address)
         self._expected_connected = False
@@ -71,7 +71,7 @@ class IdasenDeskCoordinator(DataUpdateCoordinator):
         if self._expected_connected:
             if not self.desk.is_connected:
                 _LOGGER.debug("Desk disconnected. Reconnecting")
-                self.hass.async_create_task(self.connect())
+                self.hass.async_create_task(self.async_connect())
         elif self.desk.is_connected:
             _LOGGER.warning("Desk is connected but should not be. Disconnecting")
             self.hass.async_create_task(self.desk.disconnect())
@@ -104,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        if not await coordinator.connect():
+        if not await coordinator.async_connect():
             raise ConfigEntryNotReady(f"Unable to connect to desk {address}")
     except (AuthFailedError, TimeoutError, BleakError, Exception) as ex:
         raise ConfigEntryNotReady(f"Unable to connect to desk {address}") from ex
@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _async_stop(event: Event) -> None:
         """Close the connection."""
-        await coordinator.disconnect()
+        await coordinator.async_disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
@@ -133,7 +133,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         data: DeskData = hass.data[DOMAIN].pop(entry.entry_id)
-        await data.coordinator.disconnect()
+        await data.coordinator.async_disconnect()
         bluetooth.async_rediscover_address(hass, data.address)
 
     return unload_ok
