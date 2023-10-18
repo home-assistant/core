@@ -350,10 +350,10 @@ aiounifi==63
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.3.1
+aiovodafone==0.4.1
 
 # homeassistant.components.waqi
-aiowaqi==2.0.0
+aiowaqi==2.1.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -537,7 +537,7 @@ datadog==0.15.0
 datapoint==0.9.8;python_version<'3.12'
 
 # homeassistant.components.bluetooth
-dbus-fast==2.11.1
+dbus-fast==2.12.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -572,7 +572,7 @@ discovery30303==0.2.1
 dremel3dpy==2.1.1
 
 # homeassistant.components.dsmr
-dsmr-parser==0.33
+dsmr-parser==1.3.0
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.6
@@ -2081,7 +2081,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.118.0
+zeroconf==0.119.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
