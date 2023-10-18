@@ -3,9 +3,18 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+import uuid
 
 from tvoverlay import ImageUrlSource, Notifications
-from tvoverlay.const import DEFAULT_DURATION, Positions
+from tvoverlay.const import (
+    COLOR_GREEN,
+    DEFAULT_APP_ICON,
+    DEFAULT_APP_NAME,
+    DEFAULT_DURATION,
+    DEFAULT_SMALL_ICON,
+    DEFAULT_SOURCE_NAME,
+    Positions,
+)
 
 # import voluptuous as vol
 from homeassistant.components.notify import (
@@ -72,13 +81,13 @@ class TVOverlayNotificationService(BaseNotificationService):
         """Send a message to a TVOverlay device."""
         data: dict[str, Any] | None = kwargs.get(ATTR_DATA)
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        message_id: str | None = None
-        app_title: str | None = None
-        source_name: str | None = None
-        app_icon: str | None = None
-        badge_icon: str | None = None
-        badge_color: str | None = None
-        position: Positions = Positions.TOP_RIGHT
+        message_id: str | None = str(uuid.uuid1())
+        app_title: str | None = DEFAULT_APP_NAME
+        source_name: str | None = DEFAULT_SOURCE_NAME
+        app_icon: str | None = DEFAULT_APP_ICON
+        badge_icon: str | None = DEFAULT_SMALL_ICON
+        badge_color: str | None = COLOR_GREEN
+        position: str = Positions.TOP_RIGHT.value
         duration: str = str(DEFAULT_DURATION)
         image: ImageUrlSource | str | None = None
 
@@ -125,8 +134,8 @@ class TVOverlayNotificationService(BaseNotificationService):
                         data.get(ATTR_BADGE_COLOR),
                     )
             if ATTR_POSITION in data:
-                if data.get(ATTR_POSITION) in Positions:
-                    position = data.get(ATTR_POSITION, Positions.TOP_RIGHT)
+                if data.get(ATTR_POSITION) in [member.value for member in Positions]:
+                    position = data.get(ATTR_POSITION, Positions.TOP_RIGHT.value)
                 else:
                     _LOGGER.warning(
                         "Invalid position value: %s. Has to be one of: %s",
@@ -142,14 +151,17 @@ class TVOverlayNotificationService(BaseNotificationService):
                     )
             if image_data := data.get(ATTR_IMAGE):
                 try:
-                    image = self.populate_image(
-                        url=image_data.get(ATTR_IMAGE_URL),
-                        local_path=image_data.get(ATTR_IMAGE_PATH),
-                        mdi_icon=image_data.get(ATTR_IMAGE_ICON),
-                        username=image_data.get(ATTR_IMAGE_USERNAME),
-                        password=image_data.get(ATTR_IMAGE_PASSWORD),
-                        auth=image_data.get(ATTR_IMAGE_AUTH),
-                    )
+                    if isinstance(image_data, str):
+                        image = image_data
+                    else:
+                        image = self.populate_image(
+                            url=image_data.get(ATTR_IMAGE_URL),
+                            local_path=image_data.get(ATTR_IMAGE_PATH),
+                            mdi_icon=image_data.get(ATTR_IMAGE_ICON),
+                            username=image_data.get(ATTR_IMAGE_USERNAME),
+                            password=image_data.get(ATTR_IMAGE_PASSWORD),
+                            auth=image_data.get(ATTR_IMAGE_AUTH),
+                        )
                 except ValueError:
                     _LOGGER.warning(
                         "Invalid image attributes: %s", data.get(ATTR_IMAGE)
@@ -184,15 +196,23 @@ class TVOverlayNotificationService(BaseNotificationService):
                 return ImageUrlSource(
                     url, username=username, password=password, auth=auth
                 )
+            _LOGGER.warning("'%s' is not  valid http or https url!", local_path)
 
         if local_path is not None:
             # Check whether path is whitelisted in configuration.yaml
             if self.is_allowed_path(local_path):
                 return local_path
+            _LOGGER.warning(
+                "'%s' is not secure to load data. Check 'allowlist_external_dirs' configuration",
+                local_path,
+            )
 
         if mdi_icon is not None:
             if mdi_icon.startswith("mdi:"):
                 return mdi_icon
+            _LOGGER.warning(
+                "'%s' is not a valid mdi icon. mdi:icon-name Expected!", mdi_icon
+            )
 
         _LOGGER.warning(
             "Neither valid URL, local_path or mdi_icon found in image attributes!"
