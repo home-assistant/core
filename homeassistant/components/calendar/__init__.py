@@ -261,7 +261,9 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_LIST_EVENTS: Final = "list_events"
+LEGACY_SERVICE_LIST_EVENTS: Final = "list_events"
+"""Deprecated: please use SERVICE_LIST_EVENTS."""
+SERVICE_LIST_EVENTS: Final = "list_all_events"
 SERVICE_LIST_EVENTS_SCHEMA: Final = vol.All(
     cv.has_at_least_one_key(EVENT_END_DATETIME, EVENT_DURATION),
     cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
@@ -299,6 +301,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         CREATE_EVENT_SCHEMA,
         async_create_event,
         required_features=[CalendarEntityFeature.CREATE_EVENT],
+    )
+    component.async_register_entity_service(
+        LEGACY_SERVICE_LIST_EVENTS,
+        SERVICE_LIST_EVENTS_SCHEMA,
+        async_list_events_service,
+        supports_response=SupportsResponse.ONLY_LEGACY,
     )
     component.async_register_entity_service(
         SERVICE_LIST_EVENTS,

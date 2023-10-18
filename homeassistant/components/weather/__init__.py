@@ -135,7 +135,9 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 ROUNDING_PRECISION = 2
 
-SERVICE_GET_FORECAST: Final = "get_forecast"
+LEGACY_SERVICE_GET_FORECAST: Final = "get_forecast"
+"""Deprecated: please use SERVICE_GET_FORECAST."""
+SERVICE_GET_FORECAST: Final = "get_all_forecast"
 
 _ObservationUpdateCoordinatorT = TypeVar(
     "_ObservationUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
@@ -209,6 +211,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the weather component."""
     component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
+    component.async_register_entity_service(
+        LEGACY_SERVICE_GET_FORECAST,
+        {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))},
+        async_get_forecast_service,
+        required_features=[
+            WeatherEntityFeature.FORECAST_DAILY,
+            WeatherEntityFeature.FORECAST_HOURLY,
+            WeatherEntityFeature.FORECAST_TWICE_DAILY,
+        ],
+        supports_response=SupportsResponse.ONLY_LEGACY,
     )
     component.async_register_entity_service(
         SERVICE_GET_FORECAST,

@@ -1738,8 +1738,24 @@ class SupportsResponse(enum.StrEnum):
     OPTIONAL = "optional"
     """The service optionally returns response data when asked by the caller."""
 
+    OPTIONAL_LEGACY = "optional-legacy"
+    """
+    The service optionally returns response data when asked by the caller.
+
+    The service returns data not keyed by enity_id.
+    Deprecated and scheduled for removal in 2024.6.
+    """
+
     ONLY = "only"
     """The service is read-only and the caller must always ask for response data."""
+
+    ONLY_LEGACY = "only-legacy"
+    """
+    The service is read-only and the caller must always ask for response data.
+
+    The service returns data not keyed by enity_id.
+    Deprecated and scheduled for removal in 2024.6.
+    """
 
 
 class Service:
@@ -1988,7 +2004,10 @@ class ServiceRegistry:
                 raise ValueError(
                     "Invalid argument return_response=True when handler does not support responses"
                 )
-        elif handler.supports_response == SupportsResponse.ONLY:
+        elif handler.supports_response in [
+            SupportsResponse.ONLY,
+            SupportsResponse.ONLY_LEGACY,
+        ]:
             raise ValueError(
                 "Service call requires responses but caller did not ask for responses"
             )
@@ -2039,6 +2058,16 @@ class ServiceRegistry:
             raise HomeAssistantError(
                 f"Service response data expected a dictionary, was {type(response_data)}"
             )
+        if handler.supports_response not in [
+            SupportsResponse.ONLY_LEGACY,
+            SupportsResponse.OPTIONAL_LEGACY,
+        ]:
+            for key in response_data:
+                if not valid_entity_id(key):
+                    raise HomeAssistantError(
+                        f"Service response data has to be keyed by entity_id, was {key}"
+                    )
+
         return response_data
 
     async def _run_service_call_catch_exceptions(

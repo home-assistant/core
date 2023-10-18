@@ -147,6 +147,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             DOMAIN,
             name,
             async_service_handler,
-            supports_response=SupportsResponse.OPTIONAL,
+            supports_response=SupportsResponse.OPTIONAL_LEGACY,
         )
     return True
