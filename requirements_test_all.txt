@@ -218,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.0.4
+aioesphomeapi==18.0.6
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -350,7 +350,7 @@ aiounifi==63
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.3.1
+aiovodafone==0.4.1
 
 # homeassistant.components.waqi
 aiowaqi==2.0.0
