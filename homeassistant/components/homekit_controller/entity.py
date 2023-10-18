@@ -305,35 +305,6 @@ class CharacteristicEntity(BaseCharacteristicEntity):
     the service entity.
     """
 
-    @callback
-    def _async_remove_entity_if_characteristics_disappeared(self) -> bool:
-        """Handle characteristic disappearance."""
-        if (
-            not self._accessory.entity_map.aid(self._aid)
-            .services.iid(self._iid)
-            .get_char_by_iid(self._char.iid)
-        ):
-            self._async_handle_entity_removed()
-            return True
-        return False
-
-    @callback
-    def _async_config_changed(self) -> None:
-        """Handle accessory discovery changes."""
-        if (
-            not self._async_remove_entity_if_accessory_or_service_disappeared()
-            and not self._async_remove_entity_if_characteristics_disappeared()
-        ):
-            super()._async_reconfigure()
-
-
-class CharacteristicEntity(BaseCharacteristicEntity):
-    """A HomeKit entity that is related to an single characteristic rather than a whole service.
-
-    This is typically used to expose additional sensor, binary_sensor or number entities that don't belong with
-    the service entity.
-    """
-
     @property
     def old_unique_id(self) -> str:
         """Return the old ID of this device."""
