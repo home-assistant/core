@@ -8,8 +8,8 @@
   "iot_class": "local_polling",
   "loggers": ["adb_shell", "androidtv", "pure_python_adb"],
   "requirements": [
-    "adb-shell[async]==0.4.3",
-    "androidtv[async]==0.0.70",
+    "adb-shell[async]==0.4.4",
+    "androidtv[async]==0.0.72",
     "pure-python-adb[async]==0.3.0.dev0"
   ]
 }

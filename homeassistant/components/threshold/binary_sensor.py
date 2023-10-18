@@ -183,14 +183,14 @@ class ThresholdSensor(BinarySensorEntity):
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
         self._entity_id = entity_id
-        self._name = name
+        self._attr_name = name
         if lower is not None:
             self._threshold_lower = lower
         if upper is not None:
             self._threshold_upper = upper
         self.threshold_type = _threshold_type(lower, upper)
         self._hysteresis: float = hysteresis
-        self._device_class = device_class
+        self._attr_device_class = device_class
         self._state_position = POSITION_UNKNOWN
         self._state: bool | None = None
         self.sensor_value: float | None = None
@@ -228,19 +228,9 @@ class ThresholdSensor(BinarySensorEntity):
         _update_sensor_state()
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._state
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass | None:
-        """Return the sensor class of the sensor."""
-        return self._device_class
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

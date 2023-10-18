@@ -344,14 +344,20 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
         VERSION = 5
         data = None
         task_one_done = False
+        task_two_done = False
 
         async def async_step_init(self, user_input=None):
-            if not user_input:
-                if not self.task_one_done:
+            if user_input and "task_finished" in user_input:
+                if user_input["task_finished"] == 1:
                     self.task_one_done = True
-                    progress_action = "task_one"
-                else:
-                    progress_action = "task_two"
+                elif user_input["task_finished"] == 2:
+                    self.task_two_done = True
+
+            if not self.task_one_done:
+                progress_action = "task_one"
+            elif not self.task_two_done:
+                progress_action = "task_two"
+            if not self.task_one_done or not self.task_two_done:
                 return self.async_show_progress(
                     step_id="init",
                     progress_action=progress_action,
@@ -376,7 +382,7 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
 
     # Mimic task one done and moving to task two
     # Called by integrations: `hass.config_entries.flow.async_configure(…)`
-    result = await manager.async_configure(result["flow_id"])
+    result = await manager.async_configure(result["flow_id"], {"task_finished": 1})
     assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
     assert result["progress_action"] == "task_two"
 
@@ -388,13 +394,20 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
         "refresh": True,
     }
 
+    # Frontend refreshes the flow
+    result = await manager.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "task_two"
+
     # Mimic task two done and continuing step
     # Called by integrations: `hass.config_entries.flow.async_configure(…)`
-    result = await manager.async_configure(result["flow_id"], {"title": "Hello"})
+    result = await manager.async_configure(
+        result["flow_id"], {"task_finished": 2, "title": "Hello"}
+    )
     assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE
 
     await hass.async_block_till_done()
-    assert len(events) == 2
+    assert len(events) == 2  # 1 for task one and 1 for task two
     assert events[1].data == {
         "handler": "test",
         "flow_id": result["flow_id"],
@@ -405,6 +418,93 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
     result = await manager.async_configure(result["flow_id"])
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Hello"
+
+
+async def test_show_progress_fires_only_when_changed(
+    hass: HomeAssistant, manager
+) -> None:
+    """Test show progress change logic."""
+    manager.hass = hass
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+        data = None
+
+        async def async_step_init(self, user_input=None):
+            if user_input:
+                progress_action = user_input["progress_action"]
+                description_placeholders = user_input["description_placeholders"]
+                return self.async_show_progress(
+                    step_id="init",
+                    progress_action=progress_action,
+                    description_placeholders=description_placeholders,
+                )
+            return self.async_show_progress(step_id="init", progress_action="task_one")
+
+        async def async_step_finish(self, user_input=None):
+            return self.async_create_entry(title=self.data["title"], data=self.data)
+
+    events = async_capture_events(
+        hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED
+    )
+
+    async def test_change(
+        flow_id,
+        events,
+        progress_action,
+        description_placeholders_progress,
+        number_of_events,
+        is_change,
+    ) -> None:
+        # Called by integrations: `hass.config_entries.flow.async_configure(…)`
+        result = await manager.async_configure(
+            flow_id,
+            {
+                "progress_action": progress_action,
+                "description_placeholders": {
+                    "progress": description_placeholders_progress
+                },
+            },
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
+        assert result["progress_action"] == progress_action
+        assert (
+            result["description_placeholders"]["progress"]
+            == description_placeholders_progress
+        )
+
+        await hass.async_block_till_done()
+        assert len(events) == number_of_events
+        if is_change:
+            assert events[number_of_events - 1].data == {
+                "handler": "test",
+                "flow_id": result["flow_id"],
+                "refresh": True,
+            }
+
+    result = await manager.async_init("test")
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "task_one"
+    assert len(manager.async_progress()) == 1
+    assert len(manager.async_progress_by_handler("test")) == 1
+    assert manager.async_get(result["flow_id"])["handler"] == "test"
+
+    # Mimic task one tests
+    await test_change(
+        result["flow_id"], events, "task_one", 0, 1, True
+    )  # change (progress action)
+    await test_change(result["flow_id"], events, "task_one", 0, 1, False)  # no change
+    await test_change(
+        result["flow_id"], events, "task_one", 25, 2, True
+    )  # change (description placeholder)
+    await test_change(
+        result["flow_id"], events, "task_two", 50, 3, True
+    )  # change (progress action and description placeholder)
+    await test_change(result["flow_id"], events, "task_two", 50, 3, False)  # no change
+    await test_change(
+        result["flow_id"], events, "task_two", 100, 4, True
+    )  # change (description placeholder)
 
 
 async def test_abort_flow_exception(manager) -> None:

@@ -32,14 +32,18 @@ from .const import (
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import (
     MqttValueTemplate,
     PayloadSentinel,
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,16 +108,6 @@ class MqttEvent(MqttEntity, EventEntity):
     _attributes_extra_blocked = MQTT_EVENT_ATTRIBUTES_BLOCKED
     _template: Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the sensor."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""
@@ -133,6 +127,7 @@ class MqttEvent(MqttEntity, EventEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"state"})
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             event_attributes: dict[str, Any] = {}
@@ -195,7 +190,6 @@ class MqttEvent(MqttEntity, EventEntity):
                     payload,
                 )
                 return
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         topics["state_topic"] = {
             "topic": self._config[CONF_STATE_TOPIC],

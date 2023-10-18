@@ -6,7 +6,6 @@ from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import aiounifi
-from aiounifi.websocket import WebsocketState
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
@@ -28,7 +27,7 @@ from homeassistant.components.unifi.const import (
     PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
-from homeassistant.components.unifi.controller import RETRY_TIMER, get_unifi_controller
+from homeassistant.components.unifi.controller import get_unifi_controller
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.const import (
     CONF_HOST,
@@ -44,7 +43,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEFAULT_CONFIG_ENTRY_ID = "1"
@@ -365,8 +364,8 @@ async def test_reset_fails(
 async def test_connection_state_signalling(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_unifi_websocket,
     mock_device_registry,
+    websocket_mock,
 ) -> None:
     """Verify connection statesignalling and connection state are working."""
     client = {
@@ -381,21 +380,17 @@ async def test_connection_state_signalling(
     # Controller is connected
     assert hass.states.get("device_tracker.client").state == "home"
 
-    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-    await hass.async_block_till_done()
-
+    await websocket_mock.disconnect()
     # Controller is disconnected
     assert hass.states.get("device_tracker.client").state == "unavailable"
 
-    mock_unifi_websocket(state=WebsocketState.RUNNING)
-    await hass.async_block_till_done()
-
+    await websocket_mock.reconnect()
     # Controller is once again connected
     assert hass.states.get("device_tracker.client").state == "home"
 
 
 async def test_reconnect_mechanism(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
 ) -> None:
     """Verify reconnect prints only on first reconnection try."""
     await setup_unifi_integration(hass, aioclient_mock)
@@ -403,21 +398,13 @@ async def test_reconnect_mechanism(
     aioclient_mock.clear_requests()
     aioclient_mock.get(f"https://{DEFAULT_HOST}:1234/", status=HTTPStatus.BAD_GATEWAY)
 
-    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-    await hass.async_block_till_done()
-
+    await websocket_mock.disconnect()
     assert aioclient_mock.call_count == 0
 
-    new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
-    async_fire_time_changed(hass, new_time)
-    await hass.async_block_till_done()
-
+    await websocket_mock.reconnect(fail=True)
     assert aioclient_mock.call_count == 1
 
-    new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
-    async_fire_time_changed(hass, new_time)
-    await hass.async_block_till_done()
-
+    await websocket_mock.reconnect(fail=True)
     assert aioclient_mock.call_count == 2
 
 
@@ -431,10 +418,7 @@ async def test_reconnect_mechanism(
     ],
 )
 async def test_reconnect_mechanism_exceptions(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    mock_unifi_websocket,
-    exception,
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock, exception
 ) -> None:
     """Verify async_reconnect calls expected methods."""
     await setup_unifi_integration(hass, aioclient_mock)
@@ -442,11 +426,9 @@ async def test_reconnect_mechanism_exceptions(
     with patch("aiounifi.Controller.login", side_effect=exception), patch(
         "homeassistant.components.unifi.controller.UniFiController.reconnect"
     ) as mock_reconnect:
-        mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-        await hass.async_block_till_done()
+        await websocket_mock.disconnect()
 
-        new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
-        async_fire_time_changed(hass, new_time)
+        await websocket_mock.reconnect()
         mock_reconnect.assert_called_once()
 
 

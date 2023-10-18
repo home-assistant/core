@@ -33,11 +33,11 @@ from .core.const import (
     CLUSTER_HANDLER_LEVEL,
     CLUSTER_HANDLER_ON_OFF,
     CLUSTER_HANDLER_SHADE,
-    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
 )
+from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -56,7 +56,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation cover from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.COVER]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.COVER]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -72,7 +73,7 @@ async def async_setup_entry(
 class ZhaCover(ZhaEntity, CoverEntity):
     """Representation of a ZHA cover."""
 
-    _attr_name: str = "Cover"
+    _attr_translation_key: str = "cover"
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Init this sensor."""
@@ -204,7 +205,7 @@ class Shade(ZhaEntity, CoverEntity):
     """ZHA Shade."""
 
     _attr_device_class = CoverDeviceClass.SHADE
-    _attr_name: str = "Shade"
+    _attr_translation_key: str = "shade"
 
     def __init__(
         self,
@@ -312,9 +313,8 @@ class Shade(ZhaEntity, CoverEntity):
 class KeenVent(Shade):
     """Keen vent cover."""
 
-    _attr_name: str = "Keen vent"
-
     _attr_device_class = CoverDeviceClass.DAMPER
+    _attr_translation_key: str = "keen_vent"
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

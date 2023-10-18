@@ -65,6 +65,7 @@ class Life360Member:
     at_loc_since: datetime
     battery_charging: bool
     battery_level: int
+    circle_id: str
     driving: bool
     entity_picture: str
     gps_accuracy: int
@@ -117,6 +118,10 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
         except Life360Error as exc:
             LOGGER.debug("%s: %s", exc.__class__.__name__, exc)
             raise UpdateFailed(exc) from exc
+
+    async def update_location(self, circle_id: str, member_id: str) -> None:
+        """Update location for given Circle and Member."""
+        await self._retrieve_data("update_location", circle_id, member_id)
 
     async def _async_update_data(self) -> Life360Data:
         """Get & process data from Life360."""
@@ -214,6 +219,7 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
                     dt_util.utc_from_timestamp(int(loc["since"])),
                     bool(int(loc["charge"])),
                     int(float(loc["battery"])),
+                    circle_id,
                     bool(int(loc["isDriving"])),
                     member["avatar"],
                     # Life360 reports accuracy in feet, but Device Tracker expects

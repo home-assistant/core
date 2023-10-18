@@ -18,7 +18,7 @@
     },
     "deprecated_climate_aux_property": {
       "title": "MQTT entities with auxiliary heat support found",
-      "description": "Entity `{entity_id}` has auxiliary heat support enabled, which has been deprecated for MQTT climate devices. Please adjust your configuration and remove deperated config options from your configration and restart HA to fix this issue."
+      "description": "Entity `{entity_id}` has auxiliary heat support enabled, which has been deprecated for MQTT climate devices. Please adjust your configuration and remove deprecated config options from your configuration and restart Home Assistant to fix this issue."
     }
   },
   "config": {

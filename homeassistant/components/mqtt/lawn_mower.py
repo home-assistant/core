@@ -32,7 +32,12 @@ from .const import (
     DEFAULT_RETAIN,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -40,7 +45,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,19 +118,6 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
     _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
     _command_topics: dict[str, str]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
-    _optimistic: bool = False
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT lawn mower."""
-        self._attr_current_option = None
-        LawnMowerEntity.__init__(self)
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -134,7 +126,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._optimistic = config[CONF_OPTIMISTIC]
+        self._attr_assumed_state = config[CONF_OPTIMISTIC]
 
         self._value_template = MqttValueTemplate(
             config.get(CONF_ACTIVITY_VALUE_TEMPLATE), entity=self
@@ -169,6 +161,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_activity"})
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             payload = str(self._value_template(msg.payload))
@@ -181,7 +174,6 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
                 return
             if payload.lower() == "none":
                 self._attr_activity = None
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
 
             try:
@@ -194,11 +186,10 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
                     [option.value for option in LawnMowerActivity],
                 )
                 return
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_ACTIVITY_STATE_TOPIC) is None:
             # Force into optimistic mode.
-            self._optimistic = True
+            self._attr_assumed_state = True
         else:
             self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
@@ -217,19 +208,16 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
-        if self._optimistic and (last_state := await self.async_get_last_state()):
+        if self._attr_assumed_state and (
+            last_state := await self.async_get_last_state()
+        ):
             with contextlib.suppress(ValueError):
                 self._attr_activity = LawnMowerActivity(last_state.state)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     async def _async_operate(self, option: str, activity: LawnMowerActivity) -> None:
         """Execute operation."""
         payload = self._command_templates[option](option)
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._attr_activity = activity
             self.async_write_ha_state()
 

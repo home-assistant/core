@@ -35,6 +35,7 @@ from .core.const import (
 from .radio_manager import (
     HARDWARE_DISCOVERY_SCHEMA,
     RECOMMENDED_RADIOS,
+    ProbeResult,
     ZhaRadioManager,
 )
 
@@ -59,6 +60,8 @@ OPTIONS_INTENT_MIGRATE = "intent_migrate"
 OPTIONS_INTENT_RECONFIGURE = "intent_reconfigure"
 
 UPLOADED_BACKUP_FILE = "uploaded_backup_file"
+
+REPAIR_MY_URL = "https://my.home-assistant.io/redirect/repairs/"
 
 DEFAULT_ZHA_ZEROCONF_PORT = 6638
 ESPHOME_API_PORT = 6053
@@ -187,7 +190,13 @@ class BaseZhaFlow(FlowHandler):
             port = ports[list_of_ports.index(user_selection)]
             self._radio_mgr.device_path = port.device
 
-            if not await self._radio_mgr.detect_radio_type():
+            probe_result = await self._radio_mgr.detect_radio_type()
+            if probe_result == ProbeResult.WRONG_FIRMWARE_INSTALLED:
+                return self.async_abort(
+                    reason="wrong_firmware_installed",
+                    description_placeholders={"repair_url": REPAIR_MY_URL},
+                )
+            if probe_result == ProbeResult.PROBING_FAILED:
                 # Did not autodetect anything, proceed to manual selection
                 return await self.async_step_manual_pick_radio_type()
 
@@ -530,10 +539,17 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         # config flow logic that interacts with hardware.
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             # Probe the radio type if we don't have one yet
-            if (
-                self._radio_mgr.radio_type is None
-                and not await self._radio_mgr.detect_radio_type()
-            ):
+            if self._radio_mgr.radio_type is None:
+                probe_result = await self._radio_mgr.detect_radio_type()
+            else:
+                probe_result = ProbeResult.RADIO_TYPE_DETECTED
+
+            if probe_result == ProbeResult.WRONG_FIRMWARE_INSTALLED:
+                return self.async_abort(
+                    reason="wrong_firmware_installed",
+                    description_placeholders={"repair_url": REPAIR_MY_URL},
+                )
+            if probe_result == ProbeResult.PROBING_FAILED:
                 # This path probably will not happen now that we have
                 # more precise USB matching unless there is a problem
                 # with the device

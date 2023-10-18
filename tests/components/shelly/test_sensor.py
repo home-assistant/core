@@ -408,3 +408,43 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "22.9"
+
+
+async def test_rpc_em1_sensors(
+    hass: HomeAssistant, mock_rpc_device, entity_registry_enabled_by_default: None
+) -> None:
+    """Test RPC sensors for EM1 component."""
+    registry = async_get(hass)
+    await init_integration(hass, 2)
+
+    state = hass.states.get("sensor.test_name_em0_power")
+    assert state
+    assert state.state == "85.3"
+
+    entry = registry.async_get("sensor.test_name_em0_power")
+    assert entry
+    assert entry.unique_id == "123456789ABC-em1:0-power_em1"
+
+    state = hass.states.get("sensor.test_name_em1_power")
+    assert state
+    assert state.state == "123.3"
+
+    entry = registry.async_get("sensor.test_name_em1_power")
+    assert entry
+    assert entry.unique_id == "123456789ABC-em1:1-power_em1"
+
+    state = hass.states.get("sensor.test_name_em0_total_active_energy")
+    assert state
+    assert state.state == "123.4564"
+
+    entry = registry.async_get("sensor.test_name_em0_total_active_energy")
+    assert entry
+    assert entry.unique_id == "123456789ABC-em1data:0-total_act_energy"
+
+    state = hass.states.get("sensor.test_name_em1_total_active_energy")
+    assert state
+    assert state.state == "987.6543"
+
+    entry = registry.async_get("sensor.test_name_em1_total_active_energy")
+    assert entry
+    assert entry.unique_id == "123456789ABC-em1data:1-total_act_energy"

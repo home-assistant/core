@@ -1,47 +1,17 @@
 """Sensors flow for Withings."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
-from withings_api.common import NotifyAppli
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
-    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import (
-    BaseWithingsSensor,
-    UpdateType,
-    WithingsEntityDescription,
-    async_get_data_manager,
-)
-from .const import Measurement
-
-
-@dataclass
-class WithingsBinarySensorEntityDescription(
-    BinarySensorEntityDescription, WithingsEntityDescription
-):
-    """Immutable class for describing withings binary sensor data."""
-
-
-BINARY_SENSORS = [
-    # Webhook measurements.
-    WithingsBinarySensorEntityDescription(
-        key=Measurement.IN_BED.value,
-        measurement=Measurement.IN_BED,
-        measure_type=NotifyAppli.BED_IN,
-        name="In bed",
-        icon="mdi:bed",
-        update_type=UpdateType.WEBHOOK,
-        device_class=BinarySensorDeviceClass.OCCUPANCY,
-    ),
-]
+from .const import BED_PRESENCE_COORDINATOR, DOMAIN
+from .coordinator import WithingsBedPresenceDataUpdateCoordinator
+from .entity import WithingsEntity
 
 
 async def async_setup_entry(
@@ -50,22 +20,28 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    data_manager = await async_get_data_manager(hass, entry)
+    coordinator: WithingsBedPresenceDataUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ][BED_PRESENCE_COORDINATOR]
 
-    entities = [
-        WithingsHealthBinarySensor(data_manager, attribute)
-        for attribute in BINARY_SENSORS
-    ]
+    entities = [WithingsBinarySensor(coordinator)]
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
-class WithingsHealthBinarySensor(BaseWithingsSensor, BinarySensorEntity):
+class WithingsBinarySensor(WithingsEntity, BinarySensorEntity):
     """Implementation of a Withings sensor."""
 
-    entity_description: WithingsBinarySensorEntityDescription
+    _attr_icon = "mdi:bed"
+    _attr_translation_key = "in_bed"
+    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
+    coordinator: WithingsBedPresenceDataUpdateCoordinator
+
+    def __init__(self, coordinator: WithingsBedPresenceDataUpdateCoordinator) -> None:
+        """Initialize binary sensor."""
+        super().__init__(coordinator, "in_bed")
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self._state_data
+        return self.coordinator.in_bed

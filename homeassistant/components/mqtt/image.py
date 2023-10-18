@@ -6,7 +6,7 @@ import binascii
 from collections.abc import Callable
 import functools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 import voluptuous as vol
@@ -172,7 +172,8 @@ class MqttImage(MqttEntity, ImageEntity):
                 if CONF_IMAGE_ENCODING in self._config:
                     self._last_image = b64decode(msg.payload)
                 else:
-                    assert isinstance(msg.payload, bytes)
+                    if TYPE_CHECKING:
+                        assert isinstance(msg.payload, bytes)
                     self._last_image = msg.payload
             except (binascii.Error, ValueError, AssertionError) as err:
                 _LOGGER.error(

@@ -110,14 +110,14 @@ class SongpalEntity(MediaPlayerEntity):
         self._model = None
 
         self._state = False
-        self._available = False
+        self._attr_available = False
         self._initialized = False
 
         self._volume_control = None
         self._volume_min = 0
         self._volume_max = 1
         self._volume = 0
-        self._is_muted = False
+        self._attr_is_volume_muted = False
 
         self._active_source = None
         self._sources = {}
@@ -137,7 +137,7 @@ class SongpalEntity(MediaPlayerEntity):
         async def _volume_changed(volume: VolumeChange):
             _LOGGER.debug("Volume changed: %s", volume)
             self._volume = volume.volume
-            self._is_muted = volume.mute
+            self._attr_is_volume_muted = volume.mute
             self.async_write_ha_state()
 
         async def _source_changed(content: ContentChange):
@@ -161,13 +161,13 @@ class SongpalEntity(MediaPlayerEntity):
                 self._dev.endpoint,
             )
             _LOGGER.debug("Disconnected: %s", connect.exception)
-            self._available = False
+            self._attr_available = False
             self.async_write_ha_state()
 
             # Try to reconnect forever, a successful reconnect will initialize
             # the websocket connection again.
             delay = INITIAL_RETRY_DELAY
-            while not self._available:
+            while not self._attr_available:
                 _LOGGER.debug("Trying to reconnect in %s seconds", delay)
                 await asyncio.sleep(delay)
 
@@ -220,11 +220,6 @@ class SongpalEntity(MediaPlayerEntity):
             sw_version=self._sysinfo.version,
         )
 
-    @property
-    def available(self):
-        """Return availability of the device."""
-        return self._available
-
     async def async_set_sound_setting(self, name, value):
         """Change a setting on the device."""
         _LOGGER.debug("Calling set_sound_setting with %s: %s", name, value)
@@ -243,7 +238,7 @@ class SongpalEntity(MediaPlayerEntity):
             volumes = await self._dev.get_volume_information()
             if not volumes:
                 _LOGGER.error("Got no volume controls, bailing out")
-                self._available = False
+                self._attr_available = False
                 return
 
             if len(volumes) > 1:
@@ -256,7 +251,7 @@ class SongpalEntity(MediaPlayerEntity):
             self._volume_min = volume.minVolume
             self._volume = volume.volume
             self._volume_control = volume
-            self._is_muted = self._volume_control.is_muted
+            self._attr_is_volume_muted = self._volume_control.is_muted
 
             status = await self._dev.get_power()
             self._state = status.status
@@ -273,11 +268,11 @@ class SongpalEntity(MediaPlayerEntity):
 
             _LOGGER.debug("Active source: %s", self._active_source)
 
-            self._available = True
+            self._attr_available = True
 
         except SongpalException as ex:
             _LOGGER.error("Unable to update: %s", ex)
-            self._available = False
+            self._attr_available = False
 
     async def async_select_source(self, source: str) -> None:
         """Select source."""
@@ -309,8 +304,7 @@ class SongpalEntity(MediaPlayerEntity):
     @property
     def volume_level(self):
         """Return volume level."""
-        volume = self._volume / self._volume_max
-        return volume
+        return self._volume / self._volume_max
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
@@ -354,8 +348,3 @@ class SongpalEntity(MediaPlayerEntity):
         """Mute or unmute the device."""
         _LOGGER.debug("Set mute: %s", mute)
         return await self._volume_control.set_mute(mute)
-
-    @property
-    def is_volume_muted(self):
-        """Return whether the device is muted."""
-        return self._is_muted
