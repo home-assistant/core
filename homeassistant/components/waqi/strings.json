@@ -78,6 +78,7 @@
         "name": "Dominant pollutant",
         "state": {
           "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "neph": "Nephelometry",
           "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
           "o3": "[%key:component::sensor::entity_component::ozone::name%]",
           "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
