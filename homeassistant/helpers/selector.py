@@ -102,6 +102,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.todo import TodoListEntityFeature
     from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
+    from homeassistant.components.valve import ValveEntityFeature
     from homeassistant.components.water_heater import WaterHeaterEntityFeature
     from homeassistant.components.weather import WeatherEntityFeature
 
@@ -122,6 +123,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "TodoListEntityFeature": TodoListEntityFeature,
         "UpdateEntityFeature": UpdateEntityFeature,
         "VacuumEntityFeature": VacuumEntityFeature,
+        "ValveEntityFeature": ValveEntityFeature,
         "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
         "WeatherEntityFeature": WeatherEntityFeature,
     }

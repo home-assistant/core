@@ -58,6 +58,7 @@ class Platform(StrEnum):
     TODO = "todo"
     TTS = "tts"
     VACUUM = "vacuum"
+    VALVE = "valve"
     UPDATE = "update"
     WAKE_WORD = "wake_word"
     WATER_HEATER = "water_heater"
