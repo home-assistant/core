@@ -37,7 +37,7 @@ class MyPermobilCoordinator(DataUpdateCoordinator[MyPermobilData]):
             hass,
             _LOGGER,
             name="permobil",
-            update_interval=timedelta(seconds=50),
+            update_interval=timedelta(minutes=5),
         )
         self.p_api = p_api
 

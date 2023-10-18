@@ -55,7 +55,7 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Invoke when a user initiates a flow via the user interface."""
         errors: dict[str, str] = {}
 
-        if user_input is not None:
+        if user_input:
             try:
                 self.p_api.set_email(user_input[CONF_EMAIL])
             except MyPermobilClientException:
@@ -79,7 +79,7 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Invoke when a user initiates a flow via the user interface."""
         errors: dict[str, str] = {}
-        if user_input is None:
+        if not user_input:
             # fetch the list of regions names and urls from the api
             # for the user to select from.
             try:
@@ -105,7 +105,7 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Error requesting code")
                 errors["base"] = "code_request_error"
 
-        if errors or user_input is None:
+        if errors or not user_input:
             # the error could either be that the fetch region did not pass
             # or that the request application code failed
             schema = vol.Schema(
@@ -130,21 +130,20 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Second step in config flow to enter the email code."""
         errors: dict[str, str] = {}
 
-        try:
-            if user_input is not None:
+        if user_input:
+            try:
                 self.p_api.set_code(user_input[CONF_CODE])
                 self.data.update(user_input)
                 token, ttl = await self.p_api.request_application_token()
                 self.data[CONF_TOKEN] = token
                 self.data[CONF_TTL] = ttl
-                _LOGGER.debug("Success")
-        except (MyPermobilAPIException, MyPermobilClientException):
-            # the code did not pass validation by the api client
-            # or the backend returned an error when trying to validate the code
-            _LOGGER.exception("Error verifying code")
-            errors["base"] = "invalid_code"
+            except (MyPermobilAPIException, MyPermobilClientException):
+                # the code did not pass validation by the api client
+                # or the backend returned an error when trying to validate the code
+                _LOGGER.exception("Error verifying code")
+                errors["base"] = "invalid_code"
 
-        if errors or user_input is None:
+        if errors or not user_input:
             return self.async_show_form(
                 step_id="email_code", data_schema=GET_TOKEN_SCHEMA, errors=errors
             )
@@ -160,16 +159,15 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if reauth_entry:
-            email: str = reauth_entry.data[CONF_EMAIL]
-            region: str = reauth_entry.data[CONF_REGION]
-            self.p_api.set_email(email)
-            self.p_api.set_region(region)
-            self.data = {
-                CONF_EMAIL: email,
-                CONF_REGION: region,
-            }
-
             try:
+                email: str = reauth_entry.data[CONF_EMAIL]
+                region: str = reauth_entry.data[CONF_REGION]
+                self.p_api.set_email(email)
+                self.p_api.set_region(region)
+                self.data = {
+                    CONF_EMAIL: email,
+                    CONF_REGION: region,
+                }
                 await self.p_api.request_application_code()
             except MyPermobilAPIException:
                 _LOGGER.exception("Error requesting code")
