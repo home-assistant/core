@@ -17,7 +17,6 @@ MODEL_GS3_MP: Final = "GS3 MP"
 MODEL_LM: Final = "Linea Mini"
 MODEL_LMU: Final = "Micra"
 
-DATE_RECEIVED: Final = "date_received"
 BREW_ACTIVE: Final = "brew_active"
 
 GLOBAL: Final = "global"

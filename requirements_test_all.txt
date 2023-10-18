@@ -897,7 +897,7 @@ libsoundtouch==0.8
 life360==6.0.0
 
 # homeassistant.components.lamarzocco
-lmcloud==0.3.36b3
+lmcloud==0.3.36
 
 # homeassistant.components.logi_circle
 logi-circle==0.2.3
