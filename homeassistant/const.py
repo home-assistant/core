@@ -293,6 +293,13 @@ EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: Final = "state_changed"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
+EVENT_PANELS_UPDATED: Final = "panels_updated"
+EVENT_LOVELACE_UPDATED: Final = "lovelace_updated"
+EVENT_RECORDER_5MIN_STATISTICS_GENERATED: Final = "recorder_5min_statistics_generated"
+EVENT_RECORDER_HOURLY_STATISTICS_GENERATED: Final = (
+    "recorder_hourly_statistics_generated"
+)
+EVENT_SHOPPING_LIST_UPDATED: Final = "shopping_list_updated"
 
 # #### DEVICE CLASSES ####
 # DEVICE_CLASS_* below are deprecated as of 2021.12

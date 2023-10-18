@@ -122,6 +122,29 @@ async def test_invalid_json(
         assert not mock_dispatcher_send.called
 
 
+@pytest.mark.parametrize("domain", [*list(mqtt.PLATFORMS), "device_automation", "tag"])
+@pytest.mark.no_fail_on_log_exception
+async def test_discovery_schema_error(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    domain: Platform | str,
+) -> None:
+    """Test unexpected error JSON config."""
+    with patch(
+        f"homeassistant.components.mqtt.{domain}.DISCOVERY_SCHEMA",
+        side_effect=AttributeError("Attribute abc not found"),
+    ):
+        await mqtt_mock_entry()
+        async_fire_mqtt_message(
+            hass,
+            f"homeassistant/{domain}/bla/config",
+            '{"name": "Beer", "some_topic": "bla"}',
+        )
+        await hass.async_block_till_done()
+        assert "AttributeError: Attribute abc not found" in caplog.text
+
+
 async def test_only_valid_components(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,

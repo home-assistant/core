@@ -106,7 +106,7 @@ async def test_controller_flow(
 
 @pytest.mark.parametrize(
     (
-        "unique_id",
+        "config_entry_unique_id",
         "config_entry_data",
         "config_flow_responses",
         "expected_config_entry",
@@ -154,7 +154,7 @@ async def test_multiple_config_entries(
 
 @pytest.mark.parametrize(
     (
-        "unique_id",
+        "config_entry_unique_id",
         "config_entry_data",
         "config_flow_responses",
     ),

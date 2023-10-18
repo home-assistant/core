@@ -9,6 +9,8 @@ from homeassistant.components.assist_pipeline.pipeline import Pipeline, Pipeline
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
+from .conftest import MockWakeWordEntity
+
 from tests.typing import WebSocketGenerator
 
 
@@ -266,7 +268,7 @@ async def test_audio_pipeline_with_wake_word_no_timeout(
     events.append(msg["event"])
 
     # "audio"
-    await client.send_bytes(bytes([1]) + b"wake word")
+    await client.send_bytes(bytes([handler_id]) + b"wake word")
 
     msg = await client.receive_json()
     assert msg["event"]["type"] == "wake_word-end"
@@ -1805,3 +1807,84 @@ async def test_audio_pipeline_with_enhancements(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"events": events}
+
+
+async def test_wake_word_cooldown(
+    hass: HomeAssistant,
+    init_components,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that duplicate wake word detections are blocked during the cooldown period."""
+    client_1 = await hass_ws_client(hass)
+    client_2 = await hass_ws_client(hass)
+
+    await client_1.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "wake_word",
+            "end_stage": "tts",
+            "input": {
+                "sample_rate": 16000,
+                "no_vad": True,
+                "no_chunking": True,
+            },
+        }
+    )
+
+    await client_2.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "wake_word",
+            "end_stage": "tts",
+            "input": {
+                "sample_rate": 16000,
+                "no_vad": True,
+                "no_chunking": True,
+            },
+        }
+    )
+
+    # result
+    msg = await client_1.receive_json()
+    assert msg["success"], msg
+
+    msg = await client_2.receive_json()
+    assert msg["success"], msg
+
+    # run start
+    msg = await client_1.receive_json()
+    assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
+    handler_id_1 = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
+    assert msg["event"]["data"] == snapshot
+
+    msg = await client_2.receive_json()
+    assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
+    handler_id_2 = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
+    assert msg["event"]["data"] == snapshot
+
+    # wake_word
+    msg = await client_1.receive_json()
+    assert msg["event"]["type"] == "wake_word-start"
+    assert msg["event"]["data"] == snapshot
+
+    msg = await client_2.receive_json()
+    assert msg["event"]["type"] == "wake_word-start"
+    assert msg["event"]["data"] == snapshot
+
+    # Wake both up at the same time
+    await client_1.send_bytes(bytes([handler_id_1]) + b"wake word")
+    await client_2.send_bytes(bytes([handler_id_2]) + b"wake word")
+
+    # Get response events
+    msg = await client_1.receive_json()
+    event_type_1 = msg["event"]["type"]
+
+    msg = await client_2.receive_json()
+    event_type_2 = msg["event"]["type"]
+
+    # One should be a wake up, one should be an error
+    assert {event_type_1, event_type_2} == {"wake_word-end", "error"}
