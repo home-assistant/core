@@ -40,7 +40,6 @@ class ComelitSwitchEntity(CoordinatorEntity[ComelitSerialBridge], SwitchEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_device_class = SwitchDeviceClass.OUTLET
 
     def __init__(
         self,
@@ -54,6 +53,8 @@ class ComelitSwitchEntity(CoordinatorEntity[ComelitSerialBridge], SwitchEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
         self._attr_device_info = self.coordinator.platform_device_info(device)
+        if device.type == OTHER:
+            self._attr_device_class = SwitchDeviceClass.OUTLET
 
     async def _switch_set_state(self, state: int) -> None:
         """Set desired light state."""
