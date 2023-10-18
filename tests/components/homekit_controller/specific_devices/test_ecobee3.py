@@ -300,9 +300,10 @@ async def test_ecobee3_remove_sensors_at_runtime(hass: HomeAssistant) -> None:
     occ3 = entity_registry.async_get("binary_sensor.basement")
     assert occ3.unique_id == "00:00:00:00:00:00_4_56"
 
-    # Currently it is not possible to add the entities back once
-    # they are removed because _add_new_entities has a guard to prevent
-    # the same entity from being added twice.
+    # Ensure the sensors are back
+    assert hass.states.get("binary_sensor.kitchen") is not None
+    assert hass.states.get("binary_sensor.porch") is not None
+    assert hass.states.get("binary_sensor.basement") is not None
 
 
 async def test_ecobee3_services_and_chars_removed(
