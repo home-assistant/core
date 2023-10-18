@@ -5,6 +5,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 import logging
 
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
@@ -18,6 +19,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -100,6 +102,16 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ),
 )
 
+STATUS_SENSOR: ViCareBinarySensorEntityDescription = (
+    ViCareBinarySensorEntityDescription(
+        key="status",
+        name="Status",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.isOnline(),
+    )
+)
+
 
 def _build_entity(
     name: str, vicare_api, device_config, sensor: ViCareBinarySensorEntityDescription
@@ -157,12 +169,36 @@ async def async_setup_entry(
 
     entities = []
 
+    device_config: PyViCareDeviceConfig = hass.data[DOMAIN][config_entry.entry_id][
+        VICARE_DEVICE_CONFIG
+    ]
+    is_supported: bool = False
+
+    try:
+        await hass.async_add_executor_job(STATUS_SENSOR.value_getter, device_config)
+        is_supported = True
+        _LOGGER.debug("Found entity %s", STATUS_SENSOR.name)
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.info("Feature not supported %s", STATUS_SENSOR.name)
+    except AttributeError:
+        _LOGGER.debug("Attribute Error %s", STATUS_SENSOR.name)
+
+    if is_supported:
+        async_add_entities(
+            [
+                ViCareStatusBinarySensor(
+                    device_config,
+                    STATUS_SENSOR,
+                )
+            ]
+        )
+
     for description in GLOBAL_SENSORS:
         entity = await hass.async_add_executor_job(
             _build_entity,
             description.name,
             api,
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+            device_config,
             description,
         )
         if entity is not None:
@@ -235,3 +271,22 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
             _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+
+
+class ViCareStatusBinarySensor(ViCareBinarySensor):
+    """Representation of a ViCare status binary sensor."""
+
+    _attr_is_on: bool = False
+
+    def __init__(
+        self,
+        device_config: PyViCareDeviceConfig,
+        description: ViCareBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(description.name, device_config, device_config, description)
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return True
