@@ -9,7 +9,8 @@ import os
 from typing import Any
 
 from PyViCare.PyViCare import PyViCare
-from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareDevice import Device as PyViCareDevice
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
@@ -34,15 +35,15 @@ _TOKEN_FILENAME = "vicare_token.save"
 class ViCareRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_getter: Callable[[Device], bool]
+    value_getter: Callable[[PyViCareDevice], bool]
 
 
 @dataclass()
 class ViCareRequiredKeysMixinWithSet:
     """Mixin for required keys with setter."""
 
-    value_getter: Callable[[Device], bool]
-    value_setter: Callable[[Device], bool]
+    value_getter: Callable[[PyViCareDevice], bool]
+    value_setter: Callable[[PyViCareDevice], bool]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -83,7 +84,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG_LIST] = vicare_api.devices
 
-def get_api(entry: ConfigEntry, device: PyViCareDeviceConfig) -> Device:
+def get_api(entry: ConfigEntry, device: PyViCareDeviceConfig) -> PyViCareDevice:
     """Get API for device."""
     return getattr(
         device,
