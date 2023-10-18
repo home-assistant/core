@@ -1330,6 +1330,7 @@ async def test_services_call_return_response_requires_blocking(
         (None, "expected a dictionary"),
         ("some-value", "expected a dictionary"),
         (["some-list"], "expected a dictionary"),
+        ({"not-an-entity-id": {"valid": "valid"}}, "has to be keyed by entity_id"),
     ],
 )
 async def test_serviceregistry_return_response_invalid(

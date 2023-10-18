@@ -783,6 +783,29 @@ def _get_permissible_entity_candidates(
     ]
 
 
+async def legacy_entity_service_call(
+    hass: HomeAssistant,
+    platforms: Iterable[EntityPlatform],
+    func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
+    call: ServiceCall,
+    required_features: Iterable[int] | None = None,
+) -> ServiceResponse | None:
+    """Handle an legacy entity service call.
+
+    Removes the entity_id key and directly reports the results.
+    """
+
+    results_by_entites = await entity_service_call(
+        hass, platforms, func, call, required_features
+    )
+    assert results_by_entites is not None
+
+    if len(results_by_entites) > 1:
+        raise HomeAssistantError("Deprecated service call matched more than one entity")
+
+    return results_by_entites.popitem()[1]  # type: ignore[return-value]
+
+
 @bind_hass
 async def entity_service_call(
     hass: HomeAssistant,
