@@ -1646,11 +1646,16 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Aqara Hub-1563 Lightbulb-1563',
+              'hs_color': None,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.aqara_hub_1563_lightbulb_1563',
             'state': 'off',
@@ -2027,11 +2032,16 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'ArloBabyA0 Nightlight',
+              'hs_color': None,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.arlobabya0_nightlight',
             'state': 'off',
@@ -7231,15 +7241,22 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
+              'hs_color': None,
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
               'min_mireds': 153,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.hue_ambiance_candle_4',
             'state': 'off',
@@ -7348,15 +7365,22 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
+              'hs_color': None,
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
               'min_mireds': 153,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.hue_ambiance_candle_3',
             'state': 'off',
@@ -7465,15 +7489,22 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
+              'hs_color': None,
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
               'min_mireds': 153,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.hue_ambiance_candle_2',
             'state': 'off',
@@ -7582,15 +7613,22 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
+              'hs_color': None,
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
               'min_mireds': 153,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.hue_ambiance_candle',
             'state': 'off',
@@ -8250,6 +8288,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -8359,6 +8399,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -8468,6 +8510,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -8577,6 +8621,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -8686,6 +8732,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -8795,6 +8843,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -8904,6 +8954,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Hue white lamp',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -9082,11 +9134,16 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Koogeek-LS1-20833F Light Strip',
+              'hs_color': None,
+              'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
             }),
             'entity_id': 'light.koogeek_ls1_20833f_light_strip',
             'state': 'off',
@@ -10544,6 +10601,8 @@
           }),
           'state': dict({
             'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
               'friendly_name': 'Mysa-85dda9 Display',
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -10828,6 +10887,8 @@
             'attributes': dict({
               'brightness': 255.0,
               'color_mode': <ColorMode.HS: 'hs'>,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'Nanoleaf Strip 3B32 Nanoleaf Light Strip',
               'hs_color': tuple(
                 30.0,
