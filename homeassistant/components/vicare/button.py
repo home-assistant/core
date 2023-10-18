@@ -56,7 +56,7 @@ def _build_entity(
 ):
     """Create a ViCare button entity."""
     _LOGGER.debug("Found device %s", name)
-    if is_supported(vicare_api, entity_description, name):
+    if is_supported(name, entity_description, vicare_api):
         return ViCareButton(
             name,
             vicare_api,

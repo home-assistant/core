@@ -583,7 +583,7 @@ def _build_entity(
 ):
     """Create a ViCare sensor entity."""
     _LOGGER.debug("Found device %s", name)
-    if is_supported(vicare_api, entity_description, name):
+    if is_supported(name, entity_description, vicare_api):
         return ViCareSensor(
             name,
             vicare_api,

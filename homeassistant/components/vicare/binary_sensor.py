@@ -110,7 +110,7 @@ def _build_entity(
     entity_description: ViCareBinarySensorEntityDescription,
 ):
     """Create a ViCare binary sensor entity."""
-    if is_supported(vicare_api, entity_description, name):
+    if is_supported(name, entity_description, vicare_api):
         return ViCareBinarySensor(
             name,
             vicare_api,

@@ -9,9 +9,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_supported(
-    vicare_device,
-    entity_description: ViCareRequiredKeysMixin,
     name: str,
+    entity_description: ViCareRequiredKeysMixin,
+    vicare_device,
 ) -> bool:
     """Check if the PyViCare device supports the requested sensor."""
     try:
