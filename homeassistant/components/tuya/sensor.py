@@ -742,6 +742,12 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/dlq?id=Kb0kidk9enyh8
     "dlq": (
         TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_FORWARD_ENERGY,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
             key=DPCode.FORWARD_ENERGY_TOTAL,
             translation_key="total_energy",
             device_class=SensorDeviceClass.ENERGY,
