@@ -29,8 +29,7 @@ async def async_setup_entry(
     async_add_entities(
         ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
         for device in (
-            coordinator.data[OTHER].values(),
-            coordinator.data[IRRIGATION].values(),
+            coordinator.data[OTHER].values() + coordinator.data[IRRIGATION].values()
         )
     )
 
