@@ -15,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import CONTROLLER, DOMAIN
 from .controller import ZimiController
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -42,9 +44,8 @@ class ZimiSwitch(SwitchEntity):
     def __init__(self, switch, debug=False) -> None:
         """Initialize an ZimiSwitch."""
 
-        self.logger = logging.getLogger(__name__)
         if debug:
-            self.logger.setLevel(logging.DEBUG)
+            _LOGGER.setLevel(logging.DEBUG)
 
         self._attr_unique_id = switch.identifier
         self._attr_device_class = SwitchDeviceClass.SWITCH
@@ -59,7 +60,7 @@ class ZimiSwitch(SwitchEntity):
             suggested_area=self._switch.room,
         )
         self.update()
-        self.logger.debug("__init__(%s) in %s", self.name, self._switch.room)
+        _LOGGER.debug("Initialising %s in %s", self.name, self._switch.room)
 
     def __del__(self):
         """Cleanup ZimiSwitchwith removal of notification."""
@@ -83,20 +84,20 @@ class ZimiSwitch(SwitchEntity):
     def notify(self, _observable):
         """Receive notification from switch device that state has changed."""
 
-        self.logger.debug("notification() for %s received", self.name)
+        _LOGGER.debug("Received notification for %s", self.name)
         self.schedule_update_ha_state(force_refresh=True)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
 
-        self.logger.debug("turn_on() for %s", self.name)
+        _LOGGER.debug("Sending turn_on() for %s", self.name)
 
         await self._switch.turn_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
 
-        self.logger.debug("turn_off() for %s", self.name)
+        _LOGGER.debug("Sending turn_off() for %s", self.name)
 
         await self._switch.turn_off()
 
@@ -106,5 +107,3 @@ class ZimiSwitch(SwitchEntity):
         self._name = self._switch.name
         self._state = self._switch.is_on
         self._attr_is_on = self._switch.is_on
-
-        # self.logger.debug("update(%s) with state=%s", self.name, self._state)

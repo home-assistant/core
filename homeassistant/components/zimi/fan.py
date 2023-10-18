@@ -21,6 +21,8 @@ from homeassistant.util.percentage import (
 from .const import CONTROLLER, DOMAIN
 from .controller import ZimiController
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -48,9 +50,8 @@ class ZimiFan(FanEntity):
     def __init__(self, fan, debug=False) -> None:
         """Initialize an ZimiFan."""
 
-        self.logger = logging.getLogger(__name__)
         if debug:
-            self.logger.setLevel(logging.DEBUG)
+            _LOGGER.setLevel(logging.DEBUG)
 
         self._attr_unique_id = fan.identifier
         self._attr_should_poll = False
@@ -64,7 +65,7 @@ class ZimiFan(FanEntity):
         )
         self._speed = self._fan.fanspeed
         self.update()
-        self.logger.debug("__init__(%s) in %s", self.name, self._fan.room)
+        _LOGGER.debug("Initialised %s in %s", self.name, self._fan.room)
 
     def __del__(self):
         """Cleanup ZimiCover with removal of notification."""
@@ -72,7 +73,7 @@ class ZimiFan(FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the desired speed for the fan."""
-        self.logger.debug("async_set_percentage() with percentage %s", percentage)
+        _LOGGER.debug("Sending async_set_percentage() with percentage %s", percentage)
 
         if percentage == 0:
             await self.async_turn_off()
@@ -81,8 +82,8 @@ class ZimiFan(FanEntity):
         target_speed = math.ceil(
             percentage_to_ranged_value(self._speed_range, percentage)
         )
-        self.logger.debug(
-            "async_set_percentage() converted percentage %s to bond speed %s",
+        _LOGGER.debug(
+            "async_set_percentage() converted percentage %s to speed %s",
             percentage,
             target_speed,
         )
@@ -97,13 +98,13 @@ class ZimiFan(FanEntity):
     ) -> None:
         """Instruct the fan to turn on."""
 
-        self.logger.debug("turn_on() for %s", self.name)
+        _LOGGER.debug("Sending turn_on() for %s", self.name)
         await self._fan.turn_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
 
-        self.logger.debug("turn_off() for %s", self.name)
+        _LOGGER.debug("Sending turn_off() for %s", self.name)
         await self._fan.turn_off()
 
     @property
@@ -119,7 +120,7 @@ class ZimiFan(FanEntity):
     def notify(self, _observable):
         """Receive notification from cover device that state has changed."""
 
-        self.logger.debug("notification() for %s received", self.name)
+        _LOGGER.debug("Received notification for %s", self.name)
         self.schedule_update_ha_state(force_refresh=True)
 
     @property
@@ -144,6 +145,3 @@ class ZimiFan(FanEntity):
 
         self._name = self._fan.name
         self._speed = self._fan.fanspeed
-
-        # self.logger.debug("update(%s) with: speed=%s",
-        #                   self.name, str(self._speed))

@@ -15,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import CONTROLLER, DOMAIN
 from .controller import ZimiController
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -46,9 +48,8 @@ class ZimiLight(LightEntity):
     def __init__(self, light, debug=False) -> None:
         """Initialize an ZimiLight."""
 
-        self.logger = logging.getLogger(__name__)
         if debug:
-            self.logger.setLevel(logging.DEBUG)
+            _LOGGER.setLevel(logging.DEBUG)
 
         self._attr_unique_id = light.identifier
         self._attr_should_poll = False
@@ -64,7 +65,7 @@ class ZimiLight(LightEntity):
             suggested_area=self._light.room,
         )
         self.update()
-        self.logger.debug("__init__(%s) in %s", self.name, self._light.room)
+        _LOGGER.debug("Initialising %s in %s", self.name, self._light.room)
 
     def __del__(self):
         """Cleanup ZimiLight with removal of notification."""
@@ -101,8 +102,8 @@ class ZimiLight(LightEntity):
         brightness control.
         """
 
-        self.logger.debug(
-            "turn_on(brightness=%d) for %s",
+        _LOGGER.debug(
+            "Sending turn_on(brightness=%d) for %s",
             kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255,
             self.name,
         )
@@ -117,14 +118,14 @@ class ZimiLight(LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
 
-        self.logger.debug("turn_off() for %s", self.name)
+        _LOGGER.debug("Sending turn_off() for %s", self.name)
 
         await self._light.turn_off()
 
     def notify(self, _observable):
         """Receive notification from light device that state has changed."""
 
-        self.logger.debug("notification() for %s received", self.name)
+        _LOGGER.debug("Received notification() for %s", self.name)
         self.schedule_update_ha_state(force_refresh=True)
 
     def update(self) -> None:
@@ -138,5 +139,3 @@ class ZimiLight(LightEntity):
         if self._light.type == "dimmer":
             if self._light.brightness:
                 self._brightness = self._light.brightness * 255 / 100
-
-        # self.logger.debug("update(%s) with state=%s", self.name, self._state)

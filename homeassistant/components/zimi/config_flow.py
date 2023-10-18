@@ -5,8 +5,8 @@ import logging
 import socket
 from typing import Any
 
-import voluptuous as vol
-from zcc import ControlPointDiscoveryService, ControlPointError
+import voluptuous as vol  # type: ignore[import]
+from zcc import ControlPointDiscoveryService, ControlPointError  # type: ignore[import]
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -60,7 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except TimeOut:
             errors["base"] = "timeout"
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            _LOGGER.exception("Unexpected exception during configuration steps")
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(title=data["title"], data=data)

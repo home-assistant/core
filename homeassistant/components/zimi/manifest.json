@@ -8,7 +8,7 @@
   "homekit": {},
   "integration_type": "hub",
   "iot_class": "local_push",
-  "requirements": ["zcc-helper==3.2.1rc2"],
+  "requirements": ["zcc-helper==3.2.1rc4"],
   "ssdp": [],
   "zeroconf": []
 }

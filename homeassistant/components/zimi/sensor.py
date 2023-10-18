@@ -52,6 +52,8 @@ GARAGE_SENSOR_DESCRIPTIONS = (
     ),
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -84,9 +86,8 @@ class ZimiSensor(SensorEntity):
     ) -> None:
         """Initialize an ZimiSensor with specified type."""
 
-        self.logger = logging.getLogger(__name__)
         if debug:
-            self.logger.setLevel(logging.DEBUG)
+            _LOGGER.setLevel(logging.DEBUG)
 
         self.entity_description = description
         self._attr_unique_id = sensor.identifier + "." + self.entity_description.key
@@ -104,7 +105,7 @@ class ZimiSensor(SensorEntity):
         )
 
         self.update()
-        self.logger.debug("__init__(%s) in %s", self.name, self._sensor.room)
+        _LOGGER.debug("Initialising %s in %s", self.name, self._sensor.room)
 
     def __del__(self):
         """Cleanup ZimiSensor with removal of notification."""
@@ -123,7 +124,7 @@ class ZimiSensor(SensorEntity):
     def notify(self, _observable):
         """Receive notification from sensor device that state has changed."""
 
-        self.logger.debug("notification() for %s received", self.name)
+        _LOGGER.debug("Received notification for %s", self.name)
         self.schedule_update_ha_state(force_refresh=True)
 
     @property
@@ -150,6 +151,3 @@ class ZimiSensor(SensorEntity):
             self._name = self._sensor.name + "-" + self.entity_description.name
         else:
             self._name = self.entity_description.name
-
-        # self.logger.debug("update(%s) with: %s",
-        #                   self.name, self._state)
