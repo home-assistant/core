@@ -11,7 +11,7 @@
     'entity_id': 'sensor.henk_weight',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '70.0',
+    'state': '70',
   })
 # ---
 # name: test_all_entities.1
@@ -26,7 +26,7 @@
     'entity_id': 'sensor.henk_fat_mass',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.0',
+    'state': '5',
   })
 # ---
 # name: test_all_entities.10
@@ -40,7 +40,7 @@
     'entity_id': 'sensor.henk_diastolic_blood_pressure',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '70.0',
+    'state': '70',
   })
 # ---
 # name: test_all_entities.11
@@ -54,7 +54,7 @@
     'entity_id': 'sensor.henk_systolic_blood_pressure',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '100.0',
+    'state': '100',
   })
 # ---
 # name: test_all_entities.12
@@ -69,7 +69,7 @@
     'entity_id': 'sensor.henk_heart_pulse',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '60.0',
+    'state': '60',
   })
 # ---
 # name: test_all_entities.13
@@ -114,68 +114,63 @@
     'entity_id': 'sensor.henk_pulse_wave_velocity',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '100.0',
+    'state': '100',
   })
 # ---
 # name: test_all_entities.16
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'henk Breathing disturbances intensity',
+      'friendly_name': 'henk VO2 max',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ml/min/kg',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.henk_breathing_disturbances_intensity',
+    'entity_id': 'sensor.henk_vo2_max',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '160.0',
+    'state': '100',
   })
 # ---
 # name: test_all_entities.17
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'henk Deep sleep',
-      'icon': 'mdi:sleep',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'friendly_name': 'henk Vascular age',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.henk_deep_sleep',
+    'entity_id': 'sensor.henk_vascular_age',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '322',
+    'state': '100',
   })
 # ---
 # name: test_all_entities.18
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'henk Time to sleep',
-      'icon': 'mdi:sleep',
+      'device_class': 'weight',
+      'friendly_name': 'henk Extracellular water',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.henk_time_to_sleep',
+    'entity_id': 'sensor.henk_extracellular_water',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '162.0',
+    'state': '100',
   })
 # ---
 # name: test_all_entities.19
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'henk Time to wakeup',
-      'icon': 'mdi:sleep-off',
+      'device_class': 'weight',
+      'friendly_name': 'henk Intracellular water',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.henk_time_to_wakeup',
+    'entity_id': 'sensor.henk_intracellular_water',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '163.0',
+    'state': '100',
   })
 # ---
 # name: test_all_entities.2
@@ -190,10 +185,71 @@
     'entity_id': 'sensor.henk_fat_free_mass',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '60.0',
+    'state': '60',
   })
 # ---
 # name: test_all_entities.20
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'henk Breathing disturbances intensity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_breathing_disturbances_intensity',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_all_entities.21
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'henk Deep sleep',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_deep_sleep',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '26220',
+  })
+# ---
+# name: test_all_entities.22
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'henk Time to sleep',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_time_to_sleep',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '780',
+  })
+# ---
+# name: test_all_entities.23
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'henk Time to wakeup',
+      'icon': 'mdi:sleep-off',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_time_to_wakeup',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '996',
+  })
+# ---
+# name: test_all_entities.24
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Average heart rate',
@@ -205,10 +261,10 @@
     'entity_id': 'sensor.henk_average_heart_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '164.0',
+    'state': '83',
   })
 # ---
-# name: test_all_entities.21
+# name: test_all_entities.25
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Maximum heart rate',
@@ -220,10 +276,10 @@
     'entity_id': 'sensor.henk_maximum_heart_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '165.0',
+    'state': '108',
   })
 # ---
-# name: test_all_entities.22
+# name: test_all_entities.26
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Minimum heart rate',
@@ -235,10 +291,10 @@
     'entity_id': 'sensor.henk_minimum_heart_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '166.0',
+    'state': '58',
   })
 # ---
-# name: test_all_entities.23
+# name: test_all_entities.27
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -251,10 +307,10 @@
     'entity_id': 'sensor.henk_light_sleep',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '334',
+    'state': '58440',
   })
 # ---
-# name: test_all_entities.24
+# name: test_all_entities.28
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -267,10 +323,10 @@
     'entity_id': 'sensor.henk_rem_sleep',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '336',
+    'state': '17280',
   })
 # ---
-# name: test_all_entities.25
+# name: test_all_entities.29
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Average respiratory rate',
@@ -281,63 +337,7 @@
     'entity_id': 'sensor.henk_average_respiratory_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '169.0',
-  })
-# ---
-# name: test_all_entities.26
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'henk Maximum respiratory rate',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'br/min',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.henk_maximum_respiratory_rate',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '170.0',
-  })
-# ---
-# name: test_all_entities.27
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'henk Minimum respiratory rate',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'br/min',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.henk_minimum_respiratory_rate',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '171.0',
-  })
-# ---
-# name: test_all_entities.28
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'henk Sleep score',
-      'icon': 'mdi:medal',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'points',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.henk_sleep_score',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '222',
-  })
-# ---
-# name: test_all_entities.29
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'henk Snoring',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.henk_snoring',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '173.0',
+    'state': '14',
   })
 # ---
 # name: test_all_entities.3
@@ -352,10 +352,66 @@
     'entity_id': 'sensor.henk_muscle_mass',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '50',
   })
 # ---
 # name: test_all_entities.30
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'henk Maximum respiratory rate',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'br/min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_maximum_respiratory_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_all_entities.31
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'henk Minimum respiratory rate',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'br/min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_minimum_respiratory_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_all_entities.32
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'henk Sleep score',
+      'icon': 'mdi:medal',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_sleep_score',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
+# name: test_all_entities.33
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'henk Snoring',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_snoring',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1044',
+  })
+# ---
+# name: test_all_entities.34
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Snoring episode count',
@@ -365,10 +421,10 @@
     'entity_id': 'sensor.henk_snoring_episode_count',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '348',
+    'state': '87',
   })
 # ---
-# name: test_all_entities.31
+# name: test_all_entities.35
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Wakeup count',
@@ -380,10 +436,10 @@
     'entity_id': 'sensor.henk_wakeup_count',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '350',
+    'state': '8',
   })
 # ---
-# name: test_all_entities.32
+# name: test_all_entities.36
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -396,164 +452,7 @@
     'entity_id': 'sensor.henk_wakeup_time',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '176.0',
-  })
-# ---
-# name: test_all_entities.33
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Withings sleep_breathing_disturbances_intensity henk',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_breathing_disturbances_intensity_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '160.0',
-  })
-# ---
-# name: test_all_entities.34
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_deep_duration_seconds_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:sleep',
-    'original_name': 'Withings sleep_deep_duration_seconds henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_deep_duration_seconds',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_all_entities.35
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Withings sleep_deep_duration_seconds henk',
-      'icon': 'mdi:sleep',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_deep_duration_seconds_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '322',
-  })
-# ---
-# name: test_all_entities.36
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_tosleep_duration_seconds_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:sleep',
-    'original_name': 'Withings sleep_tosleep_duration_seconds henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_tosleep_duration_seconds',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_all_entities.37
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Withings sleep_tosleep_duration_seconds henk',
-      'icon': 'mdi:sleep',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_tosleep_duration_seconds_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '162.0',
-  })
-# ---
-# name: test_all_entities.38
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_towakeup_duration_seconds_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:sleep-off',
-    'original_name': 'Withings sleep_towakeup_duration_seconds henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_towakeup_duration_seconds',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_all_entities.39
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Withings sleep_towakeup_duration_seconds henk',
-      'icon': 'mdi:sleep-off',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_towakeup_duration_seconds_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '163.0',
+    'state': '3468',
   })
 # ---
 # name: test_all_entities.4
@@ -561,6 +460,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'weight',
       'friendly_name': 'henk Bone mass',
+      'icon': 'mdi:bone',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
     }),
@@ -568,244 +468,7 @@
     'entity_id': 'sensor.henk_bone_mass',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '10.0',
-  })
-# ---
-# name: test_all_entities.40
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_heart_rate_average_bpm_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:heart-pulse',
-    'original_name': 'Withings sleep_heart_rate_average_bpm henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_heart_rate_average_bpm',
-    'unit_of_measurement': 'bpm',
-  })
-# ---
-# name: test_all_entities.41
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Withings sleep_heart_rate_average_bpm henk',
-      'icon': 'mdi:heart-pulse',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'bpm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_heart_rate_average_bpm_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '164.0',
-  })
-# ---
-# name: test_all_entities.42
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_heart_rate_max_bpm_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:heart-pulse',
-    'original_name': 'Withings sleep_heart_rate_max_bpm henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_heart_rate_max_bpm',
-    'unit_of_measurement': 'bpm',
-  })
-# ---
-# name: test_all_entities.43
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Withings sleep_heart_rate_max_bpm henk',
-      'icon': 'mdi:heart-pulse',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'bpm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_heart_rate_max_bpm_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '165.0',
-  })
-# ---
-# name: test_all_entities.44
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_heart_rate_min_bpm_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:heart-pulse',
-    'original_name': 'Withings sleep_heart_rate_min_bpm henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_heart_rate_min_bpm',
-    'unit_of_measurement': 'bpm',
-  })
-# ---
-# name: test_all_entities.45
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Withings sleep_heart_rate_min_bpm henk',
-      'icon': 'mdi:heart-pulse',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'bpm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_heart_rate_min_bpm_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '166.0',
-  })
-# ---
-# name: test_all_entities.46
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_light_duration_seconds_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:sleep',
-    'original_name': 'Withings sleep_light_duration_seconds henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_light_duration_seconds',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_all_entities.47
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Withings sleep_light_duration_seconds henk',
-      'icon': 'mdi:sleep',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_light_duration_seconds_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '334',
-  })
-# ---
-# name: test_all_entities.48
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_rem_duration_seconds_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:sleep',
-    'original_name': 'Withings sleep_rem_duration_seconds henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_rem_duration_seconds',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_all_entities.49
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Withings sleep_rem_duration_seconds henk',
-      'icon': 'mdi:sleep',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_rem_duration_seconds_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '336',
+    'state': '10',
   })
 # ---
 # name: test_all_entities.5
@@ -820,237 +483,7 @@
     'entity_id': 'sensor.henk_height',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.0',
-  })
-# ---
-# name: test_all_entities.50
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_respiratory_average_bpm_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Withings sleep_respiratory_average_bpm henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_respiratory_average_bpm',
-    'unit_of_measurement': 'br/min',
-  })
-# ---
-# name: test_all_entities.51
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Withings sleep_respiratory_average_bpm henk',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'br/min',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_respiratory_average_bpm_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '169.0',
-  })
-# ---
-# name: test_all_entities.52
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_respiratory_max_bpm_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Withings sleep_respiratory_max_bpm henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_respiratory_max_bpm',
-    'unit_of_measurement': 'br/min',
-  })
-# ---
-# name: test_all_entities.53
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Withings sleep_respiratory_max_bpm henk',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'br/min',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_respiratory_max_bpm_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '170.0',
-  })
-# ---
-# name: test_all_entities.54
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_respiratory_min_bpm_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Withings sleep_respiratory_min_bpm henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_respiratory_min_bpm',
-    'unit_of_measurement': 'br/min',
-  })
-# ---
-# name: test_all_entities.55
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Withings sleep_respiratory_min_bpm henk',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'br/min',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_respiratory_min_bpm_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '171.0',
-  })
-# ---
-# name: test_all_entities.56
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_score_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:medal',
-    'original_name': 'Withings sleep_score henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_score',
-    'unit_of_measurement': 'points',
-  })
-# ---
-# name: test_all_entities.57
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Withings sleep_score henk',
-      'icon': 'mdi:medal',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'points',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_score_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '222',
-  })
-# ---
-# name: test_all_entities.58
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_snoring_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Withings sleep_snoring henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_snoring',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities.59
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Withings sleep_snoring henk',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_snoring_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '173.0',
+    'state': '2',
   })
 # ---
 # name: test_all_entities.6
@@ -1065,147 +498,7 @@
     'entity_id': 'sensor.henk_temperature',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '40.0',
-  })
-# ---
-# name: test_all_entities.60
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_snoring_eposode_count_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Withings sleep_snoring_eposode_count henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_snoring_eposode_count',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities.61
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Withings sleep_snoring_eposode_count henk',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_snoring_eposode_count_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '348',
-  })
-# ---
-# name: test_all_entities.62
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_wakeup_count_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:sleep-off',
-    'original_name': 'Withings sleep_wakeup_count henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_wakeup_count',
-    'unit_of_measurement': 'times',
-  })
-# ---
-# name: test_all_entities.63
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Withings sleep_wakeup_count henk',
-      'icon': 'mdi:sleep-off',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'times',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_wakeup_count_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '350',
-  })
-# ---
-# name: test_all_entities.64
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.withings_sleep_wakeup_duration_seconds_henk',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:sleep-off',
-    'original_name': 'Withings sleep_wakeup_duration_seconds henk',
-    'platform': 'withings',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'withings_12345_sleep_wakeup_duration_seconds',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_all_entities.65
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Withings sleep_wakeup_duration_seconds henk',
-      'icon': 'mdi:sleep-off',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.withings_sleep_wakeup_duration_seconds_henk',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '176.0',
+    'state': '40',
   })
 # ---
 # name: test_all_entities.7
@@ -1220,7 +513,7 @@
     'entity_id': 'sensor.henk_body_temperature',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '40.0',
+    'state': '40',
   })
 # ---
 # name: test_all_entities.8
@@ -1235,7 +528,7 @@
     'entity_id': 'sensor.henk_skin_temperature',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '20.0',
+    'state': '20',
   })
 # ---
 # name: test_all_entities.9

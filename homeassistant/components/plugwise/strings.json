@@ -259,7 +259,7 @@
         "name": "DHW comfort mode"
       },
       "lock": {
-        "name": "[%key:component::lock::entity_component::_::name%]"
+        "name": "[%key:component::lock::title%]"
       },
       "relay": {
         "name": "Relay"
