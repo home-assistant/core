@@ -502,7 +502,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
             identifiers={(const.DOMAIN, DEFAULT_USER_RESPONSE["user_id"])}
         )
         assert picnic_service.model == DEFAULT_USER_RESPONSE["user_id"]
-        assert picnic_service.name == "Picnic: Commonstreet 123a"
+        assert picnic_service.name == "Mock Title"
         assert picnic_service.entry_type is dr.DeviceEntryType.SERVICE
 
     async def test_auth_token_is_saved_on_update(self):
