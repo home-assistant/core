@@ -53,6 +53,7 @@
         'so2',
         'pm10',
         'pm25',
+        'neph',
       ]),
     }),
     'context': <ANY>,
