@@ -6,5 +6,5 @@
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/spanet",
   "iot_class": "local_polling",
-  "requirements": []
+  "requirements": ["spanetlib==1.0.5"]
 }
