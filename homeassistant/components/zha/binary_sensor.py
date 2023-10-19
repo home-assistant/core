@@ -346,8 +346,8 @@ class AqaraLinkageAlarmState(BinarySensor):
 class DanfossMountingModeActive(BinarySensor):
     """Danfoss TRV Proprietary attribute exposing whether in mounting mode."""
 
-    _attribute_name = "mounting_mode_active"
     _unique_id_suffix = "mounting_mode_active"
+    _attribute_name = "mounting_mode_active"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
     _attr_translation_key: str = "mounting_mode_active"
 
