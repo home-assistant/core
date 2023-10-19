@@ -54,22 +54,14 @@ async def test_form(hass: HomeAssistant, mock_lamarzocco: MagicMock) -> None:
 
     assert len(mock_lamarzocco.try_connect.mock_calls) == 1
 
-    # now test for unique id abort
+    # now test for single instance abort
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT,
-    )
-    await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
-    assert len(mock_lamarzocco.try_connect.mock_calls) == 2
+    assert len(mock_lamarzocco.try_connect.mock_calls) == 1
 
 
 async def test_form_invalid_auth(
