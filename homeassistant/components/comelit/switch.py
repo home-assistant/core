@@ -26,14 +26,16 @@ async def async_setup_entry(
     coordinator: ComelitSerialBridge = hass.data[DOMAIN][config_entry.entry_id]
 
     # Use config_entry.entry_id as base for unique_id because no serial number or mac is available
-    async_add_entities(
+    entities: list[ComelitSwitchEntity] = []
+    entities.extend(
         ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
         for device in coordinator.data[IRRIGATION].values()
     )
-    async_add_entities(
+    entities.extend(
         ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
         for device in coordinator.data[OTHER].values()
     )
+    async_add_entities(entities)
 
 
 class ComelitSwitchEntity(CoordinatorEntity[ComelitSerialBridge], SwitchEntity):
