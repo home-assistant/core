@@ -106,6 +106,18 @@ class IRobotEntity(Entity):
         return self.vacuum_state.get("batPct")
 
     @property
+    def _run_stats(self):
+        return self.vacuum_state.get("bbrun")
+
+    @property
+    def _mission_stats(self):
+        return self.vacuum_state.get("bbmssn")
+
+    @property
+    def _battery_stats(self):
+        return self.vacuum_state.get("bbchg3")
+
+    @property
     def _robot_state(self):
         """Return the state of the vacuum cleaner."""
         clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})
