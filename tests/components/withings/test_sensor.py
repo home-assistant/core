@@ -32,13 +32,13 @@ async def test_all_entities(
     with patch("homeassistant.components.withings.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, polling_config_entry)
         entity_registry = er.async_get(hass)
-        entities = er.async_entries_for_config_entry(
+        entity_entries = er.async_entries_for_config_entry(
             entity_registry, polling_config_entry.entry_id
         )
 
-        for entity in entities:
-            assert hass.states.get(entity.entity_id) == snapshot
-        assert entities
+        assert entity_entries
+        for entity_entry in entity_entries:
+            assert hass.states.get(entity_entry.entity_id) == snapshot
 
 
 async def test_update_failed(
