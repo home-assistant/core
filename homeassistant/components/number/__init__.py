@@ -391,9 +391,12 @@ class NumberEntity(Entity):
         """Convert a value in the number's native unit to the configured unit."""
         # device_class is checked first since most of the time we can avoid
         # the unit conversion
-        if (device_class := self.device_class) in UNIT_CONVERTERS and (
-            native_unit_of_measurement := self.native_unit_of_measurement
-        ) != (unit_of_measurement := self.unit_of_measurement):
+        if (device_class := self.device_class) not in UNIT_CONVERTERS:
+            return value
+
+        native_unit_of_measurement = self.native_unit_of_measurement
+        unit_of_measurement = self.unit_of_measurement
+        if native_unit_of_measurement != unit_of_measurement:
             assert native_unit_of_measurement
             assert unit_of_measurement
 
@@ -417,12 +420,12 @@ class NumberEntity(Entity):
         """Convert a value to the number's native unit."""
         # device_class is checked first since most of the time we can avoid
         # the unit conversion
-        if (
-            value is not None
-            and (device_class := self.device_class) in UNIT_CONVERTERS
-            and (native_unit_of_measurement := self.native_unit_of_measurement)
-            != (unit_of_measurement := self.unit_of_measurement)
-        ):
+        if value is None or (device_class := self.device_class) not in UNIT_CONVERTERS:
+            return value
+
+        native_unit_of_measurement = self.native_unit_of_measurement
+        unit_of_measurement = self.unit_of_measurement
+        if native_unit_of_measurement != unit_of_measurement:
             assert native_unit_of_measurement
             assert unit_of_measurement
 
