@@ -43,7 +43,6 @@ def _get_mystrom_switch(host: str) -> MyStromSwitch:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up myStrom from a config entry."""
     host = entry.data[CONF_HOST]
-    device = None
     try:
         info = await pymystrom.get_device_info(host)
     except MyStromConnectionError as err:
