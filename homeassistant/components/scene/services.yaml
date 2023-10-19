@@ -39,6 +39,7 @@ create:
       selector:
         text:
     entities:
+      advanced: true
       example: |
         light.tv_back_light: "on"
         light.ceiling:

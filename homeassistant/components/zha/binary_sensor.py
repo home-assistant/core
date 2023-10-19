@@ -44,15 +44,6 @@ IAS_ZONE_CLASS_MAPPING = {
     IasZone.ZoneType.Vibration_Movement_Sensor: BinarySensorDeviceClass.VIBRATION,
 }
 
-IAS_ZONE_NAME_MAPPING = {
-    IasZone.ZoneType.Motion_Sensor: "Motion",
-    IasZone.ZoneType.Contact_Switch: "Opening",
-    IasZone.ZoneType.Fire_Sensor: "Smoke",
-    IasZone.ZoneType.Water_Sensor: "Moisture",
-    IasZone.ZoneType.Carbon_Monoxide_Sensor: "Gas",
-    IasZone.ZoneType.Vibration_Movement_Sensor: "Vibration",
-}
-
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.BINARY_SENSOR)
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BINARY_SENSOR)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
@@ -120,8 +111,8 @@ class Accelerometer(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "acceleration"
-    _attr_name: str = "Accelerometer"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOVING
+    _attr_translation_key: str = "accelerometer"
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY)
@@ -129,7 +120,6 @@ class Occupancy(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "occupancy"
-    _attr_name: str = "Occupancy"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OCCUPANCY
 
 
@@ -137,13 +127,14 @@ class Occupancy(BinarySensor):
 class HueOccupancy(Occupancy):
     """ZHA Hue occupancy."""
 
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OCCUPANCY
+
 
 @STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_ON_OFF)
 class Opening(BinarySensor):
     """ZHA OnOff BinarySensor."""
 
     SENSOR_ATTR = "on_off"
-    _attr_name: str = "Opening"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
 
     # Client/out cluster attributes aren't stored in the zigpy database, but are properly stored in the runtime cache.
@@ -162,7 +153,7 @@ class BinaryInput(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "present_value"
-    _attr_name: str = "Binary input"
+    _attr_translation_key: str = "binary_input"
 
 
 @STRICT_MATCH(
@@ -180,7 +171,6 @@ class BinaryInput(BinarySensor):
 class Motion(Opening):
     """ZHA OnOff BinarySensor with motion device class."""
 
-    _attr_name: str = "Motion"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOTION
 
 
@@ -191,10 +181,12 @@ class IASZone(BinarySensor):
     SENSOR_ATTR = "zone_status"
 
     @property
-    def name(self) -> str | None:
+    def translation_key(self) -> str | None:
         """Return the name of the sensor."""
         zone_type = self._cluster_handler.cluster.get("zone_type")
-        return IAS_ZONE_NAME_MAPPING.get(zone_type, "iaszone")
+        if zone_type in IAS_ZONE_CLASS_MAPPING:
+            return None
+        return "ias_zone"
 
     @property
     def device_class(self) -> BinarySensorDeviceClass | None:
@@ -243,7 +235,6 @@ class SinopeLeakStatus(BinarySensor):
     """Sinope water leak sensor."""
 
     SENSOR_ATTR = "leak_status"
-    _attr_name = "Moisture"
     _attr_device_class = BinarySensorDeviceClass.MOISTURE
 
 
@@ -253,92 +244,99 @@ class SinopeLeakStatus(BinarySensor):
         "_TZE200_htnnfasr",
     },
 )
-class FrostLock(BinarySensor, id_suffix="frost_lock"):
+class FrostLock(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "frost_lock"
+    _unique_id_suffix = "frost_lock"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.LOCK
-    _attr_name: str = "Frost lock"
+    _attr_translation_key: str = "frost_lock"
 
 
 @MULTI_MATCH(cluster_handler_names="ikea_airpurifier")
-class ReplaceFilter(BinarySensor, id_suffix="replace_filter"):
+class ReplaceFilter(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "replace_filter"
+    _unique_id_suffix = "replace_filter"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
-    _attr_name: str = "Replace filter"
+    _attr_translation_key: str = "replace_filter"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
-class AqaraPetFeederErrorDetected(BinarySensor, id_suffix="error_detected"):
+class AqaraPetFeederErrorDetected(BinarySensor):
     """ZHA aqara pet feeder error detected binary sensor."""
 
     SENSOR_ATTR = "error_detected"
+    _unique_id_suffix = "error_detected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
-    _attr_name: str = "Error detected"
 
 
 @MULTI_MATCH(
     cluster_handler_names="opple_cluster",
     models={"lumi.plug.mmeu01", "lumi.plug.maeu01"},
 )
-class XiaomiPlugConsumerConnected(BinarySensor, id_suffix="consumer_connected"):
+class XiaomiPlugConsumerConnected(BinarySensor):
     """ZHA Xiaomi plug consumer connected binary sensor."""
 
     SENSOR_ATTR = "consumer_connected"
-    _attr_name: str = "Consumer connected"
+    _unique_id_suffix = "consumer_connected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PLUG
+    _attr_translation_key: str = "consumer_connected"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"})
-class AqaraThermostatWindowOpen(BinarySensor, id_suffix="window_open"):
+class AqaraThermostatWindowOpen(BinarySensor):
     """ZHA Aqara thermostat window open binary sensor."""
 
     SENSOR_ATTR = "window_open"
+    _unique_id_suffix = "window_open"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.WINDOW
-    _attr_name: str = "Window open"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"})
-class AqaraThermostatValveAlarm(BinarySensor, id_suffix="valve_alarm"):
+class AqaraThermostatValveAlarm(BinarySensor):
     """ZHA Aqara thermostat valve alarm binary sensor."""
 
     SENSOR_ATTR = "valve_alarm"
+    _unique_id_suffix = "valve_alarm"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
-    _attr_name: str = "Valve alarm"
+    _attr_translation_key: str = "valve_alarm"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"}
 )
-class AqaraThermostatCalibrated(BinarySensor, id_suffix="calibrated"):
+class AqaraThermostatCalibrated(BinarySensor):
     """ZHA Aqara thermostat calibrated binary sensor."""
 
     SENSOR_ATTR = "calibrated"
+    _unique_id_suffix = "calibrated"
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
-    _attr_name: str = "Calibrated"
+    _attr_translation_key: str = "calibrated"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"}
 )
-class AqaraThermostatExternalSensor(BinarySensor, id_suffix="sensor"):
+class AqaraThermostatExternalSensor(BinarySensor):
     """ZHA Aqara thermostat external sensor binary sensor."""
 
     SENSOR_ATTR = "sensor"
+    _unique_id_suffix = "sensor"
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
-    _attr_name: str = "External sensor"
+    _attr_translation_key: str = "external_sensor"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"lumi.sensor_smoke.acn03"})
-class AqaraLinkageAlarmState(BinarySensor, id_suffix="linkage_alarm_state"):
+class AqaraLinkageAlarmState(BinarySensor):
     """ZHA Aqara linkage alarm state binary sensor."""
 
     SENSOR_ATTR = "linkage_alarm_state"
-    _attr_name: str = "Linkage alarm state"
+    _unique_id_suffix = "linkage_alarm_state"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.SMOKE
+    _attr_translation_key: str = "linkage_alarm_state"
 
 
 @MULTI_MATCH(

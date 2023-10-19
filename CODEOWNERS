@@ -738,8 +738,6 @@ build.json @home-assistant/supervisor
 /tests/components/matrix/ @PaarthShah
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
-/homeassistant/components/mazda/ @bdr99
-/tests/components/mazda/ @bdr99
 /homeassistant/components/meater/ @Sotolotl @emontnemery
 /tests/components/meater/ @Sotolotl @emontnemery
 /homeassistant/components/medcom_ble/ @elafargue
@@ -1267,6 +1265,8 @@ build.json @home-assistant/supervisor
 /tests/components/tag/ @balloob @dmulcahey
 /homeassistant/components/tailscale/ @frenck
 /tests/components/tailscale/ @frenck
+/homeassistant/components/tami4/ @Guy293
+/tests/components/tami4/ @Guy293
 /homeassistant/components/tankerkoenig/ @guillempages @mib1185
 /tests/components/tankerkoenig/ @guillempages @mib1185
 /homeassistant/components/tapsaff/ @bazwilliams
@@ -1323,10 +1323,10 @@ build.json @home-assistant/supervisor
 /tests/components/trafikverket_camera/ @gjohansson-ST
 /homeassistant/components/trafikverket_ferry/ @gjohansson-ST
 /tests/components/trafikverket_ferry/ @gjohansson-ST
-/homeassistant/components/trafikverket_train/ @endor-force @gjohansson-ST
-/tests/components/trafikverket_train/ @endor-force @gjohansson-ST
-/homeassistant/components/trafikverket_weatherstation/ @endor-force @gjohansson-ST
-/tests/components/trafikverket_weatherstation/ @endor-force @gjohansson-ST
+/homeassistant/components/trafikverket_train/ @gjohansson-ST
+/tests/components/trafikverket_train/ @gjohansson-ST
+/homeassistant/components/trafikverket_weatherstation/ @gjohansson-ST
+/tests/components/trafikverket_weatherstation/ @gjohansson-ST
 /homeassistant/components/transmission/ @engrbm87 @JPHutchins
 /tests/components/transmission/ @engrbm87 @JPHutchins
 /homeassistant/components/trend/ @jpbede
@@ -1438,8 +1438,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/wilight/ @leofig-rj
 /tests/components/wilight/ @leofig-rj
 /homeassistant/components/wirelesstag/ @sergeymaysak
-/homeassistant/components/withings/ @vangorra @joostlek
-/tests/components/withings/ @vangorra @joostlek
+/homeassistant/components/withings/ @joostlek
+/tests/components/withings/ @joostlek
 /homeassistant/components/wiz/ @sbidy
 /tests/components/wiz/ @sbidy
 /homeassistant/components/wled/ @frenck

@@ -15,7 +15,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 
 from . import (
-    alarm_control_panel as alarm_control_panel_platform,
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     camera as camera_platform,
@@ -56,10 +55,7 @@ DEFAULT_TLS_PROTOCOL = "auto"
 
 CONFIG_SCHEMA_BASE = vol.Schema(
     {
-        Platform.ALARM_CONTROL_PANEL.value: vol.All(
-            cv.ensure_list,
-            [alarm_control_panel_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type] # noqa: E501
-        ),
+        Platform.ALARM_CONTROL_PANEL.value: vol.All(cv.ensure_list, [dict]),
         Platform.BINARY_SENSOR.value: vol.All(
             cv.ensure_list,
             [binary_sensor_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
