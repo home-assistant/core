@@ -13,6 +13,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST,
     DOMAIN as WEATHER_DOMAIN,
+    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECAST,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -400,12 +401,20 @@ async def test_legacy_config_entry(hass: HomeAssistant, no_sensor) -> None:
     assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 2
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_GET_FORECAST,
+        (LEGACY_SERVICE_GET_FORECAST),
+    ],
+)
 async def test_forecast_service(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     mock_simple_nws,
     no_sensor,
+    service: str,
 ) -> None:
     """Test multiple forecast."""
     instance = mock_simple_nws.return_value
@@ -425,7 +434,7 @@ async def test_forecast_service(
     for forecast_type in ("twice_daily", "hourly"):
         response = await hass.services.async_call(
             WEATHER_DOMAIN,
-            SERVICE_GET_FORECAST,
+            service,
             {
                 "entity_id": "weather.abc_daynight",
                 "type": forecast_type,
@@ -453,7 +462,7 @@ async def test_forecast_service(
     for forecast_type in ("twice_daily", "hourly"):
         response = await hass.services.async_call(
             WEATHER_DOMAIN,
-            SERVICE_GET_FORECAST,
+            service,
             {
                 "entity_id": "weather.abc_daynight",
                 "type": forecast_type,
@@ -477,7 +486,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": "weather.abc_daynight",
             "type": "hourly",
@@ -495,7 +504,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": "weather.abc_daynight",
             "type": "hourly",

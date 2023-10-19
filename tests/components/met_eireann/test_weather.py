@@ -9,6 +9,7 @@ from homeassistant.components.met_eireann import UPDATE_INTERVAL
 from homeassistant.components.met_eireann.const import DOMAIN
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
+    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECAST,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -75,10 +76,18 @@ async def test_weather(hass: HomeAssistant, mock_weather) -> None:
     assert len(hass.states.async_entity_ids("weather")) == 0
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        (SERVICE_GET_FORECAST),
+        (LEGACY_SERVICE_GET_FORECAST),
+    ],
+)
 async def test_forecast_service(
     hass: HomeAssistant,
     mock_weather,
     snapshot: SnapshotAssertion,
+    service: str,
 ) -> None:
     """Test multiple forecast."""
     mock_weather.get_forecast.return_value = [
@@ -100,7 +109,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": entity_id,
             "type": "daily",
@@ -112,7 +121,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": entity_id,
             "type": "hourly",

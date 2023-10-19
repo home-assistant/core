@@ -1,5 +1,6 @@
 """Weather entity tests for the WeatherKit integration."""
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.weather import (
@@ -15,6 +16,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
+    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECAST,
 )
 from homeassistant.components.weather.const import WeatherEntityFeature
@@ -77,15 +79,22 @@ async def test_hourly_forecast_missing(hass: HomeAssistant) -> None:
     ) == 0
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_GET_FORECAST,
+        (LEGACY_SERVICE_GET_FORECAST),
+    ],
+)
 async def test_hourly_forecast(
-    hass: HomeAssistant, snapshot: SnapshotAssertion
+    hass: HomeAssistant, snapshot: SnapshotAssertion, service: str
 ) -> None:
     """Test states of the hourly forecast."""
     await init_integration(hass)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": "weather.home",
             "type": "hourly",
@@ -97,13 +106,22 @@ async def test_hourly_forecast(
     assert response == snapshot
 
 
-async def test_daily_forecast(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_GET_FORECAST,
+        (LEGACY_SERVICE_GET_FORECAST),
+    ],
+)
+async def test_daily_forecast(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, service: str
+) -> None:
     """Test states of the daily forecast."""
     await init_integration(hass)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": "weather.home",
             "type": "daily",

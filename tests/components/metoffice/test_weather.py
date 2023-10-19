@@ -13,6 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.metoffice.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
+    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECAST,
 )
 from homeassistant.const import STATE_UNAVAILABLE
@@ -415,6 +416,13 @@ async def test_legacy_config_entry(
 
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_GET_FORECAST,
+        (LEGACY_SERVICE_GET_FORECAST),
+    ],
+)
 async def test_forecast_service(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -422,6 +430,7 @@ async def test_forecast_service(
     snapshot: SnapshotAssertion,
     no_sensor,
     wavertree_data: dict[str, _Matcher],
+    service: str,
 ) -> None:
     """Test multiple forecast."""
     entry = MockConfigEntry(
@@ -438,7 +447,7 @@ async def test_forecast_service(
     for forecast_type in ("daily", "hourly"):
         response = await hass.services.async_call(
             WEATHER_DOMAIN,
-            SERVICE_GET_FORECAST,
+            service,
             {
                 "entity_id": "weather.met_office_wavertree_daily",
                 "type": forecast_type,
@@ -464,7 +473,7 @@ async def test_forecast_service(
     for forecast_type in ("daily", "hourly"):
         response = await hass.services.async_call(
             WEATHER_DOMAIN,
-            SERVICE_GET_FORECAST,
+            service,
             {
                 "entity_id": "weather.met_office_wavertree_daily",
                 "type": forecast_type,
@@ -488,7 +497,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": "weather.met_office_wavertree_daily",
             "type": "hourly",
