@@ -5,13 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from mypermobil import (
-    ENDPOINT_BATTERY_INFO,
-    ENDPOINT_DAILY_USAGE,
-    ENDPOINT_VA_USAGE_RECORDS,
-    MyPermobil,
-    MyPermobilAPIException,
-)
+from mypermobil import MyPermobil, MyPermobilAPIException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -45,9 +39,9 @@ class MyPermobilCoordinator(DataUpdateCoordinator[MyPermobilData]):
         """Fetch data from the 3 API endpoints."""
         try:
             async with asyncio.timeout(10):
-                battery = await self.p_api.request_endpoint(ENDPOINT_BATTERY_INFO)
-                daily_usage = await self.p_api.request_endpoint(ENDPOINT_DAILY_USAGE)
-                records = await self.p_api.request_endpoint(ENDPOINT_VA_USAGE_RECORDS)
+                battery = await self.p_api.get_battery_info()
+                daily_usage = await self.p_api.get_daily_usage()
+                records = await self.p_api.get_usage_records()
                 return MyPermobilData(
                     battery=battery,
                     daily_usage=daily_usage,
