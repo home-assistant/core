@@ -585,13 +585,12 @@ class AqaraBuzzerManualAlarm(ZHASwitchConfigurationEntity):
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossExternalOpenWindowDetected(
-    ZHASwitchConfigurationEntity, id_suffix="external_open_window_detected"
-):
+class DanfossExternalOpenWindowDetected(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for communicating an open window."""
 
+    _unique_id_suffix = "external_open_window_detected"
     _zcl_attribute: str = "external_open_window_detected"
-    _attr_name: str = "External Window Open"
+    _attr_translation_key: str = "external_window_sensor"
     _attr_icon: str = "mdi:window-open"
 
 
@@ -599,13 +598,12 @@ class DanfossExternalOpenWindowDetected(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossWindowOpenFeature(
-    ZHASwitchConfigurationEntity, id_suffix="window_open_feature"
-):
+class DanfossWindowOpenFeature(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute enabling open window detection."""
 
+    _unique_id_suffix = "window_open_feature"
     _zcl_attribute: str = "window_open_feature"
-    _attr_name: str = "Use Window Open Detection"
+    _attr_translation_key: str = "use_external_window_detection"
     _attr_icon: str = "mdi:window-open"
 
 
@@ -613,26 +611,24 @@ class DanfossWindowOpenFeature(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossMountingModeControl(
-    ZHASwitchConfigurationEntity, id_suffix="mounting_mode_control"
-):
+class DanfossMountingModeControl(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for switching to mounting mode."""
 
+    _unique_id_suffix = "mounting_mode_control"
     _zcl_attribute: str = "mounting_mode_control"
-    _attr_name: str = "Mounting Mode"
+    _attr_translation_key: str = "mounting_mode"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossRadiatorCovered(
-    ZHASwitchConfigurationEntity, id_suffix="radiator_covered"
-):
+class DanfossRadiatorCovered(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for communicating full usage of the external temperature sensor."""
 
+    _unique_id_suffix = "radiator_covered"
     _zcl_attribute: str = "radiator_covered"
-    _attr_name: str = "Use External Temperature Sensor"
+    _attr_translation_key: str = "prioritize_external_temperature_sensor"
     _attr_icon: str = "mdi:thermometer"
 
 
@@ -640,11 +636,12 @@ class DanfossRadiatorCovered(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossHeatAvailable(ZHASwitchConfigurationEntity, id_suffix="heat_available"):
+class DanfossHeatAvailable(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for communicating available heat."""
 
+    _unique_id_suffix = "heat_available"
     _zcl_attribute: str = "heat_available"
-    _attr_name: str = "Heat Available"
+    _attr_translation_key: str = "heat_available"
     _attr_icon: str = "mdi:water-boiler"
 
 
@@ -652,13 +649,12 @@ class DanfossHeatAvailable(ZHASwitchConfigurationEntity, id_suffix="heat_availab
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossLoadBalancingEnable(
-    ZHASwitchConfigurationEntity, id_suffix="load_balancing_enable"
-):
+class DanfossLoadBalancingEnable(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for enabling load balancing."""
 
+    _unique_id_suffix = "load_balancing_enable"
     _zcl_attribute: str = "load_balancing_enable"
-    _attr_name: str = "Use Load Balancing"
+    _attr_translation_key: str = "use_load_balancing"
     _attr_icon: str = "mdi:scale-balance"
 
 
@@ -666,13 +662,12 @@ class DanfossLoadBalancingEnable(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossAdaptationRunSettings(
-    ZHASwitchConfigurationEntity, id_suffix="adaptation_run_settings"
-):
+class DanfossAdaptationRunSettings(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for enabling daily adaptation run.
 
     Actually a bitmap, but only the first bit is used.
     """
 
+    _unique_id_suffix = "adaptation_run_settings"
     _zcl_attribute: str = "adaptation_run_settings"
-    _attr_name: str = "Adaptation Run Enabled"
+    _attr_translation_key: str = "adaptation_run_enabled"

@@ -594,15 +594,16 @@ class KeypadLockoutEnum(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="thermostat_ui")
-class KeypadLockout(ZCLEnumSelectEntity, id_suffix="keypad_lockout"):
+class KeypadLockout(ZCLEnumSelectEntity):
     """Mandatory Attribute for this cluster.
 
     often just a switch, but can be a select if need be.
     """
 
+    _unique_id_suffix = "keypad_lockout"
     _select_attr: str = "keypad_lockout"
     _enum = KeypadLockoutEnum
-    _attr_name: str = "Keypad Lockout"
+    _attr_translation_key: str = "keypad_lockout"
     _attr_icon: str = "mdi:lock"
 
 
@@ -622,13 +623,12 @@ class DanfossExerciseDayOfTheWeekEnum(types.enum8):
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossExerciseDayOfTheWeek(
-    ZCLEnumSelectEntity, id_suffix="exercise_day_of_week"
-):
+class DanfossExerciseDayOfTheWeek(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for setting the day of the week for exercising."""
 
+    _unique_id_suffix = "exercise_day_of_week"
     _select_attr = "exercise_day_of_week"
-    _attr_name: str = "Exercise Day of the Week"
+    _attr_translation_key: str = "exercise_day_of_week"
     _enum = DanfossExerciseDayOfTheWeekEnum
     _attr_icon: str = "mdi:wrench-clock"
 
@@ -644,14 +644,15 @@ class DanfossOrientationEnum(types.enum8):
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossOrientation(ZCLEnumSelectEntity, id_suffix="orientation"):
+class DanfossOrientation(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for setting the orientation of the valve.
 
     needed for biasing the internal temperature sensor.
     """
 
+    _unique_id_suffix = "orientation"
     _select_attr = "orientation"
-    _attr_name: str = "Valve Orientation"
+    _attr_translation_key: str = "valve_orientation"
     _enum = DanfossOrientationEnum
 
 
@@ -667,13 +668,12 @@ class DanfossAdaptationRunControlEnum(types.enum8):
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossAdaptationRunControl(
-    ZCLEnumSelectEntity, id_suffix="adaptation_run_control"
-):
+class DanfossAdaptationRunControl(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for controlling the current adaptation run."""
 
+    _unique_id_suffix = "adaptation_run_control"
     _select_attr = "adaptation_run_control"
-    _attr_name: str = "Adaptation Run Command"
+    _attr_translation_key: str = "adaptation_run_command"
     _enum = DanfossAdaptationRunControlEnum
 
 
@@ -688,9 +688,10 @@ class DanfossViewingDirectionEnum(types.enum8):
     cluster_handler_names="thermostat_ui",
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossViewingDirection(ZCLEnumSelectEntity, id_suffix="viewing_direction"):
+class DanfossViewingDirection(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for setting the viewing direction of the screen."""
 
+    _unique_id_suffix = "viewing_direction"
     _select_attr = "viewing_direction"
-    _attr_name: str = "Viewing Direction"
+    _attr_translation_key: str = "viewing_direction"
     _enum = DanfossViewingDirectionEnum

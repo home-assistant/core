@@ -1090,14 +1090,15 @@ class BitMapSensor(Sensor):
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class PiHeatingDemand(Sensor, id_suffix="pi_heating_demand"):
+class PiHeatingDemand(Sensor):
     """Sensor that displays the percentage of heating power used.
 
     Optional Thermostat attribute
     """
 
+    _unique_id_suffix = "pi_heating_demand"
     SENSOR_ATTR = "pi_heating_demand"
-    _attr_name: str = "Pi Heating Demand"
+    _attr_translation_key: str = "pi_heating_demand"
     _attr_icon: str = "mdi:radiator"
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
@@ -1113,14 +1114,15 @@ class SetpointChangeSourceEnum(types.enum8):
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class SetpointChangeSource(EnumSensor, id_suffix="setpoint_change_source"):
+class SetpointChangeSource(EnumSensor):
     """Sensor that displays the source of the setpoint change.
 
     Optional Thermostat attribute
     """
 
+    _unique_id_suffix = "setpoint_change_source"
     SENSOR_ATTR = "setpoint_change_source"
-    _attr_name: str = "Setpoint Change Source"
+    _attr_translation_key: str = "setpoint_change_source"
     _attr_icon: str = "mdi:thermostat"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _enum = SetpointChangeSourceEnum
@@ -1141,14 +1143,15 @@ class DanfossOpenWindowDetectionEnum(types.enum8):
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossOpenWindowDetection(EnumSensor, id_suffix="open_window_detection"):
+class DanfossOpenWindowDetection(EnumSensor):
     """Danfoss Proprietary attribute.
 
     Sensor that displays whether the TRV detects an open window using the temperature sensor.
     """
 
+    _unique_id_suffix = "open_window_detection"
     SENSOR_ATTR = "open_window_detection"
-    _attr_name: str = "Open Window Detected"
+    _attr_translation_key: str = "open_window_detected"
     _attr_icon: str = "mdi:window-open"
     _enum = DanfossOpenWindowDetectionEnum
 
@@ -1158,11 +1161,12 @@ class DanfossOpenWindowDetection(EnumSensor, id_suffix="open_window_detection"):
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossLoadEstimate(Sensor, id_suffix="load_estimate"):
+class DanfossLoadEstimate(Sensor):
     """Danfoss Proprietary attribute for communicating its estimate of the radiator load."""
 
+    _unique_id_suffix = "load_estimate"
     SENSOR_ATTR = "load_estimate"
-    _attr_name: str = "Load Estimate"
+    _attr_translation_key: str = "load_estimate"
     _attr_icon: str = "mdi:scale-balance"
 
 
@@ -1171,11 +1175,12 @@ class DanfossLoadEstimate(Sensor, id_suffix="load_estimate"):
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossAdaptationRunStatus(BitMapSensor, id_suffix="adaptation_run_status"):
+class DanfossAdaptationRunStatus(BitMapSensor):
     """Danfoss Proprietary attribute for showing the status of the adaptation run."""
 
+    _unique_id_suffix = "adaptation_run_status"
     SENSOR_ATTR = "adaptation_run_status"
-    _attr_name: str = "Adaptation Run Status"
+    _attr_translation_key: str = "adaptation_run_status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _default_value = "Nothing"
     _bitmap = {
@@ -1190,11 +1195,12 @@ class DanfossAdaptationRunStatus(BitMapSensor, id_suffix="adaptation_run_status"
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossPreheatTime(Sensor, id_suffix="preheat_time"):
+class DanfossPreheatTime(Sensor):
     """Danfoss Proprietary attribute for communicating the time when it starts pre-heating."""
 
+    _unique_id_suffix = "preheat_time"
     SENSOR_ATTR = "preheat_time"
-    _attr_name: str = "Pre-heat Time"
+    _attr_translation_key: str = "preheat_time"
     _attr_icon: str = "mdi:radiator"
     _attr_entity_registry_enabled_default = False
 
@@ -1204,11 +1210,12 @@ class DanfossPreheatTime(Sensor, id_suffix="preheat_time"):
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossSoftwareErrorCode(BitMapSensor, id_suffix="sw_error_code"):
+class DanfossSoftwareErrorCode(BitMapSensor):
     """Danfoss Proprietary attribute for communicating the error code."""
 
+    _unique_id_suffix = "sw_error_code"
     SENSOR_ATTR = "sw_error_code"
-    _attr_name: str = "Software Error"
+    _attr_translation_key: str = "software_error"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _default_value = "Good"
     _bitmap = {
@@ -1236,9 +1243,10 @@ class DanfossSoftwareErrorCode(BitMapSensor, id_suffix="sw_error_code"):
     quirk_classes={"thermostat.DanfossThermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossMotorStepCounter(Sensor, id_suffix="motor_step_counter"):
+class DanfossMotorStepCounter(Sensor):
     """Danfoss Proprietary attribute for communicating the motor step counter."""
 
+    _unique_id_suffix = "motor_step_counter"
     SENSOR_ATTR = "motor_step_counter"
-    _attr_name: str = "Motor Stepcount"
+    _attr_translation_key: str = "motor_stepcount"
     _attr_entity_category = EntityCategory.DIAGNOSTIC

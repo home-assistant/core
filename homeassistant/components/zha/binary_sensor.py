@@ -343,32 +343,35 @@ class AqaraLinkageAlarmState(BinarySensor):
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossMountingModeActive(BinarySensor, id_suffix="mounting_mode_active"):
+class DanfossMountingModeActive(BinarySensor):
     """Danfoss TRV Proprietary attribute exposing whether in mounting mode."""
 
-    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
     SENSOR_ATTR = "mounting_mode_active"
-    _attr_name: str = "Mounting Mode Active"
+    _unique_id_suffix = "mounting_mode_active"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
+    _attr_translation_key: str = "mounting_mode_active"
 
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossHeatRequired(BinarySensor, id_suffix="heat_required"):
+class DanfossHeatRequired(BinarySensor):
     """Danfoss TRV Proprietary attribute exposing whether heat is required."""
 
+    _unique_id_suffix = "heat_required"
     SENSOR_ATTR = "heat_required"
-    _attr_name: str = "Heat Required"
+    _attr_translation_key: str = "heat_required"
 
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_classes={"thermostat.DanfossThermostat"},
 )
-class DanfossPreheatStatus(BinarySensor, id_suffix="preheat_status"):
+class DanfossPreheatStatus(BinarySensor):
     """Danfoss TRV Proprietary attribute exposing whether in pre-heating mode."""
 
+    _unique_id_suffix = "preheat_status"
     SENSOR_ATTR = "preheat_status"
-    _attr_name: str = "Pre-heat Status"
+    _attr_translation_key: str = "preheat_status"
     _attr_entity_registry_enabled_default = False
