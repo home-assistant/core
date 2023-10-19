@@ -34,6 +34,10 @@ async def async_setup_entry(
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "stateless":
             entities.append(ZwaveEventEntity(config_entry, driver, info))
+        else:
+            raise ValueError(
+                f"Discovered value with hint '{info.platform_hint} not handled"
+            )
         async_add_entities(entities)
 
     config_entry.async_on_unload(
