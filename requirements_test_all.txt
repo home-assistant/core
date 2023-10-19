@@ -2081,7 +2081,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zimi
-zcc-helper==3.2.1rc4
+zcc-helper==3.2.1
 
 # homeassistant.components.zeroconf
 zeroconf==0.116.0
