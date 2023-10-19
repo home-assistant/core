@@ -216,7 +216,7 @@ aiobafi6==0.9.0
 aiobotocore==2.6.0
 
 # homeassistant.components.comelit
-aiocomelit==0.2.0
+aiocomelit==0.3.0
 
 # homeassistant.components.dhcp
 aiodiscover==1.5.1
@@ -2179,7 +2179,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.34.6
+python-roborock==0.35.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33

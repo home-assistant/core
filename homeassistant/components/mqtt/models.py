@@ -11,6 +11,8 @@ from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
+import voluptuous as vol
+
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
@@ -343,6 +345,7 @@ class MqttData:
     reload_handlers: dict[str, Callable[[], Coroutine[Any, Any, None]]] = field(
         default_factory=dict
     )
+    reload_schema: dict[str, vol.Schema] = field(default_factory=dict)
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
