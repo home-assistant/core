@@ -2477,6 +2477,7 @@ async def websocket_hard_reset_controller(
             connection.send_message(
                 websocket_api.event_message(msg[ID], {"device_id": device.id})
             )
+            async_cleanup()
 
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [
