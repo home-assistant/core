@@ -148,6 +148,7 @@ class HomeKitEntity(Entity):
         accessory_info = self.accessory.services.first(
             service_type=ServicesTypes.ACCESSORY_INFORMATION
         )
+        assert accessory_info
         self.accessory_info = accessory_info
         # If we re-setup, we need to make sure we make new
         # lists since we passed them to the connection before
