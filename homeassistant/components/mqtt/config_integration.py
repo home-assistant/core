@@ -15,9 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 
 from . import (
-    binary_sensor as binary_sensor_platform,
     button as button_platform,
-    camera as camera_platform,
     climate as climate_platform,
     cover as cover_platform,
     device_tracker as device_tracker_platform,
@@ -26,7 +24,6 @@ from . import (
     humidifier as humidifier_platform,
     image as image_platform,
     lawn_mower as lawn_mower_platform,
-    light as light_platform,
     lock as lock_platform,
     number as number_platform,
     scene as scene_platform,
@@ -56,18 +53,12 @@ DEFAULT_TLS_PROTOCOL = "auto"
 CONFIG_SCHEMA_BASE = vol.Schema(
     {
         Platform.ALARM_CONTROL_PANEL.value: vol.All(cv.ensure_list, [dict]),
-        Platform.BINARY_SENSOR.value: vol.All(
-            cv.ensure_list,
-            [binary_sensor_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.BINARY_SENSOR.value: vol.All(cv.ensure_list, [dict]),
         Platform.BUTTON.value: vol.All(
             cv.ensure_list,
             [button_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
-        Platform.CAMERA.value: vol.All(
-            cv.ensure_list,
-            [camera_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.CAMERA.value: vol.All(cv.ensure_list, [dict]),
         Platform.CLIMATE.value: vol.All(
             cv.ensure_list,
             [climate_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
@@ -100,13 +91,10 @@ CONFIG_SCHEMA_BASE = vol.Schema(
             cv.ensure_list,
             [lawn_mower_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
+        Platform.LIGHT.value: vol.All(cv.ensure_list, [dict]),
         Platform.LOCK.value: vol.All(
             cv.ensure_list,
             [lock_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
-        Platform.LIGHT.value: vol.All(
-            cv.ensure_list,
-            [light_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.NUMBER.value: vol.All(
             cv.ensure_list,
