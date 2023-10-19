@@ -27,7 +27,7 @@ async def async_setup_entry(
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
 
     @callback
-    def async_add_number(info: ZwaveDiscoveryInfo) -> None:
+    def async_add_event(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave event entity."""
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
@@ -44,7 +44,7 @@ async def async_setup_entry(
         async_dispatcher_connect(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_{EVENT_DOMAIN}",
-            async_add_number,
+            async_add_event,
         )
     )
 
