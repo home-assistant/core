@@ -181,14 +181,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except AbortFlow as err:
                 return self.async_abort(reason=err.reason)
         if self._can_identify:
-            return self.async_show_menu(
-                step_id="main_menu",
-                menu_options=[
-                    "identify",
-                    "provision",
-                ],
-            )
+            return await self.async_step_main_menu()
         return await self.async_step_provision()
+
+    async def async_step_main_menu(self, _: None = None) -> FlowResult:
+        """Show the main menu."""
+        return self.async_show_menu(
+            step_id="main_menu",
+            menu_options=[
+                "identify",
+                "provision",
+            ],
+        )
 
     async def async_step_identify(
         self, user_input: dict[str, Any] | None = None
