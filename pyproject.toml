@@ -35,7 +35,7 @@ dependencies    = [
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.25.0",
-    "home-assistant-bluetooth==1.10.3",
+    "home-assistant-bluetooth==1.10.4",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
     "lru-dict==1.2.0",
@@ -44,7 +44,7 @@ dependencies    = [
     "cryptography==41.0.4",
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
     "pyOpenSSL==23.2.0",
-    "orjson==3.9.7",
+    "orjson==3.9.9",
     "packaging>=23.1",
     "pip>=21.3.1",
     "python-slugify==4.0.1",
