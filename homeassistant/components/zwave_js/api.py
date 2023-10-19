@@ -2469,6 +2469,7 @@ async def websocket_hard_reset_controller(
         """Remove signal listeners."""
         for unsub in unsubs:
             unsub()
+        unsubs.clear()
 
     @callback
     def _handle_device_added(device: dr.DeviceEntry) -> None:
