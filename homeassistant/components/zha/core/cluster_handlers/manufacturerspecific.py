@@ -417,6 +417,12 @@ class ManufacturerSpecificThermostat(ThermostatClusterHandler):
                 AttrReportConfig(
                     attr="adaptation_run_status", config=REPORT_CONFIG_DEFAULT
                 ),
+                AttrReportConfig(
+                    attr="preheat_status", config=REPORT_CONFIG_DEFAULT
+                ),
+                AttrReportConfig(
+                    attr="preheat_time", config=REPORT_CONFIG_DEFAULT
+                ),
             )
 
             self.ZCL_INIT_ATTRS = {
@@ -425,13 +431,13 @@ class ManufacturerSpecificThermostat(ThermostatClusterHandler):
                 "window_open_feature": True,
                 "exercise_day_of_week": True,
                 "exercise_trigger_time": True,
-                "mounting_mode_control": True,
+                "mounting_mode_control": False,  # Can change
                 "orientation": True,
-                "external_measured_room_sensor": True,
+                "external_measured_room_sensor": False,  # Can change
                 "radiator_covered": True,
                 "heat_available": True,
                 "load_balancing_enable": True,
-                "load_room_mean": True,
+                "load_room_mean": False,  # Can change
                 "control_algorithm_scale_factor": True,
                 "regulation_setpoint_offset": True,
                 "adaptation_run_control": True,
