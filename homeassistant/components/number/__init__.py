@@ -218,10 +218,12 @@ class NumberEntity(Entity):
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
+        min_value = self.min_value
+        max_value = self.max_value
         return {
-            ATTR_MIN: self.min_value,
-            ATTR_MAX: self.max_value,
-            ATTR_STEP: self.step,
+            ATTR_MIN: min_value,
+            ATTR_MAX: max_value,
+            ATTR_STEP: self._calculate_step(min_value, max_value),
             ATTR_MODE: self.mode,
         }
 
@@ -291,12 +293,16 @@ class NumberEntity(Entity):
     @final
     def step(self) -> float:
         """Return the increment/decrement step."""
+        return self._calculate_step(self.min_value, self.max_value)
+
+    def _calculate_step(self, min_value: float, max_value: float) -> float:
+        """Return the increment/decrement step."""
         if hasattr(self, "_attr_native_step"):
             return self._attr_native_step
         if (native_step := self.native_step) is not None:
             return native_step
         step = DEFAULT_STEP
-        value_range = abs(self.max_value - self.min_value)
+        value_range = abs(max_value - min_value)
         if value_range != 0:
             while value_range <= step:
                 step /= 10.0
@@ -337,11 +343,12 @@ class NumberEntity(Entity):
             return self._number_option_unit_of_measurement
 
         native_unit_of_measurement = self.native_unit_of_measurement
-
+        # device_class is checked after native_unit_of_measurement since most
+        # of the time we can avoid the device_class check
         if (
-            self.device_class == NumberDeviceClass.TEMPERATURE
-            and native_unit_of_measurement
+            native_unit_of_measurement
             in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT)
+            and self.device_class == NumberDeviceClass.TEMPERATURE
         ):
             return self.hass.config.units.temperature_unit
 
@@ -382,14 +389,14 @@ class NumberEntity(Entity):
         self, value: float, method: Callable[[float, int], float]
     ) -> float:
         """Convert a value in the number's native unit to the configured unit."""
+        # device_class is checked first since most of the time we can avoid
+        # the unit conversion
+        if (device_class := self.device_class) not in UNIT_CONVERTERS:
+            return value
+
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
-        device_class = self.device_class
-
-        if (
-            native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERTERS
-        ):
+        if native_unit_of_measurement != unit_of_measurement:
             assert native_unit_of_measurement
             assert unit_of_measurement
 
@@ -411,15 +418,14 @@ class NumberEntity(Entity):
 
     def convert_to_native_value(self, value: float) -> float:
         """Convert a value to the number's native unit."""
+        # device_class is checked first since most of the time we can avoid
+        # the unit conversion
+        if value is None or (device_class := self.device_class) not in UNIT_CONVERTERS:
+            return value
+
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
-        device_class = self.device_class
-
-        if (
-            value is not None
-            and native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERTERS
-        ):
+        if native_unit_of_measurement != unit_of_measurement:
             assert native_unit_of_measurement
             assert unit_of_measurement
 
