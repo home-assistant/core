@@ -53,7 +53,7 @@ class ComelitCoverEntity(
         self._device = device
         super().__init__(coordinator)
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
-        self._attr_device_info = coordinator.platform_device_info(device, COVER)
+        self._attr_device_info = coordinator.platform_device_info(device)
         # Device doesn't provide a status so we assume UNKNOWN at first startup
         self._last_action: int | None = None
         self._last_state: str | None = None
@@ -97,11 +97,11 @@ class ComelitCoverEntity(
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._api.cover_move(self._device.index, COVER_CLOSE)
+        await self._api.set_device_status(COVER, self._device.index, COVER_CLOSE)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        await self._api.cover_move(self._device.index, COVER_OPEN)
+        await self._api.set_device_status(COVER, self._device.index, COVER_OPEN)
 
     async def async_stop_cover(self, **_kwargs: Any) -> None:
         """Stop the cover."""
@@ -109,7 +109,7 @@ class ComelitCoverEntity(
             return
 
         action = COVER_OPEN if self.is_closing else COVER_CLOSE
-        await self._api.cover_move(self._device.index, action)
+        await self._api.set_device_status(COVER, self._device.index, action)
 
     @callback
     def _handle_coordinator_update(self) -> None:

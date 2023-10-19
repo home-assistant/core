@@ -302,7 +302,7 @@ class UniFiController:
             self.poe_command_queue.clear()
             for device_id, device_commands in queue.items():
                 device = self.api.devices[device_id]
-                commands = [(idx, mode) for idx, mode in device_commands.items()]
+                commands = list(device_commands.items())
                 await self.api.request(
                     DeviceSetPoePortModeRequest.create(device, targets=commands)
                 )

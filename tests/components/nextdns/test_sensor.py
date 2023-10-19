@@ -4,12 +4,7 @@ from unittest.mock import patch
 
 from nextdns import ApiError
 
-from homeassistant.components.nextdns.const import DOMAIN
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -20,157 +15,11 @@ from . import DNSSEC, ENCRYPTION, IP_VERSIONS, PROTOCOLS, STATUS, init_integrati
 from tests.common import async_fire_time_changed
 
 
-async def test_sensor(hass: HomeAssistant) -> None:
+async def test_sensor(
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
+) -> None:
     """Test states of sensors."""
     registry = er.async_get(hass)
-
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_doh_queries",
-        suggested_object_id="fake_profile_dns_over_https_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_doh3_queries",
-        suggested_object_id="fake_profile_dns_over_http_3_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_doh_queries_ratio",
-        suggested_object_id="fake_profile_dns_over_https_queries_ratio",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_doh3_queries_ratio",
-        suggested_object_id="fake_profile_dns_over_http_3_queries_ratio",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_doq_queries",
-        suggested_object_id="fake_profile_dns_over_quic_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_doq_queries_ratio",
-        suggested_object_id="fake_profile_dns_over_quic_queries_ratio",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_dot_queries",
-        suggested_object_id="fake_profile_dns_over_tls_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_dot_queries_ratio",
-        suggested_object_id="fake_profile_dns_over_tls_queries_ratio",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_not_validated_queries",
-        suggested_object_id="fake_profile_dnssec_not_validated_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_validated_queries",
-        suggested_object_id="fake_profile_dnssec_validated_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_validated_queries_ratio",
-        suggested_object_id="fake_profile_dnssec_validated_queries_ratio",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_encrypted_queries",
-        suggested_object_id="fake_profile_encrypted_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_encrypted_queries_ratio",
-        suggested_object_id="fake_profile_encrypted_queries_ratio",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_ipv4_queries",
-        suggested_object_id="fake_profile_ipv4_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_ipv6_queries",
-        suggested_object_id="fake_profile_ipv6_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_ipv6_queries_ratio",
-        suggested_object_id="fake_profile_ipv6_queries_ratio",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_tcp_queries",
-        suggested_object_id="fake_profile_tcp_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_tcp_queries_ratio",
-        suggested_object_id="fake_profile_tcp_queries_ratio",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_udp_queries",
-        suggested_object_id="fake_profile_udp_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_udp_queries_ratio",
-        suggested_object_id="fake_profile_udp_queries_ratio",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_unencrypted_queries",
-        suggested_object_id="fake_profile_unencrypted_queries",
-        disabled_by=None,
-    )
 
     await init_integration(hass)
 
@@ -425,38 +274,11 @@ async def test_sensor(hass: HomeAssistant) -> None:
     assert entry.unique_id == "xyz12_udp_queries_ratio"
 
 
-async def test_availability(hass: HomeAssistant) -> None:
+async def test_availability(
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
+) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_doh_queries",
-        suggested_object_id="fake_profile_dns_over_https_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_validated_queries",
-        suggested_object_id="fake_profile_dnssec_validated_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_encrypted_queries",
-        suggested_object_id="fake_profile_encrypted_queries",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "xyz12_ipv4_queries",
-        suggested_object_id="fake_profile_ipv4_queries",
-        disabled_by=None,
-    )
+    er.async_get(hass)
 
     await init_integration(hass)
 

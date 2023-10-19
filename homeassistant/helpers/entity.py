@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import ABC
 import asyncio
 from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum, auto
@@ -50,11 +49,7 @@ from homeassistant.exceptions import (
     InvalidStateError,
     NoEntitySpecifiedError,
 )
-from homeassistant.loader import (
-    IntegrationNotLoaded,
-    async_get_loaded_integration,
-    bind_hass,
-)
+from homeassistant.loader import async_suggest_report_issue, bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
@@ -166,7 +161,7 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
     First try the statemachine, then entity registry.
     """
     if state := hass.states.get(entity_id):
-        return state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        return state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)  # type: ignore[no-any-return]
 
     entity_registry = er.async_get(hass)
     if not (entry := entity_registry.async_get(entity_id)):
@@ -273,9 +268,6 @@ class Entity(ABC):
     # it should be using async_write_ha_state.
     _async_update_ha_state_reported = False
 
-    # If we reported this entity is implicitly using device name
-    _implicit_device_name_reported = False
-
     # If we reported this entity was added without its platform set
     _no_platform_reported = False
 
@@ -363,22 +355,6 @@ class Entity(ABC):
         """Return a unique ID."""
         return self._attr_unique_id
 
-    def _report_implicit_device_name(self) -> None:
-        """Report entities which use implicit device name."""
-        if self._implicit_device_name_reported:
-            return
-        report_issue = self._suggest_report_issue()
-        _LOGGER.warning(
-            (
-                "Entity %s (%s) is implicitly using device name by not setting its "
-                "name. Instead, the name should be set to None, please %s"
-            ),
-            self.entity_id,
-            type(self),
-            report_issue,
-        )
-        self._implicit_device_name_reported = True
-
     @property
     def use_device_name(self) -> bool:
         """Return if this entity does not have its own name.
@@ -393,20 +369,8 @@ class Entity(ABC):
                 return False
 
         if hasattr(self, "entity_description"):
-            if not (name := self.entity_description.name):
-                return True
-            if name is UNDEFINED and not self._default_to_device_class_name():
-                # Backwards compatibility with leaving EntityDescription.name unassigned
-                # for device name.
-                # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
-                self._report_implicit_device_name()
-                return True
-            return False
-        if self.name is UNDEFINED and not self._default_to_device_class_name():
-            # Backwards compatibility with not overriding name property for device name.
-            # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
-            self._report_implicit_device_name()
-            return True
+            return not self.entity_description.name
+
         return not self.name
 
     @property
@@ -912,7 +876,9 @@ class Entity(ABC):
                 self._state_info,
             )
         except InvalidStateError:
-            _LOGGER.exception("Failed to set state, fall back to %s", STATE_UNKNOWN)
+            _LOGGER.exception(
+                "Failed to set state for %s, fall back to %s", entity_id, STATE_UNKNOWN
+            )
             hass.states.async_set(
                 entity_id, STATE_UNKNOWN, {}, self.force_update, self._context
             )
@@ -1257,35 +1223,12 @@ class Entity(ABC):
 
     def _suggest_report_issue(self) -> str:
         """Suggest to report an issue."""
-        report_issue = ""
-
-        integration = None
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2024.1
-        if self.platform:
-            with suppress(IntegrationNotLoaded):
-                integration = async_get_loaded_integration(
-                    self.hass, self.platform.platform_name
-                )
-
-        if "custom_components" in type(self).__module__:
-            if integration and integration.issue_tracker:
-                report_issue = f"create a bug report at {integration.issue_tracker}"
-            else:
-                report_issue = "report it to the custom integration author"
-        else:
-            report_issue = (
-                "create a bug report at "
-                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-            )
-            # The check for self.platform guards against integrations not using an
-            # EntityComponent and can be removed in HA Core 2024.1
-            if self.platform:
-                report_issue += (
-                    f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
-                )
-
-        return report_issue
+        platform_name = self.platform.platform_name if self.platform else None
+        return async_suggest_report_issue(
+            self.hass, integration_domain=platform_name, module=type(self).__module__
+        )
 
 
 @dataclass(slots=True)

@@ -1,4 +1,52 @@
 # serializer version: 1
+# name: test_nutrition_scope_config_entry[scopes0-unit_system0]
+  tuple(
+    '99',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Water',
+      'icon': 'mdi:cup-water',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.MILLILITERS: 'mL'>,
+    }),
+  )
+# ---
+# name: test_nutrition_scope_config_entry[scopes0-unit_system0].1
+  tuple(
+    '1600',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Calories In',
+      'icon': 'mdi:food-apple',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cal',
+    }),
+  )
+# ---
+# name: test_nutrition_scope_config_entry[scopes1-unit_system1]
+  tuple(
+    '99',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Water',
+      'icon': 'mdi:cup-water',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.FLUID_OUNCES: 'fl. oz.'>,
+    }),
+  )
+# ---
+# name: test_nutrition_scope_config_entry[scopes1-unit_system1].1
+  tuple(
+    '1600',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Calories In',
+      'icon': 'mdi:food-apple',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cal',
+    }),
+  )
+# ---
 # name: test_sensors[monitored_resources0-sensor.activity_calories-activities/activityCalories-135]
   tuple(
     '135',
@@ -6,6 +54,7 @@
       'attribution': 'Data provided by Fitbit.com',
       'friendly_name': 'Activity Calories',
       'icon': 'mdi:fire',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'cal',
     }),
     'fitbit-api-user-id-1_activities/activityCalories',
@@ -18,6 +67,7 @@
       'attribution': 'Data provided by Fitbit.com',
       'friendly_name': 'Calories',
       'icon': 'mdi:fire',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'cal',
     }),
     'fitbit-api-user-id-1_activities/calories',
@@ -30,6 +80,7 @@
       'attribution': 'Data provided by Fitbit.com',
       'friendly_name': 'Steps',
       'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'steps',
     }),
     'fitbit-api-user-id-1_activities/steps',
@@ -82,6 +133,7 @@
       'attribution': 'Data provided by Fitbit.com',
       'friendly_name': 'Awakenings Count',
       'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'times awaken',
     }),
     'fitbit-api-user-id-1_sleep/awakeningsCount',
@@ -108,6 +160,7 @@
       'device_class': 'duration',
       'friendly_name': 'Minutes After Wakeup',
       'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'fitbit-api-user-id-1_sleep/minutesAfterWakeup',
@@ -121,6 +174,7 @@
       'device_class': 'duration',
       'friendly_name': 'Sleep Minutes Asleep',
       'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'fitbit-api-user-id-1_sleep/minutesAsleep',
@@ -134,6 +188,7 @@
       'device_class': 'duration',
       'friendly_name': 'Sleep Minutes Awake',
       'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'fitbit-api-user-id-1_sleep/minutesAwake',
@@ -147,6 +202,7 @@
       'device_class': 'duration',
       'friendly_name': 'Sleep Minutes to Fall Asleep',
       'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'fitbit-api-user-id-1_sleep/minutesToFallAsleep',
@@ -160,6 +216,7 @@
       'device_class': 'distance',
       'friendly_name': 'Distance',
       'icon': 'mdi:map-marker',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'fitbit-api-user-id-1_activities/distance',
@@ -184,6 +241,7 @@
       'device_class': 'duration',
       'friendly_name': 'Sleep Time in Bed',
       'icon': 'mdi:hotel',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'fitbit-api-user-id-1_sleep/timeInBed',
@@ -197,6 +255,7 @@
       'device_class': 'distance',
       'friendly_name': 'Elevation',
       'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
     }),
     'fitbit-api-user-id-1_activities/elevation',
@@ -209,6 +268,7 @@
       'attribution': 'Data provided by Fitbit.com',
       'friendly_name': 'Floors',
       'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'floors',
     }),
     'fitbit-api-user-id-1_activities/floors',
@@ -221,6 +281,7 @@
       'attribution': 'Data provided by Fitbit.com',
       'friendly_name': 'Resting Heart Rate',
       'icon': 'mdi:heart-pulse',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'bpm',
     }),
     'fitbit-api-user-id-1_activities/heart',
@@ -234,6 +295,7 @@
       'device_class': 'duration',
       'friendly_name': 'Minutes Fairly Active',
       'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'fitbit-api-user-id-1_activities/minutesFairlyActive',
@@ -247,6 +309,7 @@
       'device_class': 'duration',
       'friendly_name': 'Minutes Lightly Active',
       'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'fitbit-api-user-id-1_activities/minutesLightlyActive',
@@ -260,6 +323,7 @@
       'device_class': 'duration',
       'friendly_name': 'Minutes Sedentary',
       'icon': 'mdi:seat-recline-normal',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'fitbit-api-user-id-1_activities/minutesSedentary',
@@ -273,6 +337,7 @@
       'device_class': 'duration',
       'friendly_name': 'Minutes Very Active',
       'icon': 'mdi:run',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'fitbit-api-user-id-1_activities/minutesVeryActive',

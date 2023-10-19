@@ -853,26 +853,6 @@ DISCOVERY_SCHEMAS = [
         allow_multi=True,
         entity_registry_enabled_default=False,
     ),
-    # number for Basic CC
-    ZWaveDiscoverySchema(
-        platform=Platform.NUMBER,
-        hint="Basic",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.BASIC},
-            type={ValueType.NUMBER},
-            property={CURRENT_VALUE_PROPERTY},
-        ),
-        required_values=[
-            ZWaveValueDiscoverySchema(
-                command_class={
-                    CommandClass.BASIC,
-                },
-                type={ValueType.NUMBER},
-                property={TARGET_VALUE_PROPERTY},
-            )
-        ],
-        entity_registry_enabled_default=False,
-    ),
     # number for Indicator CC (exclude property keys 3-5)
     ZWaveDiscoverySchema(
         platform=Platform.NUMBER,
@@ -996,6 +976,24 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # light for Basic CC
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BASIC},
+            type={ValueType.NUMBER},
+            property={CURRENT_VALUE_PROPERTY},
+        ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={
+                    CommandClass.BASIC,
+                },
+                type={ValueType.NUMBER},
+                property={TARGET_VALUE_PROPERTY},
+            )
+        ],
     ),
     # sirens
     ZWaveDiscoverySchema(
