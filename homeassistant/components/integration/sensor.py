@@ -170,7 +170,7 @@ async def async_setup_entry(
         device_info = None
 
     if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
-        # Before we has support for optional selectors, "none" was used for selecting nothing
+        # Before we had support for optional selectors, "none" was used for selecting nothing
         unit_prefix = None
 
     integral = IntegrationSensor(
