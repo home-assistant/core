@@ -1,5 +1,6 @@
-"""The TVOverlay integration."""
-from tvoverlay import ConnectError, Notifications
+"""The TvOverlay integration."""
+from tvoverlay import Notifications
+from tvoverlay.exceptions import ConnectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -17,14 +18,14 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the TVOverlay component."""
+    """Set up the TvOverlay component."""
 
     hass.data[DATA_HASS_CONFIG] = config
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up TVOverlay config entry."""
+    """Set up TvOverlay config entry."""
 
     notifier = Notifications(entry.data[CONF_HOST])
 
@@ -51,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload TVOverlay config entry."""
+    """Unload TvOverlay config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 

@@ -1,9 +1,9 @@
-"""Constants for the TVOverlay for Android TV integration."""
+"""Constants for the TvOverlay for Android TV integration."""
 
 DOMAIN: str = "tvoverlay"
 DATA_HASS_CONFIG = "tvoverlay_hass_config"
 
-DEFAULT_NAME = "TVOverlay"
+DEFAULT_NAME = "TvOverlay"
 DEFAULT_TIMEOUT = 5
 
 ATTR_ID = "id"

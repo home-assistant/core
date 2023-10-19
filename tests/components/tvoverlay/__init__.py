@@ -1,1 +1,1 @@
-"""Tests for the TVOverlay Notifications for Android TV integration."""
+"""Tests for the TvOverlay Notifications for Android TV integration."""
