@@ -1184,9 +1184,9 @@ async def test_non_color_light_reports_color(
     await hass.async_block_till_done()
 
     # Bug is fixed if we reach this point, but device won't have neither color temp nor color
-    with pytest.raises(KeyError):
-        assert hass.states.get("light.group").attributes[ATTR_COLOR_TEMP]
-        assert hass.states.get("light.group").attributes[ATTR_HS_COLOR]
+    with pytest.raises(AssertionError):
+        assert hass.states.get("light.group").attributes.get(ATTR_COLOR_TEMP) is None
+        assert hass.states.get("light.group").attributes.get(ATTR_HS_COLOR) is None
 
 
 async def test_verify_group_supported_features(

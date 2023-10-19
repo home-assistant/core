@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ViCareRequiredKeysMixinWithSet
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
 from .entity import ViCareEntity
+from .utils import is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,26 +53,18 @@ def _build_entity(
     name: str,
     vicare_api: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
-    description: ViCareButtonEntityDescription,
+    entity_description: ViCareButtonEntityDescription,
 ) -> ViCareButton | None:
     """Create a ViCare button entity."""
     _LOGGER.debug("Found device %s", name)
-    try:
-        description.value_getter(vicare_api)
-        _LOGGER.debug("Found entity %s", name)
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("Feature not supported %s", name)
-        return None
-    except AttributeError:
-        _LOGGER.debug("Attribute Error %s", name)
-        return None
-
-    return ViCareButton(
-        name,
-        vicare_api,
-        device_config,
-        description,
-    )
+    if is_supported(name, entity_description, vicare_api):
+        return ViCareButton(
+            name,
+            vicare_api,
+            device_config,
+            entity_description,
+        )
+    return None
 
 
 async def async_setup_entry(
