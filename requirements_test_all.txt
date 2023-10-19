@@ -218,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.0.4
+aioesphomeapi==18.0.6
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -350,10 +350,10 @@ aiounifi==63
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.3.1
+aiovodafone==0.4.1
 
 # homeassistant.components.waqi
-aiowaqi==2.0.0
+aiowaqi==2.1.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -476,7 +476,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.12.0
+bluetooth-data-tools==1.13.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -537,7 +537,7 @@ datadog==0.15.0
 datapoint==0.9.8;python_version<'3.12'
 
 # homeassistant.components.bluetooth
-dbus-fast==2.11.1
+dbus-fast==2.12.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -572,7 +572,7 @@ discovery30303==0.2.1
 dremel3dpy==2.1.1
 
 # homeassistant.components.dsmr
-dsmr-parser==0.33
+dsmr-parser==1.3.0
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.6
@@ -831,7 +831,7 @@ ical==5.0.1
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==1.4.1
+idasen-ha==2.3
 
 # homeassistant.components.network
 ifaddr==0.2.0
@@ -1070,7 +1070,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.36
+opower==0.0.37
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1082,7 +1082,6 @@ ovoenergy==1.2.0
 p1monitor==2.1.1
 
 # homeassistant.components.mqtt
-# homeassistant.components.shiftr
 paho-mqtt==1.6.1
 
 # homeassistant.components.panasonic_viera
@@ -1981,7 +1980,7 @@ vallox-websocket-api==3.3.0
 vehicle==1.0.1
 
 # homeassistant.components.velbus
-velbus-aio==2023.10.0
+velbus-aio==2023.10.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2084,7 +2083,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.118.0
+zeroconf==0.119.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

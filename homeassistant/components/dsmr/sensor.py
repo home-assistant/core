@@ -39,6 +39,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
 from .const import (
+    BELGIUM_5MIN_GAS_METER_READING,
     CONF_DSMR_VERSION,
     CONF_PRECISION,
     CONF_PROTOCOL,
@@ -325,7 +326,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         translation_key="max_current_per_phase",
         obis_reference=obis_references.BELGIUM_MAX_CURRENT_PER_PHASE,
         dsmr_versions={"5B"},
-        device_class=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -361,7 +362,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="belgium_5min_gas_meter_reading",
         translation_key="gas_meter_reading",
-        obis_reference=obis_references.BELGIUM_5MIN_GAS_METER_READING,
+        obis_reference=BELGIUM_5MIN_GAS_METER_READING,
         dsmr_versions={"5B"},
         is_gas=True,
         force_update=True,

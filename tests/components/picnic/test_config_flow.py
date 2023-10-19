@@ -59,7 +59,7 @@ async def test_form(hass: HomeAssistant, picnic_api) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Teststreet 123b"
+    assert result2["title"] == "Picnic"
     assert result2["data"] == {
         CONF_ACCESS_TOKEN: picnic_api().session.auth_token,
         CONF_COUNTRY_CODE: "NL",

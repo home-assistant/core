@@ -11,14 +11,14 @@ bcrypt==4.0.1
 certifi>=2021.5.30
 ciso8601==2.3.0
 httpx==0.25.0
-home-assistant-bluetooth==1.10.3
+home-assistant-bluetooth==1.10.4
 ifaddr==0.2.0
 Jinja2==3.1.2
 lru-dict==1.2.0
 PyJWT==2.8.0
 cryptography==41.0.4
 pyOpenSSL==23.2.0
-orjson==3.9.7
+orjson==3.9.9
 packaging>=23.1
 pip>=21.3.1
 python-slugify==4.0.1
