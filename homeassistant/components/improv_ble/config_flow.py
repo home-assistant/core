@@ -225,9 +225,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             need_authorization = await self._try_call(self._device.need_authorization())
-            _LOGGER.debug("Need authorization: %s", need_authorization)
         except AbortFlow as err:
             return self.async_abort(reason=err.reason)
+        _LOGGER.debug("Need authorization: %s", need_authorization)
         if need_authorization:
             return await self.async_step_authorize()
         return await self.async_step_do_provision()
@@ -249,7 +249,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         self._credentials.ssid, self._credentials.password, None
                     )
                 )
-                _LOGGER.debug("Provision successful, redirect URL: %s", redirect_url)
             except AbortFlow as err:
                 self._provision_result = self.async_abort(reason=err.reason)
                 return
@@ -265,6 +264,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._provision_result = self.async_abort(reason="unknown")
                     return
             else:
+                _LOGGER.debug("Provision successful, redirect URL: %s", redirect_url)
                 # Abort all flows in progress with same unique ID
                 for flow in self._async_in_progress(include_uninitialized=True):
                     flow_unique_id = flow["context"].get("unique_id")
