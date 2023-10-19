@@ -55,6 +55,11 @@ def mock_lamarzocco() -> Generator[MagicMock, None, None]:
     ):
         lamarzocco = lamarzocco_mock.return_value
 
+        lamarzocco.machine_info = {
+            "machine_name": MACHINE_NAME,
+            "serial_number": "GS01234",
+        }
+
         lamarzocco.model_name = "GS3 AV"
         lamarzocco.true_model_name = "GS3 AV"
         lamarzocco.machine_name = MACHINE_NAME
