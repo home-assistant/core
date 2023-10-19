@@ -162,11 +162,6 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
     @property
-    def battery_level(self):
-        """Return the battery level of the vacuum cleaner."""
-        return self._battery_level
-
-    @property
     def state(self):
         """Return the state of the vacuum cleaner."""
         return self._robot_state
