@@ -27,7 +27,6 @@ from . import (
     sensor as sensor_platform,
     switch as switch_platform,
     update as update_platform,
-    vacuum as vacuum_platform,
     water_heater as water_heater_platform,
 )
 from .const import (
@@ -104,10 +103,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
             cv.ensure_list,
             [update_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
-        Platform.VACUUM.value: vol.All(
-            cv.ensure_list,
-            [vacuum_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.VACUUM.value: vol.All(cv.ensure_list, [dict]),
         Platform.WATER_HEATER.value: vol.All(
             cv.ensure_list,
             [water_heater_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
