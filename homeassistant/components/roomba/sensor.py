@@ -130,7 +130,6 @@ async def async_setup_entry(
         RoombaSensor(roomba, blid, entity_description)
         for entity_description in SENSORS
     )
-    )
 
 
 class RoombaSensor(IRobotEntity, SensorEntity):
