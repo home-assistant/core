@@ -2464,6 +2464,7 @@ async def websocket_hard_reset_controller(
 ) -> None:
     """Hard reset controller."""
 
+    @callback
     def _check_for_ready(device: dr.DeviceEntry) -> None:
         """Check if controller is ready."""
         if entry.entry_id in device.config_entries:
