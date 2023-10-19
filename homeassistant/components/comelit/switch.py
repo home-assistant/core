@@ -1,12 +1,12 @@
-"""Support for lights."""
+"""Support for switches."""
 from __future__ import annotations
 
 from typing import Any
 
 from aiocomelit import ComelitSerialBridgeObject
-from aiocomelit.const import LIGHT
+from aiocomelit.const import IRRIGATION, OTHER
 
-from homeassistant.components.light import LightEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,19 +21,21 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Comelit lights."""
+    """Set up Comelit switches."""
 
     coordinator: ComelitSerialBridge = hass.data[DOMAIN][config_entry.entry_id]
 
     # Use config_entry.entry_id as base for unique_id because no serial number or mac is available
     async_add_entities(
-        ComelitLightEntity(coordinator, device, config_entry.entry_id)
-        for device in coordinator.data[LIGHT].values()
+        ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
+        for device in (
+            coordinator.data[OTHER].values() + coordinator.data[IRRIGATION].values()
+        )
     )
 
 
-class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
-    """Light device."""
+class ComelitSwitchEntity(CoordinatorEntity[ComelitSerialBridge], SwitchEntity):
+    """Switch device."""
 
     _attr_has_entity_name = True
     _attr_name = None
@@ -44,27 +46,34 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
         device: ComelitSerialBridgeObject,
         config_entry_entry_id: str,
     ) -> None:
-        """Init light entity."""
+        """Init switch entity."""
         self._api = coordinator.api
         self._device = device
         super().__init__(coordinator)
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
         self._attr_device_info = coordinator.platform_device_info(device)
+        if device.type == OTHER:
+            self._attr_device_class = SwitchDeviceClass.OUTLET
 
-    async def _light_set_state(self, state: int) -> None:
-        """Set desired light state."""
-        await self.coordinator.api.set_device_status(LIGHT, self._device.index, state)
+    async def _switch_set_state(self, state: int) -> None:
+        """Set desired switch state."""
+        await self.coordinator.api.set_device_status(
+            self._device.type, self._device.index, state
+        )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the light on."""
-        await self._light_set_state(STATE_ON)
+        """Turn the switch on."""
+        await self._switch_set_state(STATE_ON)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the light off."""
-        await self._light_set_state(STATE_OFF)
+        """Turn the switch off."""
+        await self._switch_set_state(STATE_OFF)
 
     @property
     def is_on(self) -> bool:
-        """Return True if light is on."""
-        return self.coordinator.data[LIGHT][self._device.index].status == STATE_ON
+        """Return True if switch is on."""
+        return (
+            self.coordinator.data[self._device.type][self._device.index].status
+            == STATE_ON
+        )

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import logging
 
 from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
@@ -42,6 +43,7 @@ from .const import (
     VICARE_UNIT_TO_UNIT_OF_MEASUREMENT,
 )
 from .entity import ViCareEntity
+from .utils import is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -574,26 +576,21 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 
 
 def _build_entity(
-    name: str, vicare_api, device_config, sensor: ViCareSensorEntityDescription
+    name: str,
+    vicare_api,
+    device_config: PyViCareDeviceConfig,
+    entity_description: ViCareSensorEntityDescription,
 ):
     """Create a ViCare sensor entity."""
     _LOGGER.debug("Found device %s", name)
-    try:
-        sensor.value_getter(vicare_api)
-        _LOGGER.debug("Found entity %s", name)
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("Feature not supported %s", name)
-        return None
-    except AttributeError:
-        _LOGGER.debug("Attribute Error %s", name)
-        return None
-
-    return ViCareSensor(
-        name,
-        vicare_api,
-        device_config,
-        sensor,
-    )
+    if is_supported(name, entity_description, vicare_api):
+        return ViCareSensor(
+            name,
+            vicare_api,
+            device_config,
+            entity_description,
+        )
+    return None
 
 
 async def _entities_from_descriptions(

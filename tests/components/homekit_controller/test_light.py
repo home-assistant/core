@@ -114,7 +114,7 @@ async def test_switch_read_light_state_dimmer(hass: HomeAssistant, utcnow) -> No
     # Initial state is that the light is off
     state = await helper.poll_and_get_state()
     assert state.state == "off"
-    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_COLOR_MODE] is None
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
@@ -177,7 +177,7 @@ async def test_switch_read_light_state_hs(hass: HomeAssistant, utcnow) -> None:
     # Initial state is that the light is off
     state = await helper.poll_and_get_state()
     assert state.state == "off"
-    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_COLOR_MODE] is None
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
@@ -246,7 +246,7 @@ async def test_switch_read_light_state_color_temp(hass: HomeAssistant, utcnow) -
     # Initial state is that the light is off
     state = await helper.poll_and_get_state()
     assert state.state == "off"
-    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_COLOR_MODE] is None
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
