@@ -217,7 +217,7 @@ async def test_light_turn_off_service(
 
     # verify the light is on before we start
     assert hass.states.get(test_light_id).state == "on"
-    brightness_pct = hass.states.get(test_light_id).attributes["brightness"]/255*100
+    brightness_pct = hass.states.get(test_light_id).attributes["brightness"] / 255 * 100
 
     # now call the HA turn_off service
     await hass.services.async_call(
@@ -266,7 +266,13 @@ async def test_light_turn_off_service(
     )
     assert len(mock_bridge_v2.mock_requests) == 3
     assert mock_bridge_v2.mock_requests[2]["json"]["on"]["on"] is True
-    assert round(mock_bridge_v2.mock_requests[2]["json"]["dimming"]["brightness"] - brightness_pct) == 0
+    assert (
+        round(
+            mock_bridge_v2.mock_requests[2]["json"]["dimming"]["brightness"]
+            - brightness_pct
+        )
+        == 0
+    )
 
     # test again with sending long flash
     await hass.services.async_call(
