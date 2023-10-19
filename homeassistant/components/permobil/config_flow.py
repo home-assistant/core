@@ -152,29 +152,26 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        errors: dict[str, str] = {}
 
         reauth_entry = self.hass.config_entries.async_get_entry(
             self.context.get("entry_id", "")
         )
 
-        if reauth_entry:
-            try:
-                email: str = reauth_entry.data[CONF_EMAIL]
-                region: str = reauth_entry.data[CONF_REGION]
-                self.p_api.set_email(email)
-                self.p_api.set_region(region)
-                self.data = {
-                    CONF_EMAIL: email,
-                    CONF_REGION: region,
-                }
-                await self.p_api.request_application_code()
-            except MyPermobilAPIException:
-                _LOGGER.exception("Error requesting code")
-                errors["base"] = "code_request_error"
-        else:
-            errors["base"] = "unknown"
+        if not reauth_entry:
+            return self.async_abort(reason="unknown")
 
-        if errors:
-            return self.async_show_form(step_id="reauth", errors=errors)
+        try:
+            email: str = reauth_entry.data[CONF_EMAIL]
+            region: str = reauth_entry.data[CONF_REGION]
+            self.p_api.set_email(email)
+            self.p_api.set_region(region)
+            self.data = {
+                CONF_EMAIL: email,
+                CONF_REGION: region,
+            }
+            await self.p_api.request_application_code()
+        except MyPermobilAPIException:
+            _LOGGER.exception("Error requesting code for reauth")
+            return self.async_abort(reason="unknown")
+
         return await self.async_step_email_code()

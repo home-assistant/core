@@ -259,9 +259,7 @@ async def test_form_reauth_api_fail(hass: HomeAssistant) -> None:
             context={"source": "reauth"},
         )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reauth"
-    assert result["errors"].get("base") == "code_request_error"
+    assert result["type"] == FlowResultType.ABORT
 
 
 async def test_form_reauth_context_fail(hass: HomeAssistant) -> None:
@@ -278,9 +276,7 @@ async def test_form_reauth_context_fail(hass: HomeAssistant) -> None:
             context={"source": "reauth"},
         )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reauth"
-    assert result["errors"].get("base") == "unknown"
+    assert result["type"] == FlowResultType.ABORT
 
 
 async def test_form_reauth_api_success(hass: HomeAssistant) -> None:
