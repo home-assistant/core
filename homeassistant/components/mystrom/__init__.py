@@ -16,7 +16,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import DOMAIN
 from .models import MyStromData
 
-PLATFORMS_PLUGS = [Platform.SWITCH, Platform.SENSOR]
+PLATFORMS_PLUGS = [Platform.SENSOR, Platform.SWITCH]
 PLATFORMS_BULB = [Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)

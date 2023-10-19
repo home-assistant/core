@@ -64,7 +64,6 @@ class MyStromSwitchSensor(SensorEntity):
     """Representation of the consumption or temperature of a myStrom switch/plug."""
 
     entity_description: MyStromSwitchSensorEntityDescription
-    device: MyStromSwitch
 
     _attr_has_entity_name = True
 
