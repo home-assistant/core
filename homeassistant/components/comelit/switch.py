@@ -28,9 +28,11 @@ async def async_setup_entry(
     # Use config_entry.entry_id as base for unique_id because no serial number or mac is available
     async_add_entities(
         ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
-        for device in (
-            coordinator.data[OTHER].values() + coordinator.data[IRRIGATION].values()
-        )
+        for device in coordinator.data[IRRIGATION].values()
+    )
+    async_add_entities(
+        ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
+        for device in coordinator.data[OTHER].values()
     )
 
 
