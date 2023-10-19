@@ -21,7 +21,7 @@ async def async_setup_entry(
     status = roomba_reported_state(roomba).get("bin", {})
     if "full" in status:
         roomba_vac = RoombaBinStatus(roomba, blid)
-        async_add_entities([roomba_vac], True)
+        async_add_entities([roomba_vac])
 
 
 class RoombaBinStatus(IRobotEntity, BinarySensorEntity):

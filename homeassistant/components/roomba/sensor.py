@@ -45,7 +45,6 @@ async def async_setup_entry(
             roomba_failed_missions,
             roomba_scrubs_count,
         ],
-        True,
     )
 
 
