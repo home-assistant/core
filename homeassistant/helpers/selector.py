@@ -994,6 +994,33 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         return data
 
 
+class SensorDeviceClassSelectorConfig(TypedDict):
+    """Class to represent a sensor device class selector config."""
+
+
+@SELECTORS.register("sensor_device_class")
+class SensorDeviceClassSelector(Selector[SensorDeviceClassSelectorConfig]):
+    """Selector for a sensor device class."""
+
+    selector_type = "sensor_device_class"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: ObjectSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        # pylint: disable=import-outside-toplevel
+        from homeassistant.components.sensor import SensorDeviceClass
+
+        sensor_device_class: str = vol.Schema(str)(data)
+        if sensor_device_class not in [str(sdc) for sdc in SensorDeviceClass]:
+            raise vol.Invalid(f"Value {sensor_device_class} is not a valid option")
+        return sensor_device_class
+
+
 select_option = vol.All(
     dict,
     vol.Schema(

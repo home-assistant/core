@@ -611,6 +611,17 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections) -> N
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
+    (({}, ("power",), ("abc123",)),),
+)
+def test_sensor_device_class_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test sensor device class selector."""
+    _test_selector("sensor_device_class", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {"options": ["red", "green", "blue"]},
