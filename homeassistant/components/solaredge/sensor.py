@@ -222,9 +222,7 @@ async def async_setup_entry(
     # Add the needed sensors to hass
     api: Solaredge = hass.data[DOMAIN][entry.entry_id][DATA_API_CLIENT]
 
-    sensor_factory = SolarEdgeSensorFactory(
-        hass, entry.title, entry.data[CONF_SITE_ID], api
-    )
+    sensor_factory = SolarEdgeSensorFactory(hass, entry.data[CONF_SITE_ID], api)
     for service in sensor_factory.all_services:
         service.async_setup()
         await service.coordinator.async_refresh()
@@ -240,11 +238,8 @@ async def async_setup_entry(
 class SolarEdgeSensorFactory:
     """Factory which creates sensors based on the sensor_key."""
 
-    def __init__(
-        self, hass: HomeAssistant, platform_name: str, site_id: str, api: Solaredge
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, site_id: str, api: Solaredge) -> None:
         """Initialize the factory."""
-        self.platform_name = platform_name
 
         details = SolarEdgeDetailsDataService(hass, api, site_id)
         overview = SolarEdgeOverviewDataService(hass, api, site_id)
@@ -295,7 +290,7 @@ class SolarEdgeSensorFactory:
         """Create and return a sensor based on the sensor_key."""
         sensor_class, service = self.services[sensor_type.key]
 
-        return sensor_class(self.platform_name, sensor_type, service)
+        return sensor_class(sensor_type, service)
 
 
 class SolarEdgeSensorEntity(
@@ -309,7 +304,6 @@ class SolarEdgeSensorEntity(
 
     def __init__(
         self,
-        platform_name: str,
         description: SolarEdgeSensorEntityDescription,
         data_service: SolarEdgeDataService,
     ) -> None:
@@ -318,7 +312,7 @@ class SolarEdgeSensorEntity(
         self.entity_description = description
         self.data_service = data_service
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, data_service.site_id)}, name=platform_name
+            identifiers={(DOMAIN, data_service.site_id)}, manufacturer="SolarEdge"
         )
 
     @property
@@ -378,12 +372,11 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
 
     def __init__(
         self,
-        platform_name: str,
         sensor_type: SolarEdgeSensorEntityDescription,
         data_service: SolarEdgeEnergyDetailsService,
     ) -> None:
         """Initialize the power flow sensor."""
-        super().__init__(platform_name, sensor_type, data_service)
+        super().__init__(sensor_type, data_service)
 
         self._attr_native_unit_of_measurement = data_service.unit
 
@@ -405,12 +398,11 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
 
     def __init__(
         self,
-        platform_name: str,
         description: SolarEdgeSensorEntityDescription,
         data_service: SolarEdgePowerFlowDataService,
     ) -> None:
         """Initialize the power flow sensor."""
-        super().__init__(platform_name, description, data_service)
+        super().__init__(description, data_service)
 
         self._attr_native_unit_of_measurement = data_service.unit
 
