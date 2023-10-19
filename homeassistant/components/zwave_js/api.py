@@ -2473,4 +2473,4 @@ async def websocket_hard_reset_controller(
     msg[DATA_UNSUBSCRIBE] = [
         async_dispatcher_connect(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, _check_for_ready)
     ]
-    await driver.async_hard_reset()
+    hass.async_create_task(driver.async_hard_reset())
