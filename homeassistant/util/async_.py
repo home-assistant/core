@@ -171,7 +171,7 @@ def protect_loop(func: Callable[_P, _R], strict: bool = True) -> Callable[_P, _R
     return protected_loop_func
 
 
-async def gather_with_concurrency(
+async def gather_with_limited_concurrency(
     limit: int, *tasks: Any, return_exceptions: bool = False
 ) -> Any:
     """Wrap asyncio.gather to limit the number of concurrent tasks.
