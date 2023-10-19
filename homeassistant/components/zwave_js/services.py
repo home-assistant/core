@@ -221,15 +221,18 @@ class ZWaveServices:
                         vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
                             vol.Coerce(int), BITMASK_SCHEMA, cv.string
                         ),
-                        vol.Inclusive(const.ATTR_VALUE_SIZE): vol.All(
+                        vol.Inclusive(const.ATTR_VALUE_SIZE, "size"): vol.All(
                             vol.Coerce(int), vol.Range(min=1, max=4)
                         ),
-                        vol.Inclusive(const.ATTR_VALUE_FORMAT): vol.Coerce(
+                        vol.Inclusive(const.ATTR_VALUE_FORMAT, "size"): vol.Coerce(
                             ConfigurationValueFormat
                         ),
                     },
                     cv.has_at_least_one_key(
                         ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                    ),
+                    cv.has_at_most_one_key(
+                        const.ATTR_CONFIG_PARAMETER_BITMASK, const.ATTR_VALUE_SIZE
                     ),
                     parameter_name_does_not_need_bitmask,
                     get_nodes_from_service_data,
@@ -466,19 +469,25 @@ class ZWaveServices:
             ),
             return_exceptions=True,
         )
-        nodes_list = list(nodes)
-        for node, result in get_valid_responses_from_results(nodes_list, results):
+        nodes_or_endpoints_list: list[ZwaveNode | Endpoint] = (
+            list(nodes)
+            if value_size is None
+            else [node.endpoints[endpoint] for node in nodes]
+        )
+        for node_or_endpoint, result in get_valid_responses_from_results(
+            nodes_or_endpoints_list, results
+        ):
             zwave_value = result[0]
             cmd_status = result[1]
             if cmd_status == CommandStatus.ACCEPTED:
                 msg = "Set configuration parameter %s on Node %s with value %s"
             else:
                 msg = (
-                    "Added command to queue to set configuration parameter %s on Node "
-                    "%s with value %s. Parameter will be set when the device wakes up"
+                    "Added command to queue to set configuration parameter %s on %s "
+                    "with value %s. Parameter will be set when the device wakes up"
                 )
-            _LOGGER.info(msg, zwave_value, node, new_value)
-        raise_exceptions_from_results(nodes_list, results)
+            _LOGGER.info(msg, zwave_value, node_or_endpoint, new_value)
+        raise_exceptions_from_results(nodes_or_endpoints_list, results)
 
     async def async_bulk_set_partial_config_parameters(
         self, service: ServiceCall
