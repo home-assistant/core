@@ -64,9 +64,7 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
         else:
             self._attr_event_types = [_cc_and_prop(info.primary_value)]
         # Entity class attributes
-        self._attr_name = self.generate_name(
-            include_value_name=True, alternate_value_name=info.platform_hint
-        )
+        self._attr_name = self.generate_name(include_value_name=True)
 
     @callback
     def _async_handle_event(self, value_notification: ValueNotification) -> None:
