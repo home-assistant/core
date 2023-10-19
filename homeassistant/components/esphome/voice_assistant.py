@@ -55,6 +55,8 @@ _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
         VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END: PipelineEventType.TTS_END,
         VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_START: PipelineEventType.WAKE_WORD_START,
         VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END: PipelineEventType.WAKE_WORD_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_START: PipelineEventType.STT_VAD_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_END: PipelineEventType.STT_VAD_END,
     }
 )
 
@@ -161,7 +163,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         try:
             event_type = _VOICE_ASSISTANT_EVENT_TYPES.from_hass(event.type)
         except KeyError:
-            _LOGGER.warning("Received unknown pipeline event type: %s", event.type)
+            _LOGGER.debug("Received unknown pipeline event type: %s", event.type)
             return
 
         data_to_send = None
@@ -260,6 +262,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                     noise_suppression_level=audio_settings.noise_suppression_level,
                     auto_gain_dbfs=audio_settings.auto_gain,
                     volume_multiplier=audio_settings.volume_multiplier,
+                    is_vad_enabled=bool(flags & VoiceAssistantCommandFlag.USE_VAD),
                 ),
             )
 
@@ -295,6 +298,10 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             if self.transport is None:
                 return
 
+            self.handle_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
+            )
+
             _extension, audio_bytes = await tts.async_get_media_source_audio(
                 self.hass,
                 media_id,
@@ -320,4 +327,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 sample_offset += samples_in_chunk
 
         finally:
+            self.handle_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
+            )
             self._tts_done.set()

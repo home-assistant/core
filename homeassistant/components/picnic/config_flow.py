@@ -107,7 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Abort if we're adding a new config and the unique id is already in use, else create the entry
             if self.source != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=info["title"], data=data)
+                return self.async_create_entry(title="Picnic", data=data)
 
             # In case of re-auth, only continue if an exiting account exists with the same unique id
             if existing_entry:
