@@ -1078,7 +1078,7 @@ class BitMapSensor(Sensor):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Bitmap."""
-        value = self._cluster_handler.cluster.get(self.SENSOR_ATTR)
+        value = self._cluster_handler.cluster.get(self._attribute_name)
 
         state_attr = {}
 
