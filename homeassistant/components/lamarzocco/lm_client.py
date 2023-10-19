@@ -3,13 +3,21 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from lmcloud import LMCloud
+from lmcloud import LMCloud  # type: ignore[import]
 
 from homeassistant.components import bluetooth
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import DEFAULT_PORT_LOCAL, MODEL_GS3_AV, MODEL_GS3_MP, MODEL_LM, MODEL_LMU
+from .const import (
+    DEFAULT_PORT_LOCAL,
+    MACHINE_NAME,
+    MODEL_GS3_AV,
+    MODEL_GS3_MP,
+    MODEL_LM,
+    MODEL_LMU,
+    SERIAL_NUMBER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,22 +49,22 @@ class LaMarzoccoClient(LMCloud):
 
     @property
     def true_model_name(self) -> str:
-        """Return the model name from the cloud, even if it's not one we know about.  Used for display only."""
-        return (
-            self.model_name
-            if self.model_name in MODELS
-            else self.model_name + " (Unknown)"
-        )
+        """Return the model name from the cloud, even if it's not one we know about. Used for display only."""
+        if self.model_name == MODEL_LMU:
+            return f"Linea {MODEL_LMU}"
+        if self.model_name in MODELS:
+            return self.model_name
+        return f"Unsupported Model ({self.model_name})"
 
     @property
     def machine_name(self) -> str:
         """Return the name of the machine."""
-        return self.machine_info["machine_name"]
+        return self.machine_info[MACHINE_NAME]
 
     @property
     def serial_number(self) -> str:
         """Return serial number."""
-        return self.machine_info["serial_number"]
+        return self.machine_info[SERIAL_NUMBER]
 
     async def connect(self) -> None:
         """Connect to the machine."""

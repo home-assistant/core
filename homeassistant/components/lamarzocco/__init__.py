@@ -8,14 +8,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import LmApiCoordinator
-from .services import async_setup_services
 
 PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.SENSOR,
-    Platform.SWITCH,
-    Platform.UPDATE,
     Platform.WATER_HEATER,
 ]
 
@@ -45,8 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Set up global services.
-    await async_setup_services(hass, entry)
     return True
 
 
