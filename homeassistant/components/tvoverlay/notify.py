@@ -1,5 +1,4 @@
 """TvOverlay notification service for Android TV."""
-from __future__ import annotations
 
 import logging
 from typing import Any
@@ -37,6 +36,12 @@ from .const import (
     ATTR_DURATION,
     ATTR_ID,
     ATTR_IMAGE,
+    ATTR_IMAGE_AUTH,
+    ATTR_IMAGE_ICON,
+    ATTR_IMAGE_PASSWORD,
+    ATTR_IMAGE_PATH,
+    ATTR_IMAGE_URL,
+    ATTR_IMAGE_USERNAME,
     ATTR_PERSISTENT,
     ATTR_POSITION,
     ATTR_SHAPE,
@@ -46,6 +51,124 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class TvOverlayNotificationService(BaseNotificationService):
+    """Notification service for TvOverlay."""
+
+    def __init__(self, notify: Notifications, is_allowed_path: Any) -> None:
+        """Initialize the service."""
+        self.notify = notify
+        self.is_allowed_path = is_allowed_path
+
+    async def async_send_message(self, message: str, **kwargs: Any) -> None:
+        """Send a message to a TvOverlay device."""
+        data = kwargs.get(ATTR_DATA, {})
+        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        message_id = data.get(ATTR_ID, str(uuid.uuid1()))
+        app_title = data.get(ATTR_APP_TITLE, DEFAULT_APP_NAME)
+        source_name = data.get(ATTR_SOURCE_NAME, DEFAULT_SOURCE_NAME)
+        app_icon: str | ImageUrlSource | None = None
+        app_icon_data = data.get(ATTR_APP_ICON)
+        if isinstance(app_icon_data, str):
+            app_icon = app_icon_data
+        else:
+            app_icon = self.populate_image(app_icon_data) if app_icon_data else None
+
+        badge_icon = data.get(ATTR_BADGE_ICON, DEFAULT_SMALL_ICON)
+        badge_color = data.get(ATTR_BADGE_COLOR, COLOR_GREEN)
+        position = data.get(ATTR_POSITION, Positions.TOP_RIGHT.value)
+
+        if position not in [member.value for member in Positions]:
+            position = Positions.TOP_RIGHT.value
+            _LOGGER.warning(
+                "Invalid position value: %s. Has to be one of: %s",
+                position,
+                [member.value for member in Positions],
+            )
+
+        duration = str(data.get(ATTR_DURATION, DEFAULT_DURATION))
+        image: str | ImageUrlSource | None = None
+        image_data = data.get(ATTR_IMAGE)
+        if isinstance(image_data, str):
+            image = image_data
+        else:
+            image = self.populate_image(image_data) if image_data else None
+
+        is_persistent = cv.boolean(data.get(ATTR_PERSISTENT, False))
+        text_color = data.get(ATTR_TEXT_COLOR)
+        border_color = data.get(ATTR_BORDER_COLOR)
+        bg_color = data.get(ATTR_BG_COLOR)
+        shape = data.get(ATTR_SHAPE, Shapes.CIRCLE.value)
+
+        if shape not in [member.value for member in Shapes]:
+            shape = Shapes.CIRCLE.value
+            _LOGGER.warning(
+                "Invalid shape value: %s. Has to be one of: %s",
+                shape,
+                [member.value for member in Shapes],
+            )
+
+        visible = cv.boolean(data.get(ATTR_VISIBLE, True))
+
+        if is_persistent:
+            _LOGGER.info("Sending TvOverlay persistent notification")
+            await self.notify.async_send_fixed(
+                message,
+                id=message_id,
+                icon=badge_icon,
+                iconColor=badge_color,
+                textColor=text_color,
+                borderColor=border_color,
+                backgroundColor=bg_color,
+                shape=shape,
+                expiration=duration,
+                visible=visible,
+            )
+        else:
+            _LOGGER.info("Sending TvOverlay notification")
+            await self.notify.async_send(
+                message,
+                id=message_id,
+                title=title,
+                deviceSourceName=source_name,
+                appTitle=app_title,
+                appIcon=app_icon,
+                smallIcon=badge_icon,
+                smallIconColor=badge_color,
+                image=image,
+                corner=position,
+                seconds=int(duration),
+            )
+
+    def populate_image(self, data: dict[str, Any]) -> ImageUrlSource | str | None:
+        """Populate image from a local path or URL."""
+        if data:
+            url = data.get(ATTR_IMAGE_URL)
+            local_path = data.get(ATTR_IMAGE_PATH)
+            mdi_icon = data.get(ATTR_IMAGE_ICON)
+            username = data.get(ATTR_IMAGE_USERNAME)
+            password = data.get(ATTR_IMAGE_PASSWORD)
+            auth = data.get(ATTR_IMAGE_AUTH)
+
+            if url and (url.startswith("http://") or url.startswith("https://")):
+                _LOGGER.debug("Using image URL: %s", url)
+                return ImageUrlSource(
+                    url, username=username, password=password, auth=auth
+                )
+
+            if local_path and self.is_allowed_path(local_path):
+                _LOGGER.debug("Using local image path: %s", local_path)
+                return local_path
+
+            if mdi_icon and mdi_icon.startswith("mdi:"):
+                _LOGGER.debug("Using MDI icon: %s", mdi_icon)
+                return mdi_icon
+
+        _LOGGER.warning(
+            "No valid URL, local_path, or mdi_icon found in image attributes"
+        )
+        return None
 
 
 async def async_get_service(
@@ -61,143 +184,3 @@ async def async_get_service(
         notify,
         hass.config.is_allowed_path,
     )
-
-
-class TvOverlayNotificationService(BaseNotificationService):
-    """Notification service for TvOverlay."""
-
-    def __init__(
-        self,
-        notify: Notifications,
-        is_allowed_path: Any,
-    ) -> None:
-        """Initialize the service."""
-        self.notify = notify
-        self.is_allowed_path = is_allowed_path
-
-    async def async_send_message(self, message: str, **kwargs: Any) -> None:
-        """Send a message to a TvOverlay device."""
-        data: dict[str, Any] | None = kwargs.get(ATTR_DATA)
-        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        message_id: str | None = str(uuid.uuid1())
-        app_title: str | None = DEFAULT_APP_NAME
-        source_name: str | None = DEFAULT_SOURCE_NAME
-        app_icon: str | ImageUrlSource | None = None
-        badge_icon: str | None = DEFAULT_SMALL_ICON
-        badge_color: str | None = COLOR_GREEN
-        position: str = Positions.TOP_RIGHT.value
-        duration: str = str(DEFAULT_DURATION)
-        image: str | ImageUrlSource | None = None
-        is_persistent: bool | None = False
-        text_color: str | None = None
-        border_color: str | None = None
-        bg_color: str | None = None
-        shape: str = Shapes.CIRCLE.value
-        visible: bool | None = True
-
-        if data:
-            message_id = data.get(ATTR_ID, message_id)
-            app_title = data.get(ATTR_APP_TITLE, app_title)
-            source_name = data.get(ATTR_SOURCE_NAME, source_name)
-
-            app_icon_data = data.get(ATTR_APP_ICON)
-            if app_icon_data:
-                app_icon = self.populate_image(**app_icon_data)
-
-            badge_icon = data.get(ATTR_BADGE_ICON, badge_icon)
-            badge_color = data.get(ATTR_BADGE_COLOR, badge_color)
-            position = data.get(ATTR_POSITION, Positions.TOP_RIGHT.value)
-            if position not in [member.value for member in Positions]:
-                _LOGGER.warning(
-                    "Invalid position value: %s. Has to be one of: %s",
-                    position,
-                    [member.value for member in Positions],
-                )
-
-            duration = str(data.get(ATTR_DURATION, duration))
-
-            image_data = data.get(ATTR_IMAGE)
-            if image_data:
-                image = self.populate_image(**image_data)
-
-            is_persistent = cv.boolean(data.get(ATTR_PERSISTENT, is_persistent))
-            text_color = data.get(ATTR_TEXT_COLOR, text_color)
-            border_color = data.get(ATTR_BORDER_COLOR, border_color)
-            bg_color = data.get(ATTR_BG_COLOR, bg_color)
-
-            shape = data.get(ATTR_SHAPE, shape)
-            if shape not in [member.value for member in Shapes]:
-                _LOGGER.warning(
-                    "Invalid shape value: %s. Has to be one of: %s",
-                    shape,
-                    [member.value for member in Shapes],
-                )
-
-            visible = cv.boolean(data.get(ATTR_VISIBLE, visible))
-
-        if is_persistent:
-            await self.notify.async_send_fixed(
-                message,
-                id=message_id,
-                icon=badge_icon,
-                iconColor=app_title,
-                textColor=text_color,
-                borderColor=border_color,
-                backgroundColor=bg_color,
-                shape=shape,
-                expiration=duration,
-                visible=visible,
-            )
-        else:
-            await self.notify.async_send(
-                message,
-                id=message_id,
-                title=title,
-                deviceSourceName=source_name,
-                appTitle=app_title,
-                appIcon=app_icon,
-                smallIcon=badge_icon,
-                smallIconColor=badge_color,
-                image=image,
-                corner=position,
-                seconds=int(duration),
-            )
-
-    def populate_image(
-        self,
-        url: str | None = None,
-        local_path: str | None = None,
-        mdi_icon: str | None = None,
-        username: str | None = None,
-        password: str | None = None,
-        auth: str | None = None,
-    ) -> ImageUrlSource | str | None:
-        """Populate image from a local path or URL."""
-        if url is not None:
-            if url.startswith("http://") or url.startswith("https://"):
-                return ImageUrlSource(
-                    url, username=username, password=password, auth=auth
-                )
-            _LOGGER.warning("'%s' is not  valid http or https url!", local_path)
-
-        if local_path is not None:
-            # Check whether path is whitelisted in configuration.yaml
-            if self.is_allowed_path(local_path):
-                return local_path
-            _LOGGER.warning(
-                "'%s' is not secure to load data. Check 'allowlist_external_dirs' configuration",
-                local_path,
-            )
-
-        if mdi_icon is not None:
-            if mdi_icon.startswith("mdi:"):
-                return mdi_icon
-            _LOGGER.warning(
-                "'%s' is not a valid mdi icon. mdi:icon-name Expected!", mdi_icon
-            )
-
-        _LOGGER.warning(
-            "Neither valid URL, local_path or mdi_icon found in image attributes!"
-        )
-
-        return None
