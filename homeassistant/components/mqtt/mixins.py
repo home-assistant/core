@@ -274,7 +274,7 @@ def async_handle_schema_error(
     )
 
 
-async def async_discover(
+async def _async_discover(
     hass: HomeAssistant,
     domain: str,
     async_setup: partial[Coroutine[Any, Any, None]],
@@ -326,7 +326,9 @@ async def async_setup_entry_helper(
         async_dispatcher_connect(
             hass,
             MQTT_DISCOVERY_NEW.format(domain, "mqtt"),
-            functools.partial(async_discover, hass, domain, async_setup_from_discovery),
+            functools.partial(
+                _async_discover, hass, domain, async_setup_from_discovery
+            ),
         )
     )
 
@@ -384,7 +386,9 @@ async def async_mqtt_entry_helper(
         async_dispatcher_connect(
             hass,
             MQTT_DISCOVERY_NEW.format(domain, "mqtt"),
-            functools.partial(async_discover, hass, domain, async_setup_from_discovery),
+            functools.partial(
+                _async_discover, hass, domain, async_setup_from_discovery
+            ),
         )
     )
 
