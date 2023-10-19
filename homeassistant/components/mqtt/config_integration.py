@@ -25,7 +25,6 @@ from . import (
     lawn_mower as lawn_mower_platform,
     lock as lock_platform,
     number as number_platform,
-    scene as scene_platform,
     select as select_platform,
     sensor as sensor_platform,
     siren as siren_platform,
@@ -96,10 +95,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
             cv.ensure_list,
             [number_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
-        Platform.SCENE.value: vol.All(
-            cv.ensure_list,
-            [scene_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.SCENE.value: vol.All(cv.ensure_list, [dict]),
         Platform.SELECT.value: vol.All(
             cv.ensure_list,
             [select_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
