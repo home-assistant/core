@@ -79,10 +79,12 @@ from homeassistant.components.zwave_js.api import (
 from homeassistant.components.zwave_js.const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DOMAIN,
+    EVENT_DEVICE_ADDED_TO_REGISTRY,
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import MockUser
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -4659,6 +4661,11 @@ async def test_hard_reset_controller(
     entry = integration
     ws_client = await hass_ws_client(hass)
 
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device(
+        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    )
+
     client.async_send_command.return_value = {}
     await ws_client.send_json(
         {
@@ -4673,6 +4680,11 @@ async def test_hard_reset_controller(
 
     assert len(client.async_send_command.call_args_list) == 1
     assert client.async_send_command.call_args[0][0] == {"command": "driver.hard_reset"}
+
+    async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["device_id"] == device.id
 
     # Test FailedZWaveCommand is caught
     with patch(

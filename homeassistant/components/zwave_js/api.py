@@ -2465,13 +2465,24 @@ async def websocket_hard_reset_controller(
     """Hard reset controller."""
 
     @callback
-    def _check_for_ready(device: dr.DeviceEntry) -> None:
-        """Check if controller is ready."""
-        if entry.entry_id in device.config_entries:
-            msg[DATA_UNSUBSCRIBE][0]()
-            connection.send_result(msg[ID], device.id)
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
 
-    msg[DATA_UNSUBSCRIBE] = [
-        async_dispatcher_connect(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, _check_for_ready)
+    @callback
+    def _handle_device_added(device: dr.DeviceEntry) -> None:
+        """Handle device is added."""
+        if entry.entry_id in device.config_entries:
+            connection.send_message(
+                websocket_api.event_message(msg[ID], {"device_id": device.id})
+            )
+
+    connection.subscriptions[msg["id"]] = async_cleanup
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        async_dispatcher_connect(
+            hass, EVENT_DEVICE_ADDED_TO_REGISTRY, _handle_device_added
+        )
     ]
-    hass.async_create_task(driver.async_hard_reset())
+    await driver.async_hard_reset()
+    connection.send_result(msg[ID])
