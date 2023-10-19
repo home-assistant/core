@@ -5,6 +5,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 import logging
 
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
@@ -24,6 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ViCareRequiredKeysMixin
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
 from .entity import ViCareEntity
+from .utils import is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,25 +104,20 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 
 
 def _build_entity(
-    name: str, vicare_api, device_config, sensor: ViCareBinarySensorEntityDescription
+    name: str,
+    vicare_api,
+    device_config: PyViCareDeviceConfig,
+    entity_description: ViCareBinarySensorEntityDescription,
 ):
     """Create a ViCare binary sensor entity."""
-    try:
-        sensor.value_getter(vicare_api)
-        _LOGGER.debug("Found entity %s", name)
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("Feature not supported %s", name)
-        return None
-    except AttributeError:
-        _LOGGER.debug("Attribute Error %s", name)
-        return None
-
-    return ViCareBinarySensor(
-        name,
-        vicare_api,
-        device_config,
-        sensor,
-    )
+    if is_supported(name, entity_description, vicare_api):
+        return ViCareBinarySensor(
+            name,
+            vicare_api,
+            device_config,
+            entity_description,
+        )
+    return None
 
 
 async def _entities_from_descriptions(
