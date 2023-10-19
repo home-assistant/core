@@ -39,9 +39,3 @@
     ]),
   })
 # ---
-# name: test_get_forecast_no_forecast
-  dict({
-    'forecast': list([
-    ]),
-  })
-# ---

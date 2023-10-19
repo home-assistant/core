@@ -897,7 +897,6 @@ async def test_get_forecast(
 async def test_get_forecast_no_forecast(
     hass: HomeAssistant,
     enable_custom_integrations: None,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get forecast service."""
 
@@ -919,7 +918,9 @@ async def test_get_forecast_no_forecast(
         blocking=True,
         return_response=True,
     )
-    assert response == snapshot
+    assert response == {
+        "forecast": [],
+    }
 
 
 @pytest.mark.parametrize(

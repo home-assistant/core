@@ -236,7 +236,6 @@ async def test_forecast_invalid(
     hass: HomeAssistant,
     start_ha,
     caplog: pytest.LogCaptureFixture,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test invalid forecasts."""
     for attr, _v_attr, value in [
@@ -277,7 +276,7 @@ async def test_forecast_invalid(
         blocking=True,
         return_response=True,
     )
-    assert response == snapshot
+    assert response == {"forecast": []}
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
         SERVICE_GET_FORECAST,
@@ -285,7 +284,7 @@ async def test_forecast_invalid(
         blocking=True,
         return_response=True,
     )
-    assert response == snapshot
+    assert response == {"forecast": []}
     assert "Only valid keys in Forecast are allowed" in caplog.text
 
 
@@ -312,7 +311,6 @@ async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
     hass: HomeAssistant,
     start_ha,
     caplog: pytest.LogCaptureFixture,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test forecast service invalid when is_daytime missing in twice_daily forecast."""
     for attr, _v_attr, value in [
@@ -347,7 +345,7 @@ async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
         blocking=True,
         return_response=True,
     )
-    assert response == snapshot
+    assert response == {"forecast": []}
     assert "`is_daytime` is missing in twice_daily forecast" in caplog.text
 
 
@@ -374,7 +372,6 @@ async def test_forecast_invalid_datetime_missing(
     hass: HomeAssistant,
     start_ha,
     caplog: pytest.LogCaptureFixture,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test forecast service invalid when datetime missing."""
     for attr, _v_attr, value in [
@@ -409,7 +406,7 @@ async def test_forecast_invalid_datetime_missing(
         blocking=True,
         return_response=True,
     )
-    assert response == snapshot
+    assert response == {"forecast": []}
     assert "`datetime` is required in forecasts" in caplog.text
 
 
@@ -691,6 +688,7 @@ async def test_trigger_action(
         },
     ],
 )
+@pytest.mark.freeze_time("2023-10-19 13:50:05")
 async def test_trigger_weather_services(
     hass: HomeAssistant,
     start_ha,

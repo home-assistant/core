@@ -1,28 +1,4 @@
 # serializer version: 1
-# name: test_forecast_invalid[config0-1-weather]
-  dict({
-    'forecast': list([
-    ]),
-  })
-# ---
-# name: test_forecast_invalid[config0-1-weather].1
-  dict({
-    'forecast': list([
-    ]),
-  })
-# ---
-# name: test_forecast_invalid_datetime_missing[config0-1-weather]
-  dict({
-    'forecast': list([
-    ]),
-  })
-# ---
-# name: test_forecast_invalid_is_daytime_missing_in_twice_daily[config0-1-weather]
-  dict({
-    'forecast': list([
-    ]),
-  })
-# ---
 # name: test_forecasts[config0-1-weather]
   dict({
     'forecast': list([
@@ -88,7 +64,7 @@
     'forecast': list([
       dict({
         'condition': 'sunny',
-        'datetime': '2023-10-19T03:34:38.951305-07:00',
+        'datetime': '2023-10-19T06:50:05-07:00',
         'precipitation': 20.0,
         'temperature': 20.0,
         'templow': 15.0,
@@ -101,7 +77,7 @@
     'forecast': list([
       dict({
         'condition': 'sunny',
-        'datetime': '2023-10-19T03:34:38.951305-07:00',
+        'datetime': '2023-10-19T06:50:05-07:00',
         'precipitation': 20.0,
         'temperature': 20.0,
         'templow': 15.0,
@@ -114,7 +90,7 @@
     'forecast': list([
       dict({
         'condition': 'sunny',
-        'datetime': '2023-10-19T03:34:38.951305-07:00',
+        'datetime': '2023-10-19T06:50:05-07:00',
         'is_daytime': True,
         'precipitation': 20.0,
         'temperature': 20.0,
