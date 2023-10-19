@@ -1,4 +1,4 @@
-"""Notifications for Android TV notification service."""
+"""TvOverlay notification service for Android TV."""
 from __future__ import annotations
 
 import logging
@@ -54,19 +54,19 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> TVOverlayNotificationService | None:
-    """Get the TVOverlay notification service."""
+) -> TvOverlayNotificationService | None:
+    """Get the TvOverlay notification service."""
     if discovery_info is None:
         return None
     notify = await hass.async_add_executor_job(Notifications, discovery_info[CONF_HOST])
-    return TVOverlayNotificationService(
+    return TvOverlayNotificationService(
         notify,
         hass.config.is_allowed_path,
     )
 
 
-class TVOverlayNotificationService(BaseNotificationService):
-    """Notification service for Notifications for TVOverlay."""
+class TvOverlayNotificationService(BaseNotificationService):
+    """Notification service for TvOverlay."""
 
     def __init__(
         self,
@@ -78,7 +78,7 @@ class TVOverlayNotificationService(BaseNotificationService):
         self.is_allowed_path = is_allowed_path
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
-        """Send a message to a TVOverlay device."""
+        """Send a message to a TvOverlay device."""
         data: dict[str, Any] | None = kwargs.get(ATTR_DATA)
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         message_id: str | None = str(uuid.uuid1())

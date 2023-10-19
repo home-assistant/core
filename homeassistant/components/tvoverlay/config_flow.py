@@ -1,10 +1,11 @@
-"""Config flow for TVOverlay integration."""
+"""Config flow for TvOverlay integration."""
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from tvoverlay import ConnectError, Notifications
+from tvoverlay import Notifications
+from tvoverlay.exceptions import ConnectError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TVOverlayFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for TVOverlay."""
+    """Handle a config flow for TvOverlay."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -48,7 +49,7 @@ class TVOverlayFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_try_connect(self, host: str) -> str | None:
-        """Try connecting to TVOverlay."""
+        """Try connecting to TvOverlay."""
 
         notifier = Notifications(host)
 

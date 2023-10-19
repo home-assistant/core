@@ -1,6 +1,6 @@
 {
   "domain": "tvoverlay",
-  "name": "TVOverlay Notifications for Android TV",
+  "name": "TvOverlay Notifications for Android TV",
   "codeowners": ["@hareeshmu"],
   "config_flow": true,
   "dependencies": [],
