@@ -4672,17 +4672,15 @@ async def test_hard_reset_controller(
             ENTRY_ID: entry.entry_id,
         }
     )
-    msg = await ws_client.receive_json()
-    assert msg["result"] is None
-    assert msg["success"]
-
-    assert len(client.async_send_command.call_args_list) == 1
-    assert client.async_send_command.call_args[0][0] == {"command": "driver.hard_reset"}
 
     await hass.config_entries.async_reload(entry.entry_id)
 
     msg = await ws_client.receive_json()
-    assert msg["event"]["device_id"] == device.id
+    assert msg["result"] == device.id
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {"command": "driver.hard_reset"}
 
     # Test FailedZWaveCommand is caught
     with patch(

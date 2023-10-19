@@ -2475,16 +2475,12 @@ async def websocket_hard_reset_controller(
     def _handle_device_added(device: dr.DeviceEntry) -> None:
         """Handle device is added."""
         if entry.entry_id in device.config_entries:
-            connection.send_message(
-                websocket_api.event_message(msg[ID], {"device_id": device.id})
-            )
+            connection.send_result(msg[ID], device.id)
             async_cleanup()
 
-    connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [
         async_dispatcher_connect(
             hass, EVENT_DEVICE_ADDED_TO_REGISTRY, _handle_device_added
         )
     ]
     await driver.async_hard_reset()
-    connection.send_result(msg[ID])
