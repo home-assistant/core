@@ -16,7 +16,6 @@ from tvoverlay.const import (
     Positions,
 )
 
-# import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
@@ -25,8 +24,6 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-# import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -84,12 +81,12 @@ class TvOverlayNotificationService(BaseNotificationService):
         message_id: str | None = str(uuid.uuid1())
         app_title: str | None = DEFAULT_APP_NAME
         source_name: str | None = DEFAULT_SOURCE_NAME
-        app_icon: str | None = DEFAULT_APP_ICON
+        app_icon: str | ImageUrlSource | None = None
         badge_icon: str | None = DEFAULT_SMALL_ICON
         badge_color: str | None = COLOR_GREEN
         position: str = Positions.TOP_RIGHT.value
         duration: str = str(DEFAULT_DURATION)
-        image: ImageUrlSource | str | None = None
+        image: str | ImageUrlSource | None = None
 
         if data:
             if ATTR_ID in data:
@@ -111,13 +108,25 @@ class TvOverlayNotificationService(BaseNotificationService):
                     _LOGGER.warning(
                         "Invalid source_name value: %s", data.get(ATTR_SOURCE_NAME)
                     )
-            if ATTR_APP_ICON in data:
+            if app_icon_data := data.get(ATTR_APP_ICON):
                 try:
-                    app_icon = data.get(ATTR_APP_ICON)
+                    if isinstance(app_icon_data, str):
+                        app_icon = app_icon_data
+                    else:
+                        app_icon = self.populate_image(
+                            url=app_icon_data.get(ATTR_IMAGE_URL),
+                            local_path=app_icon_data.get(ATTR_IMAGE_PATH),
+                            mdi_icon=app_icon_data.get(ATTR_IMAGE_ICON),
+                            username=app_icon_data.get(ATTR_IMAGE_USERNAME),
+                            password=app_icon_data.get(ATTR_IMAGE_PASSWORD),
+                            auth=app_icon_data.get(ATTR_IMAGE_AUTH),
+                        )
                 except ValueError:
                     _LOGGER.warning(
-                        "Invalid app_icon value: %s", data.get(ATTR_APP_ICON)
+                        "Invalid image attributes: %s", data.get(ATTR_IMAGE)
                     )
+            else:
+                app_icon = DEFAULT_APP_ICON
             if ATTR_BADGE_ICON in data:
                 try:
                     badge_icon = data.get(ATTR_BADGE_ICON)

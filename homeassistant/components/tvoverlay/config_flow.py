@@ -50,12 +50,8 @@ class TVOverlayFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(self, host: str) -> str | None:
         """Try connecting to TvOverlay."""
-
-        notifier = Notifications(host)
-
         try:
-            # await self.hass.async_add_executor_job(notifier.async_connect)
-            await notifier.async_connect()
+            await self.hass.async_add_executor_job(Notifications, host)
         except ConnectError:
             _LOGGER.error("Error connecting to device at %s", host)
             return "cannot_connect"
