@@ -67,7 +67,6 @@
   "selector": {
     "device_class": {
       "options": {
-        "none": "No device class",
         "date": "[%key:component::sensor::entity_component::date::name%]",
         "duration": "[%key:component::sensor::entity_component::duration::name%]",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
@@ -121,7 +120,6 @@
     },
     "state_class": {
       "options": {
-        "none": "No state class",
         "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
         "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
         "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"

@@ -1,7 +1,7 @@
 {
   "domain": "trafikverket_train",
   "name": "Trafikverket Train",
-  "codeowners": ["@endor-force", "@gjohansson-ST"],
+  "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/trafikverket_train",
   "iot_class": "cloud_polling",

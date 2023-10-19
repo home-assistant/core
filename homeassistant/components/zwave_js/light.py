@@ -129,11 +129,22 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._supported_color_modes: set[ColorMode] = set()
 
         # get additional (optional) values and set features
+        # If the command class is Basic, we must geenerate a name that includes
+        # the command class name to avoid ambiguity
         self._target_brightness = self.get_zwave_value(
             TARGET_VALUE_PROPERTY,
             CommandClass.SWITCH_MULTILEVEL,
             add_to_watched_value_ids=False,
         )
+        if self.info.primary_value.command_class == CommandClass.BASIC:
+            self._attr_name = self.generate_name(
+                include_value_name=True, alternate_value_name="Basic"
+            )
+            self._target_brightness = self.get_zwave_value(
+                TARGET_VALUE_PROPERTY,
+                CommandClass.BASIC,
+                add_to_watched_value_ids=False,
+            )
         self._target_color = self.get_zwave_value(
             TARGET_COLOR_PROPERTY,
             CommandClass.SWITCH_COLOR,
@@ -356,7 +367,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # typically delayed and causes a confusing UX.
         if (
             zwave_brightness == SET_TO_PREVIOUS_VALUE
-            and self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL
+            and self.info.primary_value.command_class
+            in (CommandClass.BASIC, CommandClass.SWITCH_MULTILEVEL)
         ):
             self._set_optimistic_state = True
             self.async_write_ha_state()

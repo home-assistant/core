@@ -109,4 +109,4 @@ def test_all(policy: CategoryType, key: str) -> bool:
     if not isinstance(all_policy, dict):
         return bool(all_policy)
 
-    return all_policy.get(key, False)
+    return all_policy.get(key, False)  # type: ignore[no-any-return]
