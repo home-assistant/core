@@ -6,6 +6,7 @@ DATA_HASS_CONFIG = "tvoverlay_hass_config"
 DEFAULT_NAME = "TvOverlay"
 DEFAULT_TIMEOUT = 5
 
+# Parameters for Notifications
 ATTR_ID = "id"
 ATTR_APP_TITLE = "app_title"
 ATTR_SOURCE_NAME = "source_name"
@@ -23,3 +24,11 @@ ATTR_IMAGE_ICON = "mdi_icon"
 ATTR_IMAGE_USERNAME = "username"
 ATTR_IMAGE_PASSWORD = "password"
 ATTR_IMAGE_AUTH = "auth"
+
+# Additional Parameters for Persistent Notifications
+ATTR_PERSISTENT = "is_persistent"
+ATTR_TEXT_COLOR = "text_color"
+ATTR_BORDER_COLOR = "border_color"
+ATTR_BG_COLOR = "bg_color"
+ATTR_SHAPE = "shape"
+ATTR_VISIBLE = "visible"
