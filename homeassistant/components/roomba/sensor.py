@@ -76,7 +76,7 @@ class BatteryCycles(IRobotEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name} battery cycles"
+        return "Battery cycles"
 
     @property
     def unique_id(self):
@@ -128,7 +128,7 @@ class AverageMissionTime(IRobotEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name} average mission time"
+        return "Average mission time"
 
     @property
     def unique_id(self):
@@ -161,7 +161,7 @@ class MissionSensor(IRobotEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name} missions {self._mission_type}"
+        return f"Missions {self._mission_type}"
 
     @property
     def unique_id(self):
@@ -188,7 +188,7 @@ class ScrubsCount(IRobotEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name} scrubs count"
+        return "Scrubs count"
 
     @property
     def unique_id(self):
