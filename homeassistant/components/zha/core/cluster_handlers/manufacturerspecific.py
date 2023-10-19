@@ -417,12 +417,8 @@ class ManufacturerSpecificThermostat(ThermostatClusterHandler):
                 AttrReportConfig(
                     attr="adaptation_run_status", config=REPORT_CONFIG_DEFAULT
                 ),
-                AttrReportConfig(
-                    attr="preheat_status", config=REPORT_CONFIG_DEFAULT
-                ),
-                AttrReportConfig(
-                    attr="preheat_time", config=REPORT_CONFIG_DEFAULT
-                ),
+                AttrReportConfig(attr="preheat_status", config=REPORT_CONFIG_DEFAULT),
+                AttrReportConfig(attr="preheat_time", config=REPORT_CONFIG_DEFAULT),
             )
 
             self.ZCL_INIT_ATTRS = {

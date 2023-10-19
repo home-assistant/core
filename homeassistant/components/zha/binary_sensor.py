@@ -346,7 +346,7 @@ class AqaraLinkageAlarmState(BinarySensor):
 class DanfossMountingModeActive(BinarySensor):
     """Danfoss TRV Proprietary attribute exposing whether in mounting mode."""
 
-    SENSOR_ATTR = "mounting_mode_active"
+    _attribute_name = "mounting_mode_active"
     _unique_id_suffix = "mounting_mode_active"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
     _attr_translation_key: str = "mounting_mode_active"
@@ -360,7 +360,7 @@ class DanfossHeatRequired(BinarySensor):
     """Danfoss TRV Proprietary attribute exposing whether heat is required."""
 
     _unique_id_suffix = "heat_required"
-    SENSOR_ATTR = "heat_required"
+    _attribute_name = "heat_required"
     _attr_translation_key: str = "heat_required"
 
 
@@ -372,6 +372,6 @@ class DanfossPreheatStatus(BinarySensor):
     """Danfoss TRV Proprietary attribute exposing whether in pre-heating mode."""
 
     _unique_id_suffix = "preheat_status"
-    SENSOR_ATTR = "preheat_status"
+    _attribute_name = "preheat_status"
     _attr_translation_key: str = "preheat_status"
     _attr_entity_registry_enabled_default = False

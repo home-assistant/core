@@ -1097,7 +1097,7 @@ class PiHeatingDemand(Sensor):
     """
 
     _unique_id_suffix = "pi_heating_demand"
-    SENSOR_ATTR = "pi_heating_demand"
+    _attribute_name = "pi_heating_demand"
     _attr_translation_key: str = "pi_heating_demand"
     _attr_icon: str = "mdi:radiator"
     _attr_native_unit_of_measurement = PERCENTAGE
@@ -1121,7 +1121,7 @@ class SetpointChangeSource(EnumSensor):
     """
 
     _unique_id_suffix = "setpoint_change_source"
-    SENSOR_ATTR = "setpoint_change_source"
+    _attribute_name = "setpoint_change_source"
     _attr_translation_key: str = "setpoint_change_source"
     _attr_icon: str = "mdi:thermostat"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -1150,7 +1150,7 @@ class DanfossOpenWindowDetection(EnumSensor):
     """
 
     _unique_id_suffix = "open_window_detection"
-    SENSOR_ATTR = "open_window_detection"
+    _attribute_name = "open_window_detection"
     _attr_translation_key: str = "open_window_detected"
     _attr_icon: str = "mdi:window-open"
     _enum = DanfossOpenWindowDetectionEnum
@@ -1165,7 +1165,7 @@ class DanfossLoadEstimate(Sensor):
     """Danfoss Proprietary attribute for communicating its estimate of the radiator load."""
 
     _unique_id_suffix = "load_estimate"
-    SENSOR_ATTR = "load_estimate"
+    _attribute_name = "load_estimate"
     _attr_translation_key: str = "load_estimate"
     _attr_icon: str = "mdi:scale-balance"
 
@@ -1179,7 +1179,7 @@ class DanfossAdaptationRunStatus(BitMapSensor):
     """Danfoss Proprietary attribute for showing the status of the adaptation run."""
 
     _unique_id_suffix = "adaptation_run_status"
-    SENSOR_ATTR = "adaptation_run_status"
+    _attribute_name = "adaptation_run_status"
     _attr_translation_key: str = "adaptation_run_status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _default_value = "Nothing"
@@ -1199,7 +1199,7 @@ class DanfossPreheatTime(Sensor):
     """Danfoss Proprietary attribute for communicating the time when it starts pre-heating."""
 
     _unique_id_suffix = "preheat_time"
-    SENSOR_ATTR = "preheat_time"
+    _attribute_name = "preheat_time"
     _attr_translation_key: str = "preheat_time"
     _attr_icon: str = "mdi:radiator"
     _attr_entity_registry_enabled_default = False
@@ -1214,7 +1214,7 @@ class DanfossSoftwareErrorCode(BitMapSensor):
     """Danfoss Proprietary attribute for communicating the error code."""
 
     _unique_id_suffix = "sw_error_code"
-    SENSOR_ATTR = "sw_error_code"
+    _attribute_name = "sw_error_code"
     _attr_translation_key: str = "software_error"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _default_value = "Good"
@@ -1247,6 +1247,6 @@ class DanfossMotorStepCounter(Sensor):
     """Danfoss Proprietary attribute for communicating the motor step counter."""
 
     _unique_id_suffix = "motor_step_counter"
-    SENSOR_ATTR = "motor_step_counter"
+    _attribute_name = "motor_step_counter"
     _attr_translation_key: str = "motor_stepcount"
     _attr_entity_category = EntityCategory.DIAGNOSTIC

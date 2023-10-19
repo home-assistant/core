@@ -982,7 +982,7 @@ class MaxHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
     """
 
     _unique_id_suffix = "max_heat_setpoint_limit"
-    _zcl_attribute: str = "max_heat_setpoint_limit"
+    _attribute_name: str = "max_heat_setpoint_limit"
     _attr_translation_key: str = "max_heat_setpoint_limit"
 
     min_source = "min_heat_setpoint_limit"
@@ -997,7 +997,7 @@ class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
     """
 
     _unique_id_suffix = "min_heat_setpoint_limit"
-    _zcl_attribute: str = "min_heat_setpoint_limit"
+    _attribute_name: str = "min_heat_setpoint_limit"
     _attr_translation_key: str = "min_heat_setpoint_limit"
 
     max_source = "max_heat_setpoint_limit"
@@ -1012,7 +1012,7 @@ class DanfossExerciseTriggerTime(ZHANumberConfigurationEntity):
     """Danfoss Proprietary Attribute to set the time to exercise the valve."""
 
     _unique_id_suffix = "exercise_trigger_time"
-    _zcl_attribute: str = "exercise_trigger_time"
+    _attribute_name: str = "exercise_trigger_time"
     _attr_translation_key: str = "exercise_trigger_time"
     _attr_native_min_value: int = 0
     _attr_native_max_value: int = 1439
@@ -1030,7 +1030,7 @@ class DanfossExternalMeasuredRoomSensor(ZCLTemperatureEntity):
     """Danfoss Proprietary Attribute to communicate the value of the external temperature sensor."""
 
     _unique_id_suffix = "external_measured_room_sensor"
-    _zcl_attribute: str = "external_measured_room_sensor"
+    _attribute_name: str = "external_measured_room_sensor"
     _attr_translation_key: str = "external_temperature_sensor"
     _attr_native_min_value: float = -80
     _attr_native_max_value: float = 35
@@ -1046,7 +1046,7 @@ class DanfossLoadRoomMean(ZHANumberConfigurationEntity):
     """Danfoss Proprietary Attribute to set a value for the load."""
 
     _unique_id_suffix = "load_room_mean"
-    _zcl_attribute: str = "load_room_mean"
+    _attribute_name: str = "load_room_mean"
     _attr_translation_key: str = "load_room_mean"
     _attr_native_min_value: int = -8000
     _attr_native_max_value: int = 2000
@@ -1063,7 +1063,7 @@ class DanfossControlAlgorithmScaleFactor(ZHANumberConfigurationEntity):
     """Danfoss Proprietary Attribute to configure the aggressiveness of the control algorithm."""
 
     _unique_id_suffix = "control_algorithm_scale_factor"
-    _zcl_attribute: str = "control_algorithm_scale_factor"
+    _attribute_name: str = "control_algorithm_scale_factor"
     _attr_translation_key: str = "control_algorithm_scale_factor"
     _attr_native_min_value: int = 1
     _attr_native_max_value: int = 10
@@ -1080,7 +1080,7 @@ class DanfossRegulationSetpointOffset(ZHANumberConfigurationEntity):
     """Danfoss Proprietary Attribute to set the regulation setpoint offset."""
 
     _unique_id_suffix = "regulation_setpoint_offset"
-    _zcl_attribute: str = "regulation_setpoint_offset"
+    _attribute_name: str = "regulation_setpoint_offset"
     _attr_translation_key: str = "regulation_setpoint_offset"
     _attr_mode: NumberMode = NumberMode.BOX
     _attr_native_unit_of_measurement: str = "°C"

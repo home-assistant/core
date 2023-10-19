@@ -591,7 +591,7 @@ class DanfossExternalOpenWindowDetected(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for communicating an open window."""
 
     _unique_id_suffix = "external_open_window_detected"
-    _zcl_attribute: str = "external_open_window_detected"
+    _attribute_name: str = "external_open_window_detected"
     _attr_translation_key: str = "external_window_sensor"
     _attr_icon: str = "mdi:window-open"
 
@@ -604,7 +604,7 @@ class DanfossWindowOpenFeature(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute enabling open window detection."""
 
     _unique_id_suffix = "window_open_feature"
-    _zcl_attribute: str = "window_open_feature"
+    _attribute_name: str = "window_open_feature"
     _attr_translation_key: str = "use_external_window_detection"
     _attr_icon: str = "mdi:window-open"
 
@@ -617,7 +617,7 @@ class DanfossMountingModeControl(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for switching to mounting mode."""
 
     _unique_id_suffix = "mounting_mode_control"
-    _zcl_attribute: str = "mounting_mode_control"
+    _attribute_name: str = "mounting_mode_control"
     _attr_translation_key: str = "mounting_mode"
 
 
@@ -629,7 +629,7 @@ class DanfossRadiatorCovered(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for communicating full usage of the external temperature sensor."""
 
     _unique_id_suffix = "radiator_covered"
-    _zcl_attribute: str = "radiator_covered"
+    _attribute_name: str = "radiator_covered"
     _attr_translation_key: str = "prioritize_external_temperature_sensor"
     _attr_icon: str = "mdi:thermometer"
 
@@ -642,7 +642,7 @@ class DanfossHeatAvailable(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for communicating available heat."""
 
     _unique_id_suffix = "heat_available"
-    _zcl_attribute: str = "heat_available"
+    _attribute_name: str = "heat_available"
     _attr_translation_key: str = "heat_available"
     _attr_icon: str = "mdi:water-boiler"
 
@@ -655,7 +655,7 @@ class DanfossLoadBalancingEnable(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for enabling load balancing."""
 
     _unique_id_suffix = "load_balancing_enable"
-    _zcl_attribute: str = "load_balancing_enable"
+    _attribute_name: str = "load_balancing_enable"
     _attr_translation_key: str = "use_load_balancing"
     _attr_icon: str = "mdi:scale-balance"
 
@@ -671,5 +671,5 @@ class DanfossAdaptationRunSettings(ZHASwitchConfigurationEntity):
     """
 
     _unique_id_suffix = "adaptation_run_settings"
-    _zcl_attribute: str = "adaptation_run_settings"
+    _attribute_name: str = "adaptation_run_settings"
     _attr_translation_key: str = "adaptation_run_enabled"
