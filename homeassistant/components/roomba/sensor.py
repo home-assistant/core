@@ -147,7 +147,7 @@ class RoombaSensor(IRobotEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self.entity_description.key}_{self._blid}"
 
