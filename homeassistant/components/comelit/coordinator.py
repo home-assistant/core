@@ -68,7 +68,7 @@ class ComelitSerialBridge(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Update router data."""
+        """Update device data."""
         _LOGGER.debug("Polling Comelit Serial Bridge host: %s", self._host)
         logged = False
         try:
