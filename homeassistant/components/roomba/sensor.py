@@ -127,8 +127,7 @@ async def async_setup_entry(
     blid = domain_data[BLID]
 
     async_add_entities(
-        RoombaSensor(roomba, blid, entity_description)
-        for entity_description in SENSORS
+        RoombaSensor(roomba, blid, entity_description) for entity_description in SENSORS
     )
 
 
@@ -146,7 +145,11 @@ class RoombaSensor(IRobotEntity, SensorEntity):
         """Initialize Roomba sensor."""
         super().__init__(roomba, blid)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{entity_description.key}_{blid}"
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return f"{self.entity_description.key}_{self._blid}"
 
     @property
     def native_value(self) -> StateType:
