@@ -24,7 +24,6 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_suggest_report_issue
@@ -73,13 +72,6 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 @callback
 def async_default_engine(hass: HomeAssistant) -> str | None:
     """Return the domain or entity id of the default engine."""
-    entity_registry = er.async_get(hass)
-    if (
-        cloud_entity_id := entity_registry.async_get_entity_id(
-            DOMAIN, "cloud", "cloud-speech-to-text"
-        )
-    ) and cloud_entity_id in hass.states.async_entity_ids(DOMAIN):
-        return cloud_entity_id
     return async_default_provider(hass) or next(
         iter(hass.states.async_entity_ids(DOMAIN)), None
     )
