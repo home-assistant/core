@@ -524,7 +524,7 @@
         "name": "Phase C voltage"
       },
       "add_ele": {
-        "name": "Current energy level"
+        "name": "Current consumption"
       },
       "cleaning_area": {
         "name": "Cleaning area"
