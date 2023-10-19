@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from asyncio import run_coroutine_threadsafe
-import datetime as dt
 from datetime import timedelta
 import logging
 from typing import Any
