@@ -197,7 +197,7 @@ async def test_dimmer_off(dimmer, hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
-    assert ATTR_BRIGHTNESS not in state.attributes
+    assert state.attributes[ATTR_BRIGHTNESS] is None
 
 
 @pytest.fixture(name="wlightbox_s")
@@ -236,7 +236,7 @@ async def test_wlightbox_s_init(wlightbox_s, hass: HomeAssistant) -> None:
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
     assert color_modes == [ColorMode.BRIGHTNESS]
 
-    assert ATTR_BRIGHTNESS not in state.attributes
+    assert state.attributes[ATTR_BRIGHTNESS] is None
     assert state.state == STATE_UNKNOWN
 
     device_registry = dr.async_get(hass)
@@ -339,8 +339,8 @@ async def test_wlightbox_init(wlightbox, hass: HomeAssistant) -> None:
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
     assert color_modes == [ColorMode.RGBW]
 
-    assert ATTR_BRIGHTNESS not in state.attributes
-    assert ATTR_RGBW_COLOR not in state.attributes
+    assert state.attributes[ATTR_BRIGHTNESS] is None
+    assert state.attributes[ATTR_RGBW_COLOR] is None
     assert state.state == STATE_UNKNOWN
 
     device_registry = dr.async_get(hass)
@@ -487,7 +487,7 @@ async def test_wlightbox_off(wlightbox, hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get(entity_id)
-    assert ATTR_RGBW_COLOR not in state.attributes
+    assert state.attributes[ATTR_RGBW_COLOR] is None
     assert state.state == STATE_OFF
 
 
