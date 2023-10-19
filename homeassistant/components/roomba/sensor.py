@@ -127,11 +127,9 @@ async def async_setup_entry(
     blid = domain_data[BLID]
 
     async_add_entities(
-        (
-            RoombaSensor(roomba, blid, entity_description)
-            for entity_description in SENSORS
-        ),
-        True,
+        RoombaSensor(roomba, blid, entity_description)
+        for entity_description in SENSORS
+    )
     )
 
 
