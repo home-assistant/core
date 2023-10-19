@@ -16,8 +16,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import BLID, DOMAIN, ROOMBA_SESSION
+from .const import DOMAIN
 from .irobot_base import IRobotEntity
+from .models import RoombaData
 
 
 @dataclass
@@ -122,9 +123,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the iRobot Roomba vacuum cleaner."""
-    domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    roomba = domain_data[ROOMBA_SESSION]
-    blid = domain_data[BLID]
+    domain_data: RoombaData = hass.data[DOMAIN][config_entry.entry_id]
+    roomba = domain_data.roomba
+    blid = domain_data.blid
 
     async_add_entities(
         RoombaSensor(roomba, blid, entity_description) for entity_description in SENSORS
