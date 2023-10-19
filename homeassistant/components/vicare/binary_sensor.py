@@ -168,18 +168,7 @@ async def async_setup_entry(
     device_config: PyViCareDeviceConfig = hass.data[DOMAIN][config_entry.entry_id][
         VICARE_DEVICE_CONFIG
     ]
-    is_supported: bool = False
-
-    try:
-        await hass.async_add_executor_job(STATUS_SENSOR.value_getter, device_config)
-        is_supported = True
-        _LOGGER.debug("Found entity %s", STATUS_SENSOR.name)
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("Feature not supported %s", STATUS_SENSOR.name)
-    except AttributeError:
-        _LOGGER.debug("Attribute Error %s", STATUS_SENSOR.name)
-
-    if is_supported:
+    if await hass.async_add_executor_job(is_supported, STATUS_SENSOR.name, STATUS_SENSOR, device_config):
         async_add_entities(
             [
                 ViCareStatusBinarySensor(
