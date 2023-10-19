@@ -39,7 +39,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
 )
-from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
+from homeassistant.core import Context, Event, EventOrigin, State
 from homeassistant.helpers.entity import EntityInfo
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
 import homeassistant.util.dt as dt_util
@@ -560,7 +560,6 @@ class StateAttributes(Base):
     def shared_attrs_bytes_from_event(
         event: Event,
         entity_sources: dict[str, EntityInfo],
-        exclude_attrs_by_domain: dict[str, set[str]],
         dialect: SupportedDialect | None,
     ) -> bytes:
         """Create shared_attrs from a state_changed event."""
@@ -568,14 +567,7 @@ class StateAttributes(Base):
         # None state means the state was removed from the state machine
         if state is None:
             return b"{}"
-        domain = split_entity_id(state.entity_id)[0]
         exclude_attrs = set(ALL_DOMAIN_EXCLUDE_ATTRS)
-        if base_platform_attrs := exclude_attrs_by_domain.get(domain):
-            exclude_attrs |= base_platform_attrs
-        if (entity_info := entity_sources.get(state.entity_id)) and (
-            integration_attrs := exclude_attrs_by_domain.get(entity_info["domain"])
-        ):
-            exclude_attrs |= integration_attrs
         if state_info := state.state_info:
             exclude_attrs |= state_info["unrecorded_attributes"]
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes

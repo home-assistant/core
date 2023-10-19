@@ -15,6 +15,7 @@ from .coordinator import RensonCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.FAN,
     Platform.NUMBER,
     Platform.SENSOR,

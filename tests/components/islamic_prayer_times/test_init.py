@@ -9,7 +9,9 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import islamic_prayer_times
 from homeassistant.components.islamic_prayer_times.const import CONF_CALC_METHOD
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import (
     NEW_PRAYER_TIMES,
@@ -145,3 +147,46 @@ async def test_update(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
         assert pt_data.data == NEW_PRAYER_TIMES_TIMESTAMPS
+
+
+@pytest.mark.parametrize(
+    ("object_id", "old_unique_id"),
+    [
+        (
+            "fajer_prayer",
+            "Fajr",
+        ),
+        (
+            "dhuhr_prayer",
+            "Dhuhr",
+        ),
+    ],
+)
+async def test_migrate_unique_id(
+    hass: HomeAssistant, object_id: str, old_unique_id: str
+) -> None:
+    """Test unique id migration."""
+    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
+    entry.add_to_hass(hass)
+
+    ent_reg = er.async_get(hass)
+
+    entity: er.RegistryEntry = ent_reg.async_get_or_create(
+        suggested_object_id=object_id,
+        domain=SENSOR_DOMAIN,
+        platform=islamic_prayer_times.DOMAIN,
+        unique_id=old_unique_id,
+        config_entry=entry,
+    )
+    assert entity.unique_id == old_unique_id
+
+    with patch(
+        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+        return_value=PRAYER_TIMES,
+    ), freeze_time(NOW):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_migrated = ent_reg.async_get(entity.entity_id)
+    assert entity_migrated
+    assert entity_migrated.unique_id == f"{entry.entry_id}-{old_unique_id}"

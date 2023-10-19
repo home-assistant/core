@@ -11,19 +11,6 @@ from homeassistant.core import HomeAssistant, callback, is_callback
 import homeassistant.util.logging as logging_util
 
 
-def test_sensitive_data_filter() -> None:
-    """Test the logging sensitive data filter."""
-    log_filter = logging_util.HideSensitiveDataFilter("mock_sensitive")
-
-    clean_record = logging.makeLogRecord({"msg": "clean log data"})
-    log_filter.filter(clean_record)
-    assert clean_record.msg == "clean log data"
-
-    sensitive_record = logging.makeLogRecord({"msg": "mock_sensitive log"})
-    log_filter.filter(sensitive_record)
-    assert sensitive_record.msg == "******* log"
-
-
 async def test_logging_with_queue_handler() -> None:
     """Test logging with HomeAssistantQueueHandler."""
 
