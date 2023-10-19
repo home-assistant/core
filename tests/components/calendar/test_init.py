@@ -424,7 +424,7 @@ async def test_list_events_service(
         blocking=True,
         return_response=True,
     )
-    assert response == snapshot
+    assert response == snapshot(name="test_list_events_service")
 
 
 @pytest.mark.parametrize(
@@ -438,6 +438,7 @@ async def test_list_events_service(
         ("calendar.calendar_2", "00:15:00"),
     ],
 )
+@pytest.mark.freeze_time("2023-10-19 13:50:05")
 async def test_list_events_service_duration(
     hass: HomeAssistant,
     entity: str,

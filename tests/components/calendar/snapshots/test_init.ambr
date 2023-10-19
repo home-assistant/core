@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_list_events_service[2023-06-22T04:30:00-06:00-2023-06-22T06:30:00-06:00]
+# name: test_list_events_service[2023-06-22T04:30:00-06:00-2023-06-22T06:30:00-06:00][test_list_events_service]
   dict({
     'events': list([
       dict({
@@ -12,7 +12,7 @@
     ]),
   })
 # ---
-# name: test_list_events_service[2023-06-22T04:30:00-2023-06-22T06:30:00]
+# name: test_list_events_service[2023-06-22T04:30:00-2023-06-22T06:30:00][test_list_events_service]
   dict({
     'events': list([
       dict({
@@ -25,7 +25,7 @@
     ]),
   })
 # ---
-# name: test_list_events_service[2023-06-22T10:30:00Z-2023-06-22T12:30:00Z]
+# name: test_list_events_service[2023-06-22T10:30:00Z-2023-06-22T12:30:00Z][test_list_events_service]
   dict({
     'events': list([
       dict({
@@ -49,9 +49,9 @@
     'events': list([
       dict({
         'description': 'Future Description',
-        'end': '2023-10-19T05:19:32.771608-07:00',
+        'end': '2023-10-19T08:20:05-07:00',
         'location': 'Future Location',
-        'start': '2023-10-19T04:19:32.771608-07:00',
+        'start': '2023-10-19T07:20:05-07:00',
         'summary': 'Future Event',
       }),
     ]),
@@ -61,8 +61,8 @@
   dict({
     'events': list([
       dict({
-        'end': '2023-10-19T04:19:33.058104-07:00',
-        'start': '2023-10-19T03:19:33.058104-07:00',
+        'end': '2023-10-19T07:20:05-07:00',
+        'start': '2023-10-19T06:20:05-07:00',
         'summary': 'Current Event',
       }),
     ]),
