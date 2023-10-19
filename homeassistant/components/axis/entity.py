@@ -42,7 +42,8 @@ class AxisEntity(Entity):
         self.device = device
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(AXIS_DOMAIN, device.unique_id)}
+            identifiers={(AXIS_DOMAIN, device.unique_id)},
+            serial_number=device.api.vapix.serial_number,
         )
 
     async def async_added_to_hass(self) -> None:
