@@ -36,6 +36,7 @@ class HomeKitEntity(Entity):
     pollable_characteristics: list[tuple[int, int]]
     watchable_characteristics: list[tuple[int, int]]
     all_characteristics: set[tuple[int, int]]
+    accessory_info: Service
 
     def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
         """Initialise a generic HomeKit device."""
@@ -144,9 +145,11 @@ class HomeKitEntity(Entity):
         accessory = self._accessory
         self.accessory = accessory.entity_map.aid(self._aid)
         self.service = self.accessory.services.iid(self._iid)
-        self.accessory_info = self.accessory.services.first(
+        accessory_info = self.accessory.services.first(
             service_type=ServicesTypes.ACCESSORY_INFORMATION
         )
+        assert accessory_info
+        self.accessory_info = accessory_info
         # If we re-setup, we need to make sure we make new
         # lists since we passed them to the connection before
         # and we do not want to inadvertently modify the old
