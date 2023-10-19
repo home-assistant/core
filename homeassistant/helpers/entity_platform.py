@@ -20,9 +20,9 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
+    EntityServiceResponse,
     HomeAssistant,
     ServiceCall,
-    ServiceResponse,
     SupportsResponse,
     callback,
     split_entity_id,
@@ -828,7 +828,7 @@ class EntityPlatform:
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> ServiceResponse:
+        async def handle_service(call: ServiceCall) -> EntityServiceResponse:
             """Handle the service."""
             return await service.entity_service_call(
                 self.hass,

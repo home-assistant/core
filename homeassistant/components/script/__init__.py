@@ -618,7 +618,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             unique_id,
             self._service_handler,
             schema=SCRIPT_SERVICE_SCHEMA,
-            supports_response=SupportsResponse.OPTIONAL_LEGACY,
+            supports_response=SupportsResponse.OPTIONAL,
         )
 
         # Register the service description

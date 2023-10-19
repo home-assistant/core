@@ -134,6 +134,7 @@ DOMAIN = "homeassistant"
 BLOCK_LOG_TIMEOUT = 60
 
 ServiceResponse = JsonObjectType | None
+EntityServiceResponse = dict[str, ServiceResponse] | None
 
 
 class ConfigSource(enum.StrEnum):
@@ -1738,14 +1739,6 @@ class SupportsResponse(enum.StrEnum):
     OPTIONAL = "optional"
     """The service optionally returns response data when asked by the caller."""
 
-    OPTIONAL_LEGACY = "optional-legacy"
-    """
-    The service optionally returns response data when asked by the caller.
-
-    The service returns data not keyed by enity_id.
-    Deprecated and scheduled for removal in 2024.6.
-    """
-
     ONLY = "only"
     """The service is read-only and the caller must always ask for response data."""
 
@@ -1753,7 +1746,7 @@ class SupportsResponse(enum.StrEnum):
     """
     The service is read-only and the caller must always ask for response data.
 
-    The service returns data not keyed by enity_id.
+    The service returns data not keyed by entity_id.
     Deprecated and scheduled for removal in 2024.6.
     """
 
@@ -1765,7 +1758,10 @@ class Service:
 
     def __init__(
         self,
-        func: Callable[[ServiceCall], Coroutine[Any, Any, ServiceResponse] | None],
+        func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse] | None,
+        ],
         schema: vol.Schema | None,
         domain: str,
         service: str,
@@ -1874,7 +1870,8 @@ class ServiceRegistry:
         domain: str,
         service: str,
         service_func: Callable[
-            [ServiceCall], Coroutine[Any, Any, ServiceResponse] | None
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse] | None,
         ],
         schema: vol.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
@@ -2058,15 +2055,6 @@ class ServiceRegistry:
             raise HomeAssistantError(
                 f"Service response data expected a dictionary, was {type(response_data)}"
             )
-        if handler.supports_response not in [
-            SupportsResponse.ONLY_LEGACY,
-            SupportsResponse.OPTIONAL_LEGACY,
-        ]:
-            for key in response_data:
-                if not valid_entity_id(key):
-                    raise HomeAssistantError(
-                        f"Service response data has to be keyed by entity_id, was {key}"
-                    )
 
         return response_data
 

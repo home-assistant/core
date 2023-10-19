@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     Context,
+    EntityServiceResponse,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -783,29 +784,6 @@ def _get_permissible_entity_candidates(
     ]
 
 
-async def legacy_entity_service_call(
-    hass: HomeAssistant,
-    platforms: Iterable[EntityPlatform],
-    func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
-    call: ServiceCall,
-    required_features: Iterable[int] | None = None,
-) -> ServiceResponse | None:
-    """Handle an legacy entity service call.
-
-    Removes the entity_id key and directly reports the results.
-    """
-
-    results_by_entites = await entity_service_call(
-        hass, platforms, func, call, required_features
-    )
-    assert results_by_entites is not None
-
-    if len(results_by_entites) > 1:
-        raise HomeAssistantError("Deprecated service call matched more than one entity")
-
-    return results_by_entites.popitem()[1]  # type: ignore[return-value]
-
-
 @bind_hass
 async def entity_service_call(
     hass: HomeAssistant,
@@ -813,7 +791,7 @@ async def entity_service_call(
     func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
-) -> ServiceResponse | None:
+) -> EntityServiceResponse | None:
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
@@ -896,15 +874,15 @@ async def entity_service_call(
         # Single entity case avoids creating task
         # ServiceResponse
         entity = entities[0]
-        response_data = await _handle_entity_call(
-            hass, entity, func, data, call.context
-        )
+        response = await _handle_entity_call(hass, entity, func, data, call.context)
         if entity.should_poll:
             # Context expires if the turn on commands took a long time.
             # Set context again so it's there when we update
             entity.async_set_context(call.context)
             await entity.async_update_ha_state(True)
-        return response_data if return_response else None
+        if return_response and response is not None:
+            return {entity.entity_id: response}
+        return None
 
     done, pending = await asyncio.wait(
         [
@@ -918,11 +896,9 @@ async def entity_service_call(
     )
     assert not pending
 
-    response_data = {}
-    for task in done:
-        result = task.result()  # pop exception if have
-        if result is not None:
-            response_data.update(result)
+    response_data: EntityServiceResponse = {}
+    for entity, task in zip(entities, done):
+        response_data[entity.entity_id] = task.result()  # type: ignore[index]
 
     tasks: list[asyncio.Task[None]] = []
 
@@ -964,7 +940,7 @@ async def _handle_entity_call(
 
     # Guard because callback functions do not return a task when passed to
     # async_run_job.
-    result: ServiceResponse | None = None
+    result: ServiceResponse = None
     if task is not None:
         result = await task
 
@@ -979,7 +955,7 @@ async def _handle_entity_call(
         )
         result = await result
 
-    return {entity.entity_id: result}
+    return result
 
 
 @bind_hass

@@ -20,6 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
+    EntityServiceResponse,
     Event,
     HomeAssistant,
     ServiceCall,
@@ -230,24 +231,29 @@ class EntityComponent(Generic[_EntityT]):
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> ServiceResponse:
+        async def handle_service(
+            call: ServiceCall,
+        ) -> EntityServiceResponse | ServiceResponse:
             """Handle the service."""
 
-            if supports_response in [
-                SupportsResponse.ONLY_LEGACY,
-                SupportsResponse.OPTIONAL_LEGACY,
-            ]:
+            result = await service.entity_service_call(
+                self.hass, self._platforms.values(), func, call, required_features
+            )
+
+            if supports_response == SupportsResponse.ONLY_LEGACY:
                 self.logger.warning(
                     "Detect use of service %s. "
                     "This is deprecated and will stop working in Home Assistant 2024.6",
                     name,
                 )
-                return await service.legacy_entity_service_call(
-                    self.hass, self._platforms.values(), func, call, required_features
-                )
-            return await service.entity_service_call(
-                self.hass, self._platforms.values(), func, call, required_features
-            )
+
+                if result:
+                    if len(result) > 1:
+                        raise HomeAssistantError(
+                            "Deprecated service call matched more than one entity"
+                        )
+                    return result.popitem()[1]
+            return result
 
         self.hass.services.async_register(
             self.domain, name, handle_service, schema, supports_response
