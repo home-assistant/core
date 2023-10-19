@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.dt import utc_from_timestamp, utcnow
+from homeassistant.util.dt import utcnow
 
 from . import HomeAssistantSpotifyData
 from .browse_media import async_browse_media_internal
@@ -203,7 +203,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def media_position_updated_at(self) -> dt.datetime | None:
         """When was the position of the current playing media valid."""
-        if not self._currently_playing or self._currently_playing_updated is None:
+        if not self._currently_playing:
             return None
         return self._currently_playing_updated
 
