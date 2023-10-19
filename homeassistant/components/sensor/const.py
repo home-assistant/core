@@ -185,7 +185,7 @@ class SensorDeviceClass(StrEnum):
     """Gas.
 
     Unit of measurement:
-    - SI / metric: `m³`
+    - SI / metric: `m³`, `l`
     - USCS / imperial: `ft³`, `CCF`
     """
 
@@ -503,6 +503,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.ENERGY_STORAGE: set(UnitOfEnergy),
     SensorDeviceClass.FREQUENCY: set(UnitOfFrequency),
     SensorDeviceClass.GAS: {
+        UnitOfVolume.LITERS,
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CUBIC_METERS,
