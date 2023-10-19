@@ -75,6 +75,8 @@ def mock_lamarzocco() -> Generator[MagicMock, None, None]:
         lamarzocco.current_status = json.loads(
             load_fixture("current_status.json", DOMAIN)
         )
+        lamarzocco.config = json.loads(load_fixture("config.json", DOMAIN))
+        lamarzocco.statistics = json.loads(load_fixture("statistics.json", DOMAIN))
 
         lamarzocco.try_connect.return_value = {
             "machine_name": MACHINE_NAME,
