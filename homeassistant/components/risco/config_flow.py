@@ -109,7 +109,7 @@ async def validate_local_input(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Risco."""
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self) -> None:
         """Init the config flow."""
@@ -219,7 +219,7 @@ class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
                 ): bool,
                 vol.Required(
                     CONF_COMMUNICATION_DELAY,
-                    default=self._data[CONF_COMMUNICATION_DELAY],
+                    default=self._data.get(CONF_COMMUNICATION_DELAY, 0),
                 ): int,
             }
         )

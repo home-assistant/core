@@ -87,7 +87,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         data[CONF_HOST],
         data[CONF_PORT],
         data[CONF_PIN],
-        **{CONF_COMMUNICATION_DELAY: options[CONF_COMMUNICATION_DELAY]},
+        **{CONF_COMMUNICATION_DELAY: options.get(CONF_COMMUNICATION_DELAY, 0)},
     )
 
     try:
@@ -182,22 +182,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-    if config_entry.version == 1:
-        new = {**config_entry.options}
-        new[CONF_COMMUNICATION_DELAY] = 0
-
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, options=new)
-
-    _LOGGER.debug("Migration to version %s successful", config_entry.version)
-
-    return True
 
 
 class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
