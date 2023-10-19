@@ -82,6 +82,21 @@ PLACEHOLDER_KEY_COMPONENTS = "components"
 
 ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
 
+ADDON_UPDATE_STATS = "stats"
+ADDON_UPDATE_CHANGELOG = "changelog"
+ADDON_UPDATE_INFO = "info"
+
+# This is a mapping of which endpoint the key in the addon data
+# is obtained from so we know which endpoint to update when the
+# coordinator polls for updates.
+KEY_TO_UPDATE_TYPES: dict[str, set[str]] = {
+    ATTR_VERSION_LATEST: {ADDON_UPDATE_INFO, ADDON_UPDATE_CHANGELOG},
+    ATTR_MEMORY_PERCENT: {ADDON_UPDATE_STATS},
+    ATTR_CPU_PERCENT: {ADDON_UPDATE_STATS},
+    ATTR_VERSION: {ADDON_UPDATE_INFO},
+    ATTR_STATE: {ADDON_UPDATE_INFO},
+}
+
 
 class SupervisorEntityModel(StrEnum):
     """Supervisor entity model."""

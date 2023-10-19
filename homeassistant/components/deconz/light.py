@@ -154,8 +154,9 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
             self._attr_supported_color_modes.add(ColorMode.ONOFF)
 
         if device.brightness is not None:
-            self._attr_supported_features |= LightEntityFeature.FLASH
-            self._attr_supported_features |= LightEntityFeature.TRANSITION
+            self._attr_supported_features |= (
+                LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
+            )
 
         if device.effect is not None:
             self._attr_supported_features |= LightEntityFeature.EFFECT

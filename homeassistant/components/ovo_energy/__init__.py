@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 import aiohttp
@@ -19,6 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_ACCOUNT, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
@@ -58,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise UpdateFailed(exception) from exception
             if not authenticated:
                 raise ConfigEntryAuthFailed("Not authenticated with OVO Energy")
-            return await client.get_daily_usage(datetime.utcnow().strftime("%Y-%m"))
+            return await client.get_daily_usage(dt_util.utcnow().strftime("%Y-%m"))
 
     coordinator = DataUpdateCoordinator[OVODailyUsage](
         hass,

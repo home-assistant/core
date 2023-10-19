@@ -4,11 +4,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Coroutine
-from functools import partial
+from functools import partial, wraps
 import logging
-from typing import Any, Protocol, cast, final
+from typing import TYPE_CHECKING, Any, Protocol, cast, final
 
 import voluptuous as vol
+import yaml
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -53,6 +54,7 @@ from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import (
     UNDEFINED,
     ConfigType,
@@ -101,6 +103,7 @@ from .discovery import (
     set_discovery_hash,
 )
 from .models import (
+    MessageCallbackType,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
@@ -336,6 +339,117 @@ async def async_setup_entry_helper(
     await _async_setup_entities()
 
 
+async def async_mqtt_entry_helper(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    entity_class: type[MqttEntity],
+    domain: str,
+    async_add_entities: AddEntitiesCallback,
+    discovery_schema: vol.Schema,
+    platform_schema_modern: vol.Schema,
+) -> None:
+    """Set up entity, automation or tag creation dynamically through MQTT discovery."""
+    mqtt_data = get_mqtt_data(hass)
+
+    async def async_discover(discovery_payload: MQTTDiscoveryPayload) -> None:
+        """Discover and add an MQTT entity, automation or tag."""
+        if not mqtt_config_entry_enabled(hass):
+            _LOGGER.warning(
+                (
+                    "MQTT integration is disabled, skipping setup of discovered item "
+                    "MQTT %s, payload %s"
+                ),
+                domain,
+                discovery_payload,
+            )
+            return
+        discovery_data = discovery_payload.discovery_data
+        try:
+            config: DiscoveryInfoType = discovery_schema(discovery_payload)
+            async_add_entities([entity_class(hass, config, entry, discovery_data)])
+        except vol.Invalid as err:
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+            clear_discovery_hash(hass, discovery_hash)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
+            async_handle_schema_error(discovery_payload, err)
+        except Exception:
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+            clear_discovery_hash(hass, discovery_hash)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
+            raise
+
+    mqtt_data.reload_dispatchers.append(
+        async_dispatcher_connect(
+            hass, MQTT_DISCOVERY_NEW.format(domain, "mqtt"), async_discover
+        )
+    )
+
+    async def _async_setup_entities() -> None:
+        """Set up MQTT items from configuration.yaml."""
+        mqtt_data = get_mqtt_data(hass)
+        if not (config_yaml := mqtt_data.config):
+            return
+        yaml_configs: list[ConfigType] = [
+            config
+            for config_item in config_yaml
+            for config_domain, configs in config_item.items()
+            for config in configs
+            if config_domain == domain
+        ]
+        entities: list[Entity] = []
+        for yaml_config in yaml_configs:
+            try:
+                config = platform_schema_modern(yaml_config)
+                entities.append(entity_class(hass, config, entry, None))
+            except vol.Invalid as ex:
+                error = str(ex)
+                config_file = getattr(yaml_config, "__config_file__", "?")
+                line = getattr(yaml_config, "__line__", "?")
+                issue_id = hex(hash(frozenset(yaml_config.items())))
+                yaml_config_str = yaml.dump(dict(yaml_config))
+                learn_more_url = (
+                    f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
+                )
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    issue_domain=domain,
+                    is_fixable=False,
+                    severity=IssueSeverity.ERROR,
+                    learn_more_url=learn_more_url,
+                    translation_placeholders={
+                        "domain": domain,
+                        "config_file": config_file,
+                        "line": line,
+                        "config": yaml_config_str,
+                        "error": error,
+                    },
+                    translation_key="invalid_platform_config",
+                )
+                _LOGGER.error(
+                    "%s for manual configured MQTT %s item, in %s, line %s Got %s",
+                    error,
+                    domain,
+                    config_file,
+                    line,
+                    yaml_config,
+                )
+
+        async_add_entities(entities)
+
+    # When reloading we check manual configured items against the schema
+    # before reloading
+    mqtt_data.reload_schema[domain] = platform_schema_modern
+    # discover manual configured MQTT items
+    mqtt_data.reload_handlers[domain] = _async_setup_entities
+    await _async_setup_entities()
+
+
 def init_entity_id_from_config(
     hass: HomeAssistant, entity: Entity, config: ConfigType, entity_id_format: str
 ) -> None:
@@ -344,6 +458,41 @@ def init_entity_id_from_config(
         entity.entity_id = async_generate_entity_id(
             entity_id_format, config[CONF_OBJECT_ID], None, hass
         )
+
+
+def write_state_on_attr_change(
+    entity: Entity, attributes: set[str]
+) -> Callable[[MessageCallbackType], MessageCallbackType]:
+    """Wrap an MQTT message callback to track state attribute changes."""
+
+    def _attrs_have_changed(tracked_attrs: dict[str, Any]) -> bool:
+        """Return True if attributes on entity changed or if update is forced."""
+        if not (write_state := (getattr(entity, "_attr_force_update", False))):
+            for attribute, last_value in tracked_attrs.items():
+                if getattr(entity, attribute, UNDEFINED) != last_value:
+                    write_state = True
+                    break
+
+        return write_state
+
+    def _decorator(msg_callback: MessageCallbackType) -> MessageCallbackType:
+        @wraps(msg_callback)
+        def wrapper(msg: ReceiveMessage) -> None:
+            """Track attributes for write state requests."""
+            tracked_attrs: dict[str, Any] = {
+                attribute: getattr(entity, attribute, UNDEFINED)
+                for attribute in attributes
+            }
+            msg_callback(msg)
+            if not _attrs_have_changed(tracked_attrs):
+                return
+
+            mqtt_data = get_mqtt_data(entity.hass)
+            mqtt_data.state_write_requests.write_state_request(entity)
+
+        return wrapper
+
+    return _decorator
 
 
 class MqttAttributes(Entity):
@@ -379,6 +528,7 @@ class MqttAttributes(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_extra_state_attributes"})
         def attributes_message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = attr_tpl(msg.payload)
@@ -391,9 +541,6 @@ class MqttAttributes(Entity):
                         and k not in self._attributes_extra_blocked
                     }
                     self._attr_extra_state_attributes = filtered_dict
-                    get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                        self
-                    )
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")
             except ValueError:
@@ -488,6 +635,7 @@ class MqttAvailability(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"available"})
         def availability_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT availability message."""
             topic = msg.topic
@@ -499,8 +647,6 @@ class MqttAvailability(Entity):
             elif payload == self._avail_topics[topic][CONF_PAYLOAD_NOT_AVAILABLE]:
                 self._available[topic] = False
                 self._available_latest = False
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._available = {
             topic: (self._available[topic] if topic in self._available else False)
@@ -850,7 +996,8 @@ class MqttDiscoveryUpdate(Entity):
                 discovery_hash,
                 payload,
             )
-            assert self._discovery_data
+            if TYPE_CHECKING:
+                assert self._discovery_data
             old_payload: DiscoveryInfoType
             old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
             debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
@@ -877,7 +1024,8 @@ class MqttDiscoveryUpdate(Entity):
                     send_discovery_done(self.hass, self._discovery_data)
 
         if discovery_hash:
-            assert self._discovery_data is not None
+            if TYPE_CHECKING:
+                assert self._discovery_data is not None
             debug_info.add_entity_discovery_data(
                 self.hass, self._discovery_data, self.entity_id
             )
@@ -1135,6 +1283,11 @@ class MqttEntity(
         elif not self._default_to_device_class_name():
             # Assign the default name
             self._attr_name = self._default_name
+        elif hasattr(self, "_attr_name"):
+            # An entity name was not set in the config
+            # don't set the name attribute and derive
+            # the name from the device_class
+            delattr(self, "_attr_name")
         if CONF_DEVICE in config:
             device_name: str
             if CONF_NAME not in config[CONF_DEVICE]:

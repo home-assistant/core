@@ -120,6 +120,8 @@ class QswSensorEntity(QswDataEntity):
 class QswFirmwareEntity(CoordinatorEntity[QswFirmwareCoordinator]):
     """Define a QNAP QSW firmware entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: QswFirmwareCoordinator,

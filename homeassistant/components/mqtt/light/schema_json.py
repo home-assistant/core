@@ -63,9 +63,9 @@ from ..const import (
     CONF_STATE_TOPIC,
 )
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
 from ..models import ReceiveMessage
-from ..util import get_mqtt_data, valid_subscribe_topic
+from ..util import valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
     CONF_BRIGHTNESS_SCALE,
@@ -184,20 +184,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
+    _fixed_color_mode: ColorMode | str | None = None
     _flash_times: dict[str, int | None]
     _topic: dict[str, str | None]
     _optimistic: bool
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize MQTT JSON light."""
-        self._fixed_color_mode: ColorMode | str | None = None
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -215,6 +205,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         }
         optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
+        self._attr_assumed_state = bool(self._optimistic)
 
         self._flash_times = {
             key: config.get(key)
@@ -346,6 +337,21 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(
+            self,
+            {
+                "_attr_brightness",
+                "_attr_color_temp",
+                "_attr_effect",
+                "_attr_hs_color",
+                "_attr_is_on",
+                "_attr_rgb_color",
+                "_attr_rgbw_color",
+                "_attr_rgbww_color",
+                "_attr_xy_color",
+                "color_mode",
+            },
+        )
         def state_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             values = json_loads_object(msg.payload)
@@ -418,8 +424,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 with suppress(KeyError):
                     self._attr_effect = cast(str, values["effect"])
 
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-
         if self._topic[CONF_STATE_TOPIC] is not None:
             self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
@@ -461,11 +465,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 ATTR_RGBWW_COLOR, self.rgbww_color
             )
             self._attr_xy_color = last_attributes.get(ATTR_XY_COLOR, self.xy_color)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     @property
     def color_mode(self) -> ColorMode | str | None:

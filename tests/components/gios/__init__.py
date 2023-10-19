@@ -21,6 +21,7 @@ async def init_integration(
         title="Home",
         unique_id="123",
         data={"station_id": 123, "name": "Home"},
+        entry_id="86129426118ae32020417a53712d6eef",
     )
 
     indexes = json.loads(load_fixture("gios/indexes.json"))

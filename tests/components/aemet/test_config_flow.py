@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aemet_opendata.exceptions import AuthError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import data_entry_flow
@@ -9,7 +10,6 @@ from homeassistant.components.aemet.const import CONF_STATION_UPDATES, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
 
 from .util import mock_api_call
 
@@ -59,13 +59,15 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_options(hass: HomeAssistant) -> None:
+async def test_form_options(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test the form options."""
 
-    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now), patch(
-        "homeassistant.util.dt.utcnow", return_value=now
-    ), patch(
+    hass.config.set_time_zone("UTC")
+    freezer.move_to("2021-01-09 12:00:00+00:00")
+    with patch(
         "homeassistant.components.aemet.AEMET.api_call",
         side_effect=mock_api_call,
     ):
@@ -116,13 +118,15 @@ async def test_form_options(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_form_duplicated_id(hass: HomeAssistant) -> None:
+async def test_form_duplicated_id(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test setting up duplicated entry."""
 
-    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now), patch(
-        "homeassistant.util.dt.utcnow", return_value=now
-    ), patch(
+    hass.config.set_time_zone("UTC")
+    freezer.move_to("2021-01-09 12:00:00+00:00")
+    with patch(
         "homeassistant.components.aemet.AEMET.api_call",
         side_effect=mock_api_call,
     ):
@@ -142,7 +146,7 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
 async def test_form_auth_error(hass: HomeAssistant) -> None:
     """Test setting up with api auth error."""
     mocked_aemet = MagicMock()
-    mocked_aemet.get_conventional_observation_stations.side_effect = AuthError
+    mocked_aemet.select_coordinates.side_effect = AuthError
 
     with patch(
         "homeassistant.components.aemet.config_flow.AEMET",

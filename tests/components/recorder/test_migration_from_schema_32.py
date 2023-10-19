@@ -39,6 +39,12 @@ SCHEMA_MODULE = "tests.components.recorder.db_schema_32"
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 
+async def _async_wait_migration_done(hass: HomeAssistant) -> None:
+    """Wait for the migration to be done."""
+    await recorder.get_instance(hass).async_block_till_done()
+    await async_recorder_block_till_done(hass)
+
+
 def _create_engine_test(*args, **kwargs):
     """Test version of create_engine that initializes with old schema.
 
@@ -101,6 +107,8 @@ async def test_migrate_events_context_ids(
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     test_uuid = uuid.uuid4()
     uuid_hex = test_uuid.hex
@@ -110,7 +118,7 @@ async def test_migrate_events_context_ids(
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    Events(
+                    old_db_schema.Events(
                         event_type="old_uuid_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -123,7 +131,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="empty_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -136,7 +144,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="ulid_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -149,7 +157,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id="01ARZ3NDEKTSV4RRFFQ69G5FA2",
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="invalid_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -162,7 +170,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="garbage_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -175,7 +183,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="event_with_garbage_context_id_no_time_fired_ts",
                         event_data=None,
                         origin_idx=0,
@@ -196,10 +204,12 @@ async def test_migrate_events_context_ids(
     await async_wait_recording_done(hass)
     now = dt_util.utcnow()
     expected_ulid_fallback_start = ulid_to_bytes(ulid_at_time(now.timestamp()))[0:6]
+    await _async_wait_migration_done(hass)
+
     with freeze_time(now):
         # This is a threadsafe way to add a task to the recorder
         instance.queue_task(EventsContextIDMigrationTask())
-        await async_recorder_block_till_done(hass)
+        await _async_wait_migration_done(hass)
 
     def _object_as_dict(obj):
         return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
@@ -304,6 +314,8 @@ async def test_migrate_states_context_ids(
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     test_uuid = uuid.uuid4()
     uuid_hex = test_uuid.hex
@@ -313,7 +325,7 @@ async def test_migrate_states_context_ids(
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    States(
+                    old_db_schema.States(
                         entity_id="state.old_uuid_context_id",
                         last_updated_ts=1477721632.452529,
                         context_id=uuid_hex,
@@ -323,7 +335,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="state.empty_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id=None,
@@ -333,7 +345,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="state.ulid_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id="01ARZ3NDEKTSV4RRFFQ69G5FAV",
@@ -343,7 +355,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id="01ARZ3NDEKTSV4RRFFQ69G5FA2",
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="state.invalid_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id="invalid",
@@ -353,7 +365,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="state.garbage_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id="adapt_lgt:b'5Cf*':interval:b'0R'",
@@ -363,7 +375,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="state.human_readable_uuid_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id="0ae29799-ee4e-4f45-8116-f582d7d3ee65",
@@ -380,7 +392,7 @@ async def test_migrate_states_context_ids(
 
     await async_wait_recording_done(hass)
     instance.queue_task(StatesContextIDMigrationTask())
-    await async_recorder_block_till_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _object_as_dict(obj):
         return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
@@ -489,22 +501,24 @@ async def test_migrate_event_type_ids(
     """Test we can migrate event_types to the EventTypes table."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     def _insert_events():
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    Events(
+                    old_db_schema.Events(
                         event_type="event_type_one",
                         origin_idx=0,
                         time_fired_ts=1677721632.452529,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="event_type_one",
                         origin_idx=0,
                         time_fired_ts=1677721632.552529,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="event_type_two",
                         origin_idx=0,
                         time_fired_ts=1677721632.552529,
@@ -517,7 +531,7 @@ async def test_migrate_event_type_ids(
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EventTypeIDMigrationTask())
-    await async_recorder_block_till_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _fetch_migrated_events():
         with session_scope(hass=hass, read_only=True) as session:
@@ -570,22 +584,24 @@ async def test_migrate_entity_ids(
     """Test we can migrate entity_ids to the StatesMeta table."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     def _insert_states():
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    States(
+                    old_db_schema.States(
                         entity_id="sensor.one",
                         state="one_1",
                         last_updated_ts=1.452529,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="sensor.two",
                         state="two_2",
                         last_updated_ts=2.252529,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="sensor.two",
                         state="two_1",
                         last_updated_ts=3.152529,
@@ -595,10 +611,10 @@ async def test_migrate_entity_ids(
 
     await instance.async_add_executor_job(_insert_states)
 
-    await async_wait_recording_done(hass)
+    await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EntityIDMigrationTask())
-    await async_recorder_block_till_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():
         with session_scope(hass=hass, read_only=True) as session:
@@ -636,22 +652,24 @@ async def test_post_migrate_entity_ids(
     """Test we can migrate entity_ids to the StatesMeta table."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     def _insert_events():
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    States(
+                    old_db_schema.States(
                         entity_id="sensor.one",
                         state="one_1",
                         last_updated_ts=1.452529,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="sensor.two",
                         state="two_2",
                         last_updated_ts=2.252529,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="sensor.two",
                         state="two_1",
                         last_updated_ts=3.152529,
@@ -661,10 +679,10 @@ async def test_post_migrate_entity_ids(
 
     await instance.async_add_executor_job(_insert_events)
 
-    await async_wait_recording_done(hass)
+    await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EntityIDPostMigrationTask())
-    await async_recorder_block_till_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():
         with session_scope(hass=hass, read_only=True) as session:
@@ -688,18 +706,20 @@ async def test_migrate_null_entity_ids(
     """Test we can migrate entity_ids to the StatesMeta table."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     def _insert_states():
         with session_scope(hass=hass) as session:
             session.add(
-                States(
+                old_db_schema.States(
                     entity_id="sensor.one",
                     state="one_1",
                     last_updated_ts=1.452529,
                 ),
             )
             session.add_all(
-                States(
+                old_db_schema.States(
                     entity_id=None,
                     state="empty",
                     last_updated_ts=time + 1.452529,
@@ -707,7 +727,7 @@ async def test_migrate_null_entity_ids(
                 for time in range(1000)
             )
             session.add(
-                States(
+                old_db_schema.States(
                     entity_id="sensor.one",
                     state="one_1",
                     last_updated_ts=2.452529,
@@ -716,11 +736,10 @@ async def test_migrate_null_entity_ids(
 
     await instance.async_add_executor_job(_insert_states)
 
-    await async_wait_recording_done(hass)
+    await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EntityIDMigrationTask())
-    await async_recorder_block_till_done(hass)
-    await async_recorder_block_till_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():
         with session_scope(hass=hass, read_only=True) as session:
@@ -758,18 +777,20 @@ async def test_migrate_null_event_type_ids(
     """Test we can migrate event_types to the EventTypes table when the event_type is NULL."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     def _insert_events():
         with session_scope(hass=hass) as session:
             session.add(
-                Events(
+                old_db_schema.Events(
                     event_type="event_type_one",
                     origin_idx=0,
                     time_fired_ts=1.452529,
                 ),
             )
             session.add_all(
-                Events(
+                old_db_schema.Events(
                     event_type=None,
                     origin_idx=0,
                     time_fired_ts=time + 1.452529,
@@ -777,7 +798,7 @@ async def test_migrate_null_event_type_ids(
                 for time in range(1000)
             )
             session.add(
-                Events(
+                old_db_schema.Events(
                     event_type="event_type_one",
                     origin_idx=0,
                     time_fired_ts=2.452529,
@@ -786,12 +807,10 @@ async def test_migrate_null_event_type_ids(
 
     await instance.async_add_executor_job(_insert_events)
 
-    await async_wait_recording_done(hass)
+    await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-
     instance.queue_task(EventTypeIDMigrationTask())
-    await async_recorder_block_till_done(hass)
-    await async_recorder_block_till_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _fetch_migrated_events():
         with session_scope(hass=hass, read_only=True) as session:

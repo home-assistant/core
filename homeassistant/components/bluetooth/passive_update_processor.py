@@ -341,7 +341,8 @@ class PassiveBluetoothProcessorCoordinator(
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
-        super()._async_handle_bluetooth_event(service_info, change)
+        was_available = self._available
+        self._available = True
         if self.hass.is_stopping:
             return
 
@@ -359,7 +360,7 @@ class PassiveBluetoothProcessorCoordinator(
             self.logger.info("Coordinator %s recovered", self.name)
 
         for processor in self._processors:
-            processor.async_handle_update(update)
+            processor.async_handle_update(update, was_available)
 
 
 _PassiveBluetoothDataProcessorT = TypeVar(
@@ -516,20 +517,39 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
 
     @callback
     def async_update_listeners(
-        self, data: PassiveBluetoothDataUpdate[_T] | None
+        self,
+        data: PassiveBluetoothDataUpdate[_T] | None,
+        was_available: bool | None = None,
     ) -> None:
         """Update all registered listeners."""
+        if was_available is None:
+            was_available = self.coordinator.available
+
         # Dispatch to listeners without a filter key
         for update_callback in self._listeners:
             update_callback(data)
 
+        if not was_available or data is None:
+            # When data is None, or was_available is False,
+            # dispatch to all listeners as it means the device
+            # is flipping between available and unavailable
+            for listeners in self._entity_key_listeners.values():
+                for update_callback in listeners:
+                    update_callback(data)
+            return
+
         # Dispatch to listeners with a filter key
-        for listeners in self._entity_key_listeners.values():
-            for update_callback in listeners:
-                update_callback(data)
+        # if the key is in the data
+        entity_key_listeners = self._entity_key_listeners
+        for entity_key in data.entity_data:
+            if maybe_listener := entity_key_listeners.get(entity_key):
+                for update_callback in maybe_listener:
+                    update_callback(data)
 
     @callback
-    def async_handle_update(self, update: _T) -> None:
+    def async_handle_update(
+        self, update: _T, was_available: bool | None = None
+    ) -> None:
         """Handle a Bluetooth event."""
         try:
             new_data = self.update_method(update)
@@ -554,7 +574,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
             )
 
         self.data.update(new_data)
-        self.async_update_listeners(new_data)
+        self.async_update_listeners(new_data, was_available)
 
 
 class PassiveBluetoothProcessorEntity(Entity, Generic[_PassiveBluetoothDataProcessorT]):

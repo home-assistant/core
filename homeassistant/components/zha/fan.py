@@ -6,7 +6,6 @@ import functools
 import math
 from typing import Any
 
-from zigpy.exceptions import ZigbeeException
 from zigpy.zcl.clusters import hvac
 
 from homeassistant.components.fan import (
@@ -28,12 +27,9 @@ from homeassistant.util.percentage import (
 )
 
 from .core import discovery
-from .core.const import (
-    CLUSTER_HANDLER_FAN,
-    DATA_ZHA,
-    SIGNAL_ADD_ENTITIES,
-    SIGNAL_ATTR_UPDATED,
-)
+from .core.cluster_handlers import wrap_zigpy_exceptions
+from .core.const import CLUSTER_HANDLER_FAN, SIGNAL_ADD_ENTITIES, SIGNAL_ATTR_UPDATED
+from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity, ZhaGroupEntity
 
@@ -65,7 +61,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation fan from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.FAN]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.FAN]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -83,6 +80,7 @@ class BaseFan(FanEntity):
     """Base representation of a ZHA fan."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_translation_key: str = "fan"
 
     @property
     def preset_modes(self) -> list[str]:
@@ -136,8 +134,6 @@ class BaseFan(FanEntity):
 class ZhaFan(BaseFan, ZhaEntity):
     """Representation of a ZHA fan."""
 
-    _attr_name: str = "Fan"
-
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
@@ -184,6 +180,8 @@ class ZhaFan(BaseFan, ZhaEntity):
 class FanGroup(BaseFan, ZhaGroupEntity):
     """Representation of a fan group."""
 
+    _attr_translation_key: str = "fan_group"
+
     def __init__(
         self, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
     ) -> None:
@@ -207,10 +205,10 @@ class FanGroup(BaseFan, ZhaGroupEntity):
 
     async def _async_set_fan_mode(self, fan_mode: int) -> None:
         """Set the fan mode for the group."""
-        try:
+
+        with wrap_zigpy_exceptions():
             await self._fan_cluster_handler.write_attributes({"fan_mode": fan_mode})
-        except ZigbeeException as ex:
-            self.error("Could not set fan mode: %s", ex)
+
         self.async_set_state(0, "fan_mode", fan_mode)
 
     async def async_update(self) -> None:
@@ -264,8 +262,6 @@ IKEA_PRESET_MODES = list(IKEA_NAME_TO_PRESET_MODE)
 )
 class IkeaFan(BaseFan, ZhaEntity):
     """Representation of a ZHA fan."""
-
-    _attr_name: str = "IKEA fan"
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Init this sensor."""

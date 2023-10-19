@@ -311,6 +311,8 @@ class ProtectNVREntity(ProtectDeviceEntity):
 class EventEntityMixin(ProtectDeviceEntity):
     """Adds motion event attributes to sensor."""
 
+    _unrecorded_attributes = frozenset({ATTR_EVENT_ID, ATTR_EVENT_SCORE})
+
     entity_description: ProtectEventMixin
 
     def __init__(

@@ -1,6 +1,8 @@
 """Tests for the SolarEdge coordinator services."""
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.solaredge.const import (
     CONF_SITE_ID,
     DEFAULT_NAME,
@@ -10,7 +12,6 @@ from homeassistant.components.solaredge.const import (
 from homeassistant.components.solaredge.sensor import SENSOR_TYPES
 from homeassistant.const import CONF_API_KEY, CONF_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -20,7 +21,7 @@ API_KEY = "a1b2c3d4e5f6g7h8"
 
 @patch("homeassistant.components.solaredge.Solaredge")
 async def test_solaredgeoverviewdataservice_energy_values_validity(
-    mock_solaredge, hass: HomeAssistant
+    mock_solaredge, hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test overview energy data validity."""
     mock_config_entry = MockConfigEntry(
@@ -46,7 +47,8 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
         }
     }
     mock_solaredge().get_overview.return_value = mock_overview_data
-    async_fire_time_changed(hass, dt_util.utcnow() + OVERVIEW_UPDATE_DELAY)
+    freezer.tick(OVERVIEW_UPDATE_DELAY)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.solaredge_lifetime_energy")
     assert state
@@ -55,7 +57,8 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     # Invalid energy values, lifeTimeData energy is lower than last year, month or day.
     mock_overview_data["overview"]["lifeTimeData"]["energy"] = 0
     mock_solaredge().get_overview.return_value = mock_overview_data
-    async_fire_time_changed(hass, dt_util.utcnow() + OVERVIEW_UPDATE_DELAY)
+    freezer.tick(OVERVIEW_UPDATE_DELAY)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.solaredge_lifetime_energy")
@@ -65,7 +68,8 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     # New valid energy values update
     mock_overview_data["overview"]["lifeTimeData"]["energy"] = 100001
     mock_solaredge().get_overview.return_value = mock_overview_data
-    async_fire_time_changed(hass, dt_util.utcnow() + OVERVIEW_UPDATE_DELAY)
+    freezer.tick(OVERVIEW_UPDATE_DELAY)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.solaredge_lifetime_energy")
@@ -75,7 +79,8 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     # Invalid energy values, lastYearData energy is lower than last month or day.
     mock_overview_data["overview"]["lastYearData"]["energy"] = 0
     mock_solaredge().get_overview.return_value = mock_overview_data
-    async_fire_time_changed(hass, dt_util.utcnow() + OVERVIEW_UPDATE_DELAY)
+    freezer.tick(OVERVIEW_UPDATE_DELAY)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.solaredge_energy_this_year")
@@ -92,7 +97,8 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     mock_overview_data["overview"]["lastMonthData"]["energy"] = 0.0
     mock_overview_data["overview"]["lastDayData"]["energy"] = 0.0
     mock_solaredge().get_overview.return_value = mock_overview_data
-    async_fire_time_changed(hass, dt_util.utcnow() + OVERVIEW_UPDATE_DELAY)
+    freezer.tick(OVERVIEW_UPDATE_DELAY)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.solaredge_lifetime_energy")

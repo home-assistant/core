@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import abc
+import asyncio
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
-import inspect
 import logging
 from typing import (
     Any,
@@ -47,12 +47,15 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_platform import EntityPlatform
+import homeassistant.helpers.issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     TimestampDataUpdateCoordinator,
 )
+from homeassistant.loader import async_get_issue_tracker, async_suggest_report_issue
 from homeassistant.util.dt import utcnow
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -261,6 +264,8 @@ class PostInit(metaclass=PostInitMeta):
 class WeatherEntity(Entity, PostInit):
     """ABC for weather data."""
 
+    _entity_component_unrecorded_attributes = frozenset({ATTR_FORECAST})
+
     entity_description: WeatherEntityDescription
     _attr_condition: str | None = None
     # _attr_forecast is deprecated, implement async_forecast_daily,
@@ -271,35 +276,8 @@ class WeatherEntity(Entity, PostInit):
     _attr_cloud_coverage: int | None = None
     _attr_uv_index: float | None = None
     _attr_precision: float
-    _attr_pressure: None = (
-        None  # Provide backwards compatibility. Use _attr_native_pressure
-    )
-    _attr_pressure_unit: None = (
-        None  # Provide backwards compatibility. Use _attr_native_pressure_unit
-    )
     _attr_state: None = None
-    _attr_temperature: None = (
-        None  # Provide backwards compatibility. Use _attr_native_temperature
-    )
-    _attr_temperature_unit: None = (
-        None  # Provide backwards compatibility. Use _attr_native_temperature_unit
-    )
-    _attr_visibility: None = (
-        None  # Provide backwards compatibility. Use _attr_native_visibility
-    )
-    _attr_visibility_unit: None = (
-        None  # Provide backwards compatibility. Use _attr_native_visibility_unit
-    )
-    _attr_precipitation_unit: None = (
-        None  # Provide backwards compatibility. Use _attr_native_precipitation_unit
-    )
     _attr_wind_bearing: float | str | None = None
-    _attr_wind_speed: None = (
-        None  # Provide backwards compatibility. Use _attr_native_wind_speed
-    )
-    _attr_wind_speed_unit: None = (
-        None  # Provide backwards compatibility. Use _attr_native_wind_speed_unit
-    )
 
     _attr_native_pressure: float | None = None
     _attr_native_pressure_unit: str | None = None
@@ -318,6 +296,8 @@ class WeatherEntity(Entity, PostInit):
         Literal["daily", "hourly", "twice_daily"],
         list[Callable[[list[JsonValueType] | None], None]],
     ]
+    __weather_reported_legacy_forecast = False
+    __weather_legacy_forecast = False
 
     _weather_option_temperature_unit: str | None = None
     _weather_option_pressure_unit: str | None = None
@@ -332,55 +312,73 @@ class WeatherEntity(Entity, PostInit):
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
-
-        _reported = False
-        if any(
-            method in cls.__dict__
-            for method in (
-                "_attr_temperature",
-                "temperature",
-                "_attr_temperature_unit",
-                "temperature_unit",
-                "_attr_pressure",
-                "pressure",
-                "_attr_pressure_unit",
-                "pressure_unit",
-                "_attr_wind_speed",
-                "wind_speed",
-                "_attr_wind_speed_unit",
-                "wind_speed_unit",
-                "_attr_visibility",
-                "visibility",
-                "_attr_visibility_unit",
-                "visibility_unit",
-                "_attr_precipitation_unit",
-                "precipitation_unit",
-            )
+        if (
+            "forecast" in cls.__dict__
+            and cls.async_forecast_daily is WeatherEntity.async_forecast_daily
+            and cls.async_forecast_hourly is WeatherEntity.async_forecast_hourly
+            and cls.async_forecast_twice_daily
+            is WeatherEntity.async_forecast_twice_daily
         ):
-            if _reported is False:
-                module = inspect.getmodule(cls)
-                _reported = True
-                if (
-                    module
-                    and module.__file__
-                    and "custom_components" in module.__file__
-                ):
-                    report_issue = "report it to the custom integration author."
-                else:
-                    report_issue = (
-                        "create a bug report at "
-                        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-                    )
-                _LOGGER.warning(
-                    (
-                        "%s::%s is overriding deprecated methods on an instance of "
-                        "WeatherEntity, this is not valid and will be unsupported "
-                        "from Home Assistant 2023.1. Please %s"
-                    ),
-                    cls.__module__,
-                    cls.__name__,
-                    report_issue,
-                )
+            cls.__weather_legacy_forecast = True
+
+    @callback
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: asyncio.Semaphore | None,
+    ) -> None:
+        """Start adding an entity to a platform."""
+        super().add_to_platform_start(hass, platform, parallel_updates)
+        if self.__weather_legacy_forecast:
+            self._report_legacy_forecast(hass)
+
+    def _report_legacy_forecast(self, hass: HomeAssistant) -> None:
+        """Log warning and create an issue if the entity imlpements legacy forecast."""
+        if "custom_components" not in type(self).__module__:
+            # Do not report core integrations as they are already fixed or PR is open.
+            return
+
+        report_issue = async_suggest_report_issue(
+            hass,
+            integration_domain=self.platform.platform_name,
+            module=type(self).__module__,
+        )
+        _LOGGER.warning(
+            (
+                "%s::%s implements the `forecast` property or sets "
+                "`self._attr_forecast` in a subclass of WeatherEntity, this is "
+                "deprecated and will be unsupported from Home Assistant 2024.3."
+                " Please %s"
+            ),
+            self.platform.platform_name,
+            self.__class__.__name__,
+            report_issue,
+        )
+
+        translation_placeholders = {"platform": self.platform.platform_name}
+        translation_key = "deprecated_weather_forecast_no_url"
+        issue_tracker = async_get_issue_tracker(
+            hass,
+            integration_domain=self.platform.platform_name,
+            module=type(self).__module__,
+        )
+        if issue_tracker:
+            translation_placeholders["issue_tracker"] = issue_tracker
+            translation_key = "deprecated_weather_forecast_url"
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_weather_forecast_{self.platform.platform_name}",
+            breaks_in_ha_version="2024.3.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=self.platform.platform_name,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
+        self.__weather_reported_legacy_forecast = True
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the weather entity is added to hass."""
@@ -394,44 +392,20 @@ class WeatherEntity(Entity, PostInit):
         """Return the apparent temperature in native units."""
         return self._attr_native_temperature
 
-    @final
-    @property
-    def temperature(self) -> float | None:
-        """Return the temperature for backward compatibility.
-
-        Should not be set by integrations.
-        """
-        return self._attr_temperature
-
     @property
     def native_temperature(self) -> float | None:
         """Return the temperature in native units."""
-        if (temperature := self.temperature) is not None:
-            return temperature
-
         return self._attr_native_temperature
 
     @property
     def native_temperature_unit(self) -> str | None:
         """Return the native unit of measurement for temperature."""
-        if (temperature_unit := self.temperature_unit) is not None:
-            return temperature_unit
-
         return self._attr_native_temperature_unit
 
     @property
     def native_dew_point(self) -> float | None:
         """Return the dew point temperature in native units."""
         return self._attr_native_dew_point
-
-    @final
-    @property
-    def temperature_unit(self) -> str | None:
-        """Return the temperature unit for backward compatibility.
-
-        Should not be set by integrations.
-        """
-        return self._attr_temperature_unit
 
     @final
     @property
@@ -456,39 +430,15 @@ class WeatherEntity(Entity, PostInit):
 
         return self._default_temperature_unit
 
-    @final
-    @property
-    def pressure(self) -> float | None:
-        """Return the pressure for backward compatibility.
-
-        Should not be set by integrations.
-        """
-        return self._attr_pressure
-
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure in native units."""
-        if (pressure := self.pressure) is not None:
-            return pressure
-
         return self._attr_native_pressure
 
     @property
     def native_pressure_unit(self) -> str | None:
         """Return the native unit of measurement for pressure."""
-        if (pressure_unit := self.pressure_unit) is not None:
-            return pressure_unit
-
         return self._attr_native_pressure_unit
-
-    @final
-    @property
-    def pressure_unit(self) -> str | None:
-        """Return the pressure unit for backward compatibility.
-
-        Should not be set by integrations.
-        """
-        return self._attr_pressure_unit
 
     @final
     @property
@@ -525,39 +475,15 @@ class WeatherEntity(Entity, PostInit):
         """Return the wind gust speed in native units."""
         return self._attr_native_wind_gust_speed
 
-    @final
-    @property
-    def wind_speed(self) -> float | None:
-        """Return the wind_speed for backward compatibility.
-
-        Should not be set by integrations.
-        """
-        return self._attr_wind_speed
-
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed in native units."""
-        if (wind_speed := self.wind_speed) is not None:
-            return wind_speed
-
         return self._attr_native_wind_speed
 
     @property
     def native_wind_speed_unit(self) -> str | None:
         """Return the native unit of measurement for wind speed."""
-        if (wind_speed_unit := self.wind_speed_unit) is not None:
-            return wind_speed_unit
-
         return self._attr_native_wind_speed_unit
-
-    @final
-    @property
-    def wind_speed_unit(self) -> str | None:
-        """Return the wind_speed unit for backward compatibility.
-
-        Should not be set by integrations.
-        """
-        return self._attr_wind_speed_unit
 
     @final
     @property
@@ -604,39 +530,15 @@ class WeatherEntity(Entity, PostInit):
         """Return the UV index."""
         return self._attr_uv_index
 
-    @final
-    @property
-    def visibility(self) -> float | None:
-        """Return the visibility for backward compatibility.
-
-        Should not be set by integrations.
-        """
-        return self._attr_visibility
-
     @property
     def native_visibility(self) -> float | None:
         """Return the visibility in native units."""
-        if (visibility := self.visibility) is not None:
-            return visibility
-
         return self._attr_native_visibility
 
     @property
     def native_visibility_unit(self) -> str | None:
         """Return the native unit of measurement for visibility."""
-        if (visibility_unit := self.visibility_unit) is not None:
-            return visibility_unit
-
         return self._attr_native_visibility_unit
-
-    @final
-    @property
-    def visibility_unit(self) -> str | None:
-        """Return the visibility unit for backward compatibility.
-
-        Should not be set by integrations.
-        """
-        return self._attr_visibility_unit
 
     @final
     @property
@@ -667,6 +569,15 @@ class WeatherEntity(Entity, PostInit):
 
         Should not be overridden by integrations. Kept for backwards compatibility.
         """
+        if (
+            self._attr_forecast is not None
+            and type(self).async_forecast_daily is WeatherEntity.async_forecast_daily
+            and type(self).async_forecast_hourly is WeatherEntity.async_forecast_hourly
+            and type(self).async_forecast_twice_daily
+            is WeatherEntity.async_forecast_twice_daily
+            and not self.__weather_reported_legacy_forecast
+        ):
+            self._report_legacy_forecast(self.hass)
         return self._attr_forecast
 
     async def async_forecast_daily(self) -> list[Forecast] | None:
@@ -684,19 +595,7 @@ class WeatherEntity(Entity, PostInit):
     @property
     def native_precipitation_unit(self) -> str | None:
         """Return the native unit of measurement for accumulated precipitation."""
-        if (precipitation_unit := self.precipitation_unit) is not None:
-            return precipitation_unit
-
         return self._attr_native_precipitation_unit
-
-    @final
-    @property
-    def precipitation_unit(self) -> str | None:
-        """Return the precipitation unit for backward compatibility.
-
-        Should not be set by integrations.
-        """
-        return self._attr_precipitation_unit
 
     @final
     @property
