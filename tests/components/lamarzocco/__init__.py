@@ -4,7 +4,13 @@ from homeassistant.components.lamarzocco.const import (
     DEFAULT_CLIENT_SECRET,
     DEFAULT_PORT_LOCAL,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 MACHINE_NAME = "GS01234"
@@ -13,15 +19,18 @@ UNIQUE_ID = "1234"
 DEFAULT_CONF = {
     "client_id": DEFAULT_CLIENT_ID,
     "client_secret": DEFAULT_CLIENT_SECRET,
-    "machine_name": MACHINE_NAME,
     "port": DEFAULT_PORT_LOCAL,
-    "title": MACHINE_NAME,
 }
 
 USER_INPUT = {
     CONF_USERNAME: "username",
     CONF_PASSWORD: "password",
     CONF_HOST: "192.168.1.42",
+}
+
+DISCOVERED_INFO = {
+    CONF_NAME: "GS3_01234",
+    CONF_MAC: "aa:bb:cc:dd:ee:ff",
 }
 
 LOGIN_INFO = {
@@ -35,8 +44,8 @@ WRONG_LOGIN_INFO = {
 }
 
 LM_SERVICE_INFO = BluetoothServiceInfo(
-    name="MICRA_123532",
-    address="11:22:33:44:55",
+    name="GS3_01234",
+    address="aa:bb:cc:dd:ee:ff",
     rssi=-63,
     manufacturer_data={},
     service_data={},
