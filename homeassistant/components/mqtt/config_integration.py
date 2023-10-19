@@ -18,7 +18,6 @@ from . import (
     button as button_platform,
     cover as cover_platform,
     event as event_platform,
-    lock as lock_platform,
     number as number_platform,
     sensor as sensor_platform,
     update as update_platform,
@@ -62,10 +61,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.IMAGE.value: vol.All(cv.ensure_list, [dict]),
         Platform.LAWN_MOWER.value: vol.All(cv.ensure_list, [dict]),
         Platform.LIGHT.value: vol.All(cv.ensure_list, [dict]),
-        Platform.LOCK.value: vol.All(
-            cv.ensure_list,
-            [lock_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.LOCK.value: vol.All(cv.ensure_list, [dict]),
         Platform.NUMBER.value: vol.All(
             cv.ensure_list,
             [number_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
