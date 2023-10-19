@@ -37,4 +37,4 @@ async def async_setup_entry(
         constructor = RoombaVacuum
 
     roomba_vac = constructor(roomba, blid)
-    async_add_entities([roomba_vac], True)
+    async_add_entities([roomba_vac])
