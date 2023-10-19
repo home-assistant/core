@@ -134,7 +134,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             SPOTIFY_SCOPES
         )
         self._currently_playing: dict | None = {}
-        self._currently_playing_updated: dt.datetime | None = None
         self._playlist: dict | None = None
         self._restricted_device: bool = False
 
@@ -199,13 +198,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         ):
             return None
         return self._currently_playing["progress_ms"] / 1000
-
-    @property
-    def media_position_updated_at(self) -> dt.datetime | None:
-        """When was the position of the current playing media valid."""
-        if not self._currently_playing:
-            return None
-        return self._currently_playing_updated
 
     @property
     def media_image_url(self) -> str | None:
@@ -416,7 +408,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self._currently_playing = current or {}
         # Record the last updated time, because Spotify's timestamp property is unreliable
         # and doesn't actually return the fetch time as is mentioned in the API description
-        self._currently_playing_updated = utcnow() if current is not None else None
+        self._attr_media_position_updated_at = utcnow() if current is not None else None
 
         context = self._currently_playing.get("context") or {}
 
