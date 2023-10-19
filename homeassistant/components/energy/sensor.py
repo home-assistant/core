@@ -48,6 +48,7 @@ VALID_ENERGY_UNITS: set[str] = {
     UnitOfEnergy.WATT_HOUR,
 }
 VALID_ENERGY_UNITS_GAS = {
+    UnitOfVolume.LITERS,
     UnitOfVolume.CENTUM_CUBIC_FEET,
     UnitOfVolume.CUBIC_FEET,
     UnitOfVolume.CUBIC_METERS,
