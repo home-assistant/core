@@ -55,10 +55,10 @@ async def async_setup_entry(
     is_metric = hass.config.units is METRIC_SYSTEM
     if config_entry.data.get(CONF_TRACK_HOME, False):
         name = hass.config.location_name
-    elif (name := config_entry.data.get(CONF_NAME)) and name is None:
-        name = DEFAULT_NAME
-    elif TYPE_CHECKING:
-        assert isinstance(name, str)
+    else:
+        name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+        if TYPE_CHECKING:
+            assert isinstance(name, str)
 
     entities = [MetWeather(coordinator, config_entry.data, False, name, is_metric)]
 

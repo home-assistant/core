@@ -3,7 +3,10 @@ import json
 
 import requests_mock
 
-from homeassistant.components.wallbox import CHARGER_MAX_CHARGING_CURRENT_KEY, DOMAIN
+from homeassistant.components.wallbox.const import (
+    CHARGER_MAX_CHARGING_CURRENT_KEY,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
