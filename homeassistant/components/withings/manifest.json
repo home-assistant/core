@@ -2,7 +2,7 @@
   "domain": "withings",
   "name": "Withings",
   "after_dependencies": ["cloud"],
-  "codeowners": ["@vangorra", "@joostlek"],
+  "codeowners": ["@joostlek"],
   "config_flow": true,
   "dependencies": ["application_credentials", "http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/withings",

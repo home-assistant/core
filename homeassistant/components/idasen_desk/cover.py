@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from idasen_ha import Desk
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverDeviceClass,
@@ -54,8 +52,8 @@ class IdasenDeskCover(CoordinatorEntity, CoverEntity):
     ) -> None:
         """Initialize an Idasen Desk cover."""
         super().__init__(coordinator)
-        self._desk: Desk = coordinator.desk
-        self._attr_name = device_info.get(ATTR_NAME)
+        self._desk = coordinator.desk
+        self._attr_name = device_info[ATTR_NAME]
         self._attr_unique_id = address
         self._attr_device_info = device_info
 

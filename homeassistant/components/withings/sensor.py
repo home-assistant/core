@@ -406,7 +406,7 @@ async def async_setup_entry(
         DOMAIN
     ][entry.entry_id][MEASUREMENT_COORDINATOR]
 
-    current_measurement_types = set(measurement_coordinator.data.keys())
+    current_measurement_types = set(measurement_coordinator.data)
 
     entities: list[SensorEntity] = []
     entities.extend(
@@ -419,7 +419,7 @@ async def async_setup_entry(
 
     def _async_measurement_listener() -> None:
         """Listen for new measurements and add sensors if they did not exist."""
-        received_measurement_types = set(measurement_coordinator.data.keys())
+        received_measurement_types = set(measurement_coordinator.data)
         new_measurement_types = received_measurement_types - current_measurement_types
         if new_measurement_types:
             current_measurement_types.update(new_measurement_types)

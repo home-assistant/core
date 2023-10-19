@@ -40,6 +40,6 @@ async def async_get_config_entry_diagnostics(
         "has_valid_external_webhook_url": has_valid_external_webhook_url,
         "has_cloudhooks": has_cloudhooks,
         "webhooks_connected": measurement_coordinator.webhooks_connected,
-        "received_measurements": list(measurement_coordinator.data.keys()),
+        "received_measurements": list(measurement_coordinator.data),
         "received_sleep_data": sleep_coordinator.data is not None,
     }
