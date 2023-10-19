@@ -24,6 +24,7 @@ from .const import (
     PLATFORMS,
     VICARE_API,
     VICARE_DEVICE_CONFIG,
+    VICARE_DEVICE_CONFIG_LIST,
     HeatingType,
 )
 
@@ -83,7 +84,9 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
         )
 
     # Currently we only support a single device
-    device = vicare_api.devices[0]
+    device_list = vicare_api.devices
+    device = device_list[0]
+    hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG_LIST] = device_list
     hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG] = device
     hass.data[DOMAIN][entry.entry_id][VICARE_API] = getattr(
         device,
