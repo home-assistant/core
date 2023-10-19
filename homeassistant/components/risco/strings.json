@@ -18,8 +18,7 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "pin": "[%key:common::config_flow::data::pin%]",
-          "communication_delay": "Communication delay (seconds)"
+          "pin": "[%key:common::config_flow::data::pin%]"
         }
       }
     },
@@ -39,7 +38,8 @@
         "data": {
           "scan_interval": "How often to poll Risco (in seconds)",
           "code_arm_required": "Require PIN to arm",
-          "code_disarm_required": "Require PIN to disarm"
+          "code_disarm_required": "Require PIN to disarm",
+          "communication_delay": "Communication delay (in seconds)"
         }
       },
       "risco_to_ha": {
