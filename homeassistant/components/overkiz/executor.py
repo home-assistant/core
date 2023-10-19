@@ -41,6 +41,10 @@ class OverkizExecutor:
         """Return Overkiz device sharing the same base url."""
         return self.coordinator.data[f"{self.base_device_url}#{index}"]
 
+    def has_linked_device(self, index: int) -> bool:
+        """Return True if an Overkiz device exist with the same base url."""
+        return f"{self.base_device_url}#{index}" in self.coordinator.data
+
     def select_command(self, *commands: str) -> str | None:
         """Select first existing command in a list of commands."""
         existing_commands = self.device.definition.commands
