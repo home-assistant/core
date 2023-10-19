@@ -21,7 +21,7 @@ fnv-hash-fast==0.4.1
 ha-av==10.1.1
 hass-nabucasa==0.73.0
 hassil==1.2.5
-home-assistant-bluetooth==1.10.3
+home-assistant-bluetooth==1.10.4
 home-assistant-frontend==20231005.0
 home-assistant-intents==2023.10.16
 httpx==0.25.0
@@ -30,7 +30,7 @@ janus==1.0.0
 Jinja2==3.1.2
 lru-dict==1.2.0
 mutagen==1.47.0
-orjson==3.9.7
+orjson==3.9.9
 packaging>=23.1
 paho-mqtt==1.6.1
 Pillow==10.0.1
