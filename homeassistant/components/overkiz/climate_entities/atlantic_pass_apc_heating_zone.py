@@ -88,17 +88,20 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         super().__init__(device_url, coordinator)
 
         # Temperature sensor use the same base_device_url and use the n+1 index
-        try:
+        if self.executor.has_linked_device(int(self.index_device_url) + 1):
             self.temperature_device = self.executor.linked_device(
                 int(self.index_device_url) + 1
             )
-        except KeyError:
-            LOGGER.error("AtlanticPassAPCHeatingZone dont have temperature sensor")
+        else:
+           self.temperature_device = None
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self.temperature_device is not None and temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]:
+        if self.temperature_device is None:
+            return None
+            
+        if temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]:
             return cast(float, temperature.value)
 
         return None
