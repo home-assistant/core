@@ -31,12 +31,12 @@ from .entity import HydrawiseEntity
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="auto_watering",
-        name="Automatic Watering",
+        translation_key="auto_watering",
         device_class=SwitchDeviceClass.SWITCH,
     ),
     SwitchEntityDescription(
         key="manual_watering",
-        name="Manual Watering",
+        translation_key="manual_watering",
         device_class=SwitchDeviceClass.SWITCH,
     ),
 )
@@ -65,7 +65,7 @@ def setup_platform(
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
     # We don't need to trigger import flow from here as it's triggered from `__init__.py`
-    return
+    return  # pragma: no cover
 
 
 async def async_setup_entry(

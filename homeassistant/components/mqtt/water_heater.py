@@ -194,18 +194,6 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
     _entity_id_format = water_heater.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the water heater device."""
-        MqttTemperatureControlEntity.__init__(
-            self, hass, config, config_entry, discovery_data
-        )
-
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""

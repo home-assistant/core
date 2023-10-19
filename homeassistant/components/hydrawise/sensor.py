@@ -24,12 +24,12 @@ from .entity import HydrawiseEntity
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="next_cycle",
-        name="Next Cycle",
+        translation_key="next_cycle",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key="watering_time",
-        name="Watering Time",
+        translation_key="watering_time",
         icon="mdi:water-pump",
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
@@ -59,7 +59,7 @@ def setup_platform(
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
     # We don't need to trigger import flow from here as it's triggered from `__init__.py`
-    return
+    return  # pragma: no cover
 
 
 async def async_setup_entry(

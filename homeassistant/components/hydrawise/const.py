@@ -11,6 +11,8 @@ CONF_WATERING_TIME = "watering_minutes"
 DOMAIN = "hydrawise"
 DEFAULT_WATERING_TIME = 15
 
+MANUFACTURER = "Hydrawise"
+
 SCAN_INTERVAL = timedelta(seconds=120)
 
 SIGNAL_UPDATE_HYDRAWISE = "hydrawise_update"

@@ -72,9 +72,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.58.0
-grpcio-status==1.58.0
-grpcio-reflection==1.58.0
+grpcio==1.59.0
+grpcio-status==1.59.0
+grpcio-reflection==1.59.0
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -106,7 +106,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==3.7.1
 h11==0.14.0
-httpcore==0.17.3
+httpcore==0.18.0
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -128,8 +128,9 @@ multidict>=6.0.2
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Require to avoid issues with decorators (#93904). v2 has breaking changes.
-pydantic>=1.10.8,<2.0
+# Required to avoid breaking (#101042).
+# v2 has breaking changes (#99218).
+pydantic==1.10.12
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -174,6 +175,11 @@ pysnmp==1000000000.0.0
 # The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
 get-mac==1000000000.0.0
+
+# We want to skip the binary wheels for the 'charset-normalizer' packages.
+# They are build with mypyc, but causes issues with our wheel builder.
+# In order to do so, we need to constrain the version.
+charset-normalizer==3.2.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

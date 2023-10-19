@@ -184,20 +184,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
+    _fixed_color_mode: ColorMode | str | None = None
     _flash_times: dict[str, int | None]
     _topic: dict[str, str | None]
     _optimistic: bool
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize MQTT JSON light."""
-        self._fixed_color_mode: ColorMode | str | None = None
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:

@@ -21,13 +21,14 @@ class ComelitSerialBridge(DataUpdateCoordinator):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, host: str, pin: int) -> None:
+    def __init__(self, hass: HomeAssistant, host: str, port: int, pin: int) -> None:
         """Initialize the scanner."""
 
         self._host = host
+        self._port = port
         self._pin = pin
 
-        self.api = ComeliteSerialBridgeApi(host, pin)
+        self.api = ComeliteSerialBridgeApi(host, port, pin)
 
         super().__init__(
             hass=hass,
@@ -53,34 +54,30 @@ class ComelitSerialBridge(DataUpdateCoordinator):
             "hw_version": "20003101",
         }
 
-    def platform_device_info(
-        self, device: ComelitSerialBridgeObject, platform: str
-    ) -> dr.DeviceInfo:
+    def platform_device_info(self, device: ComelitSerialBridgeObject) -> dr.DeviceInfo:
         """Set platform device info."""
 
         return dr.DeviceInfo(
             identifiers={
-                (DOMAIN, f"{self.config_entry.entry_id}-{platform}-{device.index}")
+                (DOMAIN, f"{self.config_entry.entry_id}-{device.type}-{device.index}")
             },
             via_device=(DOMAIN, self.config_entry.entry_id),
             name=device.name,
-            model=f"{BRIDGE} {platform}",
+            model=f"{BRIDGE} {device.type}",
             **self.basic_device_info,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update router data."""
         _LOGGER.debug("Polling Comelit Serial Bridge host: %s", self._host)
+        logged = False
         try:
             logged = await self.api.login()
         except (asyncio.exceptions.TimeoutError, aiohttp.ClientConnectorError) as err:
             _LOGGER.warning("Connection error for %s", self._host)
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
+        finally:
+            if not logged:
+                raise ConfigEntryAuthFailed
 
-        if not logged:
-            raise ConfigEntryAuthFailed
-
-        devices_data = await self.api.get_all_devices()
-        await self.api.logout()
-
-        return devices_data
+        return await self.api.get_all_devices()

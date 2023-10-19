@@ -1,7 +1,7 @@
 """Support for Hydrawise cloud."""
 
 
-from pydrawise.legacy import LegacyHydrawise
+from pydrawise import legacy
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
@@ -54,7 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up Hydrawise from a config entry."""
     access_token = config_entry.data[CONF_API_KEY]
     try:
-        hydrawise = await hass.async_add_executor_job(LegacyHydrawise, access_token)
+        hydrawise = await hass.async_add_executor_job(
+            legacy.LegacyHydrawise, access_token
+        )
     except (ConnectTimeout, HTTPError) as ex:
         LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
         raise ConfigEntryNotReady(

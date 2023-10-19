@@ -424,27 +424,15 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
     climate and water_heater platforms.
     """
 
-    _attr_target_temperature_low: float | None
-    _attr_target_temperature_high: float | None
+    _attr_target_temperature_low: float | None = None
+    _attr_target_temperature_high: float | None = None
 
+    _feature_preset_mode: bool = False
     _optimistic: bool
     _topic: dict[str, Any]
 
     _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
     _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the temperature controlled device."""
-        self._attr_target_temperature_low = None
-        self._attr_target_temperature_high = None
-        self._feature_preset_mode = False
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     def add_subscription(
         self,
@@ -619,26 +607,13 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
 class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     """Representation of an MQTT climate device."""
 
+    _attr_fan_mode: str | None = None
+    _attr_hvac_mode: HVACMode | None = None
+    _attr_is_aux_heat: bool | None = None
+    _attr_swing_mode: str | None = None
     _default_name = DEFAULT_NAME
     _entity_id_format = climate.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the climate device."""
-        self._attr_fan_mode = None
-        self._attr_hvac_action = None
-        self._attr_hvac_mode = None
-        self._attr_is_aux_heat = None
-        self._attr_swing_mode = None
-        MqttTemperatureControlEntity.__init__(
-            self, hass, config, config_entry, discovery_data
-        )
 
     @staticmethod
     def config_schema() -> vol.Schema:
