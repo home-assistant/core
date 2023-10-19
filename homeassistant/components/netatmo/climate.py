@@ -184,7 +184,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._selected_schedule = None
 
         self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT]
-        if self._model == NA_THERM:
+        if NA_THERM in self._model:
             self._attr_hvac_modes.append(HVACMode.OFF)
 
         self._attr_unique_id = f"{self._room.entity_id}-{self._model}"
@@ -286,7 +286,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported."""
-        if self._model != NA_VALVE and self._boilerstatus is not None:
+        if NA_VALVE not in self._model and self._boilerstatus is not None:
             return CURRENT_HVAC_MAP_NETATMO[self._boilerstatus]
         # Maybe it is a valve
         if (
@@ -308,14 +308,14 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         """Set new preset mode."""
         if (
             preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX)
-            and self._model == NA_VALVE
+            and NA_VALVE in self._model
             and self._attr_hvac_mode == HVACMode.HEAT
         ):
             await self._room.async_therm_set(
                 STATE_NETATMO_HOME,
             )
         elif (
-            preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX) and self._model == NA_VALVE
+            preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX) and NA_VALVE in self._model
         ):
             await self._room.async_therm_set(
                 STATE_NETATMO_MANUAL,
@@ -344,7 +344,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
-        if self._model == NA_VALVE:
+        if NA_VALVE in self._model:
             await self._room.async_therm_set(
                 STATE_NETATMO_MANUAL,
                 DEFAULT_MIN_TEMP,
@@ -390,7 +390,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             ATTR_SELECTED_SCHEDULE
         ] = self._selected_schedule
 
-        if self._model == NA_VALVE:
+        if NA_VALVE in self._model:
             self._attr_extra_state_attributes[
                 ATTR_HEATING_POWER_REQUEST
             ] = self._room.heating_power_request
