@@ -2463,7 +2463,6 @@ async def websocket_hard_reset_controller(
     driver: Driver,
 ) -> None:
     """Hard reset controller."""
-    await driver.async_hard_reset()
 
     def _check_for_ready(device: dr.DeviceEntry) -> None:
         """Check if controller is ready."""
@@ -2474,3 +2473,4 @@ async def websocket_hard_reset_controller(
     msg[DATA_UNSUBSCRIBE] = [
         async_dispatcher_connect(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, _check_for_ready)
     ]
+    await driver.async_hard_reset()
