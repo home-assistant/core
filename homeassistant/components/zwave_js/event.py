@@ -49,9 +49,9 @@ async def async_setup_entry(
     )
 
 
-def _cc_and_prop(value: Value) -> str:
-    """Return a string with the command class and property."""
-    return f"{value.command_class}: {value.property_}"
+def _cc_and_label(value: Value) -> str:
+    """Return a string with the command class and label."""
+    return f"{value.command_class_name}: {value.metadata.label}"
 
 
 class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
@@ -66,7 +66,7 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
         if info.primary_value.metadata.states:
             self._attr_event_types = sorted(info.primary_value.metadata.states.values())
         else:
-            self._attr_event_types = [_cc_and_prop(info.primary_value)]
+            self._attr_event_types = [_cc_and_label(info.primary_value)]
         # Entity class attributes
         self._attr_name = self.generate_name(include_value_name=True)
 
@@ -94,7 +94,7 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
                     f"'{primary_value.value_id}' states"
                 ) from None
         else:
-            event_name = _cc_and_prop(primary_value)
+            event_name = _cc_and_label(primary_value)
         self._trigger_event(event_name, {ATTR_VALUE: value_notification.value})
         self.async_write_ha_state()
 
