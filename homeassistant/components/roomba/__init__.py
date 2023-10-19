@@ -3,9 +3,9 @@ import asyncio
 import contextlib
 from functools import partial
 import logging
+from typing import Any
 
 from roombapy import Roomba, RoombaConnectionError, RoombaFactory
-from typing import Any
 
 from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
