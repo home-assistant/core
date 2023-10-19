@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from aiocomelit import ComelitSerialBridgeObject
-from aiocomelit.const import IRRIGATION, OTHER
+from aiocomelit.const import IRRIGATION, OTHER, STATE_OFF, STATE_ON
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, STATE_OFF, STATE_ON
+from .const import DOMAIN
 from .coordinator import ComelitSerialBridge
 
 
