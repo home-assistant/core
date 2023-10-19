@@ -5,7 +5,6 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
-from typing import Any
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -580,7 +579,7 @@ def _build_entity(
     vicare_api: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
     sensor: ViCareSensorEntityDescription,
-):
+) -> ViCareSensor | None:
     """Create a ViCare sensor entity."""
     _LOGGER.debug("Found device %s", name)
     try:
@@ -605,7 +604,7 @@ async def _entities_from_descriptions(
     hass: HomeAssistant,
     entities: list[ViCareSensor],
     sensor_descriptions: tuple[ViCareSensorEntityDescription, ...],
-    iterables: list[Any],
+    iterables: list[PyViCareDevice],
     config_entry: ConfigEntry,
 ) -> None:
     """Create entities from descriptions and list of burners/circuits."""

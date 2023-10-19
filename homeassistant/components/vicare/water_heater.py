@@ -3,7 +3,7 @@ from contextlib import suppress
 import logging
 from typing import Any
 
-from PyViCare.PyViCareDevice import Device as PyViCareDevice
+from PyViCare.PyViCareDevice import Device as PyViCareDevice, HeatingCircuit
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -56,7 +56,7 @@ HA_TO_VICARE_HVAC_DHW = {
 }
 
 
-def _get_circuits(vicare_api: PyViCareDevice) -> list[Any]:
+def _get_circuits(vicare_api: PyViCareDevice) -> list[HeatingCircuit]:
     """Return the list of circuits."""
     try:
         return vicare_api.circuits
@@ -105,7 +105,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         self,
         name: str,
         api: PyViCareDevice,
-        circuit: Any,
+        circuit: HeatingCircuit,
         device_config: PyViCareDeviceConfig,
     ) -> None:
         """Initialize the DHW water_heater device."""

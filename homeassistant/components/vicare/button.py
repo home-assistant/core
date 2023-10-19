@@ -53,7 +53,7 @@ def _build_entity(
     vicare_api: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
     description: ViCareButtonEntityDescription,
-):
+) -> ViCareButton | None:
     """Create a ViCare button entity."""
     _LOGGER.debug("Found device %s", name)
     try:

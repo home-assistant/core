@@ -4,7 +4,6 @@ from __future__ import annotations
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
-from typing import Any
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -109,7 +108,7 @@ def _build_entity(
     vicare_api: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
     sensor: ViCareBinarySensorEntityDescription,
-):
+) -> ViCareBinarySensor | None:
     """Create a ViCare binary sensor entity."""
     try:
         sensor.value_getter(vicare_api)
@@ -133,7 +132,7 @@ async def _entities_from_descriptions(
     hass: HomeAssistant,
     entities: list[ViCareBinarySensor],
     sensor_descriptions: tuple[ViCareBinarySensorEntityDescription, ...],
-    iterables: list[Any],
+    iterables: list[PyViCareDevice],
     config_entry: ConfigEntry,
 ) -> None:
     """Create entities from descriptions and list of burners/circuits."""

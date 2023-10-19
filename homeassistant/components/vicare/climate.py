@@ -6,7 +6,7 @@ from contextlib import suppress
 import logging
 from typing import Any
 
-from PyViCare.PyViCareDevice import Device as PyViCareDevice
+from PyViCare.PyViCareDevice import Device as PyViCareDevice, HeatingCircuit
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
@@ -93,7 +93,7 @@ HA_TO_VICARE_PRESET_HEATING = {
 }
 
 
-def _get_circuits(vicare_api: PyViCareDevice) -> list[Any]:
+def _get_circuits(vicare_api: PyViCareDevice) -> list[HeatingCircuit]:
     """Return the list of circuits."""
     try:
         return vicare_api.circuits
@@ -155,7 +155,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         self,
         name: str,
         api: PyViCareDevice,
-        circuit,
+        circuit: HeatingCircuit,
         device_config: PyViCareDeviceConfig,
     ) -> None:
         """Initialize the climate device."""
