@@ -76,7 +76,7 @@ class IdasenDeskSwitch(CoordinatorEntity, SwitchEntity, RestoreEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn connection on."""
         _LOGGER.debug("Turn Idasen Desk connection on %s", self._address)
-        if await self.coordinator.connect():
+        if await self.coordinator.async_connect():
             self._attr_is_on = True
             self.async_write_ha_state()
 
@@ -84,7 +84,7 @@ class IdasenDeskSwitch(CoordinatorEntity, SwitchEntity, RestoreEntity):
         """Turn connection off."""
         _LOGGER.debug("Turn Idasen Desk connection off %s", self._address)
         self._attr_is_on = False
-        await self.coordinator.disconnect()
+        await self.coordinator.async_disconnect()
         self.async_write_ha_state()
 
     @callback
