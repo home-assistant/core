@@ -48,7 +48,7 @@ class IdasenDeskSwitch(CoordinatorEntity, SwitchEntity, RestoreEntity):
         """Initialize the connection switch."""
         super().__init__(coordinator)
         self._address = address
-        self._attr_name = f"{device_info.get(ATTR_NAME)} Connection"
+        self._attr_name = f"{device_info[ATTR_NAME]} Connection"
         self._attr_unique_id = address
         self._attr_device_info = device_info
         self._attr_is_on = False
