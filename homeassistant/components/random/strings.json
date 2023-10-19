@@ -30,7 +30,10 @@
   },
   "options": {
     "step": {
-      "binary_sensor": {},
+      "binary_sensor": {
+        "title": "[%key:component::random::config::step::binary_sensor::title%]",
+        "description": "This helper does not have any options."
+      },
       "sensor": {
         "data": {
           "device_class": "[%key:component::random::config::step::sensor::data::device_class%]",
