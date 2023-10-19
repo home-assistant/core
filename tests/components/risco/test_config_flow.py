@@ -29,13 +29,6 @@ TEST_LOCAL_DATA = {
     "pin": "1234",
 }
 
-TEST_LOCAL_DATA_V2 = {
-    "host": "test-host",
-    "port": 5004,
-    "pin": "1234",
-    "communication_delay": 0,
-}
-
 TEST_RISCO_TO_HA = {
     "arm": "armed_away",
     "partial_arm": "armed_home",
@@ -55,6 +48,17 @@ TEST_OPTIONS = {
     "scan_interval": 10,
     "code_arm_required": True,
     "code_disarm_required": True,
+}
+
+TEST_OPTIONS_V2 = {
+    "scan_interval": 10,
+    "code_arm_required": True,
+    "code_disarm_required": True,
+    "communication_delay": 0,
+}
+
+TEST_OPTIONS_INITIAL = {
+    "communication_delay": 0,
 }
 
 
@@ -253,10 +257,11 @@ async def test_local_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    expected_data = {**TEST_LOCAL_DATA_V2, **{"type": "local"}}
+    expected_data = {**TEST_LOCAL_DATA, **{"type": "local"}}
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME
     assert result3["data"] == expected_data
+    assert result3["options"] == TEST_OPTIONS_INITIAL
     assert len(mock_setup_entry.mock_calls) == 1
     mock_close.assert_awaited_once()
 
@@ -327,6 +332,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id=TEST_CLOUD_DATA["username"],
         data=TEST_CLOUD_DATA,
+        options=TEST_OPTIONS_INITIAL,
     )
 
     entry.add_to_hass(hass)
@@ -338,7 +344,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input=TEST_OPTIONS,
+        user_input=TEST_OPTIONS_V2,
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "risco_to_ha"
@@ -359,7 +365,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert entry.options == {
-        **TEST_OPTIONS,
+        **TEST_OPTIONS_V2,
         "risco_states_to_ha": TEST_RISCO_TO_HA,
         "ha_states_to_risco": TEST_HA_TO_RISCO,
     }
@@ -371,6 +377,7 @@ async def test_ha_to_risco_schema(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id=TEST_CLOUD_DATA["username"],
         data=TEST_CLOUD_DATA,
+        options=TEST_OPTIONS_INITIAL,
     )
 
     entry.add_to_hass(hass)
@@ -379,7 +386,7 @@ async def test_ha_to_risco_schema(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input=TEST_OPTIONS,
+        user_input=TEST_OPTIONS_V2,
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -405,7 +412,11 @@ async def test_migration_1_2(hass: HomeAssistant) -> None:
     """Test migrating from version 1 to 2."""
     test_data = {**TEST_LOCAL_DATA, **{"type": "local"}}
     config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=TEST_SITE_NAME, data=test_data, version=1
+        domain=DOMAIN,
+        unique_id=TEST_SITE_NAME,
+        data=test_data,
+        options=TEST_OPTIONS_INITIAL,
+        version=1,
     )
     config_entry.add_to_hass(hass)
 
@@ -424,7 +435,8 @@ async def test_migration_1_2(hass: HomeAssistant) -> None:
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
 
-    expected_data = {**TEST_LOCAL_DATA_V2, **{"type": "local"}}
+    expected_data = {**TEST_LOCAL_DATA, **{"type": "local"}}
     assert config_entries[0].unique_id == TEST_SITE_NAME
     assert config_entries[0].data == expected_data
+    assert config_entries[0].options == TEST_OPTIONS_INITIAL
     assert config_entries[0].version == 2
