@@ -2755,7 +2755,7 @@ ttls==1.5.1
 tuya-device-sharing-sdk==0.1.9
 
 # homeassistant.components.tvoverlay
-tvoverlay==1.1.0
+tvoverlay==1.1.1
 
 # homeassistant.components.twentemilieu
 twentemilieu==2.0.1

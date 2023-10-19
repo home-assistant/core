@@ -8,12 +8,12 @@ import uuid
 from tvoverlay import ImageUrlSource, Notifications
 from tvoverlay.const import (
     COLOR_GREEN,
-    DEFAULT_APP_ICON,
     DEFAULT_APP_NAME,
     DEFAULT_DURATION,
     DEFAULT_SMALL_ICON,
     DEFAULT_SOURCE_NAME,
     Positions,
+    Shapes,
 )
 
 from homeassistant.components.notify import (
@@ -24,6 +24,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -31,17 +32,17 @@ from .const import (
     ATTR_APP_TITLE,
     ATTR_BADGE_COLOR,
     ATTR_BADGE_ICON,
+    ATTR_BG_COLOR,
+    ATTR_BORDER_COLOR,
     ATTR_DURATION,
     ATTR_ID,
     ATTR_IMAGE,
-    ATTR_IMAGE_AUTH,
-    ATTR_IMAGE_ICON,
-    ATTR_IMAGE_PASSWORD,
-    ATTR_IMAGE_PATH,
-    ATTR_IMAGE_URL,
-    ATTR_IMAGE_USERNAME,
+    ATTR_PERSISTENT,
     ATTR_POSITION,
+    ATTR_SHAPE,
     ATTR_SOURCE_NAME,
+    ATTR_TEXT_COLOR,
+    ATTR_VISIBLE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,108 +88,80 @@ class TvOverlayNotificationService(BaseNotificationService):
         position: str = Positions.TOP_RIGHT.value
         duration: str = str(DEFAULT_DURATION)
         image: str | ImageUrlSource | None = None
+        is_persistent: bool | None = False
+        text_color: str | None = None
+        border_color: str | None = None
+        bg_color: str | None = None
+        shape: str = Shapes.CIRCLE.value
+        visible: bool | None = True
 
         if data:
-            if ATTR_ID in data:
-                try:
-                    message_id = data.get(ATTR_ID)
-                except ValueError:
-                    _LOGGER.warning("Invalid id value: %s", data.get(ATTR_ID))
-            if ATTR_APP_TITLE in data:
-                try:
-                    app_title = data.get(ATTR_APP_TITLE)
-                except ValueError:
-                    _LOGGER.warning(
-                        "Invalid app_title value: %s", data.get(ATTR_APP_TITLE)
-                    )
-            if ATTR_SOURCE_NAME in data:
-                try:
-                    source_name = data.get(ATTR_SOURCE_NAME)
-                except ValueError:
-                    _LOGGER.warning(
-                        "Invalid source_name value: %s", data.get(ATTR_SOURCE_NAME)
-                    )
-            if app_icon_data := data.get(ATTR_APP_ICON):
-                try:
-                    if isinstance(app_icon_data, str):
-                        app_icon = app_icon_data
-                    else:
-                        app_icon = self.populate_image(
-                            url=app_icon_data.get(ATTR_IMAGE_URL),
-                            local_path=app_icon_data.get(ATTR_IMAGE_PATH),
-                            mdi_icon=app_icon_data.get(ATTR_IMAGE_ICON),
-                            username=app_icon_data.get(ATTR_IMAGE_USERNAME),
-                            password=app_icon_data.get(ATTR_IMAGE_PASSWORD),
-                            auth=app_icon_data.get(ATTR_IMAGE_AUTH),
-                        )
-                except ValueError:
-                    _LOGGER.warning(
-                        "Invalid image attributes: %s", data.get(ATTR_IMAGE)
-                    )
-            else:
-                app_icon = DEFAULT_APP_ICON
-            if ATTR_BADGE_ICON in data:
-                try:
-                    badge_icon = data.get(ATTR_BADGE_ICON)
-                except ValueError:
-                    _LOGGER.warning(
-                        "Invalid badge_icon value: %s", data.get(ATTR_BADGE_ICON)
-                    )
-            if ATTR_BADGE_COLOR in data:
-                try:
-                    badge_color = data.get(ATTR_BADGE_COLOR)
-                except ValueError:
-                    _LOGGER.warning(
-                        "Invalid badge_color value: %s",
-                        data.get(ATTR_BADGE_COLOR),
-                    )
-            if ATTR_POSITION in data:
-                if data.get(ATTR_POSITION) in [member.value for member in Positions]:
-                    position = data.get(ATTR_POSITION, Positions.TOP_RIGHT.value)
-                else:
-                    _LOGGER.warning(
-                        "Invalid position value: %s. Has to be one of: %s",
-                        data.get(ATTR_POSITION),
-                        [member.value for member in Positions],
-                    )
-            if ATTR_DURATION in data:
-                try:
-                    duration = str(data.get(ATTR_DURATION))
-                except ValueError:
-                    _LOGGER.warning(
-                        "Invalid duration value: %s", data.get(ATTR_DURATION)
-                    )
-            if image_data := data.get(ATTR_IMAGE):
-                try:
-                    if isinstance(image_data, str):
-                        image = image_data
-                    else:
-                        image = self.populate_image(
-                            url=image_data.get(ATTR_IMAGE_URL),
-                            local_path=image_data.get(ATTR_IMAGE_PATH),
-                            mdi_icon=image_data.get(ATTR_IMAGE_ICON),
-                            username=image_data.get(ATTR_IMAGE_USERNAME),
-                            password=image_data.get(ATTR_IMAGE_PASSWORD),
-                            auth=image_data.get(ATTR_IMAGE_AUTH),
-                        )
-                except ValueError:
-                    _LOGGER.warning(
-                        "Invalid image attributes: %s", data.get(ATTR_IMAGE)
-                    )
+            message_id = data.get(ATTR_ID, message_id)
+            app_title = data.get(ATTR_APP_TITLE, app_title)
+            source_name = data.get(ATTR_SOURCE_NAME, source_name)
 
-        await self.notify.async_send(
-            message,
-            id=message_id,
-            title=title,
-            deviceSourceName=source_name,
-            appTitle=app_title,
-            appIcon=app_icon,
-            smallIcon=badge_icon,
-            smallIconColor=badge_color,
-            image=image,
-            corner=position,
-            seconds=int(duration),
-        )
+            app_icon_data = data.get(ATTR_APP_ICON)
+            if app_icon_data:
+                app_icon = self.populate_image(**app_icon_data)
+
+            badge_icon = data.get(ATTR_BADGE_ICON, badge_icon)
+            badge_color = data.get(ATTR_BADGE_COLOR, badge_color)
+            position = data.get(ATTR_POSITION, Positions.TOP_RIGHT.value)
+            if position not in [member.value for member in Positions]:
+                _LOGGER.warning(
+                    "Invalid position value: %s. Has to be one of: %s",
+                    position,
+                    [member.value for member in Positions],
+                )
+
+            duration = str(data.get(ATTR_DURATION, duration))
+
+            image_data = data.get(ATTR_IMAGE)
+            if image_data:
+                image = self.populate_image(**image_data)
+
+            is_persistent = cv.boolean(data.get(ATTR_PERSISTENT, is_persistent))
+            text_color = data.get(ATTR_TEXT_COLOR, text_color)
+            border_color = data.get(ATTR_BORDER_COLOR, border_color)
+            bg_color = data.get(ATTR_BG_COLOR, bg_color)
+
+            shape = data.get(ATTR_SHAPE, shape)
+            if shape not in [member.value for member in Shapes]:
+                _LOGGER.warning(
+                    "Invalid shape value: %s. Has to be one of: %s",
+                    shape,
+                    [member.value for member in Shapes],
+                )
+
+            visible = cv.boolean(data.get(ATTR_VISIBLE, visible))
+
+        if is_persistent:
+            await self.notify.async_send_fixed(
+                message,
+                id=message_id,
+                icon=badge_icon,
+                iconColor=app_title,
+                textColor=text_color,
+                borderColor=border_color,
+                backgroundColor=bg_color,
+                shape=shape,
+                expiration=duration,
+                visible=visible,
+            )
+        else:
+            await self.notify.async_send(
+                message,
+                id=message_id,
+                title=title,
+                deviceSourceName=source_name,
+                appTitle=app_title,
+                appIcon=app_icon,
+                smallIcon=badge_icon,
+                smallIconColor=badge_color,
+                image=image,
+                corner=position,
+                seconds=int(duration),
+            )
 
     def populate_image(
         self,
