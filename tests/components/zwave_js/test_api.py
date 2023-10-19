@@ -79,12 +79,10 @@ from homeassistant.components.zwave_js.api import (
 from homeassistant.components.zwave_js.const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DOMAIN,
-    EVENT_DEVICE_ADDED_TO_REGISTRY,
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import MockUser
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -4681,7 +4679,7 @@ async def test_hard_reset_controller(
     assert len(client.async_send_command.call_args_list) == 1
     assert client.async_send_command.call_args[0][0] == {"command": "driver.hard_reset"}
 
-    async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
+    await hass.config_entries.async_reload(entry.entry_id)
 
     msg = await ws_client.receive_json()
     assert msg["event"]["device_id"] == device.id
