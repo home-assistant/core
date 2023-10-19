@@ -16,7 +16,6 @@ from homeassistant.helpers import config_validation as cv
 
 from . import (
     button as button_platform,
-    climate as climate_platform,
     cover as cover_platform,
     event as event_platform,
     humidifier as humidifier_platform,
@@ -52,10 +51,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
             [button_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.CAMERA.value: vol.All(cv.ensure_list, [dict]),
-        Platform.CLIMATE.value: vol.All(
-            cv.ensure_list,
-            [climate_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.CLIMATE.value: vol.All(cv.ensure_list, [dict]),
         Platform.COVER.value: vol.All(
             cv.ensure_list,
             [cover_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
