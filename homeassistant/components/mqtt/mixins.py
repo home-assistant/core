@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import asyncio
 from collections.abc import Callable, Coroutine
 import functools
 from functools import partial, wraps
@@ -312,7 +311,7 @@ async def async_setup_entry_helper(
     async_setup: partial[Coroutine[Any, Any, None]],
     discovery_schema: vol.Schema,
 ) -> None:
-    """Set up entity, automation or tag creation dynamically through MQTT discovery."""
+    """Set up automation or tag creation dynamically through MQTT discovery."""
     mqtt_data = get_mqtt_data(hass)
 
     async def async_setup_from_discovery(
@@ -331,28 +330,6 @@ async def async_setup_entry_helper(
             ),
         )
     )
-
-    # The setup of manual configured MQTT entities will be migrated to async_mqtt_entry_helper.
-    # The following setup code will be cleaned up after the last entity platform has been migrated.
-    async def _async_setup_entities() -> None:
-        """Set up MQTT items from configuration.yaml."""
-        mqtt_data = get_mqtt_data(hass)
-        if not (config_yaml := mqtt_data.config):
-            return
-        setups: list[Coroutine[Any, Any, None]] = [
-            async_setup(config)
-            for config_item in config_yaml
-            for config_domain, configs in config_item.items()
-            for config in configs
-            if config_domain == domain
-        ]
-        if not setups:
-            return
-        await asyncio.gather(*setups)
-
-    # discover manual configured MQTT items
-    mqtt_data.reload_handlers[domain] = _async_setup_entities
-    await _async_setup_entities()
 
 
 async def async_mqtt_entry_helper(
