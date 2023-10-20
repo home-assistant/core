@@ -77,10 +77,10 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     # Installations
     state = hass.states.get("climate.house")
     assert state.state == HVACMode.COOL
-    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 27
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 22.0
-    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.COOLING
-    assert state.attributes.get(ATTR_HVAC_MODES) == [
+    assert state.attributes[ATTR_CURRENT_HUMIDITY] == 27
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.0
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
+    assert state.attributes[ATTR_HVAC_MODES] == [
         HVACMode.HEAT_COOL,
         HVACMode.COOL,
         HVACMode.HEAT,
@@ -88,10 +88,10 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         HVACMode.DRY,
         HVACMode.OFF,
     ]
-    assert state.attributes.get(ATTR_MAX_TEMP) == 30
-    assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
-    assert state.attributes.get(ATTR_TEMPERATURE) == 23.3
+    assert state.attributes[ATTR_MAX_TEMP] == 30
+    assert state.attributes[ATTR_MIN_TEMP] == 15
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_TEMPERATURE_STEP
+    assert state.attributes[ATTR_TEMPERATURE] == 23.3
 
     # Zones
     state = hass.states.get("climate.dormitorio")
@@ -459,7 +459,7 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
         )
 
     state = hass.states.get("climate.house")
-    assert state.attributes.get(ATTR_TEMPERATURE) == 20.5
+    assert state.attributes[ATTR_TEMPERATURE] == 20.5
 
     # Zones
     with patch(
@@ -537,7 +537,7 @@ async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
         )
 
     state = hass.states.get("climate.house")
-    assert state.attributes.get(ATTR_TEMPERATURE) == 23.3
+    assert state.attributes[ATTR_TEMPERATURE] == 23.3
 
     # Zones
     with patch(
