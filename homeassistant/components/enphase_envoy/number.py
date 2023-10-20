@@ -1,7 +1,7 @@
 """Number platform for Enphase Envoy solar energy monitor."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -44,7 +44,7 @@ class EnvoyStorageSettingsRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoyStorageSettings], float]
-    update_fn: Callable[[Envoy, float], Coroutine[Any, Any, dict[str, Any]]]
+    update_fn: Callable[[Envoy, float], Awaitable[dict[str, Any]]]
 
 
 @dataclass

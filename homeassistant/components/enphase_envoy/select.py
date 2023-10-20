@@ -1,7 +1,7 @@
 """Select platform for Enphase Envoy solar energy monitor."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
@@ -43,7 +43,7 @@ class EnvoyStorageSettingsRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoyStorageSettings], str]
-    update_fn: Callable[[Envoy, str], Coroutine[Any, Any, dict[str, Any]]]
+    update_fn: Callable[[Envoy, str], Awaitable[dict[str, Any]]]
 
 
 @dataclass
@@ -126,15 +126,13 @@ RELAY_ENTITIES = (
         ),
     ),
 )
-STORAGE_SETTINGS_ENTITIES = (
-    EnvoyStorageSettingsSelectEntityDescription(
-        key="storage_mode",
-        translation_key="storage_mode",
-        options=STORAGE_MODE_OPTIONS,
-        value_fn=lambda storage_settings: STORAGE_MODE_MAP[storage_settings.mode],
-        update_fn=lambda envoy, value: envoy.set_storage_mode(
-            REVERSE_STORAGE_MODE_MAP[value]
-        ),
+STORAGE_MODE_ENTITY = EnvoyStorageSettingsSelectEntityDescription(
+    key="storage_mode",
+    translation_key="storage_mode",
+    options=STORAGE_MODE_OPTIONS,
+    value_fn=lambda storage_settings: STORAGE_MODE_MAP[storage_settings.mode],
+    update_fn=lambda envoy, value: envoy.set_storage_mode(
+        REVERSE_STORAGE_MODE_MAP[value]
     ),
 )
 
@@ -160,9 +158,8 @@ async def async_setup_entry(
         and envoy_data.tariff.storage_settings
         and coordinator.envoy.supported_features & SupportedFeatures.ENCHARGE
     ):
-        entities.extend(
-            EnvoyStorageSettingsSelectEntity(coordinator, entity)
-            for entity in STORAGE_SETTINGS_ENTITIES
+        entities.append(
+            EnvoyStorageSettingsSelectEntity(coordinator, STORAGE_MODE_ENTITY)
         )
     async_add_entities(entities)
 
