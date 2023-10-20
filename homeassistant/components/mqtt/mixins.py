@@ -305,7 +305,7 @@ async def _async_discover(
         raise
 
 
-async def async_setup_entry_helper(
+async def async_setup_non_entity_entry_helper(
     hass: HomeAssistant,
     domain: str,
     async_setup: partial[Coroutine[Any, Any, None]],
@@ -332,7 +332,7 @@ async def async_setup_entry_helper(
     )
 
 
-async def async_mqtt_entry_helper(
+async def async_setup_entity_entry_helper(
     hass: HomeAssistant,
     entry: ConfigEntry,
     entity_class: type[MqttEntity] | None,
@@ -342,7 +342,7 @@ async def async_mqtt_entry_helper(
     platform_schema_modern: vol.Schema,
     schema_class_mapping: dict[str, type[MqttEntity]] | None = None,
 ) -> None:
-    """Set up entity, automation or tag creation dynamically through MQTT discovery."""
+    """Set up entity creation dynamically through MQTT discovery."""
     mqtt_data = get_mqtt_data(hass)
 
     async def async_setup_from_discovery(
