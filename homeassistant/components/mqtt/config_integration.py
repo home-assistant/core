@@ -20,7 +20,6 @@ from . import (
     number as number_platform,
     sensor as sensor_platform,
     update as update_platform,
-    water_heater as water_heater_platform,
 )
 from .const import (
     CONF_BIRTH_MESSAGE,
@@ -76,10 +75,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
             [update_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.VACUUM.value: vol.All(cv.ensure_list, [dict]),
-        Platform.WATER_HEATER.value: vol.All(
-            cv.ensure_list,
-            [water_heater_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.WATER_HEATER.value: vol.All(cv.ensure_list, [dict]),
     }
 )
 
