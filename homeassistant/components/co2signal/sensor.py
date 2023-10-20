@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 
 from aioelectricitymaps.models import CarbonIntensityResponse
@@ -38,9 +38,9 @@ class CO2SensorEntityDescription(SensorEntityDescription, ElectricityMapsMixin):
 
     # For backwards compat, allow description to override unique ID key to use
     unique_id: str | None = None
-    unit_of_measurement_fn: Callable[[CarbonIntensityResponse], str | None] = field(
-        default=lambda response: None
-    )
+    unit_of_measurement_fn: Callable[
+        [CarbonIntensityResponse], str | None
+    ] | None = None
 
 
 SENSORS = (
@@ -106,7 +106,7 @@ class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        if self.entity_description.native_unit_of_measurement:
-            return self.entity_description.native_unit_of_measurement
+        if self.entity_description.unit_of_measurement_fn:
+            return self.entity_description.unit_of_measurement_fn(self.coordinator.data)
 
-        return self.entity_description.unit_of_measurement_fn(self.coordinator.data)
+        return self.entity_description.native_unit_of_measurement
