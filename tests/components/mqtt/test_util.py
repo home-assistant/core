@@ -73,6 +73,22 @@ async def test_async_create_certificate_temp_files(
 
     assert file_path == file_path2
 
+    # Make sure any old files are removed to test certificate and dir creation
+    def _remove_old_files() -> None:
+        if not temp_dir.exists():
+            temp_dir.rmdir()
+
+    await hass.async_add_executor_job(_remove_old_files)
+    await mqtt.util.async_create_certificate_temp_files(hass, config)
+    file_path = await hass.async_add_executor_job(mqtt.util.get_file_path, option)
+    assert bool(file_path) is file_created
+    assert (
+        await hass.async_add_executor_job(
+            mqtt.util.migrate_certificate_file_to_content, file_path or content
+        )
+        == content
+    )
+
 
 async def test_reading_non_exitisting_certificate_file() -> None:
     """Test reading a non existing certificate file."""
