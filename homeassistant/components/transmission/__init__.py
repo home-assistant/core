@@ -109,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         if CONF_NAME not in config_entry.data:
             return None
         match = re.search(
-            f"{config_entry.data[CONF_HOST]}-{config_entry.data.get(CONF_NAME)} (?P<name>.+)",
+            f"{config_entry.data[CONF_HOST]}-{config_entry.data[CONF_NAME]} (?P<name>.+)",
             entity_entry.unique_id,
         )
 
