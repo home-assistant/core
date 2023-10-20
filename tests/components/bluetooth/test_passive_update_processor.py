@@ -141,6 +141,37 @@ GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE_WITH_TEMP_CHANGE = PassiveBluetoothDataUpd
 )
 
 
+GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE_WITH_DEVICE_NAME_AND_TEMP_CHANGE = (
+    PassiveBluetoothDataUpdate(
+        devices={
+            None: DeviceInfo(
+                name="Changed", model="Test Model", manufacturer="Test Manufacturer"
+            ),
+        },
+        entity_data={
+            PassiveBluetoothEntityKey("temperature", None): 15.5,
+            PassiveBluetoothEntityKey("pressure", None): 1234,
+        },
+        entity_names={
+            PassiveBluetoothEntityKey("temperature", None): "Temperature",
+            PassiveBluetoothEntityKey("pressure", None): "Pressure",
+        },
+        entity_descriptions={
+            PassiveBluetoothEntityKey("temperature", None): SensorEntityDescription(
+                key="temperature",
+                native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+                device_class=SensorDeviceClass.TEMPERATURE,
+            ),
+            PassiveBluetoothEntityKey("pressure", None): SensorEntityDescription(
+                key="pressure",
+                native_unit_of_measurement="hPa",
+                device_class=SensorDeviceClass.PRESSURE,
+            ),
+        },
+    )
+)
+
+
 async def test_basic_usage(
     hass: HomeAssistant,
     mock_bleak_scanner_start: MagicMock,
@@ -266,6 +297,10 @@ async def test_entity_key_is_dispatched_on_entity_key_change(
         assert data == {"test": "data"}
         nonlocal update_count
         update_count += 1
+        if update_count > 2:
+            return (
+                GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE_WITH_DEVICE_NAME_AND_TEMP_CHANGE
+            )
         if update_count > 1:
             return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE_WITH_TEMP_CHANGE
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
@@ -333,16 +368,27 @@ async def test_entity_key_is_dispatched_on_entity_key_change(
     # so the mock should not be called again
     assert len(mock_entity.mock_calls) == 2
 
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+
+    # All listeners should receive the data since
+    # the device name changed
+    assert len(entity_key_events) == 3
+    assert len(all_events) == 3
+
+    # On the second, the entities should already be created
+    # so the mock should not be called again
+    assert len(mock_entity.mock_calls) == 2
+
     cancel_async_add_entity_key_listener()
     cancel_listener()
     cancel_async_add_entities_listener()
 
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
 
     # Each listener should not trigger any more now
     # that they were cancelled
-    assert len(entity_key_events) == 2
-    assert len(all_events) == 2
+    assert len(entity_key_events) == 3
+    assert len(all_events) == 3
     assert len(mock_entity.mock_calls) == 2
     assert coordinator.available is True
 

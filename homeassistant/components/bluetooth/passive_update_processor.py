@@ -136,8 +136,12 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
 
     def update(
         self, new_data: PassiveBluetoothDataUpdate[_T]
-    ) -> set[PassiveBluetoothEntityKey]:
-        """Update the data and returned changed PassiveBluetoothEntityKey."""
+    ) -> set[PassiveBluetoothEntityKey] | None:
+        """Update the data and returned changed PassiveBluetoothEntityKey or None on device change.
+
+        The changed PassiveBluetoothEntityKey can be used to filter
+        which listeners are called.
+        """
         device_change = False
         changed_entity_keys: set[PassiveBluetoothEntityKey] = set()
         for key, device_info in new_data.devices.items():
@@ -151,10 +155,12 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         ):
             # mypy can't seem to work this out
             for key, data in incoming.items():  # type: ignore[attr-defined]
-                if device_change or current.get(key) != data:  # type: ignore[attr-defined]
+                if current.get(key) != data:  # type: ignore[attr-defined]
                     changed_entity_keys.add(key)  # type: ignore[arg-type]
                 current[key] = data  # type: ignore[index]
-        return changed_entity_keys
+        # If the device changed we don't need to return the changed
+        # entity keys as all entities will be updated
+        return None if device_change else changed_entity_keys
 
     def async_get_restore_data(self) -> RestoredPassiveBluetoothDataUpdate:
         """Serialize restore data to storage."""
