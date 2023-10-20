@@ -2813,7 +2813,7 @@ zigpy-zigate==0.11.0
 zigpy-znp==0.11.6
 
 # homeassistant.components.zha
-zigpy==0.57.2
+zigpy==0.58.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
