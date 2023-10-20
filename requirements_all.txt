@@ -216,7 +216,7 @@ aiobafi6==0.9.0
 aiobotocore==2.6.0
 
 # homeassistant.components.comelit
-aiocomelit==0.2.0
+aiocomelit==0.3.0
 
 # homeassistant.components.dhcp
 aiodiscover==1.5.1
@@ -255,7 +255,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.0.5
+aiohomekit==3.0.6
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -521,7 +521,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.36.5
+bellows==0.36.7
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.1
@@ -1546,7 +1546,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2023.10.0
+pyDuotecno==2023.10.1
 
 # homeassistant.components.eight_sleep
 pyEight==0.3.2
@@ -2594,7 +2594,7 @@ todoist-api-python==2.1.2
 tololib==0.1.0b4
 
 # homeassistant.components.toon
-toonapi==0.2.1
+toonapi==0.3.0
 
 # homeassistant.components.totalconnect
 total-connect-client==2023.2
@@ -2810,10 +2810,10 @@ zigpy-xbee==0.18.3
 zigpy-zigate==0.11.0
 
 # homeassistant.components.zha
-zigpy-znp==0.11.5
+zigpy-znp==0.11.6
 
 # homeassistant.components.zha
-zigpy==0.57.2
+zigpy==0.58.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

@@ -65,7 +65,7 @@
             "state": {
               "asleep": "Night",
               "away": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::away%]",
-              "home": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::home%]",
+              "home": "[%key:common::state::home%]",
               "no_frost": "Anti-frost",
               "vacation": "Vacation"
             }
