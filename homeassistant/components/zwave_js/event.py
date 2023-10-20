@@ -84,7 +84,7 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
         ):
             return
         event_name = self.states.get(val, _cc_and_label(self.value))
-        self._trigger_event(event_name, {ATTR_VALUE: value_notification.value})
+        self._trigger_event(event_name, {ATTR_VALUE: val})
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
