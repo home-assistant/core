@@ -84,7 +84,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return information about the device."""
-        if not self._unique_id:
+        if self._unique_id is None:
             return None
         return DeviceInfo(
             name=self.device_name,

@@ -14,5 +14,5 @@
   },
   "iot_class": "cloud_polling",
   "loggers": ["pkce", "pymyq"],
-  "requirements": ["python-myq==3.1.11"]
+  "requirements": ["python-myq==3.1.13"]
 }

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import functools
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
@@ -35,7 +35,7 @@ from .mixins import (
     CONF_JSON_ATTRS_TOPIC,
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_setup_entry_helper,
+    async_setup_entity_entry_helper,
     write_state_on_attr_change,
 )
 from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
@@ -84,22 +84,16 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT device_tracker through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    """Set up MQTT event through YAML and through MQTT discovery."""
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttDeviceTracker,
+        device_tracker.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, device_tracker.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT Device Tracker entity."""
-    async_add_entities([MqttDeviceTracker(hass, config, config_entry, discovery_data)])
 
 
 class MqttDeviceTracker(MqttEntity, TrackerEntity):
@@ -137,7 +131,8 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             elif payload == self._config[CONF_PAYLOAD_RESET]:
                 self._location_name = None
             else:
-                assert isinstance(msg.payload, str)
+                if TYPE_CHECKING:
+                    assert isinstance(msg.payload, str)
                 self._location_name = msg.payload
 
         state_topic: str | None = self._config.get(CONF_STATE_TOPIC)

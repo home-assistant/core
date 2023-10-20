@@ -10,6 +10,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import assist_pipeline, stt
+from homeassistant.components.assist_pipeline.const import (
+    CONF_DEBUG_RECORDING_DIR,
+    DOMAIN,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -395,8 +399,8 @@ async def test_pipeline_save_audio(
         temp_dir = Path(temp_dir_str)
         assert await async_setup_component(
             hass,
-            "assist_pipeline",
-            {"assist_pipeline": {"debug_recording_dir": temp_dir_str}},
+            DOMAIN,
+            {DOMAIN: {CONF_DEBUG_RECORDING_DIR: temp_dir_str}},
         )
 
         pipeline = assist_pipeline.async_get_pipeline(hass)
@@ -476,8 +480,8 @@ async def test_pipeline_saved_audio_with_device_id(
         temp_dir = Path(temp_dir_str)
         assert await async_setup_component(
             hass,
-            "assist_pipeline",
-            {"assist_pipeline": {"debug_recording_dir": temp_dir_str}},
+            DOMAIN,
+            {DOMAIN: {CONF_DEBUG_RECORDING_DIR: temp_dir_str}},
         )
 
         def event_callback(event: assist_pipeline.PipelineEvent):
@@ -529,8 +533,8 @@ async def test_pipeline_saved_audio_write_error(
         temp_dir = Path(temp_dir_str)
         assert await async_setup_component(
             hass,
-            "assist_pipeline",
-            {"assist_pipeline": {"debug_recording_dir": temp_dir_str}},
+            DOMAIN,
+            {DOMAIN: {CONF_DEBUG_RECORDING_DIR: temp_dir_str}},
         )
 
         def event_callback(event: assist_pipeline.PipelineEvent):

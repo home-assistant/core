@@ -122,6 +122,9 @@
       }
     },
     "switch": {
+      "charge_from_grid": {
+        "name": "Charge from grid"
+      },
       "grid_enabled": {
         "name": "Grid enabled"
       }
