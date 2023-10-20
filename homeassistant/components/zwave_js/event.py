@@ -48,7 +48,7 @@ def _cc_and_label(value: Value) -> str:
     label = value.metadata.label
     if label:
         label = label.lower()
-    return f"{value.command_class_name.capitalize()} {label}"
+    return f"{value.command_class_name.capitalize()} {label}".strip()
 
 
 class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
