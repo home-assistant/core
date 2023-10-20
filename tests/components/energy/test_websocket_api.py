@@ -1044,7 +1044,7 @@ async def test_fossil_energy_consumption_checks(
 async def test_fossil_energy_consumption_check_missing_hour(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test explicitly if the API omits the first hour of data for the requested time frame."""
+    """Test explicitly if the API keeps the first hour of data for the requested time frame."""
 
     now = dt_util.utcnow()
     later = dt_util.as_utc(dt_util.parse_datetime("2021-08-01 05:00:00"))
