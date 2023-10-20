@@ -56,7 +56,7 @@ async def test_sensors_aranet2(
     interval_sensor = hass.states.get("sensor.aranet2_12345_update_interval")
     interval_sensor_attrs = interval_sensor.attributes
     assert interval_sensor.state == "60"
-    assert interval_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet2 12345 Update Interval"
+    assert interval_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet2 12345 Update interval"
     assert interval_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "s"
     assert interval_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
@@ -92,7 +92,7 @@ async def test_sensors_aranet4(
     co2_sensor = hass.states.get("sensor.aranet4_12345_carbon_dioxide")
     co2_sensor_attrs = co2_sensor.attributes
     assert co2_sensor.state == "650"
-    assert co2_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet4 12345 Carbon Dioxide"
+    assert co2_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet4 12345 Carbon dioxide"
     assert co2_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "ppm"
     assert co2_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
@@ -120,7 +120,7 @@ async def test_sensors_aranet4(
     interval_sensor = hass.states.get("sensor.aranet4_12345_update_interval")
     interval_sensor_attrs = interval_sensor.attributes
     assert interval_sensor.state == "300"
-    assert interval_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet4 12345 Update Interval"
+    assert interval_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet4 12345 Update interval"
     assert interval_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "s"
     assert interval_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
