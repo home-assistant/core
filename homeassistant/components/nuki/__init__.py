@@ -50,7 +50,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 
-@dataclass
+@dataclass(slots=True)
 class NukiEntryData:
     """Class to hold Nuki data."""
 
