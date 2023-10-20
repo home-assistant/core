@@ -637,8 +637,8 @@ class BaseLight(LogMixin, light.LightEntity):
 class Light(BaseLight, ZhaEntity):
     """Representation of a ZHA or ZLL light."""
 
-    _attr_name: str = "Light"
     _attr_supported_color_modes: set[ColorMode]
+    _attr_translation_key: str = "light"
     _REFRESH_INTERVAL = (45, 75)
 
     def __init__(
@@ -1066,7 +1066,6 @@ class Light(BaseLight, ZhaEntity):
 class HueLight(Light):
     """Representation of a HUE light which does not report attributes."""
 
-    _attr_name: str = "Light"
     _REFRESH_INTERVAL = (3, 5)
 
 
@@ -1078,7 +1077,6 @@ class HueLight(Light):
 class ForceOnLight(Light):
     """Representation of a light which does not respect on/off for move_to_level_with_on_off commands."""
 
-    _attr_name: str = "Light"
     _FORCE_ON = True
 
 
@@ -1090,8 +1088,6 @@ class ForceOnLight(Light):
 class MinTransitionLight(Light):
     """Representation of a light which does not react to any "move to" calls with 0 as a transition."""
 
-    _attr_name: str = "Light"
-
     # Transitions are counted in 1/10th of a second increments, so this is the smallest
     _DEFAULT_MIN_TRANSITION_TIME = 0.1
 
@@ -1099,6 +1095,8 @@ class MinTransitionLight(Light):
 @GROUP_MATCH()
 class LightGroup(BaseLight, ZhaGroupEntity):
     """Representation of a light group."""
+
+    _attr_translation_key: str = "light_group"
 
     def __init__(
         self,
