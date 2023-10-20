@@ -19,7 +19,6 @@ from . import (
     event as event_platform,
     number as number_platform,
     sensor as sensor_platform,
-    update as update_platform,
 )
 from .const import (
     CONF_BIRTH_MESSAGE,
@@ -70,10 +69,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.SIREN.value: vol.All(cv.ensure_list, [dict]),
         Platform.SWITCH.value: vol.All(cv.ensure_list, [dict]),
         Platform.TEXT.value: vol.All(cv.ensure_list, [dict]),
-        Platform.UPDATE.value: vol.All(
-            cv.ensure_list,
-            [update_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.UPDATE.value: vol.All(cv.ensure_list, [dict]),
         Platform.VACUUM.value: vol.All(cv.ensure_list, [dict]),
         Platform.WATER_HEATER.value: vol.All(cv.ensure_list, [dict]),
     }
