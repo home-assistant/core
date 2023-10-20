@@ -435,7 +435,7 @@ apcaccess==0.0.13
 apple_weatherkit==1.0.4
 
 # homeassistant.components.apprise
-apprise==1.5.0
+apprise==1.6.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
