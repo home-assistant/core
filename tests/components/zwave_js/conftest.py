@@ -662,6 +662,12 @@ def logic_group_zdb5100_state_fixture():
     return json.loads(load_fixture("zwave_js/logic_group_zdb5100_state.json"))
 
 
+@pytest.fixture(name="central_scene_node_state", scope="session")
+def central_scene_node_state_fixture():
+    """Load node with Central Scene CC node state fixture data."""
+    return json.loads(load_fixture("zwave_js/central_scene_node_state.json"))
+
+
 # model fixtures
 
 
@@ -1288,5 +1294,13 @@ def nice_ibt4zwave_fixture(client, nice_ibt4zwave_state):
 def logic_group_zdb5100_fixture(client, logic_group_zdb5100_state):
     """Mock a ZDB5100 light node."""
     node = Node(client, copy.deepcopy(logic_group_zdb5100_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="central_scene_node")
+def central_scene_node_fixture(client, central_scene_node_state):
+    """Mock a node with the Central Scene CC."""
+    node = Node(client, copy.deepcopy(central_scene_node_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
