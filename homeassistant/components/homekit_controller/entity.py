@@ -51,6 +51,7 @@ class HomeKitEntity(Entity):
         self._char_name: str | None = None
         self._char_subscription: CALLBACK_TYPE | None = None
         self.async_setup()
+        self._attr_unique_id = f"{accessory.unique_id}_{self._aid}_{self._iid}"
         super().__init__()
 
     @callback
@@ -200,11 +201,6 @@ class HomeKitEntity(Entity):
         return f"homekit-{self._accessory.unique_id}-{self._aid}-{self._iid}"
 
     @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
-        return f"{self._accessory.unique_id}_{self._aid}_{self._iid}"
-
-    @property
     def default_name(self) -> str | None:
         """Return the default name of the device."""
         return None
@@ -215,10 +211,9 @@ class HomeKitEntity(Entity):
         accessory_name = self.accessory.name
         # If the service has a name char, use that, if not
         # fallback to the default name provided by the subclass
-        device_name = self._char_name or self.default_name
-        folded_device_name = folded_name(device_name or "")
-        folded_accessory_name = folded_name(accessory_name)
-        if device_name:
+        if device_name := self._char_name or self.default_name:
+            folded_device_name = folded_name(device_name)
+            folded_accessory_name = folded_name(accessory_name)
             # Sometimes the device name includes the accessory
             # name already like My ecobee Occupancy / My ecobee
             if folded_device_name.startswith(folded_accessory_name):
@@ -252,16 +247,16 @@ class HomeKitEntity(Entity):
 class AccessoryEntity(HomeKitEntity):
     """A HomeKit entity that is related to an entire accessory rather than a specific service or characteristic."""
 
+    def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
+        """Initialise a generic HomeKit accessory."""
+        super().__init__(accessory, devinfo)
+        self._attr_unique_id = f"{accessory.unique_id}_{self._aid}"
+
     @property
     def old_unique_id(self) -> str:
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-aid:{self._aid}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
-        return f"{self._accessory.unique_id}_{self._aid}"
 
 
 class BaseCharacteristicEntity(HomeKitEntity):
@@ -278,6 +273,9 @@ class BaseCharacteristicEntity(HomeKitEntity):
         self._char = char
         super().__init__(accessory, devinfo)
         self._entity_key = (self._aid, self._iid, char.iid)
+        self._attr_unique_id = (
+            f"{accessory.unique_id}_{self._aid}_{char.service.iid}_{char.iid}"
+        )
 
     @callback
     def _async_remove_entity_if_characteristics_disappeared(self) -> bool:
@@ -313,8 +311,3 @@ class CharacteristicEntity(BaseCharacteristicEntity):
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-aid:{self._aid}-sid:{self._char.service.iid}-cid:{self._char.iid}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
-        return f"{self._accessory.unique_id}_{self._aid}_{self._char.service.iid}_{self._char.iid}"
