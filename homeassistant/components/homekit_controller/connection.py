@@ -437,9 +437,10 @@ class HKDevice:
 
     @callback
     def async_migrate_unique_id(
-        self, old_unique_id: str, new_unique_id: str, platform: str
+        self, old_unique_id: str, new_unique_id: str | None, platform: str
     ) -> None:
         """Migrate legacy unique IDs to new format."""
+        assert new_unique_id is not None
         _LOGGER.debug(
             "Checking if unique ID %s on %s needs to be migrated",
             old_unique_id,
