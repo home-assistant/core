@@ -26,7 +26,6 @@ async def help_create_test_certificate_file(
     """Help creating a certificate test file."""
     temp_dir = Path(tempfile.gettempdir()) / mock_temp_dir
 
-    # Create old file to be able to assert it is replaced with auto option
     def _create_file() -> None:
         if not temp_dir.exists():
             temp_dir.mkdir(0o700)
