@@ -654,6 +654,7 @@ omit =
     homeassistant/components/lannouncer/notify.py
     homeassistant/components/launch_library/__init__.py
     homeassistant/components/launch_library/sensor.py
+    homeassistant/components/lamarzocco/lm_client.py
     homeassistant/components/lcn/climate.py
     homeassistant/components/lcn/helpers.py
     homeassistant/components/lcn/services.py
