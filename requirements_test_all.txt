@@ -173,10 +173,10 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.2.4
+aioairzone-cloud==0.2.5
 
 # homeassistant.components.airzone
-aioairzone==0.6.8
+aioairzone==0.6.9
 
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
@@ -233,7 +233,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.0.5
+aiohomekit==3.0.6
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -445,7 +445,7 @@ base36==0.1.1
 beautifulsoup4==4.12.2
 
 # homeassistant.components.zha
-bellows==0.36.5
+bellows==0.36.7
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.1
@@ -654,7 +654,7 @@ flux-led==1.0.4
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnv-hash-fast==0.4.1
+fnv-hash-fast==0.5.0
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -1179,7 +1179,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2023.10.0
+pyDuotecno==2023.10.1
 
 # homeassistant.components.eight_sleep
 pyEight==0.3.2
@@ -1258,7 +1258,7 @@ pydeconz==113
 pydexcom==0.2.3
 
 # homeassistant.components.discovergy
-pydiscovergy==2.0.4
+pydiscovergy==2.0.5
 
 # homeassistant.components.hydrawise
 pydrawise==2023.10.0
@@ -1921,7 +1921,7 @@ todoist-api-python==2.1.2
 tololib==0.1.0b4
 
 # homeassistant.components.toon
-toonapi==0.2.1
+toonapi==0.3.0
 
 # homeassistant.components.totalconnect
 total-connect-client==2023.2
@@ -1977,7 +1977,7 @@ uvcclient==0.11.0
 vallox-websocket-api==3.3.0
 
 # homeassistant.components.rdw
-vehicle==1.0.1
+vehicle==2.0.0
 
 # homeassistant.components.velbus
 velbus-aio==2023.10.1
@@ -2101,10 +2101,10 @@ zigpy-xbee==0.18.3
 zigpy-zigate==0.11.0
 
 # homeassistant.components.zha
-zigpy-znp==0.11.5
+zigpy-znp==0.11.6
 
 # homeassistant.components.zha
-zigpy==0.57.2
+zigpy==0.58.1
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.52.1
