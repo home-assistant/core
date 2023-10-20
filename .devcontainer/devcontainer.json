@@ -6,10 +6,8 @@
   "postStartCommand": "script/bootstrap",
   "containerEnv": { "DEVCONTAINER": "1" },
   "appPort": ["8123:8123"],
-  "runArgs": [
-    "-e",
-    "GIT_EDITOR=code --wait",
-  ],
+  "runArgs": ["-e", "GIT_EDITOR=code"],
+  "remoteUser": "root",
   "customizations": {
     "vscode": {
       "extensions": [
