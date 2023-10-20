@@ -297,3 +297,13 @@ async def test_indicator_test(
         "propertyKey": "Switch",
     }
     assert args["value"] is False
+
+
+async def test_thermostat_operating_state(
+    hass: HomeAssistant, client, climate_adc_t3000, integration
+) -> None:
+    """Test that Thermostat Operating State sensor is discovered for climate_adc_t3000"""
+    node = climate_adc_t3000
+
+    state = hass.states.get("sensor.adc_t3000_operating_state")
+    assert state

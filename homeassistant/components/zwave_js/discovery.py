@@ -38,6 +38,7 @@ from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_FAN_MODE_PROPERTY,
     THERMOSTAT_MODE_PROPERTY,
     THERMOSTAT_SETPOINT_PROPERTY,
+    THERMOSTAT_OPERATING_STATE_PROPERTY,
 )
 from zwave_js_server.exceptions import UnknownValueData
 from zwave_js_server.model.device_class import DeviceClassItem
@@ -733,6 +734,16 @@ DISCOVERY_SCHEMAS = [
                 type={ValueType.NUMBER},
             ),
         ],
+    ),
+    # thermostat operating state
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="thermostat_opertating_state",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.THERMOSTAT_OPERATING_STATE},
+            property={THERMOSTAT_OPERATING_STATE_PROPERTY},
+            type={ValueType.NUMBER},
+        ),
     ),
     # binary sensors
     # When CC is Sensor Binary and device class generic is Binary Sensor, entity should
