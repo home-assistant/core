@@ -19,8 +19,15 @@
       'version': 1,
     }),
     'data': dict({
-      '__type': "<class 'aioelectricitymaps.models.CarbonIntensityResponse'>",
-      'repr': "CarbonIntensityResponse(status='ok', country_code='FR', data=CarbonIntensityData(carbon_intensity=45.98623190095805, fossil_fuel_percentage=5.461182741937103), units=CarbonIntensityUnit(carbon_intensity='gCO2eq/kWh'))",
+      'country_code': 'FR',
+      'data': dict({
+        'carbon_intensity': 45.98623190095805,
+        'fossil_fuel_percentage': 5.461182741937103,
+      }),
+      'status': 'ok',
+      'units': dict({
+        'carbon_intensity': 'gCO2eq/kWh',
+      }),
     }),
   })
 # ---
