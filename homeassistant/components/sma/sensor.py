@@ -274,8 +274,6 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "grid_power_factor_excitation": SensorEntityDescription(
         key="grid_power_factor_excitation",
         name="Grid Power Factor Excitation",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.POWER_FACTOR,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

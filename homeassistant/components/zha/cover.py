@@ -73,7 +73,7 @@ async def async_setup_entry(
 class ZhaCover(ZhaEntity, CoverEntity):
     """Representation of a ZHA cover."""
 
-    _attr_name: str = "Cover"
+    _attr_translation_key: str = "cover"
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Init this sensor."""
@@ -205,7 +205,7 @@ class Shade(ZhaEntity, CoverEntity):
     """ZHA Shade."""
 
     _attr_device_class = CoverDeviceClass.SHADE
-    _attr_name: str = "Shade"
+    _attr_translation_key: str = "shade"
 
     def __init__(
         self,
@@ -313,9 +313,8 @@ class Shade(ZhaEntity, CoverEntity):
 class KeenVent(Shade):
     """Keen vent cover."""
 
-    _attr_name: str = "Keen vent"
-
     _attr_device_class = CoverDeviceClass.DAMPER
+    _attr_translation_key: str = "keen_vent"
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

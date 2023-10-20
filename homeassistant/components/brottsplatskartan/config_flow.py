@@ -18,11 +18,10 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_LOCATION): selector.LocationSelector(
             selector.LocationSelectorConfig(radius=False, icon="")
         ),
-        vol.Optional(CONF_AREA, default="none"): selector.SelectSelector(
+        vol.Optional(CONF_AREA): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=AREAS,
                 mode=selector.SelectSelectorMode.DROPDOWN,
-                translation_key="areas",
             )
         ),
     }
@@ -43,9 +42,7 @@ class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             latitude: float | None = None
             longitude: float | None = None
-            area: str | None = (
-                user_input[CONF_AREA] if user_input[CONF_AREA] != "none" else None
-            )
+            area: str | None = user_input.get(CONF_AREA)
 
             if area:
                 name = f"{DEFAULT_NAME} {area}"

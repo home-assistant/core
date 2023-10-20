@@ -6,12 +6,13 @@ from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
 from wyoming.asr import Transcript
+from wyoming.info import Info, WakeModel, WakeProgram
 from wyoming.wake import Detection
 
 from homeassistant.components import wake_word
 from homeassistant.core import HomeAssistant
 
-from . import MockAsyncTcpClient
+from . import TEST_ATTR, MockAsyncTcpClient
 
 
 async def test_support(hass: HomeAssistant, init_wyoming_wake_word) -> None:
@@ -24,7 +25,7 @@ async def test_support(hass: HomeAssistant, init_wyoming_wake_word) -> None:
     )
     assert entity is not None
 
-    assert entity.supported_wake_words == [
+    assert (await entity.get_supported_wake_words()) == [
         wake_word.WakeWord(id="Test Model", name="Test Model")
     ]
 
@@ -157,3 +158,55 @@ async def test_detect_message_with_wrong_wake_word(
         result = await entity.async_process_audio_stream(audio_stream(), "my-wake-word")
 
     assert result is None
+
+
+async def test_dynamic_wake_word_info(
+    hass: HomeAssistant, init_wyoming_wake_word
+) -> None:
+    """Test that supported wake words are loaded dynamically."""
+    entity = wake_word.async_get_wake_word_detection_entity(
+        hass, "wake_word.test_wake_word"
+    )
+    assert entity is not None
+
+    # Original info
+    assert (await entity.get_supported_wake_words()) == [
+        wake_word.WakeWord("Test Model", "Test Model")
+    ]
+
+    new_info = Info(
+        wake=[
+            WakeProgram(
+                name="dynamic",
+                description="Dynamic Wake Word",
+                installed=True,
+                attribution=TEST_ATTR,
+                models=[
+                    WakeModel(
+                        name="ww1",
+                        description="Wake Word 1",
+                        installed=True,
+                        attribution=TEST_ATTR,
+                        languages=[],
+                    ),
+                    WakeModel(
+                        name="ww2",
+                        description="Wake Word 2",
+                        installed=True,
+                        attribution=TEST_ATTR,
+                        languages=[],
+                    ),
+                ],
+            )
+        ]
+    )
+
+    # Different Wyoming info will be fetched
+    with patch(
+        "homeassistant.components.wyoming.wake_word.load_wyoming_info",
+        return_value=new_info,
+    ):
+        assert (await entity.get_supported_wake_words()) == [
+            wake_word.WakeWord("ww1", "Wake Word 1"),
+            wake_word.WakeWord("ww2", "Wake Word 2"),
+        ]
