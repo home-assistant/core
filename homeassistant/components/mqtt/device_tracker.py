@@ -35,7 +35,7 @@ from .mixins import (
     CONF_JSON_ATTRS_TOPIC,
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_mqtt_entry_helper,
+    async_setup_entity_entry_helper,
     write_state_on_attr_change,
 )
 from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
@@ -85,7 +85,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT event through YAML and through MQTT discovery."""
-    await async_mqtt_entry_helper(
+    await async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttDeviceTracker,
