@@ -5,7 +5,6 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,14 +26,10 @@ async def async_setup_entry(
     coordinator: TransmissionDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    # to be removed in 2024.1
-    name = config_entry.data.get(CONF_NAME)
-    if name is None:
-        name = f"{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}"
 
     dev = []
     for switch_type, switch_name in SWITCH_TYPES.items():
-        dev.append(TransmissionSwitch(switch_type, switch_name, coordinator, name))
+        dev.append(TransmissionSwitch(switch_type, switch_name, coordinator))
 
     async_add_entities(dev, True)
 
@@ -52,7 +47,6 @@ class TransmissionSwitch(
         switch_type: str,
         switch_name: str,
         coordinator: TransmissionDataUpdateCoordinator,
-        client_name: str,
     ) -> None:
         """Initialize the Transmission switch."""
         super().__init__(coordinator)
@@ -64,7 +58,6 @@ class TransmissionSwitch(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Transmission",
-            name=client_name,
         )
 
     @property
