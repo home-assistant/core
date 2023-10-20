@@ -71,15 +71,13 @@ RELAY_ENTITIES = (
     ),
 )
 
-STORAGE_SETTINGS_ENTITIES = (
-    EnvoyStorageSettingsNumberEntityDescription(
-        key="reserve_soc",
-        translation_key="reserve_soc",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=NumberDeviceClass.BATTERY,
-        value_fn=lambda storage_settings: storage_settings.reserved_soc,
-        update_fn=lambda envoy, value: envoy.set_reserve_soc(int(value)),
-    ),
+STORAGE_RESERVE_SOC_ENTITY = EnvoyStorageSettingsNumberEntityDescription(
+    key="reserve_soc",
+    translation_key="reserve_soc",
+    native_unit_of_measurement=PERCENTAGE,
+    device_class=NumberDeviceClass.BATTERY,
+    value_fn=lambda storage_settings: storage_settings.reserved_soc,
+    update_fn=lambda envoy, value: envoy.set_reserve_soc(int(value)),
 )
 
 
@@ -104,9 +102,8 @@ async def async_setup_entry(
         and envoy_data.tariff.storage_settings
         and coordinator.envoy.supported_features & SupportedFeatures.ENCHARGE
     ):
-        entities.extend(
-            EnvoyStorageSettingsNumberEntity(coordinator, entity)
-            for entity in STORAGE_SETTINGS_ENTITIES
+        entities.append(
+            EnvoyStorageSettingsNumberEntity(coordinator, STORAGE_RESERVE_SOC_ENTITY)
         )
     async_add_entities(entities)
 
