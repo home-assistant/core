@@ -1651,8 +1651,8 @@ async def test_naming(
     sensor_entity: PassiveBluetoothProcessorEntity = sensor_entities[0]
     sensor_entity.hass = hass
     assert sensor_entity.available is True
-    assert sensor_entity.name == UNDEFINED
-    assert sensor_entity.device_class == SensorDeviceClass.TEMPERATURE
+    assert sensor_entity.name is UNDEFINED
+    assert sensor_entity.device_class is SensorDeviceClass.TEMPERATURE
     assert sensor_entity.translation_key is None
 
     cancel_coordinator()
