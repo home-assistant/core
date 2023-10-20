@@ -81,5 +81,7 @@ class TedeeButtonEntity(TedeeEntity, ButtonEntity):
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             raise HomeAssistantError(
-                "Error while unlatching the door through button: %s" % ex
+                "Error while unlatching the lock {} through button: {}".format(
+                    str(self._lock.lock_id), ex
+                )
             ) from ex

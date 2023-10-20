@@ -13,7 +13,14 @@ from homeassistant.components.lock import (
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
-from homeassistant.components.tedee.const import DOMAIN
+from homeassistant.components.tedee.const import (
+    ATTR_CONNECTED,
+    ATTR_DURATION_PULLSPRING,
+    ATTR_NUMERIC_STATE,
+    ATTR_SEMI_LOCKED,
+    ATTR_SUPPORT_PULLSPING,
+    DOMAIN,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -44,6 +51,13 @@ async def test_lock(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Lock-1A2B Lock"
     assert state.attributes.get(ATTR_ICON) == "mdi:lock"
     assert state.state == STATE_UNLOCKED
+
+    # test extra attributes
+    assert state.attributes.get(ATTR_CONNECTED) is True
+    assert state.attributes.get(ATTR_DURATION_PULLSPRING) == 2
+    assert state.attributes.get(ATTR_NUMERIC_STATE) == 2
+    assert state.attributes.get(ATTR_SEMI_LOCKED) is False
+    assert state.attributes.get(ATTR_SUPPORT_PULLSPING) is True
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
