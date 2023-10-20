@@ -1,7 +1,8 @@
 """Test the Discovergy config flow."""
 from unittest.mock import Mock, patch
 
-from pydiscovergy.error import HTTPError, InvalidLogin
+from pydiscovergy.error import DiscovergyClientError, HTTPError, InvalidLogin
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.discovergy.const import DOMAIN
@@ -10,6 +11,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.components.discovergy.const import GET_METERS
 
 
 async def test_form(hass: HomeAssistant, mock_meters: Mock) -> None:
@@ -73,17 +75,37 @@ async def test_reauth(
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        (InvalidLogin, "invalid_auth"),
+        (HTTPError, "cannot_connect"),
+        (DiscovergyClientError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_fail(hass: HomeAssistant, error: Exception, message: str) -> None:
+    """Test to handle exceptions."""
 
     with patch(
         "pydiscovergy.Discovergy.meters",
-        side_effect=InvalidLogin,
+        side_effect=error,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_EMAIL: "test@example.com",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": message}
+
+    with patch("pydiscovergy.Discovergy.meters", return_value=GET_METERS):
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_EMAIL: "test@example.com",
@@ -91,43 +113,6 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch("pydiscovergy.Discovergy.meters", side_effect=HTTPError):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_EMAIL: "test@example.com",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_unknown_exception(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch("pydiscovergy.Discovergy.meters", side_effect=Exception):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_EMAIL: "test@example.com",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["title"] == "test@example.com"
+        assert "errors" not in result

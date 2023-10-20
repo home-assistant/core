@@ -1,4 +1,5 @@
 """Test the Android TV Remote config flow."""
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 from androidtvremote2 import CannotConnect, ConnectionClosed, InvalidAuth
@@ -431,8 +432,8 @@ async def test_zeroconf_flow_success(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=host,
-            addresses=[host],
+            ip_address=ip_address(host),
+            ip_addresses=[ip_address(host)],
             port=6466,
             hostname=host,
             type="mock_type",
@@ -509,8 +510,8 @@ async def test_zeroconf_flow_cannot_connect(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=host,
-            addresses=[host],
+            ip_address=ip_address(host),
+            ip_addresses=[ip_address(host)],
             port=6466,
             hostname=host,
             type="mock_type",
@@ -560,8 +561,8 @@ async def test_zeroconf_flow_pairing_invalid_auth(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=host,
-            addresses=[host],
+            ip_address=ip_address(host),
+            ip_addresses=[ip_address(host)],
             port=6466,
             hostname=host,
             type="mock_type",
@@ -643,8 +644,8 @@ async def test_zeroconf_flow_already_configured_host_changed_reloads_entry(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=host,
-            addresses=[host],
+            ip_address=ip_address(host),
+            ip_addresses=[ip_address(host)],
             port=6466,
             hostname=host,
             type="mock_type",
@@ -696,8 +697,8 @@ async def test_zeroconf_flow_already_configured_host_not_changed_no_reload_entry
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=host,
-            addresses=[host],
+            ip_address=ip_address(host),
+            ip_addresses=[ip_address(host)],
             port=6466,
             hostname=host,
             type="mock_type",
@@ -729,8 +730,8 @@ async def test_zeroconf_flow_abort_if_mac_is_missing(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=host,
-            addresses=[host],
+            ip_address=ip_address(host),
+            ip_addresses=[ip_address(host)],
             port=6466,
             hostname=host,
             type="mock_type",

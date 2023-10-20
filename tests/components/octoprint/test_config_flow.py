@@ -1,4 +1,5 @@
 """Test the OctoPrint config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from pyoctoprintapi import ApiError, DiscoverySettings
@@ -174,8 +175,8 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=80,
@@ -496,8 +497,8 @@ async def test_duplicate_zerconf_ignored(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=80,

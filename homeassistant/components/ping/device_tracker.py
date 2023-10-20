@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.async_ import gather_with_concurrency
+from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.process import kill_subprocess
 
 from .const import DOMAIN, ICMP_TIMEOUT, PING_ATTEMPTS_COUNT, PING_PRIVS, PING_TIMEOUT
@@ -117,7 +117,7 @@ async def async_setup_scanner(
 
         async def async_update(now: datetime) -> None:
             """Update all the hosts on every interval time."""
-            results = await gather_with_concurrency(
+            results = await gather_with_limited_concurrency(
                 CONCURRENT_PING_LIMIT,
                 *(hass.async_add_executor_job(host.update) for host in hosts),
             )

@@ -1,6 +1,7 @@
 """Test the Nanoleaf config flow."""
 from __future__ import annotations
 
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aionanoleaf import InvalidToken, Unauthorized, Unavailable
@@ -237,8 +238,8 @@ async def test_discovery_link_unavailable(
             DOMAIN,
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
-                host=TEST_HOST,
-                addresses=[TEST_HOST],
+                ip_address=ip_address(TEST_HOST),
+                ip_addresses=[ip_address(TEST_HOST)],
                 hostname="mock_hostname",
                 name=f"{TEST_NAME}.{type_in_discovery_info}",
                 port=None,
@@ -372,8 +373,8 @@ async def test_import_discovery_integration(
             DOMAIN,
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
-                host=TEST_HOST,
-                addresses=[TEST_HOST],
+                ip_address=ip_address(TEST_HOST),
+                ip_addresses=[ip_address(TEST_HOST)],
                 hostname="mock_hostname",
                 name=f"{TEST_NAME}.{type_in_discovery}",
                 port=None,

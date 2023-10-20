@@ -3,7 +3,7 @@
     "flow_title": "{serial} ({host})",
     "step": {
       "user": {
-        "description": "For firmware version 7.0 and later, enter the Enphase cloud credentials, for older models models, enter username `installer` without a password.",
+        "description": "For firmware version 7.0 and later, enter the Enphase cloud credentials, for older models, enter username `installer` without a password.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
