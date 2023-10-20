@@ -282,6 +282,7 @@ FLOWS = {
         "ld2410_ble",
         "leaone",
         "led_ble",
+        "lektrico",
         "lg_soundbar",
         "lidarr",
         "lifx",
