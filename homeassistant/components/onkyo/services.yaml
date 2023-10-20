@@ -1,0 +1,24 @@
+# Describes the format for selecting HDMI output
+select_hdmi_output:
+  target:
+    entity:
+      integration: onkyo
+      domain: media_player
+  fields:
+    hdmi_output:
+      required: true
+      default: out
+      example: out
+      selector:
+        select:
+          translation_key: "hdmi_output"
+          options:
+            - "no"
+            - "analog"
+            - "yes"
+            - "out"
+            - "out-sub"
+            - "sub"
+            - "hdbaset"
+            - "both"
+            - "up"

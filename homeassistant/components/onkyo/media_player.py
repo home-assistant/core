@@ -9,7 +9,6 @@ from eiscp import eISCP
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    DOMAIN,
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -23,6 +22,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = "onkyo"
 
 CONF_SOURCES = "sources"
 CONF_MAX_VOLUME = "max_volume"
@@ -106,7 +107,7 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
     }
 )
 
-SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
+SERVICE_SELECT_HDMI_OUTPUT = "select_hdmi_output"
 
 
 def _parse_onkyo_payload(payload):

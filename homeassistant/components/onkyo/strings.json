@@ -1,0 +1,29 @@
+{
+  "services": {
+    "select_hdmi_output": {
+      "name": "Select HDMI output",
+      "description": "Changes the HDMI output of your receiver.",
+      "fields": {
+        "hdmi_output": {
+          "name": "HDMI Output",
+          "description": "The desired output code. Which one to use seems to vary depending on model so you will have to try them out (for model TX-NR676E it seems to be ‘out’ for main, ‘out-sub’ for sub, and ‘sub’ for both )."
+        }
+      }
+    }
+  },
+  "selector": {
+    "hdmi_output": {
+      "options": {
+        "no": "no",
+        "analog": "analog",
+        "yes": "yes",
+        "out": "out",
+        "out-sub": "out-sub",
+        "sub": "sub",
+        "hdbaset": "hdbaset",
+        "both": "both",
+        "up": "up"
+      }
+    }
+  }
+}
