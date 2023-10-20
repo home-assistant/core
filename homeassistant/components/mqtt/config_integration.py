@@ -15,7 +15,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 
 from . import (
-    cover as cover_platform,
     event as event_platform,
     sensor as sensor_platform,
 )
@@ -40,10 +39,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.BUTTON.value: vol.All(cv.ensure_list, [dict]),
         Platform.CAMERA.value: vol.All(cv.ensure_list, [dict]),
         Platform.CLIMATE.value: vol.All(cv.ensure_list, [dict]),
-        Platform.COVER.value: vol.All(
-            cv.ensure_list,
-            [cover_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.COVER.value: vol.All(cv.ensure_list, [dict]),
         Platform.DEVICE_TRACKER.value: vol.All(cv.ensure_list, [dict]),
         Platform.EVENT.value: vol.All(
             cv.ensure_list,
