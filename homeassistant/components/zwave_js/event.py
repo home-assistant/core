@@ -59,16 +59,14 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
     ) -> None:
         """Initialize a ZwaveEventEntity entity."""
         super().__init__(config_entry, driver, info)
-        self.value = info.primary_value
+        value = self.value = info.primary_value
         self.states: dict[int, str] = {}
 
-        if info.primary_value.metadata.states:
-            self._attr_event_types = sorted(info.primary_value.metadata.states.values())
-            self.states = {
-                int(k): v for k, v in info.primary_value.metadata.states.items()
-            }
+        if states := value.metadata.states:
+            self._attr_event_types = sorted(states.values())
+            self.states = {int(k): v for k, v in states.items()}
         else:
-            self._attr_event_types = [_cc_and_label(info.primary_value)]
+            self._attr_event_types = [_cc_and_label(value)]
         # Entity class attributes
         self._attr_name = self.generate_name(include_value_name=True)
 
@@ -76,18 +74,16 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
     def _async_handle_event(self, value_notification: ValueNotification) -> None:
         """Handle a value notification event."""
         # If the notification doesn't match the value we are tracking, we can return
+        value = self.value
         if (
-            value_notification.command_class != self.value.command_class
-            or value_notification.endpoint != self.value.endpoint
-            or value_notification.property_ != self.value.property_
-            or value_notification.property_key != self.value.property_key
+            value_notification.command_class != value.command_class
+            or value_notification.endpoint != value.endpoint
+            or value_notification.property_ != value.property_
+            or value_notification.property_key != value.property_key
+            or (val := value_notification.value) is None
         ):
             return
-        if value_notification.value is None:
-            return
-        event_name = self.states.get(
-            value_notification.value, _cc_and_label(self.value)
-        )
+        event_name = self.states.get(val, _cc_and_label(self.value))
         self._trigger_event(event_name, {ATTR_VALUE: value_notification.value})
         self.async_write_ha_state()
 
