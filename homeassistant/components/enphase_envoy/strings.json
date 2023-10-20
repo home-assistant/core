@@ -80,7 +80,7 @@
         }
       },
       "storage_mode": {
-        "name": "Storage Mode",
+        "name": "Storage mode",
         "state": {
           "self_consumption": "Self consumption",
           "backup": "Full backup",
