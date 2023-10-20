@@ -25,14 +25,10 @@ class ColorClientClusterHandler(ClientClusterHandler):
 class ColorClusterHandler(ClusterHandler):
     """Color cluster handler."""
 
-    CAPABILITIES_COLOR_XY = 0x08
-    CAPABILITIES_COLOR_TEMP = 0x10
-    UNSUPPORTED_ATTRIBUTE = 0x86
     REPORT_CONFIG = (
         AttrReportConfig(attr="current_x", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="current_y", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="current_hue", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="enhanced_current_hue", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="current_saturation", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="color_temperature", config=REPORT_CONFIG_DEFAULT),
     )
@@ -44,6 +40,7 @@ class ColorClusterHandler(ClusterHandler):
         "color_temp_physical_max": True,
         "color_capabilities": True,
         "color_loop_active": False,
+        "enhanced_current_hue": False,
         "start_up_color_temperature": True,
         "options": True,
     }
@@ -53,7 +50,7 @@ class ColorClusterHandler(ClusterHandler):
         """Return ZCL color capabilities of the light."""
         color_capabilities = self.cluster.get("color_capabilities")
         if color_capabilities is None:
-            return lighting.Color.ColorCapabilities(self.CAPABILITIES_COLOR_XY)
+            return lighting.Color.ColorCapabilities.XY_attributes
         return lighting.Color.ColorCapabilities(color_capabilities)
 
     @property

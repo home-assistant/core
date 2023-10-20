@@ -261,3 +261,8 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
             return
         self._attr_native_value = attr_val
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return true is device is available."""
+        return super().available and self.coordinator.dev_online

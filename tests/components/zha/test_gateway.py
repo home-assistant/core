@@ -9,6 +9,7 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
+from homeassistant.components.zha.core.const import RadioType
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.components.zha.core.helpers import get_zha_gateway
@@ -350,13 +351,11 @@ async def test_gateway_initialize_bellows_thread(
     zha_gateway.config_entry.data["device"]["path"] = device_path
     zha_gateway._config.setdefault("zigpy_config", {}).update(config_override)
 
-    with patch(
-        "bellows.zigbee.application.ControllerApplication.new",
-        return_value=zigpy_app_controller,
-    ) as mock_new:
-        await zha_gateway.async_initialize()
+    await zha_gateway.async_initialize()
 
-    assert mock_new.mock_calls[0].kwargs["config"]["use_thread"] is thread_state
+    RadioType.ezsp.controller.new.mock_calls[-1].kwargs["config"][
+        "use_thread"
+    ] is thread_state
 
 
 @pytest.mark.parametrize(
