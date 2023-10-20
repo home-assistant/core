@@ -312,6 +312,7 @@ FLOWS = {
         "leaone",
         "led_ble",
         "lg_netcast",
+        "lektrico",
         "lg_soundbar",
         "lidarr",
         "lifx",
