@@ -87,7 +87,7 @@ class MediaExtractor:
 
     def get_entities(self) -> list[str]:
         """Return list of entities."""
-        return self.call_data.get(ATTR_ENTITY_ID, [])
+        return self.call_data.get(ATTR_ENTITY_ID, [])  # type: ignore[no-any-return]
 
     def extract_and_send(self) -> None:
         """Extract exact stream format for each entity_id and play it."""
@@ -153,7 +153,7 @@ class MediaExtractor:
         except MEQueryException:
             _LOGGER.error("Wrong query format: %s", stream_query)
             return
-
+        _LOGGER.debug("Selected the following stream: %s", stream_url)
         data = {k: v for k, v in self.call_data.items() if k != ATTR_ENTITY_ID}
         data[ATTR_MEDIA_CONTENT_ID] = stream_url
 
@@ -193,9 +193,16 @@ def get_best_stream(formats: list[dict[str, Any]]) -> str:
 
 
 def get_best_stream_youtube(formats: list[dict[str, Any]]) -> str:
-    """YouTube requests also include manifest files.
+    """YouTube responses also include files with only video or audio.
 
-    They don't have a filesize so we skip all formats without filesize.
+    So we filter on files with both audio and video codec.
     """
 
-    return get_best_stream([format for format in formats if "filesize" in format])
+    return get_best_stream(
+        [
+            format
+            for format in formats
+            if format.get("acodec", "none") != "none"
+            and format.get("vcodec", "none") != "none"
+        ]
+    )

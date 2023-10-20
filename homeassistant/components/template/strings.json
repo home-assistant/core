@@ -51,7 +51,6 @@
   "selector": {
     "binary_sensor_device_class": {
       "options": {
-        "none": "[%key:component::template::selector::sensor_device_class::options::none%]",
         "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
         "battery_charging": "[%key:component::binary_sensor::entity_component::battery_charging::name%]",
         "carbon_monoxide": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]",
@@ -83,7 +82,6 @@
     },
     "sensor_device_class": {
       "options": {
-        "none": "No device class",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
         "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
         "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
@@ -137,7 +135,6 @@
     },
     "sensor_state_class": {
       "options": {
-        "none": "No state class",
         "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
         "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
         "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"

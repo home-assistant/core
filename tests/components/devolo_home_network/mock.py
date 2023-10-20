@@ -31,12 +31,18 @@ class MockDevice(Device):
     ) -> None:
         """Bring mock in a well defined state."""
         super().__init__(ip, zeroconf_instance)
+        self._firmware_version = DISCOVERY_INFO.properties["FirmwareVersion"]
         self.reset()
 
     @property
     def firmware_version(self) -> str:
         """Mock firmware version currently installed."""
-        return DISCOVERY_INFO.properties["FirmwareVersion"]
+        return self._firmware_version
+
+    @firmware_version.setter
+    def firmware_version(self, version: str) -> None:
+        """Mock firmware version currently installed."""
+        self._firmware_version = version
 
     async def async_connect(
         self, session_instance: httpx.AsyncClient | None = None
@@ -49,6 +55,7 @@ class MockDevice(Device):
 
     def reset(self):
         """Reset mock to starting point."""
+        self._firmware_version = DISCOVERY_INFO.properties["FirmwareVersion"]
         self.async_disconnect = AsyncMock()
         self.device = DeviceApi(IP, None, DISCOVERY_INFO)
         self.device.async_check_firmware_available = AsyncMock(

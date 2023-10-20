@@ -667,6 +667,7 @@ async def async_setup_entry(
         accessory_info = accessory.services.first(
             service_type=ServicesTypes.ACCESSORY_INFORMATION
         )
+        assert accessory_info
         info = {"aid": accessory.aid, "iid": accessory_info.iid}
         entity = RSSISensor(conn, info)
         conn.async_migrate_unique_id(
