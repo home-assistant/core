@@ -1,7 +1,7 @@
 """Switch platform for Enphase Envoy solar energy monitor."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -61,8 +61,8 @@ class EnvoyStorageSettingsRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoyStorageSettings], bool]
-    turn_on_fn: Callable[[Envoy], Coroutine[Any, Any, dict[str, Any]]]
-    turn_off_fn: Callable[[Envoy], Coroutine[Any, Any, dict[str, Any]]]
+    turn_on_fn: Callable[[Envoy], Awaitable[dict[str, Any]]]
+    turn_off_fn: Callable[[Envoy], Awaitable[dict[str, Any]]]
 
 
 @dataclass
@@ -127,12 +127,10 @@ async def async_setup_entry(
         and envoy_data.tariff.storage_settings
         and (coordinator.envoy.supported_features & SupportedFeatures.ENCHARGE)
     ):
-        entities.extend(
-            [
-                EnvoyStorageSettingsSwitchEntity(
-                    coordinator, CHARGE_FROM_GRID_SWITCH, envoy_data.enpower
-                )
-            ]
+        entities.append(
+            EnvoyStorageSettingsSwitchEntity(
+                coordinator, CHARGE_FROM_GRID_SWITCH, envoy_data.enpower
+            )
         )
 
     async_add_entities(entities)
