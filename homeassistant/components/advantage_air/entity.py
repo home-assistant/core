@@ -63,7 +63,7 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
         return self.coordinator.data["aircons"][self.ac_key]["info"]
 
     @property
-    def _myzone(self) -> dict[str, Any]:
+    def _myzone(self) -> dict[str, Any] | None:
         return self.coordinator.data["aircons"][self.ac_key]["zones"].get(
             f"z{self._ac['myZone']:02}"
         )
