@@ -31,13 +31,7 @@ async def async_setup_entry(
         """Add Z-Wave event entity."""
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
-        entities: list[ZWaveBaseEntity] = []
-        if info.platform_hint == "stateless":
-            entities.append(ZwaveEventEntity(config_entry, driver, info))
-        else:
-            raise ValueError(
-                f"Discovered value with hint '{info.platform_hint} not handled"
-            )
+        entities: list[ZWaveBaseEntity] = [ZwaveEventEntity(config_entry, driver, info)]
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -51,7 +45,10 @@ async def async_setup_entry(
 
 def _cc_and_label(value: Value) -> str:
     """Return a string with the command class and label."""
-    return f"{value.command_class_name}: {value.metadata.label}"
+    label = value.metadata.label
+    if label:
+        label = label.lower()
+    return f"{value.command_class_name.capitalize()} {label}"
 
 
 class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
@@ -62,9 +59,14 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
     ) -> None:
         """Initialize a ZwaveEventEntity entity."""
         super().__init__(config_entry, driver, info)
+        self.value = info.primary_value
+        self.states: dict[int, str] = {}
 
         if info.primary_value.metadata.states:
             self._attr_event_types = sorted(info.primary_value.metadata.states.values())
+            self.states = {
+                int(k): v for k, v in info.primary_value.metadata.states.items()
+            }
         else:
             self._attr_event_types = [_cc_and_label(info.primary_value)]
         # Entity class attributes
@@ -73,28 +75,19 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
     @callback
     def _async_handle_event(self, value_notification: ValueNotification) -> None:
         """Handle a value notification event."""
-        primary_value = self.info.primary_value
         # If the notification doesn't match the value we are tracking, we can return
         if (
-            value_notification.command_class != primary_value.command_class
-            or value_notification.endpoint != primary_value.endpoint
-            or value_notification.property_ != primary_value.property_
-            or value_notification.property_key != primary_value.property_key
+            value_notification.command_class != self.value.command_class
+            or value_notification.endpoint != self.value.endpoint
+            or value_notification.property_ != self.value.property_
+            or value_notification.property_key != self.value.property_key
         ):
             return
-
-        if primary_value.metadata.states:
-            try:
-                event_name = primary_value.metadata.states[
-                    str(value_notification.value)
-                ]
-            except KeyError:
-                raise KeyError(
-                    f"Can't find '{value_notification.value}' in "
-                    f"'{primary_value.value_id}' states"
-                ) from None
-        else:
-            event_name = _cc_and_label(primary_value)
+        if value_notification.value is None:
+            return
+        event_name = self.states.get(
+            value_notification.value, _cc_and_label(self.value)
+        )
         self._trigger_event(event_name, {ATTR_VALUE: value_notification.value})
         self.async_write_ha_state()
 

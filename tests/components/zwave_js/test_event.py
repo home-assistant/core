@@ -2,7 +2,6 @@
 from datetime import timedelta
 
 from freezegun import freeze_time
-import pytest
 from zwave_js_server.event import Event
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
@@ -60,7 +59,7 @@ async def test_basic(
     assert state
     assert state.state == dt_util.as_utc(fut).isoformat(timespec="milliseconds")
     attributes = state.attributes
-    assert attributes[ATTR_EVENT_TYPE] == "Basic: Event value"
+    assert attributes[ATTR_EVENT_TYPE] == "Basic event value"
     assert attributes[ATTR_VALUE] == 255
 
 
@@ -160,9 +159,16 @@ async def test_central_scene(
                     "stateful": False,
                     "secret": False,
                 },
-                "value": 255,
             },
         },
     )
-    with pytest.raises(KeyError):
+    with freeze_time(fut):
         node.receive_event(event)
+
+    state = hass.states.get(CENTRAL_SCENE_ENTITY)
+
+    assert state
+    assert state.state == dt_util.as_utc(fut).isoformat(timespec="milliseconds")
+    attributes = state.attributes
+    assert attributes[ATTR_EVENT_TYPE] == "KeyReleased"
+    assert attributes[ATTR_VALUE] == 1
