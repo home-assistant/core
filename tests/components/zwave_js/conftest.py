@@ -1316,4 +1316,3 @@ def climate_intermatic_pe653_fixture(client, climate_intermatic_pe653_state):
 def central_scene_node_fixture(client, central_scene_node_state):
     """Mock a node with the Central Scene CC."""
     node = Node(client, copy.deepcopy(central_scene_node_state))
-  
