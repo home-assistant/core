@@ -7,6 +7,8 @@ from aiohttp import web
 
 from homeassistant.components.http.view import HomeAssistantView
 
+from .coordinator import TedeeApiCoordinator
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -21,7 +23,7 @@ class TedeeWebhookView(HomeAssistantView):
     name = "tedee"
     requires_auth = False
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator: TedeeApiCoordinator) -> None:
         """Initialize the view."""
         self._coordinator = coordinator
 

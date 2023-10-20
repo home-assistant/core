@@ -1,7 +1,6 @@
 """Button entity for Tedee locks."""
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from pytedee_async import TedeeClient, TedeeClientException
@@ -14,8 +13,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import TedeeEntity, TedeeEntityDescription
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -37,14 +34,14 @@ ENTITIES: tuple[TedeeButtonEntityDescription, ...] = (
         key="unlatch",
         translation_key="unlatch",
         icon="mdi:gesture-tap-button",
-        unique_id_fn=lambda lock_id: f"{lock_id}-unlatch-button",
+        unique_id_fn=lambda lock: f"{lock.lock_id}-unlatch-button",
         press_fn=lambda client, lock_id: client.pull(lock_id),
     ),
     TedeeButtonEntityDescription(
         key="unlock_unlatch",
         translation_key="unlock_unlatch",
         icon="mdi:gesture-tap-button",
-        unique_id_fn=lambda lock_id: f"{lock_id}-unlockunlatch-button",
+        unique_id_fn=lambda lock: f"{lock.lock_id}-unlockunlatch-button",
         press_fn=lambda client, lock_id: client.open(lock_id),
     ),
 )
@@ -73,20 +70,16 @@ class TedeeButtonEntity(TedeeEntity, ButtonEntity):
 
     entity_description: TedeeButtonEntityDescription
 
-    def __init__(self, lock, coordinator, entity_description) -> None:
-        """Initialize the button."""
-        _LOGGER.debug("Setting up ButtonEntity for %s", lock.name)
-        super().__init__(lock, coordinator, entity_description)
-
     async def async_press(self, **kwargs) -> None:
         """Press the button."""
         try:
             self._lock.state = 4
             self.async_write_ha_state()
             await self.entity_description.press_fn(
-                self.coordinator.tedee_client, self._lock.id
+                self.coordinator.tedee_client, self._lock.lock_id
             )
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
-            _LOGGER.debug("Error while unlatching the door through button: %s", ex)
-            raise HomeAssistantError(ex) from ex
+            raise HomeAssistantError(
+                "Error while unlatching the door through button: %s" % ex
+            ) from ex

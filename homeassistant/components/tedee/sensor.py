@@ -1,9 +1,8 @@
 """Tedee sensor entities."""
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
-from pytedee_async import Lock as TedeeLock
+from pytedee_async.lock import TedeeLock
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,8 +16,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import TedeeEntity, TedeeEntityDescription
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -39,7 +36,7 @@ ENTITIES: tuple[TedeeSensorEntityDescription, ...] = (
     TedeeSensorEntityDescription(
         key="battery_sensor",
         translation_key="battery_sensor",
-        unique_id_fn=lambda lock: f"{lock.id}-battery-sensor",
+        unique_id_fn=lambda lock: f"{lock.lock_id}-battery-sensor",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement="%",
         state_class=SensorStateClass.MEASUREMENT,
@@ -69,11 +66,6 @@ class TedeeSensorEntity(TedeeEntity, SensorEntity):
     """Tedee sensor entity."""
 
     entity_description: TedeeSensorEntityDescription
-
-    def __init__(self, lock, coordinator, entity_description) -> None:
-        """Initialize Tedee sensor entity."""
-        _LOGGER.debug("Setting up SensorEntity for %s", lock.name)
-        super().__init__(lock, coordinator, entity_description)
 
     @property
     def native_value(self) -> float:

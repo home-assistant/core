@@ -5,15 +5,20 @@ import time
 
 from pytedee_async import (
     TedeeAuthException,
+    TedeeClient,
     TedeeClientException,
     TedeeDataUpdateException,
     TedeeLocalAuthException,
     TedeeWebhookException,
 )
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=20)
 STALE_DATA_INTERVAL = 300
@@ -24,21 +29,23 @@ _LOGGER = logging.getLogger(__name__)
 class TedeeApiCoordinator(DataUpdateCoordinator):
     """Class to handle fetching data from the tedee API centrally."""
 
-    def __init__(self, hass: HomeAssistant, tedee_client) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            # Name of the data. For logging purposes.
-            name="tedee API coordinator",
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=SCAN_INTERVAL,
+        self.tedee_client = TedeeClient(
+            entry.data[CONF_ACCESS_TOKEN],
+            entry.data[CONF_LOCAL_ACCESS_TOKEN],
+            entry.data[CONF_HOST],
         )
-        self.tedee_client = tedee_client
         self._initialized = False
         self._next_get_locks = time.time()
         self._last_data_update = time.time()
         self._stale_data = False
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
@@ -87,6 +94,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
         except TedeeDataUpdateException as ex:
             _LOGGER.debug("Error while updating data: %s", str(ex))
         except (TedeeClientException, Exception) as ex:
+            # TODO: remove this exception # pylint: disable=fixme
             _LOGGER.exception(ex)
             raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
 
