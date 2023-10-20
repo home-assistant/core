@@ -1,8 +1,8 @@
 """Base entity for the HomeWizard integration."""
 from __future__ import annotations
 
-from homeassistant.const import ATTR_IDENTIFIERS
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -25,6 +25,10 @@ class HomeWizardEntity(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator]):
         )
 
         if coordinator.data.device.serial is not None:
+            self._attr_device_info[ATTR_CONNECTIONS] = {
+                (CONNECTION_NETWORK_MAC, coordinator.data.device.serial)
+            }
+
             self._attr_device_info[ATTR_IDENTIFIERS] = {
                 (DOMAIN, coordinator.data.device.serial)
             }

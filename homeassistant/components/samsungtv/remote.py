@@ -24,6 +24,7 @@ async def async_setup_entry(
 class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
     """Device that sends commands to a SamsungTV."""
 
+    _attr_name = None
     _attr_should_poll = False
 
     async def async_turn_off(self, **kwargs: Any) -> None:

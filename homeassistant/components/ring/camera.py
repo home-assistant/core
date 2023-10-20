@@ -60,6 +60,7 @@ class RingCam(RingEntityMixin, Camera):
         self._video_url = None
         self._image = None
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
+        self._attr_unique_id = device.id
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -90,11 +91,6 @@ class RingCam(RingEntityMixin, Camera):
             self._image = None
             self._expires_at = dt_util.utcnow()
             self.async_write_ha_state()
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._device.id
 
     @property
     def extra_state_attributes(self):

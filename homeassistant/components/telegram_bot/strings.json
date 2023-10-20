@@ -168,7 +168,7 @@
     },
     "send_animation": {
       "name": "Send animation",
-      "description": "Sends an anmiation.",
+      "description": "Sends an animation.",
       "fields": {
         "url": {
           "name": "[%key:common::config_flow::data::url%]",

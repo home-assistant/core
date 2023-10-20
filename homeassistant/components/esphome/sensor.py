@@ -25,11 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from .entity import (
-    EsphomeEntity,
-    esphome_state_property,
-    platform_async_setup_entry,
-)
+from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 from .enum_mapper import EsphomeEnumMapper
 
 
@@ -100,7 +96,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
         state = self._state
-        if math.isnan(state.state) or state.missing_state:
+        if state.missing_state or not math.isfinite(state.state):
             return None
         if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
             return dt_util.utc_from_timestamp(state.state)

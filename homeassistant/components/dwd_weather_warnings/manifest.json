@@ -1,7 +1,7 @@
 {
   "domain": "dwd_weather_warnings",
   "name": "Deutscher Wetterdienst (DWD) Weather Warnings",
-  "codeowners": ["@runningman84", "@stephan192", "@Hummel95", "@andarotajo"],
+  "codeowners": ["@runningman84", "@stephan192", "@andarotajo"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dwd_weather_warnings",
   "iot_class": "cloud_polling",

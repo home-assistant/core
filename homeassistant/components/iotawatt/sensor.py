@@ -24,7 +24,7 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -182,9 +182,9 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
         return self._sensor_data.getName()
 
     @property
-    def device_info(self) -> entity.DeviceInfo:
+    def device_info(self) -> dr.DeviceInfo:
         """Return device info."""
-        return entity.DeviceInfo(
+        return dr.DeviceInfo(
             connections={
                 (dr.CONNECTION_NETWORK_MAC, self._sensor_data.hub_mac_address)
             },

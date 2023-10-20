@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import functools
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
@@ -35,10 +35,11 @@ from .mixins import (
     CONF_JSON_ATTRS_TOPIC,
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_setup_entry_helper,
+    async_setup_entity_entry_helper,
+    write_state_on_attr_change,
 )
 from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
-from .util import get_mqtt_data, valid_subscribe_topic
+from .util import valid_subscribe_topic
 
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
@@ -51,7 +52,7 @@ DEFAULT_SOURCE_TYPE = SourceType.GPS
 def valid_config(config: ConfigType) -> ConfigType:
     """Check if there is a state topic or json_attributes_topic."""
     if CONF_STATE_TOPIC not in config and CONF_JSON_ATTRS_TOPIC not in config:
-        raise vol.MultipleInvalid(
+        raise vol.Invalid(
             f"Invalid device tracker config, missing {CONF_STATE_TOPIC} or {CONF_JSON_ATTRS_TOPIC}, got: {config}"
         )
     return config
@@ -83,22 +84,16 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT device_tracker through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    """Set up MQTT event through YAML and through MQTT discovery."""
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttDeviceTracker,
+        device_tracker.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, device_tracker.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT Device Tracker entity."""
-    async_add_entities([MqttDeviceTracker(hass, config, config_entry, discovery_data)])
 
 
 class MqttDeviceTracker(MqttEntity, TrackerEntity):
@@ -106,18 +101,8 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
 
     _default_name = None
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
+    _location_name: str | None = None
     _value_template: Callable[..., ReceivePayloadType]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the tracker."""
-        self._location_name: str | None = None
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -135,6 +120,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_location_name"})
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             payload: ReceivePayloadType = self._value_template(msg.payload)
@@ -145,10 +131,9 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             elif payload == self._config[CONF_PAYLOAD_RESET]:
                 self._location_name = None
             else:
-                assert isinstance(msg.payload, str)
+                if TYPE_CHECKING:
+                    assert isinstance(msg.payload, str)
                 self._location_name = msg.payload
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         state_topic: str | None = self._config.get(CONF_STATE_TOPIC)
         if state_topic is None:
@@ -164,6 +149,11 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                 }
             },
         )
+
+    @property
+    def force_update(self) -> bool:
+        """Do not force updates if the state is the same."""
+        return False
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

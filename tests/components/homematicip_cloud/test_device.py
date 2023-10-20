@@ -244,13 +244,13 @@ async def test_hmip_reset_energy_counter_services(
         blocking=True,
     )
     assert hmip_device.mock_calls[-1][0] == "reset_energy_counter"
-    assert len(hmip_device._connection.mock_calls) == 2  # pylint: disable=W0212
+    assert len(hmip_device._connection.mock_calls) == 2
 
     await hass.services.async_call(
         "homematicip_cloud", "reset_energy_counter", {"entity_id": "all"}, blocking=True
     )
     assert hmip_device.mock_calls[-1][0] == "reset_energy_counter"
-    assert len(hmip_device._connection.mock_calls) == 4  # pylint: disable=W0212
+    assert len(hmip_device._connection.mock_calls) == 4
 
 
 async def test_hmip_multi_area_device(

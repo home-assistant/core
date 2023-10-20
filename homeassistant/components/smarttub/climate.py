@@ -64,6 +64,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_preset_modes = list(PRESET_MODES.values())
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
@@ -103,11 +104,6 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     def preset_mode(self):
         """Return the current preset mode."""
         return PRESET_MODES[self.spa_status.heat_mode]
-
-    @property
-    def preset_modes(self):
-        """Return the available preset modes."""
-        return list(PRESET_MODES.values())
 
     @property
     def current_temperature(self):

@@ -37,15 +37,20 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
     OralBSensor.SECTOR: SensorEntityDescription(
-        key=OralBSensor.SECTOR, translation_key="sector"
+        key=OralBSensor.SECTOR,
+        translation_key="sector",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OralBSensor.NUMBER_OF_SECTORS: SensorEntityDescription(
-        key=OralBSensor.NUMBER_OF_SECTORS, translation_key="number_of_sectors"
+        key=OralBSensor.NUMBER_OF_SECTORS,
+        translation_key="number_of_sectors",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OralBSensor.SECTOR_TIMER: SensorEntityDescription(
         key=OralBSensor.SECTOR_TIMER,
-        entity_registry_enabled_default=False,
         translation_key="sector_timer",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     OralBSensor.TOOTHBRUSH_STATE: SensorEntityDescription(
         key=OralBSensor.TOOTHBRUSH_STATE, translation_key="toothbrush_state"
@@ -54,7 +59,9 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         key=OralBSensor.PRESSURE, translation_key="pressure"
     ),
     OralBSensor.MODE: SensorEntityDescription(
-        key=OralBSensor.MODE, translation_key="mode"
+        key=OralBSensor.MODE,
+        translation_key="mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OralBSensor.SIGNAL_STRENGTH: SensorEntityDescription(
         key=OralBSensor.SIGNAL_STRENGTH,
@@ -69,6 +76,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
@@ -114,7 +122,9 @@ async def async_setup_entry(
             OralBBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class OralBBluetoothSensorEntity(

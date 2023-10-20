@@ -1,4 +1,5 @@
 """Test Home Assistant config flow for BleBox devices."""
+from ipaddress import ip_address
 from unittest.mock import DEFAULT, AsyncMock, PropertyMock, patch
 
 import blebox_uniapi
@@ -152,6 +153,21 @@ async def test_flow_with_unsupported_version(
         assert result["errors"] == {"base": "unsupported_version"}
 
 
+async def test_flow_with_auth_failure(hass: HomeAssistant, product_class_mock) -> None:
+    """Test that config flow works."""
+    with product_class_mock as products_class:
+        products_class.async_from_host = AsyncMock(
+            side_effect=blebox_uniapi.error.UnauthorizedRequest
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        )
+        assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_async_setup(hass: HomeAssistant) -> None:
     """Test async_setup (for coverage)."""
     assert await async_setup_component(hass, "blebox", {"host": "172.2.3.4"})
@@ -211,8 +227,8 @@ async def test_flow_with_zeroconf(hass: HomeAssistant) -> None:
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="172.100.123.4",
-            addresses=["172.100.123.4"],
+            ip_address=ip_address("172.100.123.4"),
+            ip_addresses=[ip_address("172.100.123.4")],
             port=80,
             hostname="bbx-bbtest123456.local.",
             type="_bbxsrv._tcp.local.",
@@ -251,8 +267,8 @@ async def test_flow_with_zeroconf_when_already_configured(hass: HomeAssistant) -
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="172.100.123.4",
-                addresses=["172.100.123.4"],
+                ip_address=ip_address("172.100.123.4"),
+                ip_addresses=[ip_address("172.100.123.4")],
                 port=80,
                 hostname="bbx-bbtest123456.local.",
                 type="_bbxsrv._tcp.local.",
@@ -275,8 +291,8 @@ async def test_flow_with_zeroconf_when_device_unsupported(hass: HomeAssistant) -
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="172.100.123.4",
-                addresses=["172.100.123.4"],
+                ip_address=ip_address("172.100.123.4"),
+                ip_addresses=[ip_address("172.100.123.4")],
                 port=80,
                 hostname="bbx-bbtest123456.local.",
                 type="_bbxsrv._tcp.local.",
@@ -301,8 +317,8 @@ async def test_flow_with_zeroconf_when_device_response_unsupported(
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="172.100.123.4",
-                addresses=["172.100.123.4"],
+                ip_address=ip_address("172.100.123.4"),
+                ip_addresses=[ip_address("172.100.123.4")],
                 port=80,
                 hostname="bbx-bbtest123456.local.",
                 type="_bbxsrv._tcp.local.",

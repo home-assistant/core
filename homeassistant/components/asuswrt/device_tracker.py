@@ -58,7 +58,6 @@ class AsusWrtDevice(ScannerEntity):
         """Initialize a AsusWrt device."""
         self._router = router
         self._device = device
-        self._attr_unique_id = device.mac
         self._attr_name = device.name or DEFAULT_DEVICE_NAME
 
     @property

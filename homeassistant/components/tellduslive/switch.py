@@ -34,6 +34,8 @@ async def async_setup_entry(
 class TelldusLiveSwitch(TelldusLiveEntity, SwitchEntity):
     """Representation of a Tellstick switch."""
 
+    _attr_name = None
+
     @property
     def is_on(self):
         """Return true if switch is on."""

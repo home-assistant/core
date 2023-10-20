@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
+from homeassistant.generated.countries import COUNTRIES
 from homeassistant.util import decorator
 from homeassistant.util.yaml import dumper
 
@@ -92,6 +93,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.cover import CoverEntityFeature
     from homeassistant.components.fan import FanEntityFeature
     from homeassistant.components.humidifier import HumidifierEntityFeature
+    from homeassistant.components.lawn_mower import LawnMowerEntityFeature
     from homeassistant.components.light import LightEntityFeature
     from homeassistant.components.lock import LockEntityFeature
     from homeassistant.components.media_player import MediaPlayerEntityFeature
@@ -100,6 +102,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
     from homeassistant.components.water_heater import WaterHeaterEntityFeature
+    from homeassistant.components.weather import WeatherEntityFeature
 
     return {
         "AlarmControlPanelEntityFeature": AlarmControlPanelEntityFeature,
@@ -109,6 +112,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "CoverEntityFeature": CoverEntityFeature,
         "FanEntityFeature": FanEntityFeature,
         "HumidifierEntityFeature": HumidifierEntityFeature,
+        "LawnMowerEntityFeature": LawnMowerEntityFeature,
         "LightEntityFeature": LightEntityFeature,
         "LockEntityFeature": LockEntityFeature,
         "MediaPlayerEntityFeature": MediaPlayerEntityFeature,
@@ -117,6 +121,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "UpdateEntityFeature": UpdateEntityFeature,
         "VacuumEntityFeature": VacuumEntityFeature,
         "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
+        "WeatherEntityFeature": WeatherEntityFeature,
     }
 
 
@@ -560,6 +565,40 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
         return agent
 
 
+class CountrySelectorConfig(TypedDict, total=False):
+    """Class to represent a country selector config."""
+
+    countries: list[str]
+    no_sort: bool
+
+
+@SELECTORS.register("country")
+class CountrySelector(Selector[CountrySelectorConfig]):
+    """Selector for a single-choice country select."""
+
+    selector_type = "country"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("countries"): [str],
+            vol.Optional("no_sort", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: CountrySelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        country: str = vol.Schema(str)(data)
+        if "countries" in self.config and (
+            country not in self.config["countries"] or country not in COUNTRIES
+        ):
+            raise vol.Invalid(f"Value {country} is not a valid option")
+        return country
+
+
 class DateSelectorConfig(TypedDict):
     """Class to represent a date selector config."""
 
@@ -988,6 +1027,7 @@ class SelectSelectorConfig(TypedDict, total=False):
     custom_value: bool
     mode: SelectSelectorMode
     translation_key: str
+    sort: bool
 
 
 @SELECTORS.register("select")
@@ -1005,6 +1045,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
                 vol.Coerce(SelectSelectorMode), lambda val: val.value
             ),
             vol.Optional("translation_key"): cv.string,
+            vol.Optional("sort", default=False): cv.boolean,
         }
     )
 

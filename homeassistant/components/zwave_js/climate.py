@@ -259,9 +259,11 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def _current_mode_setpoint_enums(self) -> list[ThermostatSetpointType]:
         """Return the list of enums that are relevant to the current thermostat mode."""
         if self._current_mode is None or self._current_mode.value is None:
-            # Thermostat(valve) with no support for setting a mode
-            # is considered heating-only
-            return [ThermostatSetpointType.HEATING]
+            # Thermostat with no support for setting a mode is just a setpoint
+            if self.info.primary_value.property_key is None:
+                return []
+            return [ThermostatSetpointType(int(self.info.primary_value.property_key))]
+
         return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])
 
     @property
@@ -507,8 +509,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         # Please use Dry and Fan HVAC modes instead.
         if preset_mode_value in (ThermostatMode.DRY, ThermostatMode.FAN):
             LOGGER.warning(
-                "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. "
-                "Please use the corresponding Dry and Fan HVAC modes instead"
+                "Dry and Fan preset modes are deprecated and will be removed in Home "
+                "Assistant 2024.2. Please use the corresponding Dry and Fan HVAC "
+                "modes instead"
             )
             async_create_issue(
                 self.hass,

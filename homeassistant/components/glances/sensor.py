@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -346,5 +347,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         value = self.coordinator.data[self.entity_description.type]
 
         if isinstance(value.get(self._sensor_name_prefix), dict):
-            return value[self._sensor_name_prefix][self.entity_description.key]
-        return value[self.entity_description.key]
+            return cast(
+                StateType, value[self._sensor_name_prefix][self.entity_description.key]
+            )
+        return cast(StateType, value[self.entity_description.key])

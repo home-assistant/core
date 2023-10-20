@@ -2,6 +2,7 @@
 import json
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
@@ -19,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, load_fixture
 
@@ -132,6 +132,7 @@ async def test_switch_state(
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
 async def test_switch_dynamically_handle_segments(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
@@ -146,7 +147,8 @@ async def test_switch_dynamically_handle_segments(
         json.loads(load_fixture("wled/rgb.json"))
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (segment0 := hass.states.get("switch.wled_rgb_light_reverse"))
@@ -156,7 +158,8 @@ async def test_switch_dynamically_handle_segments(
 
     # Test remove segment again...
     mock_wled.update.return_value = return_value
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (segment0 := hass.states.get("switch.wled_rgb_light_reverse"))

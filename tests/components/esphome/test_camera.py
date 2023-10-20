@@ -10,9 +10,7 @@ from aioesphomeapi import (
     UserService,
 )
 
-from homeassistant.components.camera import (
-    STATE_IDLE,
-)
+from homeassistant.components.camera import STATE_IDLE
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
