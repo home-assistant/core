@@ -235,8 +235,7 @@ async def async_check_config_schema(
     mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml[DOMAIN]
     for mqtt_config_item in mqtt_config:
         for domain, config_items in mqtt_config_item.items():
-            if (schema := mqtt_data.reload_schema.get(domain)) is None:
-                continue
+            schema = mqtt_data.reload_schema[domain]
             for config in config_items:
                 try:
                     schema(config)
