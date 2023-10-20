@@ -77,6 +77,7 @@ CONF_KEEP_ALIVE = "keep_alive"
 CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
 CONF_PRECISION = "precision"
 CONF_TEMP_STEP = "target_temp_step"
+CONF_UNIT = "unit"
 
 CONF_PRESETS = {
     p: f"{p}_temp"
@@ -102,6 +103,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
         vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
         vol.Optional(CONF_KEEP_ALIVE): cv.positive_time_period,
+        vol.Optional(CONF_UNIT): cv.unit,
         vol.Optional(CONF_INITIAL_HVAC_MODE): vol.In(
             [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
         ),
@@ -143,7 +145,7 @@ async def async_setup_platform(
     }
     precision = config.get(CONF_PRECISION)
     target_temperature_step = config.get(CONF_TEMP_STEP)
-    unit = hass.config.units.temperature_unit
+    unit = config.get(CONF_UNIT) or hass.config.units.temperature_unit
     unique_id = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
