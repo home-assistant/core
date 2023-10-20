@@ -1316,6 +1316,7 @@ omit =
     homeassistant/components/tautulli/coordinator.py
     homeassistant/components/tautulli/sensor.py
     homeassistant/components/ted5000/sensor.py
+    homeassistant/components/tedee/views.py
     homeassistant/components/telegram/notify.py
     homeassistant/components/telegram_bot/__init__.py
     homeassistant/components/telegram_bot/polling.py

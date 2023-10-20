@@ -79,17 +79,16 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
             self._last_data_update = time.time()
 
         except TedeeLocalAuthException as ex:
-            msg = "Authentication failed. \
-                    Local access token is invalid"
-            raise ConfigEntryAuthFailed(msg) from ex
+            raise ConfigEntryAuthFailed(
+                "Authentication failed. Local access token is invalid"
+            ) from ex
 
         except TedeeAuthException as ex:
             # TODO: remove this exception # pylint: disable=fixme
             _LOGGER.exception(ex)
-            msg = "Authentication failed. \
-                        Personal Key is either invalid, doesn't have the correct scopes \
-                        (Devices: Read, Locks: Operate) or is expired"
-            raise ConfigEntryAuthFailed(msg) from ex
+            raise ConfigEntryAuthFailed(
+                "Authentication failed.  Personal Key is either invalid, doesn't have the correct scopes (Devices: Read, Locks: Operate) or is expired"
+            ) from ex
 
         except TedeeDataUpdateException as ex:
             _LOGGER.debug("Error while updating data: %s", str(ex))
