@@ -108,8 +108,7 @@ async def test_sensor(
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        state = hass.states.get(entity_id)
-        assert state == snapshot
+        assert hass.states.get(entity_id) == snapshot
 
 
 @pytest.mark.parametrize(
@@ -169,8 +168,7 @@ async def test_sensor_disabled_by_default(
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        state = hass.states.get(entity_id)
-        assert state is None
+        assert not hass.states.get(entity_id)
 
 
 @pytest.mark.parametrize(
@@ -263,8 +261,7 @@ async def test_sensor_update(
         await hass.async_block_till_done()
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-        state = hass.states.get(entity_id)
-        assert state == snapshot
+        assert hass.states.get(entity_id) == snapshot
 
 
 @pytest.mark.parametrize(
@@ -362,5 +359,4 @@ async def test_sensor_update_failure(
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-        state = hass.states.get(entity_id)
-        assert state == snapshot
+        assert hass.states.get(entity_id) == snapshot
