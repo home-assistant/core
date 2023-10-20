@@ -80,11 +80,11 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
             or value_notification.endpoint != value.endpoint
             or value_notification.property_ != value.property_
             or value_notification.property_key != value.property_key
-            or (val := value_notification.value) is None
+            or (notification_value := value_notification.value) is None
         ):
             return
-        event_name = self.states.get(val, _cc_and_label(self.value))
-        self._trigger_event(event_name, {ATTR_VALUE: val})
+        event_name = self.states.get(notification_value, _cc_and_label(self.value))
+        self._trigger_event(event_name, {ATTR_VALUE: notification_value})
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
