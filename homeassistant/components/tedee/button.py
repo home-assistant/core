@@ -56,7 +56,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
     entities = []
     for lock in coordinator.data.values():
-        if lock.is_enabled_pullspring:
+        if bool(lock.is_enabled_pullspring):
             for entity_description in ENTITIES:
                 entities.append(
                     TedeeButtonEntity(lock, coordinator, entity_description)

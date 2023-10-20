@@ -61,7 +61,7 @@ async def async_setup_entry(
     entities: list[TedeeLockEntity] = []
     for lock in coordinator.data.values():
         for entity_description in ENTITIES:
-            if lock.is_enabled_pullspring:
+            if bool(lock.is_enabled_pullspring):
                 entities.append(
                     TedeeLockWithLatchEntity(
                         lock, coordinator, entity_description, entry
@@ -112,7 +112,7 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
             ATTR_ID: self._lock.lock_id,
             ATTR_NUMERIC_STATE: self._lock.state,
             ATTR_CONNECTED: self._lock.is_connected,
-            ATTR_SUPPORT_PULLSPING: self._lock.is_enabled_pullspring,
+            ATTR_SUPPORT_PULLSPING: bool(self._lock.is_enabled_pullspring),
             ATTR_SEMI_LOCKED: self._lock.state == 3,
         }
         if self._lock.lock_type == "Tedee PRO":  # only pro has rechargeable battery

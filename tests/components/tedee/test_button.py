@@ -112,3 +112,14 @@ async def test_unlock_unlatch(
 
     assert len(mock_tedee.open.mock_calls) == 1
     mock_tedee.open.assert_called_once()
+
+
+async def test_lock_without_pullspring_no_latch_buttons(
+    hass: HomeAssistant,
+    mock_tedee: MagicMock,
+) -> None:
+    """Ensure a lock without pullspring does not have the latch related buttons."""
+    state = hass.states.get("button.lock_2b3d_pull_latch")
+    assert state is None
+    state = hass.states.get("button.lock_2b3d_unlock_and_pull_latch")
+    assert state is None
