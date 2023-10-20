@@ -1170,7 +1170,7 @@ def async_discover_single_value(
         yield from async_discover_single_configuration_value(
             cast(ConfigurationValue, value)
         )
-    elif not value.metadata.stateful:
+    elif value.metadata.stateful is False:
         yield ZwaveDiscoveryInfo(
             node=value.node,
             primary_value=value,
