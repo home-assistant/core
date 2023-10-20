@@ -1146,7 +1146,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
-pvo==1.0.0
+pvo==2.0.0
 
 # homeassistant.components.canary
 py-canary==0.5.3
