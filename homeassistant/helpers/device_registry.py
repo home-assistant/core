@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 import attr
 from yarl import URL
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -211,7 +212,7 @@ def _validate_configuration_url(value: Any) -> str | None:
     return str(value)
 
 
-@attr.s(slots=True, frozen=True)
+@attr.s(frozen=True)
 class DeviceEntry:
     """Device Registry Entry."""
 
@@ -233,8 +234,6 @@ class DeviceEntry:
     via_device_id: str | None = attr.ib(default=None)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
-
-    _json_repr: str | None = attr.ib(cmp=False, default=None, init=False, repr=False)
 
     @property
     def disabled(self) -> bool:
@@ -262,15 +261,12 @@ class DeviceEntry:
             "via_device_id": self.via_device_id,
         }
 
-    @property
+    @cached_property
     def json_repr(self) -> str | None:
         """Return a cached JSON representation of the entry."""
-        if self._json_repr is not None:
-            return self._json_repr
-
         try:
             dict_repr = self.dict_repr
-            object.__setattr__(self, "_json_repr", JSON_DUMP(dict_repr))
+            return JSON_DUMP(dict_repr)
         except (ValueError, TypeError):
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -279,7 +275,7 @@ class DeviceEntry:
                     find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
                 ),
             )
-        return self._json_repr
+        return None
 
 
 @attr.s(slots=True, frozen=True)
@@ -392,14 +388,14 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
 
     def __setitem__(self, key: str, entry: _EntryTypeT) -> None:
         """Add an item."""
-        if key in self:
-            old_entry = self[key]
+        data = self.data
+        if key in data:
+            old_entry = data[key]
             for connection in old_entry.connections:
                 del self._connections[connection]
             for identifier in old_entry.identifiers:
                 del self._identifiers[identifier]
-        # type ignore linked to mypy issue: https://github.com/python/mypy/issues/13596
-        super().__setitem__(key, entry)  # type: ignore[assignment]
+        data[key] = entry
         for connection in entry.connections:
             self._connections[connection] = entry
         for identifier in entry.identifiers:

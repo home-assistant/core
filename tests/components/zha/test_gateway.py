@@ -9,13 +9,15 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
+from homeassistant.components.zha.core.const import RadioType
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.group import GroupMember
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .common import async_find_group_entity_id, get_zha_gateway
+from .common import async_find_group_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -349,13 +351,11 @@ async def test_gateway_initialize_bellows_thread(
     zha_gateway.config_entry.data["device"]["path"] = device_path
     zha_gateway._config.setdefault("zigpy_config", {}).update(config_override)
 
-    with patch(
-        "bellows.zigbee.application.ControllerApplication.new",
-        return_value=zigpy_app_controller,
-    ) as mock_new:
-        await zha_gateway.async_initialize()
+    await zha_gateway.async_initialize()
 
-    assert mock_new.mock_calls[0].kwargs["config"]["use_thread"] is thread_state
+    RadioType.ezsp.controller.new.mock_calls[-1].kwargs["config"][
+        "use_thread"
+    ] is thread_state
 
 
 @pytest.mark.parametrize(

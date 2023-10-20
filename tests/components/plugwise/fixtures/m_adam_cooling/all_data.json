@@ -40,6 +40,12 @@
         "temperature_difference": 2.3,
         "valve_position": 0.0
       },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.1,
+        "upper_bound": 2.0
+      },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A01"
     },
@@ -117,6 +123,12 @@
         "setpoint_high": 23.5,
         "setpoint_low": 20.0,
         "temperature": 239
+      },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
       },
       "thermostat": {
         "lower_bound": 0.0,

@@ -353,7 +353,7 @@ class SolarEdgeDetailsSensor(SolarEdgeSensorEntity):
         """Return a unique ID."""
         if not self.data_service.site_id:
             return None
-        return f"{self.data_service.site_id}"
+        return str(self.data_service.site_id)
 
 
 class SolarEdgeInventorySensor(SolarEdgeSensorEntity):
