@@ -7,5 +7,5 @@
   "integration_type": "system",
   "iot_class": "local_push",
   "quality_scale": "internal",
-  "requirements": ["PyTurboJPEG==1.7.1", "ha-av==10.1.1", "numpy==1.26.0"]
+  "requirements": ["PyTurboJPEG==1.7.1", "ha-av==10.1.1", "numpy==1.26.1"]
 }
