@@ -162,9 +162,10 @@ async def test_central_scene(
             },
         },
     )
-    with freeze_time(fut):
+    with freeze_time(fut + timedelta(minutes=10)):
         node.receive_event(event)
 
+    # Nothing should have changed
     state = hass.states.get(CENTRAL_SCENE_ENTITY)
 
     assert state
