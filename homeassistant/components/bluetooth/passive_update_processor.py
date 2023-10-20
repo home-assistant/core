@@ -615,7 +615,8 @@ class PassiveBluetoothProcessorEntity(Entity, Generic[_PassiveBluetoothDataProce
             self._attr_unique_id = f"{address}-{key}"
         if ATTR_NAME not in self._attr_device_info:
             self._attr_device_info[ATTR_NAME] = self.processor.coordinator.name
-        self._attr_name = processor.entity_names.get(entity_key)
+        if processor.entity_names.get(entity_key) is not None:
+            self._attr_name = processor.entity_names[entity_key]
 
     @property
     def available(self) -> bool:
