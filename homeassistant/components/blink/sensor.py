@@ -1,12 +1,15 @@
 """Support for Blink system camera sensors."""
 from __future__ import annotations
 
+from datetime import date, datetime
+from decimal import Decimal
 import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -15,8 +18,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DEFAULT_BRAND, DOMAIN, TYPE_TEMPERATURE, TYPE_WIFI_STRENGTH
 
@@ -28,6 +32,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_WIFI_STRENGTH,
@@ -35,6 +40,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -76,10 +82,11 @@ class BlinkSensor(SensorEntity):
             model=self._camera.camera_type,
         )
 
-    def update(self) -> None:
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Retrieve sensor data from the camera."""
         try:
-            self._attr_native_value = self._camera.attributes[self._sensor_key]
+            native_value = self._camera.attributes[self._sensor_key]
             _LOGGER.debug(
                 "'%s' %s = %s",
                 self._camera.attributes["name"],
@@ -87,7 +94,8 @@ class BlinkSensor(SensorEntity):
                 self._attr_native_value,
             )
         except KeyError:
-            self._attr_native_value = None
+            native_value = None
             _LOGGER.error(
                 "%s not a valid camera attribute. Did the API change?", self._sensor_key
             )
+        return native_value

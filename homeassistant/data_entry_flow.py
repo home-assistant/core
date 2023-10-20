@@ -95,6 +95,7 @@ class FlowResult(TypedDict, total=False):
     last_step: bool | None
     menu_options: list[str] | dict[str, str]
     options: Mapping[str, Any]
+    preview: str | None
     progress_action: str
     reason: str
     required: bool
@@ -135,9 +136,10 @@ class FlowManager(abc.ABC):
     ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
+        self._preview: set[str] = set()
         self._progress: dict[str, FlowHandler] = {}
-        self._handler_progress_index: dict[str, set[str]] = {}
-        self._init_data_process_index: dict[type, set[str]] = {}
+        self._handler_progress_index: dict[str, set[FlowHandler]] = {}
+        self._init_data_process_index: dict[type, set[FlowHandler]] = {}
 
     @abc.abstractmethod
     async def async_create_flow(
@@ -219,9 +221,9 @@ class FlowManager(abc.ABC):
         """Return flows in progress init matching by data type as a partial FlowResult."""
         return _async_flow_handler_to_flow_result(
             (
-                self._progress[flow_id]
-                for flow_id in self._init_data_process_index.get(init_data_type, {})
-                if matcher(self._progress[flow_id].init_data)
+                progress
+                for progress in self._init_data_process_index.get(init_data_type, set())
+                if matcher(progress.init_data)
             ),
             include_uninitialized,
         )
@@ -235,18 +237,13 @@ class FlowManager(abc.ABC):
         If match_context is specified, only return flows with a context that
         is a superset of match_context.
         """
-        match_context_items = match_context.items() if match_context else None
+        if not match_context:
+            return list(self._handler_progress_index.get(handler, []))
+        match_context_items = match_context.items()
         return [
             progress
-            for flow_id in self._handler_progress_index.get(handler, {})
-            if (progress := self._progress[flow_id])
-            and (
-                not match_context_items
-                or (
-                    (context := progress.context)
-                    and match_context_items <= context.items()
-                )
-            )
+            for progress in self._handler_progress_index.get(handler, set())
+            if match_context_items <= progress.context.items()
         ]
 
     async def async_init(
@@ -323,10 +320,17 @@ class FlowManager(abc.ABC):
                 )
 
             # If the result has changed from last result, fire event to update
-            # the frontend.
-            if (
-                cur_step["step_id"] != result.get("step_id")
-                or result["type"] == FlowResultType.SHOW_PROGRESS
+            # the frontend. The result is considered to have changed if:
+            # - The step has changed
+            # - The step is same but result type is SHOW_PROGRESS and progress_action
+            #   or description_placeholders has changed
+            if cur_step["step_id"] != result.get("step_id") or (
+                result["type"] == FlowResultType.SHOW_PROGRESS
+                and (
+                    cur_step["progress_action"] != result.get("progress_action")
+                    or cur_step["description_placeholders"]
+                    != result.get("description_placeholders")
+                )
             ):
                 # Tell frontend to reload the flow state.
                 self.hass.bus.async_fire(
@@ -346,22 +350,20 @@ class FlowManager(abc.ABC):
         """Add a flow to in progress."""
         if flow.init_data is not None:
             init_data_type = type(flow.init_data)
-            self._init_data_process_index.setdefault(init_data_type, set()).add(
-                flow.flow_id
-            )
+            self._init_data_process_index.setdefault(init_data_type, set()).add(flow)
         self._progress[flow.flow_id] = flow
-        self._handler_progress_index.setdefault(flow.handler, set()).add(flow.flow_id)
+        self._handler_progress_index.setdefault(flow.handler, set()).add(flow)
 
     @callback
     def _async_remove_flow_from_index(self, flow: FlowHandler) -> None:
         """Remove a flow from in progress."""
         if flow.init_data is not None:
             init_data_type = type(flow.init_data)
-            self._init_data_process_index[init_data_type].remove(flow.flow_id)
+            self._init_data_process_index[init_data_type].remove(flow)
             if not self._init_data_process_index[init_data_type]:
                 del self._init_data_process_index[init_data_type]
         handler = flow.handler
-        self._handler_progress_index[handler].remove(flow.flow_id)
+        self._handler_progress_index[handler].remove(flow)
         if not self._handler_progress_index[handler]:
             del self._handler_progress_index[handler]
 
@@ -380,20 +382,19 @@ class FlowManager(abc.ABC):
         self, flow: FlowHandler, step_id: str, user_input: dict | BaseServiceInfo | None
     ) -> FlowResult:
         """Handle a step of a flow."""
+        self._raise_if_step_does_not_exist(flow, step_id)
+
         method = f"async_step_{step_id}"
-
-        if not hasattr(flow, method):
-            self._async_remove_flow_progress(flow.flow_id)
-            raise UnknownStep(
-                f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
-            )
-
         try:
             result: FlowResult = await getattr(flow, method)(user_input)
         except AbortFlow as err:
             result = _create_abort_data(
                 flow.flow_id, flow.handler, err.reason, err.description_placeholders
             )
+
+        # Setup the flow handler's preview if needed
+        if result.get("preview") is not None:
+            await self._async_setup_preview(flow)
 
         if not isinstance(result["type"], FlowResultType):
             result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
@@ -413,6 +414,7 @@ class FlowManager(abc.ABC):
             FlowResultType.SHOW_PROGRESS_DONE,
             FlowResultType.MENU,
         ):
+            self._raise_if_step_does_not_exist(flow, result["step_id"])
             flow.cur_step = result
             return result
 
@@ -428,6 +430,22 @@ class FlowManager(abc.ABC):
         self._async_remove_flow_progress(flow.flow_id)
 
         return result
+
+    def _raise_if_step_does_not_exist(self, flow: FlowHandler, step_id: str) -> None:
+        """Raise if the step does not exist."""
+        method = f"async_step_{step_id}"
+
+        if not hasattr(flow, method):
+            self._async_remove_flow_progress(flow.flow_id)
+            raise UnknownStep(
+                f"Handler {self.__class__.__name__} doesn't support step {step_id}"
+            )
+
+    async def _async_setup_preview(self, flow: FlowHandler) -> None:
+        """Set up preview for a flow handler."""
+        if flow.handler not in self._preview:
+            self._preview.add(flow.handler)
+            await flow.async_setup_preview(self.hass)
 
 
 class FlowHandler:
@@ -456,12 +474,12 @@ class FlowHandler:
     @property
     def source(self) -> str | None:
         """Source that initialized the flow."""
-        return self.context.get("source", None)
+        return self.context.get("source", None)  # type: ignore[no-any-return]
 
     @property
     def show_advanced_options(self) -> bool:
         """If we should show advanced options."""
-        return self.context.get("show_advanced_options", False)
+        return self.context.get("show_advanced_options", False)  # type: ignore[no-any-return]
 
     def add_suggested_values_to_schema(
         self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None
@@ -504,6 +522,7 @@ class FlowHandler:
         errors: dict[str, str] | None = None,
         description_placeholders: Mapping[str, str | None] | None = None,
         last_step: bool | None = None,
+        preview: str | None = None,
     ) -> FlowResult:
         """Return the definition of a form to gather user input."""
         return FlowResult(
@@ -515,6 +534,7 @@ class FlowHandler:
             errors=errors,
             description_placeholders=description_placeholders,
             last_step=last_step,  # Display next or submit button in frontend
+            preview=preview,  # Display preview component in frontend
         )
 
     @callback
@@ -634,6 +654,10 @@ class FlowHandler:
     @callback
     def async_remove(self) -> None:
         """Notification that the flow has been removed."""
+
+    @staticmethod
+    async def async_setup_preview(hass: HomeAssistant) -> None:
+        """Set up preview."""
 
 
 @callback

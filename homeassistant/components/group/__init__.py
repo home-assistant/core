@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Collection, Iterable
+from collections.abc import Callable, Collection, Iterable, Mapping
 from contextvars import ContextVar
 import logging
 from typing import Any, Protocol, cast
@@ -42,7 +42,6 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
     async_process_integration_platforms,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
@@ -285,8 +284,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = EntityComponent[Group](_LOGGER, DOMAIN, hass)
 
-    await async_process_integration_platform_for_component(hass, DOMAIN)
-
     component: EntityComponent[Group] = hass.data[DOMAIN]
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
@@ -472,16 +469,70 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None
 class GroupEntity(Entity):
     """Representation of a Group of entities."""
 
+    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID})
+
     _attr_should_poll = False
+    _entity_ids: list[str]
+
+    @callback
+    def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+
+        for entity_id in self._entity_ids:
+            if (state := self.hass.states.get(entity_id)) is None:
+                continue
+            self.async_update_supported_features(entity_id, state)
+
+        @callback
+        def async_state_changed_listener(
+            event: EventType[EventStateChangedData] | None,
+        ) -> None:
+            """Handle child updates."""
+            self.async_update_group_state()
+            if event:
+                self.async_update_supported_features(
+                    event.data["entity_id"], event.data["new_state"]
+                )
+            preview_callback(*self._async_generate_attributes())
+
+        async_state_changed_listener(None)
+        return async_track_state_change_event(
+            self.hass, self._entity_ids, async_state_changed_listener
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register listeners."""
+        for entity_id in self._entity_ids:
+            if (state := self.hass.states.get(entity_id)) is None:
+                continue
+            self.async_update_supported_features(entity_id, state)
 
-        async def _update_at_start(_: HomeAssistant) -> None:
-            self.async_update_group_state()
-            self.async_write_ha_state()
+        @callback
+        def async_state_changed_listener(
+            event: EventType[EventStateChangedData],
+        ) -> None:
+            """Handle child updates."""
+            self.async_set_context(event.context)
+            self.async_update_supported_features(
+                event.data["entity_id"], event.data["new_state"]
+            )
+            self.async_defer_or_update_ha_state()
 
-        self.async_on_remove(start.async_at_start(self.hass, _update_at_start))
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, self._entity_ids, async_state_changed_listener
+            )
+        )
+        self.async_on_remove(start.async_at_start(self.hass, self._update_at_start))
+
+    @callback
+    def _update_at_start(self, _: HomeAssistant) -> None:
+        """Update the group state at start."""
+        self.async_update_group_state()
+        self.async_write_ha_state()
 
     @callback
     def async_defer_or_update_ha_state(self) -> None:
@@ -493,12 +544,23 @@ class GroupEntity(Entity):
         self.async_write_ha_state()
 
     @abstractmethod
+    @callback
     def async_update_group_state(self) -> None:
         """Abstract method to update the entity."""
+
+    @callback
+    def async_update_supported_features(
+        self,
+        entity_id: str,
+        new_state: State | None,
+    ) -> None:
+        """Update dictionaries with supported features."""
 
 
 class Group(Entity):
     """Track a group of entity ids."""
+
+    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID, ATTR_ORDER, ATTR_AUTO})
 
     _attr_should_poll = False
     tracking: tuple[str, ...]

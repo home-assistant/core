@@ -22,6 +22,7 @@ TEST_MESSAGE_HEADERS2 = (
     b"To: notify@example.com\r\n"
     b"From: John Doe <john.doe@example.com>\r\n"
     b"Subject: Test subject\r\n"
+    b"Message-ID: <N753P9hLvLw3lYGan11ji9WggPjxtLSpKvFOYgdnE@example.com>"
 )
 
 TEST_MESSAGE_HEADERS3 = b""

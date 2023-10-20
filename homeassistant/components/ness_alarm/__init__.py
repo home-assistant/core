@@ -3,7 +3,7 @@ from collections import namedtuple
 import datetime
 import logging
 
-from nessclient import ArmingState, Client
+from nessclient import ArmingMode, ArmingState, Client
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -136,9 +136,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass, SIGNAL_ZONE_CHANGED, ZoneChangedData(zone_id=zone_id, state=state)
         )
 
-    def on_state_change(arming_state: ArmingState):
+    def on_state_change(arming_state: ArmingState, arming_mode: ArmingMode | None):
         """Receives and propagates arming state updates."""
-        async_dispatcher_send(hass, SIGNAL_ARMING_STATE_CHANGED, arming_state)
+        async_dispatcher_send(
+            hass, SIGNAL_ARMING_STATE_CHANGED, arming_state, arming_mode
+        )
 
     client.on_zone_change(on_zone_change)
     client.on_state_change(on_state_change)

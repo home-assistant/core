@@ -93,6 +93,9 @@ async def test_setup_integration_yaml(
                         "payload_on": "1.0",
                         "payload_off": "0",
                         "value_template": "{{ value | multiply(0.1) }}",
+                        "icon": (
+                            '{% if this.state=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                        ),
                     }
                 }
             ]
@@ -105,6 +108,7 @@ async def test_template(hass: HomeAssistant, load_yaml_integration: None) -> Non
     entity_state = hass.states.get("binary_sensor.test")
     assert entity_state
     assert entity_state.state == STATE_ON
+    assert entity_state.attributes.get("icon") == "mdi:on"
 
 
 @pytest.mark.parametrize(
@@ -246,7 +250,7 @@ async def test_updating_to_often(
     assert called
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=15))
     wait_till_event.set()
-    asyncio.wait(0)
+    await asyncio.sleep(0)
     assert (
         "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
         not in caplog.text
@@ -258,6 +262,7 @@ async def test_updating_to_often(
     await asyncio.sleep(0)
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
     wait_till_event.set()
+    await asyncio.sleep(0)
 
     assert (
         "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
@@ -303,7 +308,7 @@ async def test_updating_manually(
         await hass.async_block_till_done()
 
     assert called
-    called.clear
+    called.clear()
 
     await hass.services.async_call(
         HA_DOMAIN,

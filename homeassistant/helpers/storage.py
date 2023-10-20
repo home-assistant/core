@@ -93,6 +93,7 @@ class Store(Generic[_T]):
         atomic_writes: bool = False,
         encoder: type[JSONEncoder] | None = None,
         minor_version: int = 1,
+        read_only: bool = False,
     ) -> None:
         """Initialize storage class."""
         self.version = version
@@ -107,6 +108,7 @@ class Store(Generic[_T]):
         self._load_task: asyncio.Future[_T | None] | None = None
         self._encoder = encoder
         self._atomic_writes = atomic_writes
+        self._read_only = read_only
 
     @property
     def path(self):
@@ -235,7 +237,6 @@ class Store(Generic[_T]):
                 self.minor_version,
             )
             if len(inspect.signature(self._async_migrate_func).parameters) == 2:
-                # pylint: disable-next=no-value-for-parameter
                 stored = await self._async_migrate_func(data["version"], data["data"])
             else:
                 try:
@@ -343,6 +344,9 @@ class Store(Generic[_T]):
                 data["data"] = data.pop("data_func")()
 
             self._data = None
+
+            if self._read_only:
+                return
 
             try:
                 await self._async_write_data(self.path, data)

@@ -8,9 +8,14 @@ SETUP_ENTRY_PATCHER = patch(
     "homeassistant.components.starlink.async_setup_entry", return_value=True
 )
 
-COORDINATOR_SUCCESS_PATCHER = patch(
+STATUS_DATA_SUCCESS_PATCHER = patch(
     "homeassistant.components.starlink.coordinator.status_data",
     return_value=json.loads(load_fixture("status_data_success.json", "starlink")),
+)
+
+LOCATION_DATA_SUCCESS_PATCHER = patch(
+    "homeassistant.components.starlink.coordinator.location_data",
+    return_value=json.loads(load_fixture("location_data_success.json", "starlink")),
 )
 
 DEVICE_FOUND_PATCHER = patch(

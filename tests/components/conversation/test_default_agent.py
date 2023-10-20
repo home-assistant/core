@@ -20,7 +20,7 @@ from homeassistant.setup import async_setup_component
 
 from . import expose_entity
 
-from tests.common import async_mock_service
+from tests.common import MockConfigEntry, async_mock_service
 
 
 @pytest.fixture
@@ -86,8 +86,12 @@ async def test_exposed_areas(
     area_kitchen = area_registry.async_get_or_create("kitchen")
     area_bedroom = area_registry.async_get_or_create("bedroom")
 
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
     kitchen_device = device_registry.async_get_or_create(
-        config_entry_id="1234", connections=set(), identifiers={("demo", "id-1234")}
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "id-1234")},
     )
     device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
@@ -279,3 +283,13 @@ async def test_shopping_list_add_item(
     assert result.response.speech == {
         "plain": {"speech": "Added apples", "extra_data": None}
     }
+
+
+async def test_nevermind_item(hass: HomeAssistant, init_components) -> None:
+    """Test HassNevermind intent through the default agent."""
+    result = await conversation.async_converse(hass, "nevermind", None, Context())
+    assert result.response.intent is not None
+    assert result.response.intent.intent_type == intent.INTENT_NEVERMIND
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert not result.response.speech

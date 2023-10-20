@@ -1,7 +1,7 @@
 """Test Gardena Bluetooth sensor."""
 from collections.abc import Awaitable, Callable
 
-from gardena_bluetooth.const import Battery, Valve
+from gardena_bluetooth.const import Battery, Sensor, Valve
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -52,3 +52,28 @@ async def test_setup(
         mock_read_char_raw[uuid] = char_raw
         await scan_step()
         assert hass.states.get(entity_id) == snapshot
+
+
+async def test_connected_state(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_entry: MockConfigEntry,
+    mock_read_char_raw: dict[str, bytes],
+    scan_step: Callable[[], Awaitable[None]],
+) -> None:
+    """Verify that a connectivity error makes all entities unavailable."""
+
+    mock_read_char_raw[Sensor.connected_state.uuid] = Sensor.connected_state.encode(
+        False
+    )
+    mock_read_char_raw[Sensor.battery_level.uuid] = Sensor.battery_level.encode(45)
+
+    await setup_entry(hass, mock_entry, [Platform.SENSOR])
+    assert hass.states.get("sensor.mock_title_sensor_battery") == snapshot
+
+    mock_read_char_raw[Sensor.connected_state.uuid] = Sensor.connected_state.encode(
+        True
+    )
+
+    await scan_step()
+    assert hass.states.get("sensor.mock_title_sensor_battery") == snapshot

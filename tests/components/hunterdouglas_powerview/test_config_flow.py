@@ -1,5 +1,6 @@
 """Test the Logitech Harmony Hub config flow."""
 import asyncio
+from ipaddress import ip_address
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -12,9 +13,10 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
+ZEROCONF_HOST = "1.2.3.4"
 HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    host="1.2.3.4",
-    addresses=["1.2.3.4"],
+    ip_address=ip_address(ZEROCONF_HOST),
+    ip_addresses=[ip_address(ZEROCONF_HOST)],
     hostname="mock_hostname",
     name="Hunter Douglas Powerview Hub._hap._tcp.local.",
     port=None,
@@ -23,8 +25,8 @@ HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
 )
 
 ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    host="1.2.3.4",
-    addresses=["1.2.3.4"],
+    ip_address=ip_address(ZEROCONF_HOST),
+    ip_addresses=[ip_address(ZEROCONF_HOST)],
     hostname="mock_hostname",
     name="Hunter Douglas Powerview Hub._powerview._tcp.local.",
     port=None,

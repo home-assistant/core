@@ -16,7 +16,7 @@
   },
   "entity": {
     "binary_sensor": {
-      "roaming_mode": {
+      "roaming": {
         "name": "Roaming mode"
       },
       "currently_obstructed": {
@@ -42,6 +42,11 @@
       },
       "unexpected_location": {
         "name": "Unexpected location"
+      }
+    },
+    "device_tracker": {
+      "device_location": {
+        "name": "Device location"
       }
     },
     "sensor": {

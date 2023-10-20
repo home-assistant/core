@@ -6,7 +6,8 @@ from typing import Generic, TypeVar
 from pylitterbot import Robot
 from pylitterbot.robot import EVENT_UPDATE
 
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,

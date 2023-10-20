@@ -22,7 +22,8 @@ from pyunifiprotect.data import (
 
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED
 
 from .const import (
@@ -309,6 +310,8 @@ class ProtectNVREntity(ProtectDeviceEntity):
 
 class EventEntityMixin(ProtectDeviceEntity):
     """Adds motion event attributes to sensor."""
+
+    _unrecorded_attributes = frozenset({ATTR_EVENT_ID, ATTR_EVENT_SCORE})
 
     entity_description: ProtectEventMixin
 

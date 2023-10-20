@@ -175,6 +175,40 @@ async def test_stdout_captured(mock_output, hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.components.shell_command._LOGGER.debug")
+async def test_non_text_stdout_capture(
+    mock_output, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test handling of non-text output."""
+    assert await async_setup_component(
+        hass,
+        shell_command.DOMAIN,
+        {
+            shell_command.DOMAIN: {
+                "output_image": "curl -o - https://raw.githubusercontent.com/home-assistant/assets/master/misc/loading-screen.gif"
+            }
+        },
+    )
+
+    # No problem without 'return_response'
+    response = await hass.services.async_call(
+        "shell_command", "output_image", blocking=True
+    )
+
+    await hass.async_block_till_done()
+    assert not response
+
+    # Non-text output throws with 'return_response'
+    with pytest.raises(UnicodeDecodeError):
+        response = await hass.services.async_call(
+            "shell_command", "output_image", blocking=True, return_response=True
+        )
+
+    await hass.async_block_till_done()
+    assert not response
+    assert "Unable to handle non-utf8 output of command" in caplog.text
+
+
+@patch("homeassistant.components.shell_command._LOGGER.debug")
 async def test_stderr_captured(mock_output, hass: HomeAssistant) -> None:
     """Test subprocess that has stderr."""
     test_phrase = "I have error"

@@ -1,10 +1,10 @@
 """Config flow for Hunter Douglas PowerView integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from aiopvapi.helpers.aiorequest import AioRequest
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -34,7 +34,7 @@ async def validate_input(hass: core.HomeAssistant, hub_address: str) -> dict[str
     pv_request = AioRequest(hub_address, loop=hass.loop, websession=websession)
 
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             device_info = await async_get_device_info(pv_request, hub_address)
     except HUB_EXCEPTIONS as err:
         raise CannotConnect from err

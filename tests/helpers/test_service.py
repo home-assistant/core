@@ -1,5 +1,4 @@
 """Test service helpers."""
-from collections import OrderedDict
 from collections.abc import Iterable
 from copy import deepcopy
 from typing import Any
@@ -11,7 +10,7 @@ import voluptuous as vol
 # To prevent circular import when running just this file
 from homeassistant import exceptions
 from homeassistant.auth.permissions import PolicyPermissions
-import homeassistant.components  # noqa: F401, pylint: disable=unused-import
+import homeassistant.components  # noqa: F401
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -54,7 +53,7 @@ def mock_handle_entity_call():
 
 
 @pytest.fixture
-def mock_entities(hass):
+def mock_entities(hass: HomeAssistant) -> dict[str, MockEntity]:
     """Return mock entities in an ordered dict."""
     kitchen = MockEntity(
         entity_id="light.kitchen",
@@ -80,11 +79,13 @@ def mock_entities(hass):
         should_poll=False,
         supported_features=(SUPPORT_B | SUPPORT_C),
     )
-    entities = OrderedDict()
+    entities = {}
     entities[kitchen.entity_id] = kitchen
     entities[living_room.entity_id] = living_room
     entities[bedroom.entity_id] = bedroom
     entities[bathroom.entity_id] = bathroom
+    for entity in entities.values():
+        entity.hass = hass
     return entities
 
 

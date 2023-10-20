@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio import timeout
 import logging
 
 from androidtvremote2 import (
@@ -10,7 +11,6 @@ from androidtvremote2 import (
     ConnectionClosed,
     InvalidAuth,
 )
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api.add_is_available_updated_callback(is_available_updated)
 
     try:
-        async with async_timeout.timeout(5.0):
+        async with timeout(5.0):
             await api.async_connect()
     except InvalidAuth as exc:
         # The Android TV is hard reset or the certificate and key files were deleted.

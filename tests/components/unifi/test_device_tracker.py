@@ -3,7 +3,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
-from aiounifi.websocket import WebsocketState
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant import config_entries
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -39,8 +39,8 @@ async def test_no_entities(
 async def test_tracked_wireless_clients(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_unifi_websocket,
     mock_device_registry,
+    mock_unifi_websocket,
 ) -> None:
     """Verify tracking of wireless clients."""
     client = {
@@ -169,6 +169,7 @@ async def test_tracked_clients(
 async def test_tracked_wireless_clients_event_source(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
     mock_unifi_websocket,
     mock_device_registry,
 ) -> None:
@@ -234,10 +235,9 @@ async def test_tracked_wireless_clients_event_source(
     assert hass.states.get("device_tracker.client").state == STATE_HOME
 
     # Change time to mark client as away
-    new_time = dt_util.utcnow() + controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
-        async_fire_time_changed(hass, new_time)
-        await hass.async_block_till_done()
+    freezer.tick(controller.option_detection_time + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
 
@@ -274,12 +274,11 @@ async def test_tracked_wireless_clients_event_source(
     assert hass.states.get("device_tracker.client").state == STATE_HOME
 
     # Change time to mark client as away
-    new_time = dt_util.utcnow() + controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
-        async_fire_time_changed(hass, new_time)
-        await hass.async_block_till_done()
+    freezer.tick(controller.option_detection_time + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
 
 
 async def test_tracked_devices(
@@ -402,7 +401,7 @@ async def test_remove_clients(
 async def test_controller_state_change(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_unifi_websocket,
+    websocket_mock,
     mock_device_registry,
 ) -> None:
     """Verify entities state reflect on controller becoming unavailable."""
@@ -443,16 +442,12 @@ async def test_controller_state_change(
     assert hass.states.get("device_tracker.device").state == STATE_HOME
 
     # Controller unavailable
-    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-    await hass.async_block_till_done()
-
+    await websocket_mock.disconnect()
     assert hass.states.get("device_tracker.client").state == STATE_UNAVAILABLE
     assert hass.states.get("device_tracker.device").state == STATE_UNAVAILABLE
 
     # Controller available
-    mock_unifi_websocket(state=WebsocketState.RUNNING)
-    await hass.async_block_till_done()
-
+    await websocket_mock.reconnect()
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
     assert hass.states.get("device_tracker.device").state == STATE_HOME
 
@@ -946,7 +941,7 @@ async def test_restoring_client(
     await setup_unifi_integration(
         hass,
         aioclient_mock,
-        options={CONF_BLOCK_CLIENT: True},
+        options={CONF_BLOCK_CLIENT: [restored["mac"]]},
         clients_response=[client],
         clients_all_response=[restored, not_restored],
     )

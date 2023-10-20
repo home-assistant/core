@@ -7,7 +7,8 @@ from typing import Any
 
 from pyownet import protocol
 
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import StateType
 
 from .const import READ_MODE_BOOL, READ_MODE_INT

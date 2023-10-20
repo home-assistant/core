@@ -19,15 +19,15 @@ from homeassistant.components import group
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    LENGTH_METERS,
-    LENGTH_MILLIMETERS,
-    MASS_GRAMS,
     STATE_ON,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
     VOLUME_LITERS,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
@@ -52,12 +52,12 @@ def _set_up_units(hass: HomeAssistant) -> None:
     """Set up the tests."""
     hass.config.units = UnitSystem(
         "custom",
-        accumulated_precipitation=LENGTH_MILLIMETERS,
+        accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
         conversions={},
-        length=LENGTH_METERS,
-        mass=MASS_GRAMS,
+        length=UnitOfLength.METERS,
+        mass=UnitOfMass.GRAMS,
         pressure=UnitOfPressure.PA,
-        temperature=TEMP_CELSIUS,
+        temperature=UnitOfTemperature.CELSIUS,
         volume=VOLUME_LITERS,
         wind_speed=UnitOfSpeed.KILOMETERS_PER_HOUR,
     )
@@ -2709,6 +2709,7 @@ async def test_device_entities(
 ) -> None:
     """Test device_entities function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing device ids
     info = render_to_info(hass, "{{ device_entities('abc123') }}")
@@ -2858,6 +2859,7 @@ async def test_device_id(
 ) -> None:
     """Test device_id function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -2903,6 +2905,7 @@ async def test_device_attr(
 ) -> None:
     """Test device_attr and is_device_attr functions."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing device ids (device_attr)
     info = render_to_info(hass, "{{ device_attr('abc123', 'id') }}")
@@ -3049,6 +3052,7 @@ async def test_area_id(
 ) -> None:
     """Test area_id function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing entity id
     info = render_to_info(hass, "{{ area_id('sensor.fake') }}")
@@ -3155,6 +3159,7 @@ async def test_area_name(
 ) -> None:
     """Test area_name function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing entity id
     info = render_to_info(hass, "{{ area_name('sensor.fake') }}")
@@ -3236,6 +3241,7 @@ async def test_area_entities(
 ) -> None:
     """Test area_entities function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing device id
     info = render_to_info(hass, "{{ area_entities('deadbeef') }}")
@@ -3290,6 +3296,7 @@ async def test_area_devices(
 ) -> None:
     """Test area_devices function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing device id
     info = render_to_info(hass, "{{ area_devices('deadbeef') }}")
@@ -3437,7 +3444,7 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(
     template_complex_str = r"""
 
 {% for state in states.cover %}
-  {% if state.entity_id | regex_match('.*\.office_') %}
+  {% if state.entity_id | regex_match('.*\\.office_') %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
 {% endfor %}
@@ -4459,15 +4466,25 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         assert template.Template(tpl, hass).async_render() == result
 
 
-async def test_undefined_variable(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    "template_string",
+    [
+        "{{ no_such_variable }}",
+        "{{ no_such_variable and True }}",
+        "{{ no_such_variable | join(', ') }}",
+    ],
+)
+async def test_undefined_symbol_warnings(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    template_string: str,
 ) -> None:
     """Test a warning is logged on undefined variables."""
-    tpl = template.Template("{{ no_such_variable }}", hass)
+    tpl = template.Template(template_string, hass)
     assert tpl.async_render() == ""
     assert (
         "Template variable warning: 'no_such_variable' is undefined when rendering "
-        "'{{ no_such_variable }}'" in caplog.text
+        f"'{template_string}'" in caplog.text
     )
 
 

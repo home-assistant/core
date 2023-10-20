@@ -5,10 +5,12 @@ from unittest.mock import AsyncMock, Mock, patch
 from pyfibaro.fibaro_scene import SceneModel
 import pytest
 
-from homeassistant.components.fibaro import DOMAIN, FIBARO_CONTROLLER, FIBARO_DEVICES
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry
+from homeassistant.components.fibaro import DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -39,27 +41,15 @@ async def setup_platform(
 ) -> ConfigEntry:
     """Set up the fibaro platform and prerequisites."""
     hass.config.components.add(DOMAIN)
-    config_entry = ConfigEntry(
-        1,
-        DOMAIN,
-        "Test",
-        {},
-        SOURCE_USER,
-    )
+    config_entry = MockConfigEntry(domain=DOMAIN, title="Test")
+    config_entry.add_to_hass(hass)
 
     controller_mock = Mock()
     controller_mock.hub_serial = "HC2-111111"
     controller_mock.get_room_name.return_value = room_name
+    controller_mock.read_scenes.return_value = scenes
 
-    for scene in scenes:
-        scene.fibaro_controller = controller_mock
-
-    hass.data[DOMAIN] = {
-        config_entry.entry_id: {
-            FIBARO_CONTROLLER: controller_mock,
-            FIBARO_DEVICES: {Platform.SCENE: scenes},
-        }
-    }
+    hass.data[DOMAIN] = {config_entry.entry_id: controller_mock}
     await hass.config_entries.async_forward_entry_setup(config_entry, platform)
     await hass.async_block_till_done()
     return config_entry
