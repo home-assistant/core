@@ -6,6 +6,7 @@ from aioelectricitymaps import ElectricityMaps
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import CO2SignalCoordinator
@@ -15,8 +16,9 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up CO2 Signal from a config entry."""
+    session = async_get_clientsession(hass)
     coordinator = CO2SignalCoordinator(
-        hass, ElectricityMaps(token=entry.data[CONF_API_KEY])
+        hass, ElectricityMaps(token=entry.data[CONF_API_KEY], session=session)
     )
     await coordinator.async_config_entry_first_refresh()
 

@@ -26,7 +26,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "aioelectricitymaps.ElectricityMaps._get",
+        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
         return_value=VALID_PAYLOAD,
     ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
@@ -68,7 +68,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.FORM
 
     with patch(
-        "aioelectricitymaps.ElectricityMaps._get",
+        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
         return_value=VALID_PAYLOAD,
     ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
@@ -112,7 +112,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.FORM
 
     with patch(
-        "aioelectricitymaps.ElectricityMaps._get",
+        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
         return_value=VALID_PAYLOAD,
     ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
@@ -158,7 +158,7 @@ async def test_form_error_handling(hass: HomeAssistant, side_effect, err_code) -
     )
 
     with patch(
-        "aioelectricitymaps.ElectricityMaps._get",
+        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
         side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -173,7 +173,7 @@ async def test_form_error_handling(hass: HomeAssistant, side_effect, err_code) -
     assert result["errors"] == {"base": err_code}
 
     with patch(
-        "aioelectricitymaps.ElectricityMaps._get",
+        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
         return_value=VALID_PAYLOAD,
     ):
         result = await hass.config_entries.flow.async_configure(

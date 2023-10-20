@@ -29,20 +29,18 @@ SCAN_INTERVAL = timedelta(minutes=3)
 class ElectricityMapsMixin:
     """Mixin for value and unit_of_measurement_fn function."""
 
-    value_fn: Callable[[CarbonIntensityResponse], float | None] = field(
-        default=lambda response: None
-    )
-    unit_of_measurement_fn: Callable[[CarbonIntensityResponse], str | None] = field(
-        default=lambda response: None
-    )
+    value_fn: Callable[[CarbonIntensityResponse], float | None]
 
 
 @dataclass
-class CO2SensorEntityDescription(ElectricityMapsMixin, SensorEntityDescription):
+class CO2SensorEntityDescription(SensorEntityDescription, ElectricityMapsMixin):
     """Provide a description of a CO2 sensor."""
 
     # For backwards compat, allow description to override unique ID key to use
     unique_id: str | None = None
+    unit_of_measurement_fn: Callable[[CarbonIntensityResponse], str | None] = field(
+        default=lambda response: None
+    )
 
 
 SENSORS = (

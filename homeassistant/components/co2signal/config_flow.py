@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -117,7 +118,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Validate data and show form if it is invalid."""
         errors: dict[str, str] = {}
 
-        async with ElectricityMaps(token=data[CONF_API_KEY]) as em:
+        session = async_get_clientsession(self.hass)
+        async with ElectricityMaps(token=data[CONF_API_KEY], session=session) as em:
             try:
                 if CONF_COUNTRY_CODE in data:
                     await em.latest_carbon_intensity_by_country_code(
