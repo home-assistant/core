@@ -29,7 +29,7 @@
         "data": {
           "token": "Token",
           "region": "[%key:component::vulcan::config::step::auth::data::region%]",
-          "pin": "[%key:component::vulcan::config::step::auth::data::pin%]"
+          "pin": "[%key:common::config_flow::data::pin%]"
         }
       },
       "select_student": {
