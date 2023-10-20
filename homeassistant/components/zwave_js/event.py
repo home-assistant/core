@@ -83,7 +83,7 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
             or (notification_value := value_notification.value) is None
         ):
             return
-        event_name = self.states.get(notification_value, _cc_and_label(self.value))
+        event_name = self.states.get(notification_value, _cc_and_label(value))
         self._trigger_event(event_name, {ATTR_VALUE: notification_value})
         self.async_write_ha_state()
 
