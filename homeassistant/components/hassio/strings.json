@@ -316,11 +316,11 @@
           "description": "List of directories to include in the backup."
         },
         "name": {
-          "name": "[%key:component::hassio::services::backup_full::fields::name::name%]",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "[%key:component::hassio::services::backup_full::fields::name::description%]"
         },
         "password": {
-          "name": "[%key:component::hassio::services::backup_full::fields::password::name%]",
+          "name": "[%key:common::config_flow::data::password%]",
           "description": "[%key:component::hassio::services::backup_full::fields::password::description%]"
         },
         "compressed": {
@@ -328,7 +328,7 @@
           "description": "[%key:component::hassio::services::backup_full::fields::compressed::description%]"
         },
         "location": {
-          "name": "[%key:component::hassio::services::backup_full::fields::location::name%]",
+          "name": "[%key:common::config_flow::data::location%]",
           "description": "[%key:component::hassio::services::backup_full::fields::location::description%]"
         }
       }
@@ -342,7 +342,7 @@
           "description": "Slug of backup to restore from."
         },
         "password": {
-          "name": "[%key:component::hassio::services::backup_full::fields::password::name%]",
+          "name": "[%key:common::config_flow::data::password%]",
           "description": "Optional password."
         }
       }
@@ -368,7 +368,7 @@
           "description": "[%key:component::hassio::services::backup_partial::fields::addons::description%]"
         },
         "password": {
-          "name": "[%key:component::hassio::services::backup_full::fields::password::name%]",
+          "name": "[%key:common::config_flow::data::password%]",
           "description": "[%key:component::hassio::services::restore_full::fields::password::description%]"
         }
       }
