@@ -402,7 +402,6 @@ async def test_list_events_service(
     set_time_zone: None,
     start_time: str,
     end_time: str,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test listing events from the service call using exlplicit start and end time.
 
@@ -424,7 +423,17 @@ async def test_list_events_service(
         blocking=True,
         return_response=True,
     )
-    assert response == snapshot(name="test_list_events_service")
+    assert response == {
+        "events": [
+            {
+                "start": "2023-06-22T05:00:00-06:00",
+                "end": "2023-06-22T06:00:00-06:00",
+                "summary": "Future Event",
+                "description": "Future Description",
+                "location": "Future Location",
+            }
+        ]
+    }
 
 
 @pytest.mark.parametrize(
