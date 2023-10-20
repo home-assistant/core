@@ -14,13 +14,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from . import (
-    cover as cover_platform,
-    event as event_platform,
-    number as number_platform,
-    sensor as sensor_platform,
-    update as update_platform,
-)
 from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
@@ -42,38 +35,23 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.BUTTON.value: vol.All(cv.ensure_list, [dict]),
         Platform.CAMERA.value: vol.All(cv.ensure_list, [dict]),
         Platform.CLIMATE.value: vol.All(cv.ensure_list, [dict]),
-        Platform.COVER.value: vol.All(
-            cv.ensure_list,
-            [cover_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.COVER.value: vol.All(cv.ensure_list, [dict]),
         Platform.DEVICE_TRACKER.value: vol.All(cv.ensure_list, [dict]),
-        Platform.EVENT.value: vol.All(
-            cv.ensure_list,
-            [event_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.EVENT.value: vol.All(cv.ensure_list, [dict]),
         Platform.FAN.value: vol.All(cv.ensure_list, [dict]),
         Platform.HUMIDIFIER.value: vol.All(cv.ensure_list, [dict]),
         Platform.IMAGE.value: vol.All(cv.ensure_list, [dict]),
         Platform.LAWN_MOWER.value: vol.All(cv.ensure_list, [dict]),
         Platform.LIGHT.value: vol.All(cv.ensure_list, [dict]),
         Platform.LOCK.value: vol.All(cv.ensure_list, [dict]),
-        Platform.NUMBER.value: vol.All(
-            cv.ensure_list,
-            [number_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.NUMBER.value: vol.All(cv.ensure_list, [dict]),
         Platform.SCENE.value: vol.All(cv.ensure_list, [dict]),
         Platform.SELECT.value: vol.All(cv.ensure_list, [dict]),
-        Platform.SENSOR.value: vol.All(
-            cv.ensure_list,
-            [sensor_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.SENSOR.value: vol.All(cv.ensure_list, [dict]),
         Platform.SIREN.value: vol.All(cv.ensure_list, [dict]),
         Platform.SWITCH.value: vol.All(cv.ensure_list, [dict]),
         Platform.TEXT.value: vol.All(cv.ensure_list, [dict]),
-        Platform.UPDATE.value: vol.All(
-            cv.ensure_list,
-            [update_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.UPDATE.value: vol.All(cv.ensure_list, [dict]),
         Platform.VACUUM.value: vol.All(cv.ensure_list, [dict]),
         Platform.WATER_HEATER.value: vol.All(cv.ensure_list, [dict]),
     }
