@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
@@ -854,14 +855,13 @@ async def test_forecast_twice_daily_missing_is_daytime(
 
 
 @pytest.mark.parametrize(
-    ("forecast_type", "supported_features", "extra"),
+    ("forecast_type", "supported_features"),
     [
-        ("daily", WeatherEntityFeature.FORECAST_DAILY, {}),
-        ("hourly", WeatherEntityFeature.FORECAST_HOURLY, {}),
+        ("daily", WeatherEntityFeature.FORECAST_DAILY),
+        ("hourly", WeatherEntityFeature.FORECAST_HOURLY),
         (
             "twice_daily",
             WeatherEntityFeature.FORECAST_TWICE_DAILY,
-            {"is_daytime": True},
         ),
     ],
 )
@@ -870,7 +870,7 @@ async def test_get_forecast(
     enable_custom_integrations: None,
     forecast_type: str,
     supported_features: int,
-    extra: dict[str, Any],
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get forecast service."""
 
@@ -891,18 +891,7 @@ async def test_get_forecast(
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "forecast": [
-            {
-                "cloud_coverage": None,
-                "temperature": 38.0,
-                "templow": 38.0,
-                "uv_index": None,
-                "wind_bearing": None,
-            }
-            | extra
-        ],
-    }
+    assert response == snapshot
 
 
 async def test_get_forecast_no_forecast(

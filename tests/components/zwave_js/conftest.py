@@ -662,6 +662,12 @@ def logic_group_zdb5100_state_fixture():
     return json.loads(load_fixture("zwave_js/logic_group_zdb5100_state.json"))
 
 
+@pytest.fixture(name="climate_intermatic_pe653_state", scope="session")
+def climate_intermatic_pe653_state_fixture():
+    """Load Intermatic PE653 Pool Control node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_intermatic_pe653_state.json"))
+
+  
 @pytest.fixture(name="central_scene_node_state", scope="session")
 def central_scene_node_state_fixture():
     """Load node with Central Scene CC node state fixture data."""
@@ -1298,9 +1304,16 @@ def logic_group_zdb5100_fixture(client, logic_group_zdb5100_state):
     return node
 
 
+@pytest.fixture(name="climate_intermatic_pe653")
+def climate_intermatic_pe653_fixture(client, climate_intermatic_pe653_state):
+    """Mock an Intermatic PE653 node."""
+    node = Node(client, copy.deepcopy(climate_intermatic_pe653_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+  
 @pytest.fixture(name="central_scene_node")
 def central_scene_node_fixture(client, central_scene_node_state):
     """Mock a node with the Central Scene CC."""
     node = Node(client, copy.deepcopy(central_scene_node_state))
-    client.driver.controller.nodes[node.node_id] = node
-    return node
+  

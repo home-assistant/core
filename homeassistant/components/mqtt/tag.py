@@ -21,7 +21,7 @@ from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdate,
     async_handle_schema_error,
-    async_setup_entry_helper,
+    async_setup_non_entity_entry_helper,
     send_discovery_done,
     update_device,
 )
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
     """Set up MQTT tag scanner dynamically through MQTT discovery."""
 
     setup = functools.partial(_async_setup_tag, hass, config_entry=config_entry)
-    await async_setup_entry_helper(hass, TAG, setup, DISCOVERY_SCHEMA)
+    await async_setup_non_entity_entry_helper(hass, TAG, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_tag(
