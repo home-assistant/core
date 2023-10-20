@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from pathlib import Path
 from random import getrandbits
+import shutil
 import tempfile
 from unittest.mock import patch
 
@@ -19,13 +20,12 @@ from tests.typing import MqttMockHAClient, MqttMockPahoClient
 @pytest.mark.parametrize(
     ("option", "content", "file_created"),
     [
-        (mqtt.CONF_CERTIFICATE, "auto", False),
         (mqtt.CONF_CERTIFICATE, "### CA CERTIFICATE ###", True),
         (mqtt.CONF_CLIENT_CERT, "### CLIENT CERTIFICATE ###", True),
         (mqtt.CONF_CLIENT_KEY, "### PRIVATE KEY ###", True),
     ],
 )
-@pytest.mark.parametrize("temp_dir_prefix", ["create-test"])
+@pytest.mark.parametrize("temp_dir_prefix", ["create-test1"])
 async def test_async_create_certificate_temp_files(
     hass: HomeAssistant,
     mock_temp_dir: str,
@@ -38,7 +38,7 @@ async def test_async_create_certificate_temp_files(
 
     temp_dir = Path(tempfile.gettempdir()) / mock_temp_dir
 
-    # Create old file to be able to assert it is removed with auto option
+    # Create old file to be able to assert it is replaced with auto option
     def _ensure_old_file_exists() -> None:
         if not temp_dir.exists():
             temp_dir.mkdir(0o700)
@@ -53,7 +53,7 @@ async def test_async_create_certificate_temp_files(
     assert bool(file_path) is file_created
     assert (
         await hass.async_add_executor_job(
-            mqtt.util.migrate_certificate_file_to_content, file_path or content
+            mqtt.util.migrate_certificate_file_to_content, file_path
         )
         == content
     )
@@ -66,7 +66,7 @@ async def test_async_create_certificate_temp_files(
     assert bool(file_path2) is file_created
     assert (
         await hass.async_add_executor_job(
-            mqtt.util.migrate_certificate_file_to_content, file_path2 or content
+            mqtt.util.migrate_certificate_file_to_content, file_path2
         )
         == content
     )
@@ -75,8 +75,8 @@ async def test_async_create_certificate_temp_files(
 
     # Make sure any old files are removed to test certificate and dir creation
     def _remove_old_files() -> None:
-        if not temp_dir.exists():
-            temp_dir.rmdir()
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir)
 
     await hass.async_add_executor_job(_remove_old_files)
     await mqtt.util.async_create_certificate_temp_files(hass, config)
@@ -84,9 +84,40 @@ async def test_async_create_certificate_temp_files(
     assert bool(file_path) is file_created
     assert (
         await hass.async_add_executor_job(
-            mqtt.util.migrate_certificate_file_to_content, file_path or content
+            mqtt.util.migrate_certificate_file_to_content, file_path
         )
         == content
+    )
+
+
+@pytest.mark.parametrize("temp_dir_prefix", ["create-test2"])
+async def test_certificate_temp_files_with_auto_mode(
+    hass: HomeAssistant,
+    mock_temp_dir: str,
+) -> None:
+    """Test creating and reading and recovery certificate files with auto mode."""
+    config = {mqtt.CONF_CERTIFICATE: "auto"}
+
+    temp_dir = Path(tempfile.gettempdir()) / mock_temp_dir
+
+    # Create old file to be able to assert it is removed with auto option
+    def _ensure_old_file_exists() -> None:
+        if not temp_dir.exists():
+            temp_dir.mkdir(0o700)
+        temp_file = temp_dir / mqtt.CONF_CERTIFICATE
+        with open(temp_file, "wb") as old_file:
+            old_file.write(b"old content")
+            old_file.close()
+
+    await hass.async_add_executor_job(_ensure_old_file_exists)
+    await mqtt.util.async_create_certificate_temp_files(hass, config)
+    file_path = await hass.async_add_executor_job(mqtt.util.get_file_path, "auto")
+    assert file_path is None
+    assert (
+        await hass.async_add_executor_job(
+            mqtt.util.migrate_certificate_file_to_content, "auto"
+        )
+        == "auto"
     )
 
 
