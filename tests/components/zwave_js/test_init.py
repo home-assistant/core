@@ -27,11 +27,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .common import (
-    AIR_TEMPERATURE_SENSOR,
-    BASIC_EVENT_VALUE_ENTITY,
-    EATON_RF9640_ENTITY,
-)
+from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
 from tests.common import MockConfigEntry, async_get_persistent_notifications
 
@@ -971,7 +967,7 @@ async def test_removed_device(
     # Check how many entities there are
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 180
+    assert len(entity_entries) == 92
 
     # Remove a node and reload the entry
     old_node = driver.controller.nodes.pop(13)
@@ -1504,7 +1500,6 @@ async def test_disabled_entity_on_value_removed(
         | {
             battery_level_entity,
             binary_cover_entity,
-            BASIC_EVENT_VALUE_ENTITY,
             sensor_cover_entity,
             idle_cover_status_button_entity,
         }

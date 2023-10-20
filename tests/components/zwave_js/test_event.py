@@ -10,7 +10,7 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import BASIC_EVENT_VALUE_ENTITY
+BASIC_EVENT_VALUE_ENTITY = "event.honeywell_in_wall_smart_fan_control_event_value"
 
 
 async def test_basic(
