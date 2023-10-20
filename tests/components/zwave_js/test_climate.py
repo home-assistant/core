@@ -800,8 +800,8 @@ async def test_multi_setpoint_thermostat(
     """Test a thermostat with multiple setpoints."""
     node = climate_intermatic_pe653
 
-    HEATING_ENTITY = "climate.pool_control_2"
-    heating = hass.states.get(HEATING_ENTITY)
+    heating_entity_id = "climate.pool_control_2"
+    heating = hass.states.get(heating_entity_id)
     assert heating
     assert heating.state == HVACMode.HEAT
     assert heating.attributes[ATTR_TEMPERATURE] == 3.9
@@ -811,8 +811,8 @@ async def test_multi_setpoint_thermostat(
         == ClimateEntityFeature.TARGET_TEMPERATURE
     )
 
-    FURNACE_ENTITY = "climate.pool_control"
-    furnace = hass.states.get(FURNACE_ENTITY)
+    furnace_entity_id = "climate.pool_control"
+    furnace = hass.states.get(furnace_entity_id)
     assert furnace
     assert furnace.state == HVACMode.HEAT
     assert furnace.attributes[ATTR_TEMPERATURE] == 15.6
@@ -829,7 +829,7 @@ async def test_multi_setpoint_thermostat(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: HEATING_ENTITY,
+            ATTR_ENTITY_ID: heating_entity_id,
             ATTR_TEMPERATURE: 20.0,
         },
         blocking=True,
@@ -840,7 +840,7 @@ async def test_multi_setpoint_thermostat(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: FURNACE_ENTITY,
+            ATTR_ENTITY_ID: furnace_entity_id,
             ATTR_TEMPERATURE: 2.0,
         },
         blocking=True,
@@ -852,7 +852,7 @@ async def test_multi_setpoint_thermostat(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: HEATING_ENTITY,
+                ATTR_ENTITY_ID: heating_entity_id,
                 ATTR_HVAC_MODE: HVACMode.COOL,
             },
             blocking=True,
@@ -863,7 +863,7 @@ async def test_multi_setpoint_thermostat(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: FURNACE_ENTITY,
+                ATTR_ENTITY_ID: furnace_entity_id,
                 ATTR_HVAC_MODE: HVACMode.COOL,
             },
             blocking=True,
@@ -874,7 +874,7 @@ async def test_multi_setpoint_thermostat(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: HEATING_ENTITY,
+            ATTR_ENTITY_ID: heating_entity_id,
             ATTR_HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
@@ -885,7 +885,7 @@ async def test_multi_setpoint_thermostat(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: FURNACE_ENTITY,
+            ATTR_ENTITY_ID: furnace_entity_id,
             ATTR_HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
@@ -938,13 +938,13 @@ async def test_multi_setpoint_thermostat(
     )
     node.receive_event(event)
 
-    state = hass.states.get(HEATING_ENTITY)
+    state = hass.states.get(heating_entity_id)
     assert state
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == -5
 
     # furnace not changed
-    state = hass.states.get(FURNACE_ENTITY)
+    state = hass.states.get(furnace_entity_id)
     assert state
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 15.6
@@ -974,12 +974,12 @@ async def test_multi_setpoint_thermostat(
     node.receive_event(event)
 
     # heating not changed
-    state = hass.states.get(HEATING_ENTITY)
+    state = hass.states.get(heating_entity_id)
     assert state
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == -5
 
-    state = hass.states.get(FURNACE_ENTITY)
+    state = hass.states.get(furnace_entity_id)
     assert state
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 20
