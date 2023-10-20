@@ -134,12 +134,27 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         default_factory=dict
     )
 
-    def update(self, new_data: PassiveBluetoothDataUpdate[_T]) -> None:
-        """Update the data."""
-        self.devices.update(new_data.devices)
-        self.entity_descriptions.update(new_data.entity_descriptions)
-        self.entity_data.update(new_data.entity_data)
-        self.entity_names.update(new_data.entity_names)
+    def update(
+        self, new_data: PassiveBluetoothDataUpdate[_T]
+    ) -> set[PassiveBluetoothEntityKey]:
+        """Update the data and returned changed PassiveBluetoothEntityKey."""
+        device_change = False
+        changed_entity_keys: set[PassiveBluetoothEntityKey] = set()
+        for key, device_info in new_data.devices.items():
+            if device_change or self.devices.get(key) != device_info:
+                device_change = True
+            self.devices[key] = device_info
+        for incoming, current in (
+            (new_data.entity_descriptions, self.entity_descriptions),
+            (new_data.entity_names, self.entity_names),
+            (new_data.entity_data, self.entity_data),
+        ):
+            # mypy can't seem to work this out
+            for key, data in incoming.items():  # type: ignore[attr-defined]
+                if device_change or current.get(key) != data:  # type: ignore[attr-defined]
+                    changed_entity_keys.add(key)  # type: ignore[arg-type]
+                current[key] = data  # type: ignore[index]
+        return changed_entity_keys
 
     def async_get_restore_data(self) -> RestoredPassiveBluetoothDataUpdate:
         """Serialize restore data to storage."""
@@ -520,6 +535,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         self,
         data: PassiveBluetoothDataUpdate[_T] | None,
         was_available: bool | None = None,
+        changed_entity_keys: set[PassiveBluetoothEntityKey] | None = None,
     ) -> None:
         """Update all registered listeners."""
         if was_available is None:
@@ -542,6 +558,12 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         # if the key is in the data
         entity_key_listeners = self._entity_key_listeners
         for entity_key in data.entity_data:
+            if (
+                was_available
+                and changed_entity_keys is not None
+                and entity_key not in changed_entity_keys
+            ):
+                continue
             if maybe_listener := entity_key_listeners.get(entity_key):
                 for update_callback in maybe_listener:
                     update_callback(data)
@@ -573,8 +595,8 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
                 "Processing %s data recovered", self.coordinator.name
             )
 
-        self.data.update(new_data)
-        self.async_update_listeners(new_data, was_available)
+        changed_entity_keys = self.data.update(new_data)
+        self.async_update_listeners(new_data, was_available, changed_entity_keys)
 
 
 class PassiveBluetoothProcessorEntity(Entity, Generic[_PassiveBluetoothDataProcessorT]):
