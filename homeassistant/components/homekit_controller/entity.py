@@ -273,9 +273,6 @@ class BaseCharacteristicEntity(HomeKitEntity):
         self._char = char
         super().__init__(accessory, devinfo)
         self._entity_key = (self._aid, self._iid, char.iid)
-        self._attr_unique_id = (
-            f"{accessory.unique_id}_{self._aid}_{char.service.iid}_{char.iid}"
-        )
 
     @callback
     def _async_remove_entity_if_characteristics_disappeared(self) -> bool:
@@ -305,6 +302,15 @@ class CharacteristicEntity(BaseCharacteristicEntity):
     This is typically used to expose additional sensor, binary_sensor or number entities that don't belong with
     the service entity.
     """
+
+    def __init__(
+        self, accessory: HKDevice, devinfo: ConfigType, char: Characteristic
+    ) -> None:
+        """Initialise a generic single characteristic HomeKit entity."""
+        super().__init__(accessory, devinfo, char)
+        self._attr_unique_id = (
+            f"{accessory.unique_id}_{self._aid}_{char.service.iid}_{char.iid}"
+        )
 
     @property
     def old_unique_id(self) -> str:
