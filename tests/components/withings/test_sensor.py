@@ -1,6 +1,6 @@
 """Tests for the Withings component."""
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiowithings import MeasurementGroup
 from freezegun.api import FrozenDateTimeFactory
@@ -29,16 +29,16 @@ async def test_all_entities(
     polling_config_entry: MockConfigEntry,
 ) -> None:
     """Test all entities."""
-    await setup_integration(hass, polling_config_entry)
-    entity_registry = er.async_get(hass)
-    entities = er.async_entries_for_config_entry(
-        entity_registry, polling_config_entry.entry_id
-    )
+    with patch("homeassistant.components.withings.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, polling_config_entry)
+        entity_registry = er.async_get(hass)
+        entity_entries = er.async_entries_for_config_entry(
+            entity_registry, polling_config_entry.entry_id
+        )
 
-    for entity in entities:
-        if entity.domain == Platform.SENSOR:
-            assert hass.states.get(entity.entity_id) == snapshot
-    assert entities
+        assert entity_entries
+        for entity_entry in entity_entries:
+            assert hass.states.get(entity_entry.entity_id) == snapshot
 
 
 async def test_update_failed(
