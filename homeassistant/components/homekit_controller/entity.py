@@ -3,14 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiohomekit.model import Service, Services
 from aiohomekit.model.characteristics import (
     EVENT_CHARACTERISTICS,
     Characteristic,
     CharacteristicPermissions,
     CharacteristicsTypes,
 )
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -19,14 +18,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .connection import HKDevice, valid_serial_number
 from .utils import folded_name
-
-
-def _get_service_by_iid_or_none(services: Services, iid: int) -> Service | None:
-    """Return a service by iid or None."""
-    try:
-        return services.iid(iid)
-    except KeyError:
-        return None
 
 
 class HomeKitEntity(Entity):
@@ -69,9 +60,9 @@ class HomeKitEntity(Entity):
     def _async_remove_entity_if_accessory_or_service_disappeared(self) -> bool:
         """Handle accessory or service disappearance."""
         entity_map = self._accessory.entity_map
-        if not entity_map.has_aid(self._aid) or not _get_service_by_iid_or_none(
-            entity_map.aid(self._aid).services, self._iid
-        ):
+        if not (
+            accessory := entity_map.aid_or_none(self._aid)
+        ) or not accessory.services.iid_or_none(self._iid):
             self._async_handle_entity_removed()
             return True
         return False
