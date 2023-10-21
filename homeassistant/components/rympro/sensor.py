@@ -22,11 +22,12 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         key="read",
         translation_key="total_consumption",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
     ),
     SensorEntityDescription(
         key="consumption_forecast",
         translation_key="monthly_forecast",
-        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
     ),
 )
 
