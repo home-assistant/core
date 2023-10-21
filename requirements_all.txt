@@ -467,7 +467,7 @@ async-interrupt==1.1.1
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.36.1
+async-upnp-client==0.36.2
 
 # homeassistant.components.keyboard_remote
 asyncinotify==4.0.2
