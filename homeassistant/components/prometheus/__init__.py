@@ -378,6 +378,31 @@ class PrometheusMetrics:
                 )
             metric.labels(**self._labels(state)).set(value)
 
+    def _handle_number(self, state):
+        if unit := self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+            metric = self._metric(
+                f"number_state_{unit}",
+                self.prometheus_cli.Gauge,
+                f"State of the number measured in {unit}",
+            )
+        else:
+            metric = self._metric(
+                "number_state",
+                self.prometheus_cli.Gauge,
+                "State of the number",
+            )
+
+        with suppress(ValueError):
+            value = self.state_as_number(state)
+            if (
+                state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                == UnitOfTemperature.FAHRENHEIT
+            ):
+                value = TemperatureConverter.convert(
+                    value, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+                )
+            metric.labels(**self._labels(state)).set(value)
+
     def _handle_device_tracker(self, state):
         metric = self._metric(
             "device_tracker_state",
