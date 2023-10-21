@@ -220,6 +220,8 @@
     'attributes': ReadOnlyDict({
       'brightness': 128,
       'color_mode': <ColorMode.HS: 'hs'>,
+      'color_temp': None,
+      'color_temp_kelvin': None,
       'friendly_name': 'Frenck',
       'hs_color': tuple(
         358.0,
