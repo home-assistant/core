@@ -10,7 +10,6 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from .const import (
     TEST_BEDROCK_STATUS_RESPONSE,
@@ -21,69 +20,48 @@ from .const import (
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+JAVA_SENSOR_ENTITIES_ENABLED_BY_DEFAULT: list[str] = [
+    "sensor.minecraft_server_latency",
+    "sensor.minecraft_server_players_online",
+    "sensor.minecraft_server_world_message",
+    "sensor.minecraft_server_version",
+]
+
+JAVA_SENSOR_ENTITIES_DISABLED_BY_DEFAULT: list[str] = [
+    "sensor.minecraft_server_players_max",
+    "sensor.minecraft_server_protocol_version",
+]
+
+BEDROCK_SENSOR_ENTITIES_ENABLED_BY_DEFAULT: list[str] = [
+    "sensor.minecraft_server_latency",
+    "sensor.minecraft_server_players_online",
+    "sensor.minecraft_server_world_message",
+    "sensor.minecraft_server_version",
+    "sensor.minecraft_server_map_name",
+    "sensor.minecraft_server_game_mode",
+]
+
+BEDROCK_SENSOR_ENTITIES_DISABLED_BY_DEFAULT: list[str] = [
+    "sensor.minecraft_server_players_max",
+    "sensor.minecraft_server_protocol_version",
+    "sensor.minecraft_server_edition",
+]
+
 
 @pytest.mark.parametrize(
-    ("mock_config_entry", "server", "status_response", "entity_id"),
+    ("mock_config_entry", "server", "status_response", "entity_ids"),
     [
         (
             "java_mock_config_entry",
             JavaServer,
             TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_latency",
-        ),
-        (
-            "java_mock_config_entry",
-            JavaServer,
-            TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_players_online",
-        ),
-        (
-            "java_mock_config_entry",
-            JavaServer,
-            TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_world_message",
-        ),
-        (
-            "java_mock_config_entry",
-            JavaServer,
-            TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_version",
+            JAVA_SENSOR_ENTITIES_ENABLED_BY_DEFAULT,
         ),
         (
             "bedrock_mock_config_entry",
             BedrockServer,
             TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_latency",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_players_online",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_world_message",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_version",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_map_name",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_game_mode",
+            BEDROCK_SENSOR_ENTITIES_ENABLED_BY_DEFAULT,
         ),
     ],
 )
@@ -92,7 +70,7 @@ async def test_sensor(
     mock_config_entry: MockConfigEntry,
     server: JavaServer | BedrockServer,
     status_response: JavaStatusResponse | BedrockStatusResponse,
-    entity_id: er.EntityRegistry,
+    entity_ids: list[str],
     request: pytest.FixtureRequest,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -109,41 +87,24 @@ async def test_sensor(
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert hass.states.get(entity_id) == snapshot
+        for entity_id in entity_ids:
+            assert hass.states.get(entity_id) == snapshot
 
 
 @pytest.mark.parametrize(
-    ("mock_config_entry", "server", "status_response", "entity_id"),
+    ("mock_config_entry", "server", "status_response", "entity_ids"),
     [
         (
             "java_mock_config_entry",
             JavaServer,
             TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_protocol_version",
-        ),
-        (
-            "java_mock_config_entry",
-            JavaServer,
-            TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_players_max",
+            JAVA_SENSOR_ENTITIES_DISABLED_BY_DEFAULT,
         ),
         (
             "bedrock_mock_config_entry",
             BedrockServer,
             TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_protocol_version",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_players_max",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_edition",
+            BEDROCK_SENSOR_ENTITIES_DISABLED_BY_DEFAULT,
         ),
     ],
 )
@@ -152,9 +113,8 @@ async def test_sensor_disabled_by_default(
     mock_config_entry: MockConfigEntry,
     server: JavaServer | BedrockServer,
     status_response: JavaStatusResponse | BedrockStatusResponse,
-    entity_id: er.EntityRegistry,
+    entity_ids: list[str],
     request: pytest.FixtureRequest,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test sensor, which is disabled by default."""
     mock_config_entry = request.getfixturevalue(mock_config_entry)
@@ -169,71 +129,24 @@ async def test_sensor_disabled_by_default(
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert not hass.states.get(entity_id)
+        for entity_id in entity_ids:
+            assert not hass.states.get(entity_id)
 
 
 @pytest.mark.parametrize(
-    ("mock_config_entry", "server", "status_response", "entity_id"),
+    ("mock_config_entry", "server", "status_response", "entity_ids"),
     [
         (
             "java_mock_config_entry",
             JavaServer,
             TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_latency",
-        ),
-        (
-            "java_mock_config_entry",
-            JavaServer,
-            TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_players_online",
-        ),
-        (
-            "java_mock_config_entry",
-            JavaServer,
-            TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_world_message",
-        ),
-        (
-            "java_mock_config_entry",
-            JavaServer,
-            TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_version",
+            JAVA_SENSOR_ENTITIES_ENABLED_BY_DEFAULT,
         ),
         (
             "bedrock_mock_config_entry",
             BedrockServer,
             TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_latency",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_players_online",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_world_message",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_version",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_map_name",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_game_mode",
+            BEDROCK_SENSOR_ENTITIES_ENABLED_BY_DEFAULT,
         ),
     ],
 )
@@ -242,7 +155,7 @@ async def test_sensor_update(
     mock_config_entry: MockConfigEntry,
     server: JavaServer | BedrockServer,
     status_response: JavaStatusResponse | BedrockStatusResponse,
-    entity_id: er.EntityRegistry,
+    entity_ids: list[str],
     request: pytest.FixtureRequest,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
@@ -263,71 +176,24 @@ async def test_sensor_update(
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        assert hass.states.get(entity_id) == snapshot
+        for entity_id in entity_ids:
+            assert hass.states.get(entity_id) == snapshot
 
 
 @pytest.mark.parametrize(
-    ("mock_config_entry", "server", "status_response", "entity_id"),
+    ("mock_config_entry", "server", "status_response", "entity_ids"),
     [
         (
             "java_mock_config_entry",
             JavaServer,
             TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_latency",
-        ),
-        (
-            "java_mock_config_entry",
-            JavaServer,
-            TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_players_online",
-        ),
-        (
-            "java_mock_config_entry",
-            JavaServer,
-            TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_world_message",
-        ),
-        (
-            "java_mock_config_entry",
-            JavaServer,
-            TEST_JAVA_STATUS_RESPONSE,
-            "sensor.minecraft_server_version",
+            JAVA_SENSOR_ENTITIES_ENABLED_BY_DEFAULT,
         ),
         (
             "bedrock_mock_config_entry",
             BedrockServer,
             TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_latency",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_players_online",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_world_message",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_version",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_map_name",
-        ),
-        (
-            "bedrock_mock_config_entry",
-            BedrockServer,
-            TEST_BEDROCK_STATUS_RESPONSE,
-            "sensor.minecraft_server_game_mode",
+            BEDROCK_SENSOR_ENTITIES_ENABLED_BY_DEFAULT,
         ),
     ],
 )
@@ -336,7 +202,7 @@ async def test_sensor_update_failure(
     mock_config_entry: MockConfigEntry,
     server: JavaServer | BedrockServer,
     status_response: JavaStatusResponse | BedrockStatusResponse,
-    entity_id: er.EntityRegistry,
+    entity_ids: list[str],
     request: pytest.FixtureRequest,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -361,4 +227,5 @@ async def test_sensor_update_failure(
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+        for entity_id in entity_ids:
+            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
