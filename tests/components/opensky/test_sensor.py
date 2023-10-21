@@ -1,6 +1,5 @@
 """OpenSky sensor tests."""
 from datetime import timedelta
-import json
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -20,17 +19,21 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import ComponentSetup
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+)
 
 LEGACY_CONFIG = {Platform.SENSOR: [{CONF_PLATFORM: DOMAIN, CONF_RADIUS: 10.0}]}
 
 
 async def test_legacy_migration(hass: HomeAssistant) -> None:
     """Test migration from yaml to config flow."""
-    json_fixture = load_fixture("opensky/states.json")
+    state_json = load_json_object_fixture("opensky/states.json")
     with patch(
         "python_opensky.OpenSky.get_states",
-        return_value=StatesResponse.parse_obj(json.loads(json_fixture)),
+        return_value=StatesResponse.from_api(state_json),
     ):
         assert await async_setup_component(hass, Platform.SENSOR, LEGACY_CONFIG)
         await hass.async_block_till_done()
@@ -86,8 +89,8 @@ async def test_sensor_updating(
     await setup_integration(config_entry)
 
     def get_states_response_fixture(fixture: str) -> StatesResponse:
-        json_fixture = load_fixture(fixture)
-        return StatesResponse.parse_obj(json.loads(json_fixture))
+        state_json = load_json_object_fixture(fixture)
+        return StatesResponse.from_api(state_json)
 
     events = []
 
