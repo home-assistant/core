@@ -134,7 +134,7 @@ DOMAIN = "homeassistant"
 BLOCK_LOG_TIMEOUT = 60
 
 ServiceResponse = JsonObjectType | None
-EntityServiceResponse = dict[str, ServiceResponse]
+EntityServiceResponse = dict[str, JsonObjectType] | None
 
 
 class ConfigSource(enum.StrEnum):
@@ -2044,7 +2044,6 @@ class ServiceRegistry:
             raise HomeAssistantError(
                 f"Service response data expected a dictionary, was {type(response_data)}"
             )
-
         return response_data
 
     async def _run_service_call_catch_exceptions(

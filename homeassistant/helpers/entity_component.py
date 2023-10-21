@@ -267,9 +267,8 @@ class EntityComponent(Generic[_EntityT]):
 
         async def handle_service(
             call: ServiceCall,
-        ) -> EntityServiceResponse | None:
+        ) -> EntityServiceResponse:
             """Handle the service."""
-
             return await service.entity_service_call(
                 self.hass, self._platforms.values(), func, call, required_features
             )

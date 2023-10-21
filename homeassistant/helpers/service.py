@@ -879,9 +879,7 @@ async def entity_service_call(
             # Set context again so it's there when we update
             entity.async_set_context(call.context)
             await entity.async_update_ha_state(True)
-        if return_response and response is not None:
-            return {entity.entity_id: response}
-        return None
+        return response if return_response else None
 
     done, pending = await asyncio.wait(
         [
@@ -896,8 +894,10 @@ async def entity_service_call(
     assert not pending
 
     response_data: EntityServiceResponse = {}
-    for entity, task in zip(entities, done):
-        response_data[entity.entity_id] = task.result()
+    assert response_data is not None
+    for task in done:
+        if (result := task.result()) is not None:
+            response_data.update(result)
 
     tasks: list[asyncio.Task[None]] = []
 
@@ -916,7 +916,7 @@ async def entity_service_call(
         for future in done:
             future.result()  # pop exception if have
 
-    return response_data if return_response else None
+    return response_data if return_response and len(response_data) > 0 else None
 
 
 async def _handle_entity_call(
@@ -925,7 +925,7 @@ async def _handle_entity_call(
     func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
     data: dict | ServiceCall,
     context: Context,
-) -> ServiceResponse:
+) -> EntityServiceResponse:
     """Handle calling service method."""
     entity.async_set_context(context)
 
@@ -954,7 +954,7 @@ async def _handle_entity_call(
         )
         result = await result
 
-    return result
+    return {entity.entity_id: result} if result is not None else None
 
 
 @bind_hass
