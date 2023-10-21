@@ -17,15 +17,13 @@ FIXTURE_USER_INPUT = {
 FIXTURE_USER_INPUT_OPTIONS = {
     "min_temp": 10.2,
     "max_temp": 20.1,
-    "target_temp": 15,
+    "target_temp": 15.5,
     "ac_mode": False,
-    "min_cycle_duration": 5,
     "cold_tolerance": 0.5,
     "hot_tolerance": 0.5,
-    "keep_alive": False,
     "initial_hvac_mode": "off",
     "precision": "0.1",
-    "target_temp_step": 0.5,
+    "target_temp_step": "0.5",
 }
 
 
