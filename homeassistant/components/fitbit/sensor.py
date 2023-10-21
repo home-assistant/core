@@ -513,7 +513,6 @@ FITBIT_RESOURCE_BATTERY = FitbitSensorEntityDescription(
 FITBIT_RESOURCE_BATTERY_LEVEL = FitbitSensorEntityDescription(
     key="devices/battery_level",
     translation_key="battery_level",
-    icon="mdi:battery",
     scope=FitbitScope.DEVICE,
     entity_category=EntityCategory.DIAGNOSTIC,
     has_entity_name=True,
