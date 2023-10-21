@@ -38,7 +38,9 @@ async def test_all_entities(
 
         assert entity_entries
         for entity_entry in entity_entries:
-            assert hass.states.get(entity_entry.entity_id) == snapshot
+            assert hass.states.get(entity_entry.entity_id) == snapshot(
+                name=entity_entry.entity_id
+            )
 
 
 async def test_update_failed(
