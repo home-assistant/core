@@ -30,11 +30,64 @@
           "time_type": "Time Type",
           "time": "Time",
           "avoid": "Avoid",
-          "traffic_mode": "Traffic Mode",
+          "traffic_model": "Traffic Model",
           "transit_mode": "Transit Mode",
           "transit_routing_preference": "Transit Routing Preference",
           "units": "Units"
         }
+      }
+    }
+  },
+  "selector": {
+    "mode": {
+      "options": {
+        "driving": "Driving",
+        "walking": "Walking",
+        "bicycling": "Bicycling",
+        "transit": "Transit"
+      }
+    },
+    "avoid": {
+      "options": {
+        "none": "Avoid nothing",
+        "tolls": "Tolls",
+        "highways": "Highways",
+        "ferries": "Ferries",
+        "indoor": "Indoor"
+      }
+    },
+    "units": {
+      "options": {
+        "metric": "Metric System",
+        "imperial": "Imperial System"
+      }
+    },
+    "time_type": {
+      "options": {
+        "arrival_time": "Arrival Time",
+        "departure_time": "Departure Time"
+      }
+    },
+    "traffic_model": {
+      "options": {
+        "best_guess": "Best Guess",
+        "pessimistic": "Pessimistic",
+        "optimistic": "Optimistic"
+      }
+    },
+    "transit_mode": {
+      "options": {
+        "bus": "Bus",
+        "subway": "Subway",
+        "train": "Train",
+        "tram": "Tram",
+        "rail": "Rail"
+      }
+    },
+    "transit_routing_preference": {
+      "options": {
+        "less_walking": "Less Walking",
+        "fewer_transfers": "Fewer Transfers"
       }
     }
   }
