@@ -38,6 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -508,6 +509,17 @@ FITBIT_RESOURCE_BATTERY = FitbitSensorEntityDescription(
     scope=FitbitScope.DEVICE,
     entity_category=EntityCategory.DIAGNOSTIC,
 )
+FITBIT_RESOURCE_BATTERY_LEVEL = FitbitSensorEntityDescription(
+    key="devices/battery_level",
+    translation_key="battery_level",
+    name="Battery Level",
+    icon="mdi:battery",
+    scope=FitbitScope.DEVICE,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    has_entity_name=True,
+    device_class=SensorDeviceClass.BATTERY,
+    native_unit_of_measurement=PERCENTAGE,
+)
 
 FITBIT_RESOURCES_KEYS: Final[list[str]] = [
     desc.key
@@ -657,7 +669,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
     if data.device_coordinator and is_allowed_resource(FITBIT_RESOURCE_BATTERY):
-        async_add_entities(
+        battery_entities: list[SensorEntity] = [
             FitbitBatterySensor(
                 data.device_coordinator,
                 user_profile.encoded_id,
@@ -666,7 +678,17 @@ async def async_setup_entry(
                 enable_default_override=is_explicit_enable(FITBIT_RESOURCE_BATTERY),
             )
             for device in data.device_coordinator.data.values()
+        ]
+        battery_entities.extend(
+            FitbitBatteryLevelSensor(
+                data.device_coordinator,
+                user_profile.encoded_id,
+                FITBIT_RESOURCE_BATTERY_LEVEL,
+                device=device,
+            )
+            for device in data.device_coordinator.data.values()
         )
+        async_add_entities(battery_entities)
 
 
 class FitbitSensor(SensorEntity):
@@ -714,7 +736,7 @@ class FitbitSensor(SensorEntity):
 
 
 class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
-    """Implementation of a Fitbit sensor."""
+    """Implementation of a Fitbit battery sensor."""
 
     entity_description: FitbitSensorEntityDescription
     _attr_attribution = ATTRIBUTION
@@ -731,10 +753,13 @@ class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self.device = device
-        self._attr_unique_id = f"{user_profile_id}_{description.key}"
-        if device is not None:
-            self._attr_name = f"{device.device_version} Battery"
-            self._attr_unique_id = f"{self._attr_unique_id}_{device.id}"
+        self._attr_name = f"{device.device_version} Battery"
+        self._attr_unique_id = f"{user_profile_id}_{description.key}_{device.id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{user_profile_id}_{device.id}")},
+            name=device.device_version,
+            model=device.device_version,
+        )
 
         if enable_default_override:
             self._attr_entity_registry_enabled_default = True
@@ -764,4 +789,42 @@ class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
         """Handle updated data from the coordinator."""
         self.device = self.coordinator.data[self.device.id]
         self._attr_native_value = self.device.battery
+        self.async_write_ha_state()
+
+
+class FitbitBatteryLevelSensor(CoordinatorEntity, SensorEntity):
+    """Implementation of a Fitbit battery sensor."""
+
+    entity_description: FitbitSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: FitbitDeviceCoordinator,
+        user_profile_id: str,
+        description: FitbitSensorEntityDescription,
+        device: FitbitDevice,
+    ) -> None:
+        """Initialize the Fitbit sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self.device = device
+        self._attr_unique_id = f"{user_profile_id}_{description.key}_{device.id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{user_profile_id}_{device.id}")},
+            name=device.device_version,
+            model=device.device_version,
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass update state from existing coordinator data."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.device = self.coordinator.data[self.device.id]
+        self._attr_native_value = self.device.battery_level
         self.async_write_ha_state()
