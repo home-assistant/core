@@ -38,27 +38,13 @@ def min_charging_current_value(coordinator: WallboxCoordinator) -> float:
     return 0
 
 
-async def async_set_charging_current_value(
-    coordinator: WallboxCoordinator, value: float
-) -> None:
-    """Set the value for charging current."""
-    await coordinator.async_set_charging_current(value)
-
-
-async def async_set_energy_price_value(
-    coordinator: WallboxCoordinator, value: float
-) -> None:
-    """Set the value for energy price."""
-    await coordinator.async_set_energy_cost(value)
-
-
 @dataclass
 class WallboxNumberEntityDescriptionMixin:
     """Load entities from different handlers."""
 
     max_value_fn: Callable[[WallboxCoordinator], float]
     min_value_fn: Callable[[WallboxCoordinator], float]
-    set_value_fn: Callable[[WallboxCoordinator, float], Awaitable[None]]
+    set_value_fn: Callable[[WallboxCoordinator], Callable[[float], Awaitable[None]]]
 
 
 @dataclass
@@ -76,7 +62,7 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
             float, coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY]
         ),
         min_value_fn=min_charging_current_value,
-        set_value_fn=async_set_charging_current_value,
+        set_value_fn=lambda coordinator: coordinator.async_set_charging_current,
         native_step=1,
     ),
     CHARGER_ENERGY_PRICE_KEY: WallboxNumberEntityDescription(
@@ -84,7 +70,7 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
         translation_key="energy_price",
         max_value_fn=lambda _: 5,
         min_value_fn=lambda _: -5,
-        set_value_fn=async_set_energy_price_value,
+        set_value_fn=lambda coordinator: coordinator.async_set_energy_cost,
         native_step=0.01,
     ),
 }
@@ -148,4 +134,4 @@ class WallboxNumber(WallboxEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the entity."""
-        await self.entity_description.set_value_fn(self.coordinator, value)
+        await self.entity_description.set_value_fn(self.coordinator)(value)
