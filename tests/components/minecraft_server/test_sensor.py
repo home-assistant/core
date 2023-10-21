@@ -18,7 +18,7 @@ from .const import (
     TEST_PORT,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 JAVA_SENSOR_ENTITIES: list[str] = [
     "sensor.minecraft_server_latency",
@@ -73,7 +73,7 @@ BEDROCK_SENSOR_ENTITIES_DISABLED_BY_DEFAULT: list[str] = [
 )
 async def test_sensor(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: str,
     server: JavaServer | BedrockServer,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     entity_ids: list[str],
@@ -116,7 +116,7 @@ async def test_sensor(
 )
 async def test_sensor_disabled_by_default(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: str,
     server: JavaServer | BedrockServer,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     entity_ids: list[str],
@@ -159,7 +159,7 @@ async def test_sensor_disabled_by_default(
 )
 async def test_sensor_update(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: str,
     server: JavaServer | BedrockServer,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     entity_ids: list[str],
@@ -207,7 +207,7 @@ async def test_sensor_update(
 )
 async def test_sensor_update_failure(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: str,
     server: JavaServer | BedrockServer,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     entity_ids: list[str],
