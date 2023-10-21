@@ -295,7 +295,7 @@ async def _async_discover(
     try:
         if setup is not None:
             setup(discovery_payload)
-        if async_setup is not None:
+        elif async_setup is not None:
             await async_setup(discovery_payload)
     except vol.Invalid as err:
         discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
