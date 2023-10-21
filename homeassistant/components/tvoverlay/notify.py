@@ -1,4 +1,5 @@
 """TvOverlay notification service for Android TV."""
+from __future__ import annotations
 
 import logging
 from typing import Any
@@ -51,6 +52,21 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> TvOverlayNotificationService | None:
+    """Get the TvOverlay notification service."""
+    if discovery_info is None:
+        return None
+    notify = await hass.async_add_executor_job(Notifications, discovery_info[CONF_HOST])
+    return TvOverlayNotificationService(
+        notify,
+        hass.config.is_allowed_path,
+    )
 
 
 class TvOverlayNotificationService(BaseNotificationService):
@@ -169,18 +185,3 @@ class TvOverlayNotificationService(BaseNotificationService):
             "No valid URL, local_path, or mdi_icon found in image attributes"
         )
         return None
-
-
-async def async_get_service(
-    hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> TvOverlayNotificationService | None:
-    """Get the TvOverlay notification service."""
-    if discovery_info is None:
-        return None
-    notify = await hass.async_add_executor_job(Notifications, discovery_info[CONF_HOST])
-    return TvOverlayNotificationService(
-        notify,
-        hass.config.is_allowed_path,
-    )
