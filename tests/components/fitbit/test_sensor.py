@@ -293,7 +293,7 @@ async def test_device_battery_level(
     assert state.state == "60"
     assert state.attributes == {
         "attribution": "Data provided by Fitbit.com",
-        "friendly_name": "Charge 2 Battery Level",
+        "friendly_name": "Charge 2 Battery level",
         "device_class": "battery",
         "unit_of_measurement": "%",
     }
@@ -303,7 +303,7 @@ async def test_device_battery_level(
     assert state.state == "95"
     assert state.attributes == {
         "attribution": "Data provided by Fitbit.com",
-        "friendly_name": "Aria Air Battery Level",
+        "friendly_name": "Aria Air Battery level",
         "device_class": "battery",
         "unit_of_measurement": "%",
     }
