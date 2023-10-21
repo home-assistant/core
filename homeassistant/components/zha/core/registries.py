@@ -202,19 +202,31 @@ class MatchRule:
         return claimed
 
     def strict_matched(
-        self, manufacturer: str, model: str, cluster_handlers: list, quirk_id: str
+        self,
+        manufacturer: str,
+        model: str,
+        cluster_handlers: list,
+        quirk_id: str | None,
     ) -> bool:
         """Return True if this device matches the criteria."""
         return all(self._matched(manufacturer, model, cluster_handlers, quirk_id))
 
     def loose_matched(
-        self, manufacturer: str, model: str, cluster_handlers: list, quirk_id: str
+        self,
+        manufacturer: str,
+        model: str,
+        cluster_handlers: list,
+        quirk_id: str | None,
     ) -> bool:
         """Return True if this device matches the criteria."""
         return any(self._matched(manufacturer, model, cluster_handlers, quirk_id))
 
     def _matched(
-        self, manufacturer: str, model: str, cluster_handlers: list, quirk_id: str
+        self,
+        manufacturer: str,
+        model: str,
+        cluster_handlers: list,
+        quirk_id: str | None,
     ) -> list:
         """Return a list of field matches."""
         if not any(attr.asdict(self).values()):
@@ -241,7 +253,7 @@ class MatchRule:
             else:
                 matches.append(model in self.models)
 
-        if self.quirk_ids:
+        if self.quirk_ids and quirk_id:
             if callable(self.quirk_ids):
                 matches.append(self.quirk_ids(quirk_id))
             else:
@@ -287,7 +299,7 @@ class ZHAEntityRegistry:
         manufacturer: str,
         model: str,
         cluster_handlers: list[ClusterHandler],
-        quirk_id: str,
+        quirk_id: str | None,
         default: type[ZhaEntity] | None = None,
     ) -> tuple[type[ZhaEntity] | None, list[ClusterHandler]]:
         """Match a ZHA ClusterHandler to a ZHA Entity class."""
@@ -304,7 +316,7 @@ class ZHAEntityRegistry:
         manufacturer: str,
         model: str,
         cluster_handlers: list[ClusterHandler],
-        quirk_id: str,
+        quirk_id: str | None,
     ) -> tuple[
         dict[Platform, list[EntityClassAndClusterHandlers]], list[ClusterHandler]
     ]:
@@ -337,7 +349,7 @@ class ZHAEntityRegistry:
         manufacturer: str,
         model: str,
         cluster_handlers: list[ClusterHandler],
-        quirk_id: str,
+        quirk_id: str | None,
     ) -> tuple[
         dict[Platform, list[EntityClassAndClusterHandlers]], list[ClusterHandler]
     ]:

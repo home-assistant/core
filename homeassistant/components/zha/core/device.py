@@ -136,8 +136,7 @@ class ZHADevice(LogMixin):
             f"{self._zigpy_device.__class__.__module__}."
             f"{self._zigpy_device.__class__.__name__}"
         )
-        # TODO: currently defaulting to quirk_class (so zhaquirks.xx.xx) for quirk id if no quirk_id is set, should we do that though?
-        self.quirk_id = getattr(self._zigpy_device, ATTR_QUIRK_ID, self.quirk_class)
+        self.quirk_id = getattr(self._zigpy_device, ATTR_QUIRK_ID, None)
 
         if self.is_mains_powered:
             self.consider_unavailable_time = async_get_zha_config_value(
