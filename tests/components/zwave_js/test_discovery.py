@@ -307,3 +307,4 @@ async def test_thermostat_operating_state(
 
     state = hass.states.get("sensor.adc_t3000_operating_state")
     assert state
+    assert state.state == "Idle"
