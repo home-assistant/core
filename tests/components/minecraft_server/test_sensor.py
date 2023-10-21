@@ -256,7 +256,7 @@ async def test_sensor_update(
         return_value=server(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
-        return_value=status_response,  # TODO: Use second test status_response?
+        return_value=status_response,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
