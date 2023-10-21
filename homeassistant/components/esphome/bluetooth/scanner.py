@@ -39,20 +39,10 @@ class ESPHomeScanner(BaseHaRemoteScanner):
         """Call the registered callback."""
         now = MONOTONIC_TIME()
         for adv in advertisements:
-            #
-            # Advertisement data is held in memory for a long
-            # time so we need to be careful not to hold onto
-            # references to it for too long.
-            #
-            # All adv data should be copied or processed here
-            # so we can give up the reference to the original
-            # adv data as soon as possible to allow it to be
-            # garbage collected which will free up the memory
-            #
             self._async_on_advertisement(
                 int_to_bluetooth_address(adv.address),
-                int(adv.rssi),
+                adv.rssi,
                 *parse_advertisement_data_tuple((adv.data,)),
-                {"address_type": int(adv.address_type)},
+                {"address_type": adv.address_type},
                 now,
             )
