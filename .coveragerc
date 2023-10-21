@@ -745,7 +745,6 @@ omit =
     homeassistant/components/mikrotik/hub.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/sensor.py
-    homeassistant/components/minecraft_server/binary_sensor.py
     homeassistant/components/minio/minio_helper.py
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mjpeg/util.py
