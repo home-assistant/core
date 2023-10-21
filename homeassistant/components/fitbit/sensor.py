@@ -504,15 +504,15 @@ SLEEP_START_TIME_12HR = FitbitSensorEntityDescription(
 
 FITBIT_RESOURCE_BATTERY = FitbitSensorEntityDescription(
     key="devices/battery",
-    name="Battery",
+    translation_key="battery",
     icon="mdi:battery",
     scope=FitbitScope.DEVICE,
     entity_category=EntityCategory.DIAGNOSTIC,
+    has_entity_name=True,
 )
 FITBIT_RESOURCE_BATTERY_LEVEL = FitbitSensorEntityDescription(
     key="devices/battery_level",
     translation_key="battery_level",
-    name="Battery Level",
     icon="mdi:battery",
     scope=FitbitScope.DEVICE,
     entity_category=EntityCategory.DIAGNOSTIC,
@@ -753,7 +753,6 @@ class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self.device = device
-        self._attr_name = f"{device.device_version} Battery"
         self._attr_unique_id = f"{user_profile_id}_{description.key}_{device.id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{user_profile_id}_{device.id}")},
@@ -797,7 +796,6 @@ class FitbitBatteryLevelSensor(CoordinatorEntity, SensorEntity):
 
     entity_description: FitbitSensorEntityDescription
     _attr_attribution = ATTRIBUTION
-    _attr_has_entity_name = True
 
     def __init__(
         self,
