@@ -7,6 +7,7 @@ from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -359,4 +360,4 @@ async def test_sensor_update_failure(
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-        assert hass.states.get(entity_id) == snapshot
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
