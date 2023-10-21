@@ -94,7 +94,7 @@ async def test_binary_sensor_update(
         ("bedrock_mock_config_entry", BedrockServer, TEST_BEDROCK_STATUS_RESPONSE),
     ],
 )
-async def test_sensor_update_failure(
+async def test_binary_sensor_update_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     server: JavaServer | BedrockServer,
@@ -102,7 +102,7 @@ async def test_sensor_update_failure(
     request: pytest.FixtureRequest,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test failed sensor update."""
+    """Test failed binary sensor update."""
     mock_config_entry = request.getfixturevalue(mock_config_entry)
     mock_config_entry.add_to_hass(hass)
 
