@@ -201,6 +201,7 @@ async def test_reauth(
     mock_client: MagicMock,
 ) -> None:
     """Test a reauth flow."""
+    # Force a reauth
     mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
         hass,
         "auth-connect-address.json",
@@ -227,6 +228,7 @@ async def test_reauth(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
+    # Complete the reauth
     mock_client.auth.login.return_value = await async_load_json_fixture(
         hass,
         "auth-login.json",
@@ -249,6 +251,7 @@ async def test_reauth_cannot_connect(
     mock_client: MagicMock,
 ) -> None:
     """Test an unreachable server during a reauth flow."""
+    # Force a reauth
     mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
         hass,
         "auth-connect-address.json",
@@ -275,6 +278,7 @@ async def test_reauth_cannot_connect(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
+    # Perform reauth with unreachable server
     mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
         hass, "auth-connect-address-failure.json"
     )
@@ -290,6 +294,22 @@ async def test_reauth_cannot_connect(
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
 
+    # Complete reauth with reachable server
+    mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
+        hass, "auth-connect-address.json"
+    )
+    mock_client.auth.login.return_value = await async_load_json_fixture(
+        hass,
+        "auth-login.json",
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=REAUTH_INPUT,
+    )
+    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+
 
 async def test_reauth_invalid(
     hass: HomeAssistant,
@@ -298,6 +318,7 @@ async def test_reauth_invalid(
     mock_client: MagicMock,
 ) -> None:
     """Test invalid credentials during a reauth flow."""
+    # Force a reauth
     mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
         hass,
         "auth-connect-address.json",
@@ -324,6 +345,7 @@ async def test_reauth_invalid(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
+    # Perform reauth with invalid credentials
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=REAUTH_INPUT,
@@ -336,6 +358,19 @@ async def test_reauth_invalid(
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
     assert len(mock_client.auth.login.mock_calls) == 1
 
+    # Complete reauth with valid credentials
+    mock_client.auth.login.return_value = await async_load_json_fixture(
+        hass,
+        "auth-login.json",
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=REAUTH_INPUT,
+    )
+    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+
 
 async def test_reauth_exception(
     hass: HomeAssistant,
@@ -344,6 +379,7 @@ async def test_reauth_exception(
     mock_client: MagicMock,
 ) -> None:
     """Test an unexpected exception during a reauth flow."""
+    # Force a reauth
     mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
         hass,
         "auth-connect-address.json",
@@ -370,6 +406,7 @@ async def test_reauth_exception(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
+    # Perform a reauth with an unknown exception
     mock_client.auth.connect_to_address.side_effect = Exception("UnknownException")
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -382,3 +419,17 @@ async def test_reauth_exception(
     assert result2["errors"] == {"base": "unknown"}
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
+
+    # Complete the reauth without an exception
+    mock_client.auth.login.return_value = await async_load_json_fixture(
+        hass,
+        "auth-login.json",
+    )
+    mock_client.auth.connect_to_address.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=REAUTH_INPUT,
+    )
+    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
