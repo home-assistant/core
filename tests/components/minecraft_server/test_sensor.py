@@ -20,11 +20,13 @@ from .const import (
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-JAVA_SENSOR_ENTITIES_ENABLED_BY_DEFAULT: list[str] = [
+JAVA_SENSOR_ENTITIES: list[str] = [
     "sensor.minecraft_server_latency",
     "sensor.minecraft_server_players_online",
+    "sensor.minecraft_server_players_max",
     "sensor.minecraft_server_world_message",
     "sensor.minecraft_server_version",
+    "sensor.minecraft_server_protocol_version",
 ]
 
 JAVA_SENSOR_ENTITIES_DISABLED_BY_DEFAULT: list[str] = [
@@ -32,13 +34,16 @@ JAVA_SENSOR_ENTITIES_DISABLED_BY_DEFAULT: list[str] = [
     "sensor.minecraft_server_protocol_version",
 ]
 
-BEDROCK_SENSOR_ENTITIES_ENABLED_BY_DEFAULT: list[str] = [
+BEDROCK_SENSOR_ENTITIES: list[str] = [
     "sensor.minecraft_server_latency",
     "sensor.minecraft_server_players_online",
+    "sensor.minecraft_server_players_max",
     "sensor.minecraft_server_world_message",
     "sensor.minecraft_server_version",
+    "sensor.minecraft_server_protocol_version",
     "sensor.minecraft_server_map_name",
     "sensor.minecraft_server_game_mode",
+    "sensor.minecraft_server_edition",
 ]
 
 BEDROCK_SENSOR_ENTITIES_DISABLED_BY_DEFAULT: list[str] = [
@@ -48,6 +53,7 @@ BEDROCK_SENSOR_ENTITIES_DISABLED_BY_DEFAULT: list[str] = [
 ]
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("mock_config_entry", "server", "status_response", "entity_ids"),
     [
@@ -55,13 +61,13 @@ BEDROCK_SENSOR_ENTITIES_DISABLED_BY_DEFAULT: list[str] = [
             "java_mock_config_entry",
             JavaServer,
             TEST_JAVA_STATUS_RESPONSE,
-            JAVA_SENSOR_ENTITIES_ENABLED_BY_DEFAULT,
+            JAVA_SENSOR_ENTITIES,
         ),
         (
             "bedrock_mock_config_entry",
             BedrockServer,
             TEST_BEDROCK_STATUS_RESPONSE,
-            BEDROCK_SENSOR_ENTITIES_ENABLED_BY_DEFAULT,
+            BEDROCK_SENSOR_ENTITIES,
         ),
     ],
 )
@@ -133,6 +139,7 @@ async def test_sensor_disabled_by_default(
             assert not hass.states.get(entity_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("mock_config_entry", "server", "status_response", "entity_ids"),
     [
@@ -140,13 +147,13 @@ async def test_sensor_disabled_by_default(
             "java_mock_config_entry",
             JavaServer,
             TEST_JAVA_STATUS_RESPONSE,
-            JAVA_SENSOR_ENTITIES_ENABLED_BY_DEFAULT,
+            JAVA_SENSOR_ENTITIES,
         ),
         (
             "bedrock_mock_config_entry",
             BedrockServer,
             TEST_BEDROCK_STATUS_RESPONSE,
-            BEDROCK_SENSOR_ENTITIES_ENABLED_BY_DEFAULT,
+            BEDROCK_SENSOR_ENTITIES,
         ),
     ],
 )
@@ -180,6 +187,7 @@ async def test_sensor_update(
             assert hass.states.get(entity_id) == snapshot
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("mock_config_entry", "server", "status_response", "entity_ids"),
     [
@@ -187,13 +195,13 @@ async def test_sensor_update(
             "java_mock_config_entry",
             JavaServer,
             TEST_JAVA_STATUS_RESPONSE,
-            JAVA_SENSOR_ENTITIES_ENABLED_BY_DEFAULT,
+            JAVA_SENSOR_ENTITIES,
         ),
         (
             "bedrock_mock_config_entry",
             BedrockServer,
             TEST_BEDROCK_STATUS_RESPONSE,
-            BEDROCK_SENSOR_ENTITIES_ENABLED_BY_DEFAULT,
+            BEDROCK_SENSOR_ENTITIES,
         ),
     ],
 )

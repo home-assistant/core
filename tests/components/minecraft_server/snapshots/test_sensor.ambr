@@ -30,6 +30,20 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'friendly_name': 'Minecraft Server Players max',
+      'icon': 'mdi:account-multiple',
+      'unit_of_measurement': 'players',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minecraft_server_players_max',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_sensor[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server World message',
       'icon': 'mdi:minecraft',
     }),
@@ -40,7 +54,7 @@
     'state': 'Dummy MOTD',
   })
 # ---
-# name: test_sensor[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].3
+# name: test_sensor[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Version',
@@ -53,7 +67,20 @@
     'state': 'Dummy Version',
   })
 # ---
-# name: test_sensor[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].4
+# name: test_sensor[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].5
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Minecraft Server Protocol version',
+      'icon': 'mdi:numeric',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minecraft_server_protocol_version',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '123',
+  })
+# ---
+# name: test_sensor[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].6
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Map name',
@@ -66,7 +93,7 @@
     'state': 'Dummy Map Name',
   })
 # ---
-# name: test_sensor[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].5
+# name: test_sensor[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].7
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Game mode',
@@ -77,6 +104,19 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Game Mode',
+  })
+# ---
+# name: test_sensor[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].8
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Minecraft Server Edition',
+      'icon': 'mdi:minecraft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minecraft_server_edition',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MCPE',
   })
 # ---
 # name: test_sensor[java_mock_config_entry-JavaServer-status_response0-entity_ids0]
@@ -115,6 +155,20 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-status_response0-entity_ids0].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'friendly_name': 'Minecraft Server Players max',
+      'icon': 'mdi:account-multiple',
+      'unit_of_measurement': 'players',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minecraft_server_players_max',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_sensor[java_mock_config_entry-JavaServer-status_response0-entity_ids0].3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server World message',
       'icon': 'mdi:minecraft',
     }),
@@ -125,7 +179,7 @@
     'state': 'Dummy MOTD',
   })
 # ---
-# name: test_sensor[java_mock_config_entry-JavaServer-status_response0-entity_ids0].3
+# name: test_sensor[java_mock_config_entry-JavaServer-status_response0-entity_ids0].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Version',
@@ -136,6 +190,19 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Version',
+  })
+# ---
+# name: test_sensor[java_mock_config_entry-JavaServer-status_response0-entity_ids0].5
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Minecraft Server Protocol version',
+      'icon': 'mdi:numeric',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minecraft_server_protocol_version',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '123',
   })
 # ---
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1]
@@ -169,6 +236,20 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'friendly_name': 'Minecraft Server Players max',
+      'icon': 'mdi:account-multiple',
+      'unit_of_measurement': 'players',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minecraft_server_players_max',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server World message',
       'icon': 'mdi:minecraft',
     }),
@@ -179,7 +260,7 @@
     'state': 'Dummy MOTD',
   })
 # ---
-# name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].3
+# name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Version',
@@ -192,7 +273,20 @@
     'state': 'Dummy Version',
   })
 # ---
-# name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].4
+# name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].5
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Minecraft Server Protocol version',
+      'icon': 'mdi:numeric',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minecraft_server_protocol_version',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '123',
+  })
+# ---
+# name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].6
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Map name',
@@ -205,7 +299,7 @@
     'state': 'Dummy Map Name',
   })
 # ---
-# name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].5
+# name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].7
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Game mode',
@@ -216,6 +310,19 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Game Mode',
+  })
+# ---
+# name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-status_response1-entity_ids1].8
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Minecraft Server Edition',
+      'icon': 'mdi:minecraft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minecraft_server_edition',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MCPE',
   })
 # ---
 # name: test_sensor_update[java_mock_config_entry-JavaServer-status_response0-entity_ids0]
@@ -254,6 +361,20 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-status_response0-entity_ids0].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'friendly_name': 'Minecraft Server Players max',
+      'icon': 'mdi:account-multiple',
+      'unit_of_measurement': 'players',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minecraft_server_players_max',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_sensor_update[java_mock_config_entry-JavaServer-status_response0-entity_ids0].3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server World message',
       'icon': 'mdi:minecraft',
     }),
@@ -264,7 +385,7 @@
     'state': 'Dummy MOTD',
   })
 # ---
-# name: test_sensor_update[java_mock_config_entry-JavaServer-status_response0-entity_ids0].3
+# name: test_sensor_update[java_mock_config_entry-JavaServer-status_response0-entity_ids0].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Version',
@@ -275,5 +396,18 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Version',
+  })
+# ---
+# name: test_sensor_update[java_mock_config_entry-JavaServer-status_response0-entity_ids0].5
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Minecraft Server Protocol version',
+      'icon': 'mdi:numeric',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minecraft_server_protocol_version',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '123',
   })
 # ---
