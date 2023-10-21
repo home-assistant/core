@@ -4,7 +4,7 @@ from enum import StrEnum
 DOMAIN = "wallbox"
 UPDATE_INTERVAL = 30
 
-BIDIRECTIONAL_MODEL_PREFIXES = ["QSX"]
+BIDIRECTIONAL_MODEL_PREFIXES = ["QS"]
 
 CODE_KEY = "code"
 CONF_STATION = "station"
@@ -56,37 +56,3 @@ class ChargerStatus(StrEnum):
     WAITING_MID_SAFETY = "Waiting MID safety margin exceeded"
     WAITING_IN_QUEUE_ECO_SMART = "Waiting in queue by Eco-Smart"
     UNKNOWN = "Unknown"
-
-
-# Translation of StatusId based on Wallbox portal code:
-# https://my.wallbox.com/src/utilities/charger/chargerStatuses.js
-CHARGER_STATUS: dict[int, ChargerStatus] = {
-    0: ChargerStatus.DISCONNECTED,
-    14: ChargerStatus.ERROR,
-    15: ChargerStatus.ERROR,
-    161: ChargerStatus.READY,
-    162: ChargerStatus.READY,
-    163: ChargerStatus.DISCONNECTED,
-    164: ChargerStatus.WAITING,
-    165: ChargerStatus.LOCKED,
-    166: ChargerStatus.UPDATING,
-    177: ChargerStatus.SCHEDULED,
-    178: ChargerStatus.PAUSED,
-    179: ChargerStatus.SCHEDULED,
-    180: ChargerStatus.WAITING_FOR_CAR,
-    181: ChargerStatus.WAITING_FOR_CAR,
-    182: ChargerStatus.PAUSED,
-    183: ChargerStatus.WAITING_IN_QUEUE_POWER_SHARING,
-    184: ChargerStatus.WAITING_IN_QUEUE_POWER_SHARING,
-    185: ChargerStatus.WAITING_IN_QUEUE_POWER_BOOST,
-    186: ChargerStatus.WAITING_IN_QUEUE_POWER_BOOST,
-    187: ChargerStatus.WAITING_MID_FAILED,
-    188: ChargerStatus.WAITING_MID_SAFETY,
-    189: ChargerStatus.WAITING_IN_QUEUE_ECO_SMART,
-    193: ChargerStatus.CHARGING,
-    194: ChargerStatus.CHARGING,
-    195: ChargerStatus.CHARGING,
-    196: ChargerStatus.DISCHARGING,
-    209: ChargerStatus.LOCKED,
-    210: ChargerStatus.LOCKED_CAR_CONNECTED,
-}

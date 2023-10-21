@@ -240,6 +240,7 @@ async def async_setup_entry(
             SERVICE_CREATE_EVENT,
             CREATE_EVENT_SCHEMA,
             async_create_event,
+            required_features=CalendarEntityFeature.CREATE_EVENT,
         )
 
 

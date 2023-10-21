@@ -204,7 +204,7 @@ class Config:
         ):
             return self.entities[state.entity_id][CONF_ENTITY_NAME]
 
-        return state.attributes.get(ATTR_EMULATED_HUE_NAME, state.name)
+        return state.attributes.get(ATTR_EMULATED_HUE_NAME, state.name)  # type: ignore[no-any-return]
 
     @cache  # pylint: disable=method-cache-max-size-none
     def get_exposed_states(self) -> list[State]:
