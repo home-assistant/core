@@ -70,7 +70,7 @@ PyMetno==0.11.0
 PyMicroBot==0.0.9
 
 # homeassistant.components.nina
-PyNINA==0.3.2
+PyNINA==0.3.3
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -170,7 +170,7 @@ aioairq==0.2.4
 aioairzone-cloud==0.2.3
 
 # homeassistant.components.airzone
-aioairzone==0.6.8
+aioairzone==0.6.9
 
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
@@ -212,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==17.0.1
+aioesphomeapi==18.0.7
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -347,7 +347,7 @@ aiovlc==0.1.0
 aiovodafone==0.3.1
 
 # homeassistant.components.waqi
-aiowaqi==2.0.0
+aiowaqi==2.1.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -436,7 +436,7 @@ base36==0.1.1
 beautifulsoup4==4.12.2
 
 # homeassistant.components.zha
-bellows==0.36.5
+bellows==0.36.7
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.1
@@ -467,7 +467,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.12.0
+bluetooth-data-tools==1.13.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -528,7 +528,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==2.11.1
+dbus-fast==2.12.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -1061,7 +1061,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.35
+opower==0.0.36
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1171,7 +1171,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2023.10.0
+pyDuotecno==2023.10.1
 
 # homeassistant.components.eight_sleep
 pyEight==0.3.2
@@ -1759,7 +1759,7 @@ samsungtvws[async,encrypted]==2.6.0
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.9.2
+screenlogicpy==0.9.3
 
 # homeassistant.components.backup
 securetar==2023.3.0
@@ -1966,10 +1966,10 @@ uvcclient==0.11.0
 vallox-websocket-api==3.3.0
 
 # homeassistant.components.rdw
-vehicle==1.0.1
+vehicle==2.0.0
 
 # homeassistant.components.velbus
-velbus-aio==2023.2.0
+velbus-aio==2023.10.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2081,7 +2081,7 @@ zeroconf==0.115.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.104
+zha-quirks==0.0.105
 
 # homeassistant.components.zha
 zigpy-deconz==0.21.1
@@ -2093,7 +2093,7 @@ zigpy-xbee==0.18.3
 zigpy-zigate==0.11.0
 
 # homeassistant.components.zha
-zigpy-znp==0.11.5
+zigpy-znp==0.11.6
 
 # homeassistant.components.zha
 zigpy==0.57.2

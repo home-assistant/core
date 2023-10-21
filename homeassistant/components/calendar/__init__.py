@@ -483,7 +483,7 @@ class CalendarEntity(Entity):
 
     _entity_component_unrecorded_attributes = frozenset({"description"})
 
-    _alarm_unsubs: list[CALLBACK_TYPE] = []
+    _alarm_unsubs: list[CALLBACK_TYPE] | None = None
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -528,6 +528,8 @@ class CalendarEntity(Entity):
         the current or upcoming event.
         """
         super().async_write_ha_state()
+        if self._alarm_unsubs is None:
+            self._alarm_unsubs = []
         _LOGGER.debug(
             "Clearing %s alarms (%s)", self.entity_id, len(self._alarm_unsubs)
         )
@@ -571,9 +573,9 @@ class CalendarEntity(Entity):
 
         To be extended by integrations.
         """
-        for unsub in self._alarm_unsubs:
+        for unsub in self._alarm_unsubs or ():
             unsub()
-        self._alarm_unsubs.clear()
+        self._alarm_unsubs = None
 
     async def async_get_events(
         self,
