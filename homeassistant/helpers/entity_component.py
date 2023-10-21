@@ -240,7 +240,8 @@ class EntityComponent(Generic[_EntityT]):
                 self.hass, self._platforms.values(), func, call, required_features
             )
 
-            if result and len(result) > 1:
+            if result:
+                if len(result) > 1:
                     raise HomeAssistantError(
                         "Deprecated service call matched more than one entity"
                     )
@@ -266,7 +267,7 @@ class EntityComponent(Generic[_EntityT]):
 
         async def handle_service(
             call: ServiceCall,
-        ) -> EntityServiceResponse:
+        ) -> EntityServiceResponse | None:
             """Handle the service."""
 
             return await service.entity_service_call(
