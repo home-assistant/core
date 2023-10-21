@@ -18,6 +18,7 @@ from homeassistant.components import (
     humidifier,
     input_boolean,
     input_number,
+    number,
     light,
     lock,
     person,
@@ -288,6 +289,30 @@ async def test_input_number(client, input_number_entities) -> None:
     assert (
         'input_number_state_celsius{domain="input_number",'
         'entity="input_number.target_temperature",'
+        'friendly_name="Target temperature"} 22.7' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_number(client, number_entities) -> None:
+    """Test prometheus metrics for number."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'number_state{domain="number",'
+        'entity="number.threshold",'
+        'friendly_name="Threshold"} 5.2' in body
+    )
+
+    assert (
+        'number_state{domain="number",'
+        'entity="number.brightness",'
+        'friendly_name="None"} 60.0' in body
+    )
+
+    assert (
+        'number_state_celsius{domain="number",'
+        'entity="number.target_temperature",'
         'friendly_name="Target temperature"} 22.7' in body
     )
 
