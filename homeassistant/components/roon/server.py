@@ -101,23 +101,6 @@ class RoonServer:
         self._roon_name_by_id[entity_id] = roon_name
         self._id_by_roon_name[roon_name] = entity_id
 
-    def add_player_volume_hook(self, entity_id, roon_name):
-        """Register a volume controller for this player in roon."""
-        if not self.volume_hook:
-            return
-
-        self.roonapi.register_volume_control(
-            entity_id,
-            roon_name,
-            self.roonapi_volume_callback,
-            0,
-            "incremental",
-            0,
-            0,
-            0,
-            False,
-        )
-
     def roon_name(self, entity_id):
         """Get the name of the roon player from entity_id."""
         return self._roon_name_by_id.get(entity_id)

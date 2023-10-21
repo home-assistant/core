@@ -145,7 +145,6 @@ class RoonDevice(MediaPlayerEntity):
             )
         )
         self._server.add_player_id(self.entity_id, self.name)
-        self._server.add_player_volume_hook(self.entity_id, self.name)
 
     @callback
     def async_update_callback(self, player_data):
