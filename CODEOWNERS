@@ -949,6 +949,8 @@ build.json @home-assistant/supervisor
 /tests/components/picnic/ @corneyl
 /homeassistant/components/pilight/ @trekky12
 /tests/components/pilight/ @trekky12
+/homeassistant/components/ping/ @jpbede
+/tests/components/ping/ @jpbede
 /homeassistant/components/plaato/ @JohNan
 /tests/components/plaato/ @JohNan
 /homeassistant/components/plex/ @jjlawren

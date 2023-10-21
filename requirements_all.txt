@@ -43,7 +43,7 @@ Mastodon.py==1.5.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==10.0.1
+Pillow==10.1.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.4
@@ -255,7 +255,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.0.6
+aiohomekit==3.0.7
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -435,7 +435,7 @@ apcaccess==0.0.13
 apple_weatherkit==1.0.4
 
 # homeassistant.components.apprise
-apprise==1.5.0
+apprise==1.6.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -524,7 +524,7 @@ beautifulsoup4==4.12.2
 bellows==0.36.7
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected==0.14.1
+bimmer-connected==0.14.2
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -1486,7 +1486,7 @@ proxmoxer==2.0.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.5
+psutil==5.9.6
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==23.5.2
@@ -1691,7 +1691,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.12.0
+pyenphase==1.13.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -2615,7 +2615,7 @@ ttls==1.5.1
 tuya-iot-py-sdk==0.6.6
 
 # homeassistant.components.twentemilieu
-twentemilieu==1.0.0
+twentemilieu==2.0.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -2720,7 +2720,7 @@ wiffi==1.1.2
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wled
-wled==0.16.0
+wled==0.17.0
 
 # homeassistant.components.wolflink
 wolf-smartset==0.1.11
