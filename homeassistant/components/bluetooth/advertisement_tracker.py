@@ -66,9 +66,13 @@ class AdvertisementTracker:
     def async_remove_address(self, address: str) -> None:
         """Remove the tracker."""
         self.intervals.pop(address, None)
-        self.fallback_intervals.pop(address, None)
         self.sources.pop(address, None)
         self._timings.pop(address, None)
+
+    @callback
+    def async_remove_fallback_interval(self, address: str) -> None:
+        """Remove fallback interval."""
+        self.fallback_intervals.pop(address, None)
 
     @callback
     def async_remove_source(self, source: str) -> None:
