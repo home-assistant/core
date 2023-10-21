@@ -29,7 +29,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -276,7 +276,8 @@ def async_handle_schema_error(
 async def _async_discover(
     hass: HomeAssistant,
     domain: str,
-    async_setup: partial[Coroutine[Any, Any, None]],
+    setup: partial[CALLBACK_TYPE] | None,
+    async_setup: partial[Coroutine[Any, Any, None]] | None,
     discovery_payload: MQTTDiscoveryPayload,
 ) -> None:
     """Discover and add an MQTT entity, automation or tag."""
@@ -292,7 +293,10 @@ async def _async_discover(
         return
     discovery_data = discovery_payload.discovery_data
     try:
-        await async_setup(discovery_payload)
+        if setup is not None:
+            setup(discovery_payload)
+        if async_setup is not None:
+            await async_setup(discovery_payload)
     except vol.Invalid as err:
         discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
         clear_discovery_hash(hass, discovery_hash)
@@ -326,7 +330,7 @@ async def async_setup_non_entity_entry_helper(
             hass,
             MQTT_DISCOVERY_NEW.format(domain, "mqtt"),
             functools.partial(
-                _async_discover, hass, domain, async_setup_from_discovery
+                _async_discover, hass, domain, None, async_setup_from_discovery
             ),
         )
     )
@@ -345,7 +349,8 @@ async def async_setup_entity_entry_helper(
     """Set up entity creation dynamically through MQTT discovery."""
     mqtt_data = get_mqtt_data(hass)
 
-    async def async_setup_from_discovery(
+    @callback
+    def async_setup_from_discovery(
         discovery_payload: MQTTDiscoveryPayload,
     ) -> None:
         """Set up an MQTT entity from discovery."""
@@ -364,7 +369,7 @@ async def async_setup_entity_entry_helper(
             hass,
             MQTT_DISCOVERY_NEW.format(domain, "mqtt"),
             functools.partial(
-                _async_discover, hass, domain, async_setup_from_discovery
+                _async_discover, hass, domain, async_setup_from_discovery, None
             ),
         )
     )
