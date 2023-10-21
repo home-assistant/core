@@ -432,15 +432,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ]
             await asyncio.gather(*tasks)
 
-            await asyncio.gather(
-                *(
-                    [
-                        mqtt_data.reload_handlers[component]()
-                        for component in RELOADABLE_PLATFORMS
-                        if component in mqtt_data.reload_handlers
-                    ]
-                )
-            )
+            for _, component in mqtt_data.reload_handlers.items():
+                component()
 
             # Fire event
             hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)

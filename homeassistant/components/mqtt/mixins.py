@@ -369,7 +369,8 @@ async def async_setup_entity_entry_helper(
         )
     )
 
-    async def _async_setup_entities() -> None:
+    @callback
+    def _async_setup_entities() -> None:
         """Set up MQTT items from configuration.yaml."""
         nonlocal entity_class
         mqtt_data = get_mqtt_data(hass)
@@ -433,7 +434,7 @@ async def async_setup_entity_entry_helper(
     mqtt_data.reload_schema[domain] = platform_schema_modern
     # discover manual configured MQTT items
     mqtt_data.reload_handlers[domain] = _async_setup_entities
-    await _async_setup_entities()
+    _async_setup_entities()
 
 
 def init_entity_id_from_config(
