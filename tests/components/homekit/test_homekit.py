@@ -841,6 +841,7 @@ async def test_homekit_start_with_a_device(
     await async_init_entry(hass, entry)
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE, None, devices=[device_id])
     homekit.driver = hk_driver
+    homekit.aid_storage = MagicMock()
 
     with patch(f"{PATH_HOMEKIT}.get_accessory", side_effect=Exception), patch(
         f"{PATH_HOMEKIT}.async_show_setup_message"
@@ -868,6 +869,7 @@ async def test_homekit_stop(hass: HomeAssistant) -> None:
     homekit.driver.async_stop = AsyncMock()
     homekit.bridge = Mock()
     homekit.bridge.accessories = {}
+    homekit.aid_storage = MagicMock()
 
     assert homekit.status == STATUS_READY
     await homekit.async_stop()

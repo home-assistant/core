@@ -139,7 +139,7 @@ CONFIG_DEFAULTS = {
 
 
 @TYPES.register("Camera")
-class Camera(HomeAccessory, PyhapCamera):
+class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
     """Generate a Camera accessory."""
 
     def __init__(
@@ -337,7 +337,8 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def _async_get_stream_source(self) -> str | None:
         """Find the camera stream source url."""
-        if stream_source := self.config.get(CONF_STREAM_SOURCE):
+        stream_source: str | None = self.config.get(CONF_STREAM_SOURCE)
+        if stream_source:
             return stream_source
         try:
             stream_source = await camera.async_get_stream_source(
@@ -419,7 +420,7 @@ class Camera(HomeAccessory, PyhapCamera):
 
         stderr_reader = await stream.get_reader(source=FFMPEG_STDERR)
 
-        async def watch_session(_):
+        async def watch_session(_: Any) -> None:
             await self._async_ffmpeg_watch(session_info["id"])
 
         session_info[FFMPEG_LOGGER] = asyncio.create_task(
