@@ -1041,6 +1041,7 @@ class AqaraSmokeDensityDbm(Sensor):
     _attr_suggested_display_precision: int = 3
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnumSensor(Sensor):
     """Sensor with value from enum."""
 
@@ -1054,6 +1055,7 @@ class EnumSensor(Sensor):
         return self._enum(value).name
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class BitMapSensor(Sensor):
     """A sensor with only state attributes.
 
