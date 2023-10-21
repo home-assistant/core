@@ -24,7 +24,6 @@ from .coordinator import ComelitSerialBridge
 SENSOR_TYPES: Final = (
     SensorEntityDescription(
         key="power",
-        translation_key="power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -54,7 +53,6 @@ class ComelitSensorEntity(CoordinatorEntity[ComelitSerialBridge], SensorEntity):
     """Sensor device."""
 
     _attr_has_entity_name = True
-    _attr_name = None
     entity_description: SensorEntityDescription
 
     def __init__(

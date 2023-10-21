@@ -28,10 +28,5 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
-  },
-  "entity": {
-    "sensor": {
-      "power": { "name": "Power" }
-    }
   }
 }
