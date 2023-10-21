@@ -261,7 +261,9 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_LIST_EVENTS: Final = "list_events"
+LEGACY_SERVICE_LIST_EVENTS: Final = "list_events"
+"""Deprecated: please use SERVICE_LIST_EVENTS."""
+SERVICE_LIST_EVENTS: Final = "events"
 SERVICE_LIST_EVENTS_SCHEMA: Final = vol.All(
     cv.has_at_least_one_key(EVENT_END_DATETIME, EVENT_DURATION),
     cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
@@ -301,9 +303,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         required_features=[CalendarEntityFeature.CREATE_EVENT],
     )
     component.async_register_legacy_entity_service(
-        SERVICE_LIST_EVENTS,
+        LEGACY_SERVICE_LIST_EVENTS,
         SERVICE_LIST_EVENTS_SCHEMA,
         async_list_events_service,
+        supports_response=SupportsResponse.ONLY,
+    )
+    component.async_register_entity_service(
+        SERVICE_LIST_EVENTS,
+        SERVICE_LIST_EVENTS_SCHEMA,
+        async_events_service,
         supports_response=SupportsResponse.ONLY,
     )
     await component.async_setup(config)
@@ -849,6 +857,22 @@ async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
 
 
 async def async_list_events_service(
+    calendar: CalendarEntity, service_call: ServiceCall
+) -> ServiceResponse:
+    """List events on a calendar during a time range.
+
+    Deprecated: please use async_events_service.
+    """
+    _LOGGER.warning(
+        "Detected use of service 'calendar.list_events'. "
+        "This is deprecated and will stop working in Home Assistant 2024.6. "
+        "Use calendar.events instead which supports multiple entities",
+    )
+
+    return await async_events_service(calendar, service_call)
+
+
+async def async_events_service(
     calendar: CalendarEntity, service_call: ServiceCall
 ) -> ServiceResponse:
     """List events on a calendar during a time range."""

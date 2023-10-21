@@ -12,7 +12,11 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.calendar import DOMAIN, SERVICE_LIST_EVENTS
+from homeassistant.components.calendar import (
+    DOMAIN,
+    LEGACY_SERVICE_LIST_EVENTS,
+    SERVICE_LIST_EVENTS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
@@ -390,6 +394,41 @@ async def test_create_event_service_invalid_params(
 
 @freeze_time("2023-06-22 10:30:00+00:00")
 @pytest.mark.parametrize(
+    ("service", "expected"),
+    [
+        (
+            LEGACY_SERVICE_LIST_EVENTS,
+            {
+                "events": [
+                    {
+                        "start": "2023-06-22T05:00:00-06:00",
+                        "end": "2023-06-22T06:00:00-06:00",
+                        "summary": "Future Event",
+                        "description": "Future Description",
+                        "location": "Future Location",
+                    }
+                ]
+            },
+        ),
+        (
+            SERVICE_LIST_EVENTS,
+            {
+                "calendar.calendar_1": {
+                    "events": [
+                        {
+                            "start": "2023-06-22T05:00:00-06:00",
+                            "end": "2023-06-22T06:00:00-06:00",
+                            "summary": "Future Event",
+                            "description": "Future Description",
+                            "location": "Future Location",
+                        }
+                    ]
+                }
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     ("start_time", "end_time"),
     [
         ("2023-06-22T04:30:00-06:00", "2023-06-22T06:30:00-06:00"),
@@ -402,6 +441,8 @@ async def test_list_events_service(
     set_time_zone: None,
     start_time: str,
     end_time: str,
+    service: str,
+    expected: dict[str, Any],
 ) -> None:
     """Test listing events from the service call using exlplicit start and end time.
 
@@ -414,8 +455,9 @@ async def test_list_events_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_LIST_EVENTS,
-        {
+        service,
+        target={"entity_id": ["calendar.calendar_1"]},
+        service_data={
             "entity_id": "calendar.calendar_1",
             "start_date_time": start_time,
             "end_date_time": end_time,
@@ -423,19 +465,16 @@ async def test_list_events_service(
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "events": [
-            {
-                "start": "2023-06-22T05:00:00-06:00",
-                "end": "2023-06-22T06:00:00-06:00",
-                "summary": "Future Event",
-                "description": "Future Description",
-                "location": "Future Location",
-            }
-        ]
-    }
+    assert response == expected
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        (LEGACY_SERVICE_LIST_EVENTS),
+        (SERVICE_LIST_EVENTS),
+    ],
+)
 @pytest.mark.parametrize(
     ("entity", "duration"),
     [
@@ -452,6 +491,7 @@ async def test_list_events_service_duration(
     hass: HomeAssistant,
     entity: str,
     duration: str,
+    service: str,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test listing events using a time duration."""
@@ -460,7 +500,7 @@ async def test_list_events_service_duration(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_LIST_EVENTS,
+        service,
         {
             "entity_id": entity,
             "duration": duration,
