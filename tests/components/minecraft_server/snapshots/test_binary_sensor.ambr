@@ -55,31 +55,3 @@
     'state': 'on',
   })
 # ---
-# name: test_sensor_update_failure[bedrock_mock_config_entry-BedrockServer-status_response1]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.minecraft_server_status',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_sensor_update_failure[java_mock_config_entry-JavaServer-status_response0]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.minecraft_server_status',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
