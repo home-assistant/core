@@ -18,7 +18,7 @@ if typing.TYPE_CHECKING:
 MANUFACTURER = "mock manufacturer"
 MODEL = "mock model"
 QUIRK_CLASS = "mock.test.quirk.class"
-QUIRK_ID = "quirk.id"
+QUIRK_ID = "quirk_id"
 
 
 @pytest.fixture
