@@ -119,7 +119,7 @@ def serialize_entity_description(description: EntityDescription) -> dict[str, An
     }
 
 
-@dataclasses.dataclass(slots=True, frozen=True)
+@dataclasses.dataclass(slots=True, frozen=False)
 class PassiveBluetoothDataUpdate(Generic[_T]):
     """Generic bluetooth data."""
 
