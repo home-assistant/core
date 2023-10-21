@@ -218,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.0.7
+aioesphomeapi==18.0.8
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -399,9 +399,6 @@ apcaccess==0.0.13
 
 # homeassistant.components.weatherkit
 apple_weatherkit==1.0.4
-
-# homeassistant.components.apprise
-apprise==1.6.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
