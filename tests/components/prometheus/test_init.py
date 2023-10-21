@@ -18,9 +18,9 @@ from homeassistant.components import (
     humidifier,
     input_boolean,
     input_number,
-    number,
     light,
     lock,
+    number,
     person,
     prometheus,
     sensor,
@@ -1402,6 +1402,46 @@ async def input_number_fixture(
     )
     set_state_with_entry(hass, input_number_3, 22.7)
     data["input_number_3"] = input_number_3
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="number_entities")
+async def number_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate number entities."""
+    data = {}
+    number_1 = entity_registry.async_get_or_create(
+        domain=number.DOMAIN,
+        platform="test",
+        unique_id="number_1",
+        suggested_object_id="threshold",
+        original_name="Threshold",
+    )
+    set_state_with_entry(hass, number_1, 5.2)
+    data["number_1"] = number_1
+
+    number_2 = entity_registry.async_get_or_create(
+        domain=number.DOMAIN,
+        platform="test",
+        unique_id="number_2",
+        suggested_object_id="brightness",
+    )
+    set_state_with_entry(hass, number_2, 60)
+    data["number_2"] = number_2
+
+    number_3 = entity_registry.async_get_or_create(
+        domain=number.DOMAIN,
+        platform="test",
+        unique_id="number_3",
+        suggested_object_id="target_temperature",
+        original_name="Target temperature",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+    )
+    set_state_with_entry(hass, number_3, 22.7)
+    data["number_3"] = number_3
 
     await hass.async_block_till_done()
     return data
