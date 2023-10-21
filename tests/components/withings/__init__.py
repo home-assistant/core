@@ -51,7 +51,7 @@ async def setup_integration(
     if enable_webhooks:
         await async_process_ha_core_config(
             hass,
-            {"external_url": "https://example.local:8123"},
+            {"external_url": "https://example.com"},
         )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
