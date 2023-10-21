@@ -33,7 +33,7 @@
         "name": "Battery"
       },
       "battery_level": {
-        "name": "Battery Level"
+        "name": "Battery level"
       }
     }
   },
