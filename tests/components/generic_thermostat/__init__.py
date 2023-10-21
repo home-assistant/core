@@ -1,1 +1,1 @@
-"""generic_thermostat tests."""
+"""Geneirc thermostat tests."""

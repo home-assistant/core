@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TOLERANCE = 0.3
 DEFAULT_NAME = "Generic Thermostat"
+DEFAULT_MIN_TEMP = 7
 
 CONF_NAME = "name"
 CONF_HEATER = "heater"

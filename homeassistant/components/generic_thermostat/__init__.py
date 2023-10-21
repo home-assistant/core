@@ -1,4 +1,4 @@
-"""The generic_thermostat component."""
+"""The Generic Thermostat component."""
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform

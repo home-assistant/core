@@ -10,8 +10,16 @@
         "data_description": {
           "heater": "Entity for heater switch, must be a toggle device. Becomes air conditioning switch when AC mode is set to true."
         }
-      },
-      "advanced_settings": {
+      }
+    },
+    "error": {
+      "invalid_device_class_temperature": "The selected target sensor is not a temperature sensor."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "These values allow tweaking the thermostat. Please refer to the documentation if a field is unclear.",
         "data": {
           "ac_mode": "AC mode",
           "min_cycle_duration": "Minimum cycle duration",
@@ -41,9 +49,6 @@
           "keep_alive": "Set a keep-alive interval. If set, the switch specified in the heater option will be triggered every time the interval elapses. Use with heaters and A/C units that shut off if they don’t receive a signal from their remote for a while. Use also with switches that might lose state. The keep-alive call is done with the current valid climate integration state (either on or off). When keep_alive is set the min_cycle_duration option will be ignored."
         }
       }
-    },
-    "error": {
-      "invalid_device_class_temperature": "The selected target sensor is not a temperature sensor."
     }
   },
   "services": {
