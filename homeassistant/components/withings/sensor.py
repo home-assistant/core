@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from aiowithings import Goals, MeasurementType, SleepSummary
+from aiowithings import Activity, Goals, MeasurementType, SleepSummary
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,6 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
+    ACTIVITY_COORDINATOR,
     DOMAIN,
     GOALS_COORDINATOR,
     MEASUREMENT_COORDINATOR,
@@ -37,6 +38,7 @@ from .const import (
     UOM_MMHG,
 )
 from .coordinator import (
+    WithingsActivityDataUpdateCoordinator,
     WithingsDataUpdateCoordinator,
     WithingsGoalsDataUpdateCoordinator,
     WithingsMeasurementDataUpdateCoordinator,
@@ -398,6 +400,31 @@ SLEEP_SENSORS = [
 ]
 
 
+@dataclass
+class WithingsActivitySensorEntityDescriptionMixin:
+    """Mixin for describing withings data."""
+
+    value_fn: Callable[[Activity], StateType]
+
+
+@dataclass
+class WithingsActivitySensorEntityDescription(
+    SensorEntityDescription, WithingsActivitySensorEntityDescriptionMixin
+):
+    """Immutable class for describing withings data."""
+
+
+ACTIVITY_SENSORS = [
+    WithingsActivitySensorEntityDescription(
+        key="activity_steps",
+        value_fn=lambda activity: activity.steps,
+        translation_key="activity_steps",
+        native_unit_of_measurement="Steps",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+]
+
+
 STEP_GOAL = "steps"
 SLEEP_GOAL = "sleep"
 WEIGHT_GOAL = "weight"
@@ -516,6 +543,15 @@ async def async_setup_entry(
 
     goals_coordinator.async_add_listener(_async_goals_listener)
 
+    activity_coordinator: WithingsActivityDataUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ][ACTIVITY_COORDINATOR]
+
+    entities.extend(
+        WithingsActivitySensor(activity_coordinator, attribute)
+        for attribute in ACTIVITY_SENSORS
+    )
+
     sleep_coordinator: WithingsSleepDataUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ][SLEEP_COORDINATOR]
@@ -591,3 +627,22 @@ class WithingsGoalsSensor(WithingsSensor):
         """Return the state of the entity."""
         assert self.coordinator.data
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class WithingsActivitySensor(WithingsSensor):
+    """Implementation of a Withings activity sensor."""
+
+    coordinator: WithingsActivityDataUpdateCoordinator
+
+    entity_description: WithingsActivitySensorEntityDescription
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        assert self.coordinator.data
+        return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        return super().available and self.coordinator.data is not None

@@ -17,6 +17,7 @@ MEASUREMENT_COORDINATOR = "measurement_coordinator"
 SLEEP_COORDINATOR = "sleep_coordinator"
 BED_PRESENCE_COORDINATOR = "bed_presence_coordinator"
 GOALS_COORDINATOR = "goals_coordinator"
+ACTIVITY_COORDINATOR = "activity_coordinator"
 
 LOGGER = logging.getLogger(__package__)
 

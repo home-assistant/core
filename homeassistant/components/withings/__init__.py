@@ -51,6 +51,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ACTIVITY_COORDINATOR,
     BED_PRESENCE_COORDINATOR,
     CONF_PROFILES,
     CONF_USE_WEBHOOK,
@@ -62,6 +63,7 @@ from .const import (
     SLEEP_COORDINATOR,
 )
 from .coordinator import (
+    WithingsActivityDataUpdateCoordinator,
     WithingsBedPresenceDataUpdateCoordinator,
     WithingsDataUpdateCoordinator,
     WithingsGoalsDataUpdateCoordinator,
@@ -163,6 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, client
         ),
         GOALS_COORDINATOR: WithingsGoalsDataUpdateCoordinator(hass, client),
+        ACTIVITY_COORDINATOR: WithingsActivityDataUpdateCoordinator(hass, client),
     }
 
     for coordinator in coordinators.values():

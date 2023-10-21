@@ -1,9 +1,10 @@
 """Withings coordinator."""
 from abc import abstractmethod
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import TypeVar
 
 from aiowithings import (
+    Activity,
     Goals,
     MeasurementType,
     NotificationCategory,
@@ -81,7 +82,6 @@ class WithingsMeasurementDataUpdateCoordinator(
         super().__init__(hass, client)
         self.notification_categories = {
             NotificationCategory.WEIGHT,
-            NotificationCategory.ACTIVITY,
             NotificationCategory.PRESSURE,
         }
         self._previous_data: dict[MeasurementType, float] = {}
@@ -185,3 +185,41 @@ class WithingsGoalsDataUpdateCoordinator(WithingsDataUpdateCoordinator[Goals]):
     async def _internal_update_data(self) -> Goals:
         """Retrieve goals data."""
         return await self._client.get_goals()
+
+
+class WithingsActivityDataUpdateCoordinator(
+    WithingsDataUpdateCoordinator[Activity | None]
+):
+    """Withings activity coordinator."""
+
+    _last_activity_date: date | None = None
+    _previous_data: Activity | None = None
+
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotificationCategory.ACTIVITY,
+        }
+
+    async def _internal_update_data(self) -> Activity | None:
+        """Retrieve latest activity."""
+        if self._last_valid_update is None:
+            now = dt_util.utcnow()
+            startdate = now - timedelta(days=14)
+            activities = await self._client.get_activities_in_period(startdate, now)
+        else:
+            activities = await self._client.get_activities_since(
+                self._last_valid_update
+            )
+
+        if activities:
+            latest_activity = max(activities, key=lambda activity: activity.date)
+            if (
+                self._last_activity_date is None
+                or latest_activity.date >= self._last_activity_date
+            ):
+                self._last_activity_date = latest_activity.date
+                self._previous_data = latest_activity
+                return latest_activity
+        return self._previous_data
