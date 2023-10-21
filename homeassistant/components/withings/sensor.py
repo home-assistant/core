@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from aiowithings import MeasurementType, SleepSummary
+from aiowithings import Goals, MeasurementType, SleepSummary
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -27,6 +27,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import (
     DOMAIN,
+    GOALS_COORDINATOR,
     MEASUREMENT_COORDINATOR,
     SCORE_POINTS,
     SLEEP_COORDINATOR,
@@ -37,6 +38,7 @@ from .const import (
 )
 from .coordinator import (
     WithingsDataUpdateCoordinator,
+    WithingsGoalsDataUpdateCoordinator,
     WithingsMeasurementDataUpdateCoordinator,
     WithingsSleepDataUpdateCoordinator,
 )
@@ -192,6 +194,38 @@ MEASUREMENT_SENSORS: dict[
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.VO2: WithingsMeasurementSensorEntityDescription(
+        key="vo2_max",
+        measurement_type=MeasurementType.VO2,
+        translation_key="vo2_max",
+        native_unit_of_measurement="ml/min/kg",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.EXTRACELLULAR_WATER: WithingsMeasurementSensorEntityDescription(
+        key="extracellular_water",
+        measurement_type=MeasurementType.EXTRACELLULAR_WATER,
+        translation_key="extracellular_water",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.INTRACELLULAR_WATER: WithingsMeasurementSensorEntityDescription(
+        key="intracellular_water",
+        measurement_type=MeasurementType.INTRACELLULAR_WATER,
+        translation_key="intracellular_water",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.VASCULAR_AGE: WithingsMeasurementSensorEntityDescription(
+        key="vascular_age",
+        measurement_type=MeasurementType.VASCULAR_AGE,
+        translation_key="vascular_age",
+        entity_registry_enabled_default=False,
     ),
 }
 
@@ -364,6 +398,64 @@ SLEEP_SENSORS = [
 ]
 
 
+STEP_GOAL = "steps"
+SLEEP_GOAL = "sleep"
+WEIGHT_GOAL = "weight"
+
+
+@dataclass
+class WithingsGoalsSensorEntityDescriptionMixin:
+    """Mixin for describing withings data."""
+
+    value_fn: Callable[[Goals], StateType]
+
+
+@dataclass
+class WithingsGoalsSensorEntityDescription(
+    SensorEntityDescription, WithingsGoalsSensorEntityDescriptionMixin
+):
+    """Immutable class for describing withings data."""
+
+
+GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
+    STEP_GOAL: WithingsGoalsSensorEntityDescription(
+        key="step_goal",
+        value_fn=lambda goals: goals.steps,
+        icon="mdi:shoe-print",
+        translation_key="step_goal",
+        native_unit_of_measurement="Steps",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SLEEP_GOAL: WithingsGoalsSensorEntityDescription(
+        key="sleep_goal",
+        value_fn=lambda goals: goals.sleep,
+        icon="mdi:bed-clock",
+        translation_key="sleep_goal",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WEIGHT_GOAL: WithingsGoalsSensorEntityDescription(
+        key="weight_goal",
+        value_fn=lambda goals: goals.weight,
+        translation_key="weight_goal",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+}
+
+
+def get_current_goals(goals: Goals) -> set[str]:
+    """Return a list of present goals."""
+    result = set()
+    for goal in (STEP_GOAL, SLEEP_GOAL, WEIGHT_GOAL):
+        if getattr(goals, goal):
+            result.add(goal)
+    return result
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -374,8 +466,6 @@ async def async_setup_entry(
         DOMAIN
     ][entry.entry_id][MEASUREMENT_COORDINATOR]
 
-    current_measurement_types = set(measurement_coordinator.data.keys())
-
     entities: list[SensorEntity] = []
     entities.extend(
         WithingsMeasurementSensor(
@@ -385,9 +475,11 @@ async def async_setup_entry(
         if measurement_type in MEASUREMENT_SENSORS
     )
 
+    current_measurement_types = set(measurement_coordinator.data)
+
     def _async_measurement_listener() -> None:
         """Listen for new measurements and add sensors if they did not exist."""
-        received_measurement_types = set(measurement_coordinator.data.keys())
+        received_measurement_types = set(measurement_coordinator.data)
         new_measurement_types = received_measurement_types - current_measurement_types
         if new_measurement_types:
             current_measurement_types.update(new_measurement_types)
@@ -399,6 +491,31 @@ async def async_setup_entry(
             )
 
     measurement_coordinator.async_add_listener(_async_measurement_listener)
+
+    goals_coordinator: WithingsGoalsDataUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ][GOALS_COORDINATOR]
+
+    current_goals = get_current_goals(goals_coordinator.data)
+
+    entities.extend(
+        WithingsGoalsSensor(goals_coordinator, GOALS_SENSORS[goal])
+        for goal in current_goals
+    )
+
+    def _async_goals_listener() -> None:
+        """Listen for new goals and add sensors if they did not exist."""
+        received_goals = get_current_goals(goals_coordinator.data)
+        new_goals = received_goals - current_goals
+        if new_goals:
+            current_goals.update(new_goals)
+            async_add_entities(
+                WithingsGoalsSensor(goals_coordinator, GOALS_SENSORS[goal])
+                for goal in new_goals
+            )
+
+    goals_coordinator.async_add_listener(_async_goals_listener)
+
     sleep_coordinator: WithingsSleepDataUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ][SLEEP_COORDINATOR]
@@ -460,3 +577,17 @@ class WithingsSleepSensor(WithingsSensor):
     def available(self) -> bool:
         """Return if the sensor is available."""
         return super().available and self.coordinator.data is not None
+
+
+class WithingsGoalsSensor(WithingsSensor):
+    """Implementation of a Withings goals sensor."""
+
+    coordinator: WithingsGoalsDataUpdateCoordinator
+
+    entity_description: WithingsGoalsSensorEntityDescription
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        assert self.coordinator.data
+        return self.entity_description.value_fn(self.coordinator.data)

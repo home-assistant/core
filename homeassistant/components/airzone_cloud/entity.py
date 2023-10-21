@@ -10,6 +10,7 @@ from aioairzone_cloud.const import (
     AZD_AVAILABLE,
     AZD_FIRMWARE,
     AZD_GROUPS,
+    AZD_INSTALLATIONS,
     AZD_NAME,
     AZD_SYSTEM_ID,
     AZD_SYSTEMS,
@@ -123,6 +124,48 @@ class AirzoneGroupEntity(AirzoneEntity):
         try:
             await self.coordinator.airzone.api_set_group_id_params(
                 self.group_id, params
+            )
+        except AirzoneCloudError as error:
+            raise HomeAssistantError(
+                f"Failed to set {self.name} params: {error}"
+            ) from error
+
+        self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
+
+
+class AirzoneInstallationEntity(AirzoneEntity):
+    """Define an Airzone Cloud Installation entity."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        inst_id: str,
+        inst_data: dict[str, Any],
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self.inst_id = inst_id
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, inst_id)},
+            manufacturer=MANUFACTURER,
+            name=inst_data[AZD_NAME],
+        )
+
+    def get_airzone_value(self, key: str) -> Any:
+        """Return Installation value by key."""
+        value = None
+        if inst := self.coordinator.data[AZD_INSTALLATIONS].get(self.inst_id):
+            value = inst.get(key)
+        return value
+
+    async def _async_update_params(self, params: dict[str, Any]) -> None:
+        """Send Installation parameters to Cloud API."""
+        _LOGGER.debug("installation=%s: update_params=%s", self.name, params)
+        try:
+            await self.coordinator.airzone.api_set_installation_id_params(
+                self.inst_id, params
             )
         except AirzoneCloudError as error:
             raise HomeAssistantError(
