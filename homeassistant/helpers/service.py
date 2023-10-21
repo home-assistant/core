@@ -897,7 +897,7 @@ async def entity_service_call(
 
     response_data: EntityServiceResponse = {}
     for entity, task in zip(entities, done):
-        response_data[entity.entity_id] = task.result()  # type: ignore[index]
+        response_data[entity.entity_id] = task.result()
 
     tasks: list[asyncio.Task[None]] = []
 

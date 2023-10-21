@@ -134,7 +134,7 @@ DOMAIN = "homeassistant"
 BLOCK_LOG_TIMEOUT = 60
 
 ServiceResponse = JsonObjectType | None
-EntityServiceResponse = dict[str, ServiceResponse] | None
+EntityServiceResponse = dict[str, ServiceResponse]
 
 
 class ConfigSource(enum.StrEnum):

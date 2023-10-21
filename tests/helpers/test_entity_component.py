@@ -572,7 +572,7 @@ async def test_register_entity_service_response_data_multiple_matches(
     async def generate_response(
         target: MockEntity, call: ServiceCall
     ) -> ServiceResponse:
-        return {"response-key": "response-value"}
+        return {"response-key": f"response-value-{target.entity_id}"}
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
@@ -594,8 +594,8 @@ async def test_register_entity_service_response_data_multiple_matches(
         return_response=True,
     )
     assert response_data == {
-        f"{DOMAIN}.entity1": {"response-key": "response-value"},
-        f"{DOMAIN}.entity2": {"response-key": "response-value"},
+        f"{DOMAIN}.entity1": {"response-key": f"response-value-{DOMAIN}.entity1"},
+        f"{DOMAIN}.entity2": {"response-key": f"response-value-{DOMAIN}.entity2"},
     }
 
 

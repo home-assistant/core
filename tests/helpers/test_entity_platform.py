@@ -1542,7 +1542,7 @@ async def test_register_entity_service_response_data_multiple_matches(
         target: MockEntity, call: ServiceCall
     ) -> ServiceResponse:
         assert call.return_response
-        return {"response-key": "response-value"}
+        return {"response-key": f"response-value-{target.entity_id}"}
 
     entity_platform = MockEntityPlatform(
         hass, domain="mock_integration", platform_name="mock_platform", platform=None
@@ -1567,8 +1567,12 @@ async def test_register_entity_service_response_data_multiple_matches(
         return_response=True,
     )
     assert response_data == {
-        "mock_integration.entity1": {"response-key": "response-value"},
-        "mock_integration.entity2": {"response-key": "response-value"},
+        "mock_integration.entity1": {
+            "response-key": "response-value-mock_integration.entity1"
+        },
+        "mock_integration.entity2": {
+            "response-key": "response-value-mock_integration.entity2"
+        },
     }
 
 
