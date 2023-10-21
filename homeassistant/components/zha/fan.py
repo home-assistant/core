@@ -80,6 +80,7 @@ class BaseFan(FanEntity):
     """Base representation of a ZHA fan."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_translation_key: str = "fan"
 
     @property
     def preset_modes(self) -> list[str]:
@@ -133,8 +134,6 @@ class BaseFan(FanEntity):
 class ZhaFan(BaseFan, ZhaEntity):
     """Representation of a ZHA fan."""
 
-    _attr_name: str = "Fan"
-
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
@@ -180,6 +179,8 @@ class ZhaFan(BaseFan, ZhaEntity):
 @GROUP_MATCH()
 class FanGroup(BaseFan, ZhaGroupEntity):
     """Representation of a fan group."""
+
+    _attr_translation_key: str = "fan_group"
 
     def __init__(
         self, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
@@ -261,8 +262,6 @@ IKEA_PRESET_MODES = list(IKEA_NAME_TO_PRESET_MODE)
 )
 class IkeaFan(BaseFan, ZhaEntity):
     """Representation of a ZHA fan."""
-
-    _attr_name: str = "IKEA fan"
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Init this sensor."""
