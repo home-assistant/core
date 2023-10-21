@@ -280,7 +280,10 @@ async def _async_discover(
     async_setup: partial[Coroutine[Any, Any, None]] | None,
     discovery_payload: MQTTDiscoveryPayload,
 ) -> None:
-    """Discover and add an MQTT entity, automation or tag."""
+    """Discover and add an MQTT entity, automation or tag.
+
+    setup is to be run in the event loop when there is nothing to be awaited.
+    """
     if not mqtt_config_entry_enabled(hass):
         _LOGGER.warning(
             (
