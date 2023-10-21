@@ -2,7 +2,7 @@
 import asyncio
 import logging
 
-from roonapi import RoonApi, RoonDiscovery  # type: ignore[import]
+from roonapi import RoonApi, RoonDiscovery  # type: ignore[import-untyped]
 
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.helpers.dispatcher import async_dispatcher_send

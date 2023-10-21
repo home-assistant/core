@@ -4,8 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from roonapi import split_media_path  # type: ignore[import]
-import voluptuous as vol  # type: ignore[import]
+from roonapi import split_media_path  # type: ignore[import-untyped]
+import voluptuous as vol  # type: ignore[import-untyped]
 
 from homeassistant.components.media_player import (
     BrowseMedia,
