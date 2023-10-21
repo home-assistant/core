@@ -43,7 +43,7 @@ Mastodon.py==1.5.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==10.0.1
+Pillow==10.1.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.4
@@ -192,10 +192,10 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.2.4
+aioairzone-cloud==0.2.7
 
 # homeassistant.components.airzone
-aioairzone==0.6.8
+aioairzone==0.6.9
 
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
@@ -237,7 +237,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.0.6
+aioesphomeapi==18.0.7
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -255,7 +255,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.0.5
+aiohomekit==3.0.7
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -435,7 +435,7 @@ apcaccess==0.0.13
 apple_weatherkit==1.0.4
 
 # homeassistant.components.apprise
-apprise==1.5.0
+apprise==1.6.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -521,10 +521,10 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.36.5
+bellows==0.36.7
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected==0.14.1
+bimmer-connected==0.14.2
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -731,7 +731,7 @@ ecoaliface==0.4.0
 electrickiwi-api==0.8.5
 
 # homeassistant.components.elgato
-elgato==4.0.1
+elgato==5.0.0
 
 # homeassistant.components.eliqonline
 eliqonline==1.2.2
@@ -823,7 +823,7 @@ flux-led==1.0.4
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnv-hash-fast==0.4.1
+fnv-hash-fast==0.5.0
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -948,7 +948,7 @@ gspread==5.5.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.3;python_version<'3.12'
+guppy3==3.1.4
 
 # homeassistant.components.iaqualink
 h2==4.1.0
@@ -1486,7 +1486,7 @@ proxmoxer==2.0.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.5
+psutil==5.9.6
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==23.5.2
@@ -1501,7 +1501,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
-pvo==1.0.0
+pvo==2.0.0
 
 # homeassistant.components.canary
 py-canary==0.5.3
@@ -1546,7 +1546,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2023.10.0
+pyDuotecno==2023.10.1
 
 # homeassistant.components.eight_sleep
 pyEight==0.3.2
@@ -1664,7 +1664,7 @@ pydelijn==1.1.0
 pydexcom==0.2.3
 
 # homeassistant.components.discovergy
-pydiscovergy==2.0.4
+pydiscovergy==2.0.5
 
 # homeassistant.components.doods
 pydoods==1.0.2
@@ -1691,7 +1691,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.11.4
+pyenphase==1.13.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -2594,7 +2594,7 @@ todoist-api-python==2.1.2
 tololib==0.1.0b4
 
 # homeassistant.components.toon
-toonapi==0.2.1
+toonapi==0.3.0
 
 # homeassistant.components.totalconnect
 total-connect-client==2023.2
@@ -2615,7 +2615,7 @@ ttls==1.5.1
 tuya-iot-py-sdk==0.6.6
 
 # homeassistant.components.twentemilieu
-twentemilieu==1.0.0
+twentemilieu==2.0.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -2656,7 +2656,7 @@ uvcclient==0.11.0
 vallox-websocket-api==3.3.0
 
 # homeassistant.components.rdw
-vehicle==1.0.1
+vehicle==2.0.0
 
 # homeassistant.components.velbus
 velbus-aio==2023.10.1
@@ -2720,7 +2720,7 @@ wiffi==1.1.2
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wled
-wled==0.16.0
+wled==0.17.0
 
 # homeassistant.components.wolflink
 wolf-smartset==0.1.11
@@ -2810,10 +2810,10 @@ zigpy-xbee==0.18.3
 zigpy-zigate==0.11.0
 
 # homeassistant.components.zha
-zigpy-znp==0.11.5
+zigpy-znp==0.11.6
 
 # homeassistant.components.zha
-zigpy==0.57.2
+zigpy==0.58.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

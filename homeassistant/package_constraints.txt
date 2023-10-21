@@ -17,7 +17,7 @@ certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==41.0.4
 dbus-fast==2.12.0
-fnv-hash-fast==0.4.1
+fnv-hash-fast==0.5.0
 ha-av==10.1.1
 hass-nabucasa==0.73.0
 hassil==1.2.5
@@ -33,7 +33,7 @@ mutagen==1.47.0
 orjson==3.9.9
 packaging>=23.1
 paho-mqtt==1.6.1
-Pillow==10.0.1
+Pillow==10.1.0
 pip>=21.3.1
 psutil-home-assistant==0.0.1
 PyJWT==2.8.0
@@ -48,7 +48,7 @@ requests==2.31.0
 scapy==2.5.0
 SQLAlchemy==2.0.22
 typing-extensions>=4.8.0,<5.0
-ulid-transform==0.8.1
+ulid-transform==0.9.0
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtc-noise-gain==1.2.3

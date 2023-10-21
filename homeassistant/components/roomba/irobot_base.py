@@ -101,20 +101,23 @@ class IRobotEntity(Entity):
         )
 
     @property
-    def _battery_level(self):
+    def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
         return self.vacuum_state.get("batPct")
 
     @property
-    def _run_stats(self):
+    def run_stats(self):
+        """Return the run stats."""
         return self.vacuum_state.get("bbrun")
 
     @property
-    def _mission_stats(self):
+    def mission_stats(self):
+        """Return the mission stats."""
         return self.vacuum_state.get("bbmssn")
 
     @property
-    def _battery_stats(self):
+    def battery_stats(self):
+        """Return the battery stats."""
         return self.vacuum_state.get("bbchg3")
 
     @property
@@ -157,11 +160,6 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         """Initialize the iRobot handler."""
         super().__init__(roomba, blid)
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
-
-    @property
-    def battery_level(self):
-        """Return the battery level of the vacuum cleaner."""
-        return self._battery_level
 
     @property
     def state(self):
