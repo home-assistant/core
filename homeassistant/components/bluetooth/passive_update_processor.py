@@ -470,7 +470,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
             data: PassiveBluetoothDataUpdate[_T] | None,
         ) -> None:
             """Listen for new entities."""
-            if data is None:
+            if data is None or created.issuperset(data.entity_descriptions):
                 return
             entities: list[PassiveBluetoothProcessorEntity] = []
             for entity_key, description in data.entity_descriptions.items():
