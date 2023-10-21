@@ -147,7 +147,7 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         for key, device_info in new_data.devices.items():
             if device_change or self.devices.get(key) != device_info:
                 device_change = True
-            self.devices[key] = device_info
+                self.devices[key] = device_info
         for incoming, current in (
             (new_data.entity_descriptions, self.entity_descriptions),
             (new_data.entity_names, self.entity_names),
@@ -157,7 +157,7 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
             for key, data in incoming.items():  # type: ignore[attr-defined]
                 if current.get(key) != data:  # type: ignore[attr-defined]
                     changed_entity_keys.add(key)  # type: ignore[arg-type]
-                current[key] = data  # type: ignore[index]
+                    current[key] = data  # type: ignore[index]
         # If the device changed we don't need to return the changed
         # entity keys as all entities will be updated
         return None if device_change else changed_entity_keys
