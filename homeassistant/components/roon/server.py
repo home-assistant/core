@@ -2,13 +2,13 @@
 import asyncio
 import logging
 
-from roonapi import RoonApi, RoonDiscovery
+from roonapi import RoonApi, RoonDiscovery  # type: ignore[import]
 
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.dt import utcnow
 
-from .const import CONF_ROON_ID, ROON_APPINFO
+from .const import CONF_ENABLE_VOLUME_HOOKS, CONF_ROON_ID, ROON_APPINFO
 
 _LOGGER = logging.getLogger(__name__)
 INITIAL_SYNC_INTERVAL = 5
@@ -24,6 +24,7 @@ class RoonServer:
         self.hass = hass
         self.roonapi = None
         self.roon_id = None
+        self._volume_hook = False
         self.all_player_ids = set()
         self.all_playlists = []
         self.offline_devices = set()
@@ -53,6 +54,10 @@ class RoonServer:
             return RoonApi(ROON_APPINFO, token, host, port, blocking_init=True)
 
         core_id = self.config_entry.data.get(CONF_ROON_ID)
+
+        self._volume_hook = self.config_entry.options.get(
+            CONF_ENABLE_VOLUME_HOOKS, False
+        )
 
         self.roonapi = await self.hass.async_add_executor_job(get_roon_api)
 
@@ -86,10 +91,32 @@ class RoonServer:
         """Return list of zones."""
         return self.roonapi.zones
 
+    @property
+    def volume_hook(self):
+        """Return whether volume hooks are enabled."""
+        return self._volume_hook
+
     def add_player_id(self, entity_id, roon_name):
         """Register a roon player."""
         self._roon_name_by_id[entity_id] = roon_name
         self._id_by_roon_name[roon_name] = entity_id
+
+    def add_player_volume_hook(self, entity_id, roon_name):
+        """Register a volume controller for this player in roon."""
+        if not self.volume_hook:
+            return
+
+        self.roonapi.register_volume_control(
+            entity_id,
+            roon_name,
+            self.roonapi_volume_callback,
+            0,
+            "incremental",
+            0,
+            0,
+            0,
+            False,
+        )
 
     def roon_name(self, entity_id):
         """Get the name of the roon player from entity_id."""
@@ -105,7 +132,7 @@ class RoonServer:
         self._exit = True
 
     def roonapi_state_callback(self, event, changed_zones):
-        """Callbacks from the roon api websockets."""
+        """Callbacks from the roon api websocket with state change."""
         self.hass.add_job(self.async_update_changed_players(changed_zones))
 
     async def async_do_loop(self):

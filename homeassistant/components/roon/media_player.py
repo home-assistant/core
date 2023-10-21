@@ -4,8 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from roonapi import split_media_path
-import voluptuous as vol
+from roonapi import split_media_path  # type: ignore[import]
+import voluptuous as vol  # type: ignore[import]
 
 from homeassistant.components.media_player import (
     BrowseMedia,
@@ -29,6 +29,7 @@ from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
+from .event import RoonEventEntity
 from .media_browser import browse_media
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +74,15 @@ async def async_setup_entry(
             # new player!
             media_player = RoonDevice(roon_server, player_data)
             media_players.add(dev_id)
-            async_add_entities([media_player])
+
+            entities = [media_player]
+
+            if roon_server.volume_hook:
+                entities.append(
+                    RoonEventEntity(roon_server, player_data["display_name"])
+                )
+
+            async_add_entities(entities)
         else:
             # update existing player
             async_dispatcher_send(
@@ -136,6 +145,7 @@ class RoonDevice(MediaPlayerEntity):
             )
         )
         self._server.add_player_id(self.entity_id, self.name)
+        self._server.add_player_volume_hook(self.entity_id, self.name)
 
     @callback
     def async_update_callback(self, player_data):

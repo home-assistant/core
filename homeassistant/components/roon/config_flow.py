@@ -2,15 +2,21 @@
 import asyncio
 import logging
 
-from roonapi import RoonApi, RoonDiscovery
-import voluptuous as vol
+from roonapi import RoonApi, RoonDiscovery  # type: ignore[import]
+import voluptuous as vol  # type: ignore[import]
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
 from .const import (
     AUTHENTICATE_TIMEOUT,
+    CONF_ENABLE_VOLUME_HOOKS,
     CONF_ROON_ID,
     CONF_ROON_NAME,
     DEFAULT_NAME,
@@ -26,6 +32,16 @@ DATA_SCHEMA = vol.Schema(
         vol.Required("port", default=9330): cv.port,
     }
 )
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ENABLE_VOLUME_HOOKS, default=False): bool,
+    }
+)
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 TIMEOUT = 120
 
@@ -120,6 +136,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for roon."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
+        """Get options flow for this handler."""
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     def __init__(self):
         """Initialize the Roon flow."""
