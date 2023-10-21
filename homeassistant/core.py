@@ -1742,14 +1742,6 @@ class SupportsResponse(enum.StrEnum):
     ONLY = "only"
     """The service is read-only and the caller must always ask for response data."""
 
-    ONLY_LEGACY = "only-legacy"
-    """
-    The service is read-only and the caller must always ask for response data.
-
-    The service returns data not keyed by entity_id.
-    Deprecated and scheduled for removal in 2024.6.
-    """
-
 
 class Service:
     """Representation of a callable service."""
@@ -2001,10 +1993,7 @@ class ServiceRegistry:
                 raise ValueError(
                     "Invalid argument return_response=True when handler does not support responses"
                 )
-        elif handler.supports_response in [
-            SupportsResponse.ONLY,
-            SupportsResponse.ONLY_LEGACY,
-        ]:
+        elif handler.supports_response == SupportsResponse.ONLY:
             raise ValueError(
                 "Service call requires responses but caller did not ask for responses"
             )

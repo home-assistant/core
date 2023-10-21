@@ -210,7 +210,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
-    component.async_register_entity_service(
+    component.async_register_legacy_entity_service(
         SERVICE_GET_FORECAST,
         {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))},
         async_get_forecast_service,
@@ -219,7 +219,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             WeatherEntityFeature.FORECAST_HOURLY,
             WeatherEntityFeature.FORECAST_TWICE_DAILY,
         ],
-        supports_response=SupportsResponse.ONLY_LEGACY,
+        supports_response=SupportsResponse.ONLY,
     )
     async_setup_ws_api(hass)
     await component.async_setup(config)

@@ -300,11 +300,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_create_event,
         required_features=[CalendarEntityFeature.CREATE_EVENT],
     )
-    component.async_register_entity_service(
+    component.async_register_legacy_entity_service(
         SERVICE_LIST_EVENTS,
         SERVICE_LIST_EVENTS_SCHEMA,
         async_list_events_service,
-        supports_response=SupportsResponse.ONLY_LEGACY,
+        supports_response=SupportsResponse.ONLY,
     )
     await component.async_setup(config)
     return True

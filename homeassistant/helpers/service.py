@@ -872,7 +872,6 @@ async def entity_service_call(
 
     if len(entities) == 1:
         # Single entity case avoids creating task
-        # ServiceResponse
         entity = entities[0]
         response = await _handle_entity_call(hass, entity, func, data, call.context)
         if entity.should_poll:
