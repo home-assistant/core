@@ -18,7 +18,7 @@ from .const import (
     TEST_PORT,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -30,7 +30,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 )
 async def test_binary_sensor(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: str,
     server: JavaServer | BedrockServer,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     request: pytest.FixtureRequest,
@@ -61,7 +61,7 @@ async def test_binary_sensor(
 )
 async def test_binary_sensor_update(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: str,
     server: JavaServer | BedrockServer,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     request: pytest.FixtureRequest,
@@ -96,7 +96,7 @@ async def test_binary_sensor_update(
 )
 async def test_binary_sensor_update_failure(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: str,
     server: JavaServer | BedrockServer,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     request: pytest.FixtureRequest,
