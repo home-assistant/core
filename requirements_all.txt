@@ -524,7 +524,7 @@ beautifulsoup4==4.12.2
 bellows==0.36.7
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected==0.14.1
+bimmer-connected==0.14.2
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -1694,7 +1694,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.12.0
+pyenphase==1.13.0
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
