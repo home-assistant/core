@@ -21,6 +21,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import async_get_current_platform
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.enum import try_parse_enum
 
 from .const import DOMAIN
@@ -145,7 +146,7 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         device_change = False
         changed_entity_keys: set[PassiveBluetoothEntityKey] = set()
         for key, device_info in new_data.devices.items():
-            if device_change or self.devices.get(key) != device_info:
+            if device_change or self.devices.get(key, UNDEFINED) != device_info:
                 device_change = True
                 self.devices[key] = device_info
         for incoming, current in (
@@ -155,7 +156,7 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         ):
             # mypy can't seem to work this out
             for key, data in incoming.items():  # type: ignore[attr-defined]
-                if current.get(key) != data:  # type: ignore[attr-defined]
+                if current.get(key, UNDEFINED) != data:  # type: ignore[attr-defined]
                     changed_entity_keys.add(key)  # type: ignore[arg-type]
                     current[key] = data  # type: ignore[index]
         # If the device changed we don't need to return the changed
