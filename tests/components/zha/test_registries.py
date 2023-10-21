@@ -5,8 +5,10 @@ import typing
 from unittest import mock
 
 import pytest
+import zigpy.quirks as zigpy_quirks
 
 from homeassistant.components.zha.binary_sensor import IASZone
+from homeassistant.components.zha.core.const import ATTR_QUIRK_ID
 import homeassistant.components.zha.core.registries as registries
 from homeassistant.helpers import entity_registry as er
 
@@ -547,42 +549,37 @@ def iter_all_rules() -> typing.Iterable[registries.MatchRule, list[type[ZhaEntit
                 yield rule, entities
 
 
-# TODO: re-implement / unless we keep a list of all quirk IDs in zha-quirks, we can't really test if a quirk ID exists easily#
-#  We could have a file in zha-quirks that defines all quirk IDs as constants, use those constants in (Z)HA, so ZHA will automatically change matches when quirks changes
-#  (and we can use those constants in tests to check if the quirk ID exists at all in zha-quirks.)
-# def test_quirk_classes() -> None:
-#     """Make sure that quirk_classes in components matches are valid."""
-#
-#     def find_quirk_class(base_obj, quirk_mod, quirk_cls):
-#         """Find a specific quirk class."""
-#
-#         module = importlib.import_module(quirk_mod)
-#         clss = dict(inspect.getmembers(module, inspect.isclass))
-#         # Check quirk_cls in module classes
-#         return quirk_cls in clss
-#
-#     def quirk_class_validator(value):
-#         """Validate quirk classes during self test."""
-#         if callable(value):
-#             # Callables cannot be tested
-#             return
-#
-#         if isinstance(value, (frozenset, set, list)):
-#             for v in value:
-#                 # Unpack the value if needed
-#                 quirk_class_validator(v)
-#             return
-#
-#         quirk_tok = value.rsplit(".", 1)
-#         if len(quirk_tok) != 2:
-#             # quirk_class is at least __module__.__class__
-#             raise ValueError(f"Invalid quirk class : '{value}'")
-#
-#         if not find_quirk_class(zhaquirks, quirk_tok[0], quirk_tok[1]):
-#             raise ValueError(f"Quirk class '{value}' does not exists.")
-#
-#     for rule, _ in iter_all_rules():
-#         quirk_class_validator(rule.quirk_ids)
+def test_quirk_classes() -> None:
+    """Make sure that all quirk IDs in components matches exist."""
+
+    def quirk_class_validator(value):
+        """Validate quirk IDs during self test."""
+        if callable(value):
+            # Callables cannot be tested
+            return
+
+        if isinstance(value, (frozenset, set, list)):
+            for v in value:
+                # Unpack the value if needed
+                quirk_class_validator(v)
+            return
+
+        if value not in all_quirk_ids:
+            raise ValueError(f"Quirk ID '{value}' does not exist.")
+
+    # get all quirk ID from zigpy quirks registry
+    all_quirk_ids = []
+    for manufacturer in zigpy_quirks._DEVICE_REGISTRY._registry.values():
+        for model_quirk_list in manufacturer.values():
+            for quirk in model_quirk_list:
+                quirk_id = getattr(quirk, ATTR_QUIRK_ID, None)
+                if quirk_id is not None and quirk_id not in all_quirk_ids:
+                    all_quirk_ids.append(quirk_id)
+    del quirk, model_quirk_list, manufacturer
+
+    # validate all quirk IDs used in component match rules
+    for rule, _ in iter_all_rules():
+        quirk_class_validator(rule.quirk_ids)
 
 
 def test_entity_names() -> None:
