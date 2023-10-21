@@ -6028,7 +6028,7 @@
       "iot_class": "cloud_polling"
     },
     "twitter": {
-      "name": "Twitter",
+      "name": "X",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
