@@ -5,6 +5,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
+from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
@@ -488,8 +489,7 @@ class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
-    models={"TS011F"},
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF, quirk_ids=TUYA_PLUG_ONOFF
 )
 class TuyaChildLockSwitch(ZHASwitchConfigurationEntity):
     """Representation of a child lock configuration entity."""
