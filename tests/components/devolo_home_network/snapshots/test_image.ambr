@@ -23,6 +23,7 @@
     'original_icon': None,
     'original_name': 'Guest Wifi credentials as QR code',
     'platform': 'devolo_home_network',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'image_guest_wifi',
     'unique_id': '1234567890_image_guest_wifi',

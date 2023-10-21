@@ -62,7 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # so we have data when entities are added
         coordinator = DiscovergyUpdateCoordinator(
             hass=hass,
-            config_entry=entry,
             meter=meter,
             discovergy_client=discovergy_data.api_client,
         )

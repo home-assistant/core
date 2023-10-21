@@ -23,13 +23,7 @@ from async_upnp_client.const import (
     SsdpSource,
 )
 from async_upnp_client.description_cache import DescriptionCache
-from async_upnp_client.server import (
-    SSDP_SEARCH_RESPONDER_OPTION_ALWAYS_REPLY_WITH_ROOT_DEVICE,
-    SSDP_SEARCH_RESPONDER_OPTIONS,
-    UpnpServer,
-    UpnpServerDevice,
-    UpnpServerService,
-)
+from async_upnp_client.server import UpnpServer, UpnpServerDevice, UpnpServerService
 from async_upnp_client.ssdp import (
     SSDP_PORT,
     determine_source_target,
@@ -796,11 +790,6 @@ class Server:
                     http_port=http_port,
                     server_device=HassUpnpServiceDevice,
                     boot_id=boot_id,
-                    options={
-                        SSDP_SEARCH_RESPONDER_OPTIONS: {
-                            SSDP_SEARCH_RESPONDER_OPTION_ALWAYS_REPLY_WITH_ROOT_DEVICE: True
-                        }
-                    },
                 )
             )
         results = await asyncio.gather(

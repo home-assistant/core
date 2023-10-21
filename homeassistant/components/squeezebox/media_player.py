@@ -1,6 +1,7 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
 from __future__ import annotations
 
+from datetime import datetime
 import json
 import logging
 from typing import Any
@@ -238,17 +239,17 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     )
     _attr_has_entity_name = True
     _attr_name = None
+    _last_update: datetime | None = None
+    _attr_available = True
 
     def __init__(self, player):
         """Initialize the SqueezeBox device."""
         self._player = player
-        self._last_update = None
         self._query_result = {}
-        self._available = True
         self._remove_dispatcher = None
-        self._attr_unique_id = format_mac(self._player.player_id)
+        self._attr_unique_id = format_mac(player.player_id)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)}, name=self._player.name
+            identifiers={(DOMAIN, self._attr_unique_id)}, name=player.name
         )
 
     @property
@@ -262,16 +263,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
         return squeezebox_attr
 
-    @property
-    def available(self):
-        """Return True if device connected to LMS server."""
-        return self._available
-
     @callback
     def rediscovered(self, unique_id, connected):
         """Make a player available again."""
         if unique_id == self.unique_id and connected:
-            self._available = True
+            self._attr_available = True
             _LOGGER.info("Player %s is available again", self.name)
             self._remove_dispatcher()
 
@@ -287,14 +283,14 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_update(self) -> None:
         """Update the Player() object."""
         # only update available players, newly available players will be rediscovered and marked available
-        if self._available:
+        if self._attr_available:
             last_media_position = self.media_position
             await self._player.async_update()
             if self.media_position != last_media_position:
                 self._last_update = utcnow()
             if self._player.connected is False:
                 _LOGGER.info("Player %s is not available", self.name)
-                self._available = False
+                self._attr_available = False
 
                 # start listening for restored players
                 self._remove_dispatcher = async_dispatcher_connect(

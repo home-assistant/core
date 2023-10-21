@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from . import TEST_MODEL, TEST_NAME_ORIGINAL, ClientMock
+from . import TEST_MODEL, TEST_NAME, TEST_NAME_ORIGINAL, ClientMock
 
 from tests.common import MockConfigEntry
 
@@ -28,16 +28,16 @@ async def test_initial_state(hass: HomeAssistant) -> None:
     state = hass.states.get(entity.entity_id)
 
     # Basic state properties
-    assert state.name == entity.unique_id
+    assert state.name == TEST_NAME
     assert state.state == "on"
     assert state.attributes[ATTR_BRIGHTNESS] == 26
-    assert state.attributes["friendly_name"] == entity.unique_id
+    assert state.attributes["friendly_name"] == TEST_NAME
     assert state.attributes["icon"] == "mdi:string-lights"
 
-    assert entity.original_name == entity.unique_id
+    assert entity.original_name == TEST_NAME
     assert entity.original_icon == "mdi:string-lights"
 
-    assert device.name == entity.unique_id
+    assert device.name == TEST_NAME
     assert device.model == TEST_MODEL
     assert device.manufacturer == "LEDWORKS"
 

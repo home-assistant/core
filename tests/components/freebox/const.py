@@ -513,7 +513,22 @@ DATA_LAN_GET_HOSTS_LIST = [
     },
 ]
 
+# Home
+# PIR node id 26, endpoint id 6
+DATA_HOME_GET_VALUES = {
+    "category": "",
+    "ep_type": "signal",
+    "id": 6,
+    "label": "Détection",
+    "name": "trigger",
+    "ui": {"access": "w", "display": "toggle"},
+    "value": False,
+    "value_type": "bool",
+    "visibility": "normal",
+}
 
+# Home
+# ALL
 DATA_HOME_GET_NODES = [
     {
         "adapter": 2,
@@ -2113,6 +2128,22 @@ DATA_HOME_GET_NODES = [
             {
                 "category": "",
                 "ep_type": "signal",
+                "id": 7,
+                "label": "Couvercle",
+                "name": "cover",
+                "refresh": 2000,
+                "ui": {
+                    "access": "r",
+                    "display": "warning",
+                    "icon_url": "/resources/images/home/pictos/warning.png",
+                },
+                "value": False,
+                "value_type": "bool",
+                "visibility": "normal",
+            },
+            {
+                "category": "",
+                "ep_type": "signal",
                 "id": 8,
                 "label": "Niveau de Batterie",
                 "name": "battery",
@@ -2211,7 +2242,7 @@ DATA_HOME_GET_NODES = [
                     "ep_type": "signal",
                     "id": 7,
                     "label": "Couvercle",
-                    "name": "1cover",
+                    "name": "cover",
                     "param_type": "void",
                     "value_type": "bool",
                     "visibility": "normal",
@@ -2298,6 +2329,33 @@ DATA_HOME_GET_NODES = [
                 "label": "Zone temporisée",
                 "name": "timed",
                 "ui": {"access": "w", "display": "toggle"},
+                "value": False,
+                "value_type": "bool",
+                "visibility": "normal",
+            },
+            {
+                "category": "",
+                "ep_type": "signal",
+                "id": 6,
+                "label": "Détection",
+                "name": "trigger",
+                "ui": {"access": "w", "display": "toggle"},
+                "value": False,
+                "value_type": "bool",
+                "visibility": "normal",
+            },
+            {
+                "category": "",
+                "ep_type": "signal",
+                "id": 7,
+                "label": "Couvercle",
+                "name": "cover",
+                "refresh": 2000,
+                "ui": {
+                    "access": "r",
+                    "display": "warning",
+                    "icon_url": "/resources/images/home/pictos/warning.png",
+                },
                 "value": False,
                 "value_type": "bool",
                 "visibility": "normal",
