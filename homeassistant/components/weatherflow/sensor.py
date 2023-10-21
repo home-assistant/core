@@ -21,7 +21,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
@@ -80,11 +79,10 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     WeatherFlowSensorEntityDescription(
         key="air_density",
         translation_key="air_density",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        native_unit_of_measurement="kg/m³",
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=3,
-        raw_data_conv_fn=lambda raw_data: raw_data.m * 1000000,
+        suggested_display_precision=5,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="air_temperature",

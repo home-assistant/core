@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from aiocomelit import ComelitSerialBridgeObject
-from aiocomelit.const import LIGHT
+from aiocomelit.const import LIGHT, STATE_OFF, STATE_ON
 
 from homeassistant.components.light import LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, STATE_OFF, STATE_ON
+from .const import DOMAIN
 from .coordinator import ComelitSerialBridge
 
 
@@ -49,7 +49,7 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
         self._device = device
         super().__init__(coordinator)
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
-        self._attr_device_info = self.coordinator.platform_device_info(device)
+        self._attr_device_info = coordinator.platform_device_info(device)
 
     async def _light_set_state(self, state: int) -> None:
         """Set desired light state."""
@@ -61,10 +61,10 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
         await self._light_set_state(STATE_ON)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the entity off."""
+        """Turn the light off."""
         await self._light_set_state(STATE_OFF)
 
     @property
     def is_on(self) -> bool:
-        """Return True if entity is on."""
+        """Return True if light is on."""
         return self.coordinator.data[LIGHT][self._device.index].status == STATE_ON

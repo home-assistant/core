@@ -361,6 +361,7 @@ homeassistant.components.webostv.*
 homeassistant.components.websocket_api.*
 homeassistant.components.wemo.*
 homeassistant.components.whois.*
+homeassistant.components.withings.*
 homeassistant.components.wiz.*
 homeassistant.components.wled.*
 homeassistant.components.worldclock.*
