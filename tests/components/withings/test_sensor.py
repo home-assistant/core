@@ -2,7 +2,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiowithings import MeasurementGroup
+from aiowithings import Goals, MeasurementGroup
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -38,7 +38,9 @@ async def test_all_entities(
 
         assert entity_entries
         for entity_entry in entity_entries:
-            assert hass.states.get(entity_entry.entity_id) == snapshot
+            assert hass.states.get(entity_entry.entity_id) == snapshot(
+                name=entity_entry.entity_id
+            )
 
 
 async def test_update_failed(
@@ -135,3 +137,29 @@ async def test_update_new_measurement_creates_new_sensor(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.henk_fat_mass") is not None
+
+
+async def test_update_new_goals_creates_new_sensor(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test fetching new goals will add a new sensor."""
+    goals_json = load_json_object_fixture("withings/goals_1.json")
+    goals = Goals.from_api(goals_json)
+    withings.get_goals.return_value = goals
+    await setup_integration(hass, polling_config_entry, False)
+
+    assert hass.states.get("sensor.henk_step_goal") is None
+    assert hass.states.get("sensor.henk_weight_goal") is not None
+
+    goals_json = load_json_object_fixture("withings/goals.json")
+    goals = Goals.from_api(goals_json)
+    withings.get_goals.return_value = goals
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.henk_step_goal") is not None

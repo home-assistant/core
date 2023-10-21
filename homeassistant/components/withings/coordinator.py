@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import TypeVar
 
 from aiowithings import (
+    Goals,
     MeasurementType,
     NotificationCategory,
     SleepSummary,
@@ -170,3 +171,17 @@ class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[Non
 
     async def _internal_update_data(self) -> None:
         """Update coordinator data."""
+
+
+class WithingsGoalsDataUpdateCoordinator(WithingsDataUpdateCoordinator[Goals]):
+    """Withings goals coordinator."""
+
+    _default_update_interval = timedelta(hours=1)
+
+    def webhook_subscription_listener(self, connected: bool) -> None:
+        """Call when webhook status changed."""
+        # Webhooks aren't available for this datapoint, so we keep polling
+
+    async def _internal_update_data(self) -> Goals:
+        """Retrieve goals data."""
+        return await self._client.get_goals()
