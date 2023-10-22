@@ -192,7 +192,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.2.7
+aioairzone-cloud==0.3.0
 
 # homeassistant.components.airzone
 aioairzone==0.6.9
@@ -237,7 +237,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.0.7
+aioesphomeapi==18.0.10
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -255,7 +255,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.0.7
+aiohomekit==3.0.8
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -387,7 +387,7 @@ aiowatttime==0.1.1
 aiowebostv==0.3.3
 
 # homeassistant.components.withings
-aiowithings==0.4.4
+aiowithings==1.0.1
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -467,7 +467,7 @@ async-interrupt==1.1.1
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.36.1
+async-upnp-client==0.36.2
 
 # homeassistant.components.keyboard_remote
 asyncinotify==4.0.2
@@ -521,7 +521,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.36.7
+bellows==0.36.5
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.2
@@ -1045,7 +1045,7 @@ ibeacon-ble==1.0.1
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==5.0.1
+ical==5.1.0
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1709,7 +1709,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.1.2
 
 # homeassistant.components.fibaro
-pyfibaro==0.7.5
+pyfibaro==0.7.6
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -2163,7 +2163,7 @@ python-mystrom==2.2.0
 python-opendata-transport==0.3.0
 
 # homeassistant.components.opensky
-python-opensky==0.2.0
+python-opensky==0.2.1
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
@@ -2756,7 +2756,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.3.0
+yalexs-ble==2.3.1
 
 # homeassistant.components.august
 yalexs==1.10.0

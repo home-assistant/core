@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BED_PRESENCE_COORDINATOR, DOMAIN
+from .const import DOMAIN
 from .coordinator import WithingsBedPresenceDataUpdateCoordinator
 from .entity import WithingsEntity
 
@@ -20,9 +20,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    coordinator: WithingsBedPresenceDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ][BED_PRESENCE_COORDINATOR]
+    coordinator = hass.data[DOMAIN][entry.entry_id].bed_presence_coordinator
 
     entities = [WithingsBinarySensor(coordinator)]
 

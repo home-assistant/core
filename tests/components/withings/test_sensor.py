@@ -2,7 +2,6 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiowithings import MeasurementGroup
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -11,14 +10,9 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import load_goals_fixture, load_measurements_fixture, setup_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -38,7 +32,9 @@ async def test_all_entities(
 
         assert entity_entries
         for entity_entry in entity_entries:
-            assert hass.states.get(entity_entry.entity_id) == snapshot
+            assert hass.states.get(entity_entry.entity_id) == snapshot(
+                name=entity_entry.entity_id
+            )
 
 
 async def test_update_failed(
@@ -76,11 +72,6 @@ async def test_update_updates_incrementally(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    meas_json = load_json_array_fixture("withings/get_meas_1.json")
-    measurement_groups = [
-        MeasurementGroup.from_api(measurement) for measurement in meas_json
-    ]
-
     assert withings.get_measurement_since.call_args_list == []
     await _skip_10_minutes()
     assert (
@@ -88,7 +79,10 @@ async def test_update_updates_incrementally(
         == "2019-08-01 12:00:00+00:00"
     )
 
-    withings.get_measurement_since.return_value = measurement_groups
+    withings.get_measurement_since.return_value = load_measurements_fixture(
+        "withings/measurements_1.json"
+    )
+
     await _skip_10_minutes()
     assert (
         str(withings.get_measurement_since.call_args_list[1].args[0])
@@ -114,24 +108,43 @@ async def test_update_new_measurement_creates_new_sensor(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test fetching a new measurement will add a new sensor."""
-    meas_json = load_json_array_fixture("withings/get_meas_1.json")
-    measurement_groups = [
-        MeasurementGroup.from_api(measurement) for measurement in meas_json
-    ]
-    withings.get_measurement_in_period.return_value = measurement_groups
+    withings.get_measurement_in_period.return_value = load_measurements_fixture(
+        "withings/measurements_1.json"
+    )
     await setup_integration(hass, polling_config_entry, False)
 
     assert hass.states.get("sensor.henk_fat_mass") is None
 
-    meas_json = load_json_object_fixture("withings/get_meas.json")
-    measurement_groups = [
-        MeasurementGroup.from_api(measurement)
-        for measurement in meas_json["measuregrps"]
-    ]
-    withings.get_measurement_in_period.return_value = measurement_groups
+    withings.get_measurement_in_period.return_value = load_measurements_fixture(
+        "withings/measurements.json"
+    )
 
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.henk_fat_mass") is not None
+
+
+async def test_update_new_goals_creates_new_sensor(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test fetching new goals will add a new sensor."""
+
+    withings.get_goals.return_value = load_goals_fixture("withings/goals_1.json")
+
+    await setup_integration(hass, polling_config_entry, False)
+
+    assert hass.states.get("sensor.henk_step_goal") is None
+    assert hass.states.get("sensor.henk_weight_goal") is not None
+
+    withings.get_goals.return_value = load_goals_fixture("withings/goals.json")
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.henk_step_goal") is not None
