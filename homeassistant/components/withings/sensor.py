@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from aiowithings import Goals, MeasurementType, SleepSummary
+from aiowithings import Goals, MeasurementType, SleepSummary, Workout
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    Platform,
     UnitOfLength,
     UnitOfMass,
     UnitOfSpeed,
@@ -23,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import StateType
 
 from .const import (
@@ -35,12 +37,15 @@ from .const import (
     UOM_BREATHS_PER_MINUTE,
     UOM_FREQUENCY,
     UOM_MMHG,
+    WORKOUT_CATEGORY,
+    WORKOUT_COORDINATOR,
 )
 from .coordinator import (
     WithingsDataUpdateCoordinator,
     WithingsGoalsDataUpdateCoordinator,
     WithingsMeasurementDataUpdateCoordinator,
     WithingsSleepDataUpdateCoordinator,
+    WithingsWorkoutDataUpdateCoordinator,
 )
 from .entity import WithingsEntity
 
@@ -447,6 +452,73 @@ GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
 }
 
 
+@dataclass
+class WithingsWorkoutSensorEntityDescriptionMixin:
+    """Mixin for describing withings data."""
+
+    value_fn: Callable[[Workout], StateType]
+
+
+@dataclass
+class WithingsWorkoutSensorEntityDescription(
+    SensorEntityDescription, WithingsWorkoutSensorEntityDescriptionMixin
+):
+    """Immutable class for describing withings data."""
+
+
+WORKOUT_SENSORS = [
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_type",
+        value_fn=lambda workout: WORKOUT_CATEGORY[workout.category],
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="workout_type",
+        options=list(WORKOUT_CATEGORY.values()),
+    ),
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_active_calories_burnt",
+        value_fn=lambda workout: workout.active_calories_burnt,
+        translation_key="workout_active_calories_burnt",
+        native_unit_of_measurement="Calories",
+    ),
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_distance",
+        value_fn=lambda workout: workout.distance,
+        translation_key="workout_distance",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.METERS,
+    ),
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_floors_climbed",
+        value_fn=lambda workout: workout.floors_climbed,
+        translation_key="workout_floors_climbed",
+        native_unit_of_measurement="Floors",
+    ),
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_intensity",
+        value_fn=lambda workout: workout.intensity,
+        translation_key="workout_intensity",
+    ),
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_pause_duration",
+        value_fn=lambda workout: workout.pause_duration or 0,
+        translation_key="workout_pause_duration",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+    ),
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_duration",
+        value_fn=lambda workout: (
+            workout.end_date - workout.start_date
+        ).total_seconds(),
+        translation_key="workout_duration",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+    ),
+]
+
+
 def get_current_goals(goals: Goals) -> set[str]:
     """Return a list of present goals."""
     result = set()
@@ -462,6 +534,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
+    ent_reg = er.async_get(hass)
+
     measurement_coordinator: WithingsMeasurementDataUpdateCoordinator = hass.data[
         DOMAIN
     ][entry.entry_id][MEASUREMENT_COORDINATOR]
@@ -523,6 +597,31 @@ async def async_setup_entry(
     entities.extend(
         WithingsSleepSensor(sleep_coordinator, attribute) for attribute in SLEEP_SENSORS
     )
+
+    workout_coordinator: WithingsWorkoutDataUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ][WORKOUT_COORDINATOR]
+
+    workout_callback: Callable[[], None] | None = None
+
+    def _async_add_workout_entities() -> None:
+        """Add workout entities."""
+        async_add_entities(
+            WithingsWorkoutSensor(workout_coordinator, attribute)
+            for attribute in WORKOUT_SENSORS
+        )
+        if workout_callback:
+            workout_callback()
+
+    if workout_coordinator.data is not None or ent_reg.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_workout_type"
+    ):
+        _async_add_workout_entities()
+    else:
+        workout_callback = workout_coordinator.async_add_listener(
+            _async_add_workout_entities
+        )
+
     async_add_entities(entities)
 
 
@@ -585,6 +684,20 @@ class WithingsGoalsSensor(WithingsSensor):
     coordinator: WithingsGoalsDataUpdateCoordinator
 
     entity_description: WithingsGoalsSensorEntityDescription
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        assert self.coordinator.data
+        return self.entity_description.value_fn(self.coordinator.data)
+
+
+class WithingsWorkoutSensor(WithingsSensor):
+    """Implementation of a Withings goals sensor."""
+
+    coordinator: WithingsWorkoutDataUpdateCoordinator
+
+    entity_description: WithingsWorkoutSensorEntityDescription
 
     @property
     def native_value(self) -> StateType:

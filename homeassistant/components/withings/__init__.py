@@ -60,6 +60,7 @@ from .const import (
     LOGGER,
     MEASUREMENT_COORDINATOR,
     SLEEP_COORDINATOR,
+    WORKOUT_COORDINATOR,
 )
 from .coordinator import (
     WithingsBedPresenceDataUpdateCoordinator,
@@ -67,6 +68,7 @@ from .coordinator import (
     WithingsGoalsDataUpdateCoordinator,
     WithingsMeasurementDataUpdateCoordinator,
     WithingsSleepDataUpdateCoordinator,
+    WithingsWorkoutDataUpdateCoordinator,
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -163,6 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, client
         ),
         GOALS_COORDINATOR: WithingsGoalsDataUpdateCoordinator(hass, client),
+        WORKOUT_COORDINATOR: WithingsWorkoutDataUpdateCoordinator(hass, client),
     }
 
     for coordinator in coordinators.values():
