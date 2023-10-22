@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import PingDomainData
 from .const import DOMAIN
-from .ping import PingDataICMPLib, PingDataSubProcess
+from .helpers import PingDataICMPLib, PingDataSubProcess
 
 _LOGGER = logging.getLogger(__name__)
 
