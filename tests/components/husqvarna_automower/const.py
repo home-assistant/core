@@ -7,13 +7,28 @@ MWR_TWO_IDX = 1
 
 
 MOWER_ONE_SESSION_DATA = {
+    "type": "mower",
+    "id": MWR_ONE_ID,
     "attributes": {
         "system": {
             "name": "Test Mower 1",
             "model": "450XH-TEST",
             "serialNumber": 123,
         },
-        "metadata": {"connected": True, "statusTimestamp": 1685899526195},
+        "battery": {"batteryPercent": 100},
+        "capabilities": {
+            "headlights": True,
+            "workAreas": False,
+            "position": True,
+            "stayOutZones": False,
+        },
+        "mower": {
+            "mode": "MAIN_AREA",
+            "activity": "PARKED_IN_CS",
+            "state": "RESTRICTED",
+            "errorCode": 0,
+            "errorCodeTimestamp": 0,
+        },
         "calendar": {
             "tasks": [
                 {
@@ -45,6 +60,7 @@ MOWER_ONE_SESSION_DATA = {
             "override": {"action": "NOT_ACTIVE"},
             "restrictedReason": "WEEK_SCHEDULE",
         },
+        "metadata": {"connected": True, "statusTimestamp": 1697669932683},
         "positions": [
             {"latitude": 35.5402913, "longitude": -82.5527055},
             {"latitude": 35.5407693, "longitude": -82.5521503},
@@ -61,34 +77,18 @@ MOWER_ONE_SESSION_DATA = {
             {"latitude": 35.5403437, "longitude": -82.5523917},
             {"latitude": 35.5403481, "longitude": -82.5520054},
         ],
-        "battery": {"batteryPercent": 100},
-        "capabilities": {
-            "headlights": True,
-            "workAreas": False,
-            "position": True,
-            "stayOutZones": False,
-        },
-        "mower": {
-            "mode": "MAIN_AREA",
-            "activity": "PARKED_IN_CS",
-            "state": "RESTRICTED",
-            "errorCode": 0,
-            "errorCodeTimestamp": 0,
-        },
-        "statistics": {
-            "numberOfChargingCycles": 1328,
-            "numberOfCollisions": 10623,
-            "totalChargingTime": 4186800,
-            "totalCuttingTime": 4078800,
-            "totalDriveDistance": 1732536,
-            "totalRunningTime": 4442400,
-            "totalSearchingTime": 363600,
-        },
         "cuttingHeight": 4,
         "headlight": {"mode": "EVENING_ONLY"},
+        "statistics": {
+            "numberOfChargingCycles": 1380,
+            "numberOfCollisions": 11396,
+            "totalChargingTime": 4334400,
+            "totalCuttingTime": 4194000,
+            "totalDriveDistance": 1780272,
+            "totalRunningTime": 4564800,
+            "totalSearchingTime": 370800,
+        },
     },
-    "id": MWR_ONE_ID,
-    "type": "mower",
 }
 
 MOWER_TWO_SESSION_DATA = {

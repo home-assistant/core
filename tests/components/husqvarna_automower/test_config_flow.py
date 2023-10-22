@@ -18,6 +18,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
+from tests.common import load_fixture
+
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
@@ -63,13 +65,19 @@ async def test_full_flow(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
+    token = load_fixture("jwt.js", DOMAIN)
+
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json={
+            "access_token": token,
+            "scope": "iam:read amc:api",
+            "expires_in": 86399,
             "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
+            "provider": "husqvarna",
+            "user_id": "mock-user-id",
+            "token_type": "Bearer",
+            "expires_at": 1697753347,
         },
     )
 

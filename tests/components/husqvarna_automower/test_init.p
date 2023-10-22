@@ -8,7 +8,6 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.husqvarna_automower import async_reload_entry
 from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -62,7 +61,7 @@ async def test_load_unload(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "aioautomower.AutomowerSession",
+        "aioautomower.session.AutomowerSession",
         return_value=AsyncMock(
             register_token_callback=MagicMock(),
             connect=AsyncMock(),
@@ -77,16 +76,12 @@ async def test_load_unload(hass: HomeAssistant) -> None:
         assert config_entry.state == ConfigEntryState.LOADED
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-        # Reload entry - No real test, just calling the function
-        await async_reload_entry(hass, config_entry)
-        assert config_entry.state == ConfigEntryState.LOADED
-
         assert await config_entry.async_unload(hass)
         await hass.async_block_till_done()
         assert config_entry.state == ConfigEntryState.NOT_LOADED
 
     with patch(
-        "aioautomower.AutomowerSession",
+        "aioautomower.session.AutomowerSession",
         return_value=AsyncMock(
             register_token_callback=MagicMock(),
             connect=AsyncMock(side_effect=TimeoutError),
@@ -102,7 +97,7 @@ async def test_load_unload(hass: HomeAssistant) -> None:
         assert config_entry.state == ConfigEntryState.NOT_LOADED
 
     with patch(
-        "aioautomower.AutomowerSession",
+        "aioautomower.session.AutomowerSession",
         return_value=AsyncMock(
             close=AsyncMock(side_effect=Exception),
         ),
@@ -114,7 +109,7 @@ async def test_load_unload(hass: HomeAssistant) -> None:
         assert config_entry.state == ConfigEntryState.NOT_LOADED
 
     with patch(
-        "aioautomower.AutomowerSession",
+        "aioautomower.session.AutomowerSession",
         return_value=AsyncMock(
             register_token_callback=MagicMock(),
             connect=AsyncMock(side_effect=Exception("Test Exception")),
@@ -142,7 +137,7 @@ async def test_load_unload_wrong_scope(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "aioautomower.AutomowerSession",
+        "aioautomower.session.AutomowerSession",
         return_value=AsyncMock(register_token_callback=MagicMock()),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
