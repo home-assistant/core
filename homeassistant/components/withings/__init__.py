@@ -134,7 +134,7 @@ class WithingsData:
     coordinators: set[WithingsDataUpdateCoordinator] = field(default_factory=set)
 
     def __post_init__(self) -> None:
-        """Collect all coordinators in a list."""
+        """Collect all coordinators in a set."""
         self.coordinators = {
             self.measurement_coordinator,
             self.sleep_coordinator,
