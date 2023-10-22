@@ -39,7 +39,7 @@ async def async_setup_entry(
     sync_modules = []
     for sync_name, sync_module in coordinator.api.sync.items():
         sync_modules.append(BlinkSyncModuleHA(coordinator, sync_name, sync_module))
-    async_add_entities(sync_modules, update_before_add=True)
+    async_add_entities(sync_modules)
 
 
 class BlinkSyncModuleHA(

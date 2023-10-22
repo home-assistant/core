@@ -37,7 +37,7 @@ async def async_setup_entry(
         for name, camera in coordinator.api.cameras.items()
     ]
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
