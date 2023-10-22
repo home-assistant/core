@@ -43,7 +43,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if not heater.status:
         raise CannotConnect()
 
-    return {"title": "Vevor " + str(ble_device.name)[:5]}
+    return {
+        "title": "Vevor "
+        + (str(ble_device.name) if ble_device.name else ble_device.address)
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
