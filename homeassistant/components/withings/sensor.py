@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    Platform,
     UnitOfLength,
     UnitOfMass,
     UnitOfSpeed,
@@ -23,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import StateType
 
 from .const import (
@@ -416,10 +418,81 @@ class WithingsActivitySensorEntityDescription(
 
 ACTIVITY_SENSORS = [
     WithingsActivitySensorEntityDescription(
-        key="activity_steps",
+        key="activity_steps_today",
         value_fn=lambda activity: activity.steps,
-        translation_key="activity_steps",
+        translation_key="activity_steps_today",
+        icon="mdi:shoe-print",
         native_unit_of_measurement="Steps",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_distance_today",
+        value_fn=lambda activity: activity.distance,
+        translation_key="activity_distance_today",
+        suggested_display_precision=0,
+        icon="mdi:map-marker-distance",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_floors_climbed_today",
+        value_fn=lambda activity: activity.floors_climbed,
+        translation_key="activity_floors_climbed_today",
+        icon="mdi:stairs-up",
+        native_unit_of_measurement="Floors",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_soft_duration_today",
+        value_fn=lambda activity: activity.soft_activity,
+        translation_key="activity_soft_duration_today",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_moderate_duration_today",
+        value_fn=lambda activity: activity.moderate_activity,
+        translation_key="activity_moderate_duration_today",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_intense_duration_today",
+        value_fn=lambda activity: activity.intense_activity,
+        translation_key="activity_intense_duration_today",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_active_duration_today",
+        value_fn=lambda activity: activity.total_time_active,
+        translation_key="activity_active_duration_today",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_active_calories_burnt_today",
+        value_fn=lambda activity: activity.active_calories_burnt,
+        suggested_display_precision=1,
+        translation_key="activity_active_calories_burnt_today",
+        native_unit_of_measurement="Calories",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_total_calories_burnt_today",
+        value_fn=lambda activity: activity.total_calories_burnt,
+        suggested_display_precision=1,
+        translation_key="activity_total_calories_burnt_today",
+        native_unit_of_measurement="Calories",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
@@ -489,6 +562,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
+    ent_reg = er.async_get(hass)
+
     measurement_coordinator: WithingsMeasurementDataUpdateCoordinator = hass.data[
         DOMAIN
     ][entry.entry_id][MEASUREMENT_COORDINATOR]
@@ -547,10 +622,25 @@ async def async_setup_entry(
         entry.entry_id
     ][ACTIVITY_COORDINATOR]
 
-    entities.extend(
-        WithingsActivitySensor(activity_coordinator, attribute)
-        for attribute in ACTIVITY_SENSORS
-    )
+    activity_callback: Callable[[], None] | None = None
+
+    def _async_add_activity_entities() -> None:
+        """Add activity entities."""
+        async_add_entities(
+            WithingsActivitySensor(activity_coordinator, attribute)
+            for attribute in ACTIVITY_SENSORS
+        )
+        if activity_callback:
+            activity_callback()
+
+    if activity_coordinator.data is not None or ent_reg.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_activity_steps_today"
+    ):
+        _async_add_activity_entities()
+    else:
+        activity_callback = activity_coordinator.async_add_listener(
+            _async_add_activity_entities
+        )
 
     sleep_coordinator: WithingsSleepDataUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
@@ -639,10 +729,6 @@ class WithingsActivitySensor(WithingsSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the entity."""
-        assert self.coordinator.data
+        if not self.coordinator.data:
+            return None
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        return super().available and self.coordinator.data is not None

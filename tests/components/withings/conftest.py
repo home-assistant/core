@@ -4,7 +4,7 @@ import time
 from unittest.mock import AsyncMock, patch
 
 from aiowithings import Device, Goals, MeasurementGroup, SleepSummary, WithingsClient
-from aiowithings.models import NotificationConfiguration
+from aiowithings.models import Activity, NotificationConfiguration
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -15,7 +15,11 @@ from homeassistant.components.withings.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -148,6 +152,9 @@ def mock_withings():
         for not_conf in notification_json["profiles"]
     ]
 
+    activity_json = load_json_array_fixture("withings/activity.json")
+    activities = [Activity.from_api(activity) for activity in activity_json]
+
     goals_json = load_json_object_fixture("withings/goals.json")
     goals = Goals.from_api(goals_json)
 
@@ -157,6 +164,8 @@ def mock_withings():
     mock.get_measurement_in_period.return_value = measurement_groups
     mock.get_measurement_since.return_value = measurement_groups
     mock.get_sleep_summary_since.return_value = sleep_summaries
+    mock.get_activities_since.return_value = activities
+    mock.get_activities_in_period.return_value = activities
     mock.list_notification_configurations.return_value = notifications
 
     with patch(

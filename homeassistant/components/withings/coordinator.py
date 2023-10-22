@@ -192,7 +192,6 @@ class WithingsActivityDataUpdateCoordinator(
 ):
     """Withings activity coordinator."""
 
-    _last_activity_date: date | None = None
     _previous_data: Activity | None = None
 
     def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
@@ -207,19 +206,19 @@ class WithingsActivityDataUpdateCoordinator(
         if self._last_valid_update is None:
             now = dt_util.utcnow()
             startdate = now - timedelta(days=14)
-            activities = await self._client.get_activities_in_period(startdate, now)
+            activities = await self._client.get_activities_in_period(
+                startdate.date(), now.date()
+            )
         else:
             activities = await self._client.get_activities_since(
                 self._last_valid_update
             )
 
-        if activities:
-            latest_activity = max(activities, key=lambda activity: activity.date)
-            if (
-                self._last_activity_date is None
-                or latest_activity.date >= self._last_activity_date
-            ):
-                self._last_activity_date = latest_activity.date
-                self._previous_data = latest_activity
-                return latest_activity
-        return self._previous_data
+        for activity in activities:
+            if activity.date == date.today():
+                self._previous_data = activity
+                self._last_valid_update = activity.modified
+                return activity
+        if self._previous_data and self._previous_data.date == date.today():
+            return self._previous_data
+        return None
