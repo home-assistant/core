@@ -14,6 +14,7 @@ from . import (
     load_activity_fixture,
     load_goals_fixture,
     load_measurements_fixture,
+    load_workout_fixture,
     setup_integration,
 )
 
@@ -243,3 +244,50 @@ async def test_activity_sensors_created_when_receive_activity_data(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.henk_steps_today") is not None
+
+
+async def test_workout_sensors_created_when_existed(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test workout sensors will be added if they existed before."""
+    await setup_integration(hass, polling_config_entry, False)
+
+    assert hass.states.get("sensor.henk_last_workout_type") is not None
+    assert hass.states.get("sensor.henk_last_workout_type").state != STATE_UNKNOWN
+
+    withings.get_workouts_in_period.return_value = []
+
+    await hass.config_entries.async_reload(polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.henk_last_workout_type").state == STATE_UNKNOWN
+
+
+async def test_workout_sensors_created_when_receive_workout_data(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test workout sensors will be added if we receive workout data."""
+    withings.get_workouts_in_period.return_value = []
+    await setup_integration(hass, polling_config_entry, False)
+
+    assert hass.states.get("sensor.henk_last_workout_type") is None
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.henk_last_workout_type") is None
+
+    withings.get_workouts_in_period.return_value = load_workout_fixture()
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.henk_last_workout_type") is not None

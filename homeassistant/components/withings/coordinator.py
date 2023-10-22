@@ -250,6 +250,8 @@ class WithingsWorkoutDataUpdateCoordinator(
             )
         else:
             workouts = await self._client.get_workouts_since(self._last_valid_update)
+        if not workouts:
+            return self._previous_data
         latest_workout = max(workouts, key=lambda workout: workout.end_date)
         if (
             self._previous_data is None

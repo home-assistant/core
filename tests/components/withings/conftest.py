@@ -20,6 +20,7 @@ from tests.components.withings import (
     load_activity_fixture,
     load_goals_fixture,
     load_measurements_fixture,
+    load_workout_fixture,
 )
 
 CLIENT_ID = "1234"
@@ -148,6 +149,8 @@ def mock_withings():
         NotificationConfiguration.from_api(not_conf) for not_conf in notification_json
     ]
 
+    workouts = load_workout_fixture()
+
     activities = load_activity_fixture()
 
     mock = AsyncMock(spec=WithingsClient)
@@ -159,6 +162,8 @@ def mock_withings():
     mock.get_activities_since.return_value = activities
     mock.get_activities_in_period.return_value = activities
     mock.list_notification_configurations.return_value = notifications
+    mock.get_workouts_since.return_value = workouts
+    mock.get_workouts_in_period.return_value = workouts
 
     with patch(
         "homeassistant.components.withings.WithingsClient",

@@ -722,18 +722,21 @@ async def async_setup_entry(
 
     workout_callback: Callable[[], None] | None = None
 
+    workout_entities_setup_before = ent_reg.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_workout_type"
+    )
+
     def _async_add_workout_entities() -> None:
         """Add workout entities."""
-        async_add_entities(
-            WithingsWorkoutSensor(workout_coordinator, attribute)
-            for attribute in WORKOUT_SENSORS
-        )
-        if workout_callback:
-            workout_callback()
+        if workout_coordinator.data is not None or workout_entities_setup_before:
+            async_add_entities(
+                WithingsWorkoutSensor(workout_coordinator, attribute)
+                for attribute in WORKOUT_SENSORS
+            )
+            if workout_callback:
+                workout_callback()
 
-    if workout_coordinator.data is not None or ent_reg.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_workout_type"
-    ):
+    if workout_coordinator.data is not None or workout_entities_setup_before:
         _async_add_workout_entities()
     else:
         workout_callback = workout_coordinator.async_add_listener(
@@ -840,5 +843,6 @@ class WithingsWorkoutSensor(WithingsSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the entity."""
-        assert self.coordinator.data
+        if not self.coordinator.data:
+            return None
         return self.entity_description.value_fn(self.coordinator.data)
