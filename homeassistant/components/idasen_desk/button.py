@@ -1,5 +1,14 @@
 """Representation of Idasen Desk buttons."""
-from homeassistant.components.button import ButtonEntity
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+import logging
+from typing import Any, Final
+
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
@@ -9,66 +18,82 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import DeskData, IdasenDeskCoordinator
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class IdasenDeskButtonDescriptionMixin:
+    """Mixin to describe a IdasenDesk button entity."""
+
+    press_action: Callable[
+        [IdasenDeskCoordinator], Callable[[], Coroutine[Any, Any, Any]]
+    ]
+
+
+@dataclass
+class IdasenDeskButtonDescription(
+    ButtonEntityDescription, IdasenDeskButtonDescriptionMixin
+):
+    """Class to describe a IdasenDesk button entity."""
+
+
+BUTTONS: Final = [
+    IdasenDeskButtonDescription(
+        key="connect",
+        name="Connect",
+        device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
+        press_action=lambda coordinator: coordinator.async_connect,
+    ),
+    IdasenDeskButtonDescription(
+        key="disconnect",
+        name="Disconnect",
+        device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
+        press_action=lambda coordinator: coordinator.async_disconnect,
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Idasen Desk connection buttons from config entry."""
+    """Set buttons for device."""
     data: DeskData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            IdasenDeskConnectButton(data.address, data.device_info, data.coordinator),
-            IdasenDeskDisconnectButton(
-                data.address, data.device_info, data.coordinator
-            ),
-        ]
+        IdasenDeskButton(data.address, data.device_info, data.coordinator, button)
+        for button in BUTTONS
     )
 
 
-class IdasenDeskConnectButton(ButtonEntity):
-    """Representation of a connect button entity."""
+class IdasenDeskButton(ButtonEntity):
+    """Defines a IdasenDesk button."""
 
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:bluetooth-connect"
+    entity_description: IdasenDeskButtonDescription
 
     def __init__(
         self,
         address: str,
         device_info: DeviceInfo,
         coordinator: IdasenDeskCoordinator,
+        description: IdasenDeskButtonDescription,
     ) -> None:
-        """Initialize the connect button."""
-        self._attr_name = f"{device_info[ATTR_NAME]} Connect"
-        self._attr_unique_id = f"connect-{address}"
+        """Initialize the IdasenDesk button entity."""
+        self.entity_description = description
+
+        self._attr_name = f"{device_info[ATTR_NAME]} {self.entity_description.key}"
+        self._attr_unique_id = f"{self.entity_description.key}-{address}"
         self._attr_device_info = device_info
-        self._coordinator = coordinator
-
-    async def async_press(self) -> None:
-        """Press the button."""
-        await self._coordinator.async_connect()
-
-
-class IdasenDeskDisconnectButton(ButtonEntity):
-    """Representation of a disconnect button entity."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:bluetooth-off"
-
-    def __init__(
-        self,
-        address: str,
-        device_info: DeviceInfo,
-        coordinator: IdasenDeskCoordinator,
-    ) -> None:
-        """Initialize the disconnect button."""
         self._address = address
-        self._attr_name = f"{device_info[ATTR_NAME]} Disconnect"
-        self._attr_unique_id = f"disconnect-{address}"
-        self._attr_device_info = device_info
         self._coordinator = coordinator
 
     async def async_press(self) -> None:
-        """Press the button."""
-        await self._coordinator.async_disconnect()
+        """Triggers the IdasenDesk button press service."""
+        _LOGGER.debug(
+            "Trigger %s for %s",
+            self.entity_description.key,
+            self._address,
+        )
+        await self.entity_description.press_action(self._coordinator)()
