@@ -53,6 +53,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_PROFILES, CONF_USE_WEBHOOK, DEFAULT_TITLE, DOMAIN, LOGGER
 from .coordinator import (
+    WithingsActivityDataUpdateCoordinator,
     WithingsBedPresenceDataUpdateCoordinator,
     WithingsDataUpdateCoordinator,
     WithingsGoalsDataUpdateCoordinator,
@@ -131,6 +132,7 @@ class WithingsData:
     sleep_coordinator: WithingsSleepDataUpdateCoordinator
     bed_presence_coordinator: WithingsBedPresenceDataUpdateCoordinator
     goals_coordinator: WithingsGoalsDataUpdateCoordinator
+    activity_coordinator: WithingsActivityDataUpdateCoordinator
     coordinators: set[WithingsDataUpdateCoordinator] = field(default_factory=set)
 
     def __post_init__(self) -> None:
@@ -140,6 +142,7 @@ class WithingsData:
             self.sleep_coordinator,
             self.bed_presence_coordinator,
             self.goals_coordinator,
+            self.activity_coordinator,
         }
 
 
@@ -172,6 +175,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sleep_coordinator=WithingsSleepDataUpdateCoordinator(hass, client),
         bed_presence_coordinator=WithingsBedPresenceDataUpdateCoordinator(hass, client),
         goals_coordinator=WithingsGoalsDataUpdateCoordinator(hass, client),
+        activity_coordinator=WithingsActivityDataUpdateCoordinator(hass, client),
     )
 
     for coordinator in withings_data.coordinators:
