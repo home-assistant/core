@@ -16,10 +16,12 @@ from aioairzone_cloud.const import (
     AZD_AIDOOS,
     AZD_GROUPS,
     AZD_HUMIDITY,
+    AZD_INSTALLATIONS,
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
     AZD_NUM_DEVICES,
+    AZD_NUM_GROUPS,
     AZD_POWER,
     AZD_TEMP,
     AZD_TEMP_SET,
@@ -47,6 +49,7 @@ from .entity import (
     AirzoneAidooEntity,
     AirzoneEntity,
     AirzoneGroupEntity,
+    AirzoneInstallationEntity,
     AirzoneZoneEntity,
 )
 
@@ -112,6 +115,17 @@ async def async_setup_entry(
                 )
             )
 
+    # Installations
+    for inst_id, inst_data in coordinator.data.get(AZD_INSTALLATIONS, {}).items():
+        if inst_data[AZD_NUM_GROUPS] > 1:
+            entities.append(
+                AirzoneInstallationClimate(
+                    coordinator,
+                    inst_id,
+                    inst_data,
+                )
+            )
+
     # Zones
     for zone_id, zone_data in coordinator.data.get(AZD_ZONES, {}).items():
         entities.append(
@@ -132,6 +146,34 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
     _attr_name = None
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update attributes when the coordinator updates."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update climate attributes."""
+        self._attr_current_temperature = self.get_airzone_value(AZD_TEMP)
+        self._attr_current_humidity = self.get_airzone_value(AZD_HUMIDITY)
+        self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS[
+            self.get_airzone_value(AZD_ACTION)
+        ]
+        if self.get_airzone_value(AZD_POWER):
+            self._attr_hvac_mode = HVAC_MODE_LIB_TO_HASS[
+                self.get_airzone_value(AZD_MODE)
+            ]
+        else:
+            self._attr_hvac_mode = HVACMode.OFF
+        self._attr_max_temp = self.get_airzone_value(AZD_TEMP_SET_MAX)
+        self._attr_min_temp = self.get_airzone_value(AZD_TEMP_SET_MIN)
+        self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
+
+
+class AirzoneDeviceClimate(AirzoneClimate):
+    """Define an Airzone Cloud Device base class."""
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
@@ -163,92 +205,9 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
             }
         await self._async_update_params(params)
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update attributes when the coordinator updates."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
 
-    @callback
-    def _async_update_attrs(self) -> None:
-        """Update climate attributes."""
-        self._attr_current_temperature = self.get_airzone_value(AZD_TEMP)
-        self._attr_current_humidity = self.get_airzone_value(AZD_HUMIDITY)
-        self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS[
-            self.get_airzone_value(AZD_ACTION)
-        ]
-        if self.get_airzone_value(AZD_POWER):
-            self._attr_hvac_mode = HVAC_MODE_LIB_TO_HASS[
-                self.get_airzone_value(AZD_MODE)
-            ]
-        else:
-            self._attr_hvac_mode = HVACMode.OFF
-        self._attr_max_temp = self.get_airzone_value(AZD_TEMP_SET_MAX)
-        self._attr_min_temp = self.get_airzone_value(AZD_TEMP_SET_MIN)
-        self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
-
-
-class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneClimate):
-    """Define an Airzone Cloud Aidoo climate."""
-
-    def __init__(
-        self,
-        coordinator: AirzoneUpdateCoordinator,
-        aidoo_id: str,
-        aidoo_data: dict,
-    ) -> None:
-        """Initialize Airzone Cloud Aidoo climate."""
-        super().__init__(coordinator, aidoo_id, aidoo_data)
-
-        self._attr_unique_id = aidoo_id
-        self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
-        self._attr_hvac_modes = [
-            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
-        ]
-        if HVACMode.OFF not in self._attr_hvac_modes:
-            self._attr_hvac_modes += [HVACMode.OFF]
-
-        self._async_update_attrs()
-
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set hvac mode."""
-        params: dict[str, Any] = {}
-        if hvac_mode == HVACMode.OFF:
-            params[API_POWER] = {
-                API_VALUE: False,
-            }
-        else:
-            mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
-            params[API_MODE] = {
-                API_VALUE: mode.value,
-            }
-            params[API_POWER] = {
-                API_VALUE: True,
-            }
-        await self._async_update_params(params)
-
-
-class AirzoneGroupClimate(AirzoneGroupEntity, AirzoneClimate):
-    """Define an Airzone Cloud Group climate."""
-
-    def __init__(
-        self,
-        coordinator: AirzoneUpdateCoordinator,
-        group_id: str,
-        group_data: dict,
-    ) -> None:
-        """Initialize Airzone Cloud Group climate."""
-        super().__init__(coordinator, group_id, group_data)
-
-        self._attr_unique_id = group_id
-        self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
-        self._attr_hvac_modes = [
-            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
-        ]
-        if HVACMode.OFF not in self._attr_hvac_modes:
-            self._attr_hvac_modes += [HVACMode.OFF]
-
-        self._async_update_attrs()
+class AirzoneDeviceGroupClimate(AirzoneClimate):
+    """Define an Airzone Cloud DeviceGroup base class."""
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
@@ -294,7 +253,93 @@ class AirzoneGroupClimate(AirzoneGroupEntity, AirzoneClimate):
         await self._async_update_params(params)
 
 
-class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneClimate):
+class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
+    """Define an Airzone Cloud Aidoo climate."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        aidoo_id: str,
+        aidoo_data: dict,
+    ) -> None:
+        """Initialize Airzone Cloud Aidoo climate."""
+        super().__init__(coordinator, aidoo_id, aidoo_data)
+
+        self._attr_unique_id = aidoo_id
+        self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
+        self._attr_hvac_modes = [
+            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
+        ]
+        if HVACMode.OFF not in self._attr_hvac_modes:
+            self._attr_hvac_modes += [HVACMode.OFF]
+
+        self._async_update_attrs()
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set hvac mode."""
+        params: dict[str, Any] = {}
+        if hvac_mode == HVACMode.OFF:
+            params[API_POWER] = {
+                API_VALUE: False,
+            }
+        else:
+            mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
+            params[API_MODE] = {
+                API_VALUE: mode.value,
+            }
+            params[API_POWER] = {
+                API_VALUE: True,
+            }
+        await self._async_update_params(params)
+
+
+class AirzoneGroupClimate(AirzoneGroupEntity, AirzoneDeviceGroupClimate):
+    """Define an Airzone Cloud Group climate."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        group_id: str,
+        group_data: dict,
+    ) -> None:
+        """Initialize Airzone Cloud Group climate."""
+        super().__init__(coordinator, group_id, group_data)
+
+        self._attr_unique_id = group_id
+        self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
+        self._attr_hvac_modes = [
+            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
+        ]
+        if HVACMode.OFF not in self._attr_hvac_modes:
+            self._attr_hvac_modes += [HVACMode.OFF]
+
+        self._async_update_attrs()
+
+
+class AirzoneInstallationClimate(AirzoneInstallationEntity, AirzoneDeviceGroupClimate):
+    """Define an Airzone Cloud Installation climate."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        inst_id: str,
+        inst_data: dict,
+    ) -> None:
+        """Initialize Airzone Cloud Installation climate."""
+        super().__init__(coordinator, inst_id, inst_data)
+
+        self._attr_unique_id = inst_id
+        self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
+        self._attr_hvac_modes = [
+            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
+        ]
+        if HVACMode.OFF not in self._attr_hvac_modes:
+            self._attr_hvac_modes += [HVACMode.OFF]
+
+        self._async_update_attrs()
+
+
+class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneDeviceClimate):
     """Define an Airzone Cloud Zone climate."""
 
     def __init__(
@@ -327,7 +372,8 @@ class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneClimate):
             }
         else:
             mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
-            if mode != self.get_airzone_value(AZD_MODE):
+            cur_mode = self.get_airzone_value(AZD_MODE)
+            if hvac_mode != HVAC_MODE_LIB_TO_HASS[cur_mode]:
                 if self.get_airzone_value(AZD_MASTER):
                     params[API_MODE] = {
                         API_VALUE: mode.value,
