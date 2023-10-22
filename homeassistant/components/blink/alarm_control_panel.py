@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -83,18 +84,20 @@ class BlinkSyncModuleHA(
         """Send disarm command."""
         try:
             await self.sync.async_arm(False)
-            await self._coordinator.async_refresh()
-        except asyncio.TimeoutError:
-            self._attr_available = False
 
+        except asyncio.TimeoutError as er:
+            raise HomeAssistantError("Blink failed to disarm camera") from er
+
+        await self._coordinator.async_refresh()
         self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""
         try:
             await self.sync.async_arm(True)
-            await self._coordinator.async_refresh()
-        except asyncio.TimeoutError:
-            self._attr_available = False
 
+        except asyncio.TimeoutError as er:
+            raise HomeAssistantError("Blink failed to arm camera away") from er
+
+        await self._coordinator.async_refresh()
         self.async_write_ha_state()

@@ -73,20 +73,22 @@ class BlinkCamera(CoordinatorEntity, Camera):
         """Enable motion detection for the camera."""
         try:
             await self._camera.async_arm(True)
-            self._camera.motion_enabled = True
-            await self._coordinator.async_refresh()
 
         except asyncio.TimeoutError as er:
             raise HomeAssistantError("Blink failed to arm camera") from er
+
+        self._camera.motion_enabled = True
+        await self._coordinator.async_refresh()
 
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection for the camera."""
         try:
             await self._camera.async_arm(False)
-            self._camera.motion_enabled = False
-            await self._coordinator.async_refresh()
         except asyncio.TimeoutError as er:
             raise HomeAssistantError("Blink failed to disarm camera") from er
+
+        self._camera.motion_enabled = False
+        await self._coordinator.async_refresh()
 
     @property
     def motion_detection_enabled(self) -> bool:
