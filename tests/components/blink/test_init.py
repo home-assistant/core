@@ -177,12 +177,15 @@ async def test_service_calls(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    blink_api.refresh.mock_reset()
+    assert blink_api.refresh.call_count == 1
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_REFRESH,
         blocking=True,
     )
+
+    assert blink_api.refresh.call_count == 2
 
     await hass.services.async_call(
         DOMAIN,
