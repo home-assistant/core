@@ -3,10 +3,19 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from lmcloud import LMCloud  # type: ignore[import]
+from lmcloud import LMCloud
+from lmcloud.exceptions import BluetoothConnectionFailed
 
 from homeassistant.components import bluetooth
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_USERNAME
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -69,14 +78,20 @@ class LaMarzoccoClient(LMCloud):
     async def connect(self) -> None:
         """Connect to the machine."""
         _LOGGER.debug("Initializing Cloud API")
-        await self._init_cloud_api(self._entry_data)
+        credentials = {
+            CONF_USERNAME: self._entry_data.get(CONF_USERNAME, ""),
+            CONF_PASSWORD: self._entry_data.get(CONF_PASSWORD, ""),
+            CONF_CLIENT_SECRET: self._entry_data.get(CONF_CLIENT_SECRET, ""),
+            CONF_CLIENT_ID: self._entry_data.get(CONF_CLIENT_ID, ""),
+        }
+        await self._init_cloud_api(credentials=credentials)
         _LOGGER.debug("Model name: %s", self.model_name)
 
-        username = self._entry_data.get(CONF_USERNAME)
-        mac_address = self._entry_data.get(CONF_MAC)
-        name = self._entry_data.get(CONF_NAME)
+        username: str = self._entry_data.get(CONF_USERNAME, "")
+        mac_address: str = self._entry_data.get(CONF_MAC, "")
+        name: str = self._entry_data.get(CONF_NAME, "")
 
-        if mac_address is not None and name is not None:
+        if mac_address and name:
             # coming from discovery
             _LOGGER.debug("Initializing with known Bluetooth device")
             await self._init_bluetooth_with_known_device(username, mac_address, name)
@@ -95,12 +110,10 @@ class LaMarzoccoClient(LMCloud):
             _LOGGER.debug("Connecting to machine with Bluetooth")
             await self.get_hass_bt_client()
 
-        ip = self._entry_data.get(CONF_HOST)
-        if ip is not None:
+        host: str = self._entry_data.get(CONF_HOST, "")
+        if host:
             _LOGGER.debug("Initializing local API")
-            await self._init_local_api(
-                ip=self._entry_data.get(CONF_HOST), port=DEFAULT_PORT_LOCAL
-            )
+            await self._init_local_api(host=host, port=DEFAULT_PORT_LOCAL)
 
     async def try_connect(self, data: dict[str, Any]) -> dict[str, Any]:
         """Try to connect to the machine, used for validation."""
@@ -123,25 +136,23 @@ class LaMarzoccoClient(LMCloud):
         await self.configure_schedule(enable, self.schedule)
 
     async def set_prebrew_times(
-        self, key: str, seconds_on: float, seconds_off: float
+        self, key: int, seconds_on: float, seconds_off: float
     ) -> None:
         """Set the prebrew times of the machine."""
         await self.configure_prebrew(
-            prebrewOnTime=seconds_on * 1000, prebrewOffTime=seconds_off * 1000, key=key
+            on_time=seconds_on * 1000, off_time=seconds_off * 1000, key=key
         )
 
-    async def set_preinfusion_time(self, key: str, seconds: float) -> None:
+    async def set_preinfusion_time(self, key: int, seconds: float) -> None:
         """Set the preinfusion time of the machine."""
-        await self.configure_prebrew(
-            prebrewOnTime=0, prebrewOffTime=seconds * 1000, key=key
-        )
+        await self.configure_prebrew(on_time=0, off_time=seconds * 1000, key=key)
 
     async def set_coffee_temp(self, temperature: float) -> None:
         """Set the coffee temperature of the machine."""
         await self.get_hass_bt_client()
         await super().set_coffee_temp(temperature)
 
-    async def set_steam_temp(self, temperature: float) -> None:
+    async def set_steam_temp(self, temperature: int) -> None:
         """Set the steam temperature of the machine."""
         possible_temps = [126, 128, 131]
         min(possible_temps, key=lambda x: abs(x - temperature))
@@ -155,6 +166,7 @@ class LaMarzoccoClient(LMCloud):
         if self._lm_bluetooth is None:
             return
 
+        assert self._lm_bluetooth.address
         ble_device = bluetooth.async_ble_device_from_address(
             self.hass, self._lm_bluetooth.address, connectable=True
         )
@@ -165,10 +177,14 @@ class LaMarzoccoClient(LMCloud):
                     "Machine not found in Bluetooth scan, not sending commands through bluetooth"
                 )
                 self._bt_disconnected = True
-        elif self._bt_disconnected:
+            return
+
+        if self._bt_disconnected:
             _LOGGER.warning(
                 "Machine available again for Bluetooth, sending commands through bluetooth"
             )
             self._bt_disconnected = False
-
-        await self._lm_bluetooth.new_bleak_client_from_ble_device(ble_device)
+        try:
+            await self._lm_bluetooth.new_bleak_client_from_ble_device(ble_device)
+        except BluetoothConnectionFailed as ex:
+            _LOGGER.warning(ex)

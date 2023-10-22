@@ -65,7 +65,7 @@ ENTITIES: tuple[LaMarzoccoWaterHeaterEntityDescription, ...] = (
         icon="mdi:kettle-steam",
         min_temp=126,
         max_temp=131,
-        set_temp_fn=lambda client, temp: client.set_steam_temp(temp),
+        set_temp_fn=lambda client, temp: client.set_steam_temp(round(temp)),
         current_op_fn=lambda client: client.current_status.get(
             "steam_boiler_enable", False
         ),

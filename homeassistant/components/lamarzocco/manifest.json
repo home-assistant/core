@@ -22,6 +22,6 @@
   "homekit": {},
   "iot_class": "cloud_polling",
   "loggers": ["lmcloud"],
-  "requirements": ["lmcloud==0.3.36"],
+  "requirements": ["lmcloud==0.4.0"],
   "ssdp": []
 }
