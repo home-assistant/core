@@ -1610,7 +1610,7 @@ python-myq==3.1.13
 python-mystrom==2.2.0
 
 # homeassistant.components.opensky
-python-opensky==0.2.0
+python-opensky==0.2.1
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
