@@ -7,11 +7,6 @@ import logging
 from hass_nabucasa import Cloud
 from hass_nabucasa.voice import STT_LANGUAGES, VoiceError
 
-from homeassistant.components.assist_pipeline import (
-    async_get_pipelines,
-    async_setup_pipeline_store,
-    async_update_pipeline,
-)
 from homeassistant.components.stt import (
     AudioBitRates,
     AudioChannels,
@@ -27,8 +22,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .assist_pipeline import async_migrate_cloud_pipeline_stt_engine
 from .client import CloudClient
-from .const import DOMAIN
+from .const import DOMAIN, STT_ENTITY_UNIQUE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +34,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Demo speech platform via config entry."""
+    """Set up Home Assistant Cloud speech platform via config entry."""
     cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     async_add_entities([CloudProviderEntity(cloud)])
 
@@ -46,8 +42,8 @@ async def async_setup_entry(
 class CloudProviderEntity(SpeechToTextEntity):
     """NabuCasa speech API provider."""
 
-    _attr_name = "Cloud"
-    _attr_unique_id = "cloud-speech-to-text"
+    _attr_name = "Home Assistant Cloud"
+    _attr_unique_id = STT_ENTITY_UNIQUE_ID
 
     def __init__(self, cloud: Cloud[CloudClient]) -> None:
         """Home Assistant NabuCasa Speech to text."""
@@ -85,18 +81,7 @@ class CloudProviderEntity(SpeechToTextEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is about to be added to hass."""
-        # Migrate existing pipelines with cloud stt to use new cloud stt engine id.
-        # Added in 2023.11.0. Can be removed in 2024.11.0.
-        # Make sure the pipeline store is loaded, needed because assist_pipeline
-        # is an after dependency of cloud
-        await async_setup_pipeline_store(self.hass)
-        pipelines = async_get_pipelines(self.hass)
-        for pipeline in pipelines:
-            if pipeline.stt_engine != "cloud":
-                continue
-            updates = pipeline.to_json() | {"stt_engine": self.entity_id}
-            updates.pop("id")
-            await async_update_pipeline(self.hass, pipeline, updates)
+        await async_migrate_cloud_pipeline_stt_engine(self.hass, self.entity_id)
 
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]

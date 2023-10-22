@@ -64,3 +64,5 @@ MODE_DEV = "development"
 MODE_PROD = "production"
 
 DISPATCHER_REMOTE_UPDATE = "cloud_remote_update"
+
+STT_ENTITY_UNIQUE_ID = "cloud-speech-to-text"
