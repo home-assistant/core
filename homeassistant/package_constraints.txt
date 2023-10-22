@@ -3,7 +3,7 @@ aiohttp==3.8.5;python_version<'3.12'
 aiohttp==3.9.0b0;python_version>='3.12'
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.36.1
+async-upnp-client==0.36.2
 atomicwrites-homeassistant==1.4.1
 attrs==23.1.0
 awesomeversion==23.8.0
@@ -103,7 +103,7 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==3.7.1
+anyio==4.0.0
 h11==0.14.0
 httpcore==0.18.0
 

@@ -29,7 +29,7 @@ PLATFORMS: list[Platform] = [Platform.COVER, Platform.BUTTON]
 _LOGGER = logging.getLogger(__name__)
 
 
-class IdasenDeskCoordinator(DataUpdateCoordinator):
+class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
     """Class to manage updates for the Idasen Desk."""
 
     def __init__(
