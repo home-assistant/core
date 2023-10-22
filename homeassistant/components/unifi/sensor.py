@@ -27,10 +27,11 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
     UnitOfTemperature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfPower
+from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
@@ -133,8 +134,10 @@ class UnifiSensorEntityDescription(
 ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     UnifiSensorEntityDescription[Clients, Client](
         key="Bandwidth sensor RX",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        icon="mdi:upload",
         has_entity_name=True,
         allowed_fn=lambda controller, _: controller.option_allow_bandwidth_sensors,
         api_handler_fn=lambda api: api.clients,
@@ -151,8 +154,10 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     ),
     UnifiSensorEntityDescription[Clients, Client](
         key="Bandwidth sensor TX",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        icon="mdi:download",
         has_entity_name=True,
         allowed_fn=lambda controller, _: controller.option_allow_bandwidth_sensors,
         api_handler_fn=lambda api: api.clients,
