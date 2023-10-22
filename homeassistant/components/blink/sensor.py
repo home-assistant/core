@@ -86,10 +86,17 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
             manufacturer=DEFAULT_BRAND,
             model=self._camera.camera_type,
         )
+        self._update_attr()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Return native value for blink."""
+        self._update_attr()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _update_attr(self) -> None:
+        """Update Attributes for sensor."""
         try:
             self._attr_native_value = self._camera.attributes[self._sensor_key]
             _LOGGER.debug(
@@ -103,4 +110,3 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
             _LOGGER.error(
                 "%s not a valid camera attribute. Did the API change?", self._sensor_key
             )
-        super()._handle_coordinator_update()

@@ -80,9 +80,16 @@ class BlinkBinarySensor(CoordinatorEntity[BlinkUpdateCoordinator], BinarySensorE
             manufacturer=DEFAULT_BRAND,
             model=self._camera.camera_type,
         )
+        self._update_attrs()
 
     @callback
     def _handle_coordinator_update(self) -> None:
+        """Handle update from data coordinator."""
+        self._update_attrs()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _update_attrs(self) -> None:
         """Handle update from data coordinator."""
         is_on = self._camera.attributes[self.entity_description.key]
         _LOGGER.debug(
@@ -94,4 +101,3 @@ class BlinkBinarySensor(CoordinatorEntity[BlinkUpdateCoordinator], BinarySensorE
         if self.entity_description.key == TYPE_BATTERY:
             is_on = is_on != "ok"
         self._attr_is_on = is_on
-        super()._handle_coordinator_update()

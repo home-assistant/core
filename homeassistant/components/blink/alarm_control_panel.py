@@ -67,10 +67,17 @@ class BlinkSyncModuleHA(
             name=f"{DOMAIN} {name}",
             manufacturer=DEFAULT_BRAND,
         )
+        self._update_attr()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update."""
+        self._update_attr()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _update_attr(self) -> None:
+        """Update attributes."""
         self.sync.attributes["network_info"] = self.api.networks
         self.sync.attributes["associated_cameras"] = list(self.sync.cameras)
         self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
@@ -78,7 +85,6 @@ class BlinkSyncModuleHA(
         self._attr_state = (
             STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
         )
-        super()._handle_coordinator_update()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
