@@ -213,35 +213,6 @@ class ZhaCover(ZhaEntity, CoverEntity):
         """Stop the cover tilt."""
         await self.async_stop_cover()
 
-    async def async_update(self) -> None:
-        """Attempt to retrieve the open/close state of the cover."""
-        await super().async_update()
-        await self.async_get_state()
-
-    async def async_get_state(self, from_cache=True):
-        """Fetch the current state."""
-        _LOGGER.debug("polling current state")
-        if self._cover_cluster_handler:
-            pos = await self._cover_cluster_handler.get_attribute_value(
-                "current_position_lift_percentage", from_cache=from_cache
-            )
-            _LOGGER.debug("read pos=%s", pos)
-            if pos is not None:
-                self._current_position = 100 - pos
-                self._state = (
-                    STATE_OPEN if self.current_cover_position > 0 else STATE_CLOSED
-                )
-            else:
-                self._current_position = None
-                self._state = None
-
-            tilt_pos = await self._cover_cluster_handler.get_attribute_value(
-                "current_position_tilt_percentage", from_cache=from_cache
-            )
-            _LOGGER.debug("read tilt pos=%s", tilt_pos)
-            if tilt_pos is not None:
-                self._tilt_position = 100 - tilt_pos
-
 
 @MULTI_MATCH(
     cluster_handler_names={
