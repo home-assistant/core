@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 
 from aiowithings import Activity, Goals, MeasurementType, SleepSummary
 
@@ -26,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ACTIVITY_COORDINATOR,
@@ -423,7 +425,7 @@ ACTIVITY_SENSORS = [
         translation_key="activity_steps_today",
         icon="mdi:shoe-print",
         native_unit_of_measurement="Steps",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     WithingsActivitySensorEntityDescription(
         key="activity_distance_today",
@@ -433,7 +435,7 @@ ACTIVITY_SENSORS = [
         icon="mdi:map-marker-distance",
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     WithingsActivitySensorEntityDescription(
         key="activity_floors_climbed_today",
@@ -441,7 +443,7 @@ ACTIVITY_SENSORS = [
         translation_key="activity_floors_climbed_today",
         icon="mdi:stairs-up",
         native_unit_of_measurement="Floors",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     WithingsActivitySensorEntityDescription(
         key="activity_soft_duration_today",
@@ -450,7 +452,8 @@ ACTIVITY_SENSORS = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
     ),
     WithingsActivitySensorEntityDescription(
         key="activity_moderate_duration_today",
@@ -459,7 +462,8 @@ ACTIVITY_SENSORS = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
     ),
     WithingsActivitySensorEntityDescription(
         key="activity_intense_duration_today",
@@ -468,7 +472,8 @@ ACTIVITY_SENSORS = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
     ),
     WithingsActivitySensorEntityDescription(
         key="activity_active_duration_today",
@@ -477,7 +482,7 @@ ACTIVITY_SENSORS = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     WithingsActivitySensorEntityDescription(
         key="activity_active_calories_burnt_today",
@@ -485,7 +490,7 @@ ACTIVITY_SENSORS = [
         suggested_display_precision=1,
         translation_key="activity_active_calories_burnt_today",
         native_unit_of_measurement="Calories",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     WithingsActivitySensorEntityDescription(
         key="activity_total_calories_burnt_today",
@@ -493,7 +498,7 @@ ACTIVITY_SENSORS = [
         suggested_display_precision=1,
         translation_key="activity_total_calories_burnt_today",
         native_unit_of_measurement="Calories",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
 ]
 
@@ -732,3 +737,8 @@ class WithingsActivitySensor(WithingsSensor):
         if not self.coordinator.data:
             return None
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    def last_reset(self) -> datetime:
+        """These values reset every day."""
+        return dt_util.start_of_local_day()

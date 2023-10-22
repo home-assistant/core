@@ -3,7 +3,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Active calories burnt today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'Calories',
     }),
     'context': <ANY>,
@@ -18,7 +19,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Active time today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -137,7 +139,8 @@
       'device_class': 'distance',
       'friendly_name': 'henk Distance travelled today',
       'icon': 'mdi:map-marker-distance',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
     }),
     'context': <ANY>,
@@ -211,7 +214,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Floors climbed today',
       'icon': 'mdi:stairs-up',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'Floors',
     }),
     'context': <ANY>,
@@ -272,7 +276,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Intense activity today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -376,7 +381,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Moderate activity today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -509,7 +515,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Soft activity today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -553,7 +560,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Steps today',
       'icon': 'mdi:shoe-print',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'Steps',
     }),
     'context': <ANY>,
@@ -628,7 +636,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Total calories burnt today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'Calories',
     }),
     'context': <ANY>,
