@@ -76,7 +76,7 @@ class BlinkCamera(CoordinatorEntity, Camera):
             await self._coordinator.async_refresh()
 
         except asyncio.TimeoutError:
-            self._attr_available = False
+            self.coordinator.last_update_success = False
 
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection for the camera."""
@@ -85,7 +85,7 @@ class BlinkCamera(CoordinatorEntity, Camera):
             self._camera.motion_enabled = False
             await self._coordinator.async_refresh()
         except asyncio.TimeoutError:
-            self._attr_available = False
+            self.coordinator.last_update_success = False
 
     @property
     def motion_detection_enabled(self) -> bool:
@@ -95,7 +95,6 @@ class BlinkCamera(CoordinatorEntity, Camera):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update camera data."""
-        self._attr_available = True
         self.async_write_ha_state()
 
     @property
