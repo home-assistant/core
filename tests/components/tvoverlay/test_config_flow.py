@@ -5,7 +5,15 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.tvoverlay.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import CONF_CONFIG_FLOW, CONF_DATA, HOST, NAME, mocked_tvoverlay_info
+from . import (
+    CONF_CONFIG_FLOW,
+    CONF_DEFAULT_FLOW,
+    DEFAULT_NAME,
+    HOST,
+    NAME,
+    mocked_tvoverlay_default_info,
+    mocked_tvoverlay_info,
+)
 
 from tests.common import MockConfigEntry
 
@@ -23,7 +31,23 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == NAME
-        assert result["data"] == CONF_DATA
+        assert result["data"] == CONF_CONFIG_FLOW
+
+
+async def test_flow_default_user(hass: HomeAssistant) -> None:
+    """Test user initialized flow with default name."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    with mocked_tvoverlay_default_info():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DEFAULT_FLOW,
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["title"] == DEFAULT_NAME
+        assert result["data"] == CONF_DEFAULT_FLOW
 
 
 async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
