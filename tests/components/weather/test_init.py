@@ -32,8 +32,9 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN,
+    LEGACY_SERVICE_GET_FORECAST,
     ROUNDING_PRECISION,
-    SERVICE_GET_FORECAST,
+    SERVICE_FORECAST,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
@@ -960,6 +961,13 @@ async def test_forecast_twice_daily_missing_is_daytime(
 
 
 @pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_FORECAST,
+        LEGACY_SERVICE_GET_FORECAST,
+    ],
+)
+@pytest.mark.parametrize(
     ("forecast_type", "supported_features"),
     [
         ("daily", WeatherEntityFeature.FORECAST_DAILY),
@@ -976,6 +984,7 @@ async def test_get_forecast(
     forecast_type: str,
     supported_features: int,
     snapshot: SnapshotAssertion,
+    service: str,
 ) -> None:
     """Test get forecast service."""
 
@@ -1006,7 +1015,7 @@ async def test_get_forecast(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": entity0.entity_id,
             "type": forecast_type,
@@ -1017,9 +1026,30 @@ async def test_get_forecast(
     assert response == snapshot
 
 
+@pytest.mark.parametrize(
+    ("service", "expected"),
+    [
+        (
+            SERVICE_FORECAST,
+            {
+                "weather.test": {
+                    "forecast": [],
+                }
+            },
+        ),
+        (
+            LEGACY_SERVICE_GET_FORECAST,
+            {
+                "forecast": [],
+            },
+        ),
+    ],
+)
 async def test_get_forecast_no_forecast(
     hass: HomeAssistant,
     config_flow_fixture: None,
+    service: str,
+    expected: dict[str, list | dict[str, list]],
 ) -> None:
     """Test get forecast service."""
 
@@ -1040,7 +1070,7 @@ async def test_get_forecast_no_forecast(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": entity0.entity_id,
             "type": "daily",
@@ -1048,11 +1078,16 @@ async def test_get_forecast_no_forecast(
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "forecast": [],
-    }
+    assert response == expected
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_FORECAST,
+        LEGACY_SERVICE_GET_FORECAST,
+    ],
+)
 @pytest.mark.parametrize(
     ("supported_features", "forecast_types"),
     [
@@ -1066,6 +1101,7 @@ async def test_get_forecast_unsupported(
     config_flow_fixture: None,
     forecast_types: list[str],
     supported_features: int,
+    service: str,
 ) -> None:
     """Test get forecast service."""
 
@@ -1095,7 +1131,7 @@ async def test_get_forecast_unsupported(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_GET_FORECAST,
+                service,
                 {
                     "entity_id": weather_entity.entity_id,
                     "type": forecast_type,
