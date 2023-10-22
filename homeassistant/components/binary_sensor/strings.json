@@ -247,8 +247,8 @@
     "presence": {
       "name": "Presence",
       "state": {
-        "off": "[%key:component::device_tracker::entity_component::_::state::not_home%]",
-        "on": "[%key:component::device_tracker::entity_component::_::state::home%]"
+        "off": "[%key:common::state::not_home%]",
+        "on": "[%key:common::state::home%]"
       }
     },
     "problem": {
