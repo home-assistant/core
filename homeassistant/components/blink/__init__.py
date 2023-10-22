@@ -89,11 +89,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await coordinator.api.start()
-        if coordinator.api.auth.check_key_required():
-            _LOGGER.debug("Attempting a reauth flow")
-            raise ConfigEntryAuthFailed("Need 2FA for Blink")
     except (ClientError, asyncio.TimeoutError) as ex:
         raise ConfigEntryNotReady("Can not connect to host") from ex
+
+    if coordinator.api.auth.check_key_required():
+        _LOGGER.debug("Attempting a reauth flow")
+        raise ConfigEntryAuthFailed("Need 2FA for Blink")
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
