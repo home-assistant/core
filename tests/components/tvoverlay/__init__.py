@@ -1,19 +1,20 @@
 """Tests for the TvOverlay integration."""
 from unittest.mock import AsyncMock, patch
 
+from homeassistant.components.tvoverlay.const import DEFAULT_NAME
 from homeassistant.const import CONF_HOST, CONF_NAME
 
 HOST = "0.0.0.0"
-NAME = "Mock Android TV"
-
-CONF_DATA = {
-    CONF_HOST: HOST,
-    CONF_NAME: NAME,
-}
+NAME = "Android Smart TV"
 
 CONF_CONFIG_FLOW = {
     CONF_HOST: HOST,
     CONF_NAME: NAME,
+}
+
+CONF_DEFAULT_FLOW = {
+    CONF_HOST: HOST,
+    CONF_NAME: DEFAULT_NAME,
 }
 
 
@@ -34,7 +35,16 @@ def patch_config_flow_tv(mocked_tv: AsyncMock):
 
 def mocked_tvoverlay_info():
     """Create mocked tvoverlay."""
-    mocked_tvoverlay_info = {"result": {"settings": {"deviceName": "Android TV"}}}
+    mocked_tvoverlay_info = {"result": {"settings": {"deviceName": NAME}}}
+    return patch(
+        "homeassistant.components.tvoverlay.config_flow.Notifications.async_connect",
+        return_value=mocked_tvoverlay_info,
+    )
+
+
+def mocked_tvoverlay_default_info():
+    """Create mocked tvoverlay with default name."""
+    mocked_tvoverlay_info = {"result": {"settings": {"deviceName": DEFAULT_NAME}}}
     return patch(
         "homeassistant.components.tvoverlay.config_flow.Notifications.async_connect",
         return_value=mocked_tvoverlay_info,
