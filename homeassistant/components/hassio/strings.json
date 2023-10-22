@@ -296,6 +296,10 @@
         "location": {
           "name": "[%key:common::config_flow::data::location%]",
           "description": "Name of a backup network storage to host backups."
+        },
+        "homeassistant_exclude_database": {
+          "name": "Home Assistant exclude database",
+          "description": "Exclude the Home Assistant database file from backup"
         }
       }
     },
@@ -330,6 +334,10 @@
         "location": {
           "name": "[%key:common::config_flow::data::location%]",
           "description": "[%key:component::hassio::services::backup_full::fields::location::description%]"
+        },
+        "homeassistant_exclude_database": {
+          "name": "Home Assistant exclude database",
+          "description": "Exclude the Home Assistant database file from backup"
         }
       }
     },
