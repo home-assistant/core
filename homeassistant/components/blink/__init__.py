@@ -181,14 +181,12 @@ async def async_handle_save_video_service(
     if not hass.config.is_allowed_path(video_path):
         _LOGGER.error("Can't write %s, no access to path!", video_path)
         return
-    try:
-        all_cameras = hass.data[DOMAIN][entry.entry_id].api.cameras
-
-    except OSError as err:
-        _LOGGER.error("Can't write image to file: %s", err)
-
+    all_cameras = hass.data[DOMAIN][entry.entry_id].api.cameras
     if camera_name in all_cameras:
-        await all_cameras[camera_name].video_to_file(video_path)
+        try:
+            await all_cameras[camera_name].video_to_file(video_path)
+        except OSError as err:
+            _LOGGER.error("Can't write image to file: %s", err)
 
 
 async def async_handle_save_recent_clips_service(
@@ -200,11 +198,9 @@ async def async_handle_save_recent_clips_service(
     if not hass.config.is_allowed_path(clips_dir):
         _LOGGER.error("Can't write to directory %s, no access to path!", clips_dir)
         return
-
-    try:
-        all_cameras = hass.data[DOMAIN][entry.entry_id].api.cameras
-    except OSError as err:
-        _LOGGER.error("Can't write recent clips to directory: %s", err)
-
+    all_cameras = hass.data[DOMAIN][entry.entry_id].api.cameras
     if camera_name in all_cameras:
-        await all_cameras[camera_name].save_recent_clips(output_dir=clips_dir)
+        try:
+            await all_cameras[camera_name].save_recent_clips(output_dir=clips_dir)
+        except OSError as err:
+            _LOGGER.error("Can't write recent clips to directory: %s", err)
