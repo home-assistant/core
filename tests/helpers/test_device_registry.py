@@ -198,7 +198,7 @@ async def test_loading_from_storage(
                     "entry_type": dr.DeviceEntryType.SERVICE,
                     "hw_version": "hw_version",
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name_by_user": "Test Friendly Name",
@@ -213,7 +213,7 @@ async def test_loading_from_storage(
                     "config_entries": [mock_config_entry.entry_id],
                     "connections": [["Zigbee", "23.45.67.89.01"]],
                     "id": "bcdefghijklmn",
-                    "identifiers": [["serial", "34:56:AB:CD:EF:12"]],
+                    "identifiers": [["serial", "3456ABCDEF12"]],
                     "orphaned_timestamp": None,
                 }
             ],
@@ -228,7 +228,7 @@ async def test_loading_from_storage(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "01.23.45.67.89")},
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
         manufacturer="manufacturer",
         model="model",
     )
@@ -241,7 +241,7 @@ async def test_loading_from_storage(
         entry_type=dr.DeviceEntryType.SERVICE,
         hw_version="hw_version",
         id="abcdefghijklm",
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
         manufacturer="manufacturer",
         model="model",
         name_by_user="Test Friendly Name",
@@ -258,7 +258,7 @@ async def test_loading_from_storage(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "23.45.67.89.01")},
-        identifiers={("serial", "34:56:AB:CD:EF:12")},
+        identifiers={("serial", "3456ABCDEF12")},
         manufacturer="manufacturer",
         model="model",
     )
@@ -266,7 +266,7 @@ async def test_loading_from_storage(
         config_entries={mock_config_entry.entry_id},
         connections={("Zigbee", "23.45.67.89.01")},
         id="bcdefghijklmn",
-        identifiers={("serial", "34:56:AB:CD:EF:12")},
+        identifiers={("serial", "3456ABCDEF12")},
         manufacturer="manufacturer",
         model="model",
     )
@@ -293,7 +293,7 @@ async def test_migration_1_1_to_1_4(
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "entry_type": "service",
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
@@ -318,7 +318,7 @@ async def test_migration_1_1_to_1_4(
                     "connections": [],
                     "entry_type": "service",
                     "id": "deletedid",
-                    "identifiers": [["serial", "12:34:56:AB:CD:FF"]],
+                    "identifiers": [["serial", "123456ABCDFF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
@@ -335,7 +335,7 @@ async def test_migration_1_1_to_1_4(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "01.23.45.67.89")},
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
     )
     assert entry.id == "abcdefghijklm"
 
@@ -343,7 +343,7 @@ async def test_migration_1_1_to_1_4(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "01.23.45.67.89")},
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
         sw_version="new_version",
     )
     assert entry.id == "abcdefghijklm"
@@ -365,7 +365,7 @@ async def test_migration_1_1_to_1_4(
                     "entry_type": "service",
                     "hw_version": None,
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
@@ -398,7 +398,7 @@ async def test_migration_1_1_to_1_4(
                     "config_entries": ["123456"],
                     "connections": [],
                     "id": "deletedid",
-                    "identifiers": [["serial", "12:34:56:AB:CD:FF"]],
+                    "identifiers": [["serial", "123456ABCDFF"]],
                     "orphaned_timestamp": None,
                 }
             ],
@@ -427,7 +427,7 @@ async def test_migration_1_2_to_1_4(
                     "disabled_by": None,
                     "entry_type": "service",
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
@@ -463,7 +463,7 @@ async def test_migration_1_2_to_1_4(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "01.23.45.67.89")},
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
     )
     assert entry.id == "abcdefghijklm"
 
@@ -471,7 +471,7 @@ async def test_migration_1_2_to_1_4(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "01.23.45.67.89")},
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
         sw_version="new_version",
     )
     assert entry.id == "abcdefghijklm"
@@ -494,7 +494,7 @@ async def test_migration_1_2_to_1_4(
                     "entry_type": "service",
                     "hw_version": None,
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
@@ -549,7 +549,7 @@ async def test_migration_1_3_to_1_4(
                     "entry_type": "service",
                     "hw_version": "hw_version",
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
@@ -586,7 +586,7 @@ async def test_migration_1_3_to_1_4(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "01.23.45.67.89")},
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
     )
     assert entry.id == "abcdefghijklm"
 
@@ -594,7 +594,7 @@ async def test_migration_1_3_to_1_4(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "01.23.45.67.89")},
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
         sw_version="new_version",
     )
     assert entry.id == "abcdefghijklm"
@@ -617,7 +617,7 @@ async def test_migration_1_3_to_1_4(
                     "entry_type": "service",
                     "hw_version": "hw_version",
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
@@ -1988,7 +1988,7 @@ async def test_loading_invalid_configuration_url_from_storage(
                     "entry_type": dr.DeviceEntryType.SERVICE,
                     "hw_version": None,
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": None,
                     "model": None,
                     "name_by_user": None,
@@ -2007,6 +2007,6 @@ async def test_loading_invalid_configuration_url_from_storage(
     assert len(registry.devices) == 1
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
     )
     assert entry.configuration_url == "invalid"
