@@ -619,7 +619,8 @@ async def async_setup_entry(
     data: FitbitData = hass.data[DOMAIN][entry.entry_id]
     api = data.api
 
-    # Note: This will only be one rpc since it will cache the user profile
+    # These are run serially to reuse the cached user profile, not gathered
+    # to avoid two racing requests.
     user_profile = await api.async_get_user_profile()
     unit_system = await api.async_get_unit_system()
 
