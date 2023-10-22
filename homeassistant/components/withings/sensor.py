@@ -29,13 +29,10 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
+from . import WithingsData
 from .const import (
-    ACTIVITY_COORDINATOR,
     DOMAIN,
-    GOALS_COORDINATOR,
-    MEASUREMENT_COORDINATOR,
     SCORE_POINTS,
-    SLEEP_COORDINATOR,
     UOM_BEATS_PER_MINUTE,
     UOM_BREATHS_PER_MINUTE,
     UOM_FREQUENCY,
@@ -569,9 +566,9 @@ async def async_setup_entry(
     """Set up the sensor config entry."""
     ent_reg = er.async_get(hass)
 
-    measurement_coordinator: WithingsMeasurementDataUpdateCoordinator = hass.data[
-        DOMAIN
-    ][entry.entry_id][MEASUREMENT_COORDINATOR]
+    withings_data: WithingsData = hass.data[DOMAIN][entry.entry_id]
+
+    measurement_coordinator = withings_data.measurement_coordinator
 
     entities: list[SensorEntity] = []
     entities.extend(
@@ -599,9 +596,7 @@ async def async_setup_entry(
 
     measurement_coordinator.async_add_listener(_async_measurement_listener)
 
-    goals_coordinator: WithingsGoalsDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ][GOALS_COORDINATOR]
+    goals_coordinator = withings_data.goals_coordinator
 
     current_goals = get_current_goals(goals_coordinator.data)
 
@@ -623,9 +618,7 @@ async def async_setup_entry(
 
     goals_coordinator.async_add_listener(_async_goals_listener)
 
-    activity_coordinator: WithingsActivityDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ][ACTIVITY_COORDINATOR]
+    activity_coordinator = withings_data.activity_coordinator
 
     activity_callback: Callable[[], None] | None = None
 
@@ -650,9 +643,7 @@ async def async_setup_entry(
             _async_add_activity_entities
         )
 
-    sleep_coordinator: WithingsSleepDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ][SLEEP_COORDINATOR]
+    sleep_coordinator = withings_data.sleep_coordinator
 
     entities.extend(
         WithingsSleepSensor(sleep_coordinator, attribute) for attribute in SLEEP_SENSORS
