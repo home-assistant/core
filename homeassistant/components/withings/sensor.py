@@ -25,12 +25,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import WithingsData
 from .const import (
     DOMAIN,
-    GOALS_COORDINATOR,
-    MEASUREMENT_COORDINATOR,
     SCORE_POINTS,
-    SLEEP_COORDINATOR,
     UOM_BEATS_PER_MINUTE,
     UOM_BREATHS_PER_MINUTE,
     UOM_FREQUENCY,
@@ -462,9 +460,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    measurement_coordinator: WithingsMeasurementDataUpdateCoordinator = hass.data[
-        DOMAIN
-    ][entry.entry_id][MEASUREMENT_COORDINATOR]
+    withings_data: WithingsData = hass.data[DOMAIN][entry.entry_id]
+
+    measurement_coordinator = withings_data.measurement_coordinator
 
     entities: list[SensorEntity] = []
     entities.extend(
@@ -492,9 +490,7 @@ async def async_setup_entry(
 
     measurement_coordinator.async_add_listener(_async_measurement_listener)
 
-    goals_coordinator: WithingsGoalsDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ][GOALS_COORDINATOR]
+    goals_coordinator = withings_data.goals_coordinator
 
     current_goals = get_current_goals(goals_coordinator.data)
 
@@ -516,9 +512,7 @@ async def async_setup_entry(
 
     goals_coordinator.async_add_listener(_async_goals_listener)
 
-    sleep_coordinator: WithingsSleepDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ][SLEEP_COORDINATOR]
+    sleep_coordinator = withings_data.sleep_coordinator
 
     entities.extend(
         WithingsSleepSensor(sleep_coordinator, attribute) for attribute in SLEEP_SENSORS
