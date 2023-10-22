@@ -221,6 +221,7 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
             name=f"{meter.measurement_type.capitalize()} {meter.location.street} {meter.location.street_number}",
             model=f"{meter.type} {meter.full_serial_number}",
             manufacturer=MANUFACTURER,
+            serial_number=meter.full_serial_number,
         )
 
     @property
