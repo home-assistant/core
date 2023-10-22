@@ -7,7 +7,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 import contextlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -131,10 +131,11 @@ class WithingsData:
     sleep_coordinator: WithingsSleepDataUpdateCoordinator
     bed_presence_coordinator: WithingsBedPresenceDataUpdateCoordinator
     goals_coordinator: WithingsGoalsDataUpdateCoordinator
+    coordinators: set[WithingsDataUpdateCoordinator] = field(default_factory=set)
 
-    def coordinators(self) -> set[WithingsDataUpdateCoordinator]:
-        """Return the coordinators in a set."""
-        return {
+    def __post_init__(self) -> None:
+        """Collect all coordinators in a list."""
+        self.coordinators = {
             self.measurement_coordinator,
             self.sleep_coordinator,
             self.bed_presence_coordinator,
@@ -173,7 +174,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         goals_coordinator=WithingsGoalsDataUpdateCoordinator(hass, client),
     )
 
-    for coordinator in withings_data.coordinators():
+    for coordinator in withings_data.coordinators:
         await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = withings_data
@@ -184,7 +185,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.debug("Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID])
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         await async_unsubscribe_webhooks(client)
-        for coordinator in withings_data.coordinators():
+        for coordinator in withings_data.coordinators:
             coordinator.webhook_subscription_listener(False)
 
     async def register_webhook(
@@ -216,7 +217,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         await async_subscribe_webhooks(client, webhook_url)
-        for coordinator in withings_data.coordinators():
+        for coordinator in withings_data.coordinators:
             coordinator.webhook_subscription_listener(True)
         LOGGER.debug("Register Withings webhook: %s", webhook_url)
         entry.async_on_unload(
@@ -357,7 +358,7 @@ def get_webhook_handler(
             NotificationCategory.UNKNOWN,
         )
 
-        for coordinator in withings_data.coordinators():
+        for coordinator in withings_data.coordinators:
             if notification_category in coordinator.notification_categories:
                 await coordinator.async_webhook_data_updated(notification_category)
 
