@@ -2,7 +2,6 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiowithings import Activity
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -11,13 +10,14 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import load_goals_fixture, load_measurements_fixture, setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_array_fixture,
+from . import (
+    load_activity_fixture,
+    load_goals_fixture,
+    load_measurements_fixture,
+    setup_integration,
 )
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.freeze_time("2023-10-21")
@@ -121,9 +121,7 @@ async def test_update_new_measurement_creates_new_sensor(
 
     assert hass.states.get("sensor.henk_fat_mass") is None
 
-    withings.get_measurement_in_period.return_value = load_measurements_fixture(
-        "withings/measurements.json"
-    )
+    withings.get_measurement_in_period.return_value = load_measurements_fixture()
 
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
@@ -147,7 +145,7 @@ async def test_update_new_goals_creates_new_sensor(
     assert hass.states.get("sensor.henk_step_goal") is None
     assert hass.states.get("sensor.henk_weight_goal") is not None
 
-    withings.get_goals.return_value = load_goals_fixture("withings/goals.json")
+    withings.get_goals.return_value = load_goals_fixture()
 
     freezer.tick(timedelta(hours=1))
     async_fire_time_changed(hass)
@@ -238,9 +236,7 @@ async def test_activity_sensors_created_when_receive_activity_data(
 
     assert hass.states.get("sensor.henk_steps_today") is None
 
-    activity_json = load_json_array_fixture("withings/activity.json")
-    activities = [Activity.from_api(activity) for activity in activity_json]
-    withings.get_activities_in_period.return_value = activities
+    withings.get_activities_in_period.return_value = load_activity_fixture()
 
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)

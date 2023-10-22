@@ -5,7 +5,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from aiohttp.test_utils import TestClient
-from aiowithings import Goals, MeasurementGroup
+from aiowithings import Activity, Goals, MeasurementGroup
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.webhook import async_generate_url
@@ -84,3 +84,11 @@ def load_measurements_fixture(
     """Return measurement from fixture."""
     meas_json = load_json_array_fixture(fixture)
     return [MeasurementGroup.from_api(measurement) for measurement in meas_json]
+
+
+def load_activity_fixture(
+    fixture: str = "withings/activity.json",
+) -> list[Activity]:
+    """Return measurement from fixture."""
+    activity_json = load_json_array_fixture(fixture)
+    return [Activity.from_api(activity) for activity in activity_json]
