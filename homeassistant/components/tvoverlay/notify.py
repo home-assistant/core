@@ -79,53 +79,70 @@ class TvOverlayNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a TvOverlay device."""
-        data = kwargs.get(ATTR_DATA, {})
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        message_id = data.get(ATTR_ID, str(uuid.uuid1()))
-        app_title = data.get(ATTR_APP_TITLE, DEFAULT_APP_NAME)
-        source_name = data.get(ATTR_SOURCE_NAME, DEFAULT_SOURCE_NAME)
-        app_icon: str | ImageUrlSource | None = None
-        app_icon_data = data.get(ATTR_APP_ICON)
-        if isinstance(app_icon_data, str):
-            app_icon = app_icon_data
+        data = kwargs.get(ATTR_DATA, {})
+        if data:
+            message_id = data.get(ATTR_ID, str(uuid.uuid1()))
+            app_title = data.get(ATTR_APP_TITLE, DEFAULT_APP_NAME)
+            source_name = data.get(ATTR_SOURCE_NAME, DEFAULT_SOURCE_NAME)
+            app_icon: str | ImageUrlSource | None = None
+            app_icon_data = data.get(ATTR_APP_ICON)
+            if isinstance(app_icon_data, str):
+                app_icon = app_icon_data
+            else:
+                app_icon = self.populate_image(app_icon_data) if app_icon_data else None
+
+            badge_icon = data.get(ATTR_BADGE_ICON, DEFAULT_SMALL_ICON)
+            badge_color = data.get(ATTR_BADGE_COLOR, COLOR_GREEN)
+            position = data.get(ATTR_POSITION, Positions.TOP_RIGHT.value)
+
+            if position not in [member.value for member in Positions]:
+                position = Positions.TOP_RIGHT.value
+                _LOGGER.warning(
+                    "Invalid position value: %s. Has to be one of: %s",
+                    position,
+                    [member.value for member in Positions],
+                )
+
+            duration = str(data.get(ATTR_DURATION, DEFAULT_DURATION))
+            image: str | ImageUrlSource | None = None
+            image_data = data.get(ATTR_IMAGE)
+            if isinstance(image_data, str):
+                image = image_data
+            else:
+                image = self.populate_image(image_data) if image_data else None
+
+            is_persistent = cv.boolean(data.get(ATTR_PERSISTENT, False))
+            text_color = data.get(ATTR_TEXT_COLOR)
+            border_color = data.get(ATTR_BORDER_COLOR)
+            bg_color = data.get(ATTR_BG_COLOR)
+            shape = data.get(ATTR_SHAPE, Shapes.CIRCLE.value)
+
+            if shape not in [member.value for member in Shapes]:
+                shape = Shapes.CIRCLE.value
+                _LOGGER.warning(
+                    "Invalid shape value: %s. Has to be one of: %s",
+                    shape,
+                    [member.value for member in Shapes],
+                )
+
+            visible = cv.boolean(data.get(ATTR_VISIBLE, True))
         else:
-            app_icon = self.populate_image(app_icon_data) if app_icon_data else None
-
-        badge_icon = data.get(ATTR_BADGE_ICON, DEFAULT_SMALL_ICON)
-        badge_color = data.get(ATTR_BADGE_COLOR, COLOR_GREEN)
-        position = data.get(ATTR_POSITION, Positions.TOP_RIGHT.value)
-
-        if position not in [member.value for member in Positions]:
-            position = Positions.TOP_RIGHT.value
-            _LOGGER.warning(
-                "Invalid position value: %s. Has to be one of: %s",
-                position,
-                [member.value for member in Positions],
-            )
-
-        duration = str(data.get(ATTR_DURATION, DEFAULT_DURATION))
-        image: str | ImageUrlSource | None = None
-        image_data = data.get(ATTR_IMAGE)
-        if isinstance(image_data, str):
-            image = image_data
-        else:
-            image = self.populate_image(image_data) if image_data else None
-
-        is_persistent = cv.boolean(data.get(ATTR_PERSISTENT, False))
-        text_color = data.get(ATTR_TEXT_COLOR)
-        border_color = data.get(ATTR_BORDER_COLOR)
-        bg_color = data.get(ATTR_BG_COLOR)
-        shape = data.get(ATTR_SHAPE, Shapes.CIRCLE.value)
-
-        if shape not in [member.value for member in Shapes]:
+            message_id = str(uuid.uuid1())
+            badge_icon = DEFAULT_SMALL_ICON
+            badge_color = COLOR_GREEN
+            text_color = None
+            border_color = COLOR_GREEN
+            bg_color = None
             shape = Shapes.CIRCLE.value
-            _LOGGER.warning(
-                "Invalid shape value: %s. Has to be one of: %s",
-                shape,
-                [member.value for member in Shapes],
-            )
-
-        visible = cv.boolean(data.get(ATTR_VISIBLE, True))
+            duration = str(DEFAULT_DURATION)
+            visible = True
+            source_name = DEFAULT_SOURCE_NAME
+            app_title = DEFAULT_APP_NAME
+            app_icon = None
+            image = None
+            position = Positions.TOP_RIGHT.value
+            is_persistent = False
 
         if is_persistent:
             _LOGGER.info("Sending TvOverlay persistent notification")
