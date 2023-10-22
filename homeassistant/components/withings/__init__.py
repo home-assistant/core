@@ -56,6 +56,7 @@ from .const import (
     CONF_USE_WEBHOOK,
     DEFAULT_TITLE,
     DOMAIN,
+    GOALS_COORDINATOR,
     LOGGER,
     MEASUREMENT_COORDINATOR,
     SLEEP_COORDINATOR,
@@ -63,6 +64,7 @@ from .const import (
 from .coordinator import (
     WithingsBedPresenceDataUpdateCoordinator,
     WithingsDataUpdateCoordinator,
+    WithingsGoalsDataUpdateCoordinator,
     WithingsMeasurementDataUpdateCoordinator,
     WithingsSleepDataUpdateCoordinator,
 )
@@ -160,6 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         BED_PRESENCE_COORDINATOR: WithingsBedPresenceDataUpdateCoordinator(
             hass, client
         ),
+        GOALS_COORDINATOR: WithingsGoalsDataUpdateCoordinator(hass, client),
     }
 
     for coordinator in coordinators.values():

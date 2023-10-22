@@ -3,7 +3,7 @@ from datetime import timedelta
 import time
 from unittest.mock import AsyncMock, patch
 
-from aiowithings import Device, MeasurementGroup, SleepSummary, WithingsClient
+from aiowithings import Device, Goals, MeasurementGroup, SleepSummary, WithingsClient
 from aiowithings.models import NotificationConfiguration
 import pytest
 
@@ -148,8 +148,12 @@ def mock_withings():
         for not_conf in notification_json["profiles"]
     ]
 
+    goals_json = load_json_object_fixture("withings/goals.json")
+    goals = Goals.from_api(goals_json)
+
     mock = AsyncMock(spec=WithingsClient)
     mock.get_devices.return_value = devices
+    mock.get_goals.return_value = goals
     mock.get_measurement_in_period.return_value = measurement_groups
     mock.get_measurement_since.return_value = measurement_groups
     mock.get_sleep_summary_since.return_value = sleep_summaries
