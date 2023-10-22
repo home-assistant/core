@@ -1576,6 +1576,43 @@ async def test_register_entity_service_response_data_multiple_matches(
     }
 
 
+async def test_register_entity_service_response_data_multiple_matches_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test an entity service that does supports response data and matching many entities raises exceptions."""
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        assert call.return_response
+        if target.entity_id == "mock_integration.entity1":
+            raise RuntimeError("Something went wrong")
+        return {"response-key": f"response-value-{target.entity_id}"}
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(entity_id="mock_integration.entity1")
+    entity2 = MockEntity(entity_id="mock_integration.entity2")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    entity_platform.async_register_entity_service(
+        "hello",
+        {"some": str},
+        generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+    with pytest.raises(RuntimeError, match="Something went wrong"):
+        await hass.services.async_call(
+            "mock_platform",
+            "hello",
+            service_data={"some": "data"},
+            target={"entity_id": [entity1.entity_id, entity2.entity_id]},
+            blocking=True,
+            return_response=True,
+        )
+
+
 async def test_invalid_entity_id(hass: HomeAssistant) -> None:
     """Test specifying an invalid entity id."""
     platform = MockEntityPlatform(hass)

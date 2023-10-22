@@ -599,6 +599,42 @@ async def test_register_entity_service_response_data_multiple_matches(
     }
 
 
+async def test_register_entity_service_response_data_multiple_matches_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test asking for service response data and matching many entities raises exceptions."""
+    entity1 = MockEntity(entity_id=f"{DOMAIN}.entity1")
+    entity2 = MockEntity(entity_id=f"{DOMAIN}.entity2")
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        if target.entity_id == f"{DOMAIN}.entity1":
+            raise RuntimeError("Something went wrong")
+        return {"response-key": f"response-value-{target.entity_id}"}
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
+    await component.async_add_entities([entity1, entity2])
+
+    component.async_register_entity_service(
+        "hello",
+        {"some": str},
+        generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    with pytest.raises(RuntimeError, match="Something went wrong"):
+        await hass.services.async_call(
+            DOMAIN,
+            "hello",
+            service_data={"some": "data"},
+            target={"entity_id": [entity1.entity_id, entity2.entity_id]},
+            blocking=True,
+            return_response=True,
+        )
+
+
 async def test_legacy_register_entity_service_response_data_multiple_matches(
     hass: HomeAssistant,
 ) -> None:

@@ -791,7 +791,7 @@ async def entity_service_call(
     func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
-) -> EntityServiceResponse | None:
+) -> EntityServiceResponse:
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
@@ -873,31 +873,33 @@ async def entity_service_call(
     if len(entities) == 1:
         # Single entity case avoids creating task
         entity = entities[0]
-        response = await _handle_entity_call(hass, entity, func, data, call.context)
+        single_response = await _handle_entity_call(
+            hass, entity, func, data, call.context
+        )
         if entity.should_poll:
             # Context expires if the turn on commands took a long time.
             # Set context again so it's there when we update
             entity.async_set_context(call.context)
             await entity.async_update_ha_state(True)
-        return response if return_response else None
+        return {entity.entity_id: single_response} if return_response else None
 
-    done, pending = await asyncio.wait(
-        [
-            asyncio.create_task(
-                entity.async_request_call(
-                    _handle_entity_call(hass, entity, func, data, call.context)
-                )
+    # Use asyncio.gather here to ensure the returned results are in the same order as the entities list.
+    results: list[ServiceResponse] = await asyncio.gather(
+        *[
+            entity.async_request_call(
+                _handle_entity_call(hass, entity, func, data, call.context)
             )
             for entity in entities
-        ]
+        ],
+        return_exceptions=True,
     )
-    assert not pending
 
     response_data: EntityServiceResponse = {}
     assert response_data is not None
-    for task in done:
-        if (result := task.result()) is not None:
-            response_data.update(result)
+    for entity, result in zip(entities, results):
+        if isinstance(result, Exception):
+            raise result
+        response_data[entity.entity_id] = result
 
     tasks: list[asyncio.Task[None]] = []
 
@@ -925,7 +927,7 @@ async def _handle_entity_call(
     func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
     data: dict | ServiceCall,
     context: Context,
-) -> EntityServiceResponse:
+) -> ServiceResponse:
     """Handle calling service method."""
     entity.async_set_context(context)
 
@@ -954,7 +956,7 @@ async def _handle_entity_call(
         )
         result = await result
 
-    return {entity.entity_id: result} if result is not None else None
+    return result
 
 
 @bind_hass
