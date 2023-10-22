@@ -458,7 +458,7 @@ async-interrupt==1.1.1
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.36.1
+async-upnp-client==0.36.2
 
 # homeassistant.components.keyboard_remote
 asyncinotify==4.0.2
@@ -512,7 +512,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.36.7
+bellows==0.36.5
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.1
