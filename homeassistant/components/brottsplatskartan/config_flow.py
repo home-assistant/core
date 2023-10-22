@@ -18,11 +18,10 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_LOCATION): selector.LocationSelector(
             selector.LocationSelectorConfig(radius=False, icon="")
         ),
-        vol.Optional(CONF_AREA, default="none"): selector.SelectSelector(
+        vol.Optional(CONF_AREA): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=AREAS,
                 mode=selector.SelectSelectorMode.DROPDOWN,
-                translation_key="areas",
             )
         ),
     }
@@ -34,21 +33,6 @@ class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a configuration from config.yaml."""
-
-        if config.get(CONF_LATITUDE):
-            config[CONF_LOCATION] = {
-                CONF_LATITUDE: config[CONF_LATITUDE],
-                CONF_LONGITUDE: config[CONF_LONGITUDE],
-            }
-        if not config.get(CONF_AREA):
-            config[CONF_AREA] = "none"
-        else:
-            config[CONF_AREA] = config[CONF_AREA][0]
-
-        return await self.async_step_user(user_input=config)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -58,9 +42,7 @@ class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             latitude: float | None = None
             longitude: float | None = None
-            area: str | None = (
-                user_input[CONF_AREA] if user_input[CONF_AREA] != "none" else None
-            )
+            area: str | None = user_input.get(CONF_AREA)
 
             if area:
                 name = f"{DEFAULT_NAME} {area}"

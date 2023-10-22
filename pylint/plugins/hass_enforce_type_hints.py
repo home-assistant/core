@@ -3014,7 +3014,7 @@ def _is_test_function(module_name: str, node: nodes.FunctionDef) -> bool:
     return module_name.startswith("tests.") and node.name.startswith("test_")
 
 
-class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
+class HassTypeHintChecker(BaseChecker):
     """Checker for setup type hints."""
 
     name = "hass_enforce_type_hints"

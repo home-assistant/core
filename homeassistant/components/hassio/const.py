@@ -82,6 +82,24 @@ PLACEHOLDER_KEY_COMPONENTS = "components"
 
 ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
 
+CORE_CONTAINER = "homeassistant"
+SUPERVISOR_CONTAINER = "hassio_supervisor"
+
+CONTAINER_STATS = "stats"
+CONTAINER_CHANGELOG = "changelog"
+CONTAINER_INFO = "info"
+
+# This is a mapping of which endpoint the key in the addon data
+# is obtained from so we know which endpoint to update when the
+# coordinator polls for updates.
+KEY_TO_UPDATE_TYPES: dict[str, set[str]] = {
+    ATTR_VERSION_LATEST: {CONTAINER_INFO, CONTAINER_CHANGELOG},
+    ATTR_MEMORY_PERCENT: {CONTAINER_STATS},
+    ATTR_CPU_PERCENT: {CONTAINER_STATS},
+    ATTR_VERSION: {CONTAINER_INFO},
+    ATTR_STATE: {CONTAINER_INFO},
+}
+
 
 class SupervisorEntityModel(StrEnum):
     """Supervisor entity model."""

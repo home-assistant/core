@@ -19,6 +19,8 @@ def mock_nextbus_lists(mock_nextbus: MagicMock) -> MagicMock:
             "stop": [
                 {"tag": "5650", "title": "Market St & 7th St"},
                 {"tag": "5651", "title": "Market St & 7th St"},
+                # Error case test. Duplicate title with no unique direction
+                {"tag": "5652", "title": "Market St & 7th St"},
             ],
             "direction": [
                 {

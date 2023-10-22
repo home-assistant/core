@@ -18,13 +18,11 @@ elif [[ ${APP_EXIT_CODE} -eq ${SIGNAL_EXIT_CODE} ]]; then
 
   NEW_EXIT_CODE=$((128 + SIGNAL_NO))
   echo ${NEW_EXIT_CODE} > /run/s6-linux-init-container-results/exitcode
-
-  if [[ ${SIGNAL_NO} -eq ${SIGTERM} ]]; then
-    /run/s6/basedir/bin/halt
-  fi
 else
   bashio::log.info "Home Assistant Core service shutdown"
 
   echo ${APP_EXIT_CODE} > /run/s6-linux-init-container-results/exitcode
-  /run/s6/basedir/bin/halt
 fi
+
+# Make sure to stop the container
+/run/s6/basedir/bin/halt

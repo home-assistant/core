@@ -4,8 +4,8 @@ import logging
 import av
 import pytest
 
-from homeassistant.components.logger import EVENT_LOGGING_CHANGED
 from homeassistant.components.stream import __name__ as stream_name
+from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

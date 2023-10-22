@@ -437,27 +437,16 @@ class ConfigEntry:
             self._tries += 1
             message = str(ex)
             ready_message = f"ready yet: {message}" if message else "ready yet"
-            if self._tries == 1:
-                _LOGGER.warning(
-                    (
-                        "Config entry '%s' for %s integration not %s; Retrying in"
-                        " background"
-                    ),
-                    self.title,
-                    self.domain,
-                    ready_message,
-                )
-            else:
-                _LOGGER.debug(
-                    (
-                        "Config entry '%s' for %s integration not %s; Retrying in %d"
-                        " seconds"
-                    ),
-                    self.title,
-                    self.domain,
-                    ready_message,
-                    wait_time,
-                )
+            _LOGGER.debug(
+                (
+                    "Config entry '%s' for %s integration not %s; Retrying in %d"
+                    " seconds"
+                ),
+                self.title,
+                self.domain,
+                ready_message,
+                wait_time,
+            )
 
             if hass.state == CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(

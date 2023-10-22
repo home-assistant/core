@@ -149,34 +149,15 @@ async def test_lock_operator_bluetooth(hass: HomeAssistant) -> None:
         "sensor.online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == "Your favorite elven princess"
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "remote"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "keypad"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "autorelock"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "method"
-        ]
-        == "mobile"
-    )
+
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Your favorite elven princess"
+    assert state.attributes["manual"] is False
+    assert state.attributes["tag"] is False
+    assert state.attributes["remote"] is False
+    assert state.attributes["keypad"] is False
+    assert state.attributes["autorelock"] is False
+    assert state.attributes["method"] == "mobile"
 
 
 async def test_lock_operator_keypad(hass: HomeAssistant) -> None:
@@ -193,34 +174,15 @@ async def test_lock_operator_keypad(hass: HomeAssistant) -> None:
         "sensor.online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == "Your favorite elven princess"
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "remote"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "keypad"
-        ]
-        is True
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "autorelock"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "method"
-        ]
-        == "keypad"
-    )
+
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Your favorite elven princess"
+    assert state.attributes["manual"] is False
+    assert state.attributes["tag"] is False
+    assert state.attributes["remote"] is False
+    assert state.attributes["keypad"] is True
+    assert state.attributes["autorelock"] is False
+    assert state.attributes["method"] == "keypad"
 
 
 async def test_lock_operator_remote(hass: HomeAssistant) -> None:
@@ -235,34 +197,15 @@ async def test_lock_operator_remote(hass: HomeAssistant) -> None:
         "sensor.online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == "Your favorite elven princess"
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "remote"
-        ]
-        is True
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "keypad"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "autorelock"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "method"
-        ]
-        == "remote"
-    )
+
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Your favorite elven princess"
+    assert state.attributes["manual"] is False
+    assert state.attributes["tag"] is False
+    assert state.attributes["remote"] is True
+    assert state.attributes["keypad"] is False
+    assert state.attributes["autorelock"] is False
+    assert state.attributes["method"] == "remote"
 
 
 async def test_lock_operator_manual(hass: HomeAssistant) -> None:
@@ -303,34 +246,15 @@ async def test_lock_operator_autorelock(hass: HomeAssistant) -> None:
         "sensor.online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == "Auto Relock"
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "remote"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "keypad"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "autorelock"
-        ]
-        is True
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "method"
-        ]
-        == "autorelock"
-    )
+
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Auto Relock"
+    assert state.attributes["manual"] is False
+    assert state.attributes["tag"] is False
+    assert state.attributes["remote"] is False
+    assert state.attributes["keypad"] is False
+    assert state.attributes["autorelock"] is True
+    assert state.attributes["method"] == "autorelock"
 
 
 async def test_unlock_operator_manual(hass: HomeAssistant) -> None:
@@ -407,15 +331,12 @@ async def test_restored_state(
 
     # Home assistant is not running yet
     hass.state = CoreState.not_running
-    last_reset = "2023-09-22T00:00:00.000000+00:00"
     mock_restore_cache_with_extra_data(
         hass,
         [
             (
                 fake_state,
-                {
-                    "last_reset": last_reset,
-                },
+                {"native_value": "Tag Unlock", "native_unit_of_measurement": None},
             )
         ],
     )
