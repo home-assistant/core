@@ -1,7 +1,6 @@
 """Config flow for World Air Quality Index (WAQI) integration."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 import logging
 from typing import Any
 
@@ -88,32 +87,6 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-    async def _async_base_step(
-        self,
-        step_id: str,
-        method: Callable[[WAQIClient, dict[str, Any]], Awaitable[WAQIAirQuality]],
-        data_schema: vol.Schema,
-        user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            async with WAQIClient(
-                session=async_get_clientsession(self.hass)
-            ) as waqi_client:
-                waqi_client.authenticate(self.data[CONF_API_KEY])
-                try:
-                    measuring_station = await method(waqi_client, user_input)
-                except WAQIConnectionError:
-                    errors["base"] = "cannot_connect"
-                except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.exception(exc)
-                    errors["base"] = "unknown"
-                else:
-                    return await self._async_create_entry(measuring_station)
-        return self.async_show_form(
-            step_id=step_id, data_schema=data_schema, errors=errors
         )
 
     async def async_step_map(
