@@ -98,17 +98,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    if not blink.available:
+    if not coordinator.api.available:
         raise ConfigEntryNotReady
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    await coordinator.async_config_entry_first_refresh()
-
     async def blink_refresh(event_time=None):
         """Call blink to refresh info."""
-        await hass.data[DOMAIN][entry.entry_id].api.refresh(force_cache=True)
+        await coordinator.api.refresh(force_cache=True)
 
     async def async_save_video(call):
         """Call save video service handler."""
@@ -121,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def send_pin(call):
         """Call blink to send new pin."""
         pin = call.data[CONF_PIN]
-        await hass.data[DOMAIN][entry.entry_id].api.auth.send_auth_key(
+        await coordinator.api.auth.send_auth_key(
             hass.data[DOMAIN][entry.entry_id].api,
             pin,
         )

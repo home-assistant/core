@@ -38,10 +38,12 @@ async def async_setup_entry(
     sync_modules = []
     for sync_name, sync_module in coordinator.api.sync.items():
         sync_modules.append(BlinkSyncModuleHA(coordinator, sync_name, sync_module))
-    async_add_entities(sync_modules)
+    async_add_entities(sync_modules, update_before_add=True)
 
 
-class BlinkSyncModuleHA(CoordinatorEntity, AlarmControlPanelEntity):
+class BlinkSyncModuleHA(
+    CoordinatorEntity[BlinkUpdateCoordinator], AlarmControlPanelEntity
+):
     """Representation of a Blink Alarm Control Panel."""
 
     _attr_icon = ICON
@@ -75,7 +77,6 @@ class BlinkSyncModuleHA(CoordinatorEntity, AlarmControlPanelEntity):
         self._attr_state = (
             STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
         )
-        self._attr_available = True
         self.async_write_ha_state()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:

@@ -63,8 +63,6 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
 
     _attr_has_entity_name = True
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         coordinator: BlinkUpdateCoordinator,

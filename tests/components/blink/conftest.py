@@ -17,6 +17,8 @@ def blink_api_fixture() -> MagicMock:
         mock_blink_api.available = True
         mock_blink_api.start = AsyncMock(return_value=True)
         mock_blink_api.refresh = AsyncMock(return_value=True)
+        mock_blink_api.sync = MagicMock(return_value=True)
+        mock_blink_api.cameras = MagicMock(return_value=True)
         yield mock_blink_api
 
 

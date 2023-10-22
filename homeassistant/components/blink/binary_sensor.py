@@ -54,7 +54,7 @@ async def async_setup_entry(
         for camera in coordinator.api.cameras
         for description in BINARY_SENSORS_TYPES
     ]
-    async_add_entities(entities)
+    async_add_entities(entities, update_before_add=True)
 
 
 class BlinkBinarySensor(CoordinatorEntity[BlinkUpdateCoordinator], BinarySensorEntity):

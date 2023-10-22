@@ -16,11 +16,11 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class BlinkUpdateCoordinator(DataUpdateCoordinator):
+class BlinkUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """BlinkUpdateCoordinator - In charge of downloading the data for a site, which all the sensors read."""
 
     def __init__(self, hass: HomeAssistant, api: Blink) -> None:
-        """Initialise the data service."""
+        """Initialize the data service."""
         self.api = api
         super().__init__(
             hass,

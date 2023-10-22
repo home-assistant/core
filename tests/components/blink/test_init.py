@@ -60,7 +60,7 @@ async def test_setup_not_ready_timeout_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup failed because we can't connect to the Blink system."""
-    blink_api.refresh = AsyncMock(side_effect=asyncio.TimeoutError)
+    blink_api.start = AsyncMock(side_effect=asyncio.TimeoutError)
     blink_api.return_value = blink_api
     blink_auth_api.return_value = blink_auth_api
 
@@ -177,15 +177,13 @@ async def test_service_calls(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert blink_api.refresh.call_count == 1
-
     await hass.services.async_call(
         DOMAIN,
         SERVICE_REFRESH,
         blocking=True,
     )
 
-    assert blink_api.refresh.call_count == 2
+    assert blink_api.refresh.call_count == 1
 
     await hass.services.async_call(
         DOMAIN,
