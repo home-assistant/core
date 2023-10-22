@@ -228,7 +228,7 @@ async def test_sensors(
     ("devices_response", "monitored_resources"),
     [([DEVICE_RESPONSE_CHARGE_2, DEVICE_RESPONSE_ARIA_AIR], ["devices/battery"])],
 )
-async def test_device_battery(
+async def test_device_battery_level(
     hass: HomeAssistant,
     fitbit_config_setup: None,
     sensor_platform_setup: Callable[[], Awaitable[bool]],
@@ -242,71 +242,54 @@ async def test_device_battery(
 
     state = hass.states.get("sensor.charge_2_battery")
     assert state
-    assert state.state == "Medium"
+    assert state.state == "60"
     assert state.attributes == {
         "attribution": "Data provided by Fitbit.com",
         "friendly_name": "Charge 2 Battery",
+        "device_class": "battery",
+        "unit_of_measurement": "%",
+    }
+
+    state = hass.states.get("sensor.charge_2_battery_level")
+    assert state
+    assert state.state == "Medium"
+    assert state.attributes == {
+        "attribution": "Data provided by Fitbit.com",
+        "friendly_name": "Charge 2 Battery level",
         "icon": "mdi:battery-50",
         "model": "Charge 2",
         "type": "tracker",
     }
 
-    entry = entity_registry.async_get("sensor.charge_2_battery")
+    entry = entity_registry.async_get("sensor.charge_2_battery_level")
     assert entry
     assert entry.unique_id == f"{PROFILE_USER_ID}_devices/battery_816713257"
 
     state = hass.states.get("sensor.aria_air_battery")
     assert state
-    assert state.state == "High"
+    assert state.state == "95"
     assert state.attributes == {
         "attribution": "Data provided by Fitbit.com",
         "friendly_name": "Aria Air Battery",
-        "icon": "mdi:battery",
-        "model": "Aria Air",
-        "type": "scale",
-    }
-
-    entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get("sensor.aria_air_battery")
-    assert entry
-    assert entry.unique_id == f"{PROFILE_USER_ID}_devices/battery_016713257"
-
-
-@pytest.mark.parametrize(
-    ("devices_response", "monitored_resources"),
-    [([DEVICE_RESPONSE_CHARGE_2, DEVICE_RESPONSE_ARIA_AIR], ["devices/battery"])],
-)
-async def test_device_battery_level(
-    hass: HomeAssistant,
-    fitbit_config_setup: None,
-    sensor_platform_setup: Callable[[], Awaitable[bool]],
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test battery level sensor for devices."""
-
-    assert await sensor_platform_setup()
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-
-    state = hass.states.get("sensor.charge_2_battery_level")
-    assert state
-    assert state.state == "60"
-    assert state.attributes == {
-        "attribution": "Data provided by Fitbit.com",
-        "friendly_name": "Charge 2 Battery level",
         "device_class": "battery",
         "unit_of_measurement": "%",
     }
 
     state = hass.states.get("sensor.aria_air_battery_level")
     assert state
-    assert state.state == "95"
+    assert state.state == "High"
     assert state.attributes == {
         "attribution": "Data provided by Fitbit.com",
         "friendly_name": "Aria Air Battery level",
-        "device_class": "battery",
-        "unit_of_measurement": "%",
+        "icon": "mdi:battery",
+        "model": "Aria Air",
+        "type": "scale",
     }
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("sensor.aria_air_battery_level")
+    assert entry
+    assert entry.unique_id == f"{PROFILE_USER_ID}_devices/battery_016713257"
 
 
 @pytest.mark.parametrize(
@@ -587,10 +570,10 @@ async def test_settings_scope_config_entry(
     assert await integration_setup()
 
     states = hass.states.async_all()
-    assert [s.entity_id for s in states] == [
+    assert {s.entity_id for s in states} == {
         "sensor.charge_2_battery",
         "sensor.charge_2_battery_level",
-    ]
+    }
 
 
 @pytest.mark.parametrize(
@@ -694,7 +677,7 @@ async def test_device_battery_level_update_failed(
 
     state = hass.states.get("sensor.charge_2_battery")
     assert state
-    assert state.state == "Medium"
+    assert state.state == "60"
 
     # Request an update for the entity which will fail
     await async_update_entity(hass, "sensor.charge_2_battery")
@@ -744,7 +727,7 @@ async def test_device_battery_level_reauth_required(
 
     state = hass.states.get("sensor.charge_2_battery")
     assert state
-    assert state.state == "Medium"
+    assert state.state == "60"
 
     # Request an update for the entity which will fail
     await async_update_entity(hass, "sensor.charge_2_battery")

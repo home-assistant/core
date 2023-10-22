@@ -30,9 +30,6 @@
   "entity": {
     "sensor": {
       "battery": {
-        "name": "Battery"
-      },
-      "battery_level": {
         "name": "Battery level"
       }
     }

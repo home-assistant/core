@@ -511,8 +511,7 @@ FITBIT_RESOURCE_BATTERY = FitbitSensorEntityDescription(
     has_entity_name=True,
 )
 FITBIT_RESOURCE_BATTERY_LEVEL = FitbitSensorEntityDescription(
-    key="devices/battery_level",
-    translation_key="battery_level",
+    key="devices/battery_device_class",
     scope=FitbitScope.DEVICE,
     entity_category=EntityCategory.DIAGNOSTIC,
     has_entity_name=True,
@@ -669,7 +668,7 @@ async def async_setup_entry(
 
     if data.device_coordinator and is_allowed_resource(FITBIT_RESOURCE_BATTERY):
         battery_entities: list[SensorEntity] = [
-            FitbitBatterySensor(
+            FitbitBatteryStringSensor(
                 data.device_coordinator,
                 user_profile.encoded_id,
                 FITBIT_RESOURCE_BATTERY,
@@ -679,7 +678,7 @@ async def async_setup_entry(
             for device in data.device_coordinator.data.values()
         ]
         battery_entities.extend(
-            FitbitBatteryLevelSensor(
+            FitbitBatterySensor(
                 data.device_coordinator,
                 user_profile.encoded_id,
                 FITBIT_RESOURCE_BATTERY_LEVEL,
@@ -734,7 +733,7 @@ class FitbitSensor(SensorEntity):
             self._attr_native_value = self.entity_description.value_fn(result)
 
 
-class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
+class FitbitBatteryStringSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a Fitbit battery sensor."""
 
     entity_description: FitbitSensorEntityDescription
@@ -790,7 +789,7 @@ class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
         self.async_write_ha_state()
 
 
-class FitbitBatteryLevelSensor(CoordinatorEntity, SensorEntity):
+class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
     """Implementation of a Fitbit battery sensor."""
 
     entity_description: FitbitSensorEntityDescription
