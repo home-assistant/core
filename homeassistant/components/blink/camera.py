@@ -47,7 +47,6 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
     """An implementation of a Blink Camera."""
 
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(self, coordinator: BlinkUpdateCoordinator, name, camera) -> None:
         """Initialize a camera."""
@@ -55,6 +54,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         Camera.__init__(self)
         self._coordinator = coordinator
         self._camera = camera
+        self._attr_name = "Camera"
         self._attr_unique_id = f"{camera.serial}-camera"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, camera.serial)},

@@ -29,6 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=TYPE_BATTERY,
+        translation_key="battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -38,6 +39,7 @@ BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     ),
     BinarySensorEntityDescription(
         key=TYPE_MOTION_DETECTED,
+        translation_key="motion_detected",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
 )
@@ -61,7 +63,6 @@ class BlinkBinarySensor(CoordinatorEntity[BlinkUpdateCoordinator], BinarySensorE
     """Representation of a Blink binary sensor."""
 
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
