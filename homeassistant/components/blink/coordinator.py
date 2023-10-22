@@ -1,7 +1,6 @@
 """Blink Coordinator."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
@@ -9,7 +8,7 @@ from typing import Any
 from blinkpy.blinkpy import Blink
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -35,7 +34,4 @@ class BlinkUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "Initiating a blink.refresh() from BlinkSyncModule() (%s)",
             self.api,
         )
-        try:
-            return await self.api.refresh(force=True)
-        except asyncio.TimeoutError as err:
-            raise UpdateFailed("Update Failed") from err
+        return await self.api.refresh(force=True)
