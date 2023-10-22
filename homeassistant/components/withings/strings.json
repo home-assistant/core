@@ -134,6 +134,15 @@
       },
       "wakeup_time": {
         "name": "Wakeup time"
+      },
+      "step_goal": {
+        "name": "Step goal"
+      },
+      "sleep_goal": {
+        "name": "Sleep goal"
+      },
+      "weight_goal": {
+        "name": "Weight goal"
       }
     }
   }

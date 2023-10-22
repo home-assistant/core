@@ -959,6 +959,17 @@ async def test_subscribe_topic(
         unsub()
 
 
+async def test_subscribe_topic_not_initialize(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the subscription of a topic when MQTT was not initialized."""
+    with pytest.raises(
+        HomeAssistantError, match=r".*make sure MQTT is set up correctly"
+    ):
+        await mqtt.async_subscribe(hass, "test-topic", record_calls)
+
+
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.2)
 async def test_subscribe_and_resubscribe(
@@ -2114,35 +2125,30 @@ async def test_handle_message_callback(
         }
     ],
 )
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_setup_manual_mqtt_with_platform_key(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test set up a manual MQTT item with a platform key."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
     assert (
-        "Invalid config for [mqtt]: [platform] is an invalid option for [mqtt]"
+        "extra keys not allowed @ data['platform'] for manual configured MQTT light item"
         in caplog.text
     )
 
 
 @pytest.mark.parametrize("hass_config", [{mqtt.DOMAIN: {"light": {"name": "test"}}}])
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_setup_manual_mqtt_with_invalid_config(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test set up a manual MQTT item with an invalid config."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: required key not provided @ data['mqtt'][0]['light'][0]['command_topic']. "
-        "Got None. (See ?, line ?)" in caplog.text
-    )
+    assert await mqtt_mock_entry()
+    assert "required key not provided" in caplog.text
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
