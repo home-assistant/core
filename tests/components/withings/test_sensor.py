@@ -242,6 +242,12 @@ async def test_activity_sensors_created_when_receive_activity_data(
 
     assert hass.states.get("sensor.henk_steps_today") is None
 
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.henk_steps_today") is None
+
     activity_json = load_json_array_fixture("withings/activity.json")
     activities = [Activity.from_api(activity) for activity in activity_json]
     withings.get_activities_in_period.return_value = activities

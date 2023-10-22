@@ -629,18 +629,21 @@ async def async_setup_entry(
 
     activity_callback: Callable[[], None] | None = None
 
+    activity_entities_setup_before = ent_reg.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_activity_steps_today"
+    )
+
     def _async_add_activity_entities() -> None:
         """Add activity entities."""
-        async_add_entities(
-            WithingsActivitySensor(activity_coordinator, attribute)
-            for attribute in ACTIVITY_SENSORS
-        )
-        if activity_callback:
-            activity_callback()
+        if activity_coordinator.data is not None or activity_entities_setup_before:
+            async_add_entities(
+                WithingsActivitySensor(activity_coordinator, attribute)
+                for attribute in ACTIVITY_SENSORS
+            )
+            if activity_callback:
+                activity_callback()
 
-    if activity_coordinator.data is not None or ent_reg.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_activity_steps_today"
-    ):
+    if activity_coordinator.data is not None or activity_entities_setup_before:
         _async_add_activity_entities()
     else:
         activity_callback = activity_coordinator.async_add_listener(
