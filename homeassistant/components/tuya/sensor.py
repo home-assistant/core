@@ -47,6 +47,8 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
 
     subkey: str | None = None
 
+    virtualstate: VirtualStates | None = None
+
 
 # Commonly used battery sensors, that are re-used in the sensors down below.
 BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
@@ -359,14 +361,15 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
         ),
         TuyaSensorEntityDescription(
-            key=VirtualStates.STATE_UPDATED_ONLY_IF_IN_REPORTING_PAYLOAD+DPCode.ADD_ELE,
+            key=VirtualStates.DPCode.ADD_ELE,
+            virtualstate=VirtualStates.STATE_UPDATED_ONLY_IF_IN_REPORTING_PAYLOAD,
             translation_key="add_ele",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.SUM_OF_STATE,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             icon="mdi:lightning-bolt-outline",
             entity_registry_enabled_default=True,
-            force_update=True,
+            #force_update=True,
         ),
     ),
     # IoT Switch
@@ -1104,20 +1107,12 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
                 for description in descriptions:
-                    keys_to_check = set()
-                    keys_to_check.add(description.key)
-                    for virtual_state in VirtualStates:
-                        # description.key is already prefixed, try to remove the prefix and see if anything match
-                        keys_to_check.add(description.key.removeprefix(virtual_state.value))
-                    for key_to_check in keys_to_check:
-                        if key_to_check in device.status:
-                            new_description = copy.deepcopy(description)
-                            new_description.key = key_to_check
-                            entities.append(
-                                TuyaSensorEntity(
-                                    device, hass_data.device_manager, new_description
-                                )
+                    if description.key in device.status:
+                        entities.append(
+                            TuyaSensorEntity(
+                                device, hass_data.device_manager, description
                             )
+                        )
 
         async_add_entities(entities)
 

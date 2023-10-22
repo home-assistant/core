@@ -382,8 +382,7 @@ class DPCode(StrEnum):
 class PrefixedEntityDescriptionKey:
     """Describes a DPCode that uses a VirtualState prefix."""
     
-    prefixed_key: str
-    original_key: str
+    key: str
     prefix_name: str
     prefix_value: str
     entity_description: EntityDescription

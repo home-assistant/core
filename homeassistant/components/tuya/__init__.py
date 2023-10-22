@@ -258,12 +258,9 @@ class DeviceManager(TuyaDeviceManager):
         for prefix in VirtualStates:
             if (descriptions := SENSORS.get(category)):
                 for description in descriptions:
-                    if (
-                        description.key.startswith(prefix.value)
-                        and description.key.removeprefix(prefix.value) in all_dpcode
-                    ):
+                    if description.virtualstate is not None:
                         # This Entity Description is prefixed, return it
-                        prefixed_key = PrefixedEntityDescriptionKey(description.key, description.key.removeprefix(prefix.value), prefix.name, prefix.value, description)
+                        prefixed_key = PrefixedEntityDescriptionKey(description.key, description.key, prefix.name, prefix.value, description)
                         to_return.append(prefixed_key)
         
         return to_return
@@ -276,8 +273,8 @@ class DeviceManager(TuyaDeviceManager):
         prefixed_dpcodes = DeviceManager.get_prefixed_dpcodes(device.category)
         for prefixed_dpcode in prefixed_dpcodes:
             if prefixed_dpcode.prefix_value == VirtualStates.STATE_UPDATED_ONLY_IF_IN_REPORTING_PAYLOAD:
-                if prefixed_dpcode.original_key in device.status:
-                    device.status[prefixed_dpcode.original_key] = 0
+                if prefixed_dpcode.key in device.status:
+                    device.status[prefixed_dpcode.key] = 0
         
         for item in status:
             if "code" in item and "value" in item:
