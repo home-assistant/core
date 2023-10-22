@@ -71,7 +71,7 @@ class BlinkBinarySensor(CoordinatorEntity[BlinkUpdateCoordinator], BinarySensorE
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{DOMAIN} {camera} {description.name}"
+        self._attr_name = f"{DOMAIN} {camera}"
         self._camera = coordinator.api.cameras[camera]
         self._attr_unique_id = f"{self._camera.serial}-{description.key}"
         self._attr_device_info = DeviceInfo(

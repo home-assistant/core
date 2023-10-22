@@ -86,19 +86,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     blink.auth = Auth(auth_data, no_prompt=True, session=session)
     blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     coordinator = BlinkUpdateCoordinator(hass, blink)
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     try:
-        await coordinator.api.start()
+        await blink.start()
     except (ClientError, asyncio.TimeoutError) as ex:
         raise ConfigEntryNotReady("Can not connect to host") from ex
 
-    if coordinator.api.auth.check_key_required():
+    if blink.auth.check_key_required():
         _LOGGER.debug("Attempting a reauth flow")
         raise ConfigEntryAuthFailed("Need 2FA for Blink")
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
-
-    if not coordinator.api.available:
+    if not blink.available:
         raise ConfigEntryNotReady
 
     await coordinator.async_config_entry_first_refresh()

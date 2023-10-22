@@ -95,7 +95,6 @@ class BlinkSyncModuleHA(
             raise HomeAssistantError("Blink failed to disarm camera") from er
 
         await self._coordinator.async_refresh()
-        self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""

@@ -30,8 +30,4 @@ class BlinkUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
-        _LOGGER.debug(
-            "Initiating a blink.refresh() from BlinkSyncModule() (%s)",
-            self.api,
-        )
         return await self.api.refresh(force=True)
