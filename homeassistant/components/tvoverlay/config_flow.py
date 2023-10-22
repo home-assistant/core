@@ -17,7 +17,7 @@ from .const import DEFAULT_NAME, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class TVOverlayFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class TvOverlayFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TvOverlay."""
 
     async def async_step_user(
