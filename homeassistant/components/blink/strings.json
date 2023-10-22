@@ -45,7 +45,7 @@
     },
     "binary_sensor": {
       "camera_armed": {
-        "name": "Camera Armed"
+        "name": "Camera armed"
       }
     }
   },
