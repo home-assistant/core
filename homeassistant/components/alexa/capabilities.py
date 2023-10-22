@@ -580,8 +580,8 @@ class AlexaBrightnessController(AlexaCapability):
         """Read and return a property."""
         if name != "brightness":
             raise UnsupportedProperty(name)
-        if "brightness" in self.entity.attributes:
-            return round(self.entity.attributes["brightness"] / 255.0 * 100)
+        if brightness := self.entity.attributes.get("brightness"):
+            return round(brightness / 255.0 * 100)
         return 0
 
 
@@ -683,10 +683,8 @@ class AlexaColorTemperatureController(AlexaCapability):
         """Read and return a property."""
         if name != "colorTemperatureInKelvin":
             raise UnsupportedProperty(name)
-        if "color_temp" in self.entity.attributes:
-            return color_util.color_temperature_mired_to_kelvin(
-                self.entity.attributes["color_temp"]
-            )
+        if color_temp := self.entity.attributes.get("color_temp"):
+            return color_util.color_temperature_mired_to_kelvin(color_temp)
         return None
 
 
