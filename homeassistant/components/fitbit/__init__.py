@@ -1,8 +1,5 @@
 """The fitbit component."""
 
-from http import HTTPStatus
-
-import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -11,7 +8,10 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
-from .const import DOMAIN
+from .const import DOMAIN, FitbitScope
+from .coordinator import FitbitData, FitbitDeviceCoordinator
+from .exceptions import FitbitApiException, FitbitAuthException
+from .model import config_from_entry_data
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -31,14 +31,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         await fitbit_api.async_get_access_token()
-    except aiohttp.ClientResponseError as err:
-        if err.status == HTTPStatus.UNAUTHORIZED:
-            raise ConfigEntryAuthFailed from err
-        raise ConfigEntryNotReady from err
-    except aiohttp.ClientError as err:
+    except FitbitAuthException as err:
+        raise ConfigEntryAuthFailed from err
+    except FitbitApiException as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id] = fitbit_api
+    fitbit_config = config_from_entry_data(entry.data)
+    coordinator: FitbitDeviceCoordinator | None = None
+    if fitbit_config.is_allowed_resource(FitbitScope.DEVICE, "devices/battery"):
+        coordinator = FitbitDeviceCoordinator(hass, fitbit_api)
+        await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = FitbitData(
+        api=fitbit_api, device_coordinator=coordinator
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -259,8 +259,8 @@ class DemoClimate(ClimateEntity):
         ):
             self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        if kwargs.get(ATTR_HVAC_MODE) is not None:
-            self._hvac_mode = HVACMode(str(kwargs.get(ATTR_HVAC_MODE)))
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            self._hvac_mode = hvac_mode
         self.async_write_ha_state()
 
     async def async_set_humidity(self, humidity: int) -> None:
