@@ -65,19 +65,19 @@
         "name": "Grid power"
       },
       "storage_power": {
-        "name": "Storage power"
+        "name": "Stored power"
       },
       "purchased_energy": {
         "name": "Imported energy"
       },
       "production_energy": {
-        "name": "Production energy"
+        "name": "Produced energy"
       },
       "consumption_energy": {
-        "name": "Consumption energy"
+        "name": "Consumed energy"
       },
       "selfconsumption_energy": {
-        "name": "SelfConsumption energy"
+        "name": "Self-consumed energy"
       },
       "feedin_energy": {
         "name": "Exported energy"
