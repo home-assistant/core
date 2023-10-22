@@ -12,6 +12,7 @@ from requests.exceptions import ChunkedEncodingError
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -75,8 +76,8 @@ class BlinkCamera(CoordinatorEntity, Camera):
             self._camera.motion_enabled = True
             await self._coordinator.async_refresh()
 
-        except asyncio.TimeoutError:
-            self.coordinator.last_update_success = False
+        except asyncio.TimeoutError as er:
+            raise HomeAssistantError("Blink failed to arm camera") from er
 
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection for the camera."""
@@ -84,8 +85,8 @@ class BlinkCamera(CoordinatorEntity, Camera):
             await self._camera.async_arm(False)
             self._camera.motion_enabled = False
             await self._coordinator.async_refresh()
-        except asyncio.TimeoutError:
-            self.coordinator.last_update_success = False
+        except asyncio.TimeoutError as er:
+            raise HomeAssistantError("Blink failed to disarm camera") from er
 
     @property
     def motion_detection_enabled(self) -> bool:
