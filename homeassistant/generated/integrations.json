@@ -6381,6 +6381,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "vevor_heater": {
+      "name": "Vevor Heater",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "local_polling"
+    },
     "viaggiatreno": {
       "name": "Trenitalia ViaggiaTreno",
       "integration_type": "hub",

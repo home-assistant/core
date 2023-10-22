@@ -1,0 +1,19 @@
+{
+  "domain": "vevor_heater",
+  "name": "Vevor Heater",
+  "bluetooth": [
+    {
+      "connectable": true,
+      "service_uuid": "0000ffe0-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 33465
+    }
+  ],
+  "codeowners": ["@iotmaestro"],
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/vevor_heater",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "requirements": ["vevor-heater-ble==0.0.5"],
+  "ssdp": [],
+  "zeroconf": []
+}

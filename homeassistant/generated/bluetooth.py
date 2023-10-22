@@ -540,6 +540,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "manufacturer_id": 76,
     },
     {
+        "connectable": True,
+        "domain": "vevor_heater",
+        "manufacturer_id": 33465,
+        "service_uuid": "0000ffe0-0000-1000-8000-00805f9b34fb",
+    },
+    {
         "connectable": False,
         "domain": "xiaomi_ble",
         "service_data_uuid": "0000181b-0000-1000-8000-00805f9b34fb",
