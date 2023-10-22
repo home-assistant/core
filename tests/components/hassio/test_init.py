@@ -585,6 +585,7 @@ async def test_service_calls(
         {
             "name": "backup_name",
             "location": "backup_share",
+            "homeassistant_exclude_database": True,
         },
     )
     await hass.async_block_till_done()
@@ -593,6 +594,7 @@ async def test_service_calls(
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "backup_name",
         "location": "backup_share",
+        "homeassistant_exclude_database": True,
     }
 
     await hass.services.async_call(

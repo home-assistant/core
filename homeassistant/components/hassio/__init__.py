@@ -64,6 +64,7 @@ from .const import (
     ATTR_COMPRESSED,
     ATTR_FOLDERS,
     ATTR_HOMEASSISTANT,
+    ATTR_HOMEASSISTANT_EXCLUDE_DATABASE,
     ATTR_INPUT,
     ATTR_LOCATION,
     ATTR_PASSWORD,
@@ -193,6 +194,7 @@ SCHEMA_BACKUP_FULL = vol.Schema(
         vol.Optional(ATTR_LOCATION): vol.All(
             cv.string, lambda v: None if v == "/backup" else v
         ),
+        vol.Optional(ATTR_HOMEASSISTANT_EXCLUDE_DATABASE): cv.boolean,
     }
 )
 
