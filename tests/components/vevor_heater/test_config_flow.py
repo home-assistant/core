@@ -1,11 +1,11 @@
 """Unit tests for Vevor BLE Heater config flow."""
 from unittest.mock import patch
 
-from bleak import BLEDevice
+from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
-from vevor_heater_ble.heater import PowerStatus, VevorDevice, VevorHeaterStatus
 
 from homeassistant import config_entries
+from homeassistant.components.vevor_heater.config_flow import CannotConnect
 from homeassistant.components.vevor_heater.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -18,112 +18,96 @@ def mock_bluetooth(enable_bluetooth):
     """Mock bluetooth for all tests in this module."""
 
 
-async def test_form_no_device_found(hass: HomeAssistant) -> None:
-    """Test that we handle that a device with a given address isn't available."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=None,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "address": "AB:CD:EF:01:23:45",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle if we can't receive an update from the device."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    """Test we successfully create the device if we can't connect to it."""
 
     with patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=BLEDevice(
-            address="AB:CD:EF:01:23:45", name="FooBar", details=None, rssi=-1
-        ),
-    ), patch(
-        "vevor_heater_ble.heater.VevorDevice.refresh_status",
-        autospec=True,
+        "homeassistant.components.vevor_heater.config_flow.validate_device",
+        side_effect=CannotConnect,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "address": "AB:CD:EF:01:23:45",
-            },
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=BluetoothServiceInfo(
+                name="BYD-12345678",
+                address="01:03:05:07:09:11",
+                rssi=-1,
+                manufacturer_data={33465: b""},
+                service_data={},
+                service_uuids=["0000ffe0-0000-1000-8000-00805f9b34fb"],
+                source="local",
+            ),
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "not_supported"
 
 
-async def test_form_ok(hass: HomeAssistant) -> None:
-    """Test we successfully create the device if available."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+async def test_form_ok_wit_name(hass: HomeAssistant) -> None:
+    """Test we successfully create the device if it has a name."""
 
     with patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=BLEDevice(
-            address="AB:CD:EF:01:23:45", name="FooBar", details=None, rssi=-1
-        ),
+        "homeassistant.components.vevor_heater.config_flow.validate_device",
+        return_value={"title": "Vevor TestTestTest"},
     ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=BluetoothServiceInfo(
+                name="BYD-12345678",
+                address="01:03:05:07:09:11",
+                rssi=-1,
+                manufacturer_data={33465: b""},
+                service_data={},
+                service_uuids=["0000ffe0-0000-1000-8000-00805f9b34fb"],
+                source="local",
+            ),
+        )
 
-        def update_self_status(self, bledevice):
-            self.status = VevorHeaterStatus(power_status=PowerStatus.OFF)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "bluetooth_confirm"
 
-        with patch.object(
-            VevorDevice, "refresh_status", autospec=True
-        ) as refresh_status:
-            refresh_status.side_effect = update_self_status
+        with patch(
+            "homeassistant.components.vevor_heater.async_setup_entry", return_value=True
+        ):
             result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    "address": "AB:CD:EF:01:23:45",
-                },
+                result["flow_id"], user_input={}
             )
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert "errors" not in result2
-    assert result2["title"] == "Vevor FooBar"
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["title"] == "Vevor BYD-12345678"
+        assert result2["result"].unique_id == "01:03:05:07:09:11"
 
 
 async def test_form_ok_without_name(hass: HomeAssistant) -> None:
     """Test we successfully create the device if it doesn't have a name."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
 
     with patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=BLEDevice(
-            address="AB:CD:EF:01:23:45", name=None, details=None, rssi=-1
-        ),
+        "homeassistant.components.vevor_heater.config_flow.validate_device",
+        return_value={"title": "Vevor TestTestTest"},
     ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=BluetoothServiceInfo(
+                name=None,
+                address="01:03:05:07:09:11",
+                rssi=-1,
+                manufacturer_data={33465: b""},
+                service_data={},
+                service_uuids=["0000ffe0-0000-1000-8000-00805f9b34fb"],
+                source="local",
+            ),
+        )
 
-        def update_self_status(self, bledevice):
-            self.status = VevorHeaterStatus(power_status=PowerStatus.OFF)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "bluetooth_confirm"
 
-        with patch.object(
-            VevorDevice, "refresh_status", autospec=True
-        ) as refresh_status:
-            refresh_status.side_effect = update_self_status
+        with patch(
+            "homeassistant.components.vevor_heater.async_setup_entry", return_value=True
+        ):
             result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    "address": "AB:CD:EF:01:23:45",
-                },
+                result["flow_id"], user_input={}
             )
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert "errors" not in result2
-    assert result2["title"] == "Vevor AB:CD:EF:01:23:45"
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["title"] == "Vevor 01:03:05:07:09:11"
+        assert result2["result"].unique_id == "01:03:05:07:09:11"
