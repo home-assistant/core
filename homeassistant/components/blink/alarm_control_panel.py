@@ -78,7 +78,7 @@ class BlinkSyncModuleHA(
         self._attr_state = (
             STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
         )
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""

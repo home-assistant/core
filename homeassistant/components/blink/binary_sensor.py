@@ -94,4 +94,4 @@ class BlinkBinarySensor(CoordinatorEntity[BlinkUpdateCoordinator], BinarySensorE
         if self.entity_description.key == TYPE_BATTERY:
             is_on = is_on != "ok"
         self._attr_is_on = is_on
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()

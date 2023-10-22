@@ -103,4 +103,4 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
             _LOGGER.error(
                 "%s not a valid camera attribute. Did the API change?", self._sensor_key
             )
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()

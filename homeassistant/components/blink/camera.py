@@ -98,7 +98,7 @@ class BlinkCamera(CoordinatorEntity, Camera):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update camera data."""
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @property
     def brand(self) -> str | None:
