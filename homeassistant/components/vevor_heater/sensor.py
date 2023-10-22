@@ -29,7 +29,7 @@ SENSORS_MAPPINGS: dict[str, SensorEntityDescription] = {
     ),
     "operational_status": SensorEntityDescription(
         key="operational_status",
-        name="Operational Mode",
+        name="Operational Status",
         device_class=SensorDeviceClass.ENUM,
     ),
     "input_voltage": SensorEntityDescription(
