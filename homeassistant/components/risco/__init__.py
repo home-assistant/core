@@ -40,6 +40,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENTS_COORDINATOR,
+    MAX_COMMUNICATION_DELAY,
     TYPE_LOCAL,
 )
 
@@ -82,21 +83,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = entry.data
-    options = entry.options
-    risco = RiscoLocal(
-        data[CONF_HOST],
-        data[CONF_PORT],
-        data[CONF_PIN],
-        **{CONF_COMMUNICATION_DELAY: options.get(CONF_COMMUNICATION_DELAY, 0)},
-    )
+    comm_delay = initial_delay = data.get(CONF_COMMUNICATION_DELAY, 0)
 
-    try:
-        await risco.connect()
-    except CannotConnectError as error:
-        raise ConfigEntryNotReady() from error
-    except UnauthorizedError:
-        _LOGGER.exception("Failed to login to Risco cloud")
-        return False
+    while True:
+        try:
+            risco = RiscoLocal(
+                data[CONF_HOST],
+                data[CONF_PORT],
+                data[CONF_PIN],
+                **{CONF_COMMUNICATION_DELAY: comm_delay},
+            )
+            await risco.connect()
+            break
+        except CannotConnectError as error:
+            if comm_delay >= MAX_COMMUNICATION_DELAY:
+                raise ConfigEntryNotReady() from error
+            comm_delay += 1
+        except UnauthorizedError:
+            _LOGGER.exception("Failed to login to Risco cloud")
+            return False
+
+    if comm_delay > initial_delay:
+        new_data = data.copy()
+        new_data[CONF_COMMUNICATION_DELAY] = comm_delay
+        hass.config_entries.async_update_entry(entry, data=new_data)
 
     async def _error(error: Exception) -> None:
         _LOGGER.error("Error in Risco library: %s", error)

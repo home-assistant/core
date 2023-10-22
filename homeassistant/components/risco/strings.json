@@ -38,8 +38,7 @@
         "data": {
           "scan_interval": "How often to poll Risco (in seconds)",
           "code_arm_required": "Require PIN to arm",
-          "code_disarm_required": "Require PIN to disarm",
-          "communication_delay": "Communication delay (in seconds)"
+          "code_disarm_required": "Require PIN to disarm"
         }
       },
       "risco_to_ha": {

@@ -17,6 +17,8 @@ DEFAULT_SCAN_INTERVAL = 30
 
 TYPE_LOCAL = "local"
 
+MAX_COMMUNICATION_DELAY = 3
+
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
 CONF_CODE_DISARM_REQUIRED = "code_disarm_required"
 CONF_RISCO_STATES_TO_HA = "risco_states_to_ha"

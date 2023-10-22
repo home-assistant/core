@@ -33,6 +33,7 @@ from .const import (
     CONF_RISCO_STATES_TO_HA,
     DEFAULT_OPTIONS,
     DOMAIN,
+    MAX_COMMUNICATION_DELAY,
     RISCO_STATES,
     TYPE_LOCAL,
 )
@@ -97,7 +98,7 @@ async def validate_local_input(
             await risco.connect()
             break
         except CannotConnectError as e:
-            if attempts >= 3:
+            if attempts >= MAX_COMMUNICATION_DELAY:
                 raise e
             attempts += 1
 
@@ -187,8 +188,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=info["title"],
-                    data={**user_input, **{CONF_TYPE: TYPE_LOCAL}},
-                    options={**{CONF_COMMUNICATION_DELAY: int(info["attempts"])}},
+                    data={
+                        **user_input,
+                        **{CONF_TYPE: TYPE_LOCAL},
+                        **{CONF_COMMUNICATION_DELAY: int(info["attempts"])},
+                    },
                 )
 
         return self.async_show_form(
@@ -217,10 +221,6 @@ class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_CODE_DISARM_REQUIRED,
                     default=self._data[CONF_CODE_DISARM_REQUIRED],
                 ): bool,
-                vol.Required(
-                    CONF_COMMUNICATION_DELAY,
-                    default=self._data.get(CONF_COMMUNICATION_DELAY, 0),
-                ): int,
             }
         )
 
