@@ -62,4 +62,15 @@ async def fixture_coils(mock_connection):
 
     mock_connection.read_coil = read_coil
     mock_connection.read_coils = read_coils
-    return coils
+
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.nibe_heatpump import HeatPump
+
+    get_coils_original = HeatPump.get_coils
+
+    def get_coils(x):
+        coils_data = get_coils_original(x)
+        return [coil for coil in coils_data if coil.address in coils]
+
+    with patch.object(HeatPump, "get_coils", new=get_coils):
+        yield coils

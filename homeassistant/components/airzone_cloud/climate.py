@@ -372,7 +372,8 @@ class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneDeviceClimate):
             }
         else:
             mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
-            if mode != self.get_airzone_value(AZD_MODE):
+            cur_mode = self.get_airzone_value(AZD_MODE)
+            if hvac_mode != HVAC_MODE_LIB_TO_HASS[cur_mode]:
                 if self.get_airzone_value(AZD_MASTER):
                     params[API_MODE] = {
                         API_VALUE: mode.value,
