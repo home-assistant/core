@@ -62,6 +62,7 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
     """A Blink camera sensor."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -72,7 +73,7 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
         """Initialize sensors from Blink camera."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{DOMAIN} {camera}"
+
         self._camera = coordinator.api.cameras[camera]
         self._attr_unique_id = f"{self._camera.serial}-{description.key}"
         self._sensor_key = (
