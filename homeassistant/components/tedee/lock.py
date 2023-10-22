@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from pytedee_async import TedeeClientException
+from pytedee_async.lock import TedeeLockState
 
 from homeassistant.components.lock import (
     LockEntity,
@@ -61,7 +62,7 @@ async def async_setup_entry(
     entities: list[TedeeLockEntity] = []
     for lock in coordinator.data.values():
         for entity_description in ENTITIES:
-            if bool(lock.is_enabled_pullspring):
+            if lock.is_enabled_pullspring:
                 entities.append(
                     TedeeLockWithLatchEntity(
                         lock, coordinator, entity_description, entry
@@ -88,17 +89,17 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is locked."""
-        return self._lock.state == 6
+        return self._lock.state == TedeeLockState.LOCKED
 
     @property
     def is_unlocking(self) -> bool:
         """Return true if lock is unlocking."""
-        return self._lock.state == 4
+        return self._lock.state == TedeeLockState.UNLOCKING
 
     @property
     def is_locking(self) -> bool:
         """Return true if lock is locking."""
-        return self._lock.state == 5
+        return self._lock.state == TedeeLockState.LOCKING
 
     @property
     def is_jammed(self) -> bool:
@@ -112,8 +113,8 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
             ATTR_ID: self._lock.lock_id,
             ATTR_NUMERIC_STATE: self._lock.state,
             ATTR_CONNECTED: self._lock.is_connected,
-            ATTR_SUPPORT_PULLSPING: bool(self._lock.is_enabled_pullspring),
-            ATTR_SEMI_LOCKED: self._lock.state == 3,
+            ATTR_SUPPORT_PULLSPING: self._lock.is_enabled_pullspring,
+            ATTR_SEMI_LOCKED: self._lock.state == TedeeLockState.HALF_OPEN,
         }
         if self._lock.lock_type == "Tedee PRO":  # only pro has rechargeable battery
             attributes |= {ATTR_BATTERY_CHARGING: self._lock.is_charging}
@@ -128,7 +129,7 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the door."""
         try:
-            self._lock.state = 4
+            self._lock.state = TedeeLockState.UNLOCKING
             self.async_write_ha_state()
 
             if self._unlock_pulls_latch:
@@ -144,7 +145,7 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the door."""
         try:
-            self._lock.state = 5
+            self._lock.state = TedeeLockState.LOCKING
             self.async_write_ha_state()
 
             await self.coordinator.tedee_client.lock(self._lock.lock_id)
@@ -173,7 +174,7 @@ class TedeeLockWithLatchEntity(TedeeLockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door with pullspring."""
         try:
-            self._lock.state = 4
+            self._lock.state = TedeeLockState.UNLOCKING
             self.async_write_ha_state()
 
             await self.coordinator.tedee_client.open(self._lock.lock_id)
