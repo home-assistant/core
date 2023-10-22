@@ -84,9 +84,3 @@ def load_measurements_fixture(
     """Return measurement from fixture."""
     meas_json = load_json_array_fixture(fixture)
     return [MeasurementGroup.from_api(measurement) for measurement in meas_json]
-
-
-def load_sleep_fixture(fixture: str = "withings/goals.json") -> Goals:
-    """Return goals from fixture."""
-    goals_json = load_json_object_fixture(fixture)
-    return Goals.from_api(goals_json)
