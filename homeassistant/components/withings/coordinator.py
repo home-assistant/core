@@ -214,11 +214,12 @@ class WithingsActivityDataUpdateCoordinator(
                 self._last_valid_update
             )
 
+        today = date.today()
         for activity in activities:
-            if activity.date == date.today():
+            if activity.date == today:
                 self._previous_data = activity
                 self._last_valid_update = activity.modified
                 return activity
-        if self._previous_data and self._previous_data.date == date.today():
+        if self._previous_data and self._previous_data.date == today
             return self._previous_data
         return None
