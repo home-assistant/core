@@ -46,6 +46,7 @@ class BlinkSyncModuleHA(AlarmControlPanelEntity):
     _attr_icon = ICON
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, data, name: str, sync) -> None:
         """Initialize the alarm control panel."""
@@ -53,7 +54,6 @@ class BlinkSyncModuleHA(AlarmControlPanelEntity):
         self.sync = sync
         self._name: str = name
         self._attr_unique_id: str = sync.serial
-        self._attr_name = "Alarm"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sync.serial)},
             name=f"{DOMAIN} {name}",
