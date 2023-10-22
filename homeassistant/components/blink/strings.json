@@ -40,21 +40,12 @@
   "entity": {
     "sensor": {
       "wifi_rssi": {
-        "name": "WiFi RSSI"
-      },
-      "temperature": {
-        "name": "Temperature"
+        "name": "Wi-Fi RSSI"
       }
     },
     "binary_sensor": {
       "camera_armed": {
         "name": "Camera Armed"
-      },
-      "battery": {
-        "name": "Battery Level"
-      },
-      "motion_detected": {
-        "name": "Motion Detected"
       }
     }
   },

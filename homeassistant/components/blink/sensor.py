@@ -28,7 +28,6 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=TYPE_TEMPERATURE,
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
