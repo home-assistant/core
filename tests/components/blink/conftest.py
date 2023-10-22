@@ -1,9 +1,13 @@
-from unittest.mock import AsyncMock, patch, MagicMock
-import pytest
-from homeassistant.components.blink.const import DOMAIN, CONF_DEVICE_ID, DEVICE_ID
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from tests.common import MockConfigEntry
+"""Fixtures for the Blink integration tests."""
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
+
+import pytest
+
+from homeassistant.components.blink.const import CONF_DEVICE_ID, DEVICE_ID, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="blink_api")
@@ -22,7 +26,6 @@ def blink_auth_api_fixture():
     with patch(
         "homeassistant.components.blink.Auth", autospec=True
     ) as mock_blink_auth_api:
-        # mock_blink_auth_api.startup = AsyncMock(return_value = True)
         mock_blink_auth_api.check_key_required.return_value = False
         yield mock_blink_auth_api
 
