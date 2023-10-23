@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os.path
 from typing import Any
 import uuid
 
@@ -77,27 +78,61 @@ class TvOverlayNotificationService(BaseNotificationService):
         self.notify = notify
         self.is_allowed_path = is_allowed_path
 
+    async def _is_valid_url(self, url: str) -> bool:
+        """Check if a valid url and in allowlist_external_urls."""
+        if url.startswith(("http://", "https://")):
+            if not self.hass.config.is_allowed_external_url(url):
+                _LOGGER.warning(
+                    "URL is not allowed: %s, check allowlist_external_urls in configuration.yaml",
+                    url,
+                )
+                return False
+        else:
+            _LOGGER.warning("Invalid URL: %s", url)
+        return True
+
+    async def _is_valid_file(self, filename: str) -> bool:
+        """Check if a file exists on disk and is in allowlist_external_dirs."""
+        if not self.hass.config.is_allowed_path(filename):
+            _LOGGER.warning(
+                "Path is not allowed: %s, check allowlist_external_dirs in configuration.yaml",
+                filename,
+            )
+            return False
+        if not os.path.isfile(filename):
+            _LOGGER.warning("Not a valid file: %s", filename)
+            return False
+        return True
+
+    async def _validate_image(self, image_data: str) -> str | None:
+        """Validate image_data is valid and in allowed list."""
+        if image_data.startswith(("http://", "https://")):
+            image = image_data if await self._is_valid_url(image_data) else None
+        elif image_data.startswith("mdi:"):
+            image = image_data
+        else:
+            image = image_data if await self._is_valid_file(image_data) else None
+        return image
+
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a TvOverlay device."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        data = kwargs.get(ATTR_DATA, {}) or {}
+        data = kwargs.get(ATTR_DATA) or {}
         _LOGGER.debug("Notification additional data attributes: %s", data)
         message_id = data.get(ATTR_ID, str(uuid.uuid1()))
-        app_title = data.get(ATTR_APP_TITLE, DEFAULT_APP_NAME) or DEFAULT_APP_NAME
-        source_name = (
-            data.get(ATTR_SOURCE_NAME, DEFAULT_SOURCE_NAME) or DEFAULT_SOURCE_NAME
-        )
+        app_title = data.get(ATTR_APP_TITLE) or DEFAULT_APP_NAME
+        source_name = data.get(ATTR_SOURCE_NAME) or DEFAULT_SOURCE_NAME
         app_icon: str | ImageUrlSource | None = None
         app_icon_data = data.get(ATTR_APP_ICON)
         if isinstance(app_icon_data, str):
-            app_icon = app_icon_data
+            app_icon = await self._validate_image(app_icon_data)
         else:
             app_icon = (
-                await self.populate_image(app_icon_data) if app_icon_data else None
+                await self._populate_image(app_icon_data) if app_icon_data else None
             )
 
-        badge_icon = data.get(ATTR_BADGE_ICON, DEFAULT_SMALL_ICON) or DEFAULT_SMALL_ICON
-        badge_color = data.get(ATTR_BADGE_COLOR, COLOR_GREEN) or COLOR_GREEN
+        badge_icon = data.get(ATTR_BADGE_ICON) or DEFAULT_SMALL_ICON
+        badge_color = data.get(ATTR_BADGE_COLOR) or COLOR_GREEN
         position = (
             data.get(ATTR_POSITION, Positions.TOP_RIGHT.value)
             or Positions.TOP_RIGHT.value
@@ -111,14 +146,14 @@ class TvOverlayNotificationService(BaseNotificationService):
                 [member.value for member in Positions],
             )
 
-        duration = data.get(ATTR_DURATION, DEFAULT_DURATION) or str(DEFAULT_DURATION)
+        duration = data.get(ATTR_DURATION) or str(DEFAULT_DURATION)
 
         image: str | ImageUrlSource | None = None
         image_data = data.get(ATTR_IMAGE)
         if isinstance(image_data, str):
-            image = image_data
+            image = await self._validate_image(image_data)
         else:
-            image = await self.populate_image(image_data) if image_data else None
+            image = await self._populate_image(image_data) if image_data else None
 
         is_persistent = cv.boolean(data.get(ATTR_PERSISTENT, False))
         text_color = data.get(ATTR_TEXT_COLOR)
@@ -166,7 +201,9 @@ class TvOverlayNotificationService(BaseNotificationService):
                 seconds=int(duration),
             )
 
-    async def populate_image(self, data: dict[str, Any]) -> ImageUrlSource | str | None:
+    async def _populate_image(
+        self, data: dict[str, Any]
+    ) -> ImageUrlSource | str | None:
         """Populate image from a local path or URL."""
         if data:
             url = data.get(ATTR_IMAGE_URL)
@@ -176,13 +213,13 @@ class TvOverlayNotificationService(BaseNotificationService):
             password = data.get(ATTR_IMAGE_PASSWORD)
             auth = data.get(ATTR_IMAGE_AUTH)
 
-            if url and (url.startswith("http://") or url.startswith("https://")):
+            if url and await self._is_valid_url(url):
                 _LOGGER.debug("Using image URL: %s", url)
                 return ImageUrlSource(
                     url, username=username, password=password, auth=auth
                 )
 
-            if local_path and self.is_allowed_path(local_path):
+            if local_path and await self._is_valid_file(local_path):
                 _LOGGER.debug("Using local image path: %s", local_path)
                 return local_path
 
@@ -191,6 +228,6 @@ class TvOverlayNotificationService(BaseNotificationService):
                 return mdi_icon
 
         _LOGGER.warning(
-            "No valid URL, local_path, or mdi_icon found in image attributes"
+            "No valid URL, local_path or mdi_icon found in image attributes"
         )
         return None
