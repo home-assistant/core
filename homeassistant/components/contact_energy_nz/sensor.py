@@ -31,7 +31,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN, UPDATE_INTERVAL_HOURS
 
-ENTITY_ID_SENSOR_FORMAT = SENSOR_DOMAIN + ".contact_enegry_nz_{}"
+ENTITY_ID_SENSOR_FORMAT = SENSOR_DOMAIN + ".contact_energy_nz_{}"
 
 
 @dataclass
@@ -53,6 +53,7 @@ _LOGGER = logging.getLogger(DOMAIN)
 
 SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
     ContactEnergyUsageSensorEntityDescription(
+        has_entity_name=True,
         key="value",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
@@ -62,6 +63,7 @@ SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
         unit_fn=lambda data: str(data.unit),
     ),
     ContactEnergyUsageSensorEntityDescription(
+        has_entity_name=True,
         key="dollar_value",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
@@ -71,6 +73,7 @@ SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
         unit_fn=lambda data: str(data.currency),
     ),
     ContactEnergyUsageSensorEntityDescription(
+        has_entity_name=True,
         key="offpeak_value",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
@@ -80,6 +83,7 @@ SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
         unit_fn=lambda data: str(data.unit),
     ),
     ContactEnergyUsageSensorEntityDescription(
+        has_entity_name=True,
         key="offpeak_dollar_value",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
@@ -89,6 +93,7 @@ SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
         unit_fn=lambda data: str(data.currency),
     ),
     ContactEnergyUsageSensorEntityDescription(
+        has_entity_name=True,
         key="uncharged_value",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
@@ -139,7 +144,7 @@ class ContactEnergyUsageCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name="Contact Enegry NZ API",
+            name="Contact Energy NZ API",
             update_interval=timedelta(hours=UPDATE_INTERVAL_HOURS),
         )
 
