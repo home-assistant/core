@@ -60,12 +60,12 @@ class BlinkSyncModuleHA(
         self.api: Blink = coordinator.api
         self._coordinator = coordinator
         self.sync = sync
-        self._name: str = name
         self._attr_unique_id: str = sync.serial
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sync.serial)},
             name=f"{DOMAIN} {name}",
             manufacturer=DEFAULT_BRAND,
+            serial_number=sync.serial,
         )
         self._update_attr()
 
