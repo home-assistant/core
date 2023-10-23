@@ -13,6 +13,10 @@ class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
 
 
+class ServiceValidationError(HomeAssistantError):
+    """A validation exception occurred when calling a service."""
+
+
 class InvalidEntityFormatError(HomeAssistantError):
     """When an invalid formatted entity is encountered."""
 
