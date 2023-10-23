@@ -2,6 +2,7 @@
 from asyncio import Task
 from datetime import timedelta
 import logging
+from typing import Any
 
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 
@@ -67,9 +68,7 @@ class LmApiCoordinator(DataUpdateCoordinator):
         return self._lm
 
     @callback
-    def _on_data_received(
-        self, property_updated: str, value: str | bool | float
-    ) -> None:
+    def _on_data_received(self, property_updated: str, value: Any) -> None:
         """Handle data received from websocket."""
 
         if not property_updated or not self._initialized:
@@ -87,7 +86,7 @@ class LmApiCoordinator(DataUpdateCoordinator):
 
         self.async_update_listeners()
 
-    def terminate_websocket(self):
+    def terminate_websocket(self) -> None:
         """Terminate the websocket connection."""
         self._lm.websocket_terminating = True
         if self._websocket_task:

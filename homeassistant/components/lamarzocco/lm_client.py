@@ -78,13 +78,9 @@ class LaMarzoccoClient(LMCloud):
     async def connect(self) -> None:
         """Connect to the machine."""
         _LOGGER.debug("Initializing Cloud API")
-        credentials = {
-            CONF_USERNAME: self._entry_data.get(CONF_USERNAME, ""),
-            CONF_PASSWORD: self._entry_data.get(CONF_PASSWORD, ""),
-            CONF_CLIENT_SECRET: self._entry_data.get(CONF_CLIENT_SECRET, ""),
-            CONF_CLIENT_ID: self._entry_data.get(CONF_CLIENT_ID, ""),
-        }
-        await self._init_cloud_api(credentials=credentials)
+        await self._init_cloud_api(
+            credentials=self._get_credentials_from_entry_data(self._entry_data)
+        )
         _LOGGER.debug("Model name: %s", self.model_name)
 
         username: str = self._entry_data.get(CONF_USERNAME, "")
@@ -115,9 +111,9 @@ class LaMarzoccoClient(LMCloud):
             _LOGGER.debug("Initializing local API")
             await self._init_local_api(host=host, port=DEFAULT_PORT_LOCAL)
 
-    async def try_connect(self, data: dict[str, Any]) -> dict[str, Any]:
+    async def try_connect(self, data: Mapping[str, Any]) -> dict[str, Any]:
         """Try to connect to the machine, used for validation."""
-        self.client = await self._connect(data)
+        self.client = await self._connect(self._get_credentials_from_entry_data(data))
         machine_info = await self._get_machine_info()
         return machine_info
 
@@ -188,3 +184,14 @@ class LaMarzoccoClient(LMCloud):
             await self._lm_bluetooth.new_bleak_client_from_ble_device(ble_device)
         except BluetoothConnectionFailed as ex:
             _LOGGER.warning(ex)
+
+    def _get_credentials_from_entry_data(
+        self, entry_data: Mapping[str, Any]
+    ) -> dict[str, str]:
+        """Get credentials from entry data."""
+        return {
+            CONF_USERNAME: entry_data.get(CONF_USERNAME, ""),
+            CONF_PASSWORD: entry_data.get(CONF_PASSWORD, ""),
+            CONF_CLIENT_SECRET: entry_data.get(CONF_CLIENT_SECRET, ""),
+            CONF_CLIENT_ID: entry_data.get(CONF_CLIENT_ID, ""),
+        }

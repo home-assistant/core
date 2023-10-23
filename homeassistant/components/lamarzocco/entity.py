@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -9,6 +10,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, UPDATE_DELAY
+from .coordinator import LmApiCoordinator
 
 
 @dataclass
@@ -29,7 +31,12 @@ class LaMarzoccoEntity(CoordinatorEntity):
 
     entity_description: LaMarzoccoEntityDescription
 
-    def __init__(self, coordinator, hass: HomeAssistant, entity_description) -> None:
+    def __init__(
+        self,
+        coordinator: LmApiCoordinator,
+        hass: HomeAssistant,
+        entity_description: LaMarzoccoEntityDescription,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._hass = hass
@@ -48,18 +55,18 @@ class LaMarzoccoEntity(CoordinatorEntity):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the extra state attributes."""
 
-        def bool_to_str(value):
+        def bool_to_str(value: bool | str) -> str:
             """Convert boolean values to strings to improve display in Lovelace."""
             return str(value) if isinstance(value, bool) else value
 
-        def tuple_to_str(key):
+        def tuple_to_str(key: tuple[str, ...]) -> str:
             """Convert tuple keys to strings."""
             if isinstance(key, tuple):
-                key = "_".join(key)
-            return key
+                joined_key = "_".join(key)
+            return joined_key
 
         data = self._lm_client.current_status
         attr = self.entity_description.extra_attributes.get(self._lm_client.model_name)
@@ -75,7 +82,7 @@ class LaMarzoccoEntity(CoordinatorEntity):
         self._lm_client = self.coordinator.data
         self.async_write_ha_state()
 
-    async def _update_ha_state(self):
+    async def _update_ha_state(self) -> None:
         """Write the intermediate value returned from the action to HA state before actually refreshing."""
         self.async_write_ha_state()
         # wait for a bit before getting a new state, to let the machine settle in to any state changes
