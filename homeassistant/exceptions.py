@@ -16,6 +16,19 @@ class HomeAssistantError(Exception):
 class ServiceValidationError(HomeAssistantError):
     """A validation exception occurred when calling a service."""
 
+    def __init__(
+        self,
+        *args: object,
+        domain: str | None = None,
+        translation_key: str | None = None,
+        translation_placeholders: dict[str, str] | None = None,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(*args)
+        self.domain = domain
+        self.translation_key = translation_key
+        self.translation_placeholders = translation_placeholders
+
 
 class InvalidEntityFormatError(HomeAssistantError):
     """When an invalid formatted entity is encountered."""

@@ -41,6 +41,7 @@ from homeassistant.helpers.json import (
     json_dumps,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import EventType
 from homeassistant.loader import (
     Integration,
@@ -247,13 +248,51 @@ async def handle_call_service(
     except ServiceValidationError as err:
         connection.logger.error(err)
         connection.logger.debug("", exc_info=err)
-        connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
+        message = await async_build_error_message(hass, err)
+        connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, message)
     except HomeAssistantError as err:
         connection.logger.exception(err)
         connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
     except Exception as err:  # pylint: disable=broad-except
         connection.logger.exception(err)
         connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
+
+
+async def async_get_exception_translations(
+    hass: HomeAssistant, domain: str
+) -> dict[str, Any]:
+    """Get translations for exceptions for a domain."""
+    return await async_get_translations(
+        hass, hass.config.language, "exceptions", {domain}
+    )
+
+
+async def async_build_error_message(
+    hass: HomeAssistant, err: ServiceValidationError
+) -> str:
+    """Build translated error message from exception."""
+    if (translation_key := err.translation_key) is None or (
+        domain := err.domain
+    ) is None:
+        return str(err)
+
+    exception_translations: dict[str, dict[str, Any]] = hass.data.setdefault(
+        DATA_EXCEPTION_TRANSLATIONS, {}
+    )
+    if (domain_exception_translations := exception_translations.get(domain)) is None:
+        domain_exception_translations = await async_get_exception_translations(
+            hass, domain
+        )
+        exception_translations[domain] = domain_exception_translations
+    exception_message: str | None
+    if (
+        exception_message := domain_exception_translations.get(
+            f"component.{domain}.exceptions.{translation_key}.message",
+        )
+    ) is None:
+        return str(err)
+    place_holders = err.translation_placeholders or {}
+    return exception_message.format(**place_holders, message=str(err))  # type: ignore[no-any-return]
 
 
 @callback

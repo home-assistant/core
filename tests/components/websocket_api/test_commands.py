@@ -455,10 +455,12 @@ async def test_call_service_error(
     hass.services.async_register("domain_test", "ha_error", ha_error_call)
 
     @callback
-    def service_error_call(_):
+    def service_validation_error_call(_):
         raise ServiceValidationError("error_message")
 
-    hass.services.async_register("domain_test", "service_error", service_error_call)
+    hass.services.async_register(
+        "domain_test", "service_validation_error", service_validation_error_call
+    )
 
     async def unknown_error_call(_):
         raise ValueError("value_error")
@@ -486,7 +488,7 @@ async def test_call_service_error(
             "id": 6,
             "type": "call_service",
             "domain": "domain_test",
-            "service": "service_error",
+            "service": "unknown_error",
         }
     )
 
@@ -494,24 +496,122 @@ async def test_call_service_error(
     assert msg["id"] == 6
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"] is False
-    assert msg["error"]["code"] == "home_assistant_error"
-    assert msg["error"]["message"] == "error_message"
-
-    await websocket_client.send_json(
-        {
-            "id": 7,
-            "type": "call_service",
-            "domain": "domain_test",
-            "service": "unknown_error",
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"] is False
     assert msg["error"]["code"] == "unknown_error"
     assert msg["error"]["message"] == "value_error"
+
+    error_strings = {}
+    with patch(
+        "homeassistant.components.websocket_api.commands.async_get_translations",
+        return_value=error_strings,
+    ) as mock_get_translations:
+        await websocket_client.send_json(
+            {
+                "id": 7,
+                "type": "call_service",
+                "domain": "domain_test",
+                "service": "service_validation_error",
+            }
+        )
+
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 7
+        assert msg["type"] == const.TYPE_RESULT
+        assert msg["success"] is False
+        assert msg["error"]["code"] == "home_assistant_error"
+        assert msg["error"]["message"] == "error_message"
+        assert len(mock_get_translations.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    (
+        "domain",
+        "translation_key",
+        "translation_placeholders",
+        "translations",
+        "message",
+    ),
+    [
+        (
+            "test",
+            "custom_error",
+            {"option": "beer"},
+            {
+                "component.test.exceptions.custom_error.message": "Translated error {option}: {message}"
+            },
+            "Translated error beer: error_message",
+        ),
+        (
+            "test",
+            "custom_error",
+            None,
+            {
+                "component.test.exceptions.custom_error.message": "Translated error: {message}"
+            },
+            "Translated error: error_message",
+        ),
+        ("test", "custom_error_key_not_exists", None, {}, "error_message"),
+    ],
+)
+async def test_exception_translations(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    domain: str | None,
+    translation_key: str | None,
+    translations: dict[str, str],
+    translation_placeholders: dict[str, str] | None,
+    message: str,
+) -> None:
+    """Test handling exceptions with translations."""
+
+    @callback
+    def service_error_call(_):
+        raise ServiceValidationError(
+            "error_message",
+            domain=domain,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
+
+    hass.services.async_register(domain, "service_validation_error", service_error_call)
+
+    with patch(
+        "homeassistant.components.websocket_api.commands.async_get_translations",
+        return_value=translations,
+    ) as mock_get_translations:
+        await websocket_client.send_json(
+            {
+                "id": 7,
+                "type": "call_service",
+                "domain": domain,
+                "service": "service_validation_error",
+            }
+        )
+
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 7
+        assert msg["type"] == const.TYPE_RESULT
+        assert msg["success"] is False
+        assert msg["error"]["code"] == "home_assistant_error"
+        assert msg["error"]["message"] == message
+        assert len(mock_get_translations.mock_calls) == 1
+
+        # retry using cache
+        await websocket_client.send_json(
+            {
+                "id": 8,
+                "type": "call_service",
+                "domain": domain,
+                "service": "service_validation_error",
+            }
+        )
+
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 8
+        assert msg["type"] == const.TYPE_RESULT
+        assert msg["success"] is False
+        assert msg["error"]["code"] == "home_assistant_error"
+        assert msg["error"]["message"] == message
+        assert len(mock_get_translations.mock_calls) == 1
 
 
 async def test_subscribe_unsubscribe_events(
