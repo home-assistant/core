@@ -32,8 +32,6 @@ from homeassistant.helpers.selector import (
 from .const import DOMAIN
 from .sensor import DEFAULT_MAX, DEFAULT_MIN
 
-NONE_SENTINEL = "none"
-
 
 def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
     """Generate schema."""
@@ -43,13 +41,8 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
         schema = {
             vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
                 SelectSelectorConfig(
-                    options=[
-                        NONE_SENTINEL,
-                        *sorted(
-                            [cls.value for cls in BinarySensorDeviceClass],
-                            key=str.casefold,
-                        ),
-                    ],
+                    options=[cls.value for cls in BinarySensorDeviceClass],
+                    sort=True,
                     mode=SelectSelectorMode.DROPDOWN,
                     translation_key="binary_sensor_device_class",
                 ),
@@ -60,39 +53,27 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
         schema = {
             vol.Optional(CONF_MINIMUM, default=DEFAULT_MIN): cv.positive_int,
             vol.Optional(CONF_MAXIMUM, default=DEFAULT_MAX): cv.positive_int,
-            vol.Optional(CONF_DEVICE_CLASS, default=NONE_SENTINEL): SelectSelector(
+            vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
                 SelectSelectorConfig(
                     options=[
-                        NONE_SENTINEL,
-                        *sorted(
-                            [
-                                cls.value
-                                for cls in SensorDeviceClass
-                                if cls != SensorDeviceClass.ENUM
-                            ],
-                            key=str.casefold,
-                        ),
+                        cls.value
+                        for cls in SensorDeviceClass
+                        if cls != SensorDeviceClass.ENUM
                     ],
+                    sort=True,
                     mode=SelectSelectorMode.DROPDOWN,
                     translation_key="sensor_device_class",
                 ),
             ),
-            vol.Optional(
-                CONF_UNIT_OF_MEASUREMENT, default=NONE_SENTINEL
-            ): SelectSelector(
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
                 SelectSelectorConfig(
                     options=[
-                        NONE_SENTINEL,
-                        *sorted(
-                            {
-                                str(unit)
-                                for units in DEVICE_CLASS_UNITS.values()
-                                for unit in units
-                                if unit is not None
-                            },
-                            key=str.casefold,
-                        ),
+                        str(unit)
+                        for units in DEVICE_CLASS_UNITS.values()
+                        for unit in units
+                        if unit is not None
                     ],
+                    sort=True,
                     mode=SelectSelectorMode.DROPDOWN,
                     translation_key="sensor_unit_of_measurement",
                     custom_value=True,
@@ -123,15 +104,6 @@ def config_schema(domain: str) -> vol.Schema:
 async def choose_options_step(options: dict[str, Any]) -> str:
     """Return next step_id for options flow according to template_type."""
     return cast(str, options["entity_type"])
-
-
-def _strip_sentinel(options: dict[str, Any]) -> None:
-    """Convert sentinel to None."""
-    for key in (CONF_DEVICE_CLASS, CONF_UNIT_OF_MEASUREMENT):
-        if key not in options:
-            continue
-        if options[key] == NONE_SENTINEL:
-            options.pop(key)
 
 
 def _validate_unit(options: dict[str, Any]) -> None:
@@ -173,8 +145,6 @@ def validate_user_input(
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
         """Add template type to user input."""
-        if template_type in (Platform.BINARY_SENSOR, Platform.SENSOR):
-            _strip_sentinel(user_input)
         if template_type == Platform.SENSOR:
             _validate_unit(user_input)
         return {"entity_type": template_type} | user_input
