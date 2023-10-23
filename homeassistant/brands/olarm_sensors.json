@@ -1,5 +1,0 @@
-{
-  "domain": "olarm_sensors",
-  "name": "Olarm Sensors",
-  "integrations": ["olarm_sensors"]
-}
