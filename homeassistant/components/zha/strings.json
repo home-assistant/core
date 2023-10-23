@@ -583,6 +583,9 @@
       },
       "self_test": {
         "name": "Self-test"
+      },
+      "update_attributes": {
+        "name": "Update attributes"
       }
     },
     "climate": {
@@ -739,6 +742,12 @@
       },
       "min_heat_setpoint_limit": {
         "name": "Min heat setpoint limit"
+      },
+      "temperature_calibration_offset": {
+        "name": "Temperature calibration offset"
+      },
+      "window_open_temperature": {
+        "name": "Window open temperature"
       }
     },
     "select": {
@@ -991,6 +1000,9 @@
       },
       "buzzer_manual_alarm": {
         "name": "Buzzer manual alarm"
+      },
+      "boost": {
+        "name": "Boost"
       }
     }
   }

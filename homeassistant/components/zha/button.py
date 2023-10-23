@@ -211,12 +211,13 @@ class AqaraPetFeederFeedButton(ZHAAttributeButton):
     cluster_handler_names="tuya_manufacturer",
     quirk_classes={"zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG"},
 )
-class ZonnSmartOnlineButton(ZHAAttributeButton, id_suffix="update"):
+class ZonnSmartOnlineButton(ZHAAttributeButton):
     """Define a button to force the TRV to send all its attribute values to ZHA."""
 
-    _attribute_name = "online_set"
-    _attr_name = "Update attributes"
+    _attribute_name = "update_attributes"
     _attribute_value = 0
+    _unique_id_suffix = "update"
+    _attr_translation_key = "update_attributes"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(

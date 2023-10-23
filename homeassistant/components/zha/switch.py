@@ -577,11 +577,12 @@ class AqaraThermostatChildLock(ZHASwitchConfigurationEntity):
     cluster_handler_names="tuya_manufacturer",
     quirk_classes={"zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG"},
 )
-class ZonnSmartChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+class ZonnSmartChildLockSwitch(ZHASwitchConfigurationEntity):
     """Representation of a child lock configuration entity."""
 
-    _zcl_attribute: str = "child_lock"
-    _attr_name = "Child lock"
+    _unique_id_suffix: str = "child_lock"
+    _attribute_name = "child_lock"
+    _attr_translation_key = "child_lock"
     _attr_icon: str = "mdi:account-lock"
 
 
@@ -589,18 +590,21 @@ class ZonnSmartChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lo
     cluster_handler_names="tuya_manufacturer",
     quirk_classes={"zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG"},
 )
-class TuyaTRVBoostSwitch(ZHASwitchConfigurationEntity, id_suffix="boost"):
+class TuyaTRVBoostSwitch(ZHASwitchConfigurationEntity):
     """Representation of a boost configuration entity."""
 
-    _zcl_attribute: str = "boost_duration_seconds"
-    _attr_name = "Boost"
+    _unique_id_suffix: str = "boost_duration_seconds"
+    _attribute_name = "boost"
+    _attr_translation_key = "boost"
     _attr_icon: str = "mdi:radiator"
 
     async def async_turn_on_off(  # pylint: disable=arguments-renamed
         self, value: int
     ) -> None:
         """Turn the entity on or off."""
-        await self._cluster_handler.write_attributes_safe({self._zcl_attribute: value})
+        await self._cluster_handler.write_attributes_safe(
+            {self._unique_id_suffix: value}
+        )
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:

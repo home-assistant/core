@@ -1000,19 +1000,18 @@ class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
     quirk_classes={"zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class ZonnSmartTemperatureCalibration(
-    ZHANumberConfigurationEntity, id_suffix="temperature_calibration"
-):
+class ZonnSmartTemperatureCalibration(ZHANumberConfigurationEntity):
     """ZonnsSmart temperature offset configuration entity."""
 
+    _unique_id_suffix = "temperature_calibration"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_min_value: float = -5
     _attr_native_max_value: float = 5
     _attr_native_step: float = 0.5
-    _zcl_attribute: str = "temperature_calibration"
-    _attr_name: str = "Temperature calibration offset"
+    _attribute_name = "temperature_calibration_offset"
     _attr_icon: str = ICONS[0]
     _attr_multiplier: float = 0.1
+    _attr_translation_key: str = "temperature_calibration_offset"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -1020,18 +1019,17 @@ class ZonnSmartTemperatureCalibration(
     quirk_classes={"zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class ZonnSmartWindowOpenTemperature(
-    ZHANumberConfigurationEntity, id_suffix="window_open_temp"
-):
-    """ZonnsSmart temperature offset configuration entity."""
+class ZonnSmartWindowOpenTemperature(ZHANumberConfigurationEntity):
+    """ZonnsSmart opened window temperature configuration entity."""
 
+    _unique_id_suffix = "opened_window_temperature"
     _attr_native_min_value: float = 5
     _attr_native_max_value: float = 30
     _attr_native_step: float = 0.5
-    _zcl_attribute: str = "opened_window_temperature"
-    _attr_name: str = "Window open temperature"
+    _attribute_name = "window_open_temperature"
     _attr_icon: str = ICONS[0]
     _attr_multiplier: float = 0.1
+    _attr_translation_key: str = "window_open_temperature"
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the window open temperature value."""
