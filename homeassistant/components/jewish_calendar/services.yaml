@@ -1,0 +1,241 @@
+get_gregorian_date:
+  fields:
+    date:
+      example: 2023-01-01
+      selector:
+        date:
+    include_hebrew_date_info: &include_hebrew_date_info
+      default: true
+      selector:
+        boolean:
+    include_holiday_info: &include_holiday_info
+      selector:
+        boolean:
+    include_zmanim: &include_zmanim
+      selector:
+        boolean:
+
+get_hebrew_date:
+  fields:
+    year:
+      example: 5780
+      selector:
+        number:
+          mode: box
+    month:
+      example: Tishrei
+      selector:
+        select:
+          options:
+            - Tishrei
+            - Marcheshvan
+            - Kislev
+            - Tevet
+            - Sh'vat
+            - Adar I
+            - Adar II
+            - Nisan
+            - Iyyar
+            - Sivan
+            - Tammuz
+            - Av
+            - Elul
+            - תשרי
+            - מרחשוון
+            - כסלו
+            - טבת
+            - שבט
+            - אדר א
+            - אדר ב
+            - ניסן
+            - אייר
+            - סיון
+            - תמוז
+            - אב
+            - אלול
+    day:
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 30
+          mode: box
+    include_hebrew_date_info: *include_hebrew_date_info
+    include_holiday_info: *include_holiday_info
+    include_zmanim: *include_zmanim
+
+get_next_holiday:
+  fields:
+    date:
+      example: 2023-01-01
+      selector:
+        date:
+    types: &types_field
+      selector:
+        select:
+          multiple: true
+          options:
+            - YOM_TOV
+            - EREV_YOM_TOV
+            - HOL_HAMOED
+            - MELACHA_PERMITTED_HOLIDAY
+            - FAST_DAY
+            - MODERN_HOLIDAY
+            - MINOR_HOLIDAY
+            - MEMORIAL_DAY
+            - ISRAEL_NATIONAL_HOLIDAY
+    include_hebrew_date_info: *include_hebrew_date_info
+    include_holiday_info: *include_holiday_info
+    include_zmanim: *include_zmanim
+get_holidays:
+  fields:
+    year:
+      example: 5780
+      selector:
+        number:
+          mode: box
+    types: *types_field
+    holidays:
+      selector:
+        select:
+          multiple: true
+          options:
+            - erev_rosh_hashana
+            - Erev Rosh Hashana
+            - rosh_hashana_i
+            - Rosh Hashana I
+            - rosh_hashana_ii
+            - Rosh Hashana II
+            - tzom_gedaliah
+            - Tzom Gedaliah
+            - erev_yom_kippur
+            - Erev Yom Kippur
+            - yom_kippur
+            - Yom Kippur
+            - erev_sukkot
+            - Erev Sukkot
+            - sukkot
+            - Sukkot
+            - hol_hamoed_sukkot
+            - Hol hamoed Sukkot
+            - hoshana_raba
+            - Hoshana Raba
+            - simchat_torah
+            - Simchat Torah
+            - chanukah
+            - Chanukah
+            - asara_btevet
+            - Asara B'Tevet
+            - tu_bshvat
+            - Tu B'Shvat
+            - taanit_esther
+            - Ta'anit Esther
+            - purim
+            - Purim
+            - shushan_purim
+            - Shushan Purim
+            - erev_pesach
+            - Erev Pesach
+            - pesach
+            - Pesach
+            - hol_hamoed_pesach
+            - Hol hamoed Pesach
+            - pesach_vii
+            - Pesach VII
+            - yom_haatzmaut
+            - Yom HaAtzma'ut
+            - lag_bomer
+            - Lag B'Omer
+            - erev_shavuot
+            - Erev Shavuot
+            - shavuot
+            - Shavuot
+            - tzom_tammuz
+            - Tzom Tammuz
+            - tisha_bav
+            - Tish'a B'Av
+            - tu_bav
+            - Tu B'Av
+            - yom_hashoah
+            - Yom HaShoah
+            - yom_hazikaron
+            - Yom HaZikaron
+            - yom_yerushalayim
+            - Yom Yerushalayim
+            - shmini_atzeret
+            - Shmini Atzeret
+            - pesach_viii
+            - Pesach VIII
+            - shavuot_ii
+            - Shavuot II
+            - sukkot_ii
+            - Sukkot II
+            - pesach_ii
+            - Pesach II
+            - family_day
+            - Family Day
+            - memorial_day_unknown
+            - Memorial day for fallen whose place of burial is unknown
+            - rabin_memorial_day
+            - Yitzhak Rabin memorial day
+            - zeev_zhabotinsky_day
+            - Zeev Zhabotinsky day
+            - ערב ראש השנה
+            - ערב ר"ה
+            - א' ראש השנה
+            - א ר"ה
+            - ב' ר"ה
+            - ב' ראש השנה
+            - צום גדליה
+            - עיוה"כ
+            - יום הכפורים
+            - יוה"כ
+            - ערב סוכות
+            - סוכות
+            - חול המועד סוכות
+            - חוה"מ סוכות
+            - הושענא רבה
+            - הוש"ר
+            - שמחת תורה
+            - שמח"ת
+            - חנוכה
+            - צום עשרה בטבת
+            - י' בטבת
+            - ט"ו בשבט
+            - תענית אסתר
+            - פורים
+            - שושן פורים
+            - ערב פסח
+            - פסח
+            - חול המועד פסח
+            - חוה"מ פסח
+            - שביעי פסח
+            - ז' פסח
+            - יום העצמאות
+            - ל"ג בעומר
+            - ערב שבועות
+            - שבועות
+            - צום שבעה עשר בתמוז
+            - צום תמוז
+            - תשעה באב
+            - ט' באב
+            - ט"ו באב
+            - יום השואה
+            - יום הזכרון
+            - יום ירושלים
+            - יום י-ם
+            - שמיני עצרת
+            - אחרון של פסח
+            - שני של שבועות
+            - ב' שבועות
+            - שני של סוכות
+            - ב' סוכות
+            - שני של פסח
+            - ב' פסח
+            - יום המשפחה
+            - יום זכרון...
+            - יום הזכרון ליצחק רבין
+            - יום ז'בוטינסקי
+    include_hebrew_date_info: *include_hebrew_date_info
+    include_holiday_info: *include_holiday_info
+    include_zmanim: *include_zmanim

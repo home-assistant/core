@@ -1,0 +1,8 @@
+{
+  "services": {
+    "get_gregorian_date": "mdi:calendar",
+    "get_hebrew_date": "mdi:calendar",
+    "get_holidays": "mdi:calendar-star",
+    "get_next_holiday": "mdi:calendar-arrow-right"
+  }
+}
