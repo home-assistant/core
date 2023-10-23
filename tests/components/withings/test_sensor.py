@@ -305,7 +305,7 @@ async def test_workout_sensors_created_when_existed(
     """Test workout sensors will be added if they existed before."""
     await setup_integration(hass, polling_config_entry, False)
 
-    assert hass.states.get("sensor.henk_last_workout_type") is not None
+    assert hass.states.get("sensor.henk_last_workout_type")
     assert hass.states.get("sensor.henk_last_workout_type").state != STATE_UNKNOWN
 
     withings.get_workouts_in_period.return_value = []
@@ -340,4 +340,4 @@ async def test_workout_sensors_created_when_receive_workout_data(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.henk_last_workout_type") is not None
+    assert hass.states.get("sensor.henk_last_workout_type")

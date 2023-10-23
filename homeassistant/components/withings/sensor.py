@@ -725,7 +725,7 @@ async def async_setup_entry(
             for attribute in SLEEP_SENSORS
         )
     else:
-        remove_listener: Callable[[], None]
+        remove_sleep_listener: Callable[[], None]
 
         def _async_add_sleep_entities() -> None:
             """Add sleep entities."""
@@ -734,34 +734,36 @@ async def async_setup_entry(
                     WithingsSleepSensor(sleep_coordinator, attribute)
                     for attribute in SLEEP_SENSORS
                 )
-                remove_listener()
+                remove_sleep_listener()
 
-        remove_listener = sleep_coordinator.async_add_listener(
+        remove_sleep_listener = sleep_coordinator.async_add_listener(
             _async_add_sleep_entities
         )
 
     workout_coordinator = withings_data.workout_coordinator
 
-    workout_callback: Callable[[], None] | None = None
-
     workout_entities_setup_before = ent_reg.async_get_entity_id(
         Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_workout_type"
     )
 
-    def _async_add_workout_entities() -> None:
-        """Add workout entities."""
-        if workout_coordinator.data is not None or workout_entities_setup_before:
-            async_add_entities(
-                WithingsWorkoutSensor(workout_coordinator, attribute)
-                for attribute in WORKOUT_SENSORS
-            )
-            if workout_callback:
-                workout_callback()
-
     if workout_coordinator.data is not None or workout_entities_setup_before:
-        _async_add_workout_entities()
+        entities.extend(
+            WithingsWorkoutSensor(workout_coordinator, attribute)
+            for attribute in WORKOUT_SENSORS
+        )
     else:
-        workout_callback = workout_coordinator.async_add_listener(
+        remove_workout_listener: Callable[[], None]
+
+        def _async_add_workout_entities() -> None:
+            """Add workout entities."""
+            if workout_coordinator.data is not None:
+                async_add_entities(
+                    WithingsWorkoutSensor(workout_coordinator, attribute)
+                    for attribute in WORKOUT_SENSORS
+                )
+                remove_workout_listener()
+
+        remove_workout_listener = workout_coordinator.async_add_listener(
             _async_add_workout_entities
         )
 
