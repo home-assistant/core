@@ -214,7 +214,7 @@ class AqaraPetFeederFeedButton(ZHAAttributeButton):
 class ZonnSmartOnlineButton(ZHAAttributeButton):
     """Define a button to force the TRV to send all its attribute values to ZHA."""
 
-    _attribute_name = "update_attributes"
+    _attribute_name = "online_set"
     _attribute_value = 0
     _unique_id_suffix = "update"
     _attr_translation_key = "update_attributes"

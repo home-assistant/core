@@ -1003,12 +1003,12 @@ class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
 class ZonnSmartTemperatureCalibration(ZHANumberConfigurationEntity):
     """ZonnsSmart temperature offset configuration entity."""
 
-    _unique_id_suffix = "temperature_calibration"
+    _unique_id_suffix = "temperature_calibration_offset"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_min_value: float = -5
     _attr_native_max_value: float = 5
     _attr_native_step: float = 0.5
-    _attribute_name = "temperature_calibration_offset"
+    _attribute_name = "temperature_calibration"
     _attr_icon: str = ICONS[0]
     _attr_multiplier: float = 0.1
     _attr_translation_key: str = "temperature_calibration_offset"
@@ -1026,7 +1026,7 @@ class ZonnSmartWindowOpenTemperature(ZHANumberConfigurationEntity):
     _attr_native_min_value: float = 5
     _attr_native_max_value: float = 30
     _attr_native_step: float = 0.5
-    _attribute_name = "window_open_temperature"
+    _attribute_name = "opened_window_temperature"
     _attr_icon: str = ICONS[0]
     _attr_multiplier: float = 0.1
     _attr_translation_key: str = "window_open_temperature"

@@ -303,7 +303,7 @@ class ZonnSmartWindowOpened(BinarySensor):
     """Sensor that display if the window is detected open or closed."""
 
     _attribute_name = "window_detection"
-    _unique_id_suffix = "window_dectection"
+    _unique_id_suffix = "window_detection"
     _attr_translation_key: str = "window_detection"
 
 
