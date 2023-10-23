@@ -831,28 +831,24 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            entity_registry_enabled_default=True,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
             translation_key="current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
-            entity_registry_enabled_default=True,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_POWER,
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            entity_registry_enabled_default=True,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_VOLTAGE,
             translation_key="voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            entity_registry_enabled_default=True,
         ),
     ),
     # Robot Vacuum
