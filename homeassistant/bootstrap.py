@@ -137,14 +137,14 @@ async def async_setup_hass(
     config_dict = None
     basic_setup_success = False
 
-    if not (safe_mode := runtime_config.safe_mode):
+    if not (recovery_mode := runtime_config.recovery_mode):
         await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
 
         try:
             config_dict = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(
-                "Failed to parse configuration.yaml: %s. Activating safe mode",
+                "Failed to parse configuration.yaml: %s. Activating recovery mode",
                 err,
             )
         else:
@@ -156,24 +156,24 @@ async def async_setup_hass(
             )
 
     if config_dict is None:
-        safe_mode = True
+        recovery_mode = True
 
     elif not basic_setup_success:
-        _LOGGER.warning("Unable to set up core integrations. Activating safe mode")
-        safe_mode = True
+        _LOGGER.warning("Unable to set up core integrations. Activating recovery mode")
+        recovery_mode = True
 
     elif (
         "frontend" in hass.data.get(DATA_SETUP, {})
         and "frontend" not in hass.config.components
     ):
-        _LOGGER.warning("Detected that frontend did not load. Activating safe mode")
+        _LOGGER.warning("Detected that frontend did not load. Activating recovery mode")
         # Ask integrations to shut down. It's messy but we can't
         # do a clean stop without knowing what is broken
         with contextlib.suppress(asyncio.TimeoutError):
             async with hass.timeout.async_timeout(10):
                 await hass.async_stop()
 
-        safe_mode = True
+        recovery_mode = True
         old_config = hass.config
         old_logging = hass.data.get(DATA_LOGGING)
 
@@ -187,9 +187,9 @@ async def async_setup_hass(
         # Setup loader cache after the config dir has been set
         loader.async_setup(hass)
 
-    if safe_mode:
-        _LOGGER.info("Starting in safe mode")
-        hass.config.safe_mode = True
+    if recovery_mode:
+        _LOGGER.info("Starting in recovery mode")
+        hass.config.recovery_mode = True
 
         http_conf = (await http.async_get_last_config(hass)) or {}
 
@@ -471,7 +471,7 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     domains = {key.partition(" ")[0] for key in config if key != core.DOMAIN}
 
     # Add config entry domains
-    if not hass.config.safe_mode:
+    if not hass.config.recovery_mode:
         domains.update(hass.config_entries.async_domains())
 
     # Make sure the Hass.io component is loaded
