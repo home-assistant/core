@@ -5,7 +5,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
-from aiowithings import Activity, Goals, MeasurementType, SleepSummary, Workout
+from aiowithings import (
+    Activity,
+    Goals,
+    MeasurementType,
+    SleepSummary,
+    Workout,
+    WorkoutCategory,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -37,7 +44,6 @@ from .const import (
     UOM_BREATHS_PER_MINUTE,
     UOM_FREQUENCY,
     UOM_MMHG,
-    WORKOUT_CATEGORY,
 )
 from .coordinator import (
     WithingsActivityDataUpdateCoordinator,
@@ -564,13 +570,18 @@ class WithingsWorkoutSensorEntityDescription(
     """Immutable class for describing withings data."""
 
 
+_WORKOUT_CATEGORY = [
+    workout_category.name.lower() for workout_category in WorkoutCategory
+]
+
+
 WORKOUT_SENSORS = [
     WithingsWorkoutSensorEntityDescription(
         key="workout_type",
-        value_fn=lambda workout: WORKOUT_CATEGORY[workout.category],
+        value_fn=lambda workout: workout.category.name.lower(),
         device_class=SensorDeviceClass.ENUM,
         translation_key="workout_type",
-        options=list(WORKOUT_CATEGORY.values()),
+        options=_WORKOUT_CATEGORY,
     ),
     WithingsWorkoutSensorEntityDescription(
         key="workout_active_calories_burnt",
