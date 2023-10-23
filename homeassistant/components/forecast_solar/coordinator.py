@@ -18,6 +18,7 @@ from .const import (
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
+    CONF_DYNAMIC_LOCATION,
     DOMAIN,
     LOGGER,
 )
@@ -41,11 +42,18 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         ) is not None and inverter_size > 0:
             inverter_size = inverter_size / 1000
 
+        if entry.data.get(CONF_DYNAMIC_LOCATION):
+            latitude = self.hass.config.latitude
+            longitude = self.hass.config.longitude
+        else:
+            latitude = entry.data[CONF_LATITUDE]
+            longitude = entry.data[CONF_LONGITUDE]
+
         self.forecast = ForecastSolar(
             api_key=api_key,
             session=async_get_clientsession(hass),
-            latitude=entry.data[CONF_LATITUDE],
-            longitude=entry.data[CONF_LONGITUDE],
+            latitude=latitude,
+            longitude=longitude,
             declination=entry.options[CONF_DECLINATION],
             azimuth=(entry.options[CONF_AZIMUTH] - 180),
             kwp=(entry.options[CONF_MODULES_POWER] / 1000),

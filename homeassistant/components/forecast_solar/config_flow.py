@@ -19,6 +19,7 @@ from .const import (
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
+    CONF_DYNAMIC_LOCATION,
     DOMAIN,
 )
 
@@ -48,6 +49,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_LATITUDE: user_input[CONF_LATITUDE],
                     CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                    CONF_DYNAMIC_LOCATION: user_input[CONF_DYNAMIC_LOCATION],
                 },
                 options={
                     CONF_AZIMUTH: user_input[CONF_AZIMUTH],
@@ -69,6 +71,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
+                    vol.Optional(CONF_DYNAMIC_LOCATION, default=False): bool,
                     vol.Required(CONF_DECLINATION, default=25): vol.All(
                         vol.Coerce(int), vol.Range(min=0, max=90)
                     ),
@@ -147,6 +150,7 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                             )
                         },
                     ): vol.Coerce(int),
+                    vol.Optional(CONF_DYNAMIC_LOCATION, default=self.config_entry.options.get(CONF_DYNAMIC_LOCATION, False)): bool,
                 }
             ),
             errors=errors,

@@ -9,7 +9,9 @@
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "modules_power": "Total Watt peak power of your solar modules",
-          "name": "[%key:common::config_flow::data::name%]"
+          "name": "[%key:common::config_flow::data::name%]",
+          "dynamic_location": "Use dynamic location updates from Home Assistant configuration"
+
         }
       }
     }
@@ -28,7 +30,8 @@
           "damping_evening": "Damping factor: adjusts the results in the evening",
           "inverter_size": "Inverter size (Watt)",
           "declination": "[%key:component::forecast_solar::config::step::user::data::declination%]",
-          "modules_power": "[%key:component::forecast_solar::config::step::user::data::modules_power%]"
+          "modules_power": "[%key:component::forecast_solar::config::step::user::data::modules_power%]",
+          "dynamic_location": "Use dynamic location updates from Home Assistant configuration"
         }
       }
     }
