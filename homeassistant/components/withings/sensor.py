@@ -644,7 +644,6 @@ async def async_setup_entry(
 
     sleep_coordinator = withings_data.sleep_coordinator
 
-    sleep_callback: Callable[[], None] | None = None
 
     sleep_entities_setup_before = ent_reg.async_get_entity_id(
         Platform.SENSOR,
@@ -652,15 +651,6 @@ async def async_setup_entry(
         f"withings_{entry.unique_id}_sleep_deep_duration_seconds",
     )
 
-    def _async_add_sleep_entities() -> None:
-        """Add sleep entities."""
-        if sleep_coordinator.data is not None:
-            async_add_entities(
-                WithingsSleepSensor(sleep_coordinator, attribute)
-                for attribute in SLEEP_SENSORS
-            )
-            if sleep_callback:
-                sleep_callback()
 
     if sleep_coordinator.data is not None or sleep_entities_setup_before:
         entities.extend(
@@ -668,7 +658,20 @@ async def async_setup_entry(
             for attribute in SLEEP_SENSORS
         )
     else:
-        sleep_callback = sleep_coordinator.async_add_listener(_async_add_sleep_entities)
+        remove_listener: Callable[[], None]
+
+        def _async_add_sleep_entities() -> None:
+            """Add sleep entities."""
+            if sleep_coordinator.data is not None:
+                async_add_entities(
+                    WithingsSleepSensor(sleep_coordinator, attribute)
+                    for attribute in SLEEP_SENSORS
+                )
+                remove_listener()
+
+        remove_listener = sleep_coordinator.async_add_listener(
+            _async_add_sleep_entities
+        )
 
     async_add_entities(entities)
 
