@@ -39,10 +39,9 @@ class ViCareRequiredKeysMixin:
 
 
 @dataclass()
-class ViCareRequiredKeysMixinWithSet:
+class ViCareRequiredKeysMixinWithSet(ViCareRequiredKeysMixin):
     """Mixin for required keys with setter."""
 
-    value_getter: Callable[[PyViCareDevice], bool]
     value_setter: Callable[[PyViCareDevice], bool]
 
 

@@ -2088,11 +2088,6 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_voltage",
             },
-            ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
-                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_power_factor",
-            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
