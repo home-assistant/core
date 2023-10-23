@@ -97,6 +97,7 @@ class ViCareButton(ViCareEntity, ButtonEntity):
 
     def __init__(
         self,
+        name: str,
         api,
         device_config,
         description: ViCareButtonEntityDescription,
