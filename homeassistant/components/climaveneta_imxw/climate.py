@@ -18,7 +18,8 @@ from homeassistant.components.climate import (
 from homeassistant.components.modbus import ModbusHub
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -38,6 +39,24 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 CALL_TYPE_WRITE_REGISTER = "write_register"
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up a config entry."""
+    coordinator: ClimavenetaIMXWCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    entities: list[ClimateEntity] = []
+
+    entities.append(
+        ClimavenetaIMXWClimate(
+            coordinator, coordinator.hub, coordinator.slave_id, coordinator.name
+        )
+    )
+    async_add_entities(entities)
 
 
 class ClimavenetaIMXWClimate(
@@ -96,11 +115,17 @@ class ClimavenetaIMXWClimate(
         self._hub = hub
         self._attr_name = None
         self._slave = modbus_slave
-        _attr_unique_id = f"{str(hub.name)}_{name}_{str(modbus_slave)}"
+        self._attr_unique_id = f"{str(hub.name)}_{name}_{str(modbus_slave)}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"ac_{modbus_slave}")},
+            name=f"IMXW {modbus_slave}",
+            manufacturer="Climaveneta",
+            model="i-MXW",
+        )
 
-    async def async_update(self) -> None:
-        """Update unit attributes."""
-
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         # setpoint and actuals
         self._attr_target_temperature = self.coordinator.data_modbus[
             "target_temperature"
@@ -113,6 +138,7 @@ class ClimavenetaIMXWClimate(
         self._attr_hvac_action = self.coordinator.hvac_action
         self._attr_hvac_mode = self.coordinator.hvac_mode
         self._attr_fan_mode = self.coordinator.fan_mode
+        self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -169,21 +195,3 @@ class ClimavenetaIMXWClimate(
         if not result:
             return False
         return True
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up a config entry."""
-    coordinator: ClimavenetaIMXWCoordinator = hass.data[DOMAIN][entry.entry_id]
-
-    entities: list[ClimateEntity] = []
-
-    entities.append(
-        ClimavenetaIMXWClimate(
-            coordinator, coordinator.hub, coordinator.slave_id, coordinator.name
-        )
-    )
-    async_add_entities(entities)

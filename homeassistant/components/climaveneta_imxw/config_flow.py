@@ -17,12 +17,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize flow."""
-        self._hub: str
-        self._slave_id: int | None = None
-        self._name: str
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -35,10 +29,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["hub"] = "invalid_modbus_hub"
 
             if not errors:
-                self._hub = user_input[CONF_HUB]
-                self._slave_id = user_input[CONF_SLAVE]
-                self._name = user_input[CONF_NAME]
-
                 title_device = f"Climaveneta_IMXW {user_input[CONF_NAME]} at {user_input[CONF_HUB]}:{user_input[CONF_SLAVE]}"
                 return self.async_create_entry(title=title_device, data=user_input)
 
