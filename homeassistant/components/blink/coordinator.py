@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class BlinkUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """BlinkUpdateCoordinator - In charge of downloading the data for a site, which all the sensors read."""
+    """BlinkUpdateCoordinator - In charge of downloading the data for a site."""
 
     def __init__(self, hass: HomeAssistant, api: Blink) -> None:
         """Initialize the data service."""

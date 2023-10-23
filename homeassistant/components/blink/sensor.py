@@ -90,13 +90,13 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Return native value for blink."""
+        """Handle coordinator update."""
         self._update_attr()
         super()._handle_coordinator_update()
 
     @callback
     def _update_attr(self) -> None:
-        """Update Attributes for sensor."""
+        """Update attributes for sensor."""
         try:
             self._attr_native_value = self._camera.attributes[self._sensor_key]
             _LOGGER.debug(

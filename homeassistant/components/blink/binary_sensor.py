@@ -89,7 +89,7 @@ class BlinkBinarySensor(CoordinatorEntity[BlinkUpdateCoordinator], BinarySensorE
 
     @callback
     def _update_attrs(self) -> None:
-        """Handle update from data coordinator."""
+        """Update attributes for binary sensor."""
         is_on = self._camera.attributes[self.entity_description.key]
         _LOGGER.debug(
             "'%s' %s = %s",

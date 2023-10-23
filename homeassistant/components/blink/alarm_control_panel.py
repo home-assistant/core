@@ -50,6 +50,7 @@ class BlinkSyncModuleHA(
     _attr_icon = ICON
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, coordinator: BlinkUpdateCoordinator, name: str, sync: BlinkSyncModule
@@ -76,7 +77,7 @@ class BlinkSyncModuleHA(
 
     @callback
     def _update_attr(self) -> None:
-        """Update attributes."""
+        """Update attributes for alarm control panel."""
         self.sync.attributes["network_info"] = self.api.networks
         self.sync.attributes["associated_cameras"] = list(self.sync.cameras)
         self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
