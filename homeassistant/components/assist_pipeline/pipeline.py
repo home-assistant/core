@@ -12,11 +12,13 @@ from pathlib import Path
 from queue import Queue
 from threading import Thread
 import time
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 import wave
 
 import voluptuous as vol
-from webrtc_noise_gain import AudioProcessor
+
+if TYPE_CHECKING:
+    from webrtc_noise_gain import AudioProcessor
 
 from homeassistant.components import (
     conversation,
@@ -522,6 +524,12 @@ class PipelineRun:
         # Initialize with audio settings
         self.audio_processor_buffer = AudioBuffer(AUDIO_PROCESSOR_BYTES)
         if self.audio_settings.needs_processor:
+            # Delay import of webrtc so HA start up is not crashing
+            # on older architectures (armhf).
+            #
+            # pylint: disable=import-outside-toplevel
+            from webrtc_noise_gain import AudioProcessor
+
             self.audio_processor = AudioProcessor(
                 self.audio_settings.auto_gain_dbfs,
                 self.audio_settings.noise_suppression_level,
