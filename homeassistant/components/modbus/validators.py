@@ -24,6 +24,7 @@ from homeassistant.const import (
 )
 
 from .const import (
+    CONF_ALLOW_COUNT_STRUCTURE_MISMATCH,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
@@ -100,6 +101,9 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     structure = config.get(CONF_STRUCTURE, None)
     slave_count = config.get(CONF_SLAVE_COUNT, None)
     slave_name = CONF_SLAVE_COUNT
+    allow_count_structure_mismatch = config.get(
+        CONF_ALLOW_COUNT_STRUCTURE_MISMATCH, False
+    )
     if not slave_count:
         slave_count = config.get(CONF_VIRTUAL_COUNT, 0)
         slave_name = CONF_VIRTUAL_COUNT
@@ -138,7 +142,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
                 f"{name}: error in structure format --> {str(err)}"
             ) from err
         bytecount = count * 2
-        if bytecount != size:
+        if bytecount != size and not allow_count_structure_mismatch:
             raise vol.Invalid(
                 f"{name}: Size of structure is {size} bytes but `{CONF_COUNT}: {count}` is {bytecount} bytes"
             )

@@ -57,6 +57,7 @@ from .const import (  # noqa: F401
     CALL_TYPE_REGISTER_INPUT,
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
+    CONF_ALLOW_COUNT_STRUCTURE_MISMATCH,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_CLIMATES,
@@ -317,6 +318,9 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_MAX_VALUE): number_validator,
             vol.Optional(CONF_NAN_VALUE): nan_validator,
             vol.Optional(CONF_ZERO_SUPPRESS): number_validator,
+            vol.Optional(
+                CONF_ALLOW_COUNT_STRUCTURE_MISMATCH, default=False
+            ): cv.boolean,
         }
     ),
 )

@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CONF_ALLOW_COUNT_STRUCTURE_MISMATCH,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
@@ -179,6 +180,18 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                 }
             ]
         },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.CUSTOM,
+                    CONF_COUNT: 1,
+                    CONF_STRUCTURE: ">L",
+                    CONF_ALLOW_COUNT_STRUCTURE_MISMATCH: True,
+                }
+            ]
+        },
     ],
 )
 async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
@@ -277,6 +290,21 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                 ]
             },
             f"{TEST_ENTITY_NAME}: `{CONF_SWAP}:{CONF_SWAP_WORD}` cannot be combined with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
+        ),
+        (
+            {
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_DATA_TYPE: DataType.CUSTOM,
+                        CONF_COUNT: 1,
+                        CONF_STRUCTURE: ">L",
+                        CONF_ALLOW_COUNT_STRUCTURE_MISMATCH: False,
+                    },
+                ]
+            },
+            f"{TEST_ENTITY_NAME}: Size of structure is 4 bytes but `{CONF_COUNT}: 1` is 2 bytes",
         ),
     ],
 )

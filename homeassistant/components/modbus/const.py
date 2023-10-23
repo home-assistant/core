@@ -65,6 +65,7 @@ CONF_VERIFY = "verify"
 CONF_VIRTUAL_COUNT = "virtual_count"
 CONF_WRITE_TYPE = "write_type"
 CONF_ZERO_SUPPRESS = "zero_suppress"
+CONF_ALLOW_COUNT_STRUCTURE_MISMATCH = "allow_count_structure_mismatch"
 
 RTUOVERTCP = "rtuovertcp"
 SERIAL = "serial"
