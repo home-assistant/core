@@ -15,13 +15,10 @@ _LOGGER = logging.getLogger(__name__)
 class TedeeWebhookView(HomeAssistantView):
     """Handle Tedee Webhook requests."""
 
-    # url = "/api/tedee/webhook"
-    # name = "api:tedee:webhook"
+    url = "/api/tedee/webhook"
+    name = "api:tedee:webhook"
 
-    # TODO: Switch back to correct URL # pylint: disable=fixme
-    url = "/tedee"
-    name = "tedee"
-    requires_auth = False
+    requires_auth = True
 
     def __init__(self, coordinator: TedeeApiCoordinator) -> None:
         """Initialize the view."""

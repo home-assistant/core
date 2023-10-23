@@ -9,6 +9,7 @@ from pytedee_async import (
     TedeeClientException,
     TedeeDataUpdateException,
     TedeeLocalAuthException,
+    TedeeLock,
     TedeeWebhookException,
 )
 
@@ -47,7 +48,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[int, TedeeLock]:
         """Fetch data from API endpoint."""
         if (
             time.time() - self._last_data_update
@@ -84,8 +85,6 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
             ) from ex
 
         except TedeeAuthException as ex:
-            # TODO: remove this exception # pylint: disable=fixme
-            _LOGGER.exception(ex)
             raise ConfigEntryAuthFailed(
                 "Authentication failed.  Personal Key is either invalid, doesn't have the correct scopes (Devices: Read, Locks: Operate) or is expired"
             ) from ex
@@ -93,8 +92,6 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
         except TedeeDataUpdateException as ex:
             _LOGGER.debug("Error while updating data: %s", str(ex))
         except (TedeeClientException, Exception) as ex:
-            # TODO: remove this exception # pylint: disable=fixme
-            _LOGGER.exception(ex)
             raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
 
         if not self.tedee_client.locks_dict:

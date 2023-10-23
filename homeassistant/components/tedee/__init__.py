@@ -1,6 +1,8 @@
 """Init the tedee component."""
 import logging
 
+from pytedee_async import TedeeAuthException, TedeeClientException
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -46,15 +48,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.debug("Registering webhook at %s/api/tedee/webhook", instance_url)
             hass.http.register_view(TedeeWebhookView(coordinator))
             headers: list[dict[str, str]] = [
-                # {
-                #     "Authorization": f"Bearer {home_assistant_token}"
-                # }
+                {"Authorization": f"Bearer {home_assistant_token}"}
             ]
-            # TODO: Switch back to correct URL # pylint: disable=fixme
-            # await tedee_client.register_webhook(instance_url + "/api/tedee/webhook", headers)
             await coordinator.tedee_client.register_webhook(
-                instance_url + "/tedee", headers
+                instance_url + "/api/tedee/webhook", headers
             )
+
         except NoURLAvailableError:
             _LOGGER.warning(
                 "Could not register webhook, because no URL of Home Assistant could be found"
@@ -65,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def options_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def options_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -74,11 +73,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     # cleanup webhooks
-    # coordinator = hass.data[DOMAIN][entry.entry_id]
-    # try:
-    #     await coordinator.tedee_client.delete_webhooks()
-    # except Exception as ex:
-    #     _LOGGER.warn("Error while deleting webhooks: %s", ex)
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    try:
+        await coordinator.tedee_client.delete_webhooks()
+    except (TedeeClientException, TedeeAuthException) as ex:
+        _LOGGER.warning("Error while deleting webhooks: %s", ex)
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
