@@ -67,8 +67,8 @@
     },
     "config_flow": {
       "title": {
-        "oauth2_pick_implementation": "Pick Authentication Method",
-        "reauth": "Reauthenticate Integration",
+        "oauth2_pick_implementation": "Pick authentication method",
+        "reauth": "Reauthenticate integration",
         "via_hassio_addon": "{name} via Home Assistant add-on"
       },
       "description": {
@@ -81,20 +81,20 @@
         "username": "Username",
         "password": "Password",
         "host": "Host",
-        "ip": "IP Address",
+        "ip": "IP address",
         "port": "Port",
         "url": "URL",
-        "usb_path": "USB Device Path",
-        "access_token": "Access Token",
-        "api_key": "API Key",
-        "api_token": "API Token",
+        "usb_path": "USB device path",
+        "access_token": "Access token",
+        "api_key": "API key",
+        "api_token": "API token",
         "ssl": "Uses an SSL certificate",
         "verify_ssl": "Verify SSL certificate",
         "elevation": "Elevation",
         "longitude": "Longitude",
         "latitude": "Latitude",
         "location": "Location",
-        "pin": "PIN Code",
+        "pin": "PIN code",
         "mode": "Mode",
         "path": "Path"
       },

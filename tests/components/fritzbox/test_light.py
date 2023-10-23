@@ -96,7 +96,7 @@ async def test_setup_non_color_non_level(hass: HomeAssistant, fritz: Mock) -> No
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
-    assert state.attributes[ATTR_BRIGHTNESS] == 100
+    assert ATTR_BRIGHTNESS not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["onoff"]
 
 
