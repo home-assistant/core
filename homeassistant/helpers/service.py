@@ -883,7 +883,8 @@ async def entity_service_call(
             await entity.async_update_ha_state(True)
         return {entity.entity_id: single_response} if return_response else None
 
-    # Use asyncio.gather here to ensure the returned results are in the same order as the entities list.
+    # Use asyncio.gather here to ensure the returned results
+    # are in the same order as the entities list
     results: list[ServiceResponse] = await asyncio.gather(
         *[
             entity.async_request_call(

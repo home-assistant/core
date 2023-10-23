@@ -531,7 +531,7 @@ async def test_register_entity_service(hass: HomeAssistant) -> None:
 
 
 async def test_register_entity_service_response_data(hass: HomeAssistant) -> None:
-    """Test an enttiy service that does support response data."""
+    """Test an entity service that does support response data."""
     entity = MockEntity(entity_id=f"{DOMAIN}.entity")
 
     async def generate_response(

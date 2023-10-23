@@ -1579,7 +1579,7 @@ async def test_register_entity_service_response_data_multiple_matches(
 async def test_register_entity_service_response_data_multiple_matches_raises(
     hass: HomeAssistant,
 ) -> None:
-    """Test an entity service that does supports response data and matching many entities raises exceptions."""
+    """Test entity service response matching many entities raises."""
 
     async def generate_response(
         target: MockEntity, call: ServiceCall
