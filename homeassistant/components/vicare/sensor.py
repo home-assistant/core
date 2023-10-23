@@ -35,9 +35,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareRequiredKeysMixin
 from .const import (
+    DEVICE_CONFIG_LIST,
     DOMAIN,
     VICARE_CUBIC_METER,
-    VICARE_DEVICE_CONFIG_LIST,
     VICARE_KWH,
     VICARE_UNIT_TO_UNIT_OF_MEASUREMENT,
 )
@@ -624,9 +624,7 @@ async def async_setup_entry(
     """Create the ViCare sensor devices."""
     entities = []
 
-    for device_config in hass.data[DOMAIN][config_entry.entry_id][
-        VICARE_DEVICE_CONFIG_LIST
-    ]:
+    for device_config in hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONFIG_LIST]:
         device = get_device(config_entry, device_config)
         for description in GLOBAL_SENSORS:
             entity = await hass.async_add_executor_job(

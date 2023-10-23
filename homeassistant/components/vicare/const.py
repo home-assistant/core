@@ -13,7 +13,7 @@ PLATFORMS = [
     Platform.WATER_HEATER,
 ]
 
-VICARE_DEVICE_CONFIG_LIST = "device_config_list"
+DEVICE_CONFIG_LIST = "device_config_list"
 VICARE_NAME = "ViCare"
 
 CONF_CIRCUIT = "circuit"
