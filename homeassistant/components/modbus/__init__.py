@@ -84,6 +84,7 @@ from .const import (  # noqa: F401
     CONF_NAN_VALUE,
     CONF_PARITY,
     CONF_PRECISION,
+    CONF_REGISTER_SIZE,
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
     CONF_SCALE,
@@ -315,6 +316,7 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_MAX_VALUE): number_validator,
             vol.Optional(CONF_NAN_VALUE): nan_validator,
             vol.Optional(CONF_ZERO_SUPPRESS): number_validator,
+            vol.Optional(CONF_REGISTER_SIZE, default=2): cv.positive_int,
         }
     ),
 )

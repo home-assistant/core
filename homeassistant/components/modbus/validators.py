@@ -27,6 +27,7 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
+    CONF_REGISTER_SIZE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -98,6 +99,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     structure = config.get(CONF_STRUCTURE, None)
     slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT, 0))
     swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
+    register_size = config.get(CONF_REGISTER_SIZE, 2)
     validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
     for entry in (
         (count, validator.count, CONF_COUNT),
@@ -130,7 +132,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             raise vol.Invalid(
                 f"{name}: error in structure format --> {str(err)}"
             ) from err
-        bytecount = count * 2
+        bytecount = count * register_size
         if bytecount != size:
             raise vol.Invalid(
                 f"{name}: Size of structure is {size} bytes but `{CONF_COUNT}: {count}` is {bytecount} bytes"

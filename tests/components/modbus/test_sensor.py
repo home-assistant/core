@@ -15,6 +15,7 @@ from homeassistant.components.modbus.const import (
     CONF_MIN_VALUE,
     CONF_NAN_VALUE,
     CONF_PRECISION,
+    CONF_REGISTER_SIZE,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
@@ -179,6 +180,18 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                 }
             ]
         },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.CUSTOM,
+                    CONF_COUNT: 1,
+                    CONF_STRUCTURE: ">L",
+                    CONF_REGISTER_SIZE: 4,
+                }
+            ]
+        },
     ],
 )
 async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
@@ -277,6 +290,20 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                 ]
             },
             f"{TEST_ENTITY_NAME}: `{CONF_SWAP}:{CONF_SWAP_WORD}` cannot be combined with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
+        ),
+        (
+            {
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_COUNT: 1,
+                        CONF_DATA_TYPE: DataType.CUSTOM,
+                        CONF_STRUCTURE: ">L",
+                    },
+                ]
+            },
+            f"{TEST_ENTITY_NAME}: Size of structure is 4 bytes but `{CONF_COUNT}: 1` is 2 bytes",
         ),
     ],
 )
