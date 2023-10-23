@@ -185,6 +185,11 @@ class RegistryEntry:
     translation_key: str | None = attr.ib(default=None)
     unit_of_measurement: str | None = attr.ib(default=None)
 
+    def __attrs_post_init__(self) -> None:
+        """Validate RegistryEntry."""
+        if not isinstance(self.unique_id, str):
+            raise TypeError("Unique id should be a string")
+
     @domain.default
     def _domain_default(self) -> str:
         """Compute domain value."""
