@@ -827,7 +827,6 @@ omit =
     homeassistant/components/nibe_heatpump/__init__.py
     homeassistant/components/nibe_heatpump/climate.py
     homeassistant/components/nibe_heatpump/binary_sensor.py
-    homeassistant/components/nibe_heatpump/number.py
     homeassistant/components/nibe_heatpump/select.py
     homeassistant/components/nibe_heatpump/sensor.py
     homeassistant/components/nibe_heatpump/switch.py
@@ -956,6 +955,7 @@ omit =
     homeassistant/components/ping/__init__.py
     homeassistant/components/ping/binary_sensor.py
     homeassistant/components/ping/device_tracker.py
+    homeassistant/components/ping/helpers.py
     homeassistant/components/pioneer/media_player.py
     homeassistant/components/plaato/__init__.py
     homeassistant/components/plaato/binary_sensor.py
