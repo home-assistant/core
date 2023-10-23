@@ -644,13 +644,11 @@ async def async_setup_entry(
 
     sleep_coordinator = withings_data.sleep_coordinator
 
-
     sleep_entities_setup_before = ent_reg.async_get_entity_id(
         Platform.SENSOR,
         DOMAIN,
         f"withings_{entry.unique_id}_sleep_deep_duration_seconds",
     )
-
 
     if sleep_coordinator.data is not None or sleep_entities_setup_before:
         entities.extend(
