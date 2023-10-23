@@ -580,7 +580,7 @@ class AqaraThermostatChildLock(ZHASwitchConfigurationEntity):
 class ZonnSmartChildLockSwitch(ZHASwitchConfigurationEntity):
     """Representation of a child lock configuration entity."""
 
-    _unique_id_suffix: str = "child_lock"
+    _unique_id_suffix = "child_lock"
     _attribute_name = "child_lock"
     _attr_translation_key = "child_lock"
     _attr_icon: str = "mdi:account-lock"
@@ -593,8 +593,8 @@ class ZonnSmartChildLockSwitch(ZHASwitchConfigurationEntity):
 class TuyaTRVBoostSwitch(ZHASwitchConfigurationEntity):
     """Representation of a boost configuration entity."""
 
-    _unique_id_suffix: str = "boost_duration_seconds"
-    _attribute_name = "boost"
+    _unique_id_suffix = "boost_duration_seconds"
+    _attribute_name = "boost_duration_seconds"
     _attr_translation_key = "boost"
     _attr_icon: str = "mdi:radiator"
 
