@@ -1,7 +1,10 @@
 """Icon helper methods."""
 from __future__ import annotations
 
+from functools import lru_cache
 
+
+@lru_cache
 def icon_for_battery_level(
     battery_level: int | None = None, charging: bool = False
 ) -> str:
