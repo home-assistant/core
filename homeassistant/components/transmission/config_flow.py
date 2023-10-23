@@ -22,6 +22,7 @@ from .const import (
     CONF_LIMIT,
     CONF_ORDER,
     DEFAULT_LIMIT,
+    DEFAULT_NAME,
     DEFAULT_ORDER,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
@@ -78,7 +79,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(
-                    title=f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                    title=DEFAULT_NAME,
                     data=user_input,
                 )
 
