@@ -2129,8 +2129,8 @@ class Config:
         # Dictionary of Media folders that integrations may use
         self.media_dirs: dict[str, str] = {}
 
-        # If Home Assistant is running in safe mode
-        self.safe_mode: bool = False
+        # If Home Assistant is running in recovery mode
+        self.recovery_mode: bool = False
 
         # Use legacy template behavior
         self.legacy_templates: bool = False
@@ -2208,7 +2208,7 @@ class Config:
             "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
-            "safe_mode": self.safe_mode,
+            "recovery_mode": self.recovery_mode,
             "state": self.hass.state.value,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
