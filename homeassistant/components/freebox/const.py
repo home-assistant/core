@@ -4,13 +4,7 @@ from __future__ import annotations
 import enum
 import socket
 
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_TRIGGERED,
-    Platform,
-)
+from homeassistant.const import Platform
 
 DOMAIN = "freebox"
 SERVICE_REBOOT = "reboot"
@@ -99,14 +93,3 @@ HOME_COMPATIBLE_CATEGORIES = [
     FreeboxHomeCategory.PIR,
     FreeboxHomeCategory.RTS,
 ]
-
-
-LABEL_TO_STATE = {
-    "alarm1_arming": STATE_ALARM_ARMING,
-    "alarm2_arming": STATE_ALARM_ARMING,
-    "alarm1_armed": STATE_ALARM_ARMED_AWAY,
-    "alarm2_armed": STATE_ALARM_ARMED_NIGHT,
-    "alarm1_alert_timer": STATE_ALARM_TRIGGERED,
-    "alarm2_alert_timer": STATE_ALARM_TRIGGERED,
-    "alert": STATE_ALARM_TRIGGERED,
-}

@@ -8,6 +8,8 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
@@ -16,9 +18,20 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LABEL_TO_STATE, FreeboxHomeCategory
+from .const import DOMAIN, FreeboxHomeCategory
 from .home_base import FreeboxHomeEntity
 from .router import FreeboxRouter
+
+FREEBOX_TO_STATUS = {
+    "alarm1_arming": STATE_ALARM_ARMING,
+    "alarm2_arming": STATE_ALARM_ARMING,
+    "alarm1_armed": STATE_ALARM_ARMED_AWAY,
+    "alarm2_armed": STATE_ALARM_ARMED_NIGHT,
+    "alarm1_alert_timer": STATE_ALARM_TRIGGERED,
+    "alarm2_alert_timer": STATE_ALARM_TRIGGERED,
+    "alert": STATE_ALARM_TRIGGERED,
+}
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -152,6 +165,6 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
 
     def set_state(self, state: str) -> None:
         """Update state."""
-        self._state = LABEL_TO_STATE.get(state)
+        self._state = FREEBOX_TO_STATUS.get(state)
         if self._state is None:
             self._state = STATE_ALARM_DISARMED
