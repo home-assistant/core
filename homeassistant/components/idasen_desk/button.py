@@ -86,9 +86,7 @@ class IdasenDeskButton(ButtonEntity):
         """Initialize the IdasenDesk button entity."""
         self.entity_description = description
 
-        self._attr_name = f"{self.entity_description.name}"
         self._attr_unique_id = f"{self.entity_description.key}-{address}"
-        self._attr_icon = self.entity_description.icon
         self._attr_device_info = device_info
         self._address = address
         self._coordinator = coordinator
