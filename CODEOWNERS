@@ -1065,8 +1065,8 @@ build.json @home-assistant/supervisor
 /tests/components/roborock/ @humbertogontijo @Lash-L
 /homeassistant/components/roku/ @ctalkington
 /tests/components/roku/ @ctalkington
-/homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn
-/tests/components/roomba/ @pschmitt @cyr-ius @shenxn
+/homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn @Xitee1
+/tests/components/roomba/ @pschmitt @cyr-ius @shenxn @Xitee1
 /homeassistant/components/roon/ @pavoni
 /tests/components/roon/ @pavoni
 /homeassistant/components/rpi_power/ @shenxn @swetoast
