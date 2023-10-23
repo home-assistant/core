@@ -69,9 +69,7 @@ async def test_panel(
     )
     # Fake that the entity is triggered.
     hass.states.async_set("alarm_control_panel.systeme_d_alarme", STATE_ALARM_DISARMED)
-    assert (
-        hass.states.get("alarm_control_panel.systeme_d_alarme").state == "armed_night1"
-    )
+    assert hass.states.get("alarm_control_panel.systeme_d_alarme").state == "disarmed"
 
 
 async def test_reproducing_states(
