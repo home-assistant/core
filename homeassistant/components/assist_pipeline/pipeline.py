@@ -524,8 +524,8 @@ class PipelineRun:
         # Initialize with audio settings
         self.audio_processor_buffer = AudioBuffer(AUDIO_PROCESSOR_BYTES)
         if self.audio_settings.needs_processor:
-            # Delay import of webrtc so HA start up is not affected if package
-            # is missing.
+            # Delay import of webrtc so HA start up is not crashing
+            # on older architectures (armhf).
             #
             # pylint: disable=import-outside-toplevel
             from webrtc_noise_gain import AudioProcessor
