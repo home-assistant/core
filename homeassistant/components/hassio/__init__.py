@@ -13,25 +13,18 @@ from typing import Any, NamedTuple
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import panel_custom, persistent_notification
-from homeassistant.components.homeassistant import (
-    SERVICE_CHECK_CONFIG,
-    SHUTDOWN_SERVICES,
-)
-import homeassistant.config as conf_util
+from homeassistant.components import panel_custom
+from homeassistant.components.homeassistant import async_set_stop_handler
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
     HASSIO_USER_NAME,
-    SERVICE_HOMEASSISTANT_RESTART,
-    SERVICE_HOMEASSISTANT_STOP,
     Platform,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    DOMAIN as HASS_DOMAIN,
     HassJob,
     HomeAssistant,
     ServiceCall,
@@ -39,11 +32,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    recorder,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later
@@ -569,53 +558,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # Fetch data
     await update_info_data()
 
-    async def async_handle_core_service(call: ServiceCall) -> None:
-        """Service handler for handling core services."""
-        if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(
-            hass
-        ):
-            _LOGGER.error(
-                "The system cannot %s while a database upgrade is in progress",
-                call.service,
-            )
-            raise HomeAssistantError(
-                f"The system cannot {call.service} "
-                "while a database upgrade is in progress."
-            )
-
-        if call.service == SERVICE_HOMEASSISTANT_STOP:
-            await hassio.stop_homeassistant()
-            return
-
-        errors = await conf_util.async_check_ha_config_file(hass)
-
-        if errors:
-            _LOGGER.error(
-                "The system cannot %s because the configuration is not valid: %s",
-                call.service,
-                errors,
-            )
-            persistent_notification.async_create(
-                hass,
-                "Config error. See [the logs](/config/logs) for details.",
-                "Config validating",
-                f"{HASS_DOMAIN}.check_config",
-            )
-            raise HomeAssistantError(
-                f"The system cannot {call.service} "
-                f"because the configuration is not valid: {errors}"
-            )
-
-        if call.service == SERVICE_HOMEASSISTANT_RESTART:
+    async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
+        """Stop or restart home assistant."""
+        if restart:
             await hassio.restart_homeassistant()
+        else:
+            await hassio.stop_homeassistant()
 
-    # Mock core services
-    for service in (
-        SERVICE_HOMEASSISTANT_STOP,
-        SERVICE_HOMEASSISTANT_RESTART,
-        SERVICE_CHECK_CONFIG,
-    ):
-        hass.services.async_register(HASS_DOMAIN, service, async_handle_core_service)
+    # Set a custom handler for the homeassistant.restart and homeassistant.stop services
+    async_set_stop_handler(hass, _async_stop)
 
     # Init discovery Hass.io feature
     async_setup_discovery_view(hass, hassio)
