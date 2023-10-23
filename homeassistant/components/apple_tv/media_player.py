@@ -375,7 +375,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             return {
                 RepeatState.Track: RepeatMode.ONE,
                 RepeatState.All: RepeatMode.ALL,
-            }.get(self._playing.repeat, RepeatMode.OFF)
+            }.get(self._playing.repeat) or RepeatMode.OFF
         return None
 
     @property
