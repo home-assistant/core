@@ -128,7 +128,7 @@ async def test_update_new_measurement_creates_new_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.henk_fat_mass") is not None
+    assert hass.states.get("sensor.henk_fat_mass")
 
 
 async def test_update_new_goals_creates_new_sensor(
@@ -144,7 +144,7 @@ async def test_update_new_goals_creates_new_sensor(
     await setup_integration(hass, polling_config_entry, False)
 
     assert hass.states.get("sensor.henk_step_goal") is None
-    assert hass.states.get("sensor.henk_weight_goal") is not None
+    assert hass.states.get("sensor.henk_weight_goal")
 
     withings.get_goals.return_value = load_goals_fixture()
 
@@ -152,7 +152,7 @@ async def test_update_new_goals_creates_new_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.henk_step_goal") is not None
+    assert hass.states.get("sensor.henk_step_goal")
 
 
 async def test_activity_sensors_unknown_next_day(
@@ -165,7 +165,7 @@ async def test_activity_sensors_unknown_next_day(
     freezer.move_to("2023-10-21")
     await setup_integration(hass, polling_config_entry, False)
 
-    assert hass.states.get("sensor.henk_steps_today") is not None
+    assert hass.states.get("sensor.henk_steps_today")
 
     withings.get_activities_since.return_value = []
 
@@ -207,7 +207,7 @@ async def test_activity_sensors_created_when_existed(
     freezer.move_to("2023-10-21")
     await setup_integration(hass, polling_config_entry, False)
 
-    assert hass.states.get("sensor.henk_steps_today") is not None
+    assert hass.states.get("sensor.henk_steps_today")
     assert hass.states.get("sensor.henk_steps_today").state != STATE_UNKNOWN
 
     withings.get_activities_in_period.return_value = []
@@ -243,7 +243,7 @@ async def test_activity_sensors_created_when_receive_activity_data(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.henk_steps_today") is not None
+    assert hass.states.get("sensor.henk_steps_today")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -256,7 +256,7 @@ async def test_sleep_sensors_created_when_existed(
     """Test sleep sensors will be added if they existed before."""
     await setup_integration(hass, polling_config_entry, False)
 
-    assert hass.states.get("sensor.henk_deep_sleep") is not None
+    assert hass.states.get("sensor.henk_deep_sleep")
     assert hass.states.get("sensor.henk_deep_sleep").state != STATE_UNKNOWN
 
     withings.get_sleep_summary_since.return_value = []
@@ -292,4 +292,4 @@ async def test_sleep_sensors_created_when_receive_sleep_data(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.henk_deep_sleep") is not None
+    assert hass.states.get("sensor.henk_deep_sleep")
