@@ -1,12 +1,12 @@
 """Support for retrieving usage data from Contact Energy."""
 
+import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
 
-import async_timeout
 from contact_energy_nz import ContactEnergyApi, UsageDatum
 
 from homeassistant.components.sensor import (
@@ -20,8 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import InvalidStateError
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -151,7 +150,7 @@ class ContactEnergyUsageCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> UsageDatum:
         """Get the pricing data from the web service."""
         try:
-            async with async_timeout.timeout(60):
+            async with asyncio.timeout(60):
                 data = await self._api.get_latest_usage()
         except Exception as err:
             _LOGGER.error("Failed to update data: %s", err)

@@ -1,12 +1,12 @@
 {
-    "domain": "contact_energy_nz",
-    "name": "Contact Energy NZ",
-    "codeowners": ["@tkhadimullin"],
-    "config_flow": true,
-    "dependencies": [],
-    "documentation": "https://www.home-assistant.io/integrations/contact_energy_nz",
-    "integration_type": "service",
-    "iot_class": "cloud_polling",
-    "loggers": ["contact_energy_nz"],
-    "requirements": ["contact-energy-nz==0.1.5917054733"]
+  "domain": "contact_energy_nz",
+  "name": "Contact Energy NZ",
+  "codeowners": ["@tkhadimullin"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/contact_energy_nz",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["contact_energy_nz"],
+  "requirements": ["contact-energy-nz==0.1.5917054733"]
 }

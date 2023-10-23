@@ -5,7 +5,6 @@ import asyncio
 import logging
 from typing import Any
 
-import async_timeout
 from contact_energy_nz import AuthException, ContactEnergyApi
 import voluptuous as vol
 
@@ -34,7 +33,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
     """
 
     try:
-        async with async_timeout.timeout(60):
+        async with asyncio.timeout(60):
             connector = await ContactEnergyApi.from_credentials(
                 data[CONF_USERNAME], data[CONF_PASSWORD]
             )
