@@ -10,11 +10,14 @@ from homeassistant.components.alert.const import (
     CONF_DATA,
     CONF_DONE_MESSAGE,
     CONF_NOTIFIERS,
+    CONF_SCRIPT,
     CONF_SKIP_FIRST,
     CONF_TITLE,
+    CONF_VARIABLES,
     DOMAIN,
 )
 import homeassistant.components.notify as notify
+import homeassistant.components.script as script
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -37,11 +40,19 @@ NAME = "alert_test"
 DONE_MESSAGE = "alert_gone"
 NOTIFIER = "test"
 BAD_NOTIFIER = "bad_notifier"
+SCRIPT = "test"
+BAD_SCRIPT = "bad_script"
 TEMPLATE = "{{ states.sensor.test.entity_id }}"
 TEST_ENTITY = "sensor.test"
 TITLE = "{{ states.sensor.test.entity_id }}"
 TEST_TITLE = "sensor.test"
-TEST_DATA = {"data": {"inline_keyboard": ["Close garage:/close_garage"]}}
+TEST_DATA = {"inline_keyboard": ["Close garage:/close_garage"], "subtitle": TITLE}
+TEST_DATA_RESOLVED = {
+    "inline_keyboard": ["Close garage:/close_garage"],
+    "subtitle": TEST_TITLE,
+}
+TEST_VARIABLES = TEST_DATA
+TEST_VARIABLES_RESOLVED = TEST_DATA_RESOLVED
 TEST_CONFIG = {
     DOMAIN: {
         NAME: {
@@ -70,6 +81,8 @@ TEST_NOACK = [
     False,
     None,
     None,
+    None,
+    None,
 ]
 ENTITY_ID = f"{DOMAIN}.{NAME}"
 
@@ -78,6 +91,12 @@ ENTITY_ID = f"{DOMAIN}.{NAME}"
 def mock_notifier(hass: HomeAssistant) -> list[ServiceCall]:
     """Mock for notifier."""
     return async_mock_service(hass, notify.DOMAIN, NOTIFIER)
+
+
+@pytest.fixture
+def mock_script(hass: HomeAssistant) -> list[ServiceCall]:
+    """Mock for script."""
+    return async_mock_service(hass, script.DOMAIN, SCRIPT)
 
 
 async def test_setup(hass: HomeAssistant) -> None:
@@ -220,6 +239,25 @@ async def test_bad_notifier(
     assert hass.states.get(ENTITY_ID).state == STATE_IDLE
 
 
+async def test_bad_script(hass: HomeAssistant, mock_script: list[ServiceCall]) -> None:
+    """Test a broken notifier does not break the alert."""
+    config = deepcopy(TEST_CONFIG)
+    del config[DOMAIN][NAME][CONF_NOTIFIERS]
+    config[DOMAIN][NAME][CONF_SCRIPT] = BAD_SCRIPT
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(mock_script) == 0
+
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    assert len(mock_script) == 0
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    hass.states.async_set("sensor.test", STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(mock_script) == 0
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
+
+
 async def test_no_notifiers(
     hass: HomeAssistant, mock_notifier: list[ServiceCall]
 ) -> None:
@@ -321,7 +359,7 @@ async def test_sending_data_notification(
     await hass.async_block_till_done()
     assert len(mock_notifier) == 1
     last_event = mock_notifier[-1]
-    assert last_event.data[notify.ATTR_DATA] == TEST_DATA
+    assert last_event.data[notify.ATTR_DATA] == TEST_DATA_RESOLVED
 
 
 async def test_skipfirst(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> None:
@@ -345,3 +383,51 @@ async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -
     hass.async_add_job(entity.end_alerting)
     await hass.async_block_till_done()
     assert entity._send_done_message is False
+
+
+async def test_script_events(
+    hass: HomeAssistant, mock_script: list[ServiceCall]
+) -> None:
+    """Test skipping first notification."""
+    config = deepcopy(TEST_CONFIG)
+    del config[DOMAIN][NAME][CONF_NOTIFIERS]
+    config[DOMAIN][NAME][CONF_SCRIPT] = SCRIPT
+    config[DOMAIN][NAME][CONF_VARIABLES] = TEST_VARIABLES
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(mock_script) == 0
+
+    data = deepcopy(TEST_VARIABLES_RESOLVED)
+
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    assert len(mock_script) == 1
+    data["event"] = "fire"
+    assert mock_script[-1].data == data
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert len(mock_script) == 2
+    data["event"] = "ack"
+    assert mock_script[-1].data == data
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert len(mock_script) == 3
+    data["event"] = "unack"
+    assert mock_script[-1].data == data
+
+    hass.states.async_set("sensor.test", STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(mock_script) == 4
+    data["event"] = "done"
+    assert mock_script[-1].data == data

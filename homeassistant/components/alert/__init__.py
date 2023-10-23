@@ -13,6 +13,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     DOMAIN as DOMAIN_NOTIFY,
 )
+from homeassistant.components.script import DOMAIN as DOMAIN_SCRIPT
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_NAME,
@@ -45,8 +46,10 @@ from .const import (
     CONF_DATA,
     CONF_DONE_MESSAGE,
     CONF_NOTIFIERS,
+    CONF_SCRIPT,
     CONF_SKIP_FIRST,
     CONF_TITLE,
+    CONF_VARIABLES,
     DEFAULT_CAN_ACK,
     DEFAULT_SKIP_FIRST,
     DOMAIN,
@@ -69,10 +72,16 @@ ALERT_SCHEMA = vol.Schema(
         vol.Optional(CONF_ALERT_MESSAGE): cv.template,
         vol.Optional(CONF_DONE_MESSAGE): cv.template,
         vol.Optional(CONF_TITLE): cv.template,
-        vol.Optional(CONF_DATA): dict,
+        vol.Optional(CONF_DATA): vol.Any(
+            cv.template, vol.All(dict, cv.template_complex)
+        ),
         vol.Optional(CONF_NOTIFIERS, default=list): vol.All(
             cv.ensure_list, [cv.string]
         ),
+        vol.Optional(CONF_VARIABLES): vol.Any(
+            cv.template, vol.All(dict, cv.template_complex)
+        ),
+        vol.Optional(CONF_SCRIPT): cv.string,
     }
 )
 
@@ -101,7 +110,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         notifiers = cfg[CONF_NOTIFIERS]
         can_ack = cfg[CONF_CAN_ACK]
         title_template = cfg.get(CONF_TITLE)
-        data = cfg.get(CONF_DATA)
+        data: dict[str, Any] | None = cfg.get(CONF_DATA)
+        variables: dict[str, Any] | None = cfg.get(CONF_VARIABLES)
+        script: str | None = cfg.get(CONF_SCRIPT)
 
         entities.append(
             Alert(
@@ -118,6 +129,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 can_ack,
                 title_template,
                 data,
+                variables,
+                script,
             )
         )
 
@@ -152,7 +165,9 @@ class Alert(Entity):
         notifiers: list[str],
         can_ack: bool,
         title_template: Template | None,
-        data: dict[Any, Any],
+        data: dict[str, Any] | None,
+        variables: dict[str, Any] | None,
+        script: str | None,
     ) -> None:
         """Initialize the alert."""
         self.hass = hass
@@ -160,6 +175,7 @@ class Alert(Entity):
         self._alert_state = state
         self._skip_first = skip_first
         self._data = data
+        self._variables = variables
 
         self._message_template = message_template
         if self._message_template is not None:
@@ -174,6 +190,7 @@ class Alert(Entity):
             self._title_template.hass = hass
 
         self._notifiers = notifiers
+        self._script = script
         self._can_ack = can_ack
 
         self._delay = [timedelta(minutes=val) for val in repeat]
@@ -265,6 +282,7 @@ class Alert(Entity):
                 message = self._attr_name
 
             await self._send_notification_message(message)
+            await self._call_script("fire")
         await self._schedule_notify()
 
     async def _notify_done_message(self) -> None:
@@ -272,12 +290,44 @@ class Alert(Entity):
         LOGGER.info("Alerting: %s", self._done_message_template)
         self._send_done_message = False
 
-        if self._done_message_template is None:
+        if self._done_message_template is not None:
+            message = self._done_message_template.async_render(parse_result=False)
+            await self._send_notification_message(message)
+        await self._call_script("done")
+
+    def _data_template_creator(self, value: Any, **kwargs: Any) -> Any:
+        """Recursive template creator helper function."""
+        if isinstance(value, list):
+            return [self._data_template_creator(item) for item in value]
+        if isinstance(value, dict):
+            return {
+                key: self._data_template_creator(item) for key, item in value.items()
+            }
+        if isinstance(value, Template):
+            value.hass = self.hass
+            return value.async_render(kwargs, parse_result=False)
+        return value
+
+    async def _call_script(self, event: str) -> None:
+        if not self._script:
             return
 
-        message = self._done_message_template.async_render(parse_result=False)
+        script_variables = {"event": event}
 
-        await self._send_notification_message(message)
+        if self._variables:
+            script_variables.update(self._data_template_creator(self._variables))
+
+        LOGGER.debug(script_variables)
+
+        try:
+            await self.hass.services.async_call(
+                DOMAIN_SCRIPT, self._script, script_variables, context=self._context
+            )
+        except ServiceNotFound:
+            LOGGER.error(
+                "Failed to call script.%s, retrying at next notification interval",
+                self._script,
+            )
 
     async def _send_notification_message(self, message: Any) -> None:
         if not self._notifiers:
@@ -289,7 +339,7 @@ class Alert(Entity):
             title = self._title_template.async_render(parse_result=False)
             msg_payload[ATTR_TITLE] = title
         if self._data:
-            msg_payload[ATTR_DATA] = self._data
+            msg_payload[ATTR_DATA] = self._data_template_creator(self._data)
 
         LOGGER.debug(msg_payload)
 
@@ -309,12 +359,14 @@ class Alert(Entity):
         LOGGER.debug("Reset Alert: %s", self._attr_name)
         self._ack = False
         self.async_write_ha_state()
+        await self._call_script("unack")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Async Acknowledge alert."""
         LOGGER.debug("Acknowledged Alert: %s", self._attr_name)
         self._ack = True
         self.async_write_ha_state()
+        await self._call_script("ack")
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """Async toggle alert."""

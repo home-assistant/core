@@ -14,6 +14,8 @@ CONF_ALERT_MESSAGE = "message"
 CONF_DONE_MESSAGE = "done_message"
 CONF_TITLE = "title"
 CONF_DATA = "data"
+CONF_VARIABLES = "variables"
+CONF_SCRIPT = "script"
 
 DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
