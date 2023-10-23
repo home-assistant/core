@@ -791,7 +791,7 @@ async def entity_service_call(
     func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
-) -> EntityServiceResponse:
+) -> EntityServiceResponse | None:
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
@@ -895,7 +895,6 @@ async def entity_service_call(
     )
 
     response_data: EntityServiceResponse = {}
-    assert response_data is not None
     for entity, result in zip(entities, results):
         if isinstance(result, Exception):
             raise result
@@ -918,7 +917,7 @@ async def entity_service_call(
         for future in done:
             future.result()  # pop exception if have
 
-    return response_data if return_response and len(response_data) > 0 else None
+    return response_data if return_response and response_data else None
 
 
 async def _handle_entity_call(
