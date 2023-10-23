@@ -37,17 +37,18 @@ async def setup_fronius_integration(
 
 
 def _load_and_patch_fixture(
-    patch_filename: str, patch_values: list[tuple[list[str], Any]]
+    override_data: dict[str, list[tuple[list[str], Any]]]
 ) -> Callable[[str, str | None], str]:
     """Return a fixture loader that patches values at nested keys for a given filename."""
 
     def load_and_patch(filename: str, integration: str):
         """Load a fixture and patch given values."""
         text = load_fixture(filename, integration)
-        if patch_filename != filename.split("/")[-1]:
+        if filename not in override_data:
             return text
+
         _loaded = json.loads(text)
-        for keys, value in patch_values:
+        for keys, value in override_data[filename]:
             _dic = _loaded
             for key in keys[:-1]:
                 _dic = _dic[key]
@@ -63,13 +64,13 @@ def mock_responses(
     fixture_set: str = "symo",
     inverter_ids: list[str | int] = [1],
     night: bool = False,
-    override_data: tuple[str, list[tuple[list[str], Any]]]
-    | None = None,  # (filename, [([list of nested keys], patch_value)])
+    override_data: dict[str, list[tuple[list[str], Any]]]
+    | None = None,  # {filename: [([list of nested keys], patch_value)]}
 ) -> None:
     """Mock responses for Fronius devices."""
     aioclient_mock.clear_requests()
     _night = "_night" if night else ""
-    _load = _load_and_patch_fixture(*override_data) if override_data else load_fixture
+    _load = _load_and_patch_fixture(override_data) if override_data else load_fixture
 
     aioclient_mock.get(
         f"{host}/solar_api/GetAPIVersion.cgi",
