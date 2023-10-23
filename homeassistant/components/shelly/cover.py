@@ -25,7 +25,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up switches for device."""
+    """Set up covers for device."""
     if get_device_entry_gen(config_entry) == 2:
         return async_setup_rpc_entry(hass, config_entry, async_add_entities)
 

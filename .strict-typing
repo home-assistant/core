@@ -104,6 +104,7 @@ homeassistant.components.devolo_home_control.*
 homeassistant.components.devolo_home_network.*
 homeassistant.components.dhcp.*
 homeassistant.components.diagnostics.*
+homeassistant.components.discovergy.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
 homeassistant.components.doorbird.*
@@ -157,15 +158,7 @@ homeassistant.components.homeassistant_green.*
 homeassistant.components.homeassistant_hardware.*
 homeassistant.components.homeassistant_sky_connect.*
 homeassistant.components.homeassistant_yellow.*
-homeassistant.components.homekit
-homeassistant.components.homekit.accessories
-homeassistant.components.homekit.aidmanager
-homeassistant.components.homekit.config_flow
-homeassistant.components.homekit.diagnostics
-homeassistant.components.homekit.logbook
-homeassistant.components.homekit.type_locks
-homeassistant.components.homekit.type_triggers
-homeassistant.components.homekit.util
+homeassistant.components.homekit.*
 homeassistant.components.homekit_controller
 homeassistant.components.homekit_controller.alarm_control_panel
 homeassistant.components.homekit_controller.button
@@ -328,6 +321,7 @@ homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
 homeassistant.components.tailscale.*
+homeassistant.components.tami4.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.text.*
@@ -344,6 +338,7 @@ homeassistant.components.trafikverket_camera.*
 homeassistant.components.trafikverket_ferry.*
 homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
+homeassistant.components.transmission.*
 homeassistant.components.trend.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
@@ -367,6 +362,7 @@ homeassistant.components.webostv.*
 homeassistant.components.websocket_api.*
 homeassistant.components.wemo.*
 homeassistant.components.whois.*
+homeassistant.components.withings.*
 homeassistant.components.wiz.*
 homeassistant.components.wled.*
 homeassistant.components.worldclock.*
