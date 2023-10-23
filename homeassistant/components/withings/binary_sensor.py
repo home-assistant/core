@@ -32,9 +32,7 @@ async def async_setup_entry(
 
     def _async_add_bed_presence_entity() -> None:
         """Add bed presence entity."""
-        entities = [WithingsBinarySensor(coordinator)]
-
-        async_add_entities(entities)
+        async_add_entities([WithingsBinarySensor(coordinator)])
         if callback:
             callback()
 
