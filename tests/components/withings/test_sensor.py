@@ -14,6 +14,7 @@ from . import (
     load_activity_fixture,
     load_goals_fixture,
     load_measurements_fixture,
+    load_sleep_fixture,
     setup_integration,
 )
 
@@ -246,21 +247,49 @@ async def test_activity_sensors_created_when_receive_activity_data(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_no_sleep(
+async def test_sleep_sensors_created_when_existed(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test no sleep found."""
+    """Test sleep sensors will be added if they existed before."""
     await setup_integration(hass, polling_config_entry, False)
 
+    assert hass.states.get("sensor.henk_deep_sleep") is not None
+    assert hass.states.get("sensor.henk_deep_sleep").state != STATE_UNKNOWN
+
     withings.get_sleep_summary_since.return_value = []
+
+    await hass.config_entries.async_reload(polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.henk_deep_sleep").state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sleep_sensors_created_when_receive_sleep_data(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sleep sensors will be added if we receive sleep data."""
+    withings.get_sleep_summary_since.return_value = []
+    await setup_integration(hass, polling_config_entry, False)
+
+    assert hass.states.get("sensor.henk_deep_sleep") is None
+
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.henk_average_respiratory_rate")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.henk_deep_sleep") is None
+
+    withings.get_sleep_summary_since.return_value = load_sleep_fixture()
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.henk_deep_sleep") is not None

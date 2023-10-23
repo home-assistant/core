@@ -263,7 +263,6 @@ SLEEP_SENSORS = [
         icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
     ),
     WithingsSleepSensorEntityDescription(
         key="sleep_tosleep_duration_seconds",
@@ -645,9 +644,32 @@ async def async_setup_entry(
 
     sleep_coordinator = withings_data.sleep_coordinator
 
-    entities.extend(
-        WithingsSleepSensor(sleep_coordinator, attribute) for attribute in SLEEP_SENSORS
+    sleep_callback: Callable[[], None] | None = None
+
+    sleep_entities_setup_before = ent_reg.async_get_entity_id(
+        Platform.SENSOR,
+        DOMAIN,
+        f"withings_{entry.unique_id}_sleep_deep_duration_seconds",
     )
+
+    def _async_add_sleep_entities() -> None:
+        """Add sleep entities."""
+        if sleep_coordinator.data is not None:
+            async_add_entities(
+                WithingsSleepSensor(sleep_coordinator, attribute)
+                for attribute in SLEEP_SENSORS
+            )
+            if sleep_callback:
+                sleep_callback()
+
+    if sleep_coordinator.data is not None or sleep_entities_setup_before:
+        entities.extend(
+            WithingsSleepSensor(sleep_coordinator, attribute)
+            for attribute in SLEEP_SENSORS
+        )
+    else:
+        sleep_callback = sleep_coordinator.async_add_listener(_async_add_sleep_entities)
+
     async_add_entities(entities)
 
 
@@ -695,13 +717,9 @@ class WithingsSleepSensor(WithingsSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the entity."""
-        assert self.coordinator.data
+        if not self.coordinator.data:
+            return None
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        return super().available and self.coordinator.data is not None
 
 
 class WithingsGoalsSensor(WithingsSensor):
