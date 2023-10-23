@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from homeassistant.components.blink.const import CONF_DEVICE_ID, DEVICE_ID, DOMAIN
+from homeassistant.components.blink.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
@@ -40,7 +40,7 @@ def mock_config_fixture():
         data={
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "Password",
-            CONF_DEVICE_ID: DEVICE_ID,
+            "device id": "Home Assistant",
         },
         entry_id=str(uuid4()),
         version=3,
