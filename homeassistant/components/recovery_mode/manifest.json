@@ -1,5 +1,5 @@
 {
-  "domain": "safe_mode",
+  "domain": "recovery_mode",
   "name": "Safe Mode",
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
