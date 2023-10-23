@@ -29,6 +29,11 @@
         "name": "In bed"
       }
     },
+    "calendar": {
+      "workout": {
+        "name": "Workouts"
+      }
+    },
     "sensor": {
       "fat_mass": {
         "name": "Fat mass"
