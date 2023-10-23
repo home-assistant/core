@@ -601,7 +601,7 @@ class KeypadLockout(ZCLEnumSelectEntity):
     """
 
     _unique_id_suffix = "keypad_lockout"
-    _select_attr: str = "keypad_lockout"
+    _attribute_name: str = "keypad_lockout"
     _enum = KeypadLockoutEnum
     _attr_translation_key: str = "keypad_lockout"
     _attr_icon: str = "mdi:lock"
@@ -627,7 +627,7 @@ class DanfossExerciseDayOfTheWeek(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for setting the day of the week for exercising."""
 
     _unique_id_suffix = "exercise_day_of_week"
-    _select_attr = "exercise_day_of_week"
+    _attribute_name = "exercise_day_of_week"
     _attr_translation_key: str = "exercise_day_of_week"
     _enum = DanfossExerciseDayOfTheWeekEnum
     _attr_icon: str = "mdi:wrench-clock"
@@ -651,7 +651,7 @@ class DanfossOrientation(ZCLEnumSelectEntity):
     """
 
     _unique_id_suffix = "orientation"
-    _select_attr = "orientation"
+    _attribute_name = "orientation"
     _attr_translation_key: str = "valve_orientation"
     _enum = DanfossOrientationEnum
 
@@ -672,7 +672,7 @@ class DanfossAdaptationRunControl(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for controlling the current adaptation run."""
 
     _unique_id_suffix = "adaptation_run_control"
-    _select_attr = "adaptation_run_control"
+    _attribute_name = "adaptation_run_control"
     _attr_translation_key: str = "adaptation_run_command"
     _enum = DanfossAdaptationRunControlEnum
 
@@ -692,6 +692,6 @@ class DanfossViewingDirection(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for setting the viewing direction of the screen."""
 
     _unique_id_suffix = "viewing_direction"
-    _select_attr = "viewing_direction"
+    _attribute_name = "viewing_direction"
     _attr_translation_key: str = "viewing_direction"
     _enum = DanfossViewingDirectionEnum
