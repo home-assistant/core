@@ -235,8 +235,7 @@ async def async_check_config_schema(
     mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml[DOMAIN]
     for mqtt_config_item in mqtt_config:
         for domain, config_items in mqtt_config_item.items():
-            if (schema := mqtt_data.reload_schema.get(domain)) is None:
-                continue
+            schema = mqtt_data.reload_schema[domain]
             for config in config_items:
                 try:
                     schema(config)
@@ -427,22 +426,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 entity.async_remove()
                 for mqtt_platform in mqtt_platforms
                 for entity in mqtt_platform.entities.values()
-                # pylint: disable-next=protected-access
-                if not entity._discovery_data  # type: ignore[attr-defined]
-                if mqtt_platform.config_entry
+                if getattr(entity, "_discovery_data", None) is None
+                and mqtt_platform.config_entry
                 and mqtt_platform.domain in RELOADABLE_PLATFORMS
             ]
             await asyncio.gather(*tasks)
 
-            await asyncio.gather(
-                *(
-                    [
-                        mqtt_data.reload_handlers[component]()
-                        for component in RELOADABLE_PLATFORMS
-                        if component in mqtt_data.reload_handlers
-                    ]
-                )
-            )
+            for _, component in mqtt_data.reload_handlers.items():
+                component()
 
             # Fire event
             hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)

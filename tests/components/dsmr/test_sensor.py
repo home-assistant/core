@@ -480,7 +480,11 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
-    from dsmr_parser.obis_references import ELECTRICITY_ACTIVE_TARIFF
+    from dsmr_parser.obis_references import (
+        BELGIUM_CURRENT_AVERAGE_DEMAND,
+        BELGIUM_MAXIMUM_DEMAND_MONTH,
+        ELECTRICITY_ACTIVE_TARIFF,
+    )
     from dsmr_parser.objects import CosemObject, MBusObject
 
     entry_data = {
@@ -501,6 +505,17 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
+            ],
+        ),
+        BELGIUM_CURRENT_AVERAGE_DEMAND: CosemObject(
+            BELGIUM_CURRENT_AVERAGE_DEMAND,
+            [{"value": Decimal(1.75), "unit": "kW"}],
+        ),
+        BELGIUM_MAXIMUM_DEMAND_MONTH: MBusObject(
+            BELGIUM_MAXIMUM_DEMAND_MONTH,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642218)},
+                {"value": Decimal(4.11), "unit": "kW"},
             ],
         ),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject(
@@ -533,6 +548,20 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+
+    # check current average demand is parsed correctly
+    avg_demand = hass.states.get("sensor.electricity_meter_current_average_demand")
+    assert avg_demand.state == "1.75"
+    assert avg_demand.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.KILO_WATT
+    assert avg_demand.attributes.get(ATTR_STATE_CLASS) is None
+
+    # check max average demand is parsed correctly
+    max_demand = hass.states.get(
+        "sensor.electricity_meter_maximum_demand_current_month"
+    )
+    assert max_demand.state == "4.11"
+    assert max_demand.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.KILO_WATT
+    assert max_demand.attributes.get(ATTR_STATE_CLASS) is None
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")

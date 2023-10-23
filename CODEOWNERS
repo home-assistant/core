@@ -949,6 +949,8 @@ build.json @home-assistant/supervisor
 /tests/components/picnic/ @corneyl
 /homeassistant/components/pilight/ @trekky12
 /tests/components/pilight/ @trekky12
+/homeassistant/components/ping/ @jpbede
+/tests/components/ping/ @jpbede
 /homeassistant/components/plaato/ @JohNan
 /tests/components/plaato/ @JohNan
 /homeassistant/components/plex/ @jjlawren
@@ -1063,8 +1065,8 @@ build.json @home-assistant/supervisor
 /tests/components/roborock/ @humbertogontijo @Lash-L
 /homeassistant/components/roku/ @ctalkington
 /tests/components/roku/ @ctalkington
-/homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn
-/tests/components/roomba/ @pschmitt @cyr-ius @shenxn
+/homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn @Xitee1
+/tests/components/roomba/ @pschmitt @cyr-ius @shenxn @Xitee1
 /homeassistant/components/roon/ @pavoni
 /tests/components/roon/ @pavoni
 /homeassistant/components/rpi_power/ @shenxn @swetoast
