@@ -1303,6 +1303,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/time_date/ @fabaff
 /tests/components/time_date/ @fabaff
 /homeassistant/components/tmb/ @alemuro
+/homeassistant/components/todo/ @home-assistant/core
+/tests/components/todo/ @home-assistant/core
 /homeassistant/components/todoist/ @boralyl
 /tests/components/todoist/ @boralyl
 /homeassistant/components/tolo/ @MatthiasLohr
