@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/cisco_webex_teams",
   "iot_class": "cloud_push",
   "loggers": ["webexteamssdk"],
-  "requirements": ["webexteamssdk==1.1.1"]
+  "requirements": ["webexteamssdk==1.1.1;python_version<'3.12'"]
 }
