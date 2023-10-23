@@ -1,1 +1,1 @@
-"""Tests for the Safe Mode integration."""
+"""Tests for the Recovery Mode integration."""
