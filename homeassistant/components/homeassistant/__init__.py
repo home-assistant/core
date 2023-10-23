@@ -171,6 +171,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         if call.service == SERVICE_HOMEASSISTANT_STOP:
             stop_handler = hass.data[DATA_STOP_HANDLER]
             await stop_handler(hass, False)
+            return
 
         errors = await conf_util.async_check_ha_config_file(hass)
 
