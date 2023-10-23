@@ -9,6 +9,9 @@ import pytest
 
 from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
 from homeassistant.components.google_assistant.const import (
+    CONF_ENTITY_CONFIG,
+    CONF_EXPOSE,
+    CONF_EXPOSE_BY_DEFAULT,
     DOMAIN,
     EVENT_COMMAND_RECEIVED,
     HOMEGRAPH_TOKEN_URL,
@@ -299,6 +302,23 @@ async def test_should_expose(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert config.should_expose(State(CLOUD_NEVER_EXPOSED_ENTITIES[0], "mock")) is False
+
+    # Test expose by default
+    config._config[CONF_EXPOSE_BY_DEFAULT] = True
+    assert config.should_expose(State("light.mock", "mock")) is True
+
+    config._config[CONF_EXPOSE_BY_DEFAULT] = False
+    assert config.should_expose(State("light.mock", "mock")) is False
+
+    # Test that it overrides true
+    config._config[CONF_EXPOSE_BY_DEFAULT] = True
+    config._config[CONF_ENTITY_CONFIG] = {"light.mock": {CONF_EXPOSE: False}}
+    assert config.should_expose(State("light.mock", "mock")) is False
+
+    # Test that it overrides false
+    config._config[CONF_EXPOSE_BY_DEFAULT] = False
+    config._config[CONF_ENTITY_CONFIG] = {"light.mock": {CONF_EXPOSE: True}}
+    assert config.should_expose(State("light.mock", "mock")) is True
 
 
 async def test_missing_service_account(hass: HomeAssistant) -> None:
