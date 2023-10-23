@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
-from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
+from collections.abc import Callable, Coroutine, Iterable, Mapping, MutableMapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
@@ -37,7 +37,11 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_SERVICE,
     DEVICE_DEFAULT_NAME,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -320,6 +324,9 @@ class Entity(ABC):
     _attr_translation_key: str | None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
+
+    # rascal
+    async_on_push_event: Callable[[Entity | None], None] | None = None
 
     @property
     def should_poll(self) -> bool:
@@ -1249,6 +1256,12 @@ class Entity(ABC):
 
         return report_issue
 
+    async def async_get_action_target_state(
+        self, action: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Return expected state when action is complete."""
+        raise NotImplementedError()
+
 
 @dataclass(slots=True)
 class ToggleEntityDescription(EntityDescription):
@@ -1311,10 +1324,22 @@ class ToggleEntity(Entity):
             await self.async_turn_on(**kwargs)
 
     @classmethod
-    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
+    async def async_get_action_completed_state(
+        cls, action: dict[str, Any]
+    ) -> dict[str, Any] | None:
         """Return expected state when action is complete."""
-        if action == "turn_on":
-            to_state = "turned_on"
-        else:
-            to_state = "turned_off"
-        return to_state
+
+        def _target_complete_state(current: bool) -> Callable[[bool], bool]:
+            def match(value: bool) -> bool:
+                return value == current
+
+            return match
+
+        target: dict[str, Any] = {}
+        if action[CONF_SERVICE] == SERVICE_TURN_ON:
+            target["is_on"] = _target_complete_state(True)
+        elif action[CONF_SERVICE] == SERVICE_TURN_OFF:
+            target["is_on"] = _target_complete_state(False)
+        elif action[CONF_SERVICE] == SERVICE_TOGGLE:
+            target["is_on"] = _target_complete_state(not cls.is_on)
+        return target

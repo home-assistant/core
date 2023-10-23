@@ -19,12 +19,6 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_SERVICE,
-    CONF_SERVICE_DATA,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
@@ -300,45 +294,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             return ColorMode.COLOR_TEMP
 
         return ColorMode.BRIGHTNESS
-
-    async def async_get_action_target_state(
-        self, action: dict[str, Any]
-    ) -> dict[str, Any] | None:
-        """Return expected state when action is complete.
-
-        Example action:
-        {
-            CONF_EVENT: "s"|"c",
-            CONF_SERVICE: "turn_on",
-            CONF_SERVICE_DATA: {
-                'transition': 10,
-                'brightness': 50,
-                'device_id': ['70483e490873edc594fc7264fdaa75ad']
-            }
-        }
-
-        Example return value:
-        return = {
-            "attr1": value1, # "is_on": true
-            "attr2": value2  # "brightness": 50
-        }
-        """
-        if action[CONF_SERVICE] == SERVICE_TURN_ON:
-            target = {"is_on": True}
-        elif action[CONF_SERVICE] == SERVICE_TURN_OFF:
-            target = {"is_on": False}
-        else:
-            target = {"is_on": not self.is_on}
-
-        target = {"is_on": True}
-        service_data = action[CONF_SERVICE_DATA]
-        if ATTR_COLOR_TEMP_KELVIN in service_data:
-            target[ATTR_COLOR_TEMP_KELVIN] = service_data[ATTR_COLOR_TEMP_KELVIN]
-        if ATTR_HS_COLOR in service_data:
-            target[ATTR_HS_COLOR] = service_data[ATTR_HS_COLOR]
-        if ATTR_BRIGHTNESS in service_data:
-            target[ATTR_BRIGHTNESS] = service_data[ATTR_BRIGHTNESS]
-        return target
 
 
 class TPLinkSmartLightStrip(TPLinkSmartBulb):

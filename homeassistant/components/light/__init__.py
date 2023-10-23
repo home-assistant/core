@@ -1,7 +1,7 @@
 """Provides functionality to interact with lights."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 import csv
 import dataclasses
 from datetime import timedelta
@@ -15,7 +15,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,
-    CONF_SERVICE,
     CONF_SERVICE_DATA,
     RASC_START,
     SERVICE_TOGGLE,
@@ -1103,24 +1102,31 @@ class LightEntity(ToggleEntity):
 
         def _target_start_state(
             current: int | float | None, target_complete_state: int | float
-        ) -> int | float:
-            if current is None:
-                if target_complete_state > 0:
-                    return 0
-                return 100
-            if target_complete_state > current:
-                return current + 1
-            if target_complete_state < current:
-                return current - 1
-            return current
+        ) -> Callable[[int | float], bool]:
+            def match(value: int | float) -> bool:
+                if current is None:
+                    if target_complete_state > 0:
+                        return value == 0
+                    return value == 100
+                if target_complete_state > current:
+                    return value > current
+                if target_complete_state < current:
+                    return value < current
+                return value == current
 
-        target: dict[str, Any] = {}
-        if action[CONF_SERVICE] == SERVICE_TURN_ON:
-            target["is_on"] = True
-        elif action[CONF_SERVICE] == SERVICE_TURN_OFF:
-            target["is_on"] = False
-        elif action[CONF_SERVICE] == SERVICE_TOGGLE:
-            target["is_on"] = not self.is_on
+            return match
+
+        def _target_complete_state(
+            target_complete_state: int | float,
+        ) -> Callable[[int | float], bool]:
+            def match(value: int | float) -> bool:
+                return value == target_complete_state
+
+            return match
+
+        target: dict[str, Any] = (
+            await super().async_get_action_completed_state(action) or {}
+        )
 
         service_data = action[CONF_SERVICE_DATA]
         supported_color_modes = self._light_internal_supported_color_modes
@@ -1133,7 +1139,9 @@ class LightEntity(ToggleEntity):
                     self.color_temp_kelvin, service_data[ATTR_COLOR_TEMP_KELVIN]
                 )
             else:
-                target[ATTR_COLOR_TEMP_KELVIN] = service_data[ATTR_COLOR_TEMP_KELVIN]
+                target[ATTR_COLOR_TEMP_KELVIN] = _target_complete_state(
+                    service_data[ATTR_COLOR_TEMP_KELVIN]
+                )
         if ColorMode.HS in supported_color_modes and ATTR_HS_COLOR in service_data:
             if ATTR_TRANSITION not in service_data and action[CONF_EVENT] == RASC_START:
                 hue, sat = self.hs_color if self.hs_color is not None else (None, None)
@@ -1142,15 +1150,23 @@ class LightEntity(ToggleEntity):
                     _target_start_state(sat, service_data[ATTR_HS_COLOR][1]),
                 )
             else:
-                target[ATTR_HS_COLOR] = service_data[ATTR_HS_COLOR]
-        if (
-            ColorMode.BRIGHTNESS in supported_color_modes
-            and ATTR_BRIGHTNESS in service_data
+                target[ATTR_HS_COLOR] = _target_complete_state(
+                    service_data[ATTR_HS_COLOR]
+                )
+
+        if ColorMode.BRIGHTNESS in supported_color_modes and (
+            ATTR_BRIGHTNESS in service_data or ATTR_BRIGHTNESS_PCT in service_data
         ):
-            if ATTR_TRANSITION not in service_data and action[CONF_EVENT] == RASC_START:
+            if ATTR_BRIGHTNESS_PCT in service_data:
+                service_data[ATTR_BRIGHTNESS] = round(
+                    (service_data[ATTR_BRIGHTNESS_PCT] * 255.0) / 100.0
+                )
+            if ATTR_TRANSITION in service_data and action[CONF_EVENT] == RASC_START:
                 target[ATTR_BRIGHTNESS] = _target_start_state(
                     self.brightness, service_data[ATTR_BRIGHTNESS]
                 )
             else:
-                target[ATTR_BRIGHTNESS] = service_data[ATTR_BRIGHTNESS]
+                target[ATTR_BRIGHTNESS] = _target_complete_state(
+                    service_data[ATTR_BRIGHTNESS]
+                )
         return target

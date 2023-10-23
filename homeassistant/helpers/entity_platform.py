@@ -11,15 +11,19 @@ from typing import TYPE_CHECKING, Any, Protocol
 import voluptuous as vol
 
 from homeassistant import config_entries
+
+# from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.const import (
     ATTR_RESTORED,
     DEVICE_DEFAULT_NAME,
+    EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
+    Event,
     HomeAssistant,
     ServiceCall,
     callback,
@@ -41,6 +45,7 @@ from . import (
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
 from .issue_registry import IssueSeverity, async_create_issue
+from .rasc import rasc_on_command, rasc_on_update, update_rasc_state
 from .typing import UNDEFINED, ConfigType, DiscoveryInfoType
 
 if TYPE_CHECKING:
@@ -119,6 +124,7 @@ class EntityPlatform:
         self.platform_name = platform_name
         self.platform = platform
         self.scan_interval = scan_interval
+        self.default_scan_interval = scan_interval
         self.entity_namespace = entity_namespace
         self.config_entry: config_entries.ConfigEntry | None = None
         self.entities: dict[str, Entity] = {}
@@ -145,6 +151,9 @@ class EntityPlatform:
         hass.data.setdefault(DATA_ENTITY_PLATFORM, {}).setdefault(
             self.platform_name, []
         ).append(self)
+
+        # rascal abstraction
+        self.rascal_state_map: dict[str, Any] = {}
 
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
@@ -309,6 +318,8 @@ class EntityPlatform:
             else languages.DEFAULT_LANGUAGE
         )
 
+        self.hass.bus.async_listen(EVENT_CALL_SERVICE, self._listen_to_command)
+
         async def get_translations(
             language: str, category: str, integration: str
         ) -> dict[str, Any]:
@@ -422,6 +433,21 @@ class EntityPlatform:
                 return False
             finally:
                 warn_task.cancel()
+
+    def async_on_push_event(self, entity: Entity | None) -> None:
+        """Handle push event from push-based devices."""
+        update_rasc_state(self.hass, self.rascal_state_map, entity)
+
+    async def _listen_to_command(self, e: Event) -> None:
+        new_polling_interval = await rasc_on_command(
+            self.hass,
+            e,
+            self.entities.values(),
+            self.default_scan_interval,
+            self.rascal_state_map,
+        )
+
+        self._update_polling_interval(new_polling_interval)
 
     def _schedule_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
@@ -749,6 +775,8 @@ class EntityPlatform:
 
         entity.async_on_remove(remove_entity_cb)
 
+        entity.async_on_push_event = self.async_on_push_event
+
         await entity.add_to_platform_finish()
 
     async def async_reset(self) -> None:
@@ -880,6 +908,30 @@ class EntityPlatform:
                 if entity.should_poll
             ]:
                 await asyncio.gather(*tasks)
+
+            completed_entities, new_polling_interval = rasc_on_update(
+                self.hass, self.default_scan_interval, self.rascal_state_map
+            )
+            # should consider multiple entities
+            if len(completed_entities) > 0:
+                self._update_polling_interval(self.default_scan_interval)
+            else:
+                self._update_polling_interval(new_polling_interval)
+
+    def _update_polling_interval(self, polling_interval: timedelta | None) -> None:
+        if polling_interval is None:
+            return
+        if self.scan_interval == polling_interval:
+            return
+        if self._async_unsub_polling is not None:
+            self.scan_interval = polling_interval
+            self._async_unsub_polling()
+            self._async_unsub_polling = async_track_time_interval(
+                self.hass,
+                self._update_entity_states,
+                self.scan_interval,
+                name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
+            )
 
 
 current_platform: ContextVar[EntityPlatform | None] = ContextVar(

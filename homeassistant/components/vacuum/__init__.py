@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
+    CONF_SERVICE,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -42,7 +43,7 @@ from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .device_action import ACTION_TYPES
+ACTION_TYPES = {"clean", "dock"}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -362,15 +363,6 @@ class _BaseVacuum(Entity):
             partial(self.send_command, command, params=params, **kwargs)
         )
 
-    @classmethod
-    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
-        """Return expected state when action is complete."""
-        if action in ["clean", SERVICE_START, SERVICE_CLEAN_SPOT]:
-            to_state = "cleaning"
-        else:
-            to_state = "docked"
-        return to_state
-
 
 @dataclass
 class VacuumEntityDescription(ToggleEntityDescription):
@@ -482,11 +474,20 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
 
     @classmethod
-    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
+    async def async_get_action_completed_state(
+        cls, action: dict[str, Any]
+    ) -> dict[str, Any] | None:
         """Return expected state when action is complete."""
-        if action in ACTION_TYPES:
-            return await _BaseVacuum.async_get_action_completed_state(action)
-        return await ToggleEntity.async_get_action_completed_state(action)
+
+        target: dict[str, Any] = (
+            await ToggleEntity.async_get_action_completed_state(action) or {}
+        )
+
+        if action[CONF_SERVICE] in ["clean", SERVICE_START, SERVICE_CLEAN_SPOT]:
+            target["state"] = "cleaning"
+        else:
+            target["state"] = "docked"
+        return target
 
 
 @dataclass

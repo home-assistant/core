@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Generator
+from collections.abc import Awaitable, Callable, Coroutine, Generator, Iterable
 from datetime import datetime, timedelta
 import logging
 from random import randint
@@ -15,7 +15,7 @@ import aiohttp
 import requests
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_CALL_SERVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -26,6 +26,7 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
+from .rasc import rasc_on_command, rasc_on_update
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
@@ -78,6 +79,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.name = name
         self.update_method = update_method
         self.update_interval = update_interval
+        self.default_update_interval = update_interval
         self._shutdown_requested = False
         self.config_entry = config_entries.current_entry.get()
         self.always_update = always_update
@@ -126,6 +128,31 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         if self.config_entry:
             self.config_entry.async_on_unload(self.async_shutdown)
+
+        # rascal abstraction
+        self.entities: list[entity.Entity] = []
+        self.rascal_state_map: dict[str, Any] = {}
+        self.hass.bus.async_listen(EVENT_CALL_SERVICE, self._listen_to_command)
+
+    def add_entities(self, new_entities: Iterable[entity.Entity]) -> None:
+        """Add corresponding entities to coordinator."""
+        for new_entity in new_entities:
+            self.add_entity(new_entity)
+
+    def add_entity(self, new_entity: entity.Entity) -> None:
+        """Add corresponding entity to coordinator."""
+        self.entities.append(new_entity)
+
+    async def _listen_to_command(self, e: Event) -> None:
+        new_polling_interval = await rasc_on_command(
+            self.hass,
+            e,
+            self.entities,
+            self.default_update_interval,
+            self.rascal_state_map,
+        )
+
+        self._update_polling_interval(new_polling_interval)
 
     async def async_register_shutdown(self) -> None:
         """Register shutdown on HomeAssistant stop.
@@ -289,6 +316,15 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         try:
             self.data = await self._async_update_data()
 
+            completed_entities, new_polling_interval = rasc_on_update(
+                self.hass, self.default_update_interval, self.rascal_state_map
+            )
+            # should consider multiple entities
+            if len(completed_entities) > 0:
+                self._update_polling_interval(self.default_update_interval)
+            else:
+                self._update_polling_interval(new_polling_interval)
+
         except (asyncio.TimeoutError, requests.exceptions.Timeout) as err:
             self.last_exception = err
             if self.last_update_success:
@@ -415,6 +451,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         self.async_update_listeners()
 
+    def _update_polling_interval(self, polling_interval: timedelta | None) -> None:
+        if self.update_interval == polling_interval:
+            return
+        self.update_interval = polling_interval
+
 
 class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator which keeps track of the last successful update."""
@@ -489,6 +530,7 @@ class CoordinatorEntity(BaseCoordinatorEntity[_DataUpdateCoordinatorT]):
         Necessary to bind TypeVar to correct scope.
         """
         super().__init__(coordinator, context)
+        coordinator.add_entity(self)
 
     @property
     def available(self) -> bool:

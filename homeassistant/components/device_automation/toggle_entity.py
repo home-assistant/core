@@ -1,6 +1,8 @@
 """Device automation helpers for toggle entity."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.homeassistant.triggers import state as state_trigger

@@ -1198,3 +1198,4 @@ class EntityCategory(StrEnum):
 
 RASC_START = "start"
 RASC_COMPLETE = "complete"
+RASC_RESPONSE = "rasc_response"

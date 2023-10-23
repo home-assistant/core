@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import StrEnum
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -110,3 +111,10 @@ class SwitchEntity(ToggleEntity):
         if hasattr(self, "entity_description"):
             return self.entity_description.device_class
         return None
+
+    async def async_get_action_target_state(
+        self, action: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Return expected state when action is complete."""
+
+        return await super().async_get_action_completed_state(action)
