@@ -33,7 +33,7 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
+async def test_flow_abort(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -61,6 +61,15 @@ async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
+    """Test config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] == FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -72,7 +81,7 @@ async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
         },
     )
 
-    assert len(mock_tedee.get_locks.mock_calls) == 2
+    assert len(mock_tedee.get_locks.mock_calls) == 1
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "configure_cloud"

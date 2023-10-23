@@ -71,7 +71,7 @@ async def test_lock(
     assert device.configuration_url is None
     assert device.entry_type is None
     assert device.hw_version is None
-    assert device.identifiers == {(DOMAIN, 12345)}
+    assert device.identifiers == {(DOMAIN, "12345")}
     assert device.manufacturer == "tedee"
     assert device.name == "Lock-1A2B"
     assert device.model == "Tedee PRO"
@@ -198,7 +198,7 @@ async def test_lock_without_pullspring(
     assert device.configuration_url is None
     assert device.entry_type is None
     assert device.hw_version is None
-    assert device.identifiers == {(DOMAIN, 98765)}
+    assert device.identifiers == {(DOMAIN, "98765")}
     assert device.manufacturer == "tedee"
     assert device.name == "Lock-2C3D"
     assert device.model == "Tedee GO"
