@@ -106,9 +106,15 @@
               "btn_down": "Button down",
               "btn_up": "Button up",
               "double_push": "Double push",
+              "double": "Double push",
               "long_push": "Long push",
+              "long_single": "Long push and then short push",
+              "long": "Long push",
+              "single_long": "Short push and then long push",
               "single_push": "Single push",
-              "triple_push": "Triple push"
+              "single": "Single push",
+              "triple_push": "Triple push",
+              "triple": "Triple push"
             }
           }
         }

@@ -33,7 +33,6 @@ class ClientMock:
             "uuid": self.id,
             "device_name": TEST_NAME,
             "product_code": TEST_MODEL,
-            "sw_version": self.version,
         }
 
     @property
