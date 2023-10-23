@@ -9,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
+    CONF_CLIENT_SOURCE,
     CONF_IGNORE_WIRED_BUG,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -132,21 +133,29 @@ async def test_tracked_clients(
         "last_seen": None,
         "mac": "00:00:00:00:00:05",
     }
+    client_6 = {
+        "hostname": "client_6",
+        "ip": "10.0.0.6",
+        "is_wired": True,
+        "last_seen": 1562600145,
+        "mac": "00:00:00:00:00:06",
+    }
 
     await setup_unifi_integration(
         hass,
         aioclient_mock,
-        options={CONF_SSID_FILTER: ["ssid"]},
-        clients_response=[client_1, client_2, client_3, client_4, client_5],
+        options={CONF_SSID_FILTER: ["ssid"], CONF_CLIENT_SOURCE: [client_6["mac"]]},
+        clients_response=[client_1, client_2, client_3, client_4, client_5, client_6],
         known_wireless_clients=(client_4["mac"],),
     )
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 4
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 5
     assert hass.states.get("device_tracker.client_1").state == STATE_NOT_HOME
     assert hass.states.get("device_tracker.client_2").state == STATE_NOT_HOME
     assert (
         hass.states.get("device_tracker.client_5").attributes["host_name"] == "client_5"
     )
+    assert hass.states.get("device_tracker.client_6").state == STATE_NOT_HOME
 
     # Client on SSID not in SSID filter
     assert not hass.states.get("device_tracker.client_3")
