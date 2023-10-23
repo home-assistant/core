@@ -134,6 +134,42 @@
       },
       "wakeup_time": {
         "name": "Wakeup time"
+      },
+      "step_goal": {
+        "name": "Step goal"
+      },
+      "sleep_goal": {
+        "name": "Sleep goal"
+      },
+      "weight_goal": {
+        "name": "Weight goal"
+      },
+      "activity_steps_today": {
+        "name": "Steps today"
+      },
+      "activity_distance_today": {
+        "name": "Distance travelled today"
+      },
+      "activity_floors_climbed_today": {
+        "name": "Floors climbed today"
+      },
+      "activity_soft_duration_today": {
+        "name": "Soft activity today"
+      },
+      "activity_moderate_duration_today": {
+        "name": "Moderate activity today"
+      },
+      "activity_intense_duration_today": {
+        "name": "Intense activity today"
+      },
+      "activity_active_duration_today": {
+        "name": "Active time today"
+      },
+      "activity_active_calories_burnt_today": {
+        "name": "Active calories burnt today"
+      },
+      "activity_total_calories_burnt_today": {
+        "name": "Total calories burnt today"
       }
     }
   }
