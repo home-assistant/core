@@ -108,6 +108,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         entity_entry: er.RegistryEntry,
     ) -> dict[str, Any] | None:
         """Update unique ID of entity entry."""
+        if CONF_NAME not in config_entry.data:
+            return None
         match = re.search(
             f"{config_entry.data[CONF_HOST]}-{config_entry.data[CONF_NAME]} (?P<name>.+)",
             entity_entry.unique_id,
