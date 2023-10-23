@@ -103,3 +103,22 @@ async def async_attach_trigger(
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, trigger_info, platform_type="device"
     )
+
+
+async def async_attach_trigger_from_prev_action(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Listen for state changes based on previous action configuration."""
+    if config[CONF_TYPE] == "lock":
+        to_state = STATE_LOCKED
+    else:
+        to_state = STATE_UNLOCKED
+    trigger_config = {
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        CONF_TYPE: to_state,
+    }
+
+    return await async_attach_trigger(hass, trigger_config, action, trigger_info)

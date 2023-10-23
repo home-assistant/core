@@ -162,6 +162,25 @@ async def async_attach_trigger(
     )
 
 
+async def async_attach_trigger_from_prev_action(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Attach a trigger based on previous action configuration."""
+    if config[CONF_TYPE] == const.SERVICE_SET_HVAC_MODE:
+        to_state = "hvac_mode_changed"
+    else:
+        to_state = None
+    trigger_config = {
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        CONF_TYPE: to_state,
+    }
+
+    return await async_attach_trigger(hass, trigger_config, action, trigger_info)
+
+
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:

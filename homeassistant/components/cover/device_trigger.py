@@ -193,3 +193,36 @@ async def async_attach_trigger(
     return await numeric_state_trigger.async_attach_trigger(
         hass, numeric_state_config, action, trigger_info, platform_type="device"
     )
+
+
+async def async_attach_trigger_from_prev_action(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Listen for state changes based on previous action configuration."""
+    if config[CONF_TYPE] == "open":
+        to_state = "opened"
+    elif config[CONF_TYPE] == "close":
+        to_state = "closed"
+    elif config[CONF_TYPE] == "open_tilt":
+        to_state = "tilt_position"
+    elif config[CONF_TYPE] == "close_tilt":
+        to_state = "tilt_position"
+    elif config[CONF_TYPE] == "set_position":
+        to_state = "position"
+    elif config[CONF_TYPE] == "set_tilt_position":
+        to_state = "tilt_position"
+    else:
+        to_state = None
+    trigger_config = {
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        CONF_TYPE: to_state,
+    }
+    if CONF_ABOVE in config:
+        trigger_config[CONF_ABOVE] = config[CONF_ABOVE]
+    if CONF_BELOW in config:
+        trigger_config[CONF_BELOW] = config[CONF_BELOW]
+
+    return await async_attach_trigger(hass, trigger_config, action, trigger_info)

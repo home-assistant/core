@@ -62,3 +62,18 @@ async def async_attach_trigger(
         hass, config[CONF_DOMAIN], DeviceAutomationType.TRIGGER
     )
     return await platform.async_attach_trigger(hass, config, action, trigger_info)
+
+
+async def async_attach_trigger_from_prev_action(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Listen for trigger based on previous action configuration."""
+    platform = await async_get_device_automation_platform(
+        hass, config[CONF_DOMAIN], DeviceAutomationType.TRIGGER
+    )
+    return await platform.async_attach_trigger_from_prev_action(
+        hass, config, action, trigger_info
+    )

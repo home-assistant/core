@@ -27,6 +27,7 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import ATTR_CURRENT_HUMIDITY, DOMAIN
+from .const import SERVICE_SET_HUMIDITY
 
 # mypy: disallow-any-generics
 
@@ -171,3 +172,22 @@ async def async_get_trigger_capabilities(
             )
         }
     return await toggle_entity.async_get_trigger_capabilities(hass, config)
+
+
+async def async_attach_trigger_from_prev_action(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Listen for state changes based on previous action configuration."""
+    if config[CONF_TYPE] == SERVICE_SET_HUMIDITY:
+        to_state = "current_humidity_changed"
+    else:
+        to_state = None
+    trigger_config = {
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        CONF_TYPE: to_state,
+    }
+
+    return await async_attach_trigger(hass, trigger_config, action, trigger_info)

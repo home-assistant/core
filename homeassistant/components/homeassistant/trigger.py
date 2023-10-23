@@ -35,3 +35,16 @@ async def async_attach_trigger(
     """Attach trigger of specified platform."""
     platform = _get_trigger_platform(config)
     return await platform.async_attach_trigger(hass, config, action, trigger_info)
+
+
+async def async_attach_trigger_from_prev_action(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Attach trigger of specified platform based on previous action configuration."""
+    platform = _get_trigger_platform(config)
+    return await platform.async_attach_trigger_from_prev_action(
+        hass, config, action, trigger_info
+    )

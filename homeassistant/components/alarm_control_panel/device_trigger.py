@@ -158,3 +158,32 @@ async def async_attach_trigger(
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, trigger_info, platform_type="device"
     )
+
+
+async def async_attach_trigger_from_prev_action(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Attach a trigger based on previous action configuration."""
+    if config[CONF_TYPE] == "trigger":
+        to_state = STATE_ALARM_TRIGGERED
+    elif config[CONF_TYPE] == "disarm":
+        to_state = STATE_ALARM_DISARMED
+    elif config[CONF_TYPE] == "arm_home":
+        to_state = STATE_ALARM_ARMED_HOME
+    elif config[CONF_TYPE] == "arm_away":
+        to_state = STATE_ALARM_ARMED_AWAY
+    elif config[CONF_TYPE] == "arm_night":
+        to_state = STATE_ALARM_ARMED_NIGHT
+    elif config[CONF_TYPE] == "arm_vacation":
+        to_state = STATE_ALARM_ARMED_VACATION
+    else:
+        to_state = None
+    trigger_config = {
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        CONF_TYPE: to_state,
+    }
+
+    return await async_attach_trigger(hass, trigger_config, action, trigger_info)

@@ -32,7 +32,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_attach_trigger(
     hass: HomeAssistant,
-    config: ConfigType,
+    config: ConfigType,  # trigger config
     action: TriggerActionType,
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
@@ -50,6 +50,17 @@ async def async_attach_trigger(
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, trigger_info, platform_type="device"
     )
+
+
+async def async_attach_trigger_from_prev_action(
+    hass: HomeAssistant,
+    config: ConfigType,  # previous action config
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Listen for state changes based on previous action configuration."""
+    trigger_config = {CONF_ENTITY_ID: config[CONF_ENTITY_ID]}
+    return await async_attach_trigger(hass, trigger_config, action, trigger_info)
 
 
 async def _async_get_automations(

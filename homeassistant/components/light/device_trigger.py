@@ -27,6 +27,18 @@ async def async_attach_trigger(
     return await toggle_entity.async_attach_trigger(hass, config, action, trigger_info)
 
 
+async def async_attach_trigger_from_prev_action(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Listen for state changes based on previous action configuration."""
+    return await toggle_entity.async_attach_trigger_from_prev_action(
+        hass, config, action, trigger_info
+    )
+
+
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
