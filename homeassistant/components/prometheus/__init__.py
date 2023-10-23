@@ -353,7 +353,7 @@ class PrometheusMetrics:
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
-    def _numereric_handler(self, state, domain, title):
+    def _numeric_handler(self, state, domain, title):
         if unit := self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
             metric = self._metric(
                 f"{domain}_state_{unit}",
@@ -379,10 +379,10 @@ class PrometheusMetrics:
             metric.labels(**self._labels(state)).set(value)
 
     def _handle_input_number(self, state):
-        self._numereric_handler(state, "input_number", "input number")
+        self._numeric_handler(state, "input_number", "input number")
 
     def _handle_number(self, state):
-        self._numereric_handler(state, "number", "number")
+        self._numeric_handler(state, "number", "number")
 
     def _handle_device_tracker(self, state):
         metric = self._metric(
