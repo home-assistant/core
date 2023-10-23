@@ -43,8 +43,8 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             inverter_size = inverter_size / 1000
 
         if entry.data.get(CONF_DYNAMIC_LOCATION):
-            latitude = self.hass.config.latitude
-            longitude = self.hass.config.longitude
+            latitude = hass.config.latitude
+            longitude = hass.config.longitude
         else:
             latitude = entry.data[CONF_LATITUDE]
             longitude = entry.data[CONF_LONGITUDE]

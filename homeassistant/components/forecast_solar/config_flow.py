@@ -71,7 +71,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
-                    vol.Optional(CONF_DYNAMIC_LOCATION, default=False): bool,
+                    vol.Required(CONF_DYNAMIC_LOCATION, default=False): bool,
                     vol.Required(CONF_DECLINATION, default=25): vol.All(
                         vol.Coerce(int), vol.Range(min=0, max=90)
                     ),
@@ -150,7 +150,6 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                             )
                         },
                     ): vol.Coerce(int),
-                    vol.Optional(CONF_DYNAMIC_LOCATION, default=self.config_entry.options.get(CONF_DYNAMIC_LOCATION, False)): bool,
                 }
             ),
             errors=errors,
