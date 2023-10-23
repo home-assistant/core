@@ -177,14 +177,14 @@ async def test_themes_api(hass: HomeAssistant, themes_ws_client) -> None:
     assert msg["result"]["default_dark_theme"] is None
     assert msg["result"]["themes"] == MOCK_THEMES
 
-    # safe mode
-    hass.config.safe_mode = True
+    # recovery mode
+    hass.config.recovery_mode = True
     await themes_ws_client.send_json({"id": 6, "type": "frontend/get_themes"})
     msg = await themes_ws_client.receive_json()
 
-    assert msg["result"]["default_theme"] == "safe_mode"
+    assert msg["result"]["default_theme"] == "recovery_mode"
     assert msg["result"]["themes"] == {
-        "safe_mode": {"primary-color": "#db4437", "accent-color": "#ffca28"}
+        "recovery_mode": {"primary-color": "#db4437", "accent-color": "#ffca28"}
     }
 
 

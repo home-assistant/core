@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
@@ -34,7 +33,6 @@ from .errors import AuthenticationError, CannotConnect, UnknownError
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
@@ -70,9 +68,6 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     and entry.data[CONF_PORT] == user_input[CONF_PORT]
                 ):
                     return self.async_abort(reason="already_configured")
-                if entry.data[CONF_NAME] == user_input[CONF_NAME]:
-                    errors[CONF_NAME] = "name_exists"
-                    break
             try:
                 await get_api(self.hass, user_input)
 
@@ -84,7 +79,8 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=DEFAULT_NAME,
+                    data=user_input,
                 )
 
         return self.async_show_form(

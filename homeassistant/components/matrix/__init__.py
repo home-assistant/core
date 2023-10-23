@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 import logging
 import mimetypes
 import os
@@ -17,6 +18,7 @@ from nio.responses import (
     JoinResponse,
     LoginError,
     Response,
+    RoomResolveAliasResponse,
     UploadError,
     UploadResponse,
     WhoamiError,
@@ -53,6 +55,9 @@ CONF_COMMANDS = "commands"
 CONF_WORD = "word"
 CONF_EXPRESSION = "expression"
 
+CONF_USERNAME_REGEX = "^@[^:]*:.*"
+CONF_ROOMS_REGEX = "^[!|#][^:]*:.*"
+
 EVENT_MATRIX_COMMAND = "matrix_command"
 
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
@@ -65,7 +70,9 @@ ATTR_IMAGES = "images"  # optional images
 
 WordCommand = NewType("WordCommand", str)
 ExpressionCommand = NewType("ExpressionCommand", re.Pattern)
-RoomID = NewType("RoomID", str)
+RoomAlias = NewType("RoomAlias", str)  # Starts with "#"
+RoomID = NewType("RoomID", str)  # Starts with "!"
+RoomAnyID = RoomID | RoomAlias
 
 
 class ConfigCommand(TypedDict, total=False):
@@ -83,7 +90,9 @@ COMMAND_SCHEMA = vol.All(
             vol.Exclusive(CONF_WORD, "trigger"): cv.string,
             vol.Exclusive(CONF_EXPRESSION, "trigger"): cv.is_regex,
             vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_ROOMS): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_ROOMS): vol.All(
+                cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
+            ),
         }
     ),
     cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION),
@@ -95,10 +104,10 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_HOMESERVER): cv.url,
                 vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-                vol.Required(CONF_USERNAME): cv.matches_regex("@[^:]*:.*"),
+                vol.Required(CONF_USERNAME): cv.matches_regex(CONF_USERNAME_REGEX),
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_ROOMS, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                    cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
                 ),
                 vol.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA],
             }
@@ -116,7 +125,9 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
             ),
             vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
         },
-        vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(ATTR_TARGET): vol.All(
+            cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
+        ),
     }
 )
 
@@ -160,7 +171,7 @@ class MatrixBot:
         verify_ssl: bool,
         username: str,
         password: str,
-        listening_rooms: list[RoomID],
+        listening_rooms: list[RoomAnyID],
         commands: list[ConfigCommand],
     ) -> None:
         """Set up the client."""
@@ -178,11 +189,10 @@ class MatrixBot:
             homeserver=self._homeserver, user=self._mx_id, ssl=self._verify_tls
         )
 
-        self._listening_rooms = listening_rooms
-
+        self._listening_rooms: dict[RoomAnyID, RoomID] = {}
         self._word_commands: dict[RoomID, dict[WordCommand, ConfigCommand]] = {}
         self._expression_commands: dict[RoomID, list[ConfigCommand]] = {}
-        self._load_commands(commands)
+        self._unparsed_commands = commands
 
         async def stop_client(event: HassEvent) -> None:
             """Run once when Home Assistant stops."""
@@ -195,6 +205,8 @@ class MatrixBot:
             """Run once when Home Assistant finished startup."""
             self._access_tokens = await self._get_auth_tokens()
             await self._login()
+            await self._resolve_room_aliases(listening_rooms)
+            self._load_commands(commands)
             await self._join_rooms()
             # Sync once so that we don't respond to past events.
             await self._client.sync(timeout=30_000)
@@ -211,7 +223,7 @@ class MatrixBot:
     def _load_commands(self, commands: list[ConfigCommand]) -> None:
         for command in commands:
             # Set the command for all listening_rooms, unless otherwise specified.
-            command.setdefault(CONF_ROOMS, self._listening_rooms)  # type: ignore[misc]
+            command.setdefault(CONF_ROOMS, list(self._listening_rooms.values()))  # type: ignore[misc]
 
             # COMMAND_SCHEMA guarantees that exactly one of CONF_WORD and CONF_expression are set.
             if (word_command := command.get(CONF_WORD)) is not None:
@@ -262,24 +274,60 @@ class MatrixBot:
             }
             self.hass.bus.async_fire(EVENT_MATRIX_COMMAND, message_data)
 
-    async def _join_room(self, room_id_or_alias: str) -> None:
+    async def _resolve_room_alias(
+        self, room_alias_or_id: RoomAnyID
+    ) -> dict[RoomAnyID, RoomID]:
+        """Resolve a single RoomAlias if needed."""
+        if room_alias_or_id.startswith("!"):
+            room_id = RoomID(room_alias_or_id)
+            _LOGGER.debug("Will listen to room_id '%s'", room_id)
+        elif room_alias_or_id.startswith("#"):
+            room_alias = RoomAlias(room_alias_or_id)
+            resolve_response = await self._client.room_resolve_alias(room_alias)
+            if isinstance(resolve_response, RoomResolveAliasResponse):
+                room_id = RoomID(resolve_response.room_id)
+                _LOGGER.debug(
+                    "Will listen to room_alias '%s' as room_id '%s'",
+                    room_alias_or_id,
+                    room_id,
+                )
+            else:
+                _LOGGER.error(
+                    "Could not resolve '%s' to a room_id: '%s'",
+                    room_alias_or_id,
+                    resolve_response,
+                )
+                return {}
+        # The config schema guarantees it's a valid room alias or id, so room_id is always set.
+        return {room_alias_or_id: room_id}
+
+    async def _resolve_room_aliases(self, listening_rooms: list[RoomAnyID]) -> None:
+        """Resolve any RoomAliases into RoomIDs for the purpose of client interactions."""
+        resolved_rooms = [
+            self.hass.async_create_task(self._resolve_room_alias(room_alias_or_id))
+            for room_alias_or_id in listening_rooms
+        ]
+        for resolved_room in asyncio.as_completed(resolved_rooms):
+            self._listening_rooms |= await resolved_room
+
+    async def _join_room(self, room_id: RoomID, room_alias_or_id: RoomAnyID) -> None:
         """Join a room or do nothing if already joined."""
-        join_response = await self._client.join(room_id_or_alias)
+        join_response = await self._client.join(room_id)
 
         if isinstance(join_response, JoinResponse):
-            _LOGGER.debug("Joined or already in room '%s'", room_id_or_alias)
+            _LOGGER.debug("Joined or already in room '%s'", room_alias_or_id)
         elif isinstance(join_response, JoinError):
             _LOGGER.error(
                 "Could not join room '%s': %s",
-                room_id_or_alias,
+                room_alias_or_id,
                 join_response,
             )
 
     async def _join_rooms(self) -> None:
         """Join the Matrix rooms that we listen for commands in."""
         rooms = [
-            self.hass.async_create_task(self._join_room(room_id))
-            for room_id in self._listening_rooms
+            self.hass.async_create_task(self._join_room(room_id, room_alias_or_id))
+            for room_alias_or_id, room_id in self._listening_rooms.items()
         ]
         await asyncio.wait(rooms)
 
@@ -356,11 +404,11 @@ class MatrixBot:
         await self._store_auth_token(self._client.access_token)
 
     async def _handle_room_send(
-        self, target_room: RoomID, message_type: str, content: dict
+        self, target_room: RoomAnyID, message_type: str, content: dict
     ) -> None:
         """Wrap _client.room_send and handle ErrorResponses."""
         response: Response = await self._client.room_send(
-            room_id=target_room,
+            room_id=self._listening_rooms.get(target_room, target_room),
             message_type=message_type,
             content=content,
         )
@@ -374,7 +422,7 @@ class MatrixBot:
             _LOGGER.debug("Message delivered to room '%s'", target_room)
 
     async def _handle_multi_room_send(
-        self, target_rooms: list[RoomID], message_type: str, content: dict
+        self, target_rooms: Sequence[RoomAnyID], message_type: str, content: dict
     ) -> None:
         """Wrap _handle_room_send for multiple target_rooms."""
         _tasks = []
@@ -390,7 +438,9 @@ class MatrixBot:
             )
         await asyncio.wait(_tasks)
 
-    async def _send_image(self, image_path: str, target_rooms: list[RoomID]) -> None:
+    async def _send_image(
+        self, image_path: str, target_rooms: Sequence[RoomAnyID]
+    ) -> None:
         """Upload an image, then send it to all target_rooms."""
         _is_allowed_path = await self.hass.async_add_executor_job(
             self.hass.config.is_allowed_path, image_path
@@ -442,7 +492,7 @@ class MatrixBot:
         )
 
     async def _send_message(
-        self, message: str, target_rooms: list[RoomID], data: dict | None
+        self, message: str, target_rooms: list[RoomAnyID], data: dict | None
     ) -> None:
         """Send a message to the Matrix server."""
         content = {"msgtype": "m.text", "body": message}
