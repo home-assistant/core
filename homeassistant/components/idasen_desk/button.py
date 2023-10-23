@@ -10,7 +10,7 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -41,6 +41,7 @@ BUTTONS: Final = [
     IdasenDeskButtonDescription(
         key="connect",
         name="Connect",
+        icon="mdi:bluetooth-connect",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda coordinator: coordinator.async_connect,
@@ -48,6 +49,7 @@ BUTTONS: Final = [
     IdasenDeskButtonDescription(
         key="disconnect",
         name="Disconnect",
+        icon="mdi:bluetooth-off",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda coordinator: coordinator.async_disconnect,
@@ -72,6 +74,7 @@ class IdasenDeskButton(ButtonEntity):
     """Defines a IdasenDesk button."""
 
     entity_description: IdasenDeskButtonDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -83,8 +86,9 @@ class IdasenDeskButton(ButtonEntity):
         """Initialize the IdasenDesk button entity."""
         self.entity_description = description
 
-        self._attr_name = f"{device_info[ATTR_NAME]} {self.entity_description.key}"
+        self._attr_name = f"{self.entity_description.name}"
         self._attr_unique_id = f"{self.entity_description.key}-{address}"
+        self._attr_icon = self.entity_description.icon
         self._attr_device_info = device_info
         self._address = address
         self._coordinator = coordinator
