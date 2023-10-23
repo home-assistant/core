@@ -53,6 +53,7 @@ class DevoloEntity(Entity):
             manufacturer="devolo",
             model=device.product,
             name=entry.title,
+            serial_number=device.serial_number,
             sw_version=device.firmware_version,
         )
         self._attr_translation_key = self.entity_description.key

@@ -127,7 +127,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         """Return the current target temperature."""
         # If the system is in MyZone mode, and a zone is set, return that temperature instead.
         if (
-            self._ac["myZone"] > 0
+            self._myzone
             and not self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED)
             and not self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED)
         ):
