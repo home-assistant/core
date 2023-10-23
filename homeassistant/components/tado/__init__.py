@@ -172,6 +172,14 @@ class TadoConnector:
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
 
+    def getMe(self):
+        """Return the Tado 'me' data."""
+        return self.tado.getMe()
+
+    def getMobileDevices(self):
+        """Return the Tado mobile devices."""
+        return self.tado.getMobileDevices()
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the registered zones."""

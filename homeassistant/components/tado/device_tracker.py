@@ -4,10 +4,8 @@ from __future__ import annotations
 import asyncio
 from collections import namedtuple
 from datetime import timedelta
-from http import HTTPStatus
 import logging
 
-import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -17,10 +15,12 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
+
+from . import TadoConnector
+from .const import CONST_OVERLAY_TADO_DEFAULT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> TadoDeviceScanner | None:
     """Return a Tado scanner."""
     scanner = TadoDeviceScanner(hass, config[DOMAIN])
-    return scanner if scanner.success_init else None
+    return scanner if scanner.success_init else None  # type: ignore [has-type]
 
 
 Device = namedtuple("Device", ["mac", "name"])
@@ -49,27 +49,21 @@ Device = namedtuple("Device", ["mac", "name"])
 class TadoDeviceScanner(DeviceScanner):
     """Scanner for geofenced devices from Tado."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass: HomeAssistant, config) -> None:
         """Initialize the scanner."""
         self.hass = hass
-        self.last_results = []
+        self.last_results = list[str]
 
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        self.fallback = CONST_OVERLAY_TADO_DEFAULT
 
         # The Tado device tracker can work with or without a home_id
         self.home_id = config[CONF_HOME_ID] if CONF_HOME_ID in config else None
 
-        # If there's a home_id, we need a different API URL
-        if self.home_id is None:
-            self.tadoapiurl = "https://my.tado.com/api/v2/me"
-        else:
-            self.tadoapiurl = "https://my.tado.com/api/v2/homes/{home_id}/mobileDevices"
-
-        # The API URL always needs a username and password
-        self.tadoapiurl += "?username={username}&password={password}"
-
-        self.websession = None
+        self.tadoconnector = TadoConnector(
+            self.hass, self.username, self.password, self.fallback
+        )
 
         self.success_init = asyncio.run_coroutine_threadsafe(
             self._async_update_info(), hass.loop
@@ -99,33 +93,15 @@ class TadoDeviceScanner(DeviceScanner):
         Returns boolean if scanning successful.
         """
         _LOGGER.debug("Requesting Tado")
-
-        if self.websession is None:
-            self.websession = async_create_clientsession(
-                self.hass, cookie_jar=aiohttp.CookieJar(unsafe=True)
-            )
-
         last_results = []
 
-        try:
-            async with asyncio.timeout(10):
-                # Format the URL here, so we can log the template URL if
-                # anything goes wrong without exposing username and password.
-                url = self.tadoapiurl.format(
-                    home_id=self.home_id, username=self.username, password=self.password
-                )
-
-                response = await self.websession.get(url)
-
-                if response.status != HTTPStatus.OK:
-                    _LOGGER.warning("Error %d on %s", response.status, self.tadoapiurl)
-                    return False
-
-                tado_json = await response.json()
-
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Cannot load Tado data")
-            return False
+        await self.hass.async_add_executor_job(self.tadoconnector.setup)
+        if self.home_id is None:
+            tado_json = await self.hass.async_add_executor_job(self.tadoconnector.getMe)
+        else:
+            tado_json = await self.hass.async_add_executor_job(
+                self.tadoconnector.getMobileDevices
+            )
 
         # Without a home_id, we fetched an URL where the mobile devices can be
         # found under the mobileDevices key.
