@@ -90,7 +90,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Airthings BLE sensors."""
+    """Set up the Vevor BLE heater sensors."""
 
     coordinator: VevorHeaterUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
@@ -104,14 +104,14 @@ async def async_setup_entry(
 
 
 class VevorHeaterSensor(CoordinatorEntity[VevorHeaterUpdateCoordinator], SensorEntity):
-    """Airthings BLE sensors for the device."""
+    """Vevor BLE heater sensors for the device."""
 
     def __init__(
         self,
         coordinator: VevorHeaterUpdateCoordinator,
         entity_description: SensorEntityDescription,
     ) -> None:
-        """Populate the airthings entity with relevant data."""
+        """Populate the entity with relevant data."""
         super().__init__(coordinator)
         self.entity_description = entity_description
 
@@ -119,7 +119,10 @@ class VevorHeaterSensor(CoordinatorEntity[VevorHeaterUpdateCoordinator], SensorE
             f"{coordinator.get_device_address()}_{entity_description.key}"
         )
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, coordinator.get_device_address())}
+            name=coordinator.data.name,
+            manufacturer="Vevor",
+            model="Vevor Heater",
+            connections={(CONNECTION_BLUETOOTH, coordinator.get_device_address())},
         )
         self._propagate_value()
 

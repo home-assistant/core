@@ -21,7 +21,8 @@ class VevorHeaterUpdateCoordinator(DataUpdateCoordinator[VevorDevice]):
         """Initialize the coordinator for the given BLE device. Assumes the device corresponds to a Vevor Heater."""
         self._ble_device = device
         self._vevor_device = VevorDevice(
-            address=self._ble_device.address, name=self._ble_device.name
+            address=self._ble_device.address,
+            name="Vevor " + (self._ble_device.name or ""),
         )
         super().__init__(
             hass, logger=_LOGGER, name=DOMAIN, update_interval=DEFAULT_UPDATE_INTERVAL

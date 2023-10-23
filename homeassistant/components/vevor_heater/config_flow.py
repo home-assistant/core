@@ -36,7 +36,7 @@ async def validate_device(hass: HomeAssistant, address: str) -> dict[str, Any]:
     if not ble_device:
         raise CannotConnect()
 
-    heater = VevorDevice(name=ble_device.name, address=ble_device.address)
+    heater = VevorDevice(address=ble_device.address)
     await heater.refresh_status(ble_device)
     if not heater.status:
         raise CannotConnect()
@@ -103,16 +103,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             return self.async_abort(reason="not_supported")
         self._discovery_info = discovery_info
-        self._discovered_device = VevorDevice(
-            name=discovery_info.name, address=discovery_info.address
-        )
         return await self.async_step_bluetooth_confirm()
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm discovery."""
-        assert self._discovered_device is not None
         assert self._discovery_info is not None
         discovery_info = self._discovery_info
         title = "Vevor " + str(discovery_info.name or discovery_info.address)
