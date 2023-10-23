@@ -49,6 +49,8 @@ GAS_USAGE_UNITS = {
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.GALLONS,
+        UnitOfVolume.LITERS,
     ),
 }
 GAS_PRICE_UNITS = tuple(

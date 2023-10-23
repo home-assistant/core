@@ -370,6 +370,8 @@ def test_get_unit_system_invalid(key: str) -> None:
         ),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, None),
+        (SensorDeviceClass.GAS, UnitOfVolume.GALLONS, UnitOfVolume.LITERS),
+        (SensorDeviceClass.GAS, UnitOfVolume.LITERS, None),
         (SensorDeviceClass.GAS, "very_much", None),
         # Test precipitation conversion
         (
@@ -496,7 +498,10 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfLength.METERS,
         UnitOfLength.MILLIMETERS,
     ),
-    SensorDeviceClass.GAS: (UnitOfVolume.CUBIC_METERS,),
+    SensorDeviceClass.GAS: (
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.LITERS,
+    ),
     SensorDeviceClass.PRECIPITATION: (
         UnitOfLength.CENTIMETERS,
         UnitOfLength.MILLIMETERS,
@@ -593,6 +598,8 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         (SensorDeviceClass.GAS, UnitOfVolume.CENTUM_CUBIC_FEET, None),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, None),
+        (SensorDeviceClass.GAS, UnitOfVolume.LITERS, UnitOfVolume.GALLONS),
+        (SensorDeviceClass.GAS, UnitOfVolume.GALLONS, None),
         (SensorDeviceClass.GAS, "very_much", None),
         # Test precipitation conversion
         (
@@ -715,7 +722,11 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         UnitOfLength.MILES,
         UnitOfLength.YARDS,
     ),
-    SensorDeviceClass.GAS: (UnitOfVolume.CENTUM_CUBIC_FEET, UnitOfVolume.CUBIC_FEET),
+    SensorDeviceClass.GAS: (
+        UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.GALLONS,
+    ),
     SensorDeviceClass.PRECIPITATION: (UnitOfLength.INCHES,),
     SensorDeviceClass.PRECIPITATION_INTENSITY: (
         UnitOfVolumetricFlux.INCHES_PER_DAY,

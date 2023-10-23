@@ -243,6 +243,7 @@ METRIC_SYSTEM = UnitSystem(
         # Convert non-metric volumes of gas meters
         ("gas", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("gas", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        ("gas", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
         # Convert non-metric precipitation
         ("precipitation", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
         # Convert non-metric precipitation intensity
@@ -309,6 +310,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
         # Convert non-USCS volumes of gas meters
         ("gas", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
+        ("gas", UnitOfVolume.LITERS): UnitOfVolume.GALLONS,
         # Convert non-USCS precipitation
         ("precipitation", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,
         ("precipitation", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,

@@ -185,8 +185,8 @@ class SensorDeviceClass(StrEnum):
     """Gas.
 
     Unit of measurement:
-    - SI / metric: `m³`
-    - USCS / imperial: `ft³`, `CCF`
+    - SI / metric: `m³`, `L`
+    - USCS / imperial: `ft³`, `CCF`, `gal`
     """
 
     HUMIDITY = "humidity"
@@ -506,6 +506,8 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.GALLONS,
+        UnitOfVolume.LITERS,
     },
     SensorDeviceClass.HUMIDITY: {PERCENTAGE},
     SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX},
