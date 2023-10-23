@@ -47,6 +47,7 @@ from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
+    CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
@@ -108,6 +109,9 @@ class UniFiController:
     def load_config_entry_options(self) -> None:
         """Store attributes to avoid property call overhead since they are called frequently."""
         options = self.config_entry.options
+
+        # Allow creating entities from clients.
+        self.option_supported_clients: list[str] = options.get(CONF_CLIENT_SOURCE, [])
 
         # Device tracker options
 
