@@ -34,6 +34,7 @@ from aemet_opendata.const import (
     ATTR_DATA,
 )
 from aemet_opendata.exceptions import AemetError
+from aemet_opendata.forecast import ForecastValue
 from aemet_opendata.helpers import (
     get_forecast_day_value,
     get_forecast_hour_value,
@@ -78,7 +79,6 @@ from .const import (
     ATTR_API_WIND_SPEED,
     CONDITIONS_MAP,
     DOMAIN,
-    WIND_BEARING_MAP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,11 +90,8 @@ WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
 
 def format_condition(condition: str) -> str:
     """Return condition from dict CONDITIONS_MAP."""
-    for key, value in CONDITIONS_MAP.items():
-        if condition in value:
-            return key
-    _LOGGER.error('Condition "%s" not found in CONDITIONS_MAP', condition)
-    return condition
+    val = ForecastValue.parse_condition(condition)
+    return CONDITIONS_MAP.get(val, val)
 
 
 def format_float(value) -> float | None:
@@ -489,10 +486,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         val = get_forecast_hour_value(
             day_data[AEMET_ATTR_WIND_GUST], hour, key=AEMET_ATTR_DIRECTION
         )[0]
-        if val in WIND_BEARING_MAP:
-            return WIND_BEARING_MAP[val]
-        _LOGGER.error("%s not found in Wind Bearing map", val)
-        return None
+        return ForecastValue.parse_wind_direction(val)
 
     @staticmethod
     def _get_wind_bearing_day(day_data):
@@ -500,10 +494,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         val = get_forecast_day_value(
             day_data[AEMET_ATTR_WIND], key=AEMET_ATTR_DIRECTION
         )
-        if val in WIND_BEARING_MAP:
-            return WIND_BEARING_MAP[val]
-        _LOGGER.error("%s not found in Wind Bearing map", val)
-        return None
+        return ForecastValue.parse_wind_direction(val)
 
     @staticmethod
     def _get_wind_max_speed(day_data, hour):

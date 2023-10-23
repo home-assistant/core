@@ -15,7 +15,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, KEY_COORDINATOR_FIRMWARE, KEY_ROUTER
-from .router import NetgearRouter, NetgearRouterCoordinatorEntity
+from .entity import NetgearRouterCoordinatorEntity
+from .router import NetgearRouter
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +45,7 @@ class NetgearUpdateEntity(NetgearRouterCoordinatorEntity, UpdateEntity):
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
-        self._name = f"{router.device_name} Update"
-        self._unique_id = f"{router.serial_number}-update"
+        self._attr_unique_id = f"{router.serial_number}-update"
 
     @property
     def installed_version(self) -> str | None:

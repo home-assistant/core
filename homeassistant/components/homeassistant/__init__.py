@@ -9,6 +9,7 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
 from homeassistant.const import (
+    ATTR_ELEVATION,
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -250,16 +251,28 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
     async def async_set_location(call: ha.ServiceCall) -> None:
         """Service handler to set location."""
-        await hass.config.async_update(
-            latitude=call.data[ATTR_LATITUDE], longitude=call.data[ATTR_LONGITUDE]
-        )
+        service_data = {
+            "latitude": call.data[ATTR_LATITUDE],
+            "longitude": call.data[ATTR_LONGITUDE],
+        }
+
+        if elevation := call.data.get(ATTR_ELEVATION):
+            service_data["elevation"] = elevation
+
+        await hass.config.async_update(**service_data)
 
     async_register_admin_service(
         hass,
         ha.DOMAIN,
         SERVICE_SET_LOCATION,
         async_set_location,
-        vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
+        vol.Schema(
+            {
+                vol.Required(ATTR_LATITUDE): cv.latitude,
+                vol.Required(ATTR_LONGITUDE): cv.longitude,
+                vol.Optional(ATTR_ELEVATION): int,
+            }
+        ),
     )
 
     async def async_handle_reload_templates(call: ha.ServiceCall) -> None:

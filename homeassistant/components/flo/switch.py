@@ -102,6 +102,7 @@ class FloSwitch(FloEntity, SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
+        await super().async_added_to_hass()
         self.async_on_remove(self._device.async_add_listener(self.async_update_state))
 
     async def async_set_mode_home(self):

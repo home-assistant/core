@@ -326,6 +326,7 @@ class Thermostat(ClimateEntity):
         self._attr_unique_id = self.thermostat["identifier"]
         self.vacation = None
         self._last_active_hvac_mode = HVACMode.HEAT_COOL
+        self._last_hvac_mode_before_aux_heat = HVACMode.HEAT_COOL
 
         self._attr_hvac_modes = []
         if self.settings["heatStages"] or self.settings["hasHeatPump"]:
@@ -541,13 +542,14 @@ class Thermostat(ClimateEntity):
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
         _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
+        self._last_hvac_mode_before_aux_heat = self.hvac_mode
         self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
         self.update_without_throttle = True
 
     def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
         _LOGGER.debug("Setting HVAC mode to last mode to disable aux heat")
-        self.set_hvac_mode(self._last_active_hvac_mode)
+        self.set_hvac_mode(self._last_hvac_mode_before_aux_heat)
         self.update_without_throttle = True
 
     def set_preset_mode(self, preset_mode: str) -> None:

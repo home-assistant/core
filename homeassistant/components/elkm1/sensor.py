@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .const import ATTR_VALUE, DOMAIN, ELK_USER_CODE_SERVICE_SCHEMA
+from .models import ELKM1Data
 
 SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
 SERVICE_SENSOR_COUNTER_SET = "sensor_counter_set"
@@ -41,9 +42,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the Elk-M1 sensor platform."""
-    elk_data = hass.data[DOMAIN][config_entry.entry_id]
+    elk_data: ELKM1Data = hass.data[DOMAIN][config_entry.entry_id]
+    elk = elk_data.elk
     entities: list[ElkEntity] = []
-    elk = elk_data["elk"]
     create_elk_entities(elk_data, elk.counters, "counter", ElkCounter, entities)
     create_elk_entities(elk_data, elk.keypads, "keypad", ElkKeypad, entities)
     create_elk_entities(elk_data, [elk.panel], "panel", ElkPanel, entities)
