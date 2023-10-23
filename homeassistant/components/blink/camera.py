@@ -104,6 +104,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         """Trigger camera to take a snapshot."""
         with contextlib.suppress(asyncio.TimeoutError):
             await self._camera.snap_picture()
+        self.async_write_ha_state()
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
