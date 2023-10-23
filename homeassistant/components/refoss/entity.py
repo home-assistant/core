@@ -2,21 +2,22 @@
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .bridge import DeviceDataUpdateCoordinator
+from .bridge import RefossDataUpdateCoordinator
 from .const import DOMAIN
 
 
-class RefossEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
+class RefossEntity(CoordinatorEntity[RefossDataUpdateCoordinator]):
     """Refoss entity."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: DeviceDataUpdateCoordinator, channel: int) -> None:
+    def __init__(self, coordinator: RefossDataUpdateCoordinator, channel: int) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
 
         name = coordinator.device.dev_name
         mac = coordinator.device.mac
+        self.channel_id = channel
         if channel == 0:
             self._attr_name = None
         else:

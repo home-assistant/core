@@ -8,14 +8,14 @@ from refoss_ha.controller.device import BaseDevice
 from refoss_ha.exceptions import DeviceTimeoutError
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, MAX_ERRORS
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class RefossDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Manages polling for state changes from the device."""
 
     def __init__(self, hass: HomeAssistant, device: BaseDevice) -> None:
@@ -29,12 +29,14 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self.device = device
         self._error_count = 0
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Update the state of the device."""
         try:
             await self.device.async_handle_update()
-        except DeviceTimeoutError as error:
+            self.last_update_success = True
+            self._error_count = 0
+        except DeviceTimeoutError:
             self._error_count += 1
 
-            if self.last_update_success and self._error_count >= MAX_ERRORS:
-                raise UpdateFailed(f"Device {self.name} is unavailable") from error
+            if self._error_count >= MAX_ERRORS:
+                self.last_update_success = False

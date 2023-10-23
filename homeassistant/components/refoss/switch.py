@@ -32,7 +32,7 @@ async def async_setup_entry(
 
         new_entities = []
         for channel in device.channels:
-            entity = RefossSwitch(coordinator, channel=channel)
+            entity = RefossSwitch(coordinator=coordinator, channel=channel)
             new_entities.append(entity)
 
         async_add_entities(new_entities)
@@ -46,29 +46,24 @@ async def async_setup_entry(
 
 
 class RefossSwitch(RefossEntity, SwitchEntity):
-    """Entity that controls switch based refoss device."""
-
-    def __init__(self, coordinator, channel: int) -> None:
-        """Construct."""
-        super().__init__(coordinator, channel)
-        self._channel_id = channel
+    """Refoss Switch Device."""
 
     @property
     def is_on(self) -> bool | None:
-        """is_on."""
-        return self.coordinator.device.is_on(channel=self._channel_id)
+        """Return true if switch is on."""
+        return self.coordinator.device.is_on(channel=self.channel_id)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """async_turn_on."""
-        await self.coordinator.device.async_turn_on(self._channel_id)
+        """Turn the switch on."""
+        await self.coordinator.device.async_turn_on(self.channel_id)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """async_turn_off."""
-        await self.coordinator.device.async_turn_off(self._channel_id)
+        """Turn the switch off."""
+        await self.coordinator.device.async_turn_off(self.channel_id)
         self.async_write_ha_state()
 
     async def async_toggle(self, **kwargs: Any) -> None:
-        """async_toggle."""
-        await self.coordinator.device.async_toggle(channel=self._channel_id)
+        """Toggle the switch."""
+        await self.coordinator.device.async_toggle(channel=self.channel_id)
         self.async_write_ha_state()

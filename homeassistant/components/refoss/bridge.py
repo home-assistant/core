@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
-from .coordinator import DeviceDataUpdateCoordinator
+from .coordinator import RefossDataUpdateCoordinator
 
 
 class DiscoveryService(Listener):
@@ -31,7 +31,7 @@ class DiscoveryService(Listener):
         if device is None:
             return None
 
-        coordo = DeviceDataUpdateCoordinator(self.hass, device)
+        coordo = RefossDataUpdateCoordinator(self.hass, device)
         self.hass.data[DOMAIN][COORDINATORS].append(coordo)
         await coordo.async_refresh()
 

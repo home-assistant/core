@@ -1,15 +1,11 @@
 """Tests for the refoss Integration."""
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.refoss.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .common import FakeDiscovery, build_base_device_mock
-
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+from . import FakeDiscovery, build_base_device_mock
 
 
 @patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
