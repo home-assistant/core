@@ -52,7 +52,7 @@ class TadoDeviceScanner(DeviceScanner):
     def __init__(self, hass: HomeAssistant, config) -> None:
         """Initialize the scanner."""
         self.hass = hass
-        self.last_results = list[str]
+        self.last_results: list[str] = []
 
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
