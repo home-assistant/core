@@ -11,6 +11,7 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -39,6 +40,7 @@ PLATFORMS = [
     ALARM_CONTROL_PANEL_DOMAIN,
     BINARY_SENSOR_DOMAIN,
     BUTTON_DOMAIN,
+    SENSOR_DOMAIN,
     SWITCH_DOMAIN,
     UPDATE_DOMAIN,
 ]

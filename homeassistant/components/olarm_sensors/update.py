@@ -47,22 +47,40 @@ class OlarmUpdate(UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        return self.hass.data[DOMAIN]["release_data"]["name"].split(" ")[1]
+        try:
+            return self.hass.data[DOMAIN]["release_data"]["name"].split(" ")[1]
+
+        except KeyError:
+            return None
 
     @property
     def title(self) -> str | None:
         """Return update name."""
-        return self.hass.data[DOMAIN]["release_data"]["name"]
+        try:
+            return self.hass.data[DOMAIN]["release_data"]["name"]
+
+        except KeyError:
+            return None
 
     @property
     def release_summary(self) -> str | None:
         """Return release summary."""
-        return self.hass.data[DOMAIN]["release_data"]["body"].split("\n", maxsplit=1)[0]
+        try:
+            return self.hass.data[DOMAIN]["release_data"]["body"].split(
+                "\n", maxsplit=1
+            )[0]
+
+        except KeyError:
+            return None
 
     @property
     def release_url(self) -> str | None:
         """The url of the release."""
-        return self.hass.data[DOMAIN]["release_data"]["url"]
+        try:
+            return self.hass.data[DOMAIN]["release_data"]["url"]
+
+        except KeyError:
+            return None
 
     def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install an update.
