@@ -23,6 +23,7 @@ from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
+    async_last_service_info,
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
@@ -170,6 +171,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         # mypy is not aware that we can't get here without having these set already
         assert self._discovery_info is not None
+        self._discovery_info = async_last_service_info(
+            self.hass, self._discovery_info.address
+        )
+        if not self._discovery_info:
+            return self.async_abort(reason="cannot_connect")
+        service_data = self._discovery_info.service_data
+        improv_service_data = ImprovServiceData.from_bytes(
+            service_data[SERVICE_DATA_UUID]
+        )
+        if improv_service_data.state in (State.PROVISIONING, State.PROVISIONED):
+            _LOGGER.debug(
+                "Device is already provisioned: %s", improv_service_data.state
+            )
+            return self.async_abort(reason="already_provisioned")
 
         if not self._device:
             self._device = ImprovBLEClient(self._discovery_info.device)
