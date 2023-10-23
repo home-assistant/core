@@ -10,6 +10,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import TedeeApiCoordinator
 
 
 @dataclass
@@ -29,7 +30,12 @@ class TedeeEntity(CoordinatorEntity):
 
     entity_description: TedeeEntityDescription
 
-    def __init__(self, lock, coordinator, entity_description) -> None:
+    def __init__(
+        self,
+        lock: TedeeLock,
+        coordinator: TedeeApiCoordinator,
+        entity_description: TedeeEntityDescription,
+    ) -> None:
         """Initialize Tedee entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
@@ -38,7 +44,7 @@ class TedeeEntity(CoordinatorEntity):
         self._attr_unique_id = self.entity_description.unique_id_fn(self._lock)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._lock.lock_id)},
+            identifiers={(DOMAIN, str(self._lock.lock_id))},
             name=self._lock.lock_name,
             manufacturer="tedee",
             model=self._lock.lock_type,

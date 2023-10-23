@@ -2,7 +2,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pytedee_async.lock import TedeeLock
+from pytedee_async import TedeeLock
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,7 +22,7 @@ from .entity import TedeeEntity, TedeeEntityDescription
 class TedeeSensorEntityDescriptionMixin:
     """Mixin functions for Tedee sensor entity description."""
 
-    value_fn: Callable[[TedeeLock], int]
+    value_fn: Callable[[TedeeLock], int | None]
 
 
 @dataclass
@@ -68,6 +68,6 @@ class TedeeSensorEntity(TedeeEntity, SensorEntity):
     entity_description: TedeeSensorEntityDescription
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._lock)

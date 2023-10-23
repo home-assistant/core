@@ -3,7 +3,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from pytedee_async import TedeeClient, TedeeClientException
+from pytedee_async import TedeeClient, TedeeClientException, TedeeLockState
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +19,7 @@ from .entity import TedeeEntity, TedeeEntityDescription
 class TedeeButtonEntityDescriptionMixin:
     """Mixin functions for Tedee button entity description."""
 
-    press_fn: Callable[[TedeeClient, str], Coroutine[Any, Any, None]]
+    press_fn: Callable[[TedeeClient, int], Coroutine[Any, Any, None]]
 
 
 @dataclass
@@ -70,10 +70,10 @@ class TedeeButtonEntity(TedeeEntity, ButtonEntity):
 
     entity_description: TedeeButtonEntityDescription
 
-    async def async_press(self, **kwargs) -> None:
+    async def async_press(self, **kwargs: Any) -> None:
         """Press the button."""
         try:
-            self._lock.state = 4
+            self._lock.state = TedeeLockState.UNLOCKING
             self.async_write_ha_state()
             await self.entity_description.press_fn(
                 self.coordinator.tedee_client, self._lock.lock_id

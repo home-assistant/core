@@ -3,8 +3,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from pytedee_async import TedeeClientException
-from pytedee_async.lock import TedeeLockState
+from pytedee_async import TedeeClientException, TedeeLock, TedeeLockState
 
 from homeassistant.components.lock import (
     LockEntity,
@@ -26,6 +25,7 @@ from .const import (
     CONF_UNLOCK_PULLS_LATCH,
     DOMAIN,
 )
+from .coordinator import TedeeApiCoordinator
 from .entity import TedeeEntity, TedeeEntityDescription
 
 
@@ -81,7 +81,13 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
 
     entity_description: TedeeLockEntityDescription
 
-    def __init__(self, lock, coordinator, entity_description, entry) -> None:
+    def __init__(
+        self,
+        lock: TedeeLock,
+        coordinator: TedeeApiCoordinator,
+        entity_description: TedeeLockEntityDescription,
+        entry: ConfigEntry,
+    ) -> None:
         """Initialize the lock."""
         super().__init__(lock, coordinator, entity_description)
         self._unlock_pulls_latch = entry.data.get(CONF_UNLOCK_PULLS_LATCH, False)

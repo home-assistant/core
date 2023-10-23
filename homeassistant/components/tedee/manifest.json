@@ -4,8 +4,7 @@
   "codeowners": ["@patrickhilker", "@joerg65", "@zweckj"],
   "config_flow": true,
   "dependencies": ["http"],
-  "documentation": "https://github.com/patrickhilker/tedee_hass_integration",
+  "documentation": "https://www.home-assistant.io/integrations/tedee",
   "iot_class": "local_push",
-  "issue_tracker": "https://github.com/patrickhilker/tedee_hass_integration/issues",
-  "requirements": ["pytedee-async==0.2.0b10"]
+  "requirements": ["pytedee-async==0.2.0"]
 }

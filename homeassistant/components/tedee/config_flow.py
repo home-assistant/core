@@ -1,6 +1,5 @@
 """Config flow for Tedee integration."""
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from pytedee_async import TedeeAuthException, TedeeClient, TedeeLocalAuthException
@@ -20,8 +19,6 @@ from .const import (
     DOMAIN,
     NAME,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(user_input: dict[str, Any]) -> bool:
@@ -58,6 +55,9 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict = {}
+
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
             if (
