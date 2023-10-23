@@ -871,7 +871,7 @@ class WithingsActivitySensor(WithingsSensor):
 
 
 class WithingsWorkoutSensor(WithingsSensor):
-    """Implementation of a Withings goals sensor."""
+    """Implementation of a Withings workout sensor."""
 
     coordinator: WithingsWorkoutDataUpdateCoordinator
 
