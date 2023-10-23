@@ -54,7 +54,6 @@ _LOGGER = logging.getLogger(DOMAIN)
 SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
     ContactEnergyUsageSensorEntityDescription(
         key="value",
-        name="Total Monthly Consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -64,7 +63,6 @@ SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
     ),
     ContactEnergyUsageSensorEntityDescription(
         key="dollar_value",
-        name="Total Monthly Cost",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement="NZD",
@@ -74,7 +72,6 @@ SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
     ),
     ContactEnergyUsageSensorEntityDescription(
         key="offpeak_value",
-        name="Offpeak Monthly Consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -84,7 +81,6 @@ SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
     ),
     ContactEnergyUsageSensorEntityDescription(
         key="offpeak_dollar_value",
-        name="Offpeak Monthly Cost",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement="NZD",
@@ -94,7 +90,6 @@ SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
     ),
     ContactEnergyUsageSensorEntityDescription(
         key="uncharged_value",
-        name="Monthly Consumption classed as Free",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
