@@ -57,9 +57,6 @@ from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState  # no
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
 from .const import (
-    ADDON_UPDATE_CHANGELOG,
-    ADDON_UPDATE_INFO,
-    ADDON_UPDATE_STATS,
     ATTR_ADDON,
     ATTR_ADDONS,
     ATTR_AUTO_UPDATE,
@@ -67,6 +64,7 @@ from .const import (
     ATTR_COMPRESSED,
     ATTR_FOLDERS,
     ATTR_HOMEASSISTANT,
+    ATTR_HOMEASSISTANT_EXCLUDE_DATABASE,
     ATTR_INPUT,
     ATTR_LOCATION,
     ATTR_PASSWORD,
@@ -76,6 +74,10 @@ from .const import (
     ATTR_STATE,
     ATTR_URL,
     ATTR_VERSION,
+    CONTAINER_CHANGELOG,
+    CONTAINER_INFO,
+    CONTAINER_STATS,
+    CORE_CONTAINER,
     DATA_KEY_ADDONS,
     DATA_KEY_CORE,
     DATA_KEY_HOST,
@@ -83,6 +85,7 @@ from .const import (
     DATA_KEY_SUPERVISOR,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
+    SUPERVISOR_CONTAINER,
     SupervisorEntityModel,
 )
 from .discovery import HassioServiceInfo, async_setup_discovery_view  # noqa: F401
@@ -191,6 +194,7 @@ SCHEMA_BACKUP_FULL = vol.Schema(
         vol.Optional(ATTR_LOCATION): vol.All(
             cv.string, lambda v: None if v == "/backup" else v
         ),
+        vol.Optional(ATTR_HOMEASSISTANT_EXCLUDE_DATABASE): cv.boolean,
     }
 )
 
@@ -805,9 +809,9 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
         self.is_hass_os = (get_info(self.hass) or {}).get("hassos") is not None
-        self._enabled_updates_by_addon: defaultdict[
-            str, dict[str, set[str]]
-        ] = defaultdict(lambda: defaultdict(set))
+        self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
+            lambda: defaultdict(set)
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -910,23 +914,24 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def force_data_refresh(self, first_update: bool) -> None:
         """Force update of the addon info."""
+        container_updates = self._container_updates
+
         data = self.hass.data
         hassio = self.hassio
-        (
-            data[DATA_INFO],
-            data[DATA_CORE_INFO],
-            data[DATA_CORE_STATS],
-            data[DATA_SUPERVISOR_INFO],
-            data[DATA_SUPERVISOR_STATS],
-            data[DATA_OS_INFO],
-        ) = await asyncio.gather(
-            hassio.get_info(),
-            hassio.get_core_info(),
-            hassio.get_core_stats(),
-            hassio.get_supervisor_info(),
-            hassio.get_supervisor_stats(),
-            hassio.get_os_info(),
-        )
+        updates = {
+            DATA_INFO: hassio.get_info(),
+            DATA_CORE_INFO: hassio.get_core_info(),
+            DATA_SUPERVISOR_INFO: hassio.get_supervisor_info(),
+            DATA_OS_INFO: hassio.get_os_info(),
+        }
+        if first_update or CONTAINER_STATS in container_updates[CORE_CONTAINER]:
+            updates[DATA_CORE_STATS] = hassio.get_core_stats()
+        if first_update or CONTAINER_STATS in container_updates[SUPERVISOR_CONTAINER]:
+            updates[DATA_SUPERVISOR_STATS] = hassio.get_supervisor_stats()
+
+        results = await asyncio.gather(*updates.values())
+        for key, result in zip(updates, results):
+            data[key] = result
 
         _addon_data = data[DATA_SUPERVISOR_INFO].get("addons", [])
         all_addons: list[str] = []
@@ -940,37 +945,36 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         # Update add-on info if its the first update or
         # there is at least one entity that needs the data.
         #
-        # When entities are added they call async_enable_addon_updates
+        # When entities are added they call async_enable_container_updates
         # to enable updates for the endpoints they need via
         # async_added_to_hass. This ensures that we only update
         # the data for the endpoints that are needed to avoid unnecessary
-        # API calls since otherwise we would fetch stats for all add-ons
+        # API calls since otherwise we would fetch stats for all containers
         # and throw them away.
         #
-        enabled_updates_by_addon = self._enabled_updates_by_addon
         for data_key, update_func, enabled_key, wanted_addons in (
             (
                 DATA_ADDONS_STATS,
                 self._update_addon_stats,
-                ADDON_UPDATE_STATS,
+                CONTAINER_STATS,
                 started_addons,
             ),
             (
                 DATA_ADDONS_CHANGELOGS,
                 self._update_addon_changelog,
-                ADDON_UPDATE_CHANGELOG,
+                CONTAINER_CHANGELOG,
                 all_addons,
             ),
-            (DATA_ADDONS_INFO, self._update_addon_info, ADDON_UPDATE_INFO, all_addons),
+            (DATA_ADDONS_INFO, self._update_addon_info, CONTAINER_INFO, all_addons),
         ):
-            data.setdefault(data_key, {}).update(
+            container_data: dict[str, Any] = data.setdefault(data_key, {})
+            container_data.update(
                 dict(
                     await asyncio.gather(
                         *[
                             update_func(slug)
                             for slug in wanted_addons
-                            if first_update
-                            or enabled_key in enabled_updates_by_addon[slug]
+                            if first_update or enabled_key in container_updates[slug]
                         ]
                     )
                 )
@@ -1004,11 +1008,11 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         return (slug, None)
 
     @callback
-    def async_enable_addon_updates(
+    def async_enable_container_updates(
         self, slug: str, entity_id: str, types: set[str]
     ) -> CALLBACK_TYPE:
         """Enable updates for an add-on."""
-        enabled_updates = self._enabled_updates_by_addon[slug]
+        enabled_updates = self._container_updates[slug]
         for key in types:
             enabled_updates[key].add(entity_id)
 

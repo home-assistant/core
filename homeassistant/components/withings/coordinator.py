@@ -1,9 +1,11 @@
 """Withings coordinator."""
 from abc import abstractmethod
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import TypeVar
 
 from aiowithings import (
+    Activity,
+    Goals,
     MeasurementType,
     NotificationCategory,
     SleepSummary,
@@ -80,7 +82,6 @@ class WithingsMeasurementDataUpdateCoordinator(
         super().__init__(hass, client)
         self.notification_categories = {
             NotificationCategory.WEIGHT,
-            NotificationCategory.ACTIVITY,
             NotificationCategory.PRESSURE,
         }
         self._previous_data: dict[MeasurementType, float] = {}
@@ -170,3 +171,55 @@ class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[Non
 
     async def _internal_update_data(self) -> None:
         """Update coordinator data."""
+
+
+class WithingsGoalsDataUpdateCoordinator(WithingsDataUpdateCoordinator[Goals]):
+    """Withings goals coordinator."""
+
+    _default_update_interval = timedelta(hours=1)
+
+    def webhook_subscription_listener(self, connected: bool) -> None:
+        """Call when webhook status changed."""
+        # Webhooks aren't available for this datapoint, so we keep polling
+
+    async def _internal_update_data(self) -> Goals:
+        """Retrieve goals data."""
+        return await self._client.get_goals()
+
+
+class WithingsActivityDataUpdateCoordinator(
+    WithingsDataUpdateCoordinator[Activity | None]
+):
+    """Withings activity coordinator."""
+
+    _previous_data: Activity | None = None
+
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotificationCategory.ACTIVITY,
+        }
+
+    async def _internal_update_data(self) -> Activity | None:
+        """Retrieve latest activity."""
+        if self._last_valid_update is None:
+            now = dt_util.utcnow()
+            startdate = now - timedelta(days=14)
+            activities = await self._client.get_activities_in_period(
+                startdate.date(), now.date()
+            )
+        else:
+            activities = await self._client.get_activities_since(
+                self._last_valid_update
+            )
+
+        today = date.today()
+        for activity in activities:
+            if activity.date == today:
+                self._previous_data = activity
+                self._last_valid_update = activity.modified
+                return activity
+        if self._previous_data and self._previous_data.date == today:
+            return self._previous_data
+        return None
