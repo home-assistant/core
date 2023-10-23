@@ -49,8 +49,8 @@ class WebRtcVad(VoiceActivityDetector):
 
     def __init__(self) -> None:
         """Initialize webrtcvad."""
-        # Delay import of webrtc so HA start up is not affected if package is
-        # missing.
+        # Delay import of webrtc so HA start up is not crashing
+        # on older architectures (armhf).
         #
         # pylint: disable=import-outside-toplevel
         from webrtc_noise_gain import AudioProcessor
