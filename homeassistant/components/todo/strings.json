@@ -1,0 +1,64 @@
+{
+  "title": "To-do List",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::todo::title%]"
+    }
+  },
+  "services": {
+    "create_item": {
+      "name": "Create To-do List Item",
+      "description": "Add a new To-do List Item.",
+      "fields": {
+        "summary": {
+          "name": "Summary",
+          "description": "The short summary that represents the To-do item."
+        },
+        "status": {
+          "name": "Status",
+          "description": "A status or confirmation of the To-do item."
+        }
+      }
+    },
+    "update_item": {
+      "name": "Update To-do List Item",
+      "description": "Update an existing To-do List Item based on either its Unique Id or Summary.",
+      "fields": {
+        "uid": {
+          "name": "To-do Item Unique Id",
+          "description": "Unique Identifier for the To-do List Item."
+        },
+        "summary": {
+          "name": "Summary",
+          "description": "The short summary that represents the To-do item."
+        },
+        "status": {
+          "name": "Status",
+          "description": "A status or confirmation of the To-do item."
+        }
+      }
+    },
+    "delete_item": {
+      "name": "Delete a To-do List Item",
+      "description": "Delete an existing To-do List Item either by its Unique Id or Summary.",
+      "fields": {
+        "uid": {
+          "name": "To-do Item Unique Ids",
+          "description": "Unique Identifiers for the To-do List Items."
+        },
+        "summary": {
+          "name": "Summary",
+          "description": "The short summary that represents the To-do item."
+        }
+      }
+    }
+  },
+  "selector": {
+    "status": {
+      "options": {
+        "needs_action": "Needs Action",
+        "completed": "Completed"
+      }
+    }
+  }
+}
