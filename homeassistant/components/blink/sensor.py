@@ -37,7 +37,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=TYPE_WIFI_STRENGTH,
         translation_key="wifi_rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
