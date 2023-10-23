@@ -10,22 +10,13 @@ from typing import Any
 
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import (
-    CONF_HEATING_TYPE,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    HEATING_TYPE_TO_CREATOR_METHOD,
-    PLATFORMS,
-    VICARE_DEVICE_CONFIG_LIST,
-    HeatingType,
-)
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS, VICARE_DEVICE_CONFIG_LIST
 
 _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
@@ -82,14 +73,6 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
         )
 
     hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG_LIST] = vicare_api.devices
-
-
-def get_api(entry: ConfigEntry, device: PyViCareDeviceConfig) -> PyViCareDevice:
-    """Get API for device."""
-    return getattr(
-        device,
-        HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(entry.data[CONF_HEATING_TYPE])],
-    )()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
