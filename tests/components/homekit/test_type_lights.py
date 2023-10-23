@@ -1031,6 +1031,40 @@ async def test_light_rgb_with_white_switch_to_temp(
     assert acc.char_brightness.value == 100
 
 
+async def test_light_rgb_with_hs_color_none(
+    hass: HomeAssistant,
+    hk_driver,
+    events,
+) -> None:
+    """Test lights hs color set to None."""
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGB],
+            ATTR_RGBWW_COLOR: (128, 50, 0, 255, 255),
+            ATTR_RGB_COLOR: (128, 50, 0),
+            ATTR_HS_COLOR: None,
+            ATTR_BRIGHTNESS: 255,
+            ATTR_COLOR_MODE: ColorMode.RGB,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    assert acc.char_hue.value == 0
+    assert acc.char_saturation.value == 75
+
+    await acc.run()
+    await hass.async_block_till_done()
+    assert acc.char_hue.value == 0
+    assert acc.char_saturation.value == 75
+    assert acc.char_brightness.value == 100
+
+
 async def test_light_rgbww_with_color_temp_conversion(
     hass: HomeAssistant,
     hk_driver,
