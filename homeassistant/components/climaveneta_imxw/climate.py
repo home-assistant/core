@@ -20,7 +20,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ClimavenetaIMXWCoordinator
@@ -39,18 +38,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 CALL_TYPE_WRITE_REGISTER = "write_register"
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the ClimavenetaIMXW Platform.
-
-    Empty as this was the old way of adding platforms.
-    """
 
 
 class ClimavenetaIMXWClimate(
@@ -78,37 +65,38 @@ class ClimavenetaIMXWClimate(
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
+    _filter_alarm: int | None = None
+    _heat_recovery: int | None = None
+    _heater_enabled: int | None = None
+    _heating: int | None = None
+    _cooling: int | None = None
+    _alarm = False
+    _summer_winter: int = 0
+    _target_temperature_winter: int | None = None
+    _attr_winter_temperature: float = 0.0
+    _attr_summer_temperature: float = 0.0
+    _exchanger_temperature: float = 0.0
+    _t1_alarm: int = 0
+    _t3_alarm: int = 0
+    _water_drain: int = 0
+    _min_temp: int = 15
+    _max_temp: int = 30
+    _attr_on_off: int = 0
+    _attr_fan_only: int = 0
+    _attr_ev_water: int = 0
+    _attr_target_temperature: int = 0
+    _attr_current_temperature: int = 0
+    _attr_hvac_action: HVACAction = HVACAction.OFF
+
     def __init__(
         self, coordinator, hub: ModbusHub, modbus_slave: int | None, name: str | None
     ) -> None:
         """Initialize the unit."""
         super().__init__(coordinator)
         self._hub = hub
-        self._attr_name = name
+        self._attr_name = None
         self._slave = modbus_slave
-        self._filter_alarm: int | None = None
-        self._heat_recovery: int | None = None
-        self._heater_enabled: int | None = None
-        self._heating: int | None = None
-        self._cooling: int | None = None
-        self._alarm = False
-        self._summer_winter = 0
-        self._target_temperature_winter: int | None = None
-        self._attr_winter_temperature = 0.0
-        self._attr_summer_temperature = 0.0
-        self._exchanger_temperature = 0.0
-        self._t1_alarm = 0
-        self._t3_alarm = 0
-        self._water_drain = 0
-        self._min_temp = 15
-        self._max_temp = 30
-        self._attr_on_off = 0
-        self._attr_fan_only = 0
-        self._attr_ev_water = 0
-        self._attr_unique_id = f"{str(hub.name)}_{name}_{str(modbus_slave)}"
-        self._attr_target_temperature = 0
-        self._attr_current_temperature = 0
-        self._attr_hvac_action = HVACAction.OFF
+        _attr_unique_id = f"{str(hub.name)}_{name}_{str(modbus_slave)}"
 
     async def async_update(self) -> None:
         """Update unit attributes."""

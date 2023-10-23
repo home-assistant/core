@@ -21,11 +21,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self._hub: str
         self._slave_id: int | None = None
-        self._enable_parameter_configuration = False
         self._name: str
-
-        # Only used in reauth flows:
-        self._reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -37,17 +33,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 get_hub(self.hass, user_input[CONF_HUB])
             except KeyError:
                 errors["hub"] = "invalid_modbus_hub"
-            else:
-                if user_input[CONF_SLAVE] < 0 or user_input[CONF_SLAVE] > 255:
-                    errors["slave"] = "invalid_slave_id"
 
-                if not errors:
-                    self._hub = user_input[CONF_HUB]
-                    self._slave_id = user_input[CONF_SLAVE]
-                    self._name = user_input[CONF_NAME]
+            if not errors:
+                self._hub = user_input[CONF_HUB]
+                self._slave_id = user_input[CONF_SLAVE]
+                self._name = user_input[CONF_NAME]
 
-                    title_device = f"Climaveneta_IMXW {user_input[CONF_NAME]} at {user_input[CONF_HUB]}:{user_input[CONF_SLAVE]}"
-                    return self.async_create_entry(title=title_device, data=user_input)
+                title_device = f"Climaveneta_IMXW {user_input[CONF_NAME]} at {user_input[CONF_HUB]}:{user_input[CONF_SLAVE]}"
+                return self.async_create_entry(title=title_device, data=user_input)
 
         schema = vol.Schema(
             {

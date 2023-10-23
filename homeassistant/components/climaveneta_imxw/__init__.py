@@ -9,9 +9,13 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.modbus import CALL_TYPE_REGISTER_HOLDING, get_hub
+from homeassistant.components.modbus import (
+    CALL_TYPE_REGISTER_HOLDING,
+    ModbusHub,
+    get_hub,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_SLAVE
+from homeassistant.const import CONF_NAME, CONF_SLAVE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -26,7 +30,6 @@ from .const import (
     MODE_ON,
     MODE_SUMMER,
     MODE_WINTER,
-    PLATFORMS,
     SCAN_INTERVAL,
     STATE_READ_EV_WATER_REGISTER,
     STATE_READ_FAN_AUTO_REGISTER,
@@ -42,9 +45,11 @@ from .const import (
 
 # registers
 
-
 WATER_BYPASS = 0
 WATER_CIRCULATING = 1
+
+
+PLATFORMS = [Platform.CLIMATE]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,9 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     coordinator = ClimavenetaIMXWCoordinator(hass, hub, slave_id, name)
-    hass.data.setdefault(DOMAIN, {})
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -84,19 +88,18 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return True
 
 
-class ClimavenetaIMXWCoordinator(DataUpdateCoordinator):
-    """My custom coordinator."""
+class ClimavenetaIMXWCoordinator(DataUpdateCoordinator[None]):
+    """Class to manage fetching Climaveneta IMXW data."""
 
     fan_mode = FAN_AUTO
-    hvac_mode = HVACMode.OFF
-    hvac_action = HVACAction.OFF
+    hvac_mode: HVACMode = HVACMode.OFF
+    hvac_action: HVACAction = HVACAction.OFF
 
-    def __init__(self, hass: HomeAssistant, hub, slaveid, name) -> None:
+    def __init__(self, hass: HomeAssistant, hub: ModbusHub, slaveid: int, name) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            # Name of the data. For logging purposes.
             name=name,
             # Polling interval. Will only be polled if there are subscribers.
             update_interval=SCAN_INTERVAL,
