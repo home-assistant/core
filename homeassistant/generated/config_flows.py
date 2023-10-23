@@ -550,6 +550,7 @@ FLOWS = {
         "verisure",
         "version",
         "vesync",
+        "vevor_heater",
         "vicare",
         "vilfo",
         "vizio",

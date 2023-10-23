@@ -120,11 +120,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=title, data={})
 
         self._set_confirm_only()
-        placeholders = {"name": title}
-        self.context["title_placeholders"] = placeholders
-        return self.async_show_form(
-            step_id="bluetooth_confirm", description_placeholders=placeholders
-        )
+        return self.async_show_form(step_id="bluetooth_confirm")
 
 
 class CannotConnect(HomeAssistantError):
