@@ -135,6 +135,9 @@ class GoogleConfig(AbstractConfig):
 
         explicit_expose = self.entity_config.get(state.entity_id, {}).get(CONF_EXPOSE)
 
+        if isinstance(explicit_expose, bool):
+            return explicit_expose
+
         domain_exposed_by_default = (
             expose_by_default and state.domain in exposed_domains
         )
@@ -143,12 +146,7 @@ class GoogleConfig(AbstractConfig):
         # and the entity is not a config or diagnostic entity
         entity_exposed_by_default = domain_exposed_by_default and not auxiliary_entity
 
-        # Expose an entity if the entity's is exposed by default and
-        # the configuration doesn't explicitly exclude it from being
-        # exposed, or if the entity is explicitly exposed
-        is_default_exposed = entity_exposed_by_default and explicit_expose is not False
-
-        return is_default_exposed or explicit_expose
+        return entity_exposed_by_default
 
     def get_agent_user_id(self, context):
         """Get agent user ID making request."""
