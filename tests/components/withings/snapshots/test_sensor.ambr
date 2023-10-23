@@ -151,6 +151,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'henk Distance travelled last workout',
+      'icon': 'mdi:map-marker-distance',
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
     }),
     'context': <ANY>,
@@ -240,6 +241,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Floors climbed last workout',
+      'icon': 'mdi:stairs-up',
       'unit_of_measurement': 'Floors',
     }),
     'context': <ANY>,
@@ -347,6 +349,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Last workout duration',
+      'icon': 'mdi:timer',
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -541,6 +544,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Pause during last workout',
+      'icon': 'mdi:timer-pause',
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,

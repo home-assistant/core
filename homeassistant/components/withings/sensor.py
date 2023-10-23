@@ -576,6 +576,7 @@ WORKOUT_SENSORS = [
         key="workout_active_calories_burnt",
         value_fn=lambda workout: workout.active_calories_burnt,
         translation_key="workout_active_calories_burnt",
+        suggested_display_precision=1,
         native_unit_of_measurement="Calories",
     ),
     WithingsWorkoutSensorEntityDescription(
@@ -584,11 +585,14 @@ WORKOUT_SENSORS = [
         translation_key="workout_distance",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
+        suggested_display_precision=0,
+        icon="mdi:map-marker-distance",
     ),
     WithingsWorkoutSensorEntityDescription(
         key="workout_floors_climbed",
         value_fn=lambda workout: workout.floors_climbed,
         translation_key="workout_floors_climbed",
+        icon="mdi:stairs-up",
         native_unit_of_measurement="Floors",
     ),
     WithingsWorkoutSensorEntityDescription(
@@ -600,6 +604,7 @@ WORKOUT_SENSORS = [
         key="workout_pause_duration",
         value_fn=lambda workout: workout.pause_duration or 0,
         translation_key="workout_pause_duration",
+        icon="mdi:timer-pause",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
@@ -610,6 +615,7 @@ WORKOUT_SENSORS = [
             workout.end_date - workout.start_date
         ).total_seconds(),
         translation_key="workout_duration",
+        icon="mdi:timer",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
