@@ -272,6 +272,46 @@ async def test_dimmable_light(hass: HomeAssistant) -> None:
     assert call.data["brightness_pct"] == 50
 
 
+async def test_dimmable_light_with_none_brightness(hass: HomeAssistant) -> None:
+    """Test dimmable light discovery."""
+    device = (
+        "light.test_2",
+        "on",
+        {
+            "brightness": None,
+            "friendly_name": "Test light 2",
+            "supported_color_modes": ["brightness"],
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "light#test_2"
+    assert appliance["displayCategories"][0] == "LIGHT"
+    assert appliance["friendlyName"] == "Test light 2"
+
+    assert_endpoint_capabilities(
+        appliance,
+        "Alexa.BrightnessController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    properties = await reported_properties(hass, "light#test_2")
+    properties.assert_equal("Alexa.PowerController", "powerState", "ON")
+    properties.assert_equal("Alexa.BrightnessController", "brightness", 0)
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.BrightnessController",
+        "SetBrightness",
+        "light#test_2",
+        "light.turn_on",
+        hass,
+        payload={"brightness": "50"},
+    )
+    assert call.data["brightness_pct"] == 50
+
+
 @pytest.mark.parametrize(
     "supported_color_modes",
     [["color_temp", "hs"], ["color_temp", "rgb"], ["color_temp", "xy"]],
