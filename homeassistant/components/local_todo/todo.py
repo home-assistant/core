@@ -1,4 +1,4 @@
-"""A local todo list todo platform."""
+"""A Local To-do todo platform."""
 
 from collections.abc import Iterable
 import dataclasses

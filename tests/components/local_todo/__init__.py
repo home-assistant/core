@@ -1,1 +1,1 @@
-"""Tests for the Local To-do integration."""
+"""Tests for the local_todo integration."""

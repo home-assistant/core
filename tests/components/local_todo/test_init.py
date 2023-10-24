@@ -1,4 +1,4 @@
-"""Tests for init platform of local todo."""
+"""Tests for init platform of local_todo."""
 
 from unittest.mock import patch
 
