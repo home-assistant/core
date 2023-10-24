@@ -22,9 +22,8 @@ async def async_get_config_entry_diagnostics(
 
     api: Blink = hass.data[DOMAIN][config_entry.entry_id].api
 
-    cameras = {api.cameras[camera] for camera in api.cameras}
     data = {}
-    for camera in cameras:
+    for _, camera in api.cameras.items():
         data[camera.name] = dict(camera.attributes.items())
 
     diagnostics_data = {
