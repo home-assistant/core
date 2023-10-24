@@ -171,12 +171,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         # mypy is not aware that we can't get here without having these set already
         assert self._discovery_info is not None
-        self._discovery_info = async_last_service_info(
+        discovery_info = self._discovery_info = async_last_service_info(
             self.hass, self._discovery_info.address
         )
-        if not self._discovery_info:
+        if not discovery_info:
             return self.async_abort(reason="cannot_connect")
-        service_data = self._discovery_info.service_data
+        service_data = discovery_info.service_data
         improv_service_data = ImprovServiceData.from_bytes(
             service_data[SERVICE_DATA_UUID]
         )
@@ -187,7 +187,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_provisioned")
 
         if not self._device:
-            self._device = ImprovBLEClient(self._discovery_info.device)
+            self._device = ImprovBLEClient(discovery_info.device)
         device = self._device
 
         if self._can_identify is None:
