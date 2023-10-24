@@ -15,7 +15,7 @@ env:
 jobs:
   init:
     name: Initialize build
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'jaredAmpo'
     runs-on: ubuntu-latest
     outputs:
       architectures: ${{ steps.info.outputs.architectures }}
@@ -53,7 +53,7 @@ jobs:
     environment: ${{ needs.init.outputs.channel }}
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
+    if: github.repository_owner == 'jaredAmpo' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4.1.0
@@ -86,7 +86,7 @@ jobs:
 
   build_base:
     name: Build ${{ matrix.arch }} base core image
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'jaredAmpo'
     needs: init
     runs-on: ubuntu-latest
     permissions:
@@ -219,7 +219,7 @@ jobs:
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'jaredAmpo'
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     permissions:
@@ -284,7 +284,7 @@ jobs:
   publish_ha:
     name: Publish version files
     environment: ${{ needs.init.outputs.channel }}
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'jaredAmpo'
     needs: ["init", "build_machine"]
     runs-on: ubuntu-latest
     steps:
@@ -318,7 +318,7 @@ jobs:
   publish_container:
     name: Publish meta container for ${{ matrix.registry }}
     environment: ${{ needs.init.outputs.channel }}
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'jaredAmpo'
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     permissions:

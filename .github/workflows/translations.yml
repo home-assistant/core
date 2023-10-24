@@ -15,7 +15,7 @@ env:
 jobs:
   upload:
     name: Upload
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'jaredAmpo'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository

@@ -7,7 +7,7 @@ on:
 
 jobs:
   lock:
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'jaredAmpo'
     runs-on: ubuntu-latest
     steps:
       - uses: dessant/lock-threads@v4.0.1

@@ -22,7 +22,7 @@ concurrency:
 jobs:
   init:
     name: Initialize wheels builder
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'jaredAmpo'
     runs-on: ubuntu-latest
     outputs:
       architectures: ${{ steps.info.outputs.architectures }}
@@ -76,7 +76,7 @@ jobs:
 
   core:
     name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'jaredAmpo'
     needs: init
     runs-on: ubuntu-latest
     strategy:
@@ -114,7 +114,7 @@ jobs:
 
   integrations_cp311:
     name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'jaredAmpo'
     needs: init
     runs-on: ubuntu-latest
     strategy:
