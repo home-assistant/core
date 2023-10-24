@@ -143,8 +143,8 @@ def validate_user_input(
 
 
 RANDOM_TYPES = [
-    "binary_sensor",
-    "sensor",
+    Platform.BINARY_SENSOR.value,
+    Platform.SENSOR.value,
 ]
 
 CONFIG_FLOW = {
