@@ -73,7 +73,7 @@ def _todo_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
 def _convert_item(item: TodoItem) -> Todo:
     """Convert a HomeAssistant TodoItem to an ical Todo."""
     try:
-        return Todo.parse_obj(dataclasses.asdict(item, dict_factory=_todo_dict_factory))
+        return Todo(**dataclasses.asdict(item, dict_factory=_todo_dict_factory))
     except ValidationError as err:
         _LOGGER.debug("Error parsing todo input fields: %s (%s)", item, str(err))
         raise HomeAssistantError("Error parsing todo input fields") from err
