@@ -25,7 +25,7 @@ ATTR_IMAGE_AUTH = "auth"
 
 # Additional Parameters for Persistent Notifications
 ATTR_PERSISTENT = "is_persistent"
-ATTR_TEXT_COLOR = "text_color"
+ATTR_MESSAGE_COLOR = "message_color"
 ATTR_BORDER_COLOR = "border_color"
 ATTR_BG_COLOR = "bg_color"
 ATTR_SHAPE = "shape"

@@ -44,11 +44,11 @@ from .const import (
     ATTR_IMAGE_PATH,
     ATTR_IMAGE_URL,
     ATTR_IMAGE_USERNAME,
+    ATTR_MESSAGE_COLOR,
     ATTR_PERSISTENT,
     ATTR_POSITION,
     ATTR_SHAPE,
     ATTR_SOURCE_NAME,
-    ATTR_TEXT_COLOR,
     ATTR_VISIBLE,
 )
 
@@ -156,7 +156,7 @@ class TvOverlayNotificationService(BaseNotificationService):
             image = await self._populate_image(image_data) if image_data else None
 
         is_persistent = cv.boolean(data.get(ATTR_PERSISTENT, False))
-        text_color = data.get(ATTR_TEXT_COLOR)
+        message_color = data.get(ATTR_MESSAGE_COLOR)
         border_color = data.get(ATTR_BORDER_COLOR)
         bg_color = data.get(ATTR_BG_COLOR)
         shape = data.get(ATTR_SHAPE, Shapes.CIRCLE.value) or Shapes.CIRCLE.value
@@ -178,7 +178,7 @@ class TvOverlayNotificationService(BaseNotificationService):
                 id=message_id,
                 icon=badge_icon,
                 iconColor=badge_color,
-                textColor=text_color,
+                textColor=message_color,
                 borderColor=border_color,
                 backgroundColor=bg_color,
                 shape=shape,
