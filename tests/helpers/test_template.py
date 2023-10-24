@@ -632,8 +632,8 @@ def test_is_datetime(hass: HomeAssistant, value, expected) -> None:
         (datetime(2024, 1, 1, 0, 0, 0), False),
     ],
 )
-def test_stringlike(hass: HomeAssistant, value, expected) -> None:
-    """Test string_like."""
+def test_is_string_like(hass: HomeAssistant, value, expected) -> None:
+    """Test is string_like."""
     assert (
         template.Template("{{ value is string_like }}", hass).async_render(
             {"value": value}
