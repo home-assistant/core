@@ -585,6 +585,7 @@ async def test_service_calls(
         {
             "name": "backup_name",
             "location": "backup_share",
+            "homeassistant_exclude_database": True,
         },
     )
     await hass.async_block_till_done()
@@ -593,6 +594,7 @@ async def test_service_calls(
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "backup_name",
         "location": "backup_share",
+        "homeassistant_exclude_database": True,
     }
 
     await hass.services.async_call(
@@ -690,6 +692,7 @@ async def test_service_calls_core(
     hassio_env, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Call core service and check the API calls behind that."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "hassio", {})
 
     aioclient_mock.post("http://127.0.0.1/homeassistant/restart", json={"result": "ok"})

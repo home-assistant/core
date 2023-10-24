@@ -122,26 +122,46 @@ async def test_invalid_json(
         assert not mock_dispatcher_send.called
 
 
+@pytest.mark.parametrize("domain", [*list(mqtt.PLATFORMS), "device_automation", "tag"])
 @pytest.mark.no_fail_on_log_exception
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_discovery_schema_error(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
+    domain: Platform | str,
 ) -> None:
     """Test unexpected error JSON config."""
     with patch(
-        "homeassistant.components.mqtt.binary_sensor.DISCOVERY_SCHEMA",
+        f"homeassistant.components.mqtt.{domain}.DISCOVERY_SCHEMA",
         side_effect=AttributeError("Attribute abc not found"),
     ):
         await mqtt_mock_entry()
         async_fire_mqtt_message(
             hass,
-            "homeassistant/binary_sensor/bla/config",
-            '{"name": "Beer", "state_topic": "ok"}',
+            f"homeassistant/{domain}/bla/config",
+            '{"name": "Beer", "some_topic": "bla"}',
         )
         await hass.async_block_till_done()
         assert "AttributeError: Attribute abc not found" in caplog.text
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.ALARM_CONTROL_PANEL])
+async def test_invalid_config(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sending in JSON that violates the platform schema."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/alarm_control_panel/bla/config",
+        '{"name": "abc", "state_topic": "home/alarm", '
+        '"command_topic": "home/alarm/set", '
+        '"qos": "some_invalid_value"}',
+    )
+    await hass.async_block_till_done()
+    assert "Error 'expected int for dictionary value @ data['qos']'" in caplog.text
 
 
 async def test_only_valid_components(

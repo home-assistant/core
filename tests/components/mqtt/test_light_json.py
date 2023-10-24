@@ -197,9 +197,8 @@ async def test_fail_setup_if_no_command_topic(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if setup fails with no command topic."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert "Invalid config for [mqtt]: required key not provided" in caplog.text
+    assert await mqtt_mock_entry()
+    assert "required key not provided" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -217,12 +216,8 @@ async def test_fail_setup_if_color_mode_deprecated(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if setup fails if color mode is combined with deprecated config keys."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: color_mode must not be combined with any of"
-        in caplog.text
-    )
+    assert await mqtt_mock_entry()
+    assert "color_mode must not be combined with any of" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -250,7 +245,7 @@ async def test_fail_setup_if_color_mode_deprecated(
                 COLOR_MODES_CONFIG,
                 ({"supported_color_modes": ["unknown"]},),
             ),
-            "Invalid config for [mqtt]: value must be one of [<ColorMode.",
+            "value must be one of [<ColorMode.",
         ),
     ],
 )
@@ -261,8 +256,7 @@ async def test_fail_setup_if_color_modes_invalid(
     error: str,
 ) -> None:
     """Test if setup fails if supported color modes is invalid."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
     assert error in caplog.text
 
 
@@ -525,7 +519,7 @@ async def test_controlling_state_via_topic(
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON", "color_temp":null}')
 
     light_state = hass.states.get("light.test")
-    assert "color_temp" not in light_state.attributes
+    assert light_state.attributes.get("color_temp") is None
 
     async_fire_mqtt_message(
         hass, "test_light_rgb", '{"state":"ON", "effect":"colorloop"}'
@@ -983,8 +977,8 @@ async def test_sending_mqtt_commands_and_optimistic2(
     assert state.attributes["hs_color"] == (359, 78)
     assert state.attributes["rgb_color"] == (255, 56, 59)
     assert state.attributes["xy_color"] == (0.654, 0.301)
-    assert "rgbw_color" not in state.attributes
-    assert "rgbww_color" not in state.attributes
+    assert state.attributes["rgbw_color"] is None
+    assert state.attributes["rgbww_color"] is None
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
         JsonValidator(
@@ -1004,8 +998,8 @@ async def test_sending_mqtt_commands_and_optimistic2(
     assert state.attributes["hs_color"] == (30.118, 100.0)
     assert state.attributes["rgb_color"] == (255, 128, 0)
     assert state.attributes["xy_color"] == (0.611, 0.375)
-    assert "rgbw_color" not in state.attributes
-    assert "rgbww_color" not in state.attributes
+    assert state.attributes["rgbw_color"] is None
+    assert state.attributes["rgbww_color"] is None
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
         JsonValidator('{"state": "ON", "color": {"r": 255, "g": 128, "b": 0} }'),
@@ -1023,7 +1017,7 @@ async def test_sending_mqtt_commands_and_optimistic2(
     assert state.attributes["rgbw_color"] == (255, 128, 0, 123)
     assert state.attributes["hs_color"] == (30.0, 67.451)
     assert state.attributes["rgb_color"] == (255, 169, 83)
-    assert "rgbww_color" not in state.attributes
+    assert state.attributes["rgbww_color"] is None
     assert state.attributes["xy_color"] == (0.526, 0.393)
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
@@ -1044,7 +1038,7 @@ async def test_sending_mqtt_commands_and_optimistic2(
     assert state.attributes["rgbww_color"] == (255, 128, 0, 45, 32)
     assert state.attributes["hs_color"] == (29.872, 92.157)
     assert state.attributes["rgb_color"] == (255, 137, 20)
-    assert "rgbw_color" not in state.attributes
+    assert state.attributes["rgbw_color"] is None
     assert state.attributes["xy_color"] == (0.596, 0.382)
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
@@ -1067,8 +1061,8 @@ async def test_sending_mqtt_commands_and_optimistic2(
     assert state.attributes["hs_color"] == (196.471, 100.0)
     assert state.attributes["rgb_color"] == (0, 185, 255)
     assert state.attributes["xy_color"] == (0.123, 0.223)
-    assert "rgbw_color" not in state.attributes
-    assert "rgbww_color" not in state.attributes
+    assert state.attributes["rgbw_color"] is None
+    assert state.attributes["rgbww_color"] is None
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
         JsonValidator(
@@ -1085,11 +1079,11 @@ async def test_sending_mqtt_commands_and_optimistic2(
     assert state.state == STATE_ON
     assert state.attributes["brightness"] == 75
     assert state.attributes["color_mode"] == "white"
-    assert "hs_color" not in state.attributes
-    assert "rgb_color" not in state.attributes
-    assert "xy_color" not in state.attributes
-    assert "rgbw_color" not in state.attributes
-    assert "rgbww_color" not in state.attributes
+    assert state.attributes["hs_color"] is None
+    assert state.attributes["rgb_color"] is None
+    assert state.attributes["xy_color"] is None
+    assert state.attributes["rgbw_color"] is None
+    assert state.attributes["rgbww_color"] is None
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
         JsonValidator('{"state": "ON", "white": 75}'),
@@ -1104,11 +1098,11 @@ async def test_sending_mqtt_commands_and_optimistic2(
     assert state.state == STATE_ON
     assert state.attributes["brightness"] == 60
     assert state.attributes["color_mode"] == "white"
-    assert "hs_color" not in state.attributes
-    assert "rgb_color" not in state.attributes
-    assert "xy_color" not in state.attributes
-    assert "rgbw_color" not in state.attributes
-    assert "rgbww_color" not in state.attributes
+    assert state.attributes["hs_color"] is None
+    assert state.attributes["rgb_color"] is None
+    assert state.attributes["xy_color"] is None
+    assert state.attributes["rgbw_color"] is None
+    assert state.attributes["rgbww_color"] is None
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
         JsonValidator('{"state": "ON", "white": 60}'),
