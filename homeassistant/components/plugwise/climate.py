@@ -73,11 +73,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             self.device["thermostat"]["resolution"], 0.1
         )
 
-        # Determine stable hvac_modes
-        self._hvac_modes: list[HVACMode] = [HVACMode.HEAT]
-        if self.coordinator.data.gateway["cooling_present"]:
-            self._hvac_modes = [HVACMode.HEAT_COOL]
-
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
@@ -118,7 +113,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVACModes."""
-        hvac_modes = self._hvac_modes
+        hvac_modes: list[HVACMode] = [HVACMode.HEAT]
+        if self.coordinator.data.gateway["cooling_present"]:
+            hvac_modes = [HVACMode.HEAT_COOL]
+
         if self.device["available_schedules"] != ["None"]:
             if HVACMode.AUTO not in hvac_modes:
                 hvac_modes.append(HVACMode.AUTO)
