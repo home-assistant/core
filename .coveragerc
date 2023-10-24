@@ -1521,8 +1521,6 @@ omit =
     homeassistant/components/tuya/switch.py
     homeassistant/components/tuya/util.py
     homeassistant/components/tuya/vacuum.py
-    homeassistant/components/tvoverlay/__init__.py
-    homeassistant/components/tvoverlay/notify.py
     homeassistant/components/twilio_call/notify.py
     homeassistant/components/twilio_sms/notify.py
     homeassistant/components/twitter/notify.py
