@@ -1513,7 +1513,7 @@ py-cpuinfo==9.0.0
 py-dormakaba-dkey==1.0.5
 
 # homeassistant.components.improv_ble
-py-improv-ble-client==1.0.2
+py-improv-ble-client==1.0.3
 
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4
