@@ -93,7 +93,9 @@ def get_arguments() -> argparse.Namespace:
         help="Directory that contains the Home Assistant configuration",
     )
     parser.add_argument(
-        "--safe-mode", action="store_true", help="Start Home Assistant in safe mode"
+        "--recovery-mode",
+        action="store_true",
+        help="Start Home Assistant in recovery mode",
     )
     parser.add_argument(
         "--debug", action="store_true", help="Start Home Assistant in debug mode"
@@ -193,7 +195,7 @@ def main() -> int:
         log_no_color=args.log_no_color,
         skip_pip=args.skip_pip,
         skip_pip_packages=args.skip_pip_packages,
-        safe_mode=args.safe_mode,
+        recovery_mode=args.recovery_mode,
         debug=args.debug,
         open_ui=args.open_ui,
     )

@@ -87,7 +87,7 @@ class MediaExtractor:
 
     def get_entities(self) -> list[str]:
         """Return list of entities."""
-        return self.call_data.get(ATTR_ENTITY_ID, [])
+        return self.call_data.get(ATTR_ENTITY_ID, [])  # type: ignore[no-any-return]
 
     def extract_and_send(self) -> None:
         """Extract exact stream format for each entity_id and play it."""

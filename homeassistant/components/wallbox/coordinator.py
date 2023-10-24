@@ -19,7 +19,6 @@ from .const import (
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
-    CHARGER_STATUS,
     CHARGER_STATUS_DESCRIPTION_KEY,
     CHARGER_STATUS_ID_KEY,
     CODE_KEY,
@@ -29,6 +28,39 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Translation of StatusId based on Wallbox portal code:
+# https://my.wallbox.com/src/utilities/charger/chargerStatuses.js
+CHARGER_STATUS: dict[int, ChargerStatus] = {
+    0: ChargerStatus.DISCONNECTED,
+    14: ChargerStatus.ERROR,
+    15: ChargerStatus.ERROR,
+    161: ChargerStatus.READY,
+    162: ChargerStatus.READY,
+    163: ChargerStatus.DISCONNECTED,
+    164: ChargerStatus.WAITING,
+    165: ChargerStatus.LOCKED,
+    166: ChargerStatus.UPDATING,
+    177: ChargerStatus.SCHEDULED,
+    178: ChargerStatus.PAUSED,
+    179: ChargerStatus.SCHEDULED,
+    180: ChargerStatus.WAITING_FOR_CAR,
+    181: ChargerStatus.WAITING_FOR_CAR,
+    182: ChargerStatus.PAUSED,
+    183: ChargerStatus.WAITING_IN_QUEUE_POWER_SHARING,
+    184: ChargerStatus.WAITING_IN_QUEUE_POWER_SHARING,
+    185: ChargerStatus.WAITING_IN_QUEUE_POWER_BOOST,
+    186: ChargerStatus.WAITING_IN_QUEUE_POWER_BOOST,
+    187: ChargerStatus.WAITING_MID_FAILED,
+    188: ChargerStatus.WAITING_MID_SAFETY,
+    189: ChargerStatus.WAITING_IN_QUEUE_ECO_SMART,
+    193: ChargerStatus.CHARGING,
+    194: ChargerStatus.CHARGING,
+    195: ChargerStatus.CHARGING,
+    196: ChargerStatus.DISCHARGING,
+    209: ChargerStatus.LOCKED,
+    210: ChargerStatus.LOCKED_CAR_CONNECTED,
+}
 
 
 class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -116,6 +148,21 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self.hass.async_add_executor_job(
             self._set_charging_current, charging_current
         )
+        await self.async_request_refresh()
+
+    def _set_energy_cost(self, energy_cost: float) -> None:
+        """Set energy cost for Wallbox."""
+        try:
+            self._authenticate()
+            self._wallbox.setEnergyCost(self._station, energy_cost)
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 403:
+                raise InvalidAuth from wallbox_connection_error
+            raise ConnectionError from wallbox_connection_error
+
+    async def async_set_energy_cost(self, energy_cost: float) -> None:
+        """Set energy cost for Wallbox."""
+        await self.hass.async_add_executor_job(self._set_energy_cost, energy_cost)
         await self.async_request_refresh()
 
     def _set_lock_unlock(self, lock: bool) -> None:

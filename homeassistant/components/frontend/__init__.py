@@ -17,7 +17,12 @@ from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
-from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_THEMES_UPDATED
+from homeassistant.const import (
+    CONF_MODE,
+    CONF_NAME,
+    EVENT_PANELS_UPDATED,
+    EVENT_THEMES_UPDATED,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
@@ -40,7 +45,6 @@ CONF_EXTRA_MODULE_URL = "extra_module_url"
 CONF_EXTRA_JS_URL_ES5 = "extra_js_url_es5"
 CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
-EVENT_PANELS_UPDATED = "panels_updated"
 
 DEFAULT_THEME_COLOR = "#03A9F4"
 
@@ -654,18 +658,18 @@ def websocket_get_themes(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get themes command."""
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode:
         connection.send_message(
             websocket_api.result_message(
                 msg["id"],
                 {
                     "themes": {
-                        "safe_mode": {
+                        "recovery_mode": {
                             "primary-color": "#db4437",
                             "accent-color": "#ffca28",
                         }
                     },
-                    "default_theme": "safe_mode",
+                    "default_theme": "recovery_mode",
                 },
             )
         )

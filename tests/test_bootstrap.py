@@ -488,7 +488,7 @@ async def test_setup_hass(
                 log_file=log_file,
                 log_no_color=log_no_color,
                 skip_pip=True,
-                safe_mode=False,
+                recovery_mode=False,
             ),
         )
 
@@ -547,7 +547,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
                 log_file=log_file,
                 log_no_color=log_no_color,
                 skip_pip=True,
-                safe_mode=False,
+                recovery_mode=False,
             ),
         )
 
@@ -574,7 +574,7 @@ async def test_setup_hass_invalid_yaml(
                 log_file="",
                 log_no_color=False,
                 skip_pip=True,
-                safe_mode=False,
+                recovery_mode=False,
             ),
         )
 
@@ -602,7 +602,7 @@ async def test_setup_hass_config_dir_nonexistent(
                 log_file="",
                 log_no_color=False,
                 skip_pip=True,
-                safe_mode=False,
+                recovery_mode=False,
             ),
         )
         is None
@@ -630,7 +630,7 @@ async def test_setup_hass_safe_mode(
                 log_file="",
                 log_no_color=False,
                 skip_pip=True,
-                safe_mode=True,
+                recovery_mode=True,
             ),
         )
 
@@ -661,7 +661,7 @@ async def test_setup_hass_invalid_core_config(
             log_file="",
             log_no_color=False,
             skip_pip=True,
-            safe_mode=False,
+            recovery_mode=False,
         ),
     )
 
@@ -704,7 +704,7 @@ async def test_setup_safe_mode_if_no_frontend(
             log_file=log_file,
             log_no_color=log_no_color,
             skip_pip=True,
-            safe_mode=False,
+            recovery_mode=False,
         ),
     )
 
