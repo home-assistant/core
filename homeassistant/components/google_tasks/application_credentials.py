@@ -1,4 +1,4 @@
-"""application_credentials platform the Google Tasks integration."""
+"""Application credentials platform for the Google Tasks integration."""
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant
