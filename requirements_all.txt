@@ -147,7 +147,7 @@ TwitterAPI==2.7.12
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==1.0.0
+accuweather==2.0.0
 
 # homeassistant.components.adax
 adax==0.3.0
@@ -882,7 +882,7 @@ georss-qld-bushfire-alert-client==0.5
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==3.1.0
+gios==3.2.0
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -1276,7 +1276,7 @@ netdata==1.1.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==2.1.0
+nettigo-air-monitor==2.2.0
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1455,7 +1455,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.33.1
+plugwise==0.33.2
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
