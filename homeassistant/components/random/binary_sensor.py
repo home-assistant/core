@@ -46,7 +46,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize config entry."""
     async_add_entities(
-        [RandomBinarySensor(dict(config_entry.options), config_entry.entry_id)], True
+        [RandomBinarySensor(config_entry.options, config_entry.entry_id)], True
     )
 
 
