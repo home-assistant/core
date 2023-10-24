@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LOCATION, PERCENTAGE, EntityCategory
@@ -79,7 +80,9 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
             ATTR_STATE_MESSAGE: printer.state.message,
             ATTR_STATE_REASON: printer.state.reasons,
             ATTR_COMMAND_SET: printer.info.command_set,
-            ATTR_URI_SUPPORTED: ",".join(printer.info.printer_uri_supported),
+            ATTR_URI_SUPPORTED: ",".join(
+                x.uri for x in printer.info.printer_uri_supported
+            ),
         },
         value_fn=lambda printer: printer.state.printer_state,
     ),
@@ -119,6 +122,7 @@ async def async_setup_entry(
                     name=marker.name,
                     icon="mdi:water",
                     native_unit_of_measurement=PERCENTAGE,
+                    state_class=SensorStateClass.MEASUREMENT,
                     attributes_fn=_get_marker_attributes_fn(
                         index,
                         lambda marker: {
