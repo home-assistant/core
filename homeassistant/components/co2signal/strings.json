@@ -50,5 +50,14 @@
         }
       }
     }
+  },
+  "selector": {
+    "location": {
+      "options": {
+        "use_home_location": "Use home location",
+        "specify_coordinates": "Specify coordinates",
+        "specify_country_code": "Specify country code"
+      }
+    }
   }
 }

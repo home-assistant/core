@@ -96,8 +96,8 @@ components: &components
   - homeassistant/components/persistent_notification/**
   - homeassistant/components/person/**
   - homeassistant/components/recorder/**
+  - homeassistant/components/recovery_mode/**
   - homeassistant/components/repairs/**
-  - homeassistant/components/safe_mode/**
   - homeassistant/components/script/**
   - homeassistant/components/shopping_list/**
   - homeassistant/components/ssdp/**
