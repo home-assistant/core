@@ -1956,37 +1956,37 @@ def is_number(value):
     return True
 
 
-def is_list(value: Any) -> bool:
+def _is_list(value: Any) -> bool:
     """Return whether a value is a list."""
     return isinstance(value, list)
 
 
-def is_set(value: Any) -> bool:
+def _is_set(value: Any) -> bool:
     """Return whether a value is a set."""
     return isinstance(value, set)
 
 
-def is_tuple(value: Any) -> bool:
+def _is_tuple(value: Any) -> bool:
     """Return whether a value is a tuple."""
     return isinstance(value, tuple)
 
 
-def _set(value: Any) -> set[Any]:
+def _to_set(value: Any) -> set[Any]:
     """Convert value to set."""
     return set(value)
 
 
-def _tuple(value):
+def _to_tuple(value):
     """Convert value to tuple."""
     return tuple(value)
 
 
-def is_datetime(value: Any) -> bool:
+def _is_datetime(value: Any) -> bool:
     """Return whether a value is a datetime."""
     return isinstance(value, datetime)
 
 
-def is_string_like(value: Any) -> bool:
+def _is_string_like(value: Any) -> bool:
     """Return whether a value is a string or string like object."""
     return isinstance(value, (str, bytes, bytearray))
 
@@ -2422,8 +2422,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
         self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["is_number"] = is_number
-        self.globals["set"] = _set
-        self.globals["tuple"] = _tuple
+        self.globals["set"] = _to_set
+        self.globals["tuple"] = _to_tuple
         self.globals["int"] = forgiving_int
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack
@@ -2432,11 +2432,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
         self.tests["is_number"] = is_number
-        self.tests["list"] = is_list
-        self.tests["set"] = is_set
-        self.tests["tuple"] = is_tuple
-        self.tests["datetime"] = is_datetime
-        self.tests["string_like"] = is_string_like
+        self.tests["list"] = _is_list
+        self.tests["set"] = _is_set
+        self.tests["tuple"] = _is_tuple
+        self.tests["datetime"] = _is_datetime
+        self.tests["string_like"] = _is_string_like
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
         self.tests["contains"] = contains
