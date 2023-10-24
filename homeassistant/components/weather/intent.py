@@ -26,29 +26,38 @@ class GetWeatherIntent(intent.IntentHandler):
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
+        hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
 
         weather: WeatherEntity | None = None
-        component: EntityComponent[WeatherEntity] = intent_obj.hass.data[DOMAIN]
+        component: EntityComponent[WeatherEntity] = hass.data[DOMAIN]
         entities = list(component.entities)
 
         if "name" in slots:
             # Named weather entity
-            name = str(slots["name"]["value"]).strip().casefold()
-            for maybe_weather in entities:
-                if not isinstance(maybe_weather.name, str):
-                    continue
+            weather_name = slots["name"]["value"]
 
-                if maybe_weather.name.strip().casefold() == name:
-                    weather = maybe_weather
+            # Find matching weather entity
+            matching_states = intent.async_match_states(
+                hass, name=weather_name, domains=[DOMAIN]
+            )
+            for weather_state in matching_states:
+                for maybe_weather in entities:
+                    if maybe_weather.name == weather_state.name:
+                        weather = maybe_weather
+                        break
+
+                if weather is not None:
                     break
 
             if weather is None:
-                raise intent.IntentHandleError(f"No weather entity named {name}")
-
-        if (weather is None) and entities:
+                raise intent.IntentHandleError(
+                    f"No weather entity named {weather_name}"
+                )
+        elif entities:
             # First weather entity
             weather = entities[0]
+            weather_name = weather.name
 
         if weather is None:
             raise intent.IntentHandleError("No weather entity")
@@ -62,13 +71,13 @@ class GetWeatherIntent(intent.IntentHandler):
             success_results=[
                 intent.IntentResponseTarget(
                     type=intent.IntentResponseTargetType.ENTITY,
-                    name=weather.name if isinstance(weather.name, str) else "",
+                    name=weather_name,
                     id=weather.entity_id,
                 )
             ]
         )
 
-        state = intent_obj.hass.states.get(weather.entity_id)
+        state = hass.states.get(weather.entity_id)
         if state is None:
             raise intent.IntentHandleError(f"No state for {weather.entity_id}")
 
