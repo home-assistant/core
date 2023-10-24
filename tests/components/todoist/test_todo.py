@@ -1,4 +1,4 @@
-"""Unit tests for the Todoist calendar platform."""
+"""Unit tests for the Todoist todo platform."""
 from unittest.mock import AsyncMock
 
 import pytest
@@ -188,7 +188,7 @@ async def test_delete_todo_item(
     setup_integration: None,
     api: AsyncMock,
 ) -> None:
-    """Test for deleting a To-do Item that changes the summary."""
+    """Test for deleting a To-do Item."""
 
     api.get_tasks.return_value = [
         make_api_task(id="task-id-1", content="Soda", is_completed=False),
