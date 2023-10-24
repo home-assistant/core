@@ -1,6 +1,6 @@
 """Rest API for Home Assistant."""
 import asyncio
-from asyncio import timeout
+from asyncio import shield, timeout
 from functools import lru_cache
 from http import HTTPStatus
 import logging
@@ -57,6 +57,7 @@ ATTR_VERSION = "version"
 DOMAIN = "api"
 STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
+SERVICE_WAIT_TIMEOUT = 10
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -371,11 +372,16 @@ class APIDomainServicesView(HomeAssistantView):
         context = self.context(request)
 
         try:
-            await hass.services.async_call(
-                domain, service, data, blocking=True, context=context
-            )
+            async with timeout(SERVICE_WAIT_TIMEOUT):
+                await shield(
+                    hass.services.async_call(
+                        domain, service, data, blocking=True, context=context
+                    )
+                )
         except (vol.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest() from ex
+        except TimeoutError:
+            pass
 
         changed_states = []
 
