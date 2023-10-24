@@ -36,12 +36,12 @@ def ws_req_id() -> Callable[[], int]:
 
     id = 0
 
-    def next() -> int:
+    def next_id() -> int:
         nonlocal id
         id += 1
         return id
 
-    return next
+    return next_id
 
 
 @pytest.fixture
@@ -118,12 +118,12 @@ async def test_get_items(
         {
             "uid": "task-1",
             "summary": "Task 1",
-            "status": "NEEDS-ACTION",
+            "status": "needs_action",
         },
         {
             "uid": "task-2",
             "summary": "Task 2",
-            "status": "COMPLETED",
+            "status": "completed",
         },
     ]
 

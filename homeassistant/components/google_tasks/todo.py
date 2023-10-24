@@ -34,6 +34,7 @@ async def async_setup_entry(
             GoogleTaskTodoListEntity(
                 TaskUpdateCoordinator(hass, api, task_list["id"]),
                 task_list["title"],
+                entry.entry_id,
                 task_list["id"],
             )
             for task_list in task_lists
@@ -51,12 +52,13 @@ class GoogleTaskTodoListEntity(CoordinatorEntity, TodoListEntity):
         self,
         coordinator: TaskUpdateCoordinator,
         name: str,
-        unique_id: str,
+        config_entry_id: str,
+        task_list_id: str,
     ) -> None:
         """Initialize LocalTodoListEntity."""
         super().__init__(coordinator)
         self._attr_name = name.capitalize()
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = f"{config_entry_id}-{task_list_id}"
 
     @property
     def todo_items(self) -> list[TodoItem] | None:
