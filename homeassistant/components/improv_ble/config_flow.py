@@ -179,9 +179,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # mypy is not aware that we can't get here without having these set already
         assert self._discovery_info is not None
 
-        # if self._remove_bluetooth_callback:
-        #    self._remove_bluetooth_callback()
-        #    self._remove_bluetooth_callback = None
+        if self._remove_bluetooth_callback:
+            self._remove_bluetooth_callback()
+            self._remove_bluetooth_callback = None
 
         if user_input is None:
             name = self._discovery_info.name or self._discovery_info.address
