@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components.local_todo import LocalTodoListStore
 from homeassistant.components.local_todo.const import CONF_TODO_LIST_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
 from tests.common import MockConfigEntry
@@ -72,7 +71,7 @@ def mock_store_error() -> bool:
 
 @pytest.fixture(name="store", autouse=True)
 def mock_store(ics_content: str, store_error: bool) -> Generator[None, None, None]:
-    """Test cleanup, remove any media storage persisted during the test."""
+    """Fixture that sets up a fake local storage object."""
 
     stores: dict[Path, FakeStore] = {}
 
@@ -99,5 +98,5 @@ def mock_config_entry() -> MockConfigEntry:
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Set up the integration."""
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
