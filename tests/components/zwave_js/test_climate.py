@@ -985,3 +985,147 @@ async def test_multi_setpoint_thermostat(
     assert state.attributes[ATTR_TEMPERATURE] == 20
 
     client.async_send_command.reset_mock()
+
+
+async def test_invalid_setpoint_thermostat(
+    hass: HomeAssistant, client, climate_danfoss_bad_setpoint, integration
+) -> None:
+    """Test a thermostat that has invalid setpoints."""
+    node = climate_danfoss_bad_setpoint
+
+    # Entities with invalid setpoints are treated as duplicates of the Heating setpoint
+    entity_ids = [
+        "climate.living_connect_z_thermostat",
+        "climate.living_connect_z_thermostat_2",
+        "climate.living_connect_z_thermostat_3",
+    ]
+    for entity_id in entity_ids:
+        heating = hass.states.get(entity_id)
+        assert heating
+        assert heating.state == HVACMode.HEAT
+        assert heating.attributes[ATTR_TEMPERATURE] == 11
+        assert heating.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT]
+        assert (
+            heating.attributes[ATTR_SUPPORTED_FEATURES]
+            == ClimateEntityFeature.TARGET_TEMPERATURE
+        )
+
+        client.async_send_command_no_wait.reset_mock()
+
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_TEMPERATURE: 20.0,
+            },
+            blocking=True,
+        )
+
+        # Test setting illegal mode raises an error
+        with pytest.raises(ValueError):
+            await hass.services.async_call(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_HVAC_MODE,
+                {
+                    ATTR_ENTITY_ID: entity_id,
+                    ATTR_HVAC_MODE: HVACMode.COOL,
+                },
+                blocking=True,
+            )
+
+        # this is a no-op since there's no mode
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_HVAC_MODE: HVACMode.HEAT,
+            },
+            blocking=True,
+        )
+
+        assert len(client.async_send_command_no_wait.call_args_list) == 1
+        args = client.async_send_command_no_wait.call_args_list[0][0][0]
+        assert args["command"] == "node.set_value"
+        assert args["nodeId"] == 5
+        assert args["valueId"] == {
+            "endpoint": 0,
+            "commandClass": 67,
+            "property": "setpoint",
+            "propertyKey": 1,
+        }
+        assert args["value"] == 20.0
+
+        client.async_send_command_no_wait.reset_mock()
+
+        # Test heating setpoint value update from value updated event
+        event = Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": 5,
+                "args": {
+                    "commandClassName": "Thermostat Setpoint",
+                    "commandClass": 67,
+                    "endpoint": 0,
+                    "property": "setpoint",
+                    "propertyKey": 1,
+                    "propertyKeyName": "Heating",
+                    "propertyName": "setpoint",
+                    "newValue": 11,
+                    "prevValue": 20,
+                },
+            },
+        )
+        node.receive_event(event)
+
+        event = Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": 5,
+                "args": {
+                    "commandClassName": "Thermostat Setpoint",
+                    "commandClass": 67,
+                    "endpoint": 0,
+                    "property": "setpoint",
+                    "propertyKey": 3,
+                    "propertyKeyName": "unknown (0x03)",
+                    "propertyName": "setpoint",
+                    "newValue": 24,
+                    "prevValue": 20,
+                },
+            },
+        )
+        node.receive_event(event)
+
+        event = Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": 5,
+                "args": {
+                    "commandClassName": "Thermostat Setpoint",
+                    "commandClass": 67,
+                    "endpoint": 0,
+                    "property": "setpoint",
+                    "propertyKey": 5,
+                    "propertyKeyName": "unknown (0x05)",
+                    "propertyName": "setpoint",
+                    "newValue": 25,
+                    "prevValue": 20,
+                },
+            },
+        )
+        node.receive_event(event)
+
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == HVACMode.HEAT
+        assert state.attributes[ATTR_TEMPERATURE] == 11
+
+        client.async_send_command_no_wait.reset_mock()

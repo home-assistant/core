@@ -674,6 +674,12 @@ def central_scene_node_state_fixture():
     return json.loads(load_fixture("zwave_js/central_scene_node_state.json"))
 
 
+@pytest.fixture(name="climate_danfoss_bad_setpoint_state", scope="session")
+def climate_danfoss_bad_setpoint_state_fixture():
+    """Load Danfoss (LC-13) electronic radiator thermostat with bad setpoints node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_danfoss_bad_setpoint_state.json"))
+
+
 # model fixtures
 
 
@@ -1316,5 +1322,13 @@ def climate_intermatic_pe653_fixture(client, climate_intermatic_pe653_state):
 def central_scene_node_fixture(client, central_scene_node_state):
     """Mock a node with the Central Scene CC."""
     node = Node(client, copy.deepcopy(central_scene_node_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_danfoss_bad_setpoint")
+def climate_danfoss_bad_setpoint_fixture(client, climate_danfoss_bad_setpoint_state):
+    """Mock a Danfoss thermostat with bad setpoint values node."""
+    node = Node(client, copy.deepcopy(climate_danfoss_bad_setpoint_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
