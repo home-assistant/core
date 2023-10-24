@@ -6,5 +6,5 @@
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/google_tasks",
   "iot_class": "cloud_polling",
-  "requirements": ["google-api-python-client==2.71.0"],
+  "requirements": ["google-api-python-client==2.71.0"]
 }
