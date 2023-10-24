@@ -94,6 +94,31 @@ async def test_create_todo_list_item(
     assert state.state == "1"
 
 
+async def test_create_completed_item_unsupported(
+    hass: HomeAssistant,
+    setup_integration: None,
+    api: AsyncMock,
+) -> None:
+    """Test for creating a To-do Item that is already completed."""
+
+    api.get_tasks.return_value = []
+    await async_update_entity(hass, "todo.name")
+    state = hass.states.get("todo.name")
+    assert state
+    assert state.state == "0"
+
+    api.add_task = AsyncMock()
+
+    with pytest.raises(ValueError, match="Only active tasks"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "create_item",
+            {"summary": "Soda", "status": "completed"},
+            target={"entity_id": "todo.name"},
+            blocking=True,
+        )
+
+
 async def test_update_todo_item_status(
     hass: HomeAssistant,
     setup_integration: None,
