@@ -41,7 +41,7 @@ class TvOverlayFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 device_id = (
                     info.get("result", {}).get("status", {}).get("id", DEFAULT_NAME)
                 )
-                unique_id = str(abs(device_id))
+                unique_id = str(device_id).replace("-", "")
                 await self.async_set_unique_id(unique_id)
                 if user_input[CONF_NAME] == DEFAULT_NAME:
                     user_input[CONF_NAME] = device_name
