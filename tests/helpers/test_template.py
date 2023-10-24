@@ -608,8 +608,8 @@ def test_converting_datetime_to_iterable(hass: HomeAssistant) -> None:
         (datetime(2024, 1, 1, 0, 0, 0), True),
     ],
 )
-def test_isdatetime(hass: HomeAssistant, value, expected) -> None:
-    """Test datetime."""
+def test_is_datetime(hass: HomeAssistant, value, expected) -> None:
+    """Test is datetime."""
     assert (
         template.Template("{{ value is datetime }}", hass).async_render(
             {"value": value}
