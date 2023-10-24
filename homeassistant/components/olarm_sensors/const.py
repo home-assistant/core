@@ -1,4 +1,5 @@
 """Module that stores all the constants for the integration."""
+from datetime import timedelta
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -12,6 +13,7 @@ from homeassistant.const import (
 )
 
 VERSION = "2.2.6"
+SCAN_INTERVAL = timedelta(seconds=5)
 DOMAIN = "olarm_sensors"
 AUTHENTICATION_ERROR = "invalid_credentials"
 LOGGER = logging.getLogger(__package__)

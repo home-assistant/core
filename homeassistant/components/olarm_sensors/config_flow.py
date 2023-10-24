@@ -159,27 +159,12 @@ class OlarmSensorsConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_API_KEY,
-                    msg="The api key for your account.",
-                    description={
-                        "suggested_value": "Your Olarm API key",
-                        "description": "API key for accessing the Olarm API. You can find your API key here: https://user.olarm.co/#/api",
-                    },
                 ): cv.string,
                 vol.Required(
                     CONF_SCAN_INTERVAL,
-                    msg="The update interval in seconds.",
-                    description={
-                        "suggested_value": 10,
-                        "description": "Interval, in seconds, at which to scan the Olarm device for sensor data. Minimum value is 5 seconds.",
-                    },
                 ): vol.All(vol.Coerce(int), vol.Range(min=5)),
                 vol.Optional(
                     CONF_ALARM_CODE,
-                    msg="The code for alarm actions. Leave default for no code.",
-                    description={
-                        "suggested_value": "1234567890",
-                        "description": "Alarm Panel Code",
-                    },
                 ): cv.string,
             }
         )
@@ -202,44 +187,20 @@ class OlarmOptionsFlow(OptionsFlow):
 
     def _get_schema(self):
         """Return the data schema for the user form."""
-        if self.config_entry.data[CONF_ALARM_CODE] is None:
-            alarm_code = "1234567890"
-
-        else:
-            alarm_code = self.config_entry.data[CONF_ALARM_CODE]
 
         return vol.Schema(
             {
                 vol.Required(
                     CONF_API_KEY,
-                    msg="The api key for your account.",
-                    description={
-                        "suggested_value": self.config_entry.data[CONF_API_KEY],
-                        "description": "API key for accessing the Olarm API. You can find your API key here: https://user.olarm.co/#/api",
-                    },
                 ): cv.string,
                 vol.Required(
                     CONF_SCAN_INTERVAL,
-                    msg="The update interval in seconds.",
-                    description={
-                        "suggested_value": self.config_entry.data[CONF_SCAN_INTERVAL],
-                        "description": "Interval, in seconds, at which to scan the Olarm device for sensor data. Minimum value is 5 seconds.",
-                    },
                 ): vol.All(vol.Coerce(int), vol.Range(min=5)),
                 vol.Optional(
                     CONF_ALARM_CODE,
-                    msg="The code for alarm actions. Leave default for no code.",
-                    description={
-                        "suggested_value": alarm_code,
-                        "description": "Alarm Panel Code",
-                    },
                 ): cv.string,
                 vol.Optional(
                     CONF_OLARM_DEVICES,
-                    msg="The Olarm devices to load into this Home Assistant instance.",
-                    description={
-                        "description": "The Olarm devices to load into this Home Assistant instance.",
-                    },
                 ): cv.multi_select(self.config_entry.data[OLARM_DEVICE_NAMES]),
             }
         )
