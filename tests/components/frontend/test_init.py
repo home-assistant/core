@@ -8,9 +8,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.frontend import (
-    CONF_EXTRA_HTML_URL,
-    CONF_EXTRA_HTML_URL_ES5,
-    CONF_JS_VERSION,
     CONF_THEMES,
     DEFAULT_THEME_COLOR,
     DOMAIN,
@@ -104,23 +101,6 @@ async def themes_ws_client(hass, hass_ws_client, frontend_themes):
 async def ws_client(hass, hass_ws_client, frontend):
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
-
-
-@pytest.fixture
-async def mock_http_client_with_urls(hass, aiohttp_client, ignore_frontend_deps):
-    """Start the Home Assistant HTTP component."""
-    assert await async_setup_component(
-        hass,
-        "frontend",
-        {
-            DOMAIN: {
-                CONF_JS_VERSION: "auto",
-                CONF_EXTRA_HTML_URL: ["https://domain.com/my_extra_url.html"],
-                CONF_EXTRA_HTML_URL_ES5: ["https://domain.com/my_extra_url_es5.html"],
-            }
-        },
-    )
-    return await aiohttp_client(hass.http.app)
 
 
 @pytest.fixture
