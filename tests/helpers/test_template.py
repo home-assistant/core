@@ -491,8 +491,8 @@ def test_isnumber(hass: HomeAssistant, value, expected) -> None:
         (datetime(2024, 1, 1, 0, 0, 0), False),
     ],
 )
-def test_islist(hass: HomeAssistant, value: Any, expected: bool) -> None:
-    """Test is_list."""
+def test_is_list(hass: HomeAssistant, value: Any, expected: bool) -> None:
+    """Test is list."""
     assert (
         template.Template("{{ value is list }}", hass).async_render({"value": value})
         == expected
