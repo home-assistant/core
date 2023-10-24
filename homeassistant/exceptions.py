@@ -183,6 +183,7 @@ class ServiceNotFound(HomeAssistantError):
     def __init__(self, domain: str, service: str) -> None:
         """Initialize error."""
         super().__init__(self, f"Service {domain}.{service} not found")
+        self.translation_placeholders = {"domain": domain, "service": service}
         self.domain = domain
         self.service = service
 

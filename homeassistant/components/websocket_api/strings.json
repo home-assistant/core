@@ -1,0 +1,10 @@
+{
+  "exceptions": {
+    "service_not_found_general": {
+      "message": "Service not found"
+    },
+    "service_not_found": {
+      "message": "Service {domain}.{service} not found"
+    }
+  }
+}

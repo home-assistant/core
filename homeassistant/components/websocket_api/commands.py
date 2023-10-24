@@ -240,9 +240,15 @@ async def handle_call_service(
         connection.send_result(msg["id"], {"context": context})
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
-            connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Service not found.")
+            err.translation_key = "service_not_found_general"
+            err.domain = const.DOMAIN
+            code = const.ERR_NOT_FOUND
         else:
-            connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
+            err.translation_key = "service_not_found"
+            err.domain = const.DOMAIN
+            code = const.ERR_HOME_ASSISTANT_ERROR
+        message = await async_build_error_message(hass, err)
+        connection.send_error(msg["id"], code, message)
     except vol.Invalid as err:
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
     except ServiceValidationError as err:
