@@ -1,5 +1,6 @@
 """Config flow for Random helper."""
 from collections.abc import Callable, Coroutine, Mapping
+from enum import StrEnum
 from typing import Any, cast
 
 import voluptuous as vol
