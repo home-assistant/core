@@ -13,6 +13,7 @@ CLASSIC_PORT: Final = 8080
 DEVICE_POLLING_DELAY: Final = 60
 LIVISI_STATE_CHANGE: Final = "livisi_state_change"
 LIVISI_SHUTTERSTATE_CHANGE: Final = "livisi_shutterstate_change"
+LIVISI_FETCH_CURRENT_STATE: Final = "livisi_fetch_current_state"
 LIVISI_REACHABILITY_CHANGE: Final = "livisi_reachability_change"
 LIVISI_NAMESPACE_CORE: Final = "core.RWE"
 LIVISI_NAMESPACE_COSIP: Final = "CosipDevices.RWE"

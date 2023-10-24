@@ -176,3 +176,7 @@ class LivisiShutter(LivisiEntity, CoverEntity):
         """Update the state of the switch device."""
         self._attr_current_cover_position = shutterLevel
         self.async_write_ha_state()
+
+    @callback
+    def fetch_current_state(self, data) -> None:
+        """Fetch current state of device."""

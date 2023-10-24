@@ -1,6 +1,7 @@
 """Code to manage fetching LIVISI data API."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 
@@ -20,6 +21,7 @@ from .const import (
     CONF_HOST,
     CONF_PASSWORD,
     DEVICE_POLLING_DELAY,
+    LIVISI_FETCH_CURRENT_STATE,
     LIVISI_REACHABILITY_CHANGE,
     LIVISI_SHUTTERSTATE_CHANGE,
     LIVISI_STATE_CHANGE,
@@ -52,9 +54,25 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         self.controller_type: str = ""
         self.is_avatar: bool = False
         self.port: int = 0
+        self.websocket_had_error = False
+        self.websocket_connected = False
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Get device configuration from LIVISI."""
+        LOGGER.debug(
+            "Update Livisi Data %s/%s",
+            self.websocket_connected,
+            self.websocket_had_error,
+        )
+        if self.websocket_connected and self.websocket_had_error:
+            # Websocket was not OK. Try to get all current states
+            LOGGER.debug("Recovering from websocket error")
+            for device_id in self.devices:
+                self._async_dispatcher_send(
+                    LIVISI_FETCH_CURRENT_STATE, device_id, False
+                )
+            self.websocket_had_error = False
+
         try:
             return await self.async_get_devices()
         except TokenExpiredException:
@@ -134,9 +152,16 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         """Define a handler to fire when the websocket is closed."""
         for device_id in self.devices:
             self._async_dispatcher_send(LIVISI_REACHABILITY_CHANGE, device_id, False)
-
-        await self.websocket.connect(self.on_data, self.on_close, self.port)
+        self.websocket_had_error = True
 
     async def ws_connect(self) -> None:
         """Connect the websocket."""
-        await self.websocket.connect(self.on_data, self.on_close, self.port)
+        while True:
+            try:
+                self.websocket_connected = True
+                await self.websocket.connect(self.on_data, self.on_close, self.port)
+            finally:
+                self.websocket_connected = False
+
+            LOGGER.debug("Livisi websocket died. Retrying in 10 seconds")
+            await asyncio.sleep(10)

@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LIVISI_REACHABILITY_CHANGE
+from .const import DOMAIN, LIVISI_FETCH_CURRENT_STATE, LIVISI_REACHABILITY_CHANGE
 from .coordinator import LivisiDataUpdateCoordinator
 
 
@@ -75,9 +75,20 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
                 self.update_reachability,
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{LIVISI_FETCH_CURRENT_STATE}_{self.unique_id}",
+                self.fetch_current_state,
+            )
+        )
 
     @callback
     def update_reachability(self, is_reachable: bool) -> None:
         """Update the reachability of the device."""
         self._attr_available = is_reachable
         self.async_write_ha_state()
+
+    @callback
+    def fetch_current_state(self, data) -> None:
+        """Fetch current state of device."""
