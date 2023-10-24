@@ -294,3 +294,27 @@ async def test_move_item(
     assert len(items) == 4
     summaries = [item["summary"] for item in items]
     assert summaries == expected_items
+
+
+async def test_move_item_unknown(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test moving a todo item that does not exist."""
+
+    # Prepare items for moving
+    client = await hass_ws_client()
+    data = {
+        "id": 1,
+        "type": "todo/item/move",
+        "entity_id": TEST_ENTITY,
+        "uid": "unknown",
+        "pos": 0,
+    }
+    await client.send_json(data)
+    resp = await client.receive_json()
+    assert resp.get("id") == 1
+    assert not resp.get("success")
+    assert resp.get("error", {}).get("code") == "failed"
+    assert "not found in todo list" in resp["error"]["message"]
