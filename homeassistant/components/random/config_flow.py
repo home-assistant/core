@@ -155,7 +155,7 @@ CONFIG_FLOW = {
         validate_user_input=validate_user_input(Platform.BINARY_SENSOR),
     ),
     Platform.SENSOR: SchemaFlowFormStep(
-        config_schema(Platform.SENSOR),
+        _generate_schema(Platform.SENSOR, _FlowType.CONFIG),
         validate_user_input=validate_user_input(Platform.SENSOR),
     ),
 }
