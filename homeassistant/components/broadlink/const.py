@@ -4,6 +4,7 @@ from homeassistant.const import Platform
 DOMAIN = "broadlink"
 
 DOMAINS_AND_TYPES = {
+    Platform.CLIMATE: {"HYS"},
     Platform.REMOTE: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},
     Platform.SENSOR: {
         "A1",
