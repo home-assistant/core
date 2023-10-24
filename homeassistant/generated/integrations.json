@@ -2614,6 +2614,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "improv_ble": {
+      "name": "Improv via BLE",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "incomfort": {
       "name": "Intergas InComfort/Intouch Lan2RF gateway",
       "integration_type": "hub",

@@ -36,7 +36,7 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
 
-    dev = [
+    entities = [
         TransmissionSpeedSensor(
             coordinator,
             "download_speed",
@@ -79,7 +79,7 @@ async def async_setup_entry(
         ),
     ]
 
-    async_add_entities(dev, True)
+    async_add_entities(entities)
 
 
 class TransmissionSensor(

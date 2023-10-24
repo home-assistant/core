@@ -8,7 +8,7 @@ import transmission_rpc
 from transmission_rpc.session import SessionStats
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -48,13 +48,8 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             hass,
             name=f"{DOMAIN} - {self.host}",
             logger=_LOGGER,
-            update_interval=timedelta(seconds=self.scan_interval),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
-
-    @property
-    def scan_interval(self) -> float:
-        """Return scan interval."""
-        return self.config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     @property
     def limit(self) -> int:
