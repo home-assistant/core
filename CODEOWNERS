@@ -423,8 +423,8 @@ build.json @home-assistant/supervisor
 /tests/components/fritzbox/ @mib1185 @flabbamann
 /homeassistant/components/fritzbox_callmonitor/ @cdce8p
 /tests/components/fritzbox_callmonitor/ @cdce8p
-/homeassistant/components/fronius/ @nielstron @farmio
-/tests/components/fronius/ @nielstron @farmio
+/homeassistant/components/fronius/ @farmio
+/tests/components/fronius/ @farmio
 /homeassistant/components/frontend/ @home-assistant/frontend
 /tests/components/frontend/ @home-assistant/frontend
 /homeassistant/components/frontier_silicon/ @wlcrs
