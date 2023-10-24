@@ -61,21 +61,20 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> TvOverlayNotificationService | None:
     """Get the TvOverlay notification service."""
-    if discovery_info is None:
-        return None
-    notify = await hass.async_add_executor_job(Notifications, discovery_info[CONF_HOST])
-    return TvOverlayNotificationService(
-        notify,
-        hass.config.is_allowed_path,
+    return (
+        TvOverlayNotificationService(discovery_info, hass.config.is_allowed_path)
+        if discovery_info
+        else None
     )
 
 
 class TvOverlayNotificationService(BaseNotificationService):
     """Notification service for TvOverlay."""
 
-    def __init__(self, notify: Notifications, is_allowed_path: Any) -> None:
+    # def __init__(self, notify: Notifications, is_allowed_path: Any) -> None:
+    def __init__(self, config: dict[str, Any], is_allowed_path: Any) -> None:
         """Initialize the service."""
-        self.notify = notify
+        self.notify = Notifications(config[CONF_HOST])
         self.is_allowed_path = is_allowed_path
 
     async def _is_valid_url(self, url: str) -> bool:
@@ -89,6 +88,7 @@ class TvOverlayNotificationService(BaseNotificationService):
                 return False
         else:
             _LOGGER.warning("Invalid URL: %s", url)
+            return False
         return True
 
     async def _is_valid_file(self, filename: str) -> bool:

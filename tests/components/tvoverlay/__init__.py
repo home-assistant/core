@@ -7,6 +7,8 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 HOST = "0.0.0.0"
 NAME = "Android Smart TV"
 
+SERICVE_NAME = NAME.lower().replace(" ", "_")
+
 CONF_CONFIG_FLOW = {
     CONF_HOST: HOST,
     CONF_NAME: NAME,
@@ -38,6 +40,24 @@ def mocked_tvoverlay_info():
     mocked_tvoverlay_info = {"result": {"settings": {"deviceName": NAME}}}
     return patch(
         "homeassistant.components.tvoverlay.config_flow.Notifications.async_connect",
+        return_value=mocked_tvoverlay_info,
+    )
+
+
+def mocked_send_notification():
+    """Create mocked tvoverlay."""
+    mocked_tvoverlay_info = {"result": {"settings": {"deviceName": NAME}}}
+    return patch(
+        "homeassistant.components.tvoverlay.config_flow.Notifications.async_send",
+        return_value=mocked_tvoverlay_info,
+    )
+
+
+def mocked_send_persistent_notification():
+    """Create mocked tvoverlay."""
+    mocked_tvoverlay_info = {"result": {"settings": {"deviceName": NAME}}}
+    return patch(
+        "homeassistant.components.tvoverlay.config_flow.Notifications.async_send_fixed",
         return_value=mocked_tvoverlay_info,
     )
 
