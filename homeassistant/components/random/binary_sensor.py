@@ -55,7 +55,7 @@ class RandomBinarySensor(BinarySensorEntity):
 
     _state: bool | None = None
 
-    def __init__(self, config: dict[str, Any], entry_id: str | None = None) -> None:
+    def __init__(self, config: Mapping[str, Any], entry_id: str | None = None) -> None:
         """Initialize the Random binary sensor."""
         self._name = config.get(CONF_NAME)
         self._device_class = config.get(CONF_DEVICE_CLASS)
