@@ -658,18 +658,18 @@ def websocket_get_themes(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get themes command."""
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode:
         connection.send_message(
             websocket_api.result_message(
                 msg["id"],
                 {
                     "themes": {
-                        "safe_mode": {
+                        "recovery_mode": {
                             "primary-color": "#db4437",
                             "accent-color": "#ffca28",
                         }
                     },
-                    "default_theme": "safe_mode",
+                    "default_theme": "recovery_mode",
                 },
             )
         )

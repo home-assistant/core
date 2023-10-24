@@ -150,7 +150,7 @@ WSDiscovery==2.0.0
 accuweather==1.0.0
 
 # homeassistant.components.adax
-adax==0.2.0
+adax==0.3.0
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.4.4
@@ -159,7 +159,7 @@ adb-shell[async]==0.4.4
 adext==0.4.2
 
 # homeassistant.components.adguard
-adguardhome==0.6.1
+adguardhome==0.6.2
 
 # homeassistant.components.advantage_air
 advantage-air==0.4.4
@@ -192,7 +192,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.2.8
+aioairzone-cloud==0.3.0
 
 # homeassistant.components.airzone
 aioairzone==0.6.9
@@ -237,7 +237,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.0.9
+aioesphomeapi==18.0.11
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -387,7 +387,7 @@ aiowatttime==0.1.1
 aiowebostv==0.3.3
 
 # homeassistant.components.withings
-aiowithings==1.0.0
+aiowithings==1.0.1
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -1455,7 +1455,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.33.0
+plugwise==0.33.1
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1598,7 +1598,7 @@ pyatag==0.3.5.3
 pyatmo==7.5.0
 
 # homeassistant.components.apple_tv
-pyatv==0.13.4
+pyatv==0.14.3
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -1709,7 +1709,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.1.2
 
 # homeassistant.components.fibaro
-pyfibaro==0.7.5
+pyfibaro==0.7.6
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -2163,7 +2163,7 @@ python-mystrom==2.2.0
 python-opendata-transport==0.3.0
 
 # homeassistant.components.opensky
-python-opensky==0.2.0
+python-opensky==0.2.1
 
 # homeassistant.components.otbr
 # homeassistant.components.thread

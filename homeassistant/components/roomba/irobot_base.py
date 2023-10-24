@@ -94,6 +94,7 @@ class IRobotEntity(Entity):
         return DeviceInfo(
             connections=connections,
             identifiers={(DOMAIN, self.robot_unique_id)},
+            serial_number=self.vacuum_state.get("hwPartsRev", {}).get("navSerialNo"),
             manufacturer="iRobot",
             model=self._sku,
             name=str(self._name),
