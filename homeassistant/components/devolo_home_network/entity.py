@@ -12,7 +12,8 @@ from devolo_plc_api.device_api import (
 from devolo_plc_api.plcnet_api import LogicalNetwork
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -51,7 +52,7 @@ class DevoloEntity(Entity):
             identifiers={(DOMAIN, str(device.serial_number))},
             manufacturer="devolo",
             model=device.product,
-            name=entry.title,
+            serial_number=device.serial_number,
             sw_version=device.firmware_version,
         )
         self._attr_translation_key = self.entity_description.key

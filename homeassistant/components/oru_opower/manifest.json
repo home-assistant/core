@@ -1,0 +1,6 @@
+{
+  "domain": "oru_opower",
+  "name": "Orange and Rockland Utilities (ORU) Opower",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

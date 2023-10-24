@@ -1,31 +1,18 @@
 """UniFi Network button platform tests."""
 
-from aiounifi.websocket import WebsocketState
-
-from homeassistant.components.button import (
-    DOMAIN as BUTTON_DOMAIN,
-    ButtonDeviceClass,
-)
-from homeassistant.components.unifi.const import (
-    DOMAIN as UNIFI_DOMAIN,
-)
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    STATE_UNAVAILABLE,
-    EntityCategory,
-)
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonDeviceClass
+from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .test_controller import (
-    setup_unifi_integration,
-)
+from .test_controller import setup_unifi_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_restart_device_button(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
 ) -> None:
     """Test restarting device button."""
     config_entry = await setup_unifi_integration(
@@ -82,11 +69,9 @@ async def test_restart_device_button(
     # Availability signalling
 
     # Controller disconnects
-    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-    await hass.async_block_till_done()
+    await websocket_mock.disconnect()
     assert hass.states.get("button.switch_restart").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    mock_unifi_websocket(state=WebsocketState.RUNNING)
-    await hass.async_block_till_done()
+    await websocket_mock.reconnect()
     assert hass.states.get("button.switch_restart").state != STATE_UNAVAILABLE

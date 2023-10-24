@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -351,6 +351,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
             self._attr_unique_id = f"{self._attr_unique_id}_{monitor_device}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
+            serial_number=unique_id,
             name=self.device_name,
             model=self.coordinator.data["system_stats"]["system"]["model"],
             sw_version=self.coordinator.data["system_stats"]["firmware"]["version"],

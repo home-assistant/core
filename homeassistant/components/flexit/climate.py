@@ -16,8 +16,6 @@ from homeassistant.components.climate import (
 from homeassistant.components.modbus import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
-    CALL_TYPE_WRITE_REGISTER,
-    CONF_HUB,
     DEFAULT_HUB,
     ModbusHub,
     get_hub,
@@ -33,6 +31,9 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+CALL_TYPE_WRITE_REGISTER = "write_register"
+CONF_HUB = "hub"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

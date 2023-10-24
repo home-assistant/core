@@ -4,32 +4,25 @@ from __future__ import annotations
 from collections.abc import Callable
 import functools
 import math
-from typing import (  # pylint: disable=unused-import
-    Any,
-    Generic,
-    TypeVar,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
 from aioesphomeapi import (
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
+    build_unique_id,
 )
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    EntityCategory,
-)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-)
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .domain_data import DomainData
@@ -113,8 +106,8 @@ def esphome_state_property(
         if not self._has_state:
             return None
         val = func(self)
-        if isinstance(val, float) and math.isnan(val):
-            # Home Assistant doesn't use NAN values in state machine
+        if isinstance(val, float) and not math.isfinite(val):
+            # Home Assistant doesn't use NaN or inf values in state machine
             # (not JSON serializable)
             return None
         return val
@@ -223,9 +216,12 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         This method can be overridden in child classes to know
         when the static info changes.
         """
-        static_info = cast(_InfoT, static_info)
+        device_info = self._entry_data.device_info
+        if TYPE_CHECKING:
+            static_info = cast(_InfoT, static_info)
+            assert device_info
         self._static_info = static_info
-        self._attr_unique_id = static_info.unique_id
+        self._attr_unique_id = build_unique_id(device_info.mac_address, static_info)
         self._attr_entity_registry_enabled_default = not static_info.disabled_by_default
         self._attr_name = static_info.name
         if entity_category := static_info.entity_category:

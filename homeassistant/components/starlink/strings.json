@@ -44,6 +44,11 @@
         "name": "Unexpected location"
       }
     },
+    "device_tracker": {
+      "device_location": {
+        "name": "Device location"
+      }
+    },
     "sensor": {
       "ping": {
         "name": "Ping"

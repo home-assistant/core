@@ -5,17 +5,13 @@ from typing import Any
 
 from duotecno.unit import DuoswitchUnit
 
-from homeassistant.components.cover import (
-    CoverEntity,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import DuotecnoEntity
+from .entity import DuotecnoEntity, api_call
 
 
 async def async_setup_entry(
@@ -57,29 +53,17 @@ class DuotecnoCover(DuotecnoEntity, CoverEntity):
         """Return if the cover is closing."""
         return self._unit.is_closing()
 
+    @api_call
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        try:
-            await self._unit.open()
-        except OSError as err:
-            raise HomeAssistantError(
-                "Transmit for the open_cover packet failed"
-            ) from err
+        await self._unit.open()
 
+    @api_call
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        try:
-            await self._unit.close()
-        except OSError as err:
-            raise HomeAssistantError(
-                "Transmit for the close_cover packet failed"
-            ) from err
+        await self._unit.close()
 
+    @api_call
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        try:
-            await self._unit.stop()
-        except OSError as err:
-            raise HomeAssistantError(
-                "Transmit for the stop_cover packet failed"
-            ) from err
+        await self._unit.stop()

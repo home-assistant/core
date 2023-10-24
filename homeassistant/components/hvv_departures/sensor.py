@@ -11,8 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 from homeassistant.util.dt import get_time_zone, utcnow

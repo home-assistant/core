@@ -1,6 +1,7 @@
 """Support for the Abode Security System."""
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from functools import partial
 
 from jaraco.abode.automation import Automation as AbodeAuto
@@ -25,9 +26,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import ATTRIBUTION, CONF_POLLING, DOMAIN, LOGGER
@@ -70,15 +72,14 @@ PLATFORMS = [
 ]
 
 
+@dataclass
 class AbodeSystem:
     """Abode System class."""
 
-    def __init__(self, abode: Abode, polling: bool) -> None:
-        """Initialize the system."""
-        self.abode = abode
-        self.polling = polling
-        self.entity_ids: set[str | None] = set()
-        self.logout_listener = None
+    abode: Abode
+    polling: bool
+    entity_ids: set[str | None] = field(default_factory=set)
+    logout_listener: CALLBACK_TYPE | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -320,9 +321,9 @@ class AbodeDevice(AbodeEntity):
         }
 
     @property
-    def device_info(self) -> entity.DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return entity.DeviceInfo(
+        return DeviceInfo(
             identifiers={(DOMAIN, self._device.id)},
             manufacturer="Abode",
             model=self._device.type,

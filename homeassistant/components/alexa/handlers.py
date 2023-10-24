@@ -73,6 +73,7 @@ from .errors import (
     AlexaSecurityPanelAuthorizationRequired,
     AlexaTempRangeError,
     AlexaUnsupportedThermostatModeError,
+    AlexaUnsupportedThermostatTargetStateError,
     AlexaVideoActionNotPermittedForContentError,
 )
 from .state_report import AlexaDirective, AlexaResponse, async_enable_proactive_mode
@@ -474,7 +475,24 @@ async def async_api_unlock(
     context: ha.Context,
 ) -> AlexaResponse:
     """Process an unlock request."""
-    if config.locale not in {"de-DE", "en-US", "ja-JP"}:
+    if config.locale not in {
+        "ar-SA",
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "es-US",
+        "fr-CA",
+        "fr-FR",
+        "hi-IN",
+        "it-IT",
+        "ja-JP",
+        "pt-BR",
+    }:
         msg = (
             "The unlock directive is not supported for the following locales:"
             f" {config.locale}"
@@ -758,7 +776,9 @@ async def async_api_previous(
     return directive.response()
 
 
-def temperature_from_object(hass: ha.HomeAssistant, temp_obj, interval=False):
+def temperature_from_object(
+    hass: ha.HomeAssistant, temp_obj: dict[str, Any], interval: bool = False
+) -> float:
     """Get temperature from Temperature object in requested unit."""
     to_unit = hass.config.units.temperature_unit
     from_unit = UnitOfTemperature.CELSIUS
@@ -892,7 +912,13 @@ async def async_api_adjust_target_temp(
             }
         )
     else:
-        target_temp = float(entity.attributes[ATTR_TEMPERATURE]) + temp_delta
+        current_target_temp: str | None = entity.attributes.get(ATTR_TEMPERATURE)
+        if current_target_temp is None:
+            raise AlexaUnsupportedThermostatTargetStateError(
+                "The current target temperature is not set, "
+                "cannot adjust target temperature"
+            )
+        target_temp = float(current_target_temp) + temp_delta
 
         if target_temp < min_temp or target_temp > max_temp:
             raise AlexaTempRangeError(hass, target_temp, min_temp, max_temp)

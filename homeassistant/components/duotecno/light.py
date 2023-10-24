@@ -3,18 +3,13 @@ from typing import Any
 
 from duotecno.unit import DimUnit
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import DuotecnoEntity
+from .entity import DuotecnoEntity, api_call
 
 
 async def async_setup_entry(
@@ -44,6 +39,7 @@ class DuotecnoLight(DuotecnoEntity, LightEntity):
         """Return the brightness of the light."""
         return int((self._unit.get_dimmer_state() * 255) / 100)
 
+    @api_call
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if (val := kwargs.get(ATTR_BRIGHTNESS)) is not None:
@@ -52,18 +48,9 @@ class DuotecnoLight(DuotecnoEntity, LightEntity):
         else:
             # restore state
             val = None
-        try:
-            await self._unit.set_dimmer_state(val)
-        except OSError as err:
-            raise HomeAssistantError(
-                "Transmit for the set_dimmer_state packet failed"
-            ) from err
+        await self._unit.set_dimmer_state(val)
 
+    @api_call
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        try:
-            await self._unit.set_dimmer_state(0)
-        except OSError as err:
-            raise HomeAssistantError(
-                "Transmit for the set_dimmer_state packet failed"
-            ) from err
+        await self._unit.set_dimmer_state(0)

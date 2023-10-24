@@ -18,10 +18,7 @@ from homeassistant.setup import async_setup_component
 
 from .test_common import DEFAULT_CONFIG, remove_device
 
-from tests.common import (
-    async_fire_mqtt_message,
-    async_get_device_automations,
-)
+from tests.common import async_fire_mqtt_message, async_get_device_automations
 from tests.typing import MqttMockHAClient, WebSocketGenerator
 
 

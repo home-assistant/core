@@ -9,11 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .api_responses import EXPECTED_STATE_EV_IMPERIAL, VEHICLE_STATUS_EV
-from .conftest import (
-    MOCK_API_FETCH,
-    MOCK_API_GET_DATA,
-    advance_time_to_next_fetch,
-)
+from .conftest import MOCK_API_FETCH, MOCK_API_GET_DATA, advance_time_to_next_fetch
 
 DEVICE_ID = "device_tracker.test_vehicle_2"
 

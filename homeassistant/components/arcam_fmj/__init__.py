@@ -1,11 +1,11 @@
 """Arcam component."""
 import asyncio
+from asyncio import timeout
 import logging
 from typing import Any
 
 from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -66,7 +66,7 @@ async def _run_client(hass: HomeAssistant, client: Client, interval: float) -> N
 
     while True:
         try:
-            async with async_timeout.timeout(interval):
+            async with timeout(interval):
                 await client.start()
 
             _LOGGER.debug("Client connected %s", client.host)

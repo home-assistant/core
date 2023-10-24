@@ -6,7 +6,8 @@ from yalexs.lock import Lock
 from yalexs.util import get_configuration_url
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, AugustData
 from .const import MANUFACTURER
@@ -18,6 +19,7 @@ class AugustEntityMixin(Entity):
     """Base implementation for August device."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, data: AugustData, device: Doorbell | Lock) -> None:
         """Initialize an August device."""

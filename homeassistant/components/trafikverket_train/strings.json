@@ -20,15 +20,29 @@
           "to": "To station",
           "from": "From station",
           "time": "Time (optional)",
-          "weekday": "Days"
+          "weekday": "Days",
+          "filter_product": "Filter by product description"
         },
         "data_description": {
-          "time": "Set time to search specifically at this time of day, must be exact time as scheduled train departure"
+          "time": "Set time to search specifically at this time of day, must be exact time as scheduled train departure",
+          "filter_product": "To filter by product description add the phrase here to match"
         }
       },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "filter_product": "[%key:component::trafikverket_train::config::step::user::data::filter_product%]"
+        },
+        "data_description": {
+          "filter_product": "[%key:component::trafikverket_train::config::step::user::data_description::filter_product%]"
         }
       }
     }
@@ -49,7 +63,12 @@
   "entity": {
     "sensor": {
       "departure_time": {
-        "name": "Departure time"
+        "name": "Departure time",
+        "state_attributes": {
+          "product_filter": {
+            "name": "Train filtering"
+          }
+        }
       },
       "departure_state": {
         "name": "Departure state",
@@ -57,28 +76,68 @@
           "on_time": "On time",
           "delayed": "Delayed",
           "canceled": "Cancelled"
+        },
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
         }
       },
       "cancelled": {
-        "name": "Cancelled"
+        "name": "Cancelled",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       },
       "delayed_time": {
-        "name": "Delayed time"
+        "name": "Delayed time",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       },
       "planned_time": {
-        "name": "Planned time"
+        "name": "Planned time",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       },
       "estimated_time": {
-        "name": "Estimated time"
+        "name": "Estimated time",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       },
       "actual_time": {
-        "name": "Actual time"
+        "name": "Actual time",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       },
       "other_info": {
-        "name": "Other information"
+        "name": "Other information",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       },
       "deviation": {
-        "name": "Deviation"
+        "name": "Deviation",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       }
     }
   }

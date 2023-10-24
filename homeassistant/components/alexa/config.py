@@ -145,7 +145,7 @@ class AlexaConfigStore:
     def authorized(self) -> bool:
         """Return authorization status."""
         assert self._data is not None
-        return self._data[STORE_AUTHORIZED]
+        return bool(self._data[STORE_AUTHORIZED])
 
     @callback
     def set_authorized(self, authorized: bool) -> None:

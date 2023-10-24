@@ -44,6 +44,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     "cl": (
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
+            translation_key="curtain",
             current_state=DPCode.SITUATION_SET,
             current_position=(DPCode.PERCENT_CONTROL, DPCode.PERCENT_STATE),
             set_position=DPCode.PERCENT_CONTROL,
@@ -65,6 +66,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         ),
         TuyaCoverEntityDescription(
             key=DPCode.MACH_OPERATE,
+            translation_key="curtain",
             current_position=DPCode.POSITION,
             set_position=DPCode.POSITION,
             device_class=CoverDeviceClass.CURTAIN,
@@ -76,6 +78,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         # It is used by the Kogan Smart Blinds Driver
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_1,
+            translation_key="blind",
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.BLIND,
@@ -111,6 +114,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     "clkg": (
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
+            translation_key="curtain",
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
@@ -128,6 +132,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     "jdcljqr": (
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
+            translation_key="curtain",
             current_position=DPCode.PERCENT_STATE,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,

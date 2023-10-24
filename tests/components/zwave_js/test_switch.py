@@ -63,6 +63,8 @@ async def test_switch(
     state = hass.states.get(SWITCH_ENTITY)
     assert state.state == "on"
 
+    client.async_send_command.reset_mock()
+
     # Test turning off
     await hass.services.async_call(
         "switch", "turn_off", {"entity_id": SWITCH_ENTITY}, blocking=True
