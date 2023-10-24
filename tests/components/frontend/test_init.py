@@ -8,6 +8,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.frontend import (
+    CONF_EXTRA_JS_URL_ES5,
+    CONF_EXTRA_MODULE_URL,
     CONF_THEMES,
     DEFAULT_THEME_COLOR,
     DOMAIN,
@@ -101,6 +103,22 @@ async def themes_ws_client(hass, hass_ws_client, frontend_themes):
 async def ws_client(hass, hass_ws_client, frontend):
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
+
+
+@pytest.fixture
+async def mock_http_client_with_extra_js(hass, aiohttp_client, ignore_frontend_deps):
+    """Start the Home Assistant HTTP component."""
+    assert await async_setup_component(
+        hass,
+        "frontend",
+        {
+            DOMAIN: {
+                CONF_EXTRA_MODULE_URL: ["/local/my_module.js"],
+                CONF_EXTRA_JS_URL_ES5: ["/local/my_es5.js"],
+            }
+        },
+    )
+    return await aiohttp_client(hass.http.app)
 
 
 @pytest.fixture
@@ -354,6 +372,17 @@ async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
     assert msg["success"]
     assert msg["result"]["default_theme"] == "default"
     assert msg["result"]["themes"] == {}
+
+
+async def test_extra_js(mock_http_client_with_extra_js, mock_onboarded):
+    """Test that extra javascript is loaded."""
+    resp = await mock_http_client_with_extra_js.get("")
+    assert resp.status == 200
+    assert "cache-control" not in resp.headers
+
+    text = await resp.text()
+    assert '"/local/my_module.js"' in text
+    assert '"/local/my_es5.js"' in text
 
 
 async def test_get_panels(
