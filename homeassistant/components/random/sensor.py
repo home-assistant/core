@@ -57,7 +57,7 @@ async def async_setup_entry(
     """Initialize config entry."""
 
     async_add_entities(
-        [RandomSensor(dict(config_entry.options), config_entry.entry_id)], True
+        [RandomSensor(config_entry.options, config_entry.entry_id)], True
     )
 
 
