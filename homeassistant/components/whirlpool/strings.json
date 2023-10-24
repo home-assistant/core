@@ -21,6 +21,7 @@
   "entity": {
     "sensor": {
       "whirlpool_machine": {
+        "name": "State",
         "state": {
           "standby": "[%key:common::state::standby%]",
           "setting": "Setting",
@@ -51,6 +52,7 @@
         }
       },
       "whirlpool_tank": {
+        "name": "Detergent level",
         "state": {
           "unknown": "Unknown",
           "empty": "Empty",
@@ -59,6 +61,9 @@
           "100": "100%",
           "active": "[%key:common::state::active%]"
         }
+      },
+      "end_time": {
+        "name": "End time"
       }
     }
   }

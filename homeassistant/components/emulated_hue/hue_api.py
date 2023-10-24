@@ -11,7 +11,6 @@ import time
 from typing import Any
 
 from aiohttp import web
-import async_timeout
 
 from homeassistant import core
 from homeassistant.components import (
@@ -63,7 +62,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import State
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import EventType
 from homeassistant.util.json import json_loads
 from homeassistant.util.network import is_local
 
@@ -110,6 +113,19 @@ UNAUTHORIZED_USER = [
     {"error": {"address": "/", "description": "unauthorized user", "type": "1"}}
 ]
 
+DIMMABLE_SUPPORT_FEATURES = (
+    CoverEntityFeature.SET_POSITION
+    | FanEntityFeature.SET_SPEED
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | ClimateEntityFeature.TARGET_TEMPERATURE
+)
+
+
+@lru_cache(maxsize=32)
+def _remote_is_allowed(address: str) -> bool:
+    """Check if remote address is allowed."""
+    return is_local(ip_address(address))
+
 
 class HueUnauthorizedUser(HomeAssistantView):
     """Handle requests to find the emulated hue bridge."""
@@ -135,7 +151,7 @@ class HueUsernameView(HomeAssistantView):
     async def post(self, request: web.Request) -> web.Response:
         """Handle a POST request."""
         assert request.remote is not None
-        if not is_local(ip_address(request.remote)):
+        if not _remote_is_allowed(request.remote):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         try:
@@ -164,7 +180,7 @@ class HueAllGroupsStateView(HomeAssistantView):
     def get(self, request: web.Request, username: str) -> web.Response:
         """Process a request to make the Brilliant Lightpad work."""
         assert request.remote is not None
-        if not is_local(ip_address(request.remote)):
+        if not _remote_is_allowed(request.remote):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         return self.json({})
@@ -185,7 +201,7 @@ class HueGroupView(HomeAssistantView):
     def put(self, request: web.Request, username: str) -> web.Response:
         """Process a request to make the Logitech Pop working."""
         assert request.remote is not None
-        if not is_local(ip_address(request.remote)):
+        if not _remote_is_allowed(request.remote):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         return self.json(
@@ -216,7 +232,7 @@ class HueAllLightsStateView(HomeAssistantView):
     def get(self, request: web.Request, username: str) -> web.Response:
         """Process a request to get the list of available lights."""
         assert request.remote is not None
-        if not is_local(ip_address(request.remote)):
+        if not _remote_is_allowed(request.remote):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         return self.json(create_list_of_entities(self.config, request))
@@ -237,7 +253,7 @@ class HueFullStateView(HomeAssistantView):
     def get(self, request: web.Request, username: str) -> web.Response:
         """Process a request to get the list of available lights."""
         assert request.remote is not None
-        if not is_local(ip_address(request.remote)):
+        if not _remote_is_allowed(request.remote):
             return self.json_message("only local IPs allowed", HTTPStatus.UNAUTHORIZED)
         if username != HUE_API_USERNAME:
             return self.json(UNAUTHORIZED_USER)
@@ -266,7 +282,7 @@ class HueConfigView(HomeAssistantView):
     def get(self, request: web.Request, username: str = "") -> web.Response:
         """Process a request to get the configuration."""
         assert request.remote is not None
-        if not is_local(ip_address(request.remote)):
+        if not _remote_is_allowed(request.remote):
             return self.json_message("only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         json_response = create_config_model(self.config, request)
@@ -289,7 +305,7 @@ class HueOneLightStateView(HomeAssistantView):
     def get(self, request: web.Request, username: str, entity_id: str) -> web.Response:
         """Process a request to get the state of an individual light."""
         assert request.remote is not None
-        if not is_local(ip_address(request.remote)):
+        if not _remote_is_allowed(request.remote):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         hass: core.HomeAssistant = request.app["hass"]
@@ -331,7 +347,7 @@ class HueOneLightChangeView(HomeAssistantView):
     ) -> web.Response:
         """Process a request to set the state of an individual light."""
         assert request.remote is not None
-        if not is_local(ip_address(request.remote)):
+        if not _remote_is_allowed(request.remote):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         config = self.config
@@ -801,12 +817,9 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
                 HUE_API_STATE_BRI: state_dict[STATE_BRIGHTNESS],
             }
         )
-    elif entity_features & (
-        CoverEntityFeature.SET_POSITION
-        | FanEntityFeature.SET_SPEED
-        | MediaPlayerEntityFeature.VOLUME_SET
-        | ClimateEntityFeature.TARGET_TEMPERATURE
-    ) or light.brightness_supported(color_modes):
+    elif entity_features & DIMMABLE_SUPPORT_FEATURES or light.brightness_supported(
+        color_modes
+    ):
         # Dimmable light (Zigbee Device ID: 0x0100)
         # Supports groups, scenes, on/off and dimming
         retval["type"] = "Dimmable light"
@@ -884,13 +897,13 @@ async def wait_for_state_change_or_timeout(
     ev = asyncio.Event()
 
     @core.callback
-    def _async_event_changed(event: core.Event) -> None:
+    def _async_event_changed(event: EventType[EventStateChangedData]) -> None:
         ev.set()
 
     unsub = async_track_state_change_event(hass, [entity_id], _async_event_changed)
 
     try:
-        async with async_timeout.timeout(STATE_CHANGE_WAIT_TIMEOUT):
+        async with asyncio.timeout(STATE_CHANGE_WAIT_TIMEOUT):
             await ev.wait()
     except asyncio.TimeoutError:
         pass

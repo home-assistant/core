@@ -31,7 +31,9 @@
     "pressureSurfaceLevel": 29.47,
     "solarGHI": 0,
     "cloudBase": 0.74,
-    "cloudCeiling": 0.74
+    "cloudCeiling": 0.74,
+    "uvIndex": 3,
+    "uvHealthConcern": 1
   },
   "forecasts": {
     "nowcast": [
@@ -906,6 +908,8 @@
         "values": {
           "temperatureMin": 44.13,
           "temperatureMax": 44.13,
+          "dewPoint": 12.76,
+          "humidity": 58.46,
           "windSpeed": 9.33,
           "windDirection": 315.14,
           "weatherCode": 1000,
@@ -2204,6 +2208,8 @@
         "values": {
           "temperatureMin": 26.11,
           "temperatureMax": 45.93,
+          "dewPoint": 12.76,
+          "humidity": 58.46,
           "windSpeed": 9.49,
           "windDirection": 239.6,
           "weatherCode": 1000,

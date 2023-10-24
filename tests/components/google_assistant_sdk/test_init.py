@@ -162,20 +162,26 @@ async def test_send_text_commands(
 
     command1 = "open the garage door"
     command2 = "1234"
+    command1_response = "what's the PIN?"
+    command2_response = "opened the garage door"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
-    ) as mock_text_assistant:
-        await hass.services.async_call(
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        side_effect=[
+            (command1_response, None, None),
+            (command2_response, None, None),
+        ],
+    ) as mock_assist_call:
+        response = await hass.services.async_call(
             DOMAIN,
             "send_text_command",
             {"command": [command1, command2]},
             blocking=True,
+            return_response=True,
         )
-    mock_text_assistant.assert_called_once_with(
-        ExpectedCredentials(), "en-US", audio_out=False
-    )
-    mock_text_assistant.assert_has_calls([call().__enter__().assist(command1)])
-    mock_text_assistant.assert_has_calls([call().__enter__().assist(command2)])
+        assert response == {
+            "responses": [{"text": command1_response}, {"text": command2_response}]
+        }
+    mock_assist_call.assert_has_calls([call(command1), call(command2)])
 
 
 @pytest.mark.parametrize(
@@ -326,7 +332,6 @@ async def test_conversation_agent(
     assert entry.state is ConfigEntryState.LOADED
 
     agent = await conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
-    assert agent.attribution.keys() == {"name", "url"}
     assert agent.supported_languages == SUPPORTED_LANGUAGE_CODES
 
     text1 = "tell me a joke"

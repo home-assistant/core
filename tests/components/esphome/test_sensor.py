@@ -1,15 +1,20 @@
 """Test ESPHome sensors."""
+from collections.abc import Awaitable, Callable
+import logging
 import math
 
 from aioesphomeapi import (
     APIClient,
     EntityCategory as ESPHomeEntityCategory,
+    EntityInfo,
+    EntityState,
     LastResetType,
     SensorInfo,
     SensorState,
     SensorStateClass as ESPHomeSensorStateClass,
     TextSensorInfo,
     TextSensorState,
+    UserService,
 )
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
@@ -18,13 +23,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 
+from .conftest import MockESPHomeDevice
+
 
 async def test_generic_numeric_sensor(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
 ) -> None:
     """Test a generic sensor entity."""
+    logging.getLogger("homeassistant.components.esphome").setLevel(logging.DEBUG)
     entity_info = [
         SensorInfo(
             object_id="mysensor",
@@ -35,7 +46,7 @@ async def test_generic_numeric_sensor(
     ]
     states = [SensorState(key=1, state=50)]
     user_service = []
-    await mock_generic_device_entry(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
         user_service=user_service,
@@ -44,6 +55,34 @@ async def test_generic_numeric_sensor(
     state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "50"
+
+    # Test updating state
+    mock_device.set_state(SensorState(key=1, state=60))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == "60"
+
+    # Test sending the same state again
+    mock_device.set_state(SensorState(key=1, state=60))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == "60"
+
+    # Test we can still update after the same state
+    mock_device.set_state(SensorState(key=1, state=70))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == "70"
+
+    # Test invalid data from the underlying api does not crash us
+    mock_device.set_state(SensorState(key=1, state=object()))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == "70"
 
 
 async def test_generic_numeric_sensor_with_entity_category_and_icon(
@@ -58,7 +97,7 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
             key=1,
             name="my sensor",
             unique_id="my_sensor",
-            entity_category=ESPHomeEntityCategory.CONFIG,
+            entity_category=ESPHomeEntityCategory.DIAGNOSTIC,
             icon="mdi:leaf",
         )
     ]
@@ -77,8 +116,10 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
     entity_reg = er.async_get(hass)
     entry = entity_reg.async_get("sensor.test_mysensor")
     assert entry is not None
-    assert entry.unique_id == "my_sensor"
-    assert entry.entity_category is EntityCategory.CONFIG
+    # Note that ESPHome includes the EntityInfo type in the unique id
+    # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
+    assert entry.unique_id == "11:22:33:44:55:aa-sensor-mysensor"
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
 async def test_generic_numeric_sensor_state_class_measurement(
@@ -113,7 +154,9 @@ async def test_generic_numeric_sensor_state_class_measurement(
     entity_reg = er.async_get(hass)
     entry = entity_reg.async_get("sensor.test_mysensor")
     assert entry is not None
-    assert entry.unique_id == "my_sensor"
+    # Note that ESPHome includes the EntityInfo type in the unique id
+    # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
+    assert entry.unique_id == "11:22:33:44:55:aa-sensor-mysensor"
     assert entry.entity_category is None
 
 

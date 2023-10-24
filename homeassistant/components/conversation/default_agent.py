@@ -11,7 +11,14 @@ from pathlib import Path
 import re
 from typing import IO, Any
 
-from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
+from hassil.expression import Expression, ListReference, Sequence
+from hassil.intents import (
+    Intents,
+    ResponseType,
+    SlotList,
+    TextSlotList,
+    WildcardSlotList,
+)
 from hassil.recognize import RecognizeResult, recognize_all
 from hassil.util import merge_dict
 from home_assistant_intents import get_domains_and_languages, get_intents
@@ -32,7 +39,11 @@ from homeassistant.helpers import (
     template,
     translation,
 )
-from homeassistant.helpers.event import async_track_state_added_domain
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_added_domain,
+)
+from homeassistant.helpers.typing import EventType
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
@@ -43,9 +54,7 @@ _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
-TRIGGER_CALLBACK_TYPE = Callable[  # pylint: disable=invalid-name
-    [str], Awaitable[str | None]
-]
+TRIGGER_CALLBACK_TYPE = Callable[[str, RecognizeResult], Awaitable[str | None]]
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -95,7 +104,7 @@ def async_setup(hass: core.HomeAssistant) -> None:
         async_should_expose(hass, DOMAIN, entity_id)
 
     @core.callback
-    def async_entity_state_listener(event: core.Event) -> None:
+    def async_entity_state_listener(event: EventType[EventStateChangedData]) -> None:
         """Set expose flag on new entities."""
         async_should_expose(hass, DOMAIN, event.data["entity_id"])
 
@@ -653,6 +662,17 @@ class DefaultAgent(AbstractConversationAgent):
         }
 
         self._trigger_intents = Intents.from_dict(intents_dict)
+
+        # Assume slot list references are wildcards
+        wildcard_names: set[str] = set()
+        for trigger_intent in self._trigger_intents.intents.values():
+            for intent_data in trigger_intent.data:
+                for sentence in intent_data.sentences:
+                    _collect_list_references(sentence, wildcard_names)
+
+        for wildcard_name in wildcard_names:
+            self._trigger_intents.slot_lists[wildcard_name] = WildcardSlotList()
+
         _LOGGER.debug("Rebuilt trigger intents: %s", intents_dict)
 
     def _unregister_trigger(self, trigger_data: TriggerData) -> None:
@@ -678,14 +698,14 @@ class DefaultAgent(AbstractConversationAgent):
 
         assert self._trigger_intents is not None
 
-        matched_triggers: set[int] = set()
+        matched_triggers: dict[int, RecognizeResult] = {}
         for result in recognize_all(sentence, self._trigger_intents):
             trigger_id = int(result.intent.name)
             if trigger_id in matched_triggers:
                 # Already matched a sentence from this trigger
                 break
 
-            matched_triggers.add(trigger_id)
+            matched_triggers[trigger_id] = result
 
         if not matched_triggers:
             # Sentence did not match any trigger sentences
@@ -695,14 +715,14 @@ class DefaultAgent(AbstractConversationAgent):
             "'%s' matched %s trigger(s): %s",
             sentence,
             len(matched_triggers),
-            matched_triggers,
+            list(matched_triggers),
         )
 
         # Gather callback responses in parallel
         trigger_responses = await asyncio.gather(
             *(
-                self._trigger_sentences[trigger_id].callback(sentence)
-                for trigger_id in matched_triggers
+                self._trigger_sentences[trigger_id].callback(sentence, result)
+                for trigger_id, result in matched_triggers.items()
             )
         )
 
@@ -729,3 +749,15 @@ def _make_error_result(
     response.async_set_error(error_code, response_text)
 
     return ConversationResult(response, conversation_id)
+
+
+def _collect_list_references(expression: Expression, list_names: set[str]) -> None:
+    """Collect list reference names recursively."""
+    if isinstance(expression, Sequence):
+        seq: Sequence = expression
+        for item in seq.items:
+            _collect_list_references(item, list_names)
+    elif isinstance(expression, ListReference):
+        # {list}
+        list_ref: ListReference = expression
+        list_names.add(list_ref.slot_name)

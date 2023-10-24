@@ -8,6 +8,7 @@ from homeassistant.components.apcupsd import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import CONF_DATA, MOCK_MINIMAL_STATUS, MOCK_STATUS, async_init_integration
 
@@ -26,6 +27,53 @@ async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> No
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "on"
+
+
+@pytest.mark.parametrize(
+    "status",
+    (
+        # We should not create device entries if SERIALNO is not reported.
+        MOCK_MINIMAL_STATUS,
+        # We should set the device name to be the friendly UPSNAME field if available.
+        MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX", "UPSNAME": "MyUPS"},
+        # Otherwise, we should fall back to default device name --- "APC UPS".
+        MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX"},
+        # We should create all fields of the device entry if they are available.
+        MOCK_STATUS,
+    ),
+)
+async def test_device_entry(hass: HomeAssistant, status: OrderedDict) -> None:
+    """Test successful setup of device entries."""
+    await async_init_integration(hass, status=status)
+
+    # Verify device info is properly set up.
+    device_entries = dr.async_get(hass)
+
+    if "SERIALNO" not in status:
+        assert len(device_entries.devices) == 0
+        return
+
+    assert len(device_entries.devices) == 1
+    entry = device_entries.async_get_device({(DOMAIN, status["SERIALNO"])})
+    assert entry is not None
+    # Specify the mapping between field name and the expected fields in device entry.
+    fields = {
+        "UPSNAME": entry.name,
+        "MODEL": entry.model,
+        "VERSION": entry.sw_version,
+        "FIRMWARE": entry.hw_version,
+    }
+
+    for field, entry_value in fields.items():
+        if field in status:
+            assert entry_value == status[field]
+        elif field == "UPSNAME":
+            # Even if UPSNAME is not available, we must fall back to default "APC UPS".
+            assert entry_value == "APC UPS"
+        else:
+            assert entry_value is None
+
+    assert entry.manufacturer == "APC"
 
 
 async def test_multiple_integrations(hass: HomeAssistant) -> None:

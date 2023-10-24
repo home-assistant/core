@@ -6,6 +6,7 @@ from homeassistant.components import (
     camera,
     climate,
     cover,
+    event,
     fan,
     group,
     humidifier,
@@ -48,6 +49,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "binary_sensor",
     "climate",
     "cover",
+    "event",
     "fan",
     "group",
     "humidifier",
@@ -73,6 +75,7 @@ TYPE_CAMERA = f"{PREFIX_TYPES}CAMERA"
 TYPE_CURTAIN = f"{PREFIX_TYPES}CURTAIN"
 TYPE_DEHUMIDIFIER = f"{PREFIX_TYPES}DEHUMIDIFIER"
 TYPE_DOOR = f"{PREFIX_TYPES}DOOR"
+TYPE_DOORBELL = f"{PREFIX_TYPES}DOORBELL"
 TYPE_FAN = f"{PREFIX_TYPES}FAN"
 TYPE_GARAGE = f"{PREFIX_TYPES}GARAGE"
 TYPE_HUMIDIFIER = f"{PREFIX_TYPES}HUMIDIFIER"
@@ -162,6 +165,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GARAGE,
     (cover.DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
     (cover.DOMAIN, cover.CoverDeviceClass.WINDOW): TYPE_WINDOW,
+    (event.DOMAIN, event.EventDeviceClass.DOORBELL): TYPE_DOORBELL,
     (
         humidifier.DOMAIN,
         humidifier.HumidifierDeviceClass.DEHUMIDIFIER,

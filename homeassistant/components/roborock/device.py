@@ -2,15 +2,15 @@
 
 from typing import Any
 
-from roborock.api import AttributeCache
+from roborock.api import AttributeCache, RoborockClient
 from roborock.command_cache import CacheableAttribute
 from roborock.containers import Status
 from roborock.exceptions import RoborockException
-from roborock.local_api import RoborockLocalClient
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RoborockDataUpdateCoordinator
@@ -22,7 +22,7 @@ class RoborockEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, unique_id: str, device_info: DeviceInfo, api: RoborockLocalClient
+        self, unique_id: str, device_info: DeviceInfo, api: RoborockClient
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         self._attr_unique_id = unique_id
@@ -30,7 +30,7 @@ class RoborockEntity(Entity):
         self._api = api
 
     @property
-    def api(self) -> RoborockLocalClient:
+    def api(self) -> RoborockClient:
         """Returns the api."""
         return self._api
 
@@ -39,14 +39,16 @@ class RoborockEntity(Entity):
         return self._api.cache.get(attribute)
 
     async def send(
-        self, command: RoborockCommand, params: dict[str, Any] | list[Any] | None = None
+        self,
+        command: RoborockCommand | str,
+        params: dict[str, Any] | list[Any] | int | None = None,
     ) -> dict:
         """Send a command to a vacuum cleaner."""
         try:
             response = await self._api.send_command(command, params)
         except RoborockException as err:
             raise HomeAssistantError(
-                f"Error while calling {command.name} with {params}"
+                f"Error while calling {command.name if isinstance(command, RoborockCommand) else command} with {params}"
             ) from err
 
         return response
@@ -87,7 +89,7 @@ class RoborockCoordinatedEntity(
     async def send(
         self,
         command: RoborockCommand,
-        params: dict[str, Any] | list[Any] | None = None,
+        params: dict[str, Any] | list[Any] | int | None = None,
     ) -> dict:
         """Overloads normal send command but refreshes coordinator."""
         res = await super().send(command, params)

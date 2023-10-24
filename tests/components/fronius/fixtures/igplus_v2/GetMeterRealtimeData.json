@@ -1,0 +1,17 @@
+{
+  "Body": {
+    "Data": {}
+  },
+  "Head": {
+    "RequestArguments": {
+      "DeviceClass": "Meter",
+      "Scope": "System"
+    },
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2023-07-14T17:28:05+02:00"
+  }
+}

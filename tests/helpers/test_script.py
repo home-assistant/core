@@ -9,7 +9,6 @@ from types import MappingProxyType
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
@@ -1000,7 +999,7 @@ async def test_wait_basic_times_out(hass: HomeAssistant, action_type) -> None:
         assert script_obj.last_action == wait_alias
         hass.states.async_set("switch.test", "not_on")
 
-        async with timeout(0.1):
+        async with asyncio.timeout(0.1):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         timed_out = True
@@ -1054,6 +1053,7 @@ async def test_multiple_runs_wait(hass: HomeAssistant, action_type) -> None:
         hass.states.async_set("switch.test", "on")
         hass.async_create_task(script_obj.async_run(context=Context()))
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
 
         assert script_obj.is_running
         assert len(events) == 1
@@ -1063,6 +1063,7 @@ async def test_multiple_runs_wait(hass: HomeAssistant, action_type) -> None:
         wait_started_flag.clear()
         hass.async_create_task(script_obj.async_run())
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
     except (AssertionError, asyncio.TimeoutError):
         await script_obj.async_stop()
         raise
@@ -1386,7 +1387,7 @@ async def test_wait_template_with_utcnow_no_match(hass: HomeAssistant) -> None:
         ):
             async_fire_time_changed(hass, second_non_matching_time)
 
-        async with timeout(0.1):
+        async with asyncio.timeout(0.1):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         timed_out = True
@@ -4080,6 +4081,7 @@ async def test_script_mode_2(
         hass.states.async_set("switch.test", "on")
         hass.async_create_task(script_obj.async_run(context=Context()))
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
 
         assert script_obj.is_running
         assert len(events) == 1
@@ -4090,6 +4092,7 @@ async def test_script_mode_2(
         wait_started_flag.clear()
         hass.async_create_task(script_obj.async_run(context=Context()))
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
 
         assert script_obj.is_running
         assert len(events) == 2

@@ -16,8 +16,7 @@ SERVICE_BROWSE_URL = "browse_url"
 
 SERVICE_BROWSE_URL_SCHEMA = vol.Schema(
     {
-        # pylint: disable-next=no-value-for-parameter
-        vol.Required(ATTR_URL, default=ATTR_URL_DEFAULT): vol.Url()
+        vol.Required(ATTR_URL, default=ATTR_URL_DEFAULT): vol.Url(),
     }
 )
 

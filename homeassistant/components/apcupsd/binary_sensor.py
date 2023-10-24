@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, VALUE_ONLINE, APCUPSdData
@@ -53,13 +52,8 @@ class OnlineStatus(BinarySensorEntity):
         # Set up unique id and device info if serial number is available.
         if (serial_no := data_service.serial_no) is not None:
             self._attr_unique_id = f"{serial_no}_{description.key}"
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, serial_no)},
-                model=data_service.model,
-                manufacturer="APC",
-                hw_version=data_service.hw_version,
-                sw_version=data_service.sw_version,
-            )
+        self._attr_device_info = data_service.device_info
+
         self.entity_description = description
         self._data_service = data_service
 

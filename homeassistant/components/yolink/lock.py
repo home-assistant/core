@@ -34,6 +34,8 @@ async def async_setup_entry(
 class YoLinkLockEntity(YoLinkEntity, LockEntity):
     """YoLink Lock Entity."""
 
+    _attr_name = None
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -42,7 +44,6 @@ class YoLinkLockEntity(YoLinkEntity, LockEntity):
         """Init YoLink Lock."""
         super().__init__(config_entry, coordinator)
         self._attr_unique_id = f"{coordinator.device.device_id}_lock_state"
-        self._attr_name = f"{coordinator.device.device_name}(LockState)"
 
     @callback
     def update_entity_state(self, state: dict[str, Any]) -> None:

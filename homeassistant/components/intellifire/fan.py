@@ -45,7 +45,7 @@ class IntellifireFanEntityDescription(
 INTELLIFIRE_FANS: tuple[IntellifireFanEntityDescription, ...] = (
     IntellifireFanEntityDescription(
         key="fan",
-        name="Fan",
+        translation_key="fan",
         set_fn=lambda control_api, speed: control_api.set_fan_speed(speed=speed),
         value_fn=lambda data: data.fanspeed,
         speed_range=(1, 4),

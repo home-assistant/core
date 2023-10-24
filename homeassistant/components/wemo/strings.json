@@ -41,8 +41,8 @@
       }
     },
     "reset_filter_life": {
-      "name": "Reset filter life",
-      "description": "Resets the WeMo Humidifier's filter life to 100%."
+      "name": "Reset filter lifetime",
+      "description": "Resets the WeMo Humidifier's filter lifetime to 100%."
     }
   }
 }

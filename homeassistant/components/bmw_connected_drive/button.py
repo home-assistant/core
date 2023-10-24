@@ -26,14 +26,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class BMWButtonEntityDescription(ButtonEntityDescription):
+class BMWRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    remote_function: Callable[[MyBMWVehicle], Coroutine[Any, Any, RemoteServiceStatus]]
+
+
+@dataclass
+class BMWButtonEntityDescription(ButtonEntityDescription, BMWRequiredKeysMixin):
     """Class describing BMW button entities."""
 
     enabled_when_read_only: bool = False
-    remote_function: Callable[
-        [MyBMWVehicle], Coroutine[Any, Any, RemoteServiceStatus]
-    ] | None = None
-    account_function: Callable[[BMWDataUpdateCoordinator], Coroutine] | None = None
     is_available: Callable[[MyBMWVehicle], bool] = lambda _: True
 
 
@@ -68,13 +71,6 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
         translation_key="find_vehicle",
         icon="mdi:crosshairs-question",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_vehicle_finder(),
-    ),
-    BMWButtonEntityDescription(
-        key="refresh",
-        translation_key="refresh",
-        icon="mdi:refresh",
-        account_function=lambda coordinator: coordinator.async_request_refresh(),
-        enabled_when_read_only=True,
     ),
 )
 
@@ -120,22 +116,9 @@ class BMWButton(BMWBaseEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        if self.entity_description.remote_function:
-            try:
-                await self.entity_description.remote_function(self.vehicle)
-            except MyBMWAPIError as ex:
-                raise HomeAssistantError(ex) from ex
-        elif self.entity_description.account_function:
-            _LOGGER.warning(
-                "The 'Refresh from cloud' button is deprecated. Use the"
-                " 'homeassistant.update_entity' service with any BMW entity for a full"
-                " reload. See"
-                " https://www.home-assistant.io/integrations/bmw_connected_drive/#update-the-state--refresh-from-api"
-                " for details"
-            )
-            try:
-                await self.entity_description.account_function(self.coordinator)
-            except MyBMWAPIError as ex:
-                raise HomeAssistantError(ex) from ex
+        try:
+            await self.entity_description.remote_function(self.vehicle)
+        except MyBMWAPIError as ex:
+            raise HomeAssistantError(ex) from ex
 
         self.coordinator.async_update_listeners()

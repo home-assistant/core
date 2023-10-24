@@ -235,6 +235,48 @@ async def test_initial_invalid_folder_error(
     assert (state is not None) == success
 
 
+@patch("homeassistant.components.imap.coordinator.MAX_ERRORS", 1)
+@pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
+async def test_late_authentication_retry(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_imap_protocol: MagicMock,
+) -> None:
+    """Test retrying authentication after a search was failed."""
+
+    # Mock an error in waiting for a pushed update
+    mock_imap_protocol.wait_server_push.side_effect = AioImapException(
+        "Something went wrong"
+    )
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    # Mock that the search fails, this will trigger
+    # that the connection will be restarted
+    # Then fail selecting the folder
+    mock_imap_protocol.search.return_value = Response(*BAD_RESPONSE)
+    mock_imap_protocol.login.side_effect = Response(*BAD_RESPONSE)
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+    assert "Authentication failed, retrying" in caplog.text
+
+    # we still should have an entity with an unavailable state
+    state = hass.states.get("sensor.imap_email_email_com")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@patch("homeassistant.components.imap.coordinator.MAX_ERRORS", 0)
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
 async def test_late_authentication_error(
     hass: HomeAssistant,
@@ -428,6 +470,8 @@ async def test_reset_last_message(
 ) -> None:
     """Test receiving a message successfully."""
     event = asyncio.Event()  # needed for pushed coordinator to make a new loop
+    idle_start_future = asyncio.Future()
+    idle_start_future.set_result(None)
 
     async def _sleep_till_event() -> None:
         """Simulate imap server waiting for pushes message and keep the push loop going.
@@ -437,10 +481,10 @@ async def test_reset_last_message(
         nonlocal event
         await event.wait()
         event.clear()
-        mock_imap_protocol.idle_start.return_value = AsyncMock()()
+        mock_imap_protocol.idle_start = AsyncMock(return_value=idle_start_future)
 
     # Make sure we make another cycle (needed for pushed coordinator)
-    mock_imap_protocol.idle_start.return_value = AsyncMock()()
+    mock_imap_protocol.idle_start = AsyncMock(return_value=idle_start_future)
     # Mock we wait till we push an update (needed for pushed coordinator)
     mock_imap_protocol.wait_server_push.side_effect = _sleep_till_event
 
@@ -468,6 +512,7 @@ async def test_reset_last_message(
     assert data["sender"] == "john.doe@example.com"
     assert data["subject"] == "Test subject"
     assert data["text"]
+    assert data["initial"]
     assert (
         valid_date
         and isinstance(data["date"], datetime)
@@ -584,7 +629,7 @@ async def test_message_is_truncated(
     [
         ("{{ subject }}", "Test subject", None),
         ('{{ "@example.com" in sender }}', True, None),
-        ("{% bad template }}", None, "Error rendering imap custom template"),
+        ("{% bad template }}", None, "Error rendering IMAP custom template"),
     ],
     ids=["subject_test", "sender_filter", "template_error"],
 )

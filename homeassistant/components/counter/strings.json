@@ -33,7 +33,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::counter::issues::deprecated_configure_service::title%]",
-            "description": "The counter service `counter.configure` is being removed and use of it has been detected. If you want to change the current value of a counter, use the new `counter.set_value` service instead.\n\nPlease remove the use of this service from your automations and scripts and select **submit** to close this issue."
+            "description": "The counter service `counter.configure` is being removed and use of it has been detected. If you want to change the current value of a counter, use the new `counter.set_value` service instead.\n\nPlease remove this service from your automations and scripts and select **submit** to close this issue."
           }
         }
       }

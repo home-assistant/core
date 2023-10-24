@@ -66,7 +66,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::ezviz::issues::service_depreciation_detection_sensibility::title%]",
-            "description": "The Ezviz Detection sensitivity service is deprecated and will be removed in Home Assistant 2023.12.\nTo set the sensitivity, you can instead use the `number.set_value` service targetting the Detection sensitivity entity.\n\nPlease remove the use of this service from your automations and scripts and select **submit** to close this issue."
+            "description": "The Ezviz Detection sensitivity service is deprecated and will be removed in Home Assistant 2023.12.\nTo set the sensitivity, you can instead use the `number.set_value` service targetting the Detection sensitivity entity.\n\nPlease remove this service from your automations and scripts and select **submit** to close this issue."
           }
         }
       }
@@ -77,7 +77,29 @@
         "step": {
           "confirm": {
             "title": "[%key:component::ezviz::issues::service_deprecation_alarm_sound_level::title%]",
-            "description": "Ezviz Alarm sound level service is deprecated and will be removed.\nTo set the Alarm sound level, you can instead use the `select.select_option` service targetting the Warning sound entity.\n\nPlease remove the use of this service from your automations and scripts and select **submit** to close this issue."
+            "description": "Ezviz Alarm sound level service is deprecated and will be removed.\nTo set the Alarm sound level, you can instead use the `select.select_option` service targetting the Warning sound entity.\n\nPlease remove this service from your automations and scripts and select **submit** to close this issue."
+          }
+        }
+      }
+    },
+    "service_depreciation_ptz": {
+      "title": "EZVIZ PTZ service is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::ezviz::issues::service_depreciation_ptz::title%]",
+            "description": "EZVIZ PTZ service is deprecated and will be removed.\nTo move the camera, you can instead use the `button.press` service targetting the PTZ* entities.\n\nPlease remove the use of this service from your automations and scripts and select **submit** to close this issue."
+          }
+        }
+      }
+    },
+    "service_depreciation_sound_alarm": {
+      "title": "Ezviz Sound alarm service is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::ezviz::issues::service_depreciation_sound_alarm::title%]",
+            "description": "Ezviz Sound alarm service is deprecated and will be removed.\nTo sound the alarm, you can instead use the `siren.toggle` service targeting the Siren entity.\n\nPlease remove the use of this service from your automations and scripts and select **submit** to fix this issue."
           }
         }
       }
@@ -97,6 +119,113 @@
     "image": {
       "last_motion_image": {
         "name": "Last motion image"
+      }
+    },
+    "button": {
+      "ptz_up": {
+        "name": "PTZ up"
+      },
+      "ptz_down": {
+        "name": "PTZ down"
+      },
+      "ptz_left": {
+        "name": "PTZ left"
+      },
+      "ptz_right": {
+        "name": "PTZ right"
+      }
+    },
+    "binary_sensor": {
+      "alarm_schedules_enabled": {
+        "name": "Alarm schedules enabled"
+      },
+      "encrypted": {
+        "name": "Encryption"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "number": {
+      "detection_sensibility": {
+        "name": "Detection sensitivity"
+      }
+    },
+    "sensor": {
+      "alarm_sound_mod": {
+        "name": "Alarm sound level"
+      },
+      "last_alarm_time": {
+        "name": "Last alarm time"
+      },
+      "seconds_last_trigger": {
+        "name": "Seconds since last trigger"
+      },
+      "last_alarm_pic": {
+        "name": "Last alarm picture URL"
+      },
+      "supported_channels": {
+        "name": "Supported channels"
+      },
+      "local_ip": {
+        "name": "Local IP"
+      },
+      "wan_ip": {
+        "name": "WAN IP"
+      },
+      "pir_status": {
+        "name": "PIR status"
+      },
+      "last_alarm_type_code": {
+        "name": "Last alarm type code"
+      },
+      "last_alarm_type_name": {
+        "name": "Last alarm type name"
+      }
+    },
+    "switch": {
+      "status_light": {
+        "name": "Status light"
+      },
+      "privacy": {
+        "name": "Privacy"
+      },
+      "infrared_light": {
+        "name": "Infrared light"
+      },
+      "sleep": {
+        "name": "Sleep"
+      },
+      "audio": {
+        "name": "Audio"
+      },
+      "motion_tracking": {
+        "name": "Motion tracking"
+      },
+      "all_day_video_recording": {
+        "name": "All day video recording"
+      },
+      "auto_sleep": {
+        "name": "Auto sleep"
+      },
+      "flicker_light_on_movement": {
+        "name": "Flicker light on movement"
+      },
+      "pir_motion_activated_light": {
+        "name": "PIR motion activated light"
+      },
+      "tamper_alarm": {
+        "name": "Tamper alarm"
+      },
+      "follow_movement": {
+        "name": "Follow movement"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "[%key:component::siren::title%]"
       }
     }
   },

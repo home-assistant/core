@@ -47,7 +47,7 @@ class PowerviewSelectDescription(
 DROPDOWNS: Final = [
     PowerviewSelectDescription(
         key="powersource",
-        name="Power Source",
+        translation_key="power_source",
         icon="mdi:power-plug-outline",
         current_fn=lambda shade: POWER_SUPPLY_TYPE_MAP.get(
             shade.raw_data.get(ATTR_BATTERY_KIND), None
@@ -106,7 +106,6 @@ class PowerViewSelect(ShadeEntity, SelectEntity):
         """Initialize the select entity."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self.entity_description: PowerviewSelectDescription = description
-        self._attr_name = f"{self._shade_name} {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
     @property

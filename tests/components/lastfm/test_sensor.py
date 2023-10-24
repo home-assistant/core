@@ -1,16 +1,10 @@
 """Tests for the lastfm sensor."""
 from unittest.mock import patch
 
-from pylast import WSError
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lastfm.const import (
-    ATTR_LAST_PLAYED,
-    ATTR_PLAY_COUNT,
-    ATTR_TOP_PLAYED,
-    CONF_USERS,
-    DOMAIN,
-    STATE_NOT_SCROBBLING,
-)
+from homeassistant.components.lastfm.const import CONF_USERS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant
@@ -31,7 +25,7 @@ LEGACY_CONFIG = {
 
 async def test_legacy_migration(hass: HomeAssistant) -> None:
     """Test migration from yaml to config flow."""
-    with patch("pylast.User", return_value=None):
+    with patch("pylast.User", return_value=MockUser()):
         assert await async_setup_component(hass, Platform.SENSOR, LEGACY_CONFIG)
         await hass.async_block_till_done()
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -41,73 +35,28 @@ async def test_legacy_migration(hass: HomeAssistant) -> None:
     assert len(issue_registry.issues) == 1
 
 
-async def test_user_unavailable(
+@pytest.mark.parametrize(
+    ("fixture"),
+    [
+        ("not_found_user"),
+        ("first_time_user"),
+        ("default_user"),
+    ],
+)
+async def test_sensors(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    fixture: str,
+    request: pytest.FixtureRequest,
 ) -> None:
-    """Test update when user can't be fetched."""
-    await setup_integration(
-        config_entry,
-        MockUser(thrown_error=WSError("network", "status", "User not found")),
-    )
+    """Test sensors."""
+    user = request.getfixturevalue(fixture)
+    await setup_integration(config_entry, user)
 
-    entity_id = "sensor.testaccount1"
+    entity_id = "sensor.lastfm_testaccount1"
 
     state = hass.states.get(entity_id)
 
-    assert state.state == "unavailable"
-
-
-async def test_first_time_user(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
-    first_time_user: MockUser,
-) -> None:
-    """Test first time user."""
-    await setup_integration(config_entry, first_time_user)
-
-    entity_id = "sensor.testaccount1"
-
-    state = hass.states.get(entity_id)
-
-    assert state.state == STATE_NOT_SCROBBLING
-    assert state.attributes[ATTR_LAST_PLAYED] is None
-    assert state.attributes[ATTR_TOP_PLAYED] is None
-    assert state.attributes[ATTR_PLAY_COUNT] == 0
-
-
-async def test_update_not_playing(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
-    first_time_user: MockUser,
-) -> None:
-    """Test update when no playing song."""
-    await setup_integration(config_entry, first_time_user)
-
-    entity_id = "sensor.testaccount1"
-
-    state = hass.states.get(entity_id)
-
-    assert state.state == STATE_NOT_SCROBBLING
-
-
-async def test_update_playing(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
-    default_user: MockUser,
-) -> None:
-    """Test update when playing a song."""
-    await setup_integration(config_entry, default_user)
-
-    entity_id = "sensor.testaccount1"
-
-    state = hass.states.get(entity_id)
-
-    assert state.state == "artist - title"
-    assert state.attributes[ATTR_LAST_PLAYED] == "artist - title"
-    assert state.attributes[ATTR_TOP_PLAYED] == "artist - title"
-    assert state.attributes[ATTR_PLAY_COUNT] == 1
+    assert state == snapshot

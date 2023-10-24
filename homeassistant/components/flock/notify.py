@@ -5,7 +5,6 @@ import asyncio
 from http import HTTPStatus
 import logging
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
@@ -49,7 +48,7 @@ class FlockNotificationService(BaseNotificationService):
         _LOGGER.debug("Attempting to call Flock at %s", self._url)
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 response = await self._session.post(self._url, json=payload)
                 result = await response.json()
 

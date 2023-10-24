@@ -39,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=f"Oncue {entry.data[CONF_USERNAME]}",
         update_interval=timedelta(minutes=10),
         update_method=client.async_fetch_all,
+        always_update=False,
     )
     await coordinator.async_config_entry_first_refresh()
 

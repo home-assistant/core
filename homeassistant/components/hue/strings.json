@@ -31,7 +31,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "not_hue_bridge": "Not a Hue bridge",
-      "invalid_host": "Invalid host"
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
     }
   },
   "device_automation": {
@@ -65,6 +65,54 @@
       "long_release": "[%key:component::hue::device_automation::trigger_type::remote_button_long_release%]",
       "double_short_release": "[%key:component::hue::device_automation::trigger_type::remote_double_button_short_press%]",
       "start": "[%key:component::hue::device_automation::trigger_type::initial_press%]"
+    }
+  },
+  "entity": {
+    "event": {
+      "button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "Initial press",
+              "repeat": "Repeat",
+              "short_release": "Short press",
+              "long_press": "Long press",
+              "long_release": "Long release",
+              "double_short_release": "Double press"
+            }
+          }
+        }
+      },
+      "rotary": {
+        "name": "Rotary",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "clock_wise": "Clockwise",
+              "counter_clock_wise": "Counter clockwise"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "zigbee_connectivity": {
+        "name": "Zigbee connectivity",
+        "state": {
+          "connected": "[%key:common::state::connected%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "connectivity_issue": "Connectivity issue",
+          "unidirectional_incoming": "Unidirectional incoming"
+        }
+      }
+    },
+    "switch": {
+      "motion_sensor_enabled": {
+        "name": "Motion sensor enabled"
+      },
+      "light_sensor_enabled": {
+        "name": "Light sensor enabled"
+      }
     }
   },
   "options": {

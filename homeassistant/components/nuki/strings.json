@@ -58,7 +58,7 @@
       }
     },
     "set_continuous_mode": {
-      "name": "Set continuous code",
+      "name": "Set continuous mode",
       "description": "Enables or disables continuous mode on Nuki Opener.",
       "fields": {
         "enable": {

@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
+    ATTR_MODE,
     ATTR_STEP,
     ATTR_VALUE,
     DOMAIN,
@@ -22,6 +23,7 @@ from homeassistant.components.number.const import (
 )
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
+    NON_NUMERIC_DEVICE_CLASSES,
     SensorDeviceClass,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -226,6 +228,12 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert number.step == 1.0
     assert number.unit_of_measurement is None
     assert number.value == 0.5
+    assert number.capability_attributes == {
+        ATTR_MAX: 100.0,
+        ATTR_MIN: 0.0,
+        ATTR_MODE: NumberMode.AUTO,
+        ATTR_STEP: 1.0,
+    }
 
     number_2 = MockNumberEntity()
     number_2.hass = hass
@@ -234,6 +242,12 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert number_2.step == 0.1
     assert number_2.unit_of_measurement == "native_cats"
     assert number_2.value == 0.5
+    assert number_2.capability_attributes == {
+        ATTR_MAX: 0.5,
+        ATTR_MIN: -0.5,
+        ATTR_MODE: NumberMode.AUTO,
+        ATTR_STEP: 0.1,
+    }
 
     number_3 = MockNumberEntityAttr()
     number_3.hass = hass
@@ -242,6 +256,12 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert number_3.step == 100.0
     assert number_3.unit_of_measurement == "native_dogs"
     assert number_3.value == 500.0
+    assert number_3.capability_attributes == {
+        ATTR_MAX: 1000.0,
+        ATTR_MIN: -1000.0,
+        ATTR_MODE: NumberMode.AUTO,
+        ATTR_STEP: 100.0,
+    }
 
     number_4 = MockNumberEntityDescr()
     number_4.hass = hass
@@ -250,6 +270,12 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert number_4.step == 2.0
     assert number_4.unit_of_measurement == "native_rabbits"
     assert number_4.value is None
+    assert number_4.capability_attributes == {
+        ATTR_MAX: 10.0,
+        ATTR_MIN: -10.0,
+        ATTR_MODE: NumberMode.AUTO,
+        ATTR_STEP: 2.0,
+    }
 
 
 async def test_sync_set_value(hass: HomeAssistant) -> None:
@@ -505,7 +531,7 @@ async def test_restore_number_save_state(
     assert state["entity_id"] == entity0.entity_id
     extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
     assert extra_data == RESTORE_DATA
-    assert type(extra_data["native_value"]) == float
+    assert isinstance(extra_data["native_value"], float)
 
 
 @pytest.mark.parametrize(
@@ -769,22 +795,15 @@ async def test_custom_unit_change(
 def test_device_classes_aligned() -> None:
     """Make sure all sensor device classes are also available in NumberDeviceClass."""
 
-    non_numeric_device_classes = {
-        SensorDeviceClass.DATE,
-        SensorDeviceClass.DURATION,
-        SensorDeviceClass.ENUM,
-        SensorDeviceClass.TIMESTAMP,
-    }
-
     for device_class in SensorDeviceClass:
-        if device_class in non_numeric_device_classes:
+        if device_class in NON_NUMERIC_DEVICE_CLASSES:
             continue
 
         assert hasattr(NumberDeviceClass, device_class.name)
         assert getattr(NumberDeviceClass, device_class.name).value == device_class.value
 
     for device_class in SENSOR_DEVICE_CLASS_UNITS:
-        if device_class in non_numeric_device_classes:
+        if device_class in NON_NUMERIC_DEVICE_CLASSES:
             continue
         assert (
             SENSOR_DEVICE_CLASS_UNITS[device_class]
@@ -824,22 +843,22 @@ async def test_name(hass: HomeAssistant) -> None:
         ),
     )
 
-    # Unnamed sensor without device class -> no name
+    # Unnamed number without device class -> no name
     entity1 = NumberEntity()
     entity1.entity_id = "number.test1"
 
-    # Unnamed sensor with device class but has_entity_name False -> no name
+    # Unnamed number with device class but has_entity_name False -> no name
     entity2 = NumberEntity()
     entity2.entity_id = "number.test2"
     entity2._attr_device_class = NumberDeviceClass.TEMPERATURE
 
-    # Unnamed sensor with device class and has_entity_name True -> named
+    # Unnamed number with device class and has_entity_name True -> named
     entity3 = NumberEntity()
     entity3.entity_id = "number.test3"
     entity3._attr_device_class = NumberDeviceClass.TEMPERATURE
     entity3._attr_has_entity_name = True
 
-    # Unnamed sensor with device class and has_entity_name True -> named
+    # Unnamed number with device class and has_entity_name True -> named
     entity4 = NumberEntity()
     entity4.entity_id = "number.test4"
     entity4.entity_description = NumberEntityDescription(
@@ -907,3 +926,13 @@ async def test_name(hass: HomeAssistant) -> None:
         "mode": NumberMode.AUTO,
         "step": 1.0,
     }
+
+
+def test_device_class_units(hass: HomeAssistant) -> None:
+    """Test all numeric device classes have unit."""
+    # DEVICE_CLASS_UNITS should include all device classes except:
+    # - NumberDeviceClass.MONETARY
+    # - Device classes enumerated in NON_NUMERIC_DEVICE_CLASSES
+    assert set(NUMBER_DEVICE_CLASS_UNITS) == set(
+        NumberDeviceClass
+    ) - NON_NUMERIC_DEVICE_CLASSES - {NumberDeviceClass.MONETARY}

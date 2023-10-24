@@ -51,9 +51,7 @@ class DeviceAuth(AuthImplementation):
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve a Google API Credentials object to Home Assistant token."""
         creds: Credentials = external_data[DEVICE_AUTH_CREDS]
-        delta = (
-            creds.token_expiry.replace(tzinfo=datetime.timezone.utc) - dt_util.utcnow()
-        )
+        delta = creds.token_expiry.replace(tzinfo=datetime.UTC) - dt_util.utcnow()
         _LOGGER.debug(
             "Token expires at %s (in %s)", creds.token_expiry, delta.total_seconds()
         )
@@ -116,7 +114,7 @@ class DeviceFlow:
         # For some reason, oauth.step1_get_device_and_user_codes() returns a datetime
         # object without tzinfo. For the comparison below to work, it needs one.
         user_code_expiry = self._device_flow_info.user_code_expiry.replace(
-            tzinfo=datetime.timezone.utc
+            tzinfo=datetime.UTC
         )
         expiration_time = min(user_code_expiry, max_timeout)
 

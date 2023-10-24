@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import update_coordinator
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import _LOGGER, DOMAIN, VENSTAR_SLEEP, VENSTAR_TIMEOUT
@@ -128,6 +128,8 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None
 class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
     """Representation of a Venstar entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         venstar_data_coordinator: VenstarDataUpdateCoordinator,
@@ -151,5 +153,5 @@ class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
             name=self._client.name,
             manufacturer="Venstar",
             model=f"{self._client.model}-{self._client.get_type()}",
-            sw_version=self._client.get_api_ver(),
+            sw_version="{}.{}".format(*(self._client.get_firmware_ver())),
         )

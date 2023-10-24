@@ -15,8 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -46,6 +45,7 @@ ELEC_SENSORS: tuple[OpowerEntityDescription, ...] = (
         name="Current bill electric usage to date",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        # Not TOTAL_INCREASING because it can decrease for accounts with solar
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
         value_fn=lambda data: data.usage_to_date,
@@ -188,7 +188,7 @@ async def async_setup_entry(
             sensors = ELEC_SENSORS
         elif (
             forecast.account.meter_type == MeterType.GAS
-            and forecast.unit_of_measure == UnitOfMeasure.THERM
+            and forecast.unit_of_measure in [UnitOfMeasure.THERM, UnitOfMeasure.CCF]
         ):
             sensors = GAS_SENSORS
         for sensor in sensors:

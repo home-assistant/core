@@ -18,7 +18,8 @@ if typing.TYPE_CHECKING:
 
 MANUFACTURER = "mock manufacturer"
 MODEL = "mock model"
-QUIRK_CLASS = "mock.class"
+QUIRK_CLASS = "mock.test.quirk.class"
+QUIRK_CLASS_SHORT = "quirk.class"
 
 
 @pytest.fixture
@@ -208,6 +209,12 @@ def cluster_handlers(cluster_handler):
                 cluster_handler_names="on_off", quirk_classes=lambda x: x != QUIRK_CLASS
             ),
             False,
+        ),
+        (
+            registries.MatchRule(
+                cluster_handler_names="on_off", quirk_classes=QUIRK_CLASS_SHORT
+            ),
+            True,
         ),
     ],
 )
@@ -589,6 +596,13 @@ def test_entity_names() -> None:
             if hasattr(entity, "_attr_name"):
                 # The entity has a name
                 assert isinstance(entity._attr_name, str) and entity._attr_name
+            elif hasattr(entity, "_attr_translation_key"):
+                assert (
+                    isinstance(entity._attr_translation_key, str)
+                    and entity._attr_translation_key
+                )
+            elif hasattr(entity, "_attr_device_class"):
+                assert entity._attr_device_class
             else:
                 # The only exception (for now) is IASZone
                 assert entity is IASZone

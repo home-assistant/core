@@ -349,9 +349,10 @@ def async_validate_entity_schema(
     config = schema(config)
 
     registry = er.async_get(hass)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_id(
-        registry, config[CONF_ENTITY_ID]
-    )
+    if CONF_ENTITY_ID in config:
+        config[CONF_ENTITY_ID] = er.async_resolve_entity_id(
+            registry, config[CONF_ENTITY_ID]
+        )
 
     return config
 
