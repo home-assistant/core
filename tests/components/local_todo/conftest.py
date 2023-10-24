@@ -29,30 +29,42 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 class FakeStore(LocalTodoListStore):
     """Mock storage implementation."""
 
-    def __init__(self, hass: HomeAssistant, path: Path, ics_content: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, path: Path, ics_content: str | None
+    ) -> None:
         """Initialize FakeStore."""
         self._content = ics_content
         mock_path = Mock()
+        mock_path.exists = self._mock_exists
         mock_path.read_text = self._mock_read_text
         mock_path.write_text = self._mock_write_text
         super().__init__(hass, mock_path)
 
+    def _mock_exists(self) -> bool:
+        return self._content is not None
+
     def _mock_read_text(self) -> str:
-        return self._content
+        return self._content or ""
 
     def _mock_write_text(self, content: str) -> None:
         self._content = content
 
 
+@pytest.fixture(name="ics_content")
+def mock_ics_content() -> str | None:
+    """Fixture to set .ics file content."""
+    return ""
+
+
 @pytest.fixture(name="store", autouse=True)
-def mock_store() -> Generator[None, None, None]:
+def mock_store(ics_content: str) -> Generator[None, None, None]:
     """Test cleanup, remove any media storage persisted during the test."""
 
     stores: dict[Path, FakeStore] = {}
 
     def new_store(hass: HomeAssistant, path: Path) -> FakeStore:
         if path not in stores:
-            stores[path] = FakeStore(hass, path, "")
+            stores[path] = FakeStore(hass, path, ics_content)
         return stores[path]
 
     with patch("homeassistant.components.local_todo.LocalTodoListStore", new=new_store):

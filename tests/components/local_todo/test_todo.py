@@ -1,6 +1,7 @@
 """Tests for todo platform of local_todo."""
 
 from collections.abc import Awaitable, Callable
+import textwrap
 
 import pytest
 
@@ -318,3 +319,64 @@ async def test_move_item_unknown(
     assert not resp.get("success")
     assert resp.get("error", {}).get("code") == "failed"
     assert "not found in todo list" in resp["error"]["message"]
+
+
+@pytest.mark.parametrize(
+    ("ics_content", "expected_state"),
+    [
+        ("", "0"),
+        (None, "0"),
+        (
+            textwrap.dedent(
+                """\
+                    BEGIN:VCALENDAR
+                    PRODID:-//homeassistant.io//local_todo 1.0//EN
+                    VERSION:2.0
+                    BEGIN:VTODO
+                    DTSTAMP:20231024T014011
+                    UID:077cb7f2-6c89-11ee-b2a9-0242ac110002
+                    CREATED:20231017T010348
+                    LAST-MODIFIED:20231024T014011
+                    SEQUENCE:1
+                    STATUS:COMPLETED
+                    SUMMARY:Complete Task
+                    END:VTODO
+                    END:VCALENDAR
+                """
+            ),
+            "0",
+        ),
+        (
+            textwrap.dedent(
+                """\
+                    BEGIN:VCALENDAR
+                    PRODID:-//homeassistant.io//local_todo 1.0//EN
+                    VERSION:2.0
+                    BEGIN:VTODO
+                    DTSTAMP:20231024T014011
+                    UID:077cb7f2-6c89-11ee-b2a9-0242ac110002
+                    CREATED:20231017T010348
+                    LAST-MODIFIED:20231024T014011
+                    SEQUENCE:1
+                    STATUS:NEEDS-ACTION
+                    SUMMARY:Incomplete Task
+                    END:VTODO
+                    END:VCALENDAR
+                """
+            ),
+            "1",
+        ),
+    ],
+    ids=("empty", "not_exists", "completed", "needs_action"),
+)
+async def test_parse_existing_ics(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup_integration: None,
+    expected_state: str,
+) -> None:
+    """Test parsing ics content."""
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == expected_state
