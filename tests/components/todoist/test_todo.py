@@ -50,12 +50,12 @@ async def test_todo_item_state(
 ) -> None:
     """Test for a To-do List entity state."""
 
-    await async_update_entity(hass, "todo.name")
     state = hass.states.get("todo.name")
     assert state
     assert state.state == expected_state
 
 
+@pytest.mark.parametrize(("tasks"), [[]])
 async def test_create_todo_list_item(
     hass: HomeAssistant,
     setup_integration: None,
@@ -63,8 +63,6 @@ async def test_create_todo_list_item(
 ) -> None:
     """Test for creating a To-do Item."""
 
-    api.get_tasks.return_value = []
-    await async_update_entity(hass, "todo.name")
     state = hass.states.get("todo.name")
     assert state
     assert state.state == "0"
@@ -94,6 +92,7 @@ async def test_create_todo_list_item(
     assert state.state == "1"
 
 
+@pytest.mark.parametrize(("tasks"), [[]])
 async def test_create_completed_item_unsupported(
     hass: HomeAssistant,
     setup_integration: None,
@@ -101,8 +100,6 @@ async def test_create_completed_item_unsupported(
 ) -> None:
     """Test for creating a To-do Item that is already completed."""
 
-    api.get_tasks.return_value = []
-    await async_update_entity(hass, "todo.name")
     state = hass.states.get("todo.name")
     assert state
     assert state.state == "0"
@@ -119,6 +116,9 @@ async def test_create_completed_item_unsupported(
         )
 
 
+@pytest.mark.parametrize(
+    ("tasks"), [[make_api_task(id="task-id-1", content="Soda", is_completed=False)]]
+)
 async def test_update_todo_item_status(
     hass: HomeAssistant,
     setup_integration: None,
@@ -126,10 +126,6 @@ async def test_update_todo_item_status(
 ) -> None:
     """Test for updating a To-do Item that changes the status."""
 
-    api.get_tasks.return_value = [
-        make_api_task(id="task-id-1", content="Soda", is_completed=False)
-    ]
-    await async_update_entity(hass, "todo.name")
     state = hass.states.get("todo.name")
     assert state
     assert state.state == "1"
@@ -183,6 +179,9 @@ async def test_update_todo_item_status(
     assert state.state == "1"
 
 
+@pytest.mark.parametrize(
+    ("tasks"), [[make_api_task(id="task-id-1", content="Soda", is_completed=False)]]
+)
 async def test_update_todo_item_summary(
     hass: HomeAssistant,
     setup_integration: None,
@@ -190,10 +189,6 @@ async def test_update_todo_item_summary(
 ) -> None:
     """Test for updating a To-do Item that changes the summary."""
 
-    api.get_tasks.return_value = [
-        make_api_task(id="task-id-1", content="Soda", is_completed=False)
-    ]
-    await async_update_entity(hass, "todo.name")
     state = hass.states.get("todo.name")
     assert state
     assert state.state == "1"
@@ -219,6 +214,15 @@ async def test_update_todo_item_summary(
     assert args.kwargs.get("content") == "Milk"
 
 
+@pytest.mark.parametrize(
+    ("tasks"),
+    [
+        [
+            make_api_task(id="task-id-1", content="Soda", is_completed=False),
+            make_api_task(id="task-id-2", content="Milk", is_completed=False),
+        ]
+    ],
+)
 async def test_delete_todo_item(
     hass: HomeAssistant,
     setup_integration: None,
@@ -226,11 +230,6 @@ async def test_delete_todo_item(
 ) -> None:
     """Test for deleting a To-do Item."""
 
-    api.get_tasks.return_value = [
-        make_api_task(id="task-id-1", content="Soda", is_completed=False),
-        make_api_task(id="task-id-2", content="Milk", is_completed=False),
-    ]
-    await async_update_entity(hass, "todo.name")
     state = hass.states.get("todo.name")
     assert state
     assert state.state == "2"

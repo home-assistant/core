@@ -154,4 +154,5 @@ async def mock_setup_integration(
         "homeassistant.components.todoist.TodoistAPIAsync", return_value=api
     ), patch("homeassistant.components.todoist.PLATFORMS", platforms):
         assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
         yield

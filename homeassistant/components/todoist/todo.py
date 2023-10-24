@@ -104,3 +104,8 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
             *[self.coordinator.api.delete_task(task_id=uid) for uid in uids]
         )
         await self.coordinator.async_refresh()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass update state from existing coordinator data."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
