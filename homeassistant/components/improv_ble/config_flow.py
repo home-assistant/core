@@ -186,7 +186,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # mypy is not aware that we can't get here without having these set already
         assert self._discovery_info is not None
 
-        self._unregister_bluetooth_callback()
         if user_input is None:
             name = self._discovery_info.name or self._discovery_info.address
             return self.async_show_form(
@@ -194,6 +193,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={"name": name},
             )
 
+        self._unregister_bluetooth_callback()
         return await self.async_step_start_improv()
 
     async def async_step_start_improv(
