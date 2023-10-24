@@ -9,7 +9,7 @@ STORAGE_PATH = ".storage/{key}.ics"
 
 
 class LocalTodoListStore:
-    """Local storage for a single to-do list."""
+    """Local storage for a single To-do list."""
 
     def __init__(self, hass: HomeAssistant, path: Path) -> None:
         """Initialize LocalTodoListStore."""
