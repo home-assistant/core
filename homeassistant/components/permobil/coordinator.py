@@ -49,5 +49,9 @@ class MyPermobilCoordinator(DataUpdateCoordinator[MyPermobilData]):
                 )
 
         except MyPermobilAPIException as err:
-            _LOGGER.error("Error fetching data from MyPermobil API: %s", err)
+            _LOGGER.exception(
+                "Error fetching data from MyPermobil API for account %s %s",
+                self.p_api.email,
+                err,
+            )
             raise UpdateFailed from err

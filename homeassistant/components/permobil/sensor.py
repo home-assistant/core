@@ -79,7 +79,6 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         icon="mdi:battery-clock",
         native_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
         # Distance possible on current change (km)
@@ -88,7 +87,6 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         translation_key="distance_left",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
         # Drive time possible on current charge
@@ -97,7 +95,6 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         translation_key="indoor_drive_time",
         native_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
         # Watt hours the battery can store given battery health
@@ -195,4 +192,7 @@ class PermobilSensor(CoordinatorEntity[MyPermobilCoordinator], SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the value of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        try:
+            return self.entity_description.value_fn(self.coordinator.data)
+        except KeyError:
+            return None
