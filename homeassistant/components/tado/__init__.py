@@ -172,11 +172,11 @@ class TadoConnector:
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
 
-    def getMe(self):
+    def get_me(self):
         """Return the Tado 'me' data."""
         return self.tado.getMe()
 
-    def getMobileDevices(self):
+    def get_mobile_devices(self):
         """Return the Tado mobile devices."""
         return self.tado.getMobileDevices()
 
