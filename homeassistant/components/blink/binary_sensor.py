@@ -15,13 +15,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DEFAULT_BRAND,
-    DOMAIN,
-    TYPE_BATTERY,
-    TYPE_CAMERA_ARMED,
-    TYPE_MOTION_DETECTED,
-)
+from .const import DEFAULT_BRAND, DOMAIN, TYPE_BATTERY, TYPE_MOTION_DETECTED
 from .coordinator import BlinkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,10 +25,6 @@ BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         key=TYPE_BATTERY,
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    BinarySensorEntityDescription(
-        key=TYPE_CAMERA_ARMED,
-        translation_key="camera_armed",
     ),
     BinarySensorEntityDescription(
         key=TYPE_MOTION_DETECTED,
