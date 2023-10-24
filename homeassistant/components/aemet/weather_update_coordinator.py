@@ -24,6 +24,7 @@ from aemet_opendata.const import (
     AEMET_ATTR_SPEED,
     AEMET_ATTR_STATION_DATE,
     AEMET_ATTR_STATION_HUMIDITY,
+    AEMET_ATTR_STATION_PRECIPITATION,
     AEMET_ATTR_STATION_PRESSURE,
     AEMET_ATTR_STATION_PRESSURE_SEA,
     AEMET_ATTR_STATION_TEMPERATURE,
@@ -60,6 +61,7 @@ from .const import (
     ATTR_API_FORECAST_WIND_MAX_SPEED,
     ATTR_API_FORECAST_WIND_SPEED,
     ATTR_API_HUMIDITY,
+    ATTR_API_PREC_TODAY,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
     ATTR_API_RAIN_PROB,
@@ -163,7 +165,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         # Get latest station data
         station_data = None
         station_dt = None
+        prec_today = None
         if weather_response.station:
+            prec_today = 0.0
             for _station_data in weather_response.station[ATTR_DATA]:
                 if AEMET_ATTR_STATION_DATE in _station_data:
                     _station_dt = dt_util.parse_datetime(
@@ -172,6 +176,10 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                     if not station_dt or _station_dt > station_dt:
                         station_data = _station_data
                         station_dt = _station_dt
+                if AEMET_ATTR_STATION_PRECIPITATION in _station_data:
+                    curr_day_date = dt_util.parse_datetime(_station_data[AEMET_ATTR_STATION_DATE] + "Z")
+                    if now.date() == curr_day_date.date():
+                        prec_today = prec_today + format_float(_station_data[AEMET_ATTR_STATION_PRECIPITATION])
 
         condition = None
         humidity = None
@@ -244,6 +252,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_FORECAST_DAILY: forecast_daily,
             ATTR_API_FORECAST_HOURLY: forecast_hourly,
             ATTR_API_HUMIDITY: humidity,
+            ATTR_API_PREC_TODAY: prec_today,
             ATTR_API_TEMPERATURE: temperature,
             ATTR_API_TEMPERATURE_FEELING: temperature_feeling,
             ATTR_API_PRESSURE: pressure,
@@ -377,7 +386,15 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         if val:
             return format_int(val)
         return None
-
+    
+    @staticmethod
+    def _get_prec_today(prec_today):
+        """Get humidity from weather data."""
+        val = prec_today
+        if val:
+            return format_float(val)
+        return None
+        
     @staticmethod
     def _get_precipitation_prob_day(day_data):
         """Get humidity from weather data."""
