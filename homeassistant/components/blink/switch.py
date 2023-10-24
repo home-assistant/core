@@ -48,6 +48,7 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
     """Representation of a Blink Motion Switch."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -79,7 +80,9 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
 
         except asyncio.TimeoutError as er:
             raise HomeAssistantError("Blink failed to arm camera") from er
-        self._attr_is_on = True
+
+        self._camera.motion_enabled = True
+        await self._coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
@@ -88,8 +91,9 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
 
         except asyncio.TimeoutError as er:
             raise HomeAssistantError("Blink failed to dis-arm camera") from er
-        self._attr_is_on = False
-        # self.async_write_ha_state()
+
+        self._camera.motion_enabled = False
+        await self._coordinator.async_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
