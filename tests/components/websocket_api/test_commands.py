@@ -552,6 +552,7 @@ async def test_call_service_error(
         ("test", "custom_error_key_not_exists", None, {}, "error_message"),
     ],
 )
+@pytest.mark.parametrize(("exception"), [HomeAssistantError, ServiceValidationError])
 async def test_exception_translations(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
@@ -560,12 +561,13 @@ async def test_exception_translations(
     translations: dict[str, str],
     translation_placeholders: dict[str, str] | None,
     message: str,
+    exception: Exception,
 ) -> None:
     """Test handling exceptions with translations."""
 
     @callback
     def service_error_call(_):
-        raise ServiceValidationError(
+        raise exception(
             "error_message",
             domain=domain,
             translation_key=translation_key,

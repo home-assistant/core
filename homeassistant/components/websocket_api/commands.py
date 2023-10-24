@@ -252,7 +252,8 @@ async def handle_call_service(
         connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, message)
     except HomeAssistantError as err:
         connection.logger.exception(err)
-        connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
+        message = await async_build_error_message(hass, err)
+        connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, message)
     except Exception as err:  # pylint: disable=broad-except
         connection.logger.exception(err)
         connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
@@ -268,7 +269,7 @@ async def async_get_exception_translations(
 
 
 async def async_build_error_message(
-    hass: HomeAssistant, err: ServiceValidationError
+    hass: HomeAssistant, err: HomeAssistantError
 ) -> str:
     """Build translated error message from exception."""
     if (translation_key := err.translation_key) is None or (

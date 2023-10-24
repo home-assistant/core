@@ -12,10 +12,6 @@ if TYPE_CHECKING:
 class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
 
-
-class ServiceValidationError(HomeAssistantError):
-    """A validation exception occurred when calling a service."""
-
     def __init__(
         self,
         *args: object,
@@ -28,6 +24,10 @@ class ServiceValidationError(HomeAssistantError):
         self.domain = domain
         self.translation_key = translation_key
         self.translation_placeholders = translation_placeholders
+
+
+class ServiceValidationError(HomeAssistantError):
+    """A validation exception occurred when calling a service."""
 
 
 class InvalidEntityFormatError(HomeAssistantError):
