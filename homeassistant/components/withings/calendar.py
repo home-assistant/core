@@ -1,17 +1,20 @@
 """Calendar platform for Withings."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 
 from aiowithings import WithingsClient, WorkoutCategory
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 
 from . import DOMAIN, WithingsData
-from .coordinator import WithingsActivityDataUpdateCoordinator
+from .coordinator import WithingsWorkoutDataUpdateCoordinator
 from .entity import WithingsEntity
 
 
@@ -21,15 +24,39 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the calendar platform for entity."""
+    ent_reg = er.async_get(hass)
     withings_data: WithingsData = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        [
-            WithingsWorkoutCalendarEntity(
-                withings_data.client, withings_data.activity_coordinator
-            )
-        ],
+    workout_coordinator = withings_data.workout_coordinator
+
+    calendar_setup_before = ent_reg.async_get_entity_id(
+        Platform.CALENDAR,
+        DOMAIN,
+        f"withings_{entry.unique_id}_workout",
     )
+
+    if workout_coordinator.data is not None or calendar_setup_before:
+        async_add_entities(
+            [WithingsWorkoutCalendarEntity(withings_data.client, workout_coordinator)],
+        )
+    else:
+        remove_calendar_listener: Callable[[], None]
+
+        def _async_add_calendar_entity() -> None:
+            """Add calendar entity."""
+            if workout_coordinator.data is not None:
+                async_add_entities(
+                    [
+                        WithingsWorkoutCalendarEntity(
+                            withings_data.client, workout_coordinator
+                        )
+                    ],
+                )
+                remove_calendar_listener()
+
+        remove_calendar_listener = workout_coordinator.async_add_listener(
+            _async_add_calendar_entity
+        )
 
 
 def get_event_name(category: WorkoutCategory) -> str:
@@ -43,10 +70,10 @@ class WithingsWorkoutCalendarEntity(CalendarEntity, WithingsEntity):
 
     _attr_translation_key = "workout"
 
-    coordinator: WithingsActivityDataUpdateCoordinator
+    coordinator: WithingsWorkoutDataUpdateCoordinator
 
     def __init__(
-        self, client: WithingsClient, coordinator: WithingsActivityDataUpdateCoordinator
+        self, client: WithingsClient, coordinator: WithingsWorkoutDataUpdateCoordinator
     ) -> None:
         """Create the Calendar entity."""
         super().__init__(coordinator, "workout")
