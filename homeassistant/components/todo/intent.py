@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.components.shopping_list import EVENT_SHOPPING_LIST_UPDATED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
@@ -10,7 +11,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 
 from . import DOMAIN, TodoItem, TodoListEntity
 
-INTENT_ADD_ITEM = "HassListAddItem"
+INTENT_ADD_ITEM = "HassShoppingListAddItem"
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
@@ -42,25 +43,18 @@ class AddItemIntent(intent.IntentHandler):
             # Add to a list by name
             list_name = slots["list"]["value"]
 
-            # Try literal name match first
-            for maybe_list in list_entities:
-                if not isinstance(maybe_list.name, str):
-                    continue
-
-                if list_name == maybe_list.name:
-                    target_list = maybe_list
-                    break
-
-            if target_list is None:
-                list_name_norm = list_name.strip().lower()
+            # Find matching list
+            matching_states = intent.async_match_states(
+                hass, name=list_name, domains=[DOMAIN]
+            )
+            for list_state in matching_states:
                 for maybe_list in list_entities:
-                    if not isinstance(maybe_list.name, str):
-                        continue
-
-                    maybe_name_norm = maybe_list.name.strip().lower()
-                    if list_name_norm == maybe_name_norm:
+                    if maybe_list.entity_id == list_state.entity_id:
                         target_list = maybe_list
                         break
+
+                if target_list is not None:
+                    break
 
             if target_list is None:
                 raise intent.IntentHandleError(f"No list named {list_name}")
@@ -75,4 +69,5 @@ class AddItemIntent(intent.IntentHandler):
 
         response = intent_obj.create_response()
         response.response_type = intent.IntentResponseType.ACTION_DONE
+        intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
         return response

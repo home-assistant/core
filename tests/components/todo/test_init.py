@@ -763,7 +763,7 @@ async def test_add_item_intent(
 
     # Add to first list
     response = await intent.async_handle(
-        hass, "test", "HassListAddItem", {"item": {"value": "beer"}}
+        hass, "test", todo_intent.INTENT_ADD_ITEM, {"item": {"value": "beer"}}
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -776,7 +776,7 @@ async def test_add_item_intent(
     response = await intent.async_handle(
         hass,
         "test",
-        "HassListAddItem",
+        todo_intent.INTENT_ADD_ITEM,
         {"item": {"value": "cheese"}, "list": {"value": "List 2"}},
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -789,7 +789,7 @@ async def test_add_item_intent(
     response = await intent.async_handle(
         hass,
         "test",
-        "HassListAddItem",
+        todo_intent.INTENT_ADD_ITEM,
         {"item": {"value": "wine"}, "list": {"value": "lIST 2"}},
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
