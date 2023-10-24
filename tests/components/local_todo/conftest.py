@@ -9,6 +9,7 @@ from homeassistant.components.local_todo import LocalTodoListStore
 from homeassistant.components.local_todo.const import CONF_TODO_LIST_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import slugify
 
 from tests.common import MockConfigEntry
 
@@ -74,7 +75,11 @@ def mock_store(ics_content: str) -> Generator[None, None, None]:
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
     """Fixture for mock configuration entry."""
-    return MockConfigEntry(domain=DOMAIN, data={CONF_TODO_LIST_NAME: TODO_NAME})
+    return MockConfigEntry(
+        unique_id=slugify(TODO_NAME),
+        domain=DOMAIN,
+        data={CONF_TODO_LIST_NAME: TODO_NAME},
+    )
 
 
 @pytest.fixture(name="setup_integration")
