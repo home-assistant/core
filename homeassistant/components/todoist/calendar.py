@@ -58,7 +58,7 @@ from .const import (
     SUMMARY,
 )
 from .coordinator import TodoistCoordinator
-from .types import CustomProject, ProjectData, TodoistEvent
+from .types import CalData, CustomProject, ProjectData, TodoistEvent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -334,6 +334,7 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
             whitelisted_labels=whitelisted_labels,
             whitelisted_projects=whitelisted_projects,
         )
+        self._cal_data: CalData = {}
         self._name = data[CONF_NAME]
         self._attr_unique_id = (
             str(data[CONF_ID]) if data.get(CONF_ID) is not None else None

@@ -1,7 +1,6 @@
 """A todo platform for Todoist."""
 
 import asyncio
-import logging
 from typing import cast
 
 from homeassistant.components.todo import (
@@ -80,14 +79,11 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
         """Create a To-do item."""
         if item.status != TodoItemStatus.NEEDS_ACTION:
             raise ValueError("Only active tasks may be created.")
-        logging.info("1 async_create_todo_item=%s", self._attr_todo_items)
         await self.coordinator.api.add_task(
             content=item.summary or "",
             project_id=self._project_id,
         )
-        logging.info("2 async_create_todo_item=%s", self._attr_todo_items)
         await self.coordinator.async_refresh()
-        logging.info("3 async_create_todo_item=%s", self._attr_todo_items)
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a To-do item."""
@@ -103,8 +99,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete a To-do item."""
-        tasks = []
-        for uid in uids:
-            tasks.append(self.coordinator.api.delete_task(task_id=uid))
-        await asyncio.gather(*tasks)
+        await asyncio.gather(
+            *[self.coordinator.api.delete_task(task_id=uid) for uid in uids]
+        )
         await self.coordinator.async_refresh()
