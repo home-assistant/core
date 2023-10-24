@@ -110,7 +110,7 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input select."""
-    component = EntityComponent[Timer](_LOGGER, DOMAIN, hass)
+    component = hass.data[DOMAIN] = EntityComponent[Timer](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
