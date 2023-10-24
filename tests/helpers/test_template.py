@@ -4588,3 +4588,33 @@ async def test_lru_increases_with_many_entities(hass: HomeAssistant) -> None:
     assert template.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size() == int(
         round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
     )
+
+
+def test_register_filter(hass: HomeAssistant) -> None:
+    """Test register_filter."""
+
+    def double(n: int) -> int:
+        return n * 2
+
+    template.register_filter(hass, "double", double)
+    assert template.Template("{{ 2 | double }}", hass).async_render() == 4
+
+
+def test_register_function(hass: HomeAssistant) -> None:
+    """Test register_function."""
+
+    def double(n: int) -> int:
+        return n * 2
+
+    template.register_function(hass, "double", double)
+    assert template.Template("{{ double(2) }}", hass).async_render() == 4
+
+
+def test_register_test(hass: HomeAssistant) -> None:
+    """Test register_test."""
+
+    def is_even(n: int) -> bool:
+        return n % 2 == 0
+
+    template.register_test(hass, "even", is_even)
+    assert template.Template("{{ 2 is even }}", hass).async_render() is True

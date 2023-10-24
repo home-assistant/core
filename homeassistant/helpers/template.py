@@ -65,7 +65,7 @@ from homeassistant.core import (
     valid_domain,
     valid_entity_id,
 )
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.loader import bind_hass
 from homeassistant.util import (
     convert,
@@ -92,6 +92,8 @@ _ENVIRONMENT = "template.environment"
 _ENVIRONMENT_LIMITED = "template.environment_limited"
 _ENVIRONMENT_STRICT = "template.environment_strict"
 _HASS_LOADER = "template.hass_loader"
+
+_ALL_ENVIRONMENTS = [_ENVIRONMENT, _ENVIRONMENT_LIMITED, _ENVIRONMENT_STRICT]
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
@@ -174,6 +176,51 @@ def _template_state(hass: HomeAssistant, state: State) -> TemplateState:
     template_state = TemplateState(hass, state)
     CACHED_TEMPLATE_LRU[state] = template_state
     return template_state
+
+
+CUSTOM_FILTERS = "template.custom_filters"
+CUSTOM_FUNCTIONS = "template.custom_functions"
+CUSTOM_TESTS = "template.custom_tests"
+
+
+def _get_custom_dict(hass: HomeAssistant, name: str) -> dict[str, Callable[..., Any]]:
+    """Get the dict that stores custom Jinja features."""
+    if not hass.data.get(name):
+        hass.data[name] = {}
+    return cast(
+        dict[str, Callable[..., Any]],
+        hass.data[name],
+    )
+
+
+def register_filter(hass: HomeAssistant, name: str, func: Callable[..., _R]) -> None:
+    """Add a Jinja filter for use in templates."""
+    for env_name in _ALL_ENVIRONMENTS:
+        if hass.data.get(env_name):
+            if hass.data[env_name].filters[name]:
+                raise HomeAssistantError("A filter named {name} already exists")
+            hass.data[env_name].filters[name] = func
+    _get_custom_dict(hass, CUSTOM_FILTERS)[name] = func
+
+
+def register_function(hass: HomeAssistant, name: str, func: Callable[..., _R]) -> None:
+    """Add a Jinja function for use in templates."""
+    for env_name in _ALL_ENVIRONMENTS:
+        if hass.data.get(env_name):
+            if hass.data[env_name].globals[name]:
+                raise HomeAssistantError("A global named {name} already exists")
+            hass.data[env_name].globals[name] = func
+    _get_custom_dict(hass, CUSTOM_FUNCTIONS)[name] = func
+
+
+def register_test(hass: HomeAssistant, name: str, func: Callable[..., _R]) -> None:
+    """Add a Jinja test for use in templates."""
+    for env_name in _ALL_ENVIRONMENTS:
+        if hass.data.get(env_name):
+            if hass.data[env_name].tests[name]:
+                raise HomeAssistantError("A test named {name} already exists")
+            hass.data[env_name].tests[name] = func
+    _get_custom_dict(hass, CUSTOM_TESTS)[name] = func
 
 
 def async_setup(hass: HomeAssistant) -> bool:
@@ -2536,6 +2583,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["relative_time"] = self.globals["relative_time"]
         self.globals["today_at"] = hassfunction(today_at)
         self.filters["today_at"] = self.globals["today_at"]
+
+        self.filters.update(_get_custom_dict(hass, CUSTOM_FILTERS))
+        self.globals.update(_get_custom_dict(hass, CUSTOM_FUNCTIONS))
+        self.tests.update(_get_custom_dict(hass, CUSTOM_TESTS))
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
