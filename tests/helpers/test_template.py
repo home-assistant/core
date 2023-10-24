@@ -491,7 +491,7 @@ def test_isnumber(hass: HomeAssistant, value, expected) -> None:
         (datetime(2024, 1, 1, 0, 0, 0), False),
     ],
 )
-def test_islist(hass: HomeAssistant, value, expected) -> None:
+def test_islist(hass: HomeAssistant, value: Any, expected: bool) -> None:
     """Test is_list."""
     assert (
         template.Template("{{ value is list }}", hass).async_render({"value": value})
@@ -513,7 +513,7 @@ def test_islist(hass: HomeAssistant, value, expected) -> None:
         (datetime(2024, 1, 1, 0, 0, 0), False),
     ],
 )
-def test_isset(hass: HomeAssistant, value, expected) -> None:
+def test_isset(hass: HomeAssistant, value: Any, expected: bool) -> None:
     """Test is_set."""
     assert (
         template.Template("{{ value is set }}", hass).async_render({"value": value})
@@ -535,7 +535,7 @@ def test_isset(hass: HomeAssistant, value, expected) -> None:
         (datetime(2024, 1, 1, 0, 0, 0), False),
     ],
 )
-def test_istuple(hass: HomeAssistant, value, expected) -> None:
+def test_istuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
     """Test tuple."""
     assert (
         template.Template("{{ value is tuple }}", hass).async_render({"value": value})
@@ -556,7 +556,7 @@ def test_istuple(hass: HomeAssistant, value, expected) -> None:
         ((1, 2), {1, 2}),
     ],
 )
-def test_set(hass: HomeAssistant, value, expected) -> None:
+def test_set(hass: HomeAssistant, value: Any, expected: bool) -> None:
     """Test set function/filter."""
     assert (
         template.Template("{{ set(value) }}", hass).async_render({"value": value})
@@ -577,7 +577,7 @@ def test_set(hass: HomeAssistant, value, expected) -> None:
         ((1, 2), (1, 2)),
     ],
 )
-def test_tuple(hass: HomeAssistant, value, expected) -> None:
+def test_tuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
     """Test tuple function/filter."""
     assert (
         template.Template("{{ tuple(value) }}", hass).async_render({"value": value})
