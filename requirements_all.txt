@@ -1682,7 +1682,7 @@ pydroid-ipcam==2.0.0
 pyebox==1.1.4
 
 # homeassistant.components.ecoforest
-pyecoforest==0.3.0
+pyecoforest==0.4.0
 
 # homeassistant.components.econet
 pyeconet==0.1.20
