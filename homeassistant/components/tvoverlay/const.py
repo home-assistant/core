@@ -3,6 +3,7 @@ DOMAIN: str = "tvoverlay"
 DATA_HASS_CONFIG = "tvoverlay_hass_config"
 DEFAULT_NAME = "TvOverlay"
 DEFAULT_TIMEOUT = 5
+DEFAULT_DURATION = 5
 
 # Parameters for Notifications
 ATTR_ID = "id"

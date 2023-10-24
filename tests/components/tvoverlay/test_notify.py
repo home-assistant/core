@@ -69,9 +69,7 @@ async def test_notify_2(
             {
                 "message": "Message",
                 "title": "Title",
-                "data": {
-                    "image": "http://example.com/image.png",
-                },
+                "data": {"image": "http://example.com/image.png", "duration": 10},
             },
             blocking=True,
         )
@@ -277,15 +275,15 @@ async def test_notify_8(
             {
                 "message": "Message",
                 "title": "Title",
-                "data": {
-                    "app_icon": "mdi:bell",
-                },
+                "data": {"app_icon": "mdi:bell", "duration": "100000000000w2d3h4m5s"},
             },
             blocking=True,
         )
+
         assert mock_notify.mock_calls[0].args[0] == "Message"
         assert mock_notify.mock_calls[0].kwargs["title"] == "Title"
         assert mock_notify.mock_calls[0].kwargs["appIcon"] == "mdi:bell"
+        assert mock_notify.mock_calls[0].kwargs["seconds"] == 5
 
 
 async def test_notify_9(
