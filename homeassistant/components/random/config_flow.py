@@ -101,7 +101,7 @@ def _validate_unit(options: dict[str, Any]) -> None:
     """Validate unit of measurement."""
     if (
         (device_class := options.get(CONF_DEVICE_CLASS))
-        and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
+        and (units := DEVICE_CLASS_UNITS.get(device_class))
         and (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) not in units
     ):
         sorted_units = sorted(
