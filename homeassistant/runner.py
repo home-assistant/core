@@ -54,6 +54,8 @@ class RuntimeConfig:
     debug: bool = False
     open_ui: bool = False
 
+    safe_mode: bool = False
+
 
 def can_use_pidfd() -> bool:
     """Check if pidfd_open is available.
