@@ -1,4 +1,4 @@
-"""Common fixtures for the NEW_NAME tests."""
+"""Common fixtures for the local_todo tests."""
 from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
@@ -43,21 +43,15 @@ class FakeStore(LocalTodoListStore):
         self._content = ics_content
 
 
-@pytest.fixture(name="ics_content", autouse=True)
-def mock_ics_content() -> str:
-    """Fixture to allow tests to set initial ics content for the todo store."""
-    return ""
-
-
 @pytest.fixture(name="store", autouse=True)
-def mock_store(ics_content: str) -> Generator[None, None, None]:
+def mock_store() -> Generator[None, None, None]:
     """Test cleanup, remove any media storage persisted during the test."""
 
     stores: dict[Path, FakeStore] = {}
 
     def new_store(hass: HomeAssistant, path: Path) -> FakeStore:
         if path not in stores:
-            stores[path] = FakeStore(hass, path, ics_content)
+            stores[path] = FakeStore(hass, path, "")
         return stores[path]
 
     with patch("homeassistant.components.local_todo.LocalTodoListStore", new=new_store):
