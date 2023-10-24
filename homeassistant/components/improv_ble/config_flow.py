@@ -149,6 +149,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except AbortFlow:
             self.hass.config_entries.flow.async_abort(self.flow_id)
 
+    def _unregister_bluetooth_callback(self) -> None:
+        """Unregister bluetooth callbacks."""
+        if not self._remove_bluetooth_callback:
+            return
+        self._remove_bluetooth_callback()
+        self._remove_bluetooth_callback = None
+
     async def async_step_bluetooth(
         self, discovery_info: bluetooth.BluetoothServiceInfoBleak
     ) -> FlowResult:
@@ -179,10 +186,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # mypy is not aware that we can't get here without having these set already
         assert self._discovery_info is not None
 
-        if self._remove_bluetooth_callback:
-            self._remove_bluetooth_callback()
-            self._remove_bluetooth_callback = None
-
+        self._unregister_bluetooth_callback()
         if user_input is None:
             name = self._discovery_info.name or self._discovery_info.address
             return self.async_show_form(
@@ -406,6 +410,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_remove(self) -> None:
         """Notification that the flow has been removed."""
-        if self._remove_bluetooth_callback:
-            self._remove_bluetooth_callback()
-            self._remove_bluetooth_callback = None
+        self._unregister_bluetooth_callback()
