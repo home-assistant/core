@@ -1,9 +1,12 @@
 """The Google Tasks integration."""
 from __future__ import annotations
 
+from aiohttp import ClientError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
@@ -22,8 +25,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    auth = api.AsyncConfigEntryAuth(hass, session)
+    try:
+        await auth.async_get_access_token()
+    except ClientError as err:
+        raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id] = api.AsyncConfigEntryAuth(hass, session)
+    hass.data[DOMAIN][entry.entry_id] = auth
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

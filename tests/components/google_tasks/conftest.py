@@ -32,15 +32,21 @@ def platforms() -> list[Platform]:
     return []
 
 
+@pytest.fixture(name="expires_at")
+def mock_expires_at() -> int:
+    """Fixture to set the oauth token expiration time."""
+    return time.time() + 3600
+
+
 @pytest.fixture(name="token_entry")
-def mock_token_entry() -> dict[str, Any]:
+def mock_token_entry(expires_at: int) -> dict[str, Any]:
     """Fixture for OAuth 'token' data for a ConfigEntry."""
     return {
         "access_token": FAKE_ACCESS_TOKEN,
         "refresh_token": FAKE_REFRESH_TOKEN,
         "scope": " ".join(OAUTH2_SCOPES),
         "token_type": "Bearer",
-        "expires_at": time.time() + 86400,
+        "expires_at": expires_at,
     }
 
 

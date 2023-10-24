@@ -63,15 +63,17 @@ class GoogleTaskTodoListEntity(CoordinatorEntity, TodoListEntity):
     @property
     def todo_items(self) -> list[TodoItem] | None:
         """Get the current set of To-do items."""
-        if self.coordinator.data is None:
-            return None
-        return [
-            TodoItem(
-                summary=item["title"],
-                uid=item["id"],
-                status=TODO_STATUS_MAP.get(
-                    item.get("status"), TodoItemStatus.NEEDS_ACTION
-                ),
-            )
-            for item in self.coordinator.data
-        ]
+        return (
+            [
+                TodoItem(
+                    summary=item["title"],
+                    uid=item["id"],
+                    status=TODO_STATUS_MAP.get(
+                        item.get("status"), TodoItemStatus.NEEDS_ACTION
+                    ),
+                )
+                for item in self.coordinator.data
+            ]
+            if self.coordinator.data is not None
+            else None
+        )
