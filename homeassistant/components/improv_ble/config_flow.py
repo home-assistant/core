@@ -37,7 +37,7 @@ _T = TypeVar("_T")
 STEP_PROVISION_SCHEMA = vol.Schema(
     {
         vol.Required("ssid"): str,
-        vol.Required("password"): str,
+        vol.Optional("password"): str,
     }
 )
 
@@ -236,7 +236,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="provision", data_schema=STEP_PROVISION_SCHEMA
             )
         if user_input is not None:
-            self._credentials = Credentials(user_input["password"], user_input["ssid"])
+            self._credentials = Credentials(
+                user_input.get("password", ""), user_input["ssid"]
+            )
 
         try:
             need_authorization = await self._try_call(self._device.need_authorization())
