@@ -169,9 +169,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             raise HomeAssistantError("Unsupported hvac_mode")
 
         await self.coordinator.api.set_schedule_state(
-            self.device["location"],
-            self.device["last_used"],
-            "on" if hvac_mode == HVACMode.AUTO else "off",
+            self.device["location"], "on" if hvac_mode == HVACMode.AUTO else "off"
         )
 
     @plugwise_command
