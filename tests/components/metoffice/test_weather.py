@@ -576,4 +576,5 @@ async def test_forecast_subscription(
             }
         )
         msg = await client.receive_json()
+        assert msg == snapshot
         assert msg["success"]
