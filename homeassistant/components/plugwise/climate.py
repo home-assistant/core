@@ -120,8 +120,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if self.device["available_schedules"] != ["None"]:
             if HVACMode.AUTO not in hvac_modes:
                 hvac_modes.append(HVACMode.AUTO)
-        elif HVACMode.AUTO in hvac_modes:
-            hvac_modes.remove(HVACMode.AUTO)
 
         return hvac_modes
 
