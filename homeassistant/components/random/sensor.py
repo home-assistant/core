@@ -67,7 +67,7 @@ class RandomSensor(SensorEntity):
     _attr_icon = "mdi:hanger"
     _state: int | None = None
 
-    def __init__(self, config: dict[str, Any], entry_id: str | None = None) -> None:
+    def __init__(self, config: Mapping[str, Any], entry_id: str | None = None) -> None:
         """Initialize the Random sensor."""
         self._name = config.get(CONF_NAME)
         self._minimum = config.get(CONF_MINIMUM, DEFAULT_MIN)
