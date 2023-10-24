@@ -6,7 +6,6 @@ from pathlib import Path
 from homeassistant.core import HomeAssistant
 
 
-
 class LocalTodoListStore:
     """Local storage for a single To-do list."""
 
