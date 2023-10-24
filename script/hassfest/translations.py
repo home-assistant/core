@@ -532,6 +532,11 @@ def validate_translation_file(  # noqa: C901
                 "translations",
                 f"{reference['source']} contains invalid reference {reference['ref']}: Could not find {key}",
             )
+        elif match := re.match(RE_REFERENCE, search[key]):
+            integration.add_error(
+                "translations",
+                f"Lokalise supports only one level of references: \"{reference['source']}\" should point to directly to \"{match.groups()[0]}\"",
+            )
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
