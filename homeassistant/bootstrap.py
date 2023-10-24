@@ -194,7 +194,7 @@ async def async_setup_hass(
         http_conf = (await http.async_get_last_config(hass)) or {}
 
         await async_from_config_dict(
-            {"safe_mode": {}, "http": http_conf},
+            {"recovery_mode": {}, "http": http_conf},
             hass,
         )
 
