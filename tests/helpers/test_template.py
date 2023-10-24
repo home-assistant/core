@@ -578,7 +578,7 @@ def test_set(hass: HomeAssistant, value: Any, expected: bool) -> None:
     ],
 )
 def test_tuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
-    """Test tuple function/filter."""
+    """Test convert to tuple function."""
     assert (
         template.Template("{{ tuple(value) }}", hass).async_render({"value": value})
         == expected
