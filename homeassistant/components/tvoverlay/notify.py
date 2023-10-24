@@ -1,16 +1,17 @@
 """TvOverlay notification service for Android TV."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 import os.path
-from typing import Any
+import re
+from typing import Any, Optional
 import uuid
 
 from tvoverlay import ImageUrlSource, Notifications
 from tvoverlay.const import (
     COLOR_GREEN,
     DEFAULT_APP_NAME,
-    DEFAULT_DURATION,
     DEFAULT_SMALL_ICON,
     DEFAULT_SOURCE_NAME,
     Positions,
@@ -50,6 +51,7 @@ from .const import (
     ATTR_SHAPE,
     ATTR_SOURCE_NAME,
     ATTR_VISIBLE,
+    DEFAULT_DURATION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,6 +116,39 @@ class TvOverlayNotificationService(BaseNotificationService):
             image = image_data if await self._is_valid_file(image_data) else None
         return image
 
+    async def _convert_to_seconds(self, duration: str | Any) -> Optional[int]:
+        """Convert string formatted duration 1w2d3h4m5s in to seconds."""
+        if not duration:
+            return None
+        if isinstance(duration, int):
+            return duration
+        duration = duration.replace(" ", "")
+        UNITS = {
+            "s": "seconds",
+            "m": "minutes",
+            "h": "hours",
+            "d": "days",
+            "w": "weeks",
+        }
+        try:
+            return int(
+                timedelta(
+                    **{
+                        UNITS.get(m.group("unit").lower(), "seconds"): float(
+                            m.group("val")
+                        )
+                        for m in re.finditer(
+                            r"(?P<val>\d+(\.\d+)?)(?P<unit>[smhdw])",
+                            duration,
+                            flags=re.I,
+                        )
+                    }
+                ).total_seconds()
+            )
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.warning("Invalid duration: %s. %s", duration, ex)
+            return None
+
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a TvOverlay device."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
@@ -146,7 +181,9 @@ class TvOverlayNotificationService(BaseNotificationService):
                 [member.value for member in Positions],
             )
 
-        duration = data.get(ATTR_DURATION) or str(DEFAULT_DURATION)
+        duration: int = (
+            await self._convert_to_seconds(data.get(ATTR_DURATION)) or DEFAULT_DURATION
+        )
 
         image: str | ImageUrlSource | None = None
         image_data = data.get(ATTR_IMAGE)
@@ -182,7 +219,7 @@ class TvOverlayNotificationService(BaseNotificationService):
                 borderColor=border_color,
                 backgroundColor=bg_color,
                 shape=shape,
-                expiration=duration,
+                expiration=str(duration),
                 visible=visible,
             )
         else:
