@@ -557,7 +557,7 @@ def test_istuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
     ],
 )
 def test_set(hass: HomeAssistant, value: Any, expected: bool) -> None:
-    """Test set function/filter."""
+    """Test convert to set function."""
     assert (
         template.Template("{{ set(value) }}", hass).async_render({"value": value})
         == expected
