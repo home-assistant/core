@@ -55,6 +55,7 @@ class Platform(StrEnum):
     SWITCH = "switch"
     TEXT = "text"
     TIME = "time"
+    TODO = "todo"
     TTS = "tts"
     VACUUM = "vacuum"
     UPDATE = "update"
@@ -1058,9 +1059,6 @@ COMPRESSED_STATE_LAST_CHANGED = "lc"
 COMPRESSED_STATE_LAST_UPDATED = "lu"
 
 # #### SERVICES ####
-SERVICE_HOMEASSISTANT_STOP: Final = "stop"
-SERVICE_HOMEASSISTANT_RESTART: Final = "restart"
-
 SERVICE_TURN_ON: Final = "turn_on"
 SERVICE_TURN_OFF: Final = "turn_off"
 SERVICE_TOGGLE: Final = "toggle"

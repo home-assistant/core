@@ -103,7 +103,7 @@ class HKDevice:
 
         # Track aid/iid pairs so we know if we already handle triggers for a HK
         # service.
-        self._triggers: list[tuple[int, int]] = []
+        self._triggers: set[tuple[int, int]] = set()
 
         # A list of callbacks that turn HK characteristics into entities
         self.char_factories: list[AddCharacteristicCb] = []
@@ -437,9 +437,10 @@ class HKDevice:
 
     @callback
     def async_migrate_unique_id(
-        self, old_unique_id: str, new_unique_id: str, platform: str
+        self, old_unique_id: str, new_unique_id: str | None, platform: str
     ) -> None:
         """Migrate legacy unique IDs to new format."""
+        assert new_unique_id is not None
         _LOGGER.debug(
             "Checking if unique ID %s on %s needs to be migrated",
             old_unique_id,
@@ -639,18 +640,25 @@ class HKDevice:
         await self.async_update()
         await self.async_add_new_entities()
 
-    def add_accessory_factory(self, add_entities_cb) -> None:
+    @callback
+    def async_entity_key_removed(self, entity_key: tuple[int, int | None, int | None]):
+        """Handle an entity being removed.
+
+        Releases the entity from self.entities so it can be added again.
+        """
+        self.entities.discard(entity_key)
+
+    def add_accessory_factory(self, add_entities_cb: AddAccessoryCb) -> None:
         """Add a callback to run when discovering new entities for accessories."""
         self.accessory_factories.append(add_entities_cb)
         self._add_new_entities_for_accessory([add_entities_cb])
 
-    def _add_new_entities_for_accessory(self, handlers) -> None:
+    def _add_new_entities_for_accessory(self, handlers: list[AddAccessoryCb]) -> None:
         for accessory in self.entity_map.accessories:
+            entity_key = (accessory.aid, None, None)
             for handler in handlers:
-                if (accessory.aid, None, None) in self.entities:
-                    continue
-                if handler(accessory):
-                    self.entities.add((accessory.aid, None, None))
+                if entity_key not in self.entities and handler(accessory):
+                    self.entities.add(entity_key)
                     break
 
     def add_char_factory(self, add_entities_cb: AddCharacteristicCb) -> None:
@@ -662,11 +670,10 @@ class HKDevice:
         for accessory in self.entity_map.accessories:
             for service in accessory.services:
                 for char in service.characteristics:
+                    entity_key = (accessory.aid, service.iid, char.iid)
                     for handler in handlers:
-                        if (accessory.aid, service.iid, char.iid) in self.entities:
-                            continue
-                        if handler(char):
-                            self.entities.add((accessory.aid, service.iid, char.iid))
+                        if entity_key not in self.entities and handler(char):
+                            self.entities.add(entity_key)
                             break
 
     def add_listener(self, add_entities_cb: AddServiceCb) -> None:
@@ -692,7 +699,7 @@ class HKDevice:
 
                 for add_trigger_cb in callbacks:
                     if add_trigger_cb(service):
-                        self._triggers.append(entity_key)
+                        self._triggers.add(entity_key)
                         break
 
     def add_entities(self) -> None:
@@ -702,19 +709,19 @@ class HKDevice:
         self._add_new_entities_for_char(self.char_factories)
         self._add_new_triggers(self.trigger_factories)
 
-    def _add_new_entities(self, callbacks) -> None:
+    def _add_new_entities(self, callbacks: list[AddServiceCb]) -> None:
         for accessory in self.entity_map.accessories:
             aid = accessory.aid
             for service in accessory.services:
-                iid = service.iid
+                entity_key = (aid, None, service.iid)
 
-                if (aid, None, iid) in self.entities:
+                if entity_key in self.entities:
                     # Don't add the same entity again
                     continue
 
                 for listener in callbacks:
                     if listener(service):
-                        self.entities.add((aid, None, iid))
+                        self.entities.add(entity_key)
                         break
 
     async def async_load_platform(self, platform: str) -> None:
@@ -826,10 +833,8 @@ class HKDevice:
         # Process any stateless events (via device_triggers)
         async_fire_triggers(self, new_values_dict)
 
-        self.entity_map.process_changes(new_values_dict)
-
         to_callback: set[CALLBACK_TYPE] = set()
-        for aid_iid in new_values_dict:
+        for aid_iid in self.entity_map.process_changes(new_values_dict):
             if callbacks := self._subscriptions.get(aid_iid):
                 to_callback.update(callbacks)
 

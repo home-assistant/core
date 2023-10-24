@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import MOCK_USER_DATA
+from .const import FAKE_PIN, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 
@@ -108,7 +108,7 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_PIN: "other_fake_pin",
+                CONF_PIN: FAKE_PIN,
             },
         )
         await hass.async_block_till_done()
@@ -150,7 +150,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_PIN: "other_fake_pin",
+                CONF_PIN: FAKE_PIN,
             },
         )
 

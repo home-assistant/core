@@ -40,7 +40,7 @@
       "sensor": {
         "data": {
           "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
-          "state_class": "[%key:component::template::config::step::sensor::data::state_class%]",
+          "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
           "state": "[%key:component::template::config::step::sensor::data::state%]",
           "unit_of_measurement": "[%key:component::template::config::step::sensor::data::unit_of_measurement%]"
         },
@@ -124,7 +124,7 @@
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
         "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
-        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
+        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
         "volume": "[%key:component::sensor::entity_component::volume::name%]",
         "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
