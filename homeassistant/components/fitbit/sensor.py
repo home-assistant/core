@@ -1,7 +1,6 @@
 """Support for the Fitbit API."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
@@ -620,10 +619,10 @@ async def async_setup_entry(
     data: FitbitData = hass.data[DOMAIN][entry.entry_id]
     api = data.api
 
-    # Note: This will only be one rpc since it will cache the user profile
-    (user_profile, unit_system) = await asyncio.gather(
-        api.async_get_user_profile(), api.async_get_unit_system()
-    )
+    # These are run serially to reuse the cached user profile, not gathered
+    # to avoid two racing requests.
+    user_profile = await api.async_get_user_profile()
+    unit_system = await api.async_get_unit_system()
 
     fitbit_config = config_from_entry_data(entry.data)
 
@@ -654,7 +653,7 @@ async def async_setup_entry(
         for description in resource_list
         if is_allowed_resource(description)
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
     if data.device_coordinator and is_allowed_resource(FITBIT_RESOURCE_BATTERY):
         async_add_entities(
@@ -711,6 +710,14 @@ class FitbitSensor(SensorEntity):
         else:
             self._attr_available = True
             self._attr_native_value = self.entity_description.value_fn(result)
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # We do not ask for an update with async_add_entities()
+        # because it will update disabled entities.
+        self.async_schedule_update_ha_state(force_refresh=True)
 
 
 class FitbitBatterySensor(CoordinatorEntity, SensorEntity):

@@ -2614,6 +2614,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "improv_ble": {
+      "name": "Improv via BLE",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "incomfort": {
       "name": "Intergas InComfort/Intouch Lan2RF gateway",
       "integration_type": "hub",
@@ -3261,12 +3267,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "mazda": {
-      "name": "Mazda Connected Services",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "meater": {
       "name": "Meater",
@@ -5061,12 +5061,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "shiftr": {
-      "name": "shiftr.io",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
-    },
     "shodan": {
       "name": "Shodan",
       "integration_type": "hub",
@@ -5641,6 +5635,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "tami4": {
+      "name": "Tami4 Edge / Edge+",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "tank_utility": {
       "name": "Tank Utility",
       "integration_type": "hub",
@@ -6040,7 +6040,7 @@
       "iot_class": "cloud_polling"
     },
     "twitter": {
-      "name": "Twitter",
+      "name": "X",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -6418,7 +6418,7 @@
       "name": "Withings",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "wiz": {
       "name": "WiZ",

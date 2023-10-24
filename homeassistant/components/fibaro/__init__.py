@@ -101,6 +101,7 @@ class FibaroController:
         self._event_callbacks: dict[int, list[Callable[[FibaroEvent], None]]] = {}
         self.hub_serial: str  # Unique serial number of the hub
         self.hub_name: str  # The friendly name of the hub
+        self.hub_model: str
         self.hub_software_version: str
         self.hub_api_url: str = config[CONF_URL]
         # Device infos by fibaro device id
@@ -113,6 +114,7 @@ class FibaroController:
         info = self._client.read_info()
         self.hub_serial = info.serial_number
         self.hub_name = info.hc_name
+        self.hub_model = info.platform
         self.hub_software_version = info.current_version
 
         if connected is False:
@@ -227,11 +229,8 @@ class FibaroController:
     def get_siblings(self, device: DeviceModel) -> list[DeviceModel]:
         """Get the siblings of a device."""
         if device.has_endpoint_id:
-            return self.get_children2(
-                self._device_map[device.fibaro_id].parent_fibaro_id,
-                self._device_map[device.fibaro_id].endpoint_id,
-            )
-        return self.get_children(self._device_map[device.fibaro_id].parent_fibaro_id)
+            return self.get_children2(device.parent_fibaro_id, device.endpoint_id)
+        return self.get_children(device.parent_fibaro_id)
 
     @staticmethod
     def _map_device_to_platform(device: DeviceModel) -> Platform | None:
@@ -409,9 +408,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, controller.hub_serial)},
+        serial_number=controller.hub_serial,
         manufacturer="Fibaro",
         name=controller.hub_name,
-        model=controller.hub_serial,
+        model=controller.hub_model,
         sw_version=controller.hub_software_version,
         configuration_url=controller.hub_api_url.removesuffix("/api/"),
     )
