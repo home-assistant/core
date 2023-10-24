@@ -44,6 +44,7 @@ def make_api_task(
     content: str | None = None,
     is_completed: bool = False,
     due: Due | None = None,
+    project_id: str | None = None,
 ) -> Task:
     """Mock a todoist Task instance."""
     return Task(
@@ -61,7 +62,7 @@ def make_api_task(
         order=1,
         parent_id=None,
         priority=1,
-        project_id=PROJECT_ID,
+        project_id=project_id or PROJECT_ID,
         section_id=None,
         url="https://todoist.com",
         sync_id=None,

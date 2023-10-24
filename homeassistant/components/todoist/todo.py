@@ -25,7 +25,7 @@ async def async_setup_entry(
     coordinator: TodoistCoordinator = hass.data[DOMAIN][entry.entry_id]
     projects = await coordinator.async_get_projects()
     async_add_entities(
-        TodoistTodoListEntity(coordinator, entry.unique_id, project.id, project.name)
+        TodoistTodoListEntity(coordinator, entry.entry_id, project.id, project.name)
         for project in projects
     )
 
@@ -42,15 +42,14 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
     def __init__(
         self,
         coordinator: TodoistCoordinator,
-        config_entry_unique_id: str | None,
+        config_entry_id: str,
         project_id: str,
         project_name: str,
     ) -> None:
         """Initialize TodoistTodoListEntity."""
         super().__init__(coordinator=coordinator)
         self._project_id = project_id
-        if config_entry_unique_id:
-            self._attr_unique_id = f"{config_entry_unique_id}-{project_id}"
+        self._attr_unique_id = f"{config_entry_id}-{project_id}"
         self._attr_name = project_name
 
     @callback
@@ -61,6 +60,8 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
         else:
             items = []
             for task in self.coordinator.data:
+                if task.project_id != self._project_id:
+                    continue
                 if task.is_completed:
                     status = TodoItemStatus.COMPLETED
                 else:

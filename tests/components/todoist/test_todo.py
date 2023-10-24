@@ -30,6 +30,17 @@ def platforms() -> list[Platform]:
             ],
             "2",
         ),
+        (
+            [
+                make_api_task(
+                    id="12345",
+                    content="Soda",
+                    is_completed=False,
+                    project_id="other-project-id",
+                )
+            ],
+            "0",
+        ),
     ],
 )
 async def test_todo_item_state(
