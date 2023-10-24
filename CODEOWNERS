@@ -1035,6 +1035,8 @@ build.json @home-assistant/supervisor
 /tests/components/recollect_waste/ @bachya
 /homeassistant/components/recorder/ @home-assistant/core
 /tests/components/recorder/ @home-assistant/core
+/homeassistant/components/recovery_mode/ @home-assistant/core
+/tests/components/recovery_mode/ @home-assistant/core
 /homeassistant/components/rejseplanen/ @DarkFox
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
@@ -1085,8 +1087,6 @@ build.json @home-assistant/supervisor
 /tests/components/rympro/ @OnFreund @elad-bar @maorcc
 /homeassistant/components/sabnzbd/ @shaiu
 /tests/components/sabnzbd/ @shaiu
-/homeassistant/components/safe_mode/ @home-assistant/core
-/tests/components/safe_mode/ @home-assistant/core
 /homeassistant/components/saj/ @fredericvl
 /homeassistant/components/samsungtv/ @chemelli74 @epenet
 /tests/components/samsungtv/ @chemelli74 @epenet
