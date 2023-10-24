@@ -535,8 +535,8 @@ def test_is_set(hass: HomeAssistant, value: Any, expected: bool) -> None:
         (datetime(2024, 1, 1, 0, 0, 0), False),
     ],
 )
-def test_istuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
-    """Test tuple."""
+def test_is_tuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
+    """Test is tuple."""
     assert (
         template.Template("{{ value is tuple }}", hass).async_render({"value": value})
         == expected
