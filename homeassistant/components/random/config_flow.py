@@ -151,7 +151,7 @@ RANDOM_TYPES = [
 CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(RANDOM_TYPES),
     Platform.BINARY_SENSOR: SchemaFlowFormStep(
-        config_schema(Platform.BINARY_SENSOR),
+        _generate_schema(Platform.BINARY_SENSOR, _FlowType.CONFIG),
         validate_user_input=validate_user_input(Platform.BINARY_SENSOR),
     ),
     Platform.SENSOR: SchemaFlowFormStep(
