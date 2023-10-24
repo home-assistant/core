@@ -692,6 +692,7 @@ async def test_service_calls_core(
     hassio_env, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Call core service and check the API calls behind that."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "hassio", {})
 
     aioclient_mock.post("http://127.0.0.1/homeassistant/restart", json={"result": "ok"})
