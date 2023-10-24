@@ -80,9 +80,7 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
             ATTR_STATE_MESSAGE: printer.state.message,
             ATTR_STATE_REASON: printer.state.reasons,
             ATTR_COMMAND_SET: printer.info.command_set,
-            ATTR_URI_SUPPORTED: ",".join(
-                x.uri for x in printer.info.printer_uri_supported
-            ),
+            ATTR_URI_SUPPORTED: ",".join(printer.info.printer_uri_supported),
         },
         value_fn=lambda printer: printer.state.printer_state,
     ),
