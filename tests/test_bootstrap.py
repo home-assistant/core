@@ -23,7 +23,6 @@ from .common import (
     MockModule,
     MockPlatform,
     get_test_config_dir,
-    mock_coro,
     mock_entity_platform,
     mock_integration,
 )
@@ -104,13 +103,13 @@ async def test_empty_setup(hass: HomeAssistant) -> None:
         assert domain in hass.config.components, domain
 
 
-async def test_core_failure_loads_safe_mode(
+async def test_core_failure_loads_recovery_mode(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test failing core setup aborts further setup."""
     with patch(
         "homeassistant.components.homeassistant.async_setup",
-        return_value=mock_coro(False),
+        return_value=False,
     ):
         await bootstrap.async_from_config_dict({"group": {}}, hass)
 
@@ -489,14 +488,14 @@ async def test_setup_hass(
                 log_file=log_file,
                 log_no_color=log_no_color,
                 skip_pip=True,
-                safe_mode=False,
+                recovery_mode=False,
             ),
         )
 
     assert "Waiting on integrations to complete setup" not in caplog.text
 
     assert "browser" in hass.config.components
-    assert "safe_mode" not in hass.config.components
+    assert "recovery_mode" not in hass.config.components
 
     assert len(mock_enable_logging.mock_calls) == 1
     assert mock_enable_logging.mock_calls[0][1] == (
@@ -548,7 +547,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
                 log_file=log_file,
                 log_no_color=log_no_color,
                 skip_pip=True,
-                safe_mode=False,
+                recovery_mode=False,
             ),
         )
 
@@ -575,11 +574,11 @@ async def test_setup_hass_invalid_yaml(
                 log_file="",
                 log_no_color=False,
                 skip_pip=True,
-                safe_mode=False,
+                recovery_mode=False,
             ),
         )
 
-    assert "safe_mode" in hass.config.components
+    assert "recovery_mode" in hass.config.components
     assert len(mock_mount_local_lib_path.mock_calls) == 0
 
 
@@ -603,14 +602,14 @@ async def test_setup_hass_config_dir_nonexistent(
                 log_file="",
                 log_no_color=False,
                 skip_pip=True,
-                safe_mode=False,
+                recovery_mode=False,
             ),
         )
         is None
     )
 
 
-async def test_setup_hass_safe_mode(
+async def test_setup_hass_recovery_mode(
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -631,11 +630,11 @@ async def test_setup_hass_safe_mode(
                 log_file="",
                 log_no_color=False,
                 skip_pip=True,
-                safe_mode=True,
+                recovery_mode=True,
             ),
         )
 
-    assert "safe_mode" in hass.config.components
+    assert "recovery_mode" in hass.config.components
     assert len(mock_mount_local_lib_path.mock_calls) == 0
 
     # Validate we didn't try to set up config entry.
@@ -662,11 +661,11 @@ async def test_setup_hass_invalid_core_config(
             log_file="",
             log_no_color=False,
             skip_pip=True,
-            safe_mode=False,
+            recovery_mode=False,
         ),
     )
 
-    assert "safe_mode" in hass.config.components
+    assert "recovery_mode" in hass.config.components
 
 
 @pytest.mark.parametrize(
@@ -682,7 +681,7 @@ async def test_setup_hass_invalid_core_config(
         }
     ],
 )
-async def test_setup_safe_mode_if_no_frontend(
+async def test_setup_recovery_mode_if_no_frontend(
     mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
@@ -691,7 +690,7 @@ async def test_setup_safe_mode_if_no_frontend(
     mock_process_ha_config_upgrade: Mock,
     event_loop: asyncio.AbstractEventLoop,
 ) -> None:
-    """Test we setup safe mode if frontend didn't load."""
+    """Test we setup recovery mode if frontend didn't load."""
     verbose = Mock()
     log_rotate_days = Mock()
     log_file = Mock()
@@ -705,11 +704,11 @@ async def test_setup_safe_mode_if_no_frontend(
             log_file=log_file,
             log_no_color=log_no_color,
             skip_pip=True,
-            safe_mode=False,
+            recovery_mode=False,
         ),
     )
 
-    assert "safe_mode" in hass.config.components
+    assert "recovery_mode" in hass.config.components
     assert hass.config.config_dir == get_test_config_dir()
     assert hass.config.skip_pip
     assert hass.config.internal_url == "http://192.168.1.100:8123"

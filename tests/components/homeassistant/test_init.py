@@ -12,6 +12,8 @@ import homeassistant.components as comps
 from homeassistant.components.homeassistant import (
     ATTR_ENTRY_ID,
     SERVICE_CHECK_CONFIG,
+    SERVICE_HOMEASSISTANT_RESTART,
+    SERVICE_HOMEASSISTANT_STOP,
     SERVICE_RELOAD_ALL,
     SERVICE_RELOAD_CORE_CONFIG,
     SERVICE_RELOAD_CUSTOM_TEMPLATES,
@@ -22,8 +24,6 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     EVENT_CORE_CONFIG_UPDATE,
-    SERVICE_HOMEASSISTANT_RESTART,
-    SERVICE_HOMEASSISTANT_STOP,
     SERVICE_SAVE_PERSISTENT_STATES,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -305,6 +305,8 @@ async def test_setting_location(hass: HomeAssistant) -> None:
     # Just to make sure that we are updating values.
     assert hass.config.latitude != 30
     assert hass.config.longitude != 40
+    elevation = hass.config.elevation
+    assert elevation != 50
     await hass.services.async_call(
         "homeassistant",
         "set_location",
@@ -314,6 +316,15 @@ async def test_setting_location(hass: HomeAssistant) -> None:
     assert len(events) == 1
     assert hass.config.latitude == 30
     assert hass.config.longitude == 40
+    assert hass.config.elevation == elevation
+
+    await hass.services.async_call(
+        "homeassistant",
+        "set_location",
+        {"latitude": 30, "longitude": 40, "elevation": 50},
+        blocking=True,
+    )
+    assert hass.config.elevation == 50
 
 
 async def test_require_admin(

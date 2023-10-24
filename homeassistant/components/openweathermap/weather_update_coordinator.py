@@ -1,8 +1,8 @@
 """Weather data coordinator for the OpenWeatherMap (OWM) service."""
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant.components.weather import (
@@ -46,7 +46,7 @@ from .const import (
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_GUST,
     ATTR_API_WIND_SPEED,
-    CONDITION_CLASSES,
+    CONDITION_MAP,
     DOMAIN,
     FORECAST_MODE_DAILY,
     FORECAST_MODE_HOURLY,
@@ -68,7 +68,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         self._owm_client = owm
         self._latitude = latitude
         self._longitude = longitude
-        self._forecast_mode = forecast_mode
+        self.forecast_mode = forecast_mode
         self._forecast_limit = None
         if forecast_mode == FORECAST_MODE_DAILY:
             self._forecast_limit = 15
@@ -80,7 +80,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update the data."""
         data = {}
-        async with async_timeout.timeout(20):
+        async with asyncio.timeout(20):
             try:
                 weather_response = await self._get_owm_weather()
                 data = self._convert_weather_response(weather_response)
@@ -90,7 +90,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     async def _get_owm_weather(self):
         """Poll weather data from OWM."""
-        if self._forecast_mode in (
+        if self.forecast_mode in (
             FORECAST_MODE_ONECALL_HOURLY,
             FORECAST_MODE_ONECALL_DAILY,
         ):
@@ -106,17 +106,17 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     def _get_legacy_weather_and_forecast(self):
         """Get weather and forecast data from OWM."""
-        interval = self._get_forecast_interval()
+        interval = self._get_legacy_forecast_interval()
         weather = self._owm_client.weather_at_coords(self._latitude, self._longitude)
         forecast = self._owm_client.forecast_at_coords(
             self._latitude, self._longitude, interval, self._forecast_limit
         )
         return LegacyWeather(weather.weather, forecast.forecast.weathers)
 
-    def _get_forecast_interval(self):
+    def _get_legacy_forecast_interval(self):
         """Get the correct forecast interval depending on the forecast mode."""
         interval = "daily"
-        if self._forecast_mode == FORECAST_MODE_HOURLY:
+        if self.forecast_mode == FORECAST_MODE_HOURLY:
             interval = "3h"
         return interval
 
@@ -153,9 +153,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _get_forecast_from_weather_response(self, weather_response):
         """Extract the forecast data from the weather response."""
         forecast_arg = "forecast"
-        if self._forecast_mode == FORECAST_MODE_ONECALL_HOURLY:
+        if self.forecast_mode == FORECAST_MODE_ONECALL_HOURLY:
             forecast_arg = "forecast_hourly"
-        elif self._forecast_mode == FORECAST_MODE_ONECALL_DAILY:
+        elif self.forecast_mode == FORECAST_MODE_ONECALL_DAILY:
             forecast_arg = "forecast_daily"
         return [
             self._convert_forecast(x) for x in getattr(weather_response, forecast_arg)
@@ -267,7 +267,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 return ATTR_CONDITION_SUNNY
             return ATTR_CONDITION_CLEAR_NIGHT
 
-        return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
+        return CONDITION_MAP.get(weather_code)
 
 
 class LegacyWeather:

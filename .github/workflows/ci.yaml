@@ -19,6 +19,10 @@ on:
         description: "Skip pytest"
         default: false
         type: boolean
+      skip-coverage:
+        description: "Skip coverage"
+        default: false
+        type: boolean
       pylint-only:
         description: "Only run pylint"
         default: false
@@ -31,19 +35,22 @@ on:
 env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
-  MYPY_CACHE_VERSION: 4
-  HA_SHORT_VERSION: 2023.9
+  MYPY_CACHE_VERSION: 5
+  BLACK_CACHE_VERSION: 1
+  HA_SHORT_VERSION: "2023.11"
   DEFAULT_PYTHON: "3.11"
-  ALL_PYTHON_VERSIONS: "['3.11']"
+  ALL_PYTHON_VERSIONS: "['3.11', '3.12']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
   # - 10.6.10 is the version currently shipped with the Add-on (as of 31 Jan 2023)
   # 10.10 is the latest short-term-support
   # - 10.10.3 is the latest (as of 6 Feb 2023)
+  # 10.11 is the latest long-term-support
+  # - 10.11.2 is the version currently shipped with Synology (as of 11 Oct 2023)
   # mysql 8.0.32 does not always behave the same as MariaDB
   # and some queries that work on MariaDB do not work on MySQL
-  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3','mysql:8.0.32']"
+  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3','mariadb:10.11.2','mysql:8.0.32']"
   # 12 is the oldest supported version
   # - 12.14 is the latest (as of 9 Feb 2023)
   # 15 is the latest version
@@ -51,6 +58,7 @@ env:
   POSTGRESQL_VERSIONS: "['postgres:12.14','postgres:15.2']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
+  BLACK_CACHE: /tmp/black-cache
   SQLALCHEMY_WARN_20: 1
   PYTHONASYNCIODEBUG: 1
   HASS_CI: 1
@@ -79,10 +87,11 @@ jobs:
       test_groups: ${{ steps.info.outputs.test_groups }}
       tests_glob: ${{ steps.info.outputs.tests_glob }}
       tests: ${{ steps.info.outputs.tests }}
+      skip_coverage: ${{ steps.info.outputs.skip_coverage }}
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: >-
@@ -127,6 +136,7 @@ jobs:
           test_group_count=10
           tests="[]"
           tests_glob=""
+          skip_coverage=""
 
           if [[ "${{ steps.integrations.outputs.changes }}" != "[]" ]];
           then
@@ -176,6 +186,12 @@ jobs:
             test_full_suite="true"
           fi
 
+          if [[ "${{ github.event.inputs.skip-coverage }}" == "true" ]] \
+            || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-skip-coverage') }}" == "true" ]];
+          then
+            skip_coverage="true"
+          fi
+
           # Output & sent to GitHub Actions
           echo "mariadb_groups: ${mariadb_groups}"
           echo "mariadb_groups=${mariadb_groups}" >> $GITHUB_OUTPUT
@@ -195,6 +211,8 @@ jobs:
           echo "tests=${tests}" >> $GITHUB_OUTPUT
           echo "tests_glob: ${tests_glob}"
           echo "tests_glob=${tests_glob}" >> $GITHUB_OUTPUT
+          echo "skip_coverage: ${skip_coverage}"
+          echo "skip_coverage=${skip_coverage}" >> $GITHUB_OUTPUT
 
   pre-commit:
     name: Prepare pre-commit base
@@ -206,16 +224,16 @@ jobs:
       - info
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.0
+        uses: actions/setup-python@v4.7.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v3.3.2
         with:
           path: venv
           key: >-
@@ -230,7 +248,7 @@ jobs:
           pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v3.3.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           lookup-only: true
@@ -251,16 +269,23 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.7.0
+        uses: actions/setup-python@v4.7.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
+      - name: Generate partial black restore key
+        id: generate-black-key
+        run: |
+          black_version=$(cat requirements_test_pre_commit.txt | grep black | cut -d '=' -f 3)
+          echo "version=$black_version" >> $GITHUB_OUTPUT
+          echo "key=black-${{ env.BLACK_CACHE_VERSION }}-$black_version-${{
+            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.1
+        uses: actions/cache/restore@v3.3.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -269,21 +294,36 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.3.1
+        uses: actions/cache/restore@v3.3.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
+      - name: Restore black cache
+        uses: actions/cache@v3.3.2
+        with:
+          path: ${{ env.BLACK_CACHE }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            steps.generate-black-key.outputs.key }}
+          restore-keys: |
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-black-${{
+            env.BLACK_CACHE_VERSION }}-${{ steps.generate-black-key.outputs.version }}-${{
+            env.HA_SHORT_VERSION }}-
       - name: Run black (fully)
         if: needs.info.outputs.test_full_suite == 'true'
+        env:
+          BLACK_CACHE_DIR: ${{ env.BLACK_CACHE }}
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual black --all-files --show-diff-on-failure
       - name: Run black (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
+        env:
+          BLACK_CACHE_DIR: ${{ env.BLACK_CACHE }}
         run: |
           . venv/bin/activate
           shopt -s globstar
@@ -297,16 +337,16 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.7.0
+        uses: actions/setup-python@v4.7.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.1
+        uses: actions/cache/restore@v3.3.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -315,7 +355,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.3.1
+        uses: actions/cache/restore@v3.3.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -346,16 +386,16 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.7.0
+        uses: actions/setup-python@v4.7.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.1
+        uses: actions/cache/restore@v3.3.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -364,7 +404,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.3.1
+        uses: actions/cache/restore@v3.3.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -440,10 +480,10 @@ jobs:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.7.0
+        uses: actions/setup-python@v4.7.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -454,7 +494,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v3.3.2
         with:
           path: venv
           lookup-only: true
@@ -463,7 +503,7 @@ jobs:
             needs.info.outputs.python_cache_key }}
       - name: Restore pip wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v3.3.2
         with:
           path: ${{ env.PIP_CACHE }}
           key: >-
@@ -508,16 +548,16 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.0
+        uses: actions/setup-python@v4.7.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.1
+        uses: actions/cache/restore@v3.3.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -540,16 +580,16 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.0
+        uses: actions/setup-python@v4.7.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.1
+        uses: actions/cache/restore@v3.3.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -573,16 +613,16 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.0
+        uses: actions/setup-python@v4.7.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.1
+        uses: actions/cache/restore@v3.3.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -617,10 +657,10 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.0
+        uses: actions/setup-python@v4.7.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -633,7 +673,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.1
+        uses: actions/cache/restore@v3.3.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -641,7 +681,7 @@ jobs:
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore mypy cache
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v3.3.2
         with:
           path: .mypy_cache
           key: >-
@@ -699,16 +739,16 @@ jobs:
             bluez \
             ffmpeg
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.7.0
+        uses: actions/setup-python@v4.7.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.1
+        uses: actions/cache/restore@v3.3.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -734,9 +774,19 @@ jobs:
       - name: Run pytest (fully)
         if: needs.info.outputs.test_full_suite == 'true'
         timeout-minutes: 60
+        id: pytest-full
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
+          set -o pipefail
+          cov_params=()
+          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
+            cov_params+=(--cov="homeassistant")
+            cov_params+=(--cov-report=xml)
+          fi
+
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
@@ -745,37 +795,54 @@ jobs:
             --dist=loadfile \
             --test-group-count ${{ needs.info.outputs.test_group_count }} \
             --test-group=${{ matrix.group }} \
-            --cov="homeassistant" \
-            --cov-report=xml \
+            ${cov_params[@]} \
             -o console_output_style=count \
             -p no:sugar \
-            tests
+            tests \
+              2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Run pytest (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         timeout-minutes: 10
+        id: pytest-partial
         shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
+          set -o pipefail
 
           if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
             echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
             exit 1
           fi
 
+          cov_params=()
+          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
+            cov_params+=(--cov="homeassistant.components.${{ matrix.group }}")
+            cov_params+=(--cov-report=xml)
+            cov_params+=(--cov-report=term-missing)
+          fi
+
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
             -n auto \
-            --cov="homeassistant.components.${{ matrix.group }}" \
-            --cov-report=xml \
-            --cov-report=term-missing \
+            ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \
             --durations-min=1 \
             -p no:sugar \
-            tests/components/${{ matrix.group }}
+            tests/components/${{ matrix.group }} \
+              2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
+      - name: Upload pytest output
+        if: success() || failure() && (steps.pytest-full.conclusion == 'failure' || steps.pytest-partial.conclusion == 'failure')
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: pytest-${{ github.run_number }}
+          path: pytest-*.txt
       - name: Upload coverage artifact
+        if: needs.info.outputs.skip_coverage != 'true'
         uses: actions/upload-artifact@v3.1.2
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
@@ -824,16 +891,16 @@ jobs:
             ffmpeg \
             libmariadb-dev-compat
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.7.0
+        uses: actions/setup-python@v4.7.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.1
+        uses: actions/cache/restore@v3.3.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -862,18 +929,27 @@ jobs:
           python3 -m script.translations develop --all
       - name: Run pytest (partially)
         timeout-minutes: 20
+        id: pytest-partial
         shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
+          set -o pipefail
+          mariadb=$(echo "${{ matrix.mariadb-group }}" | sed "s/:/-/g")
+          cov_params=()
+          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
+            cov_params+=(--cov="homeassistant.components.recorder")
+            cov_params+=(--cov-report=xml)
+            cov_params+=(--cov-report=term-missing)
+          fi
 
           python3 -X dev -m pytest \
             -qq \
             --timeout=20 \
             -n 1 \
-            --cov="homeassistant.components.recorder" \
-            --cov-report=xml \
-            --cov-report=term-missing \
+            ${cov_params[@]} \
             -o console_output_style=count \
             --durations=10 \
             -p no:sugar \
@@ -881,8 +957,16 @@ jobs:
             tests/components/history \
             tests/components/logbook \
             tests/components/recorder \
-            tests/components/sensor
+            tests/components/sensor \
+              2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
+      - name: Upload pytest output
+        if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: pytest-${{ github.run_number }}
+          path: pytest-*.txt
       - name: Upload coverage artifact
+        if: needs.info.outputs.skip_coverage != 'true'
         uses: actions/upload-artifact@v3.1.2
         with:
           name: coverage-${{ matrix.python-version }}-mariadb
@@ -931,16 +1015,16 @@ jobs:
             ffmpeg \
             postgresql-server-dev-14
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.7.0
+        uses: actions/setup-python@v4.7.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.1
+        uses: actions/cache/restore@v3.3.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -969,18 +1053,27 @@ jobs:
           python3 -m script.translations develop --all
       - name: Run pytest (partially)
         timeout-minutes: 20
+        id: pytest-partial
         shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
+          set -o pipefail
+          postgresql=$(echo "${{ matrix.postgresql-group }}" | sed "s/:/-/g")
+          cov_params=()
+          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
+            cov_params+=(--cov="homeassistant.components.recorder")
+            cov_params+=(--cov-report=xml)
+            cov_params+=(--cov-report=term-missing)
+          fi
 
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
             -n 1 \
-            --cov="homeassistant.components.recorder" \
-            --cov-report=xml \
-            --cov-report=term-missing \
+            ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \
             --durations-min=10 \
@@ -989,8 +1082,16 @@ jobs:
             tests/components/history \
             tests/components/logbook \
             tests/components/recorder \
-            tests/components/sensor
+            tests/components/sensor \
+              2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
+      - name: Upload pytest output
+        if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: pytest-${{ github.run_number }}
+          path: pytest-*.txt
       - name: Upload coverage artifact
+        if: needs.info.outputs.skip_coverage != 'true'
         uses: actions/upload-artifact@v3.1.0
         with:
           name: coverage-${{ matrix.python-version }}-postgresql
@@ -1001,6 +1102,7 @@ jobs:
 
   coverage:
     name: Upload test coverage to Codecov
+    if: needs.info.outputs.skip_coverage != 'true'
     runs-on: ubuntu-22.04
     needs:
       - info
@@ -1008,7 +1110,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.1
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v3
       - name: Upload coverage to Codecov (full coverage)

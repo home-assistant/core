@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio import timeout
 
 from aiobafi6 import Device, Service
 from aiobafi6.discovery import PORT
-import async_timeout
+from aiobafi6.exceptions import DeviceUUIDMismatchError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, Platform
@@ -35,8 +36,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     run_future = device.async_run()
 
     try:
-        async with async_timeout.timeout(RUN_TIMEOUT):
+        async with timeout(RUN_TIMEOUT):
             await device.async_wait_available()
+    except DeviceUUIDMismatchError as ex:
+        raise ConfigEntryNotReady(
+            f"Unexpected device found at {ip_address}; expected {entry.unique_id}, found {device.dns_sd_uuid}"
+        ) from ex
     except asyncio.TimeoutError as ex:
         run_future.cancel()
         raise ConfigEntryNotReady(f"Timed out connecting to {ip_address}") from ex

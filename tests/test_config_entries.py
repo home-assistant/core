@@ -40,7 +40,6 @@ from .common import (
     MockPlatform,
     async_fire_time_changed,
     mock_config_flow,
-    mock_coro,
     mock_entity_platform,
     mock_integration,
 )
@@ -605,7 +604,10 @@ async def test_domains_gets_domains_excludes_ignore_and_disabled(
 async def test_saving_and_loading(hass: HomeAssistant) -> None:
     """Test that we're saving and loading correctly."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=lambda *args: mock_coro(True))
+        hass,
+        MockModule(
+            "test", async_setup_entry=lambda *args: AsyncMock(return_value=True)
+        ),
     )
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -958,7 +960,7 @@ async def test_setup_raise_not_ready(
     mock_setup_entry.side_effect = None
     mock_setup_entry.return_value = True
 
-    await p_setup(None)
+    await hass.async_run_hass_job(p_setup, None)
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert entry.reason is None
 
@@ -1176,6 +1178,27 @@ async def test_entry_options_abort(
     assert await manager.options.async_finish_flow(
         flow, {"type": data_entry_flow.FlowResultType.ABORT, "reason": "test"}
     )
+
+
+async def test_entry_options_unknown_config_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test that we can abort options flow."""
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    class TestFlow:
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+    with pytest.raises(config_entries.UnknownEntry):
+        await manager.options.async_create_flow(
+            "blah", context={"source": "test"}, data=None
+        )
 
 
 async def test_entry_setup_succeed(
@@ -1537,6 +1560,28 @@ async def test_init_custom_integration(hass: HomeAssistant) -> None:
         None,
         {"name": "Hue", "dependencies": [], "requirements": [], "domain": "hue"},
     )
+    with pytest.raises(data_entry_flow.UnknownHandler), patch(
+        "homeassistant.loader.async_get_integration",
+        return_value=integration,
+    ):
+        await hass.config_entries.flow.async_init("bla", context={"source": "user"})
+
+
+async def test_init_custom_integration_with_missing_handler(
+    hass: HomeAssistant,
+) -> None:
+    """Test initializing flow for custom integration with a missing handler."""
+    integration = loader.Integration(
+        hass,
+        "custom_components.hue",
+        None,
+        {"name": "Hue", "dependencies": [], "requirements": [], "domain": "hue"},
+    )
+    mock_integration(
+        hass,
+        MockModule("hue"),
+    )
+    mock_entity_platform(hass, "config_flow.hue", None)
     with pytest.raises(data_entry_flow.UnknownHandler), patch(
         "homeassistant.loader.async_get_integration",
         return_value=integration,
@@ -2126,6 +2171,9 @@ async def test_manual_add_overrides_ignored_entry(
             )
             return self.async_show_form(step_id="step2")
 
+        async def async_step_step2(self, user_input=None):
+            raise NotImplementedError
+
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
         "homeassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
@@ -2455,6 +2503,9 @@ async def test_partial_flows_hidden(
             await pause_discovery.wait()
             return self.async_show_form(step_id="someform")
 
+        async def async_step_someform(self, user_input=None):
+            raise NotImplementedError
+
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
         # Start a config entry flow and wait for it to be blocked
         init_task = asyncio.ensure_future(
@@ -2743,6 +2794,9 @@ async def test_flow_with_default_discovery_with_unique_id(
             await self._async_handle_discovery_without_unique_id()
             return self.async_show_form(step_id="mock")
 
+        async def async_step_mock(self, user_input=None):
+            raise NotImplementedError
+
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_DISCOVERY}
@@ -2796,6 +2850,9 @@ async def test_default_discovery_in_progress(
             await self._async_handle_discovery_without_unique_id()
             return self.async_show_form(step_id="mock")
 
+        async def async_step_mock(self, user_input=None):
+            raise NotImplementedError
+
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
         result = await manager.flow.async_init(
             "comp",
@@ -2832,6 +2889,9 @@ async def test_default_discovery_abort_on_new_unique_flow(
             await self.async_set_unique_id(discovery_info.get("unique_id"))
             await self._async_handle_discovery_without_unique_id()
             return self.async_show_form(step_id="mock")
+
+        async def async_step_mock(self, user_input=None):
+            raise NotImplementedError
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
         # First discovery with default, no unique ID
@@ -2876,6 +2936,9 @@ async def test_default_discovery_abort_on_user_flow_complete(
             """Test discovery step."""
             await self._async_handle_discovery_without_unique_id()
             return self.async_show_form(step_id="mock")
+
+        async def async_step_mock(self, user_input=None):
+            raise NotImplementedError
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
         # First discovery with default, no unique ID
@@ -3336,11 +3399,13 @@ async def test_setup_retrying_during_shutdown(hass: HomeAssistant) -> None:
         ({"vendor": "zoo"}, "already_configured"),
         ({"ip": "9.9.9.9"}, "already_configured"),
         ({"ip": "7.7.7.7"}, "no_match"),  # ignored
-        ({"vendor": "data"}, "no_match"),
+        # The next two data sets ensure options or data match
+        # as options previously shadowed data when matching.
+        ({"vendor": "data"}, "already_configured"),
         (
             {"vendor": "options"},
             "already_configured",
-        ),  # ensure options takes precedence over data
+        ),
     ],
 )
 async def test__async_abort_entries_match(
@@ -3417,11 +3482,13 @@ async def test__async_abort_entries_match(
         ({"vendor": "zoo"}, "already_configured"),
         ({"ip": "9.9.9.9"}, "already_configured"),
         ({"ip": "7.7.7.7"}, "no_match"),  # ignored
-        ({"vendor": "data"}, "no_match"),
+        # The next two data sets ensure options or data match
+        # as options previously shadowed data when matching.
+        ({"vendor": "data"}, "already_configured"),
         (
             {"vendor": "options"},
             "already_configured",
-        ),  # ensure options takes precedence over data
+        ),
     ],
 )
 async def test__async_abort_entries_match_options_flow(
@@ -3897,3 +3964,80 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
     hass.loop.call_soon(event.set)
     await entry._async_process_on_unload(hass)
     assert results == ["on_unload", "background", "normal"]
+
+
+async def test_preview_supported(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test preview support."""
+
+    preview_calls = []
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+        async def async_step_test1(self, data):
+            """Mock Reauth."""
+            return self.async_show_form(step_id="next")
+
+        async def async_step_test2(self, data):
+            """Mock Reauth."""
+            return self.async_show_form(step_id="next", preview="test")
+
+        async def async_step_next(self, user_input=None):
+            raise NotImplementedError
+
+        @staticmethod
+        async def async_setup_preview(hass: HomeAssistant) -> None:
+            """Set up preview."""
+            preview_calls.append(None)
+
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    assert len(preview_calls) == 0
+
+    with patch.dict(
+        config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
+    ):
+        result = await manager.flow.async_init("test", context={"source": "test1"})
+
+        assert len(preview_calls) == 0
+        assert result["preview"] is None
+
+        result = await manager.flow.async_init("test", context={"source": "test2"})
+
+        assert len(preview_calls) == 1
+        assert result["preview"] == "test"
+
+
+async def test_preview_not_supported(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test preview support."""
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+        async def async_step_user(self, data):
+            """Mock Reauth."""
+            return self.async_show_form(step_id="user_confirm")
+
+        async def async_step_user_confirm(self, user_input=None):
+            raise NotImplementedError
+
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    with patch.dict(
+        config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
+    ):
+        result = await manager.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["preview"] is None

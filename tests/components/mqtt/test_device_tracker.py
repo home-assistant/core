@@ -1,6 +1,8 @@
 """The tests for the MQTT device_tracker platform."""
+from datetime import UTC, datetime
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import device_tracker, mqtt
@@ -11,8 +13,10 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_custom_config,
     help_test_reloadable,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
 )
 
 from tests.common import async_fire_mqtt_message
@@ -199,9 +203,10 @@ async def test_duplicate_device_tracker_removal(
 async def test_device_tracker_discovery_update(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test for a discovery update event."""
+    freezer.move_to("2023-08-22 19:15:00+00:00")
     await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
@@ -213,7 +218,9 @@ async def test_device_tracker_discovery_update(
     state = hass.states.get("device_tracker.beer")
     assert state is not None
     assert state.name == "Beer"
+    assert state.last_updated == datetime(2023, 8, 22, 19, 15, tzinfo=UTC)
 
+    freezer.move_to("2023-08-22 19:16:00+00:00")
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -224,6 +231,21 @@ async def test_device_tracker_discovery_update(
     state = hass.states.get("device_tracker.beer")
     assert state is not None
     assert state.name == "Cider"
+    assert state.last_updated == datetime(2023, 8, 22, 19, 16, tzinfo=UTC)
+
+    freezer.move_to("2023-08-22 19:20:00+00:00")
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_tracker/bla/config",
+        '{ "name": "Cider", "state_topic": "test-topic" }',
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("device_tracker.beer")
+    assert state is not None
+    assert state.name == "Cider"
+    # Entity was not updated as the state was not changed
+    assert state.last_updated == datetime(2023, 8, 22, 19, 16, tzinfo=UTC)
 
 
 async def test_cleanup_device_tracker(
@@ -616,3 +638,38 @@ async def test_reloadable(
     domain = device_tracker.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            device_tracker.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("test-topic", "home", "work"),
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)

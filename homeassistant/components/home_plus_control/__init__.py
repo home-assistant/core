@@ -1,8 +1,8 @@
 """The Legrand Home+ Control integration."""
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from homepluscontrol.homeplusapi import HomePlusControlApiError
 import voluptuous as vol
 
@@ -15,6 +15,11 @@ from homeassistant.helpers import (
     dispatcher,
 )
 from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -49,6 +54,8 @@ PLATFORMS = [Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
+_ISSUE_MOVE_TO_NETATMO = "move_to_netatmo"
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Legrand Home+ Control component from configuration.yaml."""
@@ -56,6 +63,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if DOMAIN not in config:
         return True
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        _ISSUE_MOVE_TO_NETATMO,
+        is_fixable=False,
+        is_persistent=False,
+        breaks_in_ha_version="2023.12.0",  # Netatmo decided to shutdown the api in december
+        severity=IssueSeverity.WARNING,
+        translation_key=_ISSUE_MOVE_TO_NETATMO,
+        translation_placeholders={
+            "url": "https://www.home-assistant.io/integrations/netatmo/"
+        },
+    )
 
     # Register the implementation from the config information
     config_flow.HomePlusControlFlowHandler.async_register_implementation(
@@ -69,6 +90,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Legrand Home+ Control from a config entry."""
     hass_entry_data = hass.data[DOMAIN].setdefault(entry.entry_id, {})
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        _ISSUE_MOVE_TO_NETATMO,
+        is_fixable=False,
+        is_persistent=False,
+        breaks_in_ha_version="2023.12.0",  # Netatmo decided to shutdown the api in december
+        severity=IssueSeverity.WARNING,
+        translation_key=_ISSUE_MOVE_TO_NETATMO,
+        translation_placeholders={
+            "url": "https://www.home-assistant.io/integrations/netatmo/"
+        },
+    )
 
     # Retrieve the registered implementation
     implementation = (
@@ -100,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 return await api.async_get_modules()
         except HomePlusControlApiError as err:
             raise UpdateFailed(
@@ -167,5 +202,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
         # And finally unload the domain config entry data
         hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    async_delete_issue(hass, DOMAIN, _ISSUE_MOVE_TO_NETATMO)
 
     return unload_ok

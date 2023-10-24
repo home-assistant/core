@@ -7,5 +7,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["aiopvpc"],
   "quality_scale": "platinum",
-  "requirements": ["aiopvpc==4.1.0"]
+  "requirements": ["aiopvpc==4.2.2"]
 }

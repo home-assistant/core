@@ -1,6 +1,6 @@
 """Test the Yale Access Bluetooth config flow."""
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from bleak import BleakError
 import pytest
@@ -32,6 +32,7 @@ def _get_mock_push_lock():
     """Return a mock PushLock."""
     mock_push_lock = Mock()
     mock_push_lock.start = AsyncMock()
+    mock_push_lock.start.return_value = MagicMock()
     mock_push_lock.wait_for_first_update = AsyncMock()
     mock_push_lock.stop = AsyncMock()
     mock_push_lock.lock_state = LockState(

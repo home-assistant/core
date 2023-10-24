@@ -8,6 +8,7 @@ LOGGER = logging.getLogger(__package__)
 DOMAIN = "unifi"
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.IMAGE,
     Platform.SENSOR,
@@ -22,6 +23,7 @@ UNIFI_WIRELESS_CLIENTS = "unifi_wireless_clients"
 CONF_ALLOW_BANDWIDTH_SENSORS = "allow_bandwidth_sensors"
 CONF_ALLOW_UPTIME_SENSORS = "allow_uptime_sensors"
 CONF_BLOCK_CLIENT = "block_client"
+CONF_CLIENT_SOURCE = "client_source"
 CONF_DETECTION_TIME = "detection_time"
 CONF_DPI_RESTRICTIONS = "dpi_restrictions"
 CONF_IGNORE_WIRED_BUG = "ignore_wired_bug"

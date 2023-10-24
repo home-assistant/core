@@ -1,5 +1,6 @@
 """Tests for homekit_controller init."""
 from datetime import timedelta
+import pathlib
 from unittest.mock import patch
 
 from aiohomekit import AccessoryNotFoundError
@@ -7,6 +8,9 @@ from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FakePairing
+from attr import asdict
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homekit_controller.const import DOMAIN, ENTITY_MAP
 from homeassistant.config_entries import ConfigEntryState
@@ -20,12 +24,17 @@ from homeassistant.util.dt import utcnow
 from .common import (
     Helper,
     remove_device,
+    setup_accessories_from_file,
+    setup_test_accessories,
     setup_test_accessories_with_controller,
     setup_test_component,
 )
 
 from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
+
+FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures"
+FIXTURES = [path.relative_to(FIXTURES_DIR) for path in FIXTURES_DIR.glob("*.json")]
 
 ALIVE_DEVICE_NAME = "testdevice"
 ALIVE_DEVICE_ENTITY_ID = "light.testdevice"
@@ -218,3 +227,57 @@ async def test_ble_device_only_checks_is_available(
     is_available = True
     async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
     assert hass.states.get("light.testdevice").state == STATE_OFF
+
+
+@pytest.mark.parametrize("example", FIXTURES, ids=lambda val: str(val.stem))
+async def test_snapshots(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, example: str
+) -> None:
+    """Detect regressions in enumerating a homekit accessory database and building entities."""
+    accessories = await setup_accessories_from_file(hass, example)
+    config_entry, _ = await setup_test_accessories(hass, accessories)
+
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    registry_devices = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    registry_devices.sort(key=lambda device: device.name)
+
+    devices = []
+
+    for device in registry_devices:
+        entities = []
+
+        registry_entities = er.async_entries_for_device(
+            entity_registry,
+            device_id=device.id,
+            include_disabled_entities=True,
+        )
+        registry_entities.sort(key=lambda entity: entity.entity_id)
+
+        for entity_entry in registry_entities:
+            state_dict = None
+            if state := hass.states.get(entity_entry.entity_id):
+                state_dict = dict(state.as_dict())
+                state_dict.pop("context", None)
+                state_dict.pop("last_changed", None)
+                state_dict.pop("last_updated", None)
+
+                state_dict["attributes"] = dict(state_dict["attributes"])
+                state_dict["attributes"].pop("access_token", None)
+                state_dict["attributes"].pop("entity_picture", None)
+
+            entry = asdict(entity_entry)
+            entry.pop("id", None)
+            entry.pop("device_id", None)
+
+            entities.append({"entry": entry, "state": state_dict})
+
+        device_dict = asdict(device)
+        device_dict.pop("id", None)
+        device_dict.pop("via_device_id", None)
+        devices.append({"device": device_dict, "entities": entities})
+
+    assert snapshot == devices

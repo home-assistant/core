@@ -38,12 +38,15 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     OralBSensor.SECTOR: SensorEntityDescription(
         key=OralBSensor.SECTOR,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OralBSensor.NUMBER_OF_SECTORS: SensorEntityDescription(
         key=OralBSensor.NUMBER_OF_SECTORS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OralBSensor.SECTOR_TIMER: SensorEntityDescription(
         key=OralBSensor.SECTOR_TIMER,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     OralBSensor.TOOTHBRUSH_STATE: SensorEntityDescription(
@@ -52,6 +55,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     OralBSensor.PRESSURE: SensorEntityDescription(key=OralBSensor.PRESSURE),
     OralBSensor.MODE: SensorEntityDescription(
         key=OralBSensor.MODE,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OralBSensor.SIGNAL_STRENGTH: SensorEntityDescription(
         key=OralBSensor.SIGNAL_STRENGTH,
@@ -66,6 +70,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
@@ -111,7 +116,9 @@ async def async_setup_entry(
             OralBBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class OralBBluetoothSensorEntity(

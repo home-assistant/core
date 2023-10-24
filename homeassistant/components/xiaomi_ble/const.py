@@ -7,6 +7,7 @@ DOMAIN = "xiaomi_ble"
 
 
 CONF_DISCOVERED_EVENT_CLASSES: Final = "known_events"
+CONF_SLEEPY_DEVICE: Final = "sleepy_device"
 CONF_EVENT_PROPERTIES: Final = "event_properties"
 EVENT_PROPERTIES: Final = "event_properties"
 EVENT_TYPE: Final = "event_type"

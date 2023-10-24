@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["bsblan"],
-  "requirements": ["python-bsblan==0.5.11"]
+  "requirements": ["python-bsblan==0.5.16"]
 }

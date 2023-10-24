@@ -45,7 +45,6 @@ __all__ = [
     "EventDeviceClass",
     "EventEntity",
     "EventEntityDescription",
-    "EventEntityFeature",
 ]
 
 # mypy: disallow-any-generics
@@ -104,7 +103,9 @@ class EventExtraStoredData(ExtraStoredData):
 
 
 class EventEntity(RestoreEntity):
-    """Representation of a Event entity."""
+    """Representation of an Event entity."""
+
+    _entity_component_unrecorded_attributes = frozenset({ATTR_EVENT_TYPES})
 
     entity_description: EventEntityDescription
     _attr_device_class: EventDeviceClass | None

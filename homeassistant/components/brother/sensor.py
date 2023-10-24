@@ -19,7 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -383,6 +383,7 @@ async def async_setup_entry(
     device_info = DeviceInfo(
         configuration_url=f"http://{entry.data[CONF_HOST]}/",
         identifiers={(DOMAIN, coordinator.data.serial)},
+        serial_number=coordinator.data.serial,
         manufacturer="Brother",
         model=coordinator.data.model,
         name=coordinator.data.model,

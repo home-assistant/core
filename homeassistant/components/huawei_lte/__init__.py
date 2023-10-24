@@ -46,8 +46,9 @@ from homeassistant.helpers import (
     discovery,
     entity_registry as er,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -142,9 +143,11 @@ class Router:
     url: str
 
     data: dict[str, Any] = field(default_factory=dict, init=False)
-    subscriptions: dict[str, set[str]] = field(
+    # Values are lists rather than sets, because the same item may be used by more than
+    # one thing, such as MonthDuration for CurrentMonth{Download,Upload}.
+    subscriptions: dict[str, list[str]] = field(
         default_factory=lambda: defaultdict(
-            set, ((x, {"initial_scan"}) for x in ALL_KEYS)
+            list, ((x, ["initial_scan"]) for x in ALL_KEYS)
         ),
         init=False,
     )

@@ -76,12 +76,7 @@ class InsteonBinarySensorEntity(InsteonEntity, BinarySensorEntity):
     def __init__(self, device, group):
         """Initialize the INSTEON binary sensor."""
         super().__init__(device, group)
-        self._sensor_type = SENSOR_TYPES.get(self._insteon_device_group.name)
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._sensor_type
+        self._attr_device_class = SENSOR_TYPES.get(self._insteon_device_group.name)
 
     @property
     def is_on(self):

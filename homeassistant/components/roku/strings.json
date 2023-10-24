@@ -21,6 +21,38 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "headphones_connected": {
+        "name": "Headphones connected"
+      },
+      "supports_airplay": {
+        "name": "Supports AirPlay"
+      },
+      "supports_ethernet": {
+        "name": "Supports ethernet"
+      },
+      "supports_find_remote": {
+        "name": "Supports find remote"
+      }
+    },
+    "select": {
+      "application": {
+        "name": "Application"
+      },
+      "channel": {
+        "name": "Channel"
+      }
+    },
+    "sensor": {
+      "active_app": {
+        "name": "Active app"
+      },
+      "active_app_id": {
+        "name": "Active app ID"
+      }
+    }
+  },
   "services": {
     "search": {
       "name": "Search",
