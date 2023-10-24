@@ -1,7 +1,7 @@
 """Common fixtures for the local_todo tests."""
 from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -31,16 +31,17 @@ class FakeStore(LocalTodoListStore):
 
     def __init__(self, hass: HomeAssistant, path: Path, ics_content: str) -> None:
         """Initialize FakeStore."""
-        super().__init__(hass, path)
         self._content = ics_content
+        mock_path = Mock()
+        mock_path.read_text = self._mock_read_text
+        mock_path.write_text = self._mock_write_text
+        super().__init__(hass, mock_path)
 
-    def _load(self) -> str:
-        """Read from todo storage."""
+    def _mock_read_text(self) -> str:
         return self._content
 
-    def _store(self, ics_content: str) -> None:
-        """Persist the todo storage."""
-        self._content = ics_content
+    def _mock_write_text(self, content: str) -> None:
+        self._content = content
 
 
 @pytest.fixture(name="store", autouse=True)

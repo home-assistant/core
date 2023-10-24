@@ -10,7 +10,6 @@ from ical.calendar_stream import IcsCalendarStream
 from ical.store import TodoStore
 from ical.todo import Todo, TodoStatus
 from pydantic import ValidationError
-import voluptuous as vol
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -71,6 +70,15 @@ def _todo_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
     return result
 
 
+def _convert_item(item: TodoItem) -> Todo:
+    """Convert a HomeAssistant TodoItem to an ical Todo."""
+    try:
+        return Todo.parse_obj(dataclasses.asdict(item, dict_factory=_todo_dict_factory))
+    except ValidationError as err:
+        _LOGGER.debug("Error parsing todo input fields: %s (%s)", item, str(err))
+        raise HomeAssistantError("Error parsing todo input fields") from err
+
+
 class LocalTodoListEntity(TodoListEntity):
     """A To-do List representation of the Shopping List."""
 
@@ -111,26 +119,14 @@ class LocalTodoListEntity(TodoListEntity):
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
-        try:
-            todo = Todo.parse_obj(
-                dataclasses.asdict(item, dict_factory=_todo_dict_factory)
-            )
-        except ValidationError as err:
-            _LOGGER.debug("Error parsing todo input fields: %s (%s)", item, str(err))
-            raise vol.Invalid("Error parsing todo input fields") from err
+        todo = _convert_item(item)
         TodoStore(self._calendar).add(todo)
         await self._async_save()
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item to the To-do list."""
-        try:
-            todo = Todo.parse_obj(
-                dataclasses.asdict(item, dict_factory=_todo_dict_factory)
-            )
-        except ValidationError as err:
-            _LOGGER.debug("Error parsing todo input fields: %s (%s)", item, str(err))
-            raise vol.Invalid("Error parsing todo input fields") from err
+        todo = _convert_item(item)
         TodoStore(self._calendar).edit(todo.uid, todo)
         await self._async_save()
         await self.async_update_ha_state(force_refresh=True)
