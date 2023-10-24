@@ -113,7 +113,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVACModes."""
-        hvac_modes: list[HVACMode] = [HVACMode.HEAT]
+        hvac_modes = [HVACMode.HEAT]
         if self.coordinator.data.gateway["cooling_present"]:
             hvac_modes = [HVACMode.HEAT_COOL]
 
