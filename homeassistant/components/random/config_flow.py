@@ -127,8 +127,7 @@ def validate_user_input(
 ]:
     """Do post validation of user input.
 
-    For binary sensors: Strip none-sentinels.
-    For sensors: Strip none-sentinels and validate unit of measurement.
+    For sensors: Validate unit of measurement.
     """
 
     async def _validate_user_input(
