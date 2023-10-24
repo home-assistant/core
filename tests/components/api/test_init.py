@@ -352,6 +352,25 @@ async def test_api_call_service_with_data(
     assert state["attributes"] == {"data": 1}
 
 
+async def test_api_call_service_timeout(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test if the API does not fail on long running services."""
+    test_value = []
+
+    @ha.callback
+    def listener(service_call):
+        """Simulate timeout."""
+        test_value.append(1)
+        raise TimeoutError
+
+    hass.services.async_register("test_domain", "test_service", listener)
+
+    await mock_api_client.post("/api/services/test_domain/test_service")
+    await hass.async_block_till_done()
+    assert len(test_value) == 1
+
+
 async def test_api_template(hass: HomeAssistant, mock_api_client: TestClient) -> None:
     """Test the template API."""
     hass.states.async_set("sensor.temperature", 10)
