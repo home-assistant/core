@@ -164,7 +164,7 @@ CONFIG_FLOW = {
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(next_step=choose_options_step),
     Platform.BINARY_SENSOR: SchemaFlowFormStep(
-        options_schema(Platform.BINARY_SENSOR),
+        _generate_schema(Platform.BINARY_SENSOR, _FlowType.OPTION),
         validate_user_input=validate_user_input(Platform.BINARY_SENSOR),
     ),
     Platform.SENSOR: SchemaFlowFormStep(
