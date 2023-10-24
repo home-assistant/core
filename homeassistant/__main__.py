@@ -185,7 +185,9 @@ def main() -> int:
     ensure_config_path(config_dir)
 
     # pylint: disable-next=import-outside-toplevel
-    from . import runner
+    from . import config, runner
+
+    safe_mode = config.safe_mode_enabled(config_dir)
 
     runtime_conf = runner.RuntimeConfig(
         config_dir=config_dir,
@@ -198,6 +200,7 @@ def main() -> int:
         recovery_mode=args.recovery_mode,
         debug=args.debug,
         open_ui=args.open_ui,
+        safe_mode=safe_mode,
     )
 
     fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)

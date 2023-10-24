@@ -374,7 +374,9 @@ async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
     assert msg["result"]["themes"] == {}
 
 
-async def test_extra_js(mock_http_client_with_extra_js, mock_onboarded):
+async def test_extra_js(
+    hass: HomeAssistant, mock_http_client_with_extra_js, mock_onboarded
+):
     """Test that extra javascript is loaded."""
     resp = await mock_http_client_with_extra_js.get("")
     assert resp.status == 200
@@ -383,6 +385,16 @@ async def test_extra_js(mock_http_client_with_extra_js, mock_onboarded):
     text = await resp.text()
     assert '"/local/my_module.js"' in text
     assert '"/local/my_es5.js"' in text
+
+    # safe mode
+    hass.config.safe_mode = True
+    resp = await mock_http_client_with_extra_js.get("")
+    assert resp.status == 200
+    assert "cache-control" not in resp.headers
+
+    text = await resp.text()
+    assert '"/local/my_module.js"' not in text
+    assert '"/local/my_es5.js"' not in text
 
 
 async def test_get_panels(
