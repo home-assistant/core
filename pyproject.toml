@@ -35,7 +35,7 @@ dependencies    = [
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.25.0",
-    "home-assistant-bluetooth==1.10.3",
+    "home-assistant-bluetooth==1.10.4",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
     "lru-dict==1.2.0",
@@ -44,14 +44,14 @@ dependencies    = [
     "cryptography==41.0.4",
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
     "pyOpenSSL==23.2.0",
-    "orjson==3.9.7",
+    "orjson==3.9.9",
     "packaging>=23.1",
     "pip>=21.3.1",
     "python-slugify==4.0.1",
     "PyYAML==6.0.1",
     "requests==2.31.0",
     "typing-extensions>=4.8.0,<5.0",
-    "ulid-transform==0.8.1",
+    "ulid-transform==0.9.0",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
     "yarl==1.9.2",
@@ -491,9 +491,6 @@ filterwarnings = [
     "ignore:`jaraco.functools.call_aside` is deprecated, use `jaraco.functools.invoke` instead:DeprecationWarning:jaraco.abode.helpers.timeline",
     # https://github.com/nextcord/nextcord/pull/1095 - >2.6.1
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:nextcord.health_check",
-    # https://github.com/pytest-dev/pytest/pull/10894 - >=7.4.0
-    "ignore:ast.(Str|Num|NameConstant) is deprecated and will be removed in Python 3.14:DeprecationWarning:_pytest.assertion.rewrite",
-    "ignore:Attribute s is deprecated and will be removed in Python 3.14:DeprecationWarning:_pytest.assertion.rewrite",
     # https://github.com/bachya/pytile/pull/280 - >2023.08.0
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pytile.tile",
     # https://github.com/rytilahti/python-miio/pull/1809 - >0.5.12

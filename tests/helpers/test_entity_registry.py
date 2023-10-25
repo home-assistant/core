@@ -665,6 +665,7 @@ async def test_update_entity_unique_id(entity_registry: er.EntityRegistry) -> No
         )
     assert updated_entry != entry
     assert updated_entry.unique_id == new_unique_id
+    assert updated_entry.previous_unique_id == "5678"
     assert mock_schedule_save.call_count == 1
 
     assert entity_registry.async_get_entity_id("light", "hue", "5678") is None
