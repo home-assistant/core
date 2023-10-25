@@ -332,6 +332,7 @@ FLOWS = {
         "onvif",
         "open_meteo",
         "openai_conversation",
+        "openevse",
         "openexchangerates",
         "opengarage",
         "openhome",
