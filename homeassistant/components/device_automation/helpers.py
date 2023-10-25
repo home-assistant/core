@@ -75,8 +75,9 @@ async def async_validate_device_automation_config(
             ConfigType, getattr(platform, STATIC_VALIDATOR[automation_type])(config)
         )
 
-    # The entity platforms have dynamic validators for actions, bypass the checks below
-    # for the correct config entry
+    # Devices are not linked to config entries from entity platform domains, skip
+    # the checks below which look for a config entry matching the device automation
+    # domain
     if (
         automation_type == DeviceAutomationType.ACTION
         and validated_config[CONF_DOMAIN] in ENTITY_PLATFORMS
@@ -87,8 +88,7 @@ async def async_validate_device_automation_config(
             await getattr(platform, DYNAMIC_VALIDATOR[automation_type])(hass, config),
         )
 
-    # Only call the dynamic validator if the referenced is tied to a config entry from
-    # the right domain and the relevant config entry is loaded
+    # Find a config entry with the same domain as the device automation
     device_config_entry = None
     for entry_id in device.config_entries:
         if (
@@ -100,7 +100,7 @@ async def async_validate_device_automation_config(
         break
 
     if not device_config_entry:
-        # The config entry referenced by the device automation does not exist
+        # There's no config entry with the same domain as the device automation
         raise InvalidDeviceAutomationConfig(
             f"Device '{validated_config[CONF_DEVICE_ID]}' has no config entry from "
             f"domain '{validated_config[CONF_DOMAIN]}'"
