@@ -10,6 +10,7 @@ from qbittorrent.client import LoginRequired
 from requests import RequestException
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -37,4 +38,4 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except RequestException as exc:
             raise UpdateFailed("Connection lost") from exc
         except LoginRequired as exc:
-            raise UpdateFailed("Invalid authentication") from exc
+            raise ConfigEntryError("Invalid authentication") from exc
