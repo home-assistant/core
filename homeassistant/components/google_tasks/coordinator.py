@@ -29,10 +29,10 @@ class TaskUpdateCoordinator(DataUpdateCoordinator):
             name=f"Google Tasks {task_list_id}",
             update_interval=UPDATE_INTERVAL,
         )
-        self._api = api
+        self.api = api
         self._task_list_id = task_list_id
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Fetch tasks from API endpoint."""
         async with asyncio.timeout(TIMEOUT):
-            return await self._api.list_tasks(self._task_list_id)
+            return await self.api.list_tasks(self._task_list_id)

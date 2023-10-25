@@ -3,11 +3,14 @@
 
 from collections.abc import Awaitable, Callable
 import json
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import Mock, patch
 
 from httplib2 import Response
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -21,6 +24,10 @@ LIST_TASK_LIST_RESPONSE = {
             "title": "My tasks",
         },
     ]
+}
+EMPTY_RESPONSE = {}
+LIST_TASKS_RESPONSE = {
+    "items": [],
 }
 
 
@@ -76,14 +83,14 @@ def mock_api_responses() -> list[dict | list]:
 
 
 @pytest.fixture(autouse=True)
-def mock_http_response(api_responses: list[dict | list]) -> None:
+def mock_http_response(api_responses: list[dict | list]) -> Mock:
     """Fixture to fake out http2lib responses."""
     responses = [
         (Response({}), bytes(json.dumps(api_response), encoding="utf-8"))
         for api_response in api_responses
     ]
-    with patch("httplib2.Http.request", side_effect=responses):
-        yield
+    with patch("httplib2.Http.request", side_effect=responses) as mock_response:
+        yield mock_response
 
 
 @pytest.mark.parametrize(
@@ -138,9 +145,7 @@ async def test_get_items(
     [
         [
             LIST_TASK_LIST_RESPONSE,
-            {
-                "items": [],
-            },
+            LIST_TASKS_RESPONSE,
         ]
     ],
 )
@@ -163,3 +168,163 @@ async def test_empty_todo_list(
     state = hass.states.get("todo.my_tasks")
     assert state
     assert state.state == "0"
+
+
+@pytest.mark.parametrize(
+    "api_responses",
+    [
+        [
+            LIST_TASK_LIST_RESPONSE,
+            LIST_TASKS_RESPONSE,
+            EMPTY_RESPONSE,  # create
+            LIST_TASKS_RESPONSE,  # refresh after create
+        ]
+    ],
+)
+async def test_create_todo_list_item(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    mock_http_response: Mock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for creating a To-do Item."""
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "0"
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "create_item",
+        {"summary": "Soda"},
+        target={"entity_id": "todo.my_tasks"},
+        blocking=True,
+    )
+    assert len(mock_http_response.call_args_list) == 4
+    call = mock_http_response.call_args_list[2]
+    assert call
+    assert call.args == snapshot
+    assert call.kwargs.get("body") == snapshot
+
+
+@pytest.mark.parametrize(
+    "api_responses",
+    [
+        [
+            LIST_TASK_LIST_RESPONSE,
+            LIST_TASKS_RESPONSE,
+            EMPTY_RESPONSE,  # update
+            LIST_TASKS_RESPONSE,  # refresh after create
+        ]
+    ],
+)
+async def test_update_todo_list_item(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    mock_http_response: Any,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for updating a To-do Item."""
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "0"
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {"uid": "some-task-id", "summary": "Soda", "status": "completed"},
+        target={"entity_id": "todo.my_tasks"},
+        blocking=True,
+    )
+    assert len(mock_http_response.call_args_list) == 4
+    call = mock_http_response.call_args_list[2]
+    assert call
+    assert call.args == snapshot
+    assert call.kwargs.get("body") == snapshot
+
+
+@pytest.mark.parametrize(
+    "api_responses",
+    [
+        [
+            LIST_TASK_LIST_RESPONSE,
+            LIST_TASKS_RESPONSE,
+            EMPTY_RESPONSE,  # update
+            LIST_TASKS_RESPONSE,  # refresh after create
+        ]
+    ],
+)
+async def test_partial_update_title(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    mock_http_response: Any,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for partial update with title only."""
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "0"
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {"uid": "some-task-id", "summary": "Soda"},
+        target={"entity_id": "todo.my_tasks"},
+        blocking=True,
+    )
+    assert len(mock_http_response.call_args_list) == 4
+    call = mock_http_response.call_args_list[2]
+    assert call
+    assert call.args == snapshot
+    assert call.kwargs.get("body") == snapshot
+
+
+@pytest.mark.parametrize(
+    "api_responses",
+    [
+        [
+            LIST_TASK_LIST_RESPONSE,
+            LIST_TASKS_RESPONSE,
+            EMPTY_RESPONSE,  # update
+            LIST_TASKS_RESPONSE,  # refresh after create
+        ]
+    ],
+)
+async def test_partial_update_status(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    mock_http_response: Any,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for partial update with status only."""
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "0"
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {"uid": "some-task-id", "status": "needs_action"},
+        target={"entity_id": "todo.my_tasks"},
+        blocking=True,
+    )
+    assert len(mock_http_response.call_args_list) == 4
+    call = mock_http_response.call_args_list[2]
+    assert call
+    assert call.args == snapshot
+    assert call.kwargs.get("body") == snapshot
