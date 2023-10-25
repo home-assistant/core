@@ -14,8 +14,8 @@ import zoneinfo
 import ciso8601
 
 DATE_STR_FORMAT = "%Y-%m-%d"
-UTC = dt.timezone.utc
-DEFAULT_TIME_ZONE: dt.tzinfo = dt.timezone.utc
+UTC = dt.UTC
+DEFAULT_TIME_ZONE: dt.tzinfo = dt.UTC
 CLOCK_MONOTONIC_COARSE = 6
 
 # EPOCHORDINAL is not exposed as a constant

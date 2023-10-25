@@ -105,6 +105,7 @@ EFFECT_SUNSET = "Sunset"
 EFFECT_ROMANCE = "Romance"
 EFFECT_HAPPY_BIRTHDAY = "Happy Birthday"
 EFFECT_CANDLE_FLICKER = "Candle Flicker"
+EFFECT_TEA_TIME = "Tea Time"
 
 YEELIGHT_TEMP_ONLY_EFFECT_LIST = [EFFECT_TEMP, EFFECT_STOP]
 
@@ -118,6 +119,7 @@ YEELIGHT_MONO_EFFECT_LIST = [
     EFFECT_TWITTER,
     EFFECT_HOME,
     EFFECT_CANDLE_FLICKER,
+    EFFECT_TEA_TIME,
     *YEELIGHT_TEMP_ONLY_EFFECT_LIST,
 ]
 
@@ -162,6 +164,7 @@ EFFECTS_MAP = {
     EFFECT_ROMANCE: flows.romance,
     EFFECT_HAPPY_BIRTHDAY: flows.happy_birthday,
     EFFECT_CANDLE_FLICKER: flows.candle_flicker,
+    EFFECT_TEA_TIME: flows.tea_time,
 }
 
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
@@ -238,7 +241,7 @@ def _parse_custom_effects(effects_config) -> dict[str, dict[str, Any]]:
 def _async_cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
 
-    async def _async_wrap(self: YeelightGenericLight, *args, **kwargs):
+    async def _async_wrap(self: YeelightBaseLight, *args, **kwargs):
         for attempts in range(2):
             try:
                 _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
@@ -297,7 +300,7 @@ async def async_setup_entry(
             _lights_setup_helper(YeelightColorLightWithNightlightSwitch)
             _lights_setup_helper(YeelightNightLightModeWithoutBrightnessControl)
         else:
-            _lights_setup_helper(YeelightColorLightWithoutNightlightSwitch)
+            _lights_setup_helper(YeelightColorLightWithoutNightlightSwitchLight)
     elif device_type == BulbType.WhiteTemp:
         if nl_switch_light and device.is_nightlight_supported:
             _lights_setup_helper(YeelightWithNightLight)
@@ -403,8 +406,8 @@ def _async_setup_services(hass: HomeAssistant):
     )
 
 
-class YeelightGenericLight(YeelightEntity, LightEntity):
-    """Representation of a Yeelight generic light."""
+class YeelightBaseLight(YeelightEntity, LightEntity):
+    """Abstract Yeelight light."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -861,7 +864,13 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         await self._bulb.async_set_scene(scene_class, *args)
 
 
-class YeelightColorLightSupport(YeelightGenericLight):
+class YeelightGenericLight(YeelightBaseLight):
+    """Representation of a generic Yeelight."""
+
+    _attr_name = None
+
+
+class YeelightColorLightSupport(YeelightBaseLight):
     """Representation of a Color Yeelight light support."""
 
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS, ColorMode.RGB}
@@ -884,7 +893,7 @@ class YeelightColorLightSupport(YeelightGenericLight):
         return YEELIGHT_COLOR_EFFECT_LIST
 
 
-class YeelightWhiteTempLightSupport(YeelightGenericLight):
+class YeelightWhiteTempLightSupport(YeelightBaseLight):
     """Representation of a White temp Yeelight light."""
 
     _attr_name = None
@@ -904,7 +913,7 @@ class YeelightNightLightSupport:
         return PowerMode.NORMAL
 
 
-class YeelightWithoutNightlightSwitchMixIn(YeelightGenericLight):
+class YeelightWithoutNightlightSwitchMixIn(YeelightBaseLight):
     """A mix-in for yeelights without a nightlight switch."""
 
     @property
@@ -931,8 +940,16 @@ class YeelightColorLightWithoutNightlightSwitch(
     """Representation of a Color Yeelight light."""
 
 
+class YeelightColorLightWithoutNightlightSwitchLight(
+    YeelightColorLightWithoutNightlightSwitch
+):
+    """Representation of a Color Yeelight light."""
+
+    _attr_name = None
+
+
 class YeelightColorLightWithNightlightSwitch(
-    YeelightNightLightSupport, YeelightColorLightSupport, YeelightGenericLight
+    YeelightNightLightSupport, YeelightColorLightSupport, YeelightBaseLight
 ):
     """Representation of a Yeelight with rgb support and nightlight.
 
@@ -956,7 +973,7 @@ class YeelightWhiteTempWithoutNightlightSwitch(
 
 
 class YeelightWithNightLight(
-    YeelightNightLightSupport, YeelightWhiteTempLightSupport, YeelightGenericLight
+    YeelightNightLightSupport, YeelightWhiteTempLightSupport, YeelightBaseLight
 ):
     """Representation of a Yeelight with temp only support and nightlight.
 
@@ -971,7 +988,7 @@ class YeelightWithNightLight(
         return super().is_on and not self.device.is_nightlight_enabled
 
 
-class YeelightNightLightMode(YeelightGenericLight):
+class YeelightNightLightMode(YeelightBaseLight):
     """Representation of a Yeelight when in nightlight mode."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS

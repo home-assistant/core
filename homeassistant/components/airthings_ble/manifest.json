@@ -19,10 +19,10 @@
       "service_uuid": "b42e3882-ade7-11e4-89d3-123b93f75cba"
     }
   ],
-  "codeowners": ["@vincegio"],
+  "codeowners": ["@vincegio", "@LaStrada"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/airthings_ble",
   "iot_class": "local_polling",
-  "requirements": ["airthings-ble==0.5.3"]
+  "requirements": ["airthings-ble==0.5.6-2"]
 }

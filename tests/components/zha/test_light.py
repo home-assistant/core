@@ -20,9 +20,11 @@ from homeassistant.components.zha.core.const import (
     ZHA_OPTIONS,
 )
 from homeassistant.components.zha.core.group import GroupMember
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.components.zha.light import FLASH_EFFECTS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from .common import (
@@ -32,7 +34,6 @@ from .common import (
     async_test_rejoin,
     async_wait_for_updates,
     find_entity_id,
-    get_zha_gateway,
     patch_zha_config,
     send_attributes_report,
     update_attribute_cache,
@@ -530,7 +531,78 @@ async def test_transitions(
     light2_state = hass.states.get(device_2_entity_id)
     assert light2_state.state == STATE_OFF
 
-    # first test 0 length transition with no color provided
+    # first test 0 length transition with no color and no brightness provided
+    dev1_cluster_on_off.request.reset_mock()
+    dev1_cluster_level.request.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {"entity_id": device_1_entity_id, "transition": 0},
+        blocking=True,
+    )
+    assert dev1_cluster_on_off.request.call_count == 0
+    assert dev1_cluster_on_off.request.await_count == 0
+    assert dev1_cluster_color.request.call_count == 0
+    assert dev1_cluster_color.request.await_count == 0
+    assert dev1_cluster_level.request.call_count == 1
+    assert dev1_cluster_level.request.await_count == 1
+    assert dev1_cluster_level.request.call_args == call(
+        False,
+        dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
+        dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
+        level=254,  # default "full on" brightness
+        transition_time=0,
+        expect_reply=True,
+        manufacturer=None,
+        tsn=None,
+    )
+
+    light1_state = hass.states.get(device_1_entity_id)
+    assert light1_state.state == STATE_ON
+    assert light1_state.attributes["brightness"] == 254
+
+    # test 0 length transition with no color and no brightness provided again, but for "force on" lights
+    eWeLink_cluster_on_off.request.reset_mock()
+    eWeLink_cluster_level.request.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {"entity_id": eWeLink_light_entity_id, "transition": 0},
+        blocking=True,
+    )
+    assert eWeLink_cluster_on_off.request.call_count == 1
+    assert eWeLink_cluster_on_off.request.await_count == 1
+    assert eWeLink_cluster_on_off.request.call_args_list[0] == call(
+        False,
+        eWeLink_cluster_on_off.commands_by_name["on"].id,
+        eWeLink_cluster_on_off.commands_by_name["on"].schema,
+        expect_reply=True,
+        manufacturer=None,
+        tsn=None,
+    )
+    assert eWeLink_cluster_color.request.call_count == 0
+    assert eWeLink_cluster_color.request.await_count == 0
+    assert eWeLink_cluster_level.request.call_count == 1
+    assert eWeLink_cluster_level.request.await_count == 1
+    assert eWeLink_cluster_level.request.call_args == call(
+        False,
+        eWeLink_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
+        eWeLink_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
+        level=254,  # default "full on" brightness
+        transition_time=0,
+        expect_reply=True,
+        manufacturer=None,
+        tsn=None,
+    )
+
+    eWeLink_state = hass.states.get(eWeLink_light_entity_id)
+    assert eWeLink_state.state == STATE_ON
+    assert eWeLink_state.attributes["brightness"] == 254
+
+    eWeLink_cluster_on_off.request.reset_mock()
+    eWeLink_cluster_level.request.reset_mock()
+
+    # test 0 length transition with brightness, but no color provided
     dev1_cluster_on_off.request.reset_mock()
     dev1_cluster_level.request.reset_mock()
     await hass.services.async_call(
@@ -1423,18 +1495,10 @@ async def async_test_level_on_off_from_hass(
         {"entity_id": entity_id, "transition": 10},
         blocking=True,
     )
-    assert on_off_cluster.request.call_count == 1
-    assert on_off_cluster.request.await_count == 1
+    assert on_off_cluster.request.call_count == 0
+    assert on_off_cluster.request.await_count == 0
     assert level_cluster.request.call_count == 1
     assert level_cluster.request.await_count == 1
-    assert on_off_cluster.request.call_args == call(
-        False,
-        on_off_cluster.commands_by_name["on"].id,
-        on_off_cluster.commands_by_name["on"].schema,
-        expect_reply=True,
-        manufacturer=None,
-        tsn=None,
-    )
     assert level_cluster.request.call_args == call(
         False,
         level_cluster.commands_by_name["move_to_level_with_on_off"].id,
@@ -1605,7 +1669,7 @@ async def test_zha_group_light_entity(
         ColorMode.XY,
     ]
     # Light which is off has no color mode
-    assert "color_mode" not in group_state.attributes
+    assert group_state.attributes["color_mode"] is None
 
     # test turning the lights on and off from the HA
     await async_test_on_off_from_hass(hass, group_cluster_on_off, group_entity_id)
@@ -1718,7 +1782,8 @@ async def test_zha_group_light_entity(
     assert device_3_entity_id not in zha_group.member_entity_ids
 
     # make sure the entity registry entry is still there
-    assert zha_gateway.ha_entity_registry.async_get(group_entity_id) is not None
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(group_entity_id) is not None
 
     # add a member back and ensure that the group entity was created again
     await zha_group.async_add_members([GroupMember(device_light_3.ieee, 1)])
@@ -1748,10 +1813,10 @@ async def test_zha_group_light_entity(
     assert len(zha_group.members) == 3
 
     # remove the group and ensure that there is no entity and that the entity registry is cleaned up
-    assert zha_gateway.ha_entity_registry.async_get(group_entity_id) is not None
+    assert entity_registry.async_get(group_entity_id) is not None
     await zha_gateway.async_remove_zigpy_group(zha_group.group_id)
     assert hass.states.get(group_entity_id) is None
-    assert zha_gateway.ha_entity_registry.async_get(group_entity_id) is None
+    assert entity_registry.async_get(group_entity_id) is None
 
 
 @patch(
@@ -1851,7 +1916,8 @@ async def test_group_member_assume_state(
         assert hass.states.get(group_entity_id).state == STATE_OFF
 
         # remove the group and ensure that there is no entity and that the entity registry is cleaned up
-        assert zha_gateway.ha_entity_registry.async_get(group_entity_id) is not None
+        entity_registry = er.async_get(hass)
+        assert entity_registry.async_get(group_entity_id) is not None
         await zha_gateway.async_remove_zigpy_group(zha_group.group_id)
         assert hass.states.get(group_entity_id) is None
-        assert zha_gateway.ha_entity_registry.async_get(group_entity_id) is None
+        assert entity_registry.async_get(group_entity_id) is None

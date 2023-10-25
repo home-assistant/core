@@ -4,7 +4,7 @@ Can only be used by integrations that have pillow in their requirements.
 """
 from __future__ import annotations
 
-from PIL import ImageDraw
+from PIL.ImageDraw import ImageDraw
 
 
 def draw_box(

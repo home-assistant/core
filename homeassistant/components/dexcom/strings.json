@@ -28,5 +28,15 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "glucose_value": {
+        "name": "Glucose value"
+      },
+      "glucose_trend": {
+        "name": "Glucose trend"
+      }
+    }
   }
 }

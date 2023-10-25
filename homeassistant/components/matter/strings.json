@@ -52,7 +52,7 @@
             "state": {
               "switch_latched": "Switch latched",
               "initial_press": "Initial press",
-              "long_press": "Lomng press",
+              "long_press": "Long press",
               "short_release": "Short release",
               "long_release": "Long release",
               "multi_press_ongoing": "Multi press ongoing",

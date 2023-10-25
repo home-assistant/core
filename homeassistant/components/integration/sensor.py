@@ -32,7 +32,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     EventStateChangedData,
@@ -77,7 +77,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
             vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
-            vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
+            vol.Optional(CONF_UNIT_PREFIX): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
@@ -169,8 +169,8 @@ async def async_setup_entry(
     else:
         device_info = None
 
-    unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
-    if unit_prefix == "none":
+    if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
+        # Before we had support for optional selectors, "none" was used for selecting nothing
         unit_prefix = None
 
     integral = IntegrationSensor(
@@ -200,14 +200,13 @@ async def async_setup_platform(
         round_digits=config[CONF_ROUND_DIGITS],
         source_entity=config[CONF_SOURCE_SENSOR],
         unique_id=config.get(CONF_UNIQUE_ID),
-        unit_prefix=config[CONF_UNIT_PREFIX],
+        unit_prefix=config.get(CONF_UNIT_PREFIX),
         unit_time=config[CONF_UNIT_TIME],
     )
 
     async_add_entities([integral])
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class IntegrationSensor(RestoreSensor):
     """Representation of an integration sensor."""
 
@@ -298,18 +297,14 @@ class IntegrationSensor(RestoreSensor):
             old_state = event.data["old_state"]
             new_state = event.data["new_state"]
 
-            # We may want to update our state before an early return,
-            # based on the source sensor's unit_of_measurement
-            # or device_class.
-            update_state = False
-
             if (
                 source_state := self.hass.states.get(self._sensor_source_id)
             ) is None or source_state.state == STATE_UNAVAILABLE:
                 self._attr_available = False
-                update_state = True
-            else:
-                self._attr_available = True
+                self.async_write_ha_state()
+                return
+
+            self._attr_available = True
 
             if old_state is None or new_state is None:
                 # we can't calculate the elapsed time, so we can't calculate the integral
@@ -317,10 +312,7 @@ class IntegrationSensor(RestoreSensor):
 
             unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             if unit is not None:
-                new_unit_of_measurement = self._unit(unit)
-                if self._unit_of_measurement != new_unit_of_measurement:
-                    self._unit_of_measurement = new_unit_of_measurement
-                    update_state = True
+                self._unit_of_measurement = self._unit(unit)
 
             if (
                 self.device_class is None
@@ -329,10 +321,8 @@ class IntegrationSensor(RestoreSensor):
             ):
                 self._attr_device_class = SensorDeviceClass.ENERGY
                 self._attr_icon = None
-                update_state = True
 
-            if update_state:
-                self.async_write_ha_state()
+            self.async_write_ha_state()
 
             try:
                 # integration as the Riemann integral of previous measures.

@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import DOMAIN, MediaPlayerEntityFeature
 from homeassistant.components.samsungtv.const import (
@@ -30,6 +31,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_samsungtv_entry
 from .const import (
@@ -115,9 +117,13 @@ async def test_setup_h_j_model(
 
 
 @pytest.mark.usefixtures("remotews", "remoteencws_failing", "rest_api")
-async def test_setup_updates_from_ssdp(hass: HomeAssistant) -> None:
+async def test_setup_updates_from_ssdp(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test setting up the entry fetches data from ssdp cache."""
-    entry = MockConfigEntry(domain="samsungtv", data=MOCK_ENTRYDATA_WS)
+    entry = MockConfigEntry(
+        domain="samsungtv", data=MOCK_ENTRYDATA_WS, entry_id="sample-entry-id"
+    )
     entry.add_to_hass(hass)
 
     async def _mock_async_get_discovery_info_by_st(hass: HomeAssistant, mock_st: str):
@@ -135,7 +141,8 @@ async def test_setup_updates_from_ssdp(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
-    assert hass.states.get("media_player.any")
+    assert hass.states.get("media_player.any") == snapshot
+    assert entity_registry.async_get("media_player.any") == snapshot
     assert (
         entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
         == "https://fake_host:12345/tv_agent"

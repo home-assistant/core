@@ -1,21 +1,23 @@
 """Test ZHA Gateway."""
 import asyncio
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+from zigpy.application import ControllerApplication
 import zigpy.exceptions
 import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
+from homeassistant.components.zha.core.const import RadioType
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.group import GroupMember
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .common import async_find_group_entity_id, get_zha_gateway
+from .common import async_find_group_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -232,68 +234,89 @@ async def test_gateway_create_group_with_id(
 )
 @patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
 @pytest.mark.parametrize(
-    "startup",
+    "startup_effect",
     [
-        [asyncio.TimeoutError(), FileNotFoundError(), MagicMock()],
-        [asyncio.TimeoutError(), MagicMock()],
-        [MagicMock()],
+        [asyncio.TimeoutError(), FileNotFoundError(), None],
+        [asyncio.TimeoutError(), None],
+        [None],
     ],
 )
 async def test_gateway_initialize_success(
-    startup: list[Any],
+    startup_effect: list[Exception | None],
     hass: HomeAssistant,
     device_light_1: ZHADevice,
     coordinator: ZHADevice,
+    zigpy_app_controller: ControllerApplication,
 ) -> None:
     """Test ZHA initializing the gateway successfully."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
 
-    zha_gateway.shutdown = AsyncMock()
+    zigpy_app_controller.startup.side_effect = startup_effect
+    zigpy_app_controller.startup.reset_mock()
 
     with patch(
-        "bellows.zigbee.application.ControllerApplication.new", side_effect=startup
-    ) as mock_new:
+        "bellows.zigbee.application.ControllerApplication.new",
+        return_value=zigpy_app_controller,
+    ):
         await zha_gateway.async_initialize()
 
-    assert mock_new.call_count == len(startup)
-
+    assert zigpy_app_controller.startup.call_count == len(startup_effect)
     device_light_1.async_cleanup_handles()
 
 
 @patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
 async def test_gateway_initialize_failure(
-    hass: HomeAssistant, device_light_1, coordinator
+    hass: HomeAssistant,
+    device_light_1: ZHADevice,
+    coordinator: ZHADevice,
+    zigpy_app_controller: ControllerApplication,
 ) -> None:
     """Test ZHA failing to initialize the gateway."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
 
+    zigpy_app_controller.startup.side_effect = [
+        asyncio.TimeoutError(),
+        RuntimeError(),
+        FileNotFoundError(),
+    ]
+    zigpy_app_controller.startup.reset_mock()
+
     with patch(
         "bellows.zigbee.application.ControllerApplication.new",
-        side_effect=[asyncio.TimeoutError(), FileNotFoundError(), RuntimeError()],
-    ) as mock_new, pytest.raises(RuntimeError):
+        return_value=zigpy_app_controller,
+    ), pytest.raises(FileNotFoundError):
         await zha_gateway.async_initialize()
 
-    assert mock_new.call_count == 3
+    assert zigpy_app_controller.startup.call_count == 3
 
 
 @patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
 async def test_gateway_initialize_failure_transient(
-    hass: HomeAssistant, device_light_1, coordinator
+    hass: HomeAssistant,
+    device_light_1: ZHADevice,
+    coordinator: ZHADevice,
+    zigpy_app_controller: ControllerApplication,
 ) -> None:
     """Test ZHA failing to initialize the gateway but with a transient error."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
 
+    zigpy_app_controller.startup.side_effect = [
+        RuntimeError(),
+        zigpy.exceptions.TransientConnectionError(),
+    ]
+    zigpy_app_controller.startup.reset_mock()
+
     with patch(
         "bellows.zigbee.application.ControllerApplication.new",
-        side_effect=[RuntimeError(), zigpy.exceptions.TransientConnectionError()],
-    ) as mock_new, pytest.raises(ConfigEntryNotReady):
+        return_value=zigpy_app_controller,
+    ), pytest.raises(ConfigEntryNotReady):
         await zha_gateway.async_initialize()
 
     # Initialization immediately stops and is retried after TransientConnectionError
-    assert mock_new.call_count == 2
+    assert zigpy_app_controller.startup.call_count == 2
 
 
 @patch(
@@ -313,7 +336,12 @@ async def test_gateway_initialize_failure_transient(
     ],
 )
 async def test_gateway_initialize_bellows_thread(
-    device_path, thread_state, config_override, hass: HomeAssistant, coordinator
+    device_path: str,
+    thread_state: bool,
+    config_override: dict,
+    hass: HomeAssistant,
+    coordinator: ZHADevice,
+    zigpy_app_controller: ControllerApplication,
 ) -> None:
     """Test ZHA disabling the UART thread when connecting to a TCP coordinator."""
     zha_gateway = get_zha_gateway(hass)
@@ -323,13 +351,11 @@ async def test_gateway_initialize_bellows_thread(
     zha_gateway.config_entry.data["device"]["path"] = device_path
     zha_gateway._config.setdefault("zigpy_config", {}).update(config_override)
 
-    with patch(
-        "bellows.zigbee.application.ControllerApplication.new",
-        new=AsyncMock(),
-    ) as mock_new:
-        await zha_gateway.async_initialize()
+    await zha_gateway.async_initialize()
 
-    assert mock_new.mock_calls[0].args[0]["use_thread"] is thread_state
+    RadioType.ezsp.controller.new.mock_calls[-1].kwargs["config"][
+        "use_thread"
+    ] is thread_state
 
 
 @pytest.mark.parametrize(

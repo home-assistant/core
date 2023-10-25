@@ -15,8 +15,11 @@ from homeassistant.components.bluetooth.active_update_processor import (
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
+
+from .const import CONF_SLEEPY_DEVICE
 
 
 class XiaomiActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordinator):
@@ -39,6 +42,7 @@ class XiaomiActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordina
         ]
         | None = None,
         poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
+        entry: ConfigEntry,
         connectable: bool = True,
     ) -> None:
         """Initialize the Xiaomi Bluetooth Active Update Processor Coordinator."""
@@ -55,6 +59,12 @@ class XiaomiActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordina
         )
         self.discovered_device_classes = discovered_device_classes
         self.device_data = device_data
+        self.entry = entry
+
+    @property
+    def sleepy_device(self) -> bool:
+        """Return True if the device is a sleepy device."""
+        return self.entry.data.get(CONF_SLEEPY_DEVICE, self.device_data.sleepy_device)
 
 
 class XiaomiPassiveBluetoothDataProcessor(PassiveBluetoothDataProcessor):

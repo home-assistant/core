@@ -95,7 +95,7 @@ class RokuSelectEntityDescription(
 ENTITIES: tuple[RokuSelectEntityDescription, ...] = (
     RokuSelectEntityDescription(
         key="application",
-        name="Application",
+        translation_key="application",
         icon="mdi:application",
         set_fn=_launch_application,
         value_fn=_get_application_name,
@@ -106,7 +106,7 @@ ENTITIES: tuple[RokuSelectEntityDescription, ...] = (
 
 CHANNEL_ENTITY = RokuSelectEntityDescription(
     key="channel",
-    name="Channel",
+    translation_key="channel",
     icon="mdi:television",
     set_fn=_tune_channel,
     value_fn=_get_channel_name,
@@ -122,14 +122,12 @@ async def async_setup_entry(
     """Set up Roku select based on a config entry."""
     coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     device: RokuDevice = coordinator.data
-    unique_id = device.info.serial_number
 
     entities: list[RokuSelectEntity] = []
 
     for description in ENTITIES:
         entities.append(
             RokuSelectEntity(
-                device_id=unique_id,
                 coordinator=coordinator,
                 description=description,
             )
@@ -138,7 +136,6 @@ async def async_setup_entry(
     if len(device.channels) > 0:
         entities.append(
             RokuSelectEntity(
-                device_id=unique_id,
                 coordinator=coordinator,
                 description=CHANNEL_ENTITY,
             )

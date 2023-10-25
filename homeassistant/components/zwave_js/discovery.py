@@ -160,6 +160,10 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     writeable: bool | None = None
     # [optional] the value's states map must include ANY of these key/value pairs
     any_available_states: set[tuple[int, str]] | None = None
+    # [optional] the value's value must match this value
+    value: Any | None = None
+    # [optional] the value's metadata_stateful must match this value
+    stateful: bool | None = None
 
 
 @dataclass
@@ -378,6 +382,61 @@ DISCOVERY_SCHEMAS = [
             )
         ],
     ),
+    # Fibaro Shutter Fibaro FGR223
+    # Combine both switch_multilevel endpoints into shutter_tilt
+    # if operating mode (151) is set to venetian blind (2)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter_tilt",
+        manufacturer_id={0x010F},
+        product_id={0x1000, 0x1001},
+        product_type={0x0303},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={1},
+            type={ValueType.NUMBER},
+        ),
+        data_template=CoverTiltDataTemplate(
+            current_tilt_value_id=ZwaveValueID(
+                property_=CURRENT_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+                endpoint=2,
+            ),
+            target_tilt_value_id=ZwaveValueID(
+                property_=TARGET_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+                endpoint=2,
+            ),
+        ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={151},
+                endpoint={0},
+                value={2},
+            )
+        ],
+    ),
+    # Fibaro Shutter Fibaro FGR223
+    # Disable endpoint 2 (slat),
+    # as these are either combined with endpoint one as shutter_tilt
+    # or it has no practical function.
+    # CC: Switch_Multilevel
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter",
+        manufacturer_id={0x010F},
+        product_id={0x1000, 0x1001},
+        product_type={0x0303},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={2},
+            type={ValueType.NUMBER},
+        ),
+        entity_registry_enabled_default=False,
+    ),
     # Fibaro Nice BiDi-ZWave (IBT4ZWAVE)
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
@@ -588,6 +647,19 @@ DISCOVERY_SCHEMAS = [
         ),
         absent_values=[SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA],
     ),
+    # Logic Group ZDB5100
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        hint="black_is_off",
+        manufacturer_id={0x0234},
+        product_id={0x0121},
+        product_type={0x0003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_COLOR},
+            property={CURRENT_COLOR_PROPERTY},
+            property_key={None},
+        ),
+    ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
     # Door Lock CC
@@ -783,26 +855,6 @@ DISCOVERY_SCHEMAS = [
         allow_multi=True,
         entity_registry_enabled_default=False,
     ),
-    # number for Basic CC
-    ZWaveDiscoverySchema(
-        platform=Platform.NUMBER,
-        hint="Basic",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.BASIC},
-            type={ValueType.NUMBER},
-            property={CURRENT_VALUE_PROPERTY},
-        ),
-        required_values=[
-            ZWaveValueDiscoverySchema(
-                command_class={
-                    CommandClass.BASIC,
-                },
-                type={ValueType.NUMBER},
-                property={TARGET_VALUE_PROPERTY},
-            )
-        ],
-        entity_registry_enabled_default=False,
-    ),
     # number for Indicator CC (exclude property keys 3-5)
     ZWaveDiscoverySchema(
         platform=Platform.NUMBER,
@@ -927,6 +979,24 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
+    # light for Basic CC
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BASIC},
+            type={ValueType.NUMBER},
+            property={CURRENT_VALUE_PROPERTY},
+        ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={
+                    CommandClass.BASIC,
+                },
+                type={ValueType.NUMBER},
+                property={TARGET_VALUE_PROPERTY},
+            )
+        ],
+    ),
     # sirens
     ZWaveDiscoverySchema(
         platform=Platform.SIREN,
@@ -975,6 +1045,15 @@ DISCOVERY_SCHEMAS = [
             command_class={CommandClass.NOTIFICATION},
             type={ValueType.NUMBER},
             any_available_states={(0, "idle")},
+        ),
+    ),
+    # event
+    # stateful = False
+    ZWaveDiscoverySchema(
+        platform=Platform.EVENT,
+        hint="stateless",
+        primary_value=ZWaveValueDiscoverySchema(
+            stateful=False,
         ),
     ),
 ]
@@ -1108,7 +1187,7 @@ def async_discover_single_value(
 def async_discover_single_configuration_value(
     value: ConfigurationValue,
 ) -> Generator[ZwaveDiscoveryInfo, None, None]:
-    """Run discovery on a single ZWave configuration value and return matching schema info."""
+    """Run discovery on single Z-Wave configuration value and return schema matches."""
     if value.metadata.writeable and value.metadata.readable:
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
             yield ZwaveDiscoveryInfo(
@@ -1125,36 +1204,29 @@ def async_discover_single_configuration_value(
             ConfigurationValueType.RANGE,
             ConfigurationValueType.MANUAL_ENTRY,
         ):
-            if value.metadata.type == ValueType.BOOLEAN or (
-                value.metadata.min == 0 and value.metadata.max == 1
-            ):
-                yield ZwaveDiscoveryInfo(
-                    node=value.node,
-                    primary_value=value,
-                    assumed_state=False,
-                    platform=Platform.SWITCH,
-                    platform_hint="config_parameter",
-                    platform_data=None,
-                    additional_value_ids_to_watch=set(),
-                    entity_registry_enabled_default=False,
-                )
-            else:
-                yield ZwaveDiscoveryInfo(
-                    node=value.node,
-                    primary_value=value,
-                    assumed_state=False,
-                    platform=Platform.NUMBER,
-                    platform_hint="config_parameter",
-                    platform_data=None,
-                    additional_value_ids_to_watch=set(),
-                    entity_registry_enabled_default=False,
-                )
+            yield ZwaveDiscoveryInfo(
+                node=value.node,
+                primary_value=value,
+                assumed_state=False,
+                platform=Platform.NUMBER,
+                platform_hint="config_parameter",
+                platform_data=None,
+                additional_value_ids_to_watch=set(),
+                entity_registry_enabled_default=False,
+            )
+        elif value.configuration_value_type == ConfigurationValueType.BOOLEAN:
+            yield ZwaveDiscoveryInfo(
+                node=value.node,
+                primary_value=value,
+                assumed_state=False,
+                platform=Platform.SWITCH,
+                platform_hint="config_parameter",
+                platform_data=None,
+                additional_value_ids_to_watch=set(),
+                entity_registry_enabled_default=False,
+            )
     elif not value.metadata.writeable and value.metadata.readable:
-        if value.metadata.type == ValueType.BOOLEAN or (
-            value.metadata.min == 0
-            and value.metadata.max == 1
-            and not value.metadata.states
-        ):
+        if value.configuration_value_type == ConfigurationValueType.BOOLEAN:
             yield ZwaveDiscoveryInfo(
                 node=value.node,
                 primary_value=value,
@@ -1229,6 +1301,12 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
             for key, val in schema.any_available_states
         )
     ):
+        return False
+    # check value
+    if schema.value is not None and value.value not in schema.value:
+        return False
+    # check metadata_stateful
+    if schema.stateful is not None and value.metadata.stateful != schema.stateful:
         return False
     return True
 

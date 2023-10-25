@@ -172,6 +172,7 @@ class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
             _LOGGER,
             name="ESPHome Dashboard",
             update_interval=timedelta(minutes=5),
+            always_update=False,
         )
         self.addon_slug = addon_slug
         self.url = url

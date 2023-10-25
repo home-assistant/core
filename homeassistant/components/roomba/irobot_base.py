@@ -15,7 +15,8 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import STATE_IDLE, STATE_PAUSED
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -93,6 +94,7 @@ class IRobotEntity(Entity):
         return DeviceInfo(
             connections=connections,
             identifiers={(DOMAIN, self.robot_unique_id)},
+            serial_number=self.vacuum_state.get("hwPartsRev", {}).get("navSerialNo"),
             manufacturer="iRobot",
             model=self._sku,
             name=str(self._name),
@@ -100,9 +102,24 @@ class IRobotEntity(Entity):
         )
 
     @property
-    def _battery_level(self):
+    def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
         return self.vacuum_state.get("batPct")
+
+    @property
+    def run_stats(self):
+        """Return the run stats."""
+        return self.vacuum_state.get("bbrun")
+
+    @property
+    def mission_stats(self):
+        """Return the mission stats."""
+        return self.vacuum_state.get("bbmssn")
+
+    @property
+    def battery_stats(self):
+        """Return the battery stats."""
+        return self.vacuum_state.get("bbchg3")
 
     @property
     def _robot_state(self):
@@ -137,6 +154,8 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     """Base class for iRobot robots."""
 
     _attr_name = None
+    _attr_supported_features = SUPPORT_IROBOT
+    _attr_available = True  # Always available, otherwise setup will fail
 
     def __init__(self, roomba, blid):
         """Initialize the iRobot handler."""
@@ -144,24 +163,9 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
     @property
-    def supported_features(self):
-        """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_IROBOT
-
-    @property
-    def battery_level(self):
-        """Return the battery level of the vacuum cleaner."""
-        return self._battery_level
-
-    @property
     def state(self):
         """Return the state of the vacuum cleaner."""
         return self._robot_state
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return True  # Always available, otherwise setup will fail
 
     @property
     def extra_state_attributes(self):

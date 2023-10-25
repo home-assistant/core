@@ -36,7 +36,8 @@
           "_r_to_u": "[%key:component::nina::config::step::user::data::_r_to_u%]",
           "_v_to_z": "[%key:component::nina::config::step::user::data::_v_to_z%]",
           "slots": "[%key:component::nina::config::step::user::data::slots%]",
-          "headline_filter": "[%key:component::nina::config::step::user::data::headline_filter%]"
+          "headline_filter": "[%key:component::nina::config::step::user::data::headline_filter%]",
+          "area_filter": "Whitelist regex to filter warnings based on affected areas"
         }
       }
     },

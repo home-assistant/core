@@ -54,9 +54,8 @@ from .device_automation_helpers import (
     CONF_SUBTYPE,
     VALUE_ID_REGEX,
     generate_config_parameter_subtype,
-    get_config_parameter_value_schema,
 )
-from .helpers import async_get_node_from_device_id
+from .helpers import async_get_node_from_device_id, get_value_state_schema
 
 ACTION_TYPES = {
     SERVICE_CLEAR_LOCK_USERCODE,
@@ -357,7 +356,7 @@ async def async_get_action_capabilities(
             property_key=config[ATTR_CONFIG_PARAMETER_BITMASK],
             endpoint=config[ATTR_ENDPOINT],
         )
-        value_schema = get_config_parameter_value_schema(node, value_id)
+        value_schema = get_value_state_schema(node.values[value_id])
         if value_schema is None:
             return {}
         return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}

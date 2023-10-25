@@ -46,7 +46,7 @@ async def test_public_weather_sensor(
 
     assert hass.states.get(f"{prefix}temperature").state == "22.7"
     assert hass.states.get(f"{prefix}humidity").state == "63.2"
-    assert hass.states.get(f"{prefix}pressure").state == "1010.3"
+    assert hass.states.get(f"{prefix}pressure").state == "1010.4"
 
     entities_before_change = len(hass.states.async_all())
 

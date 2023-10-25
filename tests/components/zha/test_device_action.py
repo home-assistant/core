@@ -19,11 +19,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
-from tests.common import (
-    async_get_device_automations,
-    async_mock_service,
-    mock_coro,
-)
+from tests.common import async_get_device_automations, async_mock_service
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -112,21 +108,19 @@ async def test_get_actions(hass: HomeAssistant, device_ias) -> None:
 
     ieee_address = str(device_ias[0].ieee)
 
-    ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device(
-        identifiers={(DOMAIN, ieee_address)}
-    )
-    ha_entity_registry = er.async_get(hass)
-    siren_level_select = ha_entity_registry.async_get(
+    device_registry = dr.async_get(hass)
+    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, ieee_address)})
+    entity_registry = er.async_get(hass)
+    siren_level_select = entity_registry.async_get(
         "select.fakemanufacturer_fakemodel_default_siren_level"
     )
-    siren_tone_select = ha_entity_registry.async_get(
+    siren_tone_select = entity_registry.async_get(
         "select.fakemanufacturer_fakemodel_default_siren_tone"
     )
-    strobe_level_select = ha_entity_registry.async_get(
+    strobe_level_select = entity_registry.async_get(
         "select.fakemanufacturer_fakemodel_default_strobe_level"
     )
-    strobe_select = ha_entity_registry.async_get(
+    strobe_select = entity_registry.async_get(
         "select.fakemanufacturer_fakemodel_default_strobe"
     )
 
@@ -175,13 +169,13 @@ async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> Non
     """Test we get the expected actions from a ZHA device."""
 
     inovelli_ieee_address = str(device_inovelli[0].ieee)
-    ha_device_registry = dr.async_get(hass)
-    inovelli_reg_device = ha_device_registry.async_get_device(
+    device_registry = dr.async_get(hass)
+    inovelli_reg_device = device_registry.async_get_device(
         identifiers={(DOMAIN, inovelli_ieee_address)}
     )
-    ha_entity_registry = er.async_get(hass)
-    inovelli_button = ha_entity_registry.async_get("button.inovelli_vzm31_sn_identify")
-    inovelli_light = ha_entity_registry.async_get("light.inovelli_vzm31_sn_light")
+    entity_registry = er.async_get(hass)
+    inovelli_button = entity_registry.async_get("button.inovelli_vzm31_sn_identify")
+    inovelli_light = entity_registry.async_get("light.inovelli_vzm31_sn_light")
 
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, inovelli_reg_device.id
@@ -266,11 +260,9 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
     ieee_address = str(zha_device.ieee)
     inovelli_ieee_address = str(inovelli_zha_device.ieee)
 
-    ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device(
-        identifiers={(DOMAIN, ieee_address)}
-    )
-    inovelli_reg_device = ha_device_registry.async_get_device(
+    device_registry = dr.async_get(hass)
+    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, ieee_address)})
+    inovelli_reg_device = device_registry.async_get_device(
         identifiers={(DOMAIN, inovelli_ieee_address)}
     )
 
@@ -278,7 +270,7 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
 
     with patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
+        return_value=[0x00, zcl_f.Status.SUCCESS],
     ):
         assert await async_setup_component(
             hass,

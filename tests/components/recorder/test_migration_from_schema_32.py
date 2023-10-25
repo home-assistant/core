@@ -1,23 +1,26 @@
 """The tests for the recorder filter matching the EntityFilter component."""
-# pylint: disable=invalid-name
+import datetime
 import importlib
 import sys
+from typing import Any
 from unittest.mock import patch
 import uuid
 
 from freezegun import freeze_time
 import pytest
 from sqlalchemy import create_engine, inspect
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import core, migration, statistics
+from homeassistant.components.recorder import core, db_schema, migration, statistics
 from homeassistant.components.recorder.db_schema import (
     Events,
     EventTypes,
     States,
     StatesMeta,
 )
+from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.tasks import (
     EntityIDMigrationTask,
@@ -31,13 +34,23 @@ from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 from homeassistant.util.ulid import bytes_to_ulid, ulid_at_time, ulid_to_bytes
 
-from .common import async_recorder_block_till_done, async_wait_recording_done
+from .common import (
+    async_attach_db_engine,
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+)
 
 from tests.typing import RecorderInstanceGenerator
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 SCHEMA_MODULE = "tests.components.recorder.db_schema_32"
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
+
+
+async def _async_wait_migration_done(hass: HomeAssistant) -> None:
+    """Wait for the migration to be done."""
+    await recorder.get_instance(hass).async_block_till_done()
+    await async_recorder_block_till_done(hass)
 
 
 def _create_engine_test(*args, **kwargs):
@@ -102,6 +115,8 @@ async def test_migrate_events_context_ids(
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     test_uuid = uuid.uuid4()
     uuid_hex = test_uuid.hex
@@ -111,7 +126,7 @@ async def test_migrate_events_context_ids(
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    Events(
+                    old_db_schema.Events(
                         event_type="old_uuid_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -124,7 +139,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="empty_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -137,7 +152,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="ulid_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -150,7 +165,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id="01ARZ3NDEKTSV4RRFFQ69G5FA2",
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="invalid_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -163,7 +178,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="garbage_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -176,7 +191,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="event_with_garbage_context_id_no_time_fired_ts",
                         event_data=None,
                         origin_idx=0,
@@ -197,10 +212,12 @@ async def test_migrate_events_context_ids(
     await async_wait_recording_done(hass)
     now = dt_util.utcnow()
     expected_ulid_fallback_start = ulid_to_bytes(ulid_at_time(now.timestamp()))[0:6]
+    await _async_wait_migration_done(hass)
+
     with freeze_time(now):
         # This is a threadsafe way to add a task to the recorder
         instance.queue_task(EventsContextIDMigrationTask())
-        await async_recorder_block_till_done(hass)
+        await _async_wait_migration_done(hass)
 
     def _object_as_dict(obj):
         return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
@@ -305,6 +322,8 @@ async def test_migrate_states_context_ids(
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     test_uuid = uuid.uuid4()
     uuid_hex = test_uuid.hex
@@ -314,7 +333,7 @@ async def test_migrate_states_context_ids(
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    States(
+                    old_db_schema.States(
                         entity_id="state.old_uuid_context_id",
                         last_updated_ts=1477721632.452529,
                         context_id=uuid_hex,
@@ -324,7 +343,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="state.empty_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id=None,
@@ -334,7 +353,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="state.ulid_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id="01ARZ3NDEKTSV4RRFFQ69G5FAV",
@@ -344,7 +363,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id="01ARZ3NDEKTSV4RRFFQ69G5FA2",
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="state.invalid_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id="invalid",
@@ -354,7 +373,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="state.garbage_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id="adapt_lgt:b'5Cf*':interval:b'0R'",
@@ -364,7 +383,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="state.human_readable_uuid_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id="0ae29799-ee4e-4f45-8116-f582d7d3ee65",
@@ -381,7 +400,7 @@ async def test_migrate_states_context_ids(
 
     await async_wait_recording_done(hass)
     instance.queue_task(StatesContextIDMigrationTask())
-    await async_recorder_block_till_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _object_as_dict(obj):
         return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
@@ -490,22 +509,24 @@ async def test_migrate_event_type_ids(
     """Test we can migrate event_types to the EventTypes table."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     def _insert_events():
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    Events(
+                    old_db_schema.Events(
                         event_type="event_type_one",
                         origin_idx=0,
                         time_fired_ts=1677721632.452529,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="event_type_one",
                         origin_idx=0,
                         time_fired_ts=1677721632.552529,
                     ),
-                    Events(
+                    old_db_schema.Events(
                         event_type="event_type_two",
                         origin_idx=0,
                         time_fired_ts=1677721632.552529,
@@ -518,7 +539,7 @@ async def test_migrate_event_type_ids(
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EventTypeIDMigrationTask())
-    await async_recorder_block_till_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _fetch_migrated_events():
         with session_scope(hass=hass, read_only=True) as session:
@@ -571,22 +592,24 @@ async def test_migrate_entity_ids(
     """Test we can migrate entity_ids to the StatesMeta table."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     def _insert_states():
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    States(
+                    old_db_schema.States(
                         entity_id="sensor.one",
                         state="one_1",
                         last_updated_ts=1.452529,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="sensor.two",
                         state="two_2",
                         last_updated_ts=2.252529,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="sensor.two",
                         state="two_1",
                         last_updated_ts=3.152529,
@@ -596,10 +619,10 @@ async def test_migrate_entity_ids(
 
     await instance.async_add_executor_job(_insert_states)
 
-    await async_wait_recording_done(hass)
+    await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EntityIDMigrationTask())
-    await async_recorder_block_till_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():
         with session_scope(hass=hass, read_only=True) as session:
@@ -637,22 +660,24 @@ async def test_post_migrate_entity_ids(
     """Test we can migrate entity_ids to the StatesMeta table."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     def _insert_events():
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    States(
+                    old_db_schema.States(
                         entity_id="sensor.one",
                         state="one_1",
                         last_updated_ts=1.452529,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="sensor.two",
                         state="two_2",
                         last_updated_ts=2.252529,
                     ),
-                    States(
+                    old_db_schema.States(
                         entity_id="sensor.two",
                         state="two_1",
                         last_updated_ts=3.152529,
@@ -662,10 +687,10 @@ async def test_post_migrate_entity_ids(
 
     await instance.async_add_executor_job(_insert_events)
 
-    await async_wait_recording_done(hass)
+    await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EntityIDPostMigrationTask())
-    await async_recorder_block_till_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():
         with session_scope(hass=hass, read_only=True) as session:
@@ -689,18 +714,20 @@ async def test_migrate_null_entity_ids(
     """Test we can migrate entity_ids to the StatesMeta table."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     def _insert_states():
         with session_scope(hass=hass) as session:
             session.add(
-                States(
+                old_db_schema.States(
                     entity_id="sensor.one",
                     state="one_1",
                     last_updated_ts=1.452529,
                 ),
             )
             session.add_all(
-                States(
+                old_db_schema.States(
                     entity_id=None,
                     state="empty",
                     last_updated_ts=time + 1.452529,
@@ -708,7 +735,7 @@ async def test_migrate_null_entity_ids(
                 for time in range(1000)
             )
             session.add(
-                States(
+                old_db_schema.States(
                     entity_id="sensor.one",
                     state="one_1",
                     last_updated_ts=2.452529,
@@ -717,11 +744,10 @@ async def test_migrate_null_entity_ids(
 
     await instance.async_add_executor_job(_insert_states)
 
-    await async_wait_recording_done(hass)
+    await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EntityIDMigrationTask())
-    await async_recorder_block_till_done(hass)
-    await async_recorder_block_till_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():
         with session_scope(hass=hass, read_only=True) as session:
@@ -759,18 +785,20 @@ async def test_migrate_null_event_type_ids(
     """Test we can migrate event_types to the EventTypes table when the event_type is NULL."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     def _insert_events():
         with session_scope(hass=hass) as session:
             session.add(
-                Events(
+                old_db_schema.Events(
                     event_type="event_type_one",
                     origin_idx=0,
                     time_fired_ts=1.452529,
                 ),
             )
             session.add_all(
-                Events(
+                old_db_schema.Events(
                     event_type=None,
                     origin_idx=0,
                     time_fired_ts=time + 1.452529,
@@ -778,7 +806,7 @@ async def test_migrate_null_event_type_ids(
                 for time in range(1000)
             )
             session.add(
-                Events(
+                old_db_schema.Events(
                     event_type="event_type_one",
                     origin_idx=0,
                     time_fired_ts=2.452529,
@@ -787,12 +815,10 @@ async def test_migrate_null_event_type_ids(
 
     await instance.async_add_executor_job(_insert_events)
 
-    await async_wait_recording_done(hass)
+    await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-
     instance.queue_task(EventTypeIDMigrationTask())
-    await async_recorder_block_till_done(hass)
-    await async_recorder_block_till_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _fetch_migrated_events():
         with session_scope(hass=hass, read_only=True) as session:
@@ -826,3 +852,578 @@ async def test_migrate_null_event_type_ids(
     events_by_type = await instance.async_add_executor_job(_fetch_migrated_events)
     assert len(events_by_type["event_type_one"]) == 2
     assert len(events_by_type[migration._EMPTY_EVENT_TYPE]) == 1000
+
+
+async def test_stats_timestamp_conversion_is_reentrant(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+) -> None:
+    """Test stats migration is reentrant."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+    await async_attach_db_engine(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
+    now = dt_util.utcnow()
+    one_year_ago = now - datetime.timedelta(days=365)
+    six_months_ago = now - datetime.timedelta(days=180)
+    one_month_ago = now - datetime.timedelta(days=30)
+
+    def _do_migration():
+        migration._migrate_statistics_columns_to_timestamp_removing_duplicates(
+            hass, instance, instance.get_session, instance.engine
+        )
+
+    def _insert_fake_metadata():
+        with session_scope(hass=hass) as session:
+            session.add(
+                old_db_schema.StatisticsMeta(
+                    id=1000,
+                    statistic_id="test",
+                    source="test",
+                    unit_of_measurement="test",
+                    has_mean=True,
+                    has_sum=True,
+                    name="1",
+                )
+            )
+
+    def _insert_pre_timestamp_stat(date_time: datetime) -> None:
+        with session_scope(hass=hass) as session:
+            session.add(
+                old_db_schema.StatisticsShortTerm(
+                    metadata_id=1000,
+                    created=date_time,
+                    created_ts=None,
+                    start=date_time,
+                    start_ts=None,
+                    last_reset=date_time,
+                    last_reset_ts=None,
+                    state="1",
+                )
+            )
+
+    def _insert_post_timestamp_stat(date_time: datetime) -> None:
+        with session_scope(hass=hass) as session:
+            session.add(
+                db_schema.StatisticsShortTerm(
+                    metadata_id=1000,
+                    created=None,
+                    created_ts=date_time.timestamp(),
+                    start=None,
+                    start_ts=date_time.timestamp(),
+                    last_reset=None,
+                    last_reset_ts=date_time.timestamp(),
+                    state="1",
+                )
+            )
+
+    def _get_all_short_term_stats() -> list[dict[str, Any]]:
+        with session_scope(hass=hass) as session:
+            results = []
+            for result in (
+                session.query(old_db_schema.StatisticsShortTerm)
+                .where(old_db_schema.StatisticsShortTerm.metadata_id == 1000)
+                .all()
+            ):
+                results.append(
+                    {
+                        field.name: getattr(result, field.name)
+                        for field in old_db_schema.StatisticsShortTerm.__table__.c
+                    }
+                )
+            return sorted(results, key=lambda row: row["start_ts"])
+
+    # Do not optimize this block, its intentionally written to interleave
+    # with the migration
+    await hass.async_add_executor_job(_insert_fake_metadata)
+    await async_wait_recording_done(hass)
+    await hass.async_add_executor_job(_insert_pre_timestamp_stat, one_year_ago)
+    await async_wait_recording_done(hass)
+    await hass.async_add_executor_job(_do_migration)
+    await hass.async_add_executor_job(_insert_post_timestamp_stat, six_months_ago)
+    await async_wait_recording_done(hass)
+    await hass.async_add_executor_job(_do_migration)
+    await hass.async_add_executor_job(_insert_pre_timestamp_stat, one_month_ago)
+    await async_wait_recording_done(hass)
+    await hass.async_add_executor_job(_do_migration)
+
+    final_result = await hass.async_add_executor_job(_get_all_short_term_stats)
+    # Normalize timestamps since each engine returns them differently
+    for row in final_result:
+        if row["created"] is not None:
+            row["created"] = process_timestamp(row["created"]).replace(tzinfo=None)
+        if row["start"] is not None:
+            row["start"] = process_timestamp(row["start"]).replace(tzinfo=None)
+        if row["last_reset"] is not None:
+            row["last_reset"] = process_timestamp(row["last_reset"]).replace(
+                tzinfo=None
+            )
+
+    assert final_result == [
+        {
+            "created": process_timestamp(one_year_ago).replace(tzinfo=None),
+            "created_ts": one_year_ago.timestamp(),
+            "id": 1,
+            "last_reset": process_timestamp(one_year_ago).replace(tzinfo=None),
+            "last_reset_ts": one_year_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": process_timestamp(one_year_ago).replace(tzinfo=None),
+            "start_ts": one_year_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+        {
+            "created": None,
+            "created_ts": six_months_ago.timestamp(),
+            "id": 2,
+            "last_reset": None,
+            "last_reset_ts": six_months_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": six_months_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+        {
+            "created": process_timestamp(one_month_ago).replace(tzinfo=None),
+            "created_ts": one_month_ago.timestamp(),
+            "id": 3,
+            "last_reset": process_timestamp(one_month_ago).replace(tzinfo=None),
+            "last_reset_ts": one_month_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": process_timestamp(one_month_ago).replace(tzinfo=None),
+            "start_ts": one_month_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+    ]
+
+
+async def test_stats_timestamp_with_one_by_one(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+) -> None:
+    """Test stats migration with one by one."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+    await async_attach_db_engine(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
+    now = dt_util.utcnow()
+    one_year_ago = now - datetime.timedelta(days=365)
+    six_months_ago = now - datetime.timedelta(days=180)
+    one_month_ago = now - datetime.timedelta(days=30)
+
+    def _do_migration():
+        with patch.object(
+            migration,
+            "_migrate_statistics_columns_to_timestamp",
+            side_effect=IntegrityError("test", "test", "test"),
+        ):
+            migration._migrate_statistics_columns_to_timestamp_removing_duplicates(
+                hass, instance, instance.get_session, instance.engine
+            )
+
+    def _insert_fake_metadata():
+        with session_scope(hass=hass) as session:
+            session.add(
+                old_db_schema.StatisticsMeta(
+                    id=1000,
+                    statistic_id="test",
+                    source="test",
+                    unit_of_measurement="test",
+                    has_mean=True,
+                    has_sum=True,
+                    name="1",
+                )
+            )
+
+    def _insert_pre_timestamp_stat(date_time: datetime) -> None:
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    old_db_schema.StatisticsShortTerm(
+                        metadata_id=1000,
+                        created=date_time,
+                        created_ts=None,
+                        start=date_time,
+                        start_ts=None,
+                        last_reset=date_time,
+                        last_reset_ts=None,
+                        state="1",
+                    ),
+                    old_db_schema.Statistics(
+                        metadata_id=1000,
+                        created=date_time,
+                        created_ts=None,
+                        start=date_time,
+                        start_ts=None,
+                        last_reset=date_time,
+                        last_reset_ts=None,
+                        state="1",
+                    ),
+                )
+            )
+
+    def _insert_post_timestamp_stat(date_time: datetime) -> None:
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    db_schema.StatisticsShortTerm(
+                        metadata_id=1000,
+                        created=None,
+                        created_ts=date_time.timestamp(),
+                        start=None,
+                        start_ts=date_time.timestamp(),
+                        last_reset=None,
+                        last_reset_ts=date_time.timestamp(),
+                        state="1",
+                    ),
+                    db_schema.Statistics(
+                        metadata_id=1000,
+                        created=None,
+                        created_ts=date_time.timestamp(),
+                        start=None,
+                        start_ts=date_time.timestamp(),
+                        last_reset=None,
+                        last_reset_ts=date_time.timestamp(),
+                        state="1",
+                    ),
+                )
+            )
+
+    def _get_all_stats(table: old_db_schema.StatisticsBase) -> list[dict[str, Any]]:
+        """Get all stats from a table."""
+        with session_scope(hass=hass) as session:
+            results = []
+            for result in session.query(table).where(table.metadata_id == 1000).all():
+                results.append(
+                    {
+                        field.name: getattr(result, field.name)
+                        for field in table.__table__.c
+                    }
+                )
+            return sorted(results, key=lambda row: row["start_ts"])
+
+    def _insert_and_do_migration():
+        _insert_fake_metadata()
+        _insert_pre_timestamp_stat(one_year_ago)
+        _insert_post_timestamp_stat(six_months_ago)
+        _insert_pre_timestamp_stat(one_month_ago)
+        _do_migration()
+
+    await hass.async_add_executor_job(_insert_and_do_migration)
+    final_short_term_result = await hass.async_add_executor_job(
+        _get_all_stats, old_db_schema.StatisticsShortTerm
+    )
+    final_short_term_result = sorted(
+        final_short_term_result, key=lambda row: row["start_ts"]
+    )
+
+    assert final_short_term_result == [
+        {
+            "created": None,
+            "created_ts": one_year_ago.timestamp(),
+            "id": 1,
+            "last_reset": None,
+            "last_reset_ts": one_year_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": one_year_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+        {
+            "created": None,
+            "created_ts": six_months_ago.timestamp(),
+            "id": 2,
+            "last_reset": None,
+            "last_reset_ts": six_months_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": six_months_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+        {
+            "created": None,
+            "created_ts": one_month_ago.timestamp(),
+            "id": 3,
+            "last_reset": None,
+            "last_reset_ts": one_month_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": one_month_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+    ]
+
+    final_result = await hass.async_add_executor_job(
+        _get_all_stats, old_db_schema.Statistics
+    )
+    final_result = sorted(final_result, key=lambda row: row["start_ts"])
+
+    assert final_result == [
+        {
+            "created": None,
+            "created_ts": one_year_ago.timestamp(),
+            "id": 1,
+            "last_reset": None,
+            "last_reset_ts": one_year_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": one_year_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+        {
+            "created": None,
+            "created_ts": six_months_ago.timestamp(),
+            "id": 2,
+            "last_reset": None,
+            "last_reset_ts": six_months_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": six_months_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+        {
+            "created": None,
+            "created_ts": one_month_ago.timestamp(),
+            "id": 3,
+            "last_reset": None,
+            "last_reset_ts": one_month_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": one_month_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+    ]
+
+
+async def test_stats_timestamp_with_one_by_one_removes_duplicates(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+) -> None:
+    """Test stats migration with one by one removes duplicates."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+    await async_attach_db_engine(hass)
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
+    now = dt_util.utcnow()
+    one_year_ago = now - datetime.timedelta(days=365)
+    six_months_ago = now - datetime.timedelta(days=180)
+    one_month_ago = now - datetime.timedelta(days=30)
+
+    def _do_migration():
+        with patch.object(
+            migration,
+            "_migrate_statistics_columns_to_timestamp",
+            side_effect=IntegrityError("test", "test", "test"),
+        ), patch.object(
+            migration,
+            "migrate_single_statistics_row_to_timestamp",
+            side_effect=IntegrityError("test", "test", "test"),
+        ):
+            migration._migrate_statistics_columns_to_timestamp_removing_duplicates(
+                hass, instance, instance.get_session, instance.engine
+            )
+
+    def _insert_fake_metadata():
+        with session_scope(hass=hass) as session:
+            session.add(
+                old_db_schema.StatisticsMeta(
+                    id=1000,
+                    statistic_id="test",
+                    source="test",
+                    unit_of_measurement="test",
+                    has_mean=True,
+                    has_sum=True,
+                    name="1",
+                )
+            )
+
+    def _insert_pre_timestamp_stat(date_time: datetime) -> None:
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    old_db_schema.StatisticsShortTerm(
+                        metadata_id=1000,
+                        created=date_time,
+                        created_ts=None,
+                        start=date_time,
+                        start_ts=None,
+                        last_reset=date_time,
+                        last_reset_ts=None,
+                        state="1",
+                    ),
+                    old_db_schema.Statistics(
+                        metadata_id=1000,
+                        created=date_time,
+                        created_ts=None,
+                        start=date_time,
+                        start_ts=None,
+                        last_reset=date_time,
+                        last_reset_ts=None,
+                        state="1",
+                    ),
+                )
+            )
+
+    def _insert_post_timestamp_stat(date_time: datetime) -> None:
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    db_schema.StatisticsShortTerm(
+                        metadata_id=1000,
+                        created=None,
+                        created_ts=date_time.timestamp(),
+                        start=None,
+                        start_ts=date_time.timestamp(),
+                        last_reset=None,
+                        last_reset_ts=date_time.timestamp(),
+                        state="1",
+                    ),
+                    db_schema.Statistics(
+                        metadata_id=1000,
+                        created=None,
+                        created_ts=date_time.timestamp(),
+                        start=None,
+                        start_ts=date_time.timestamp(),
+                        last_reset=None,
+                        last_reset_ts=date_time.timestamp(),
+                        state="1",
+                    ),
+                )
+            )
+
+    def _get_all_stats(table: old_db_schema.StatisticsBase) -> list[dict[str, Any]]:
+        """Get all stats from a table."""
+        with session_scope(hass=hass) as session:
+            results = []
+            for result in session.query(table).where(table.metadata_id == 1000).all():
+                results.append(
+                    {
+                        field.name: getattr(result, field.name)
+                        for field in table.__table__.c
+                    }
+                )
+            return sorted(results, key=lambda row: row["start_ts"])
+
+    def _insert_and_do_migration():
+        _insert_fake_metadata()
+        _insert_pre_timestamp_stat(one_year_ago)
+        _insert_post_timestamp_stat(six_months_ago)
+        _insert_pre_timestamp_stat(one_month_ago)
+        _do_migration()
+
+    await hass.async_add_executor_job(_insert_and_do_migration)
+    final_short_term_result = await hass.async_add_executor_job(
+        _get_all_stats, old_db_schema.StatisticsShortTerm
+    )
+    final_short_term_result = sorted(
+        final_short_term_result, key=lambda row: row["start_ts"]
+    )
+
+    assert final_short_term_result == [
+        {
+            "created": None,
+            "created_ts": one_year_ago.timestamp(),
+            "id": 1,
+            "last_reset": None,
+            "last_reset_ts": one_year_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": one_year_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+        {
+            "created": None,
+            "created_ts": six_months_ago.timestamp(),
+            "id": 2,
+            "last_reset": None,
+            "last_reset_ts": six_months_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": six_months_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+        {
+            "created": None,
+            "created_ts": one_month_ago.timestamp(),
+            "id": 3,
+            "last_reset": None,
+            "last_reset_ts": one_month_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": one_month_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+    ]
+
+    # All the duplicates should have been removed but
+    # the non-duplicates should still be there
+    final_result = await hass.async_add_executor_job(
+        _get_all_stats, old_db_schema.Statistics
+    )
+    assert final_result == [
+        {
+            "created": None,
+            "created_ts": six_months_ago.timestamp(),
+            "id": 2,
+            "last_reset": None,
+            "last_reset_ts": six_months_ago.timestamp(),
+            "max": None,
+            "mean": None,
+            "metadata_id": 1000,
+            "min": None,
+            "start": None,
+            "start_ts": six_months_ago.timestamp(),
+            "state": 1.0,
+            "sum": None,
+        },
+    ]

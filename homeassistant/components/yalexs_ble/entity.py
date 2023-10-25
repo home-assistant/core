@@ -6,7 +6,8 @@ from yalexs_ble import ConnectionInfo, LockInfo, LockState
 from homeassistant.components import bluetooth
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .models import YaleXSBLEData
