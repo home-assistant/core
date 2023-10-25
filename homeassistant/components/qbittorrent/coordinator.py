@@ -7,11 +7,10 @@ from typing import Any
 
 from qbittorrent import Client
 from qbittorrent.client import LoginRequired
-from requests import RequestException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -35,7 +34,5 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         try:
             return await self.hass.async_add_executor_job(self.client.sync_main_data)
-        except RequestException as exc:
-            raise UpdateFailed("Connection lost") from exc
         except LoginRequired as exc:
             raise ConfigEntryError("Invalid authentication") from exc
