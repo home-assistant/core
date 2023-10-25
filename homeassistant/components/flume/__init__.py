@@ -16,6 +16,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.selector import ConfigEntrySelector
@@ -108,6 +109,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def setup_service(hass: HomeAssistant) -> None:
     """Add the services for the flume integration."""
 
+    @callback
     def list_notifications(call: ServiceCall) -> ServiceResponse:
         """Return the user notifications."""
         entry_id: str = call.data[CONF_CONFIG_ENTRY]

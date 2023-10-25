@@ -1749,9 +1749,7 @@ class Service:
 
     def __init__(
         self,
-        func: Callable[
-            [ServiceCall], Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None
-        ],
+        func: Callable[[ServiceCall], Coroutine[Any, Any, ServiceResponse] | None],
         schema: vol.Schema | None,
         domain: str,
         service: str,
@@ -1860,7 +1858,7 @@ class ServiceRegistry:
         domain: str,
         service: str,
         service_func: Callable[
-            [ServiceCall], Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None
+            [ServiceCall], Coroutine[Any, Any, ServiceResponse] | None
         ],
         schema: vol.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
