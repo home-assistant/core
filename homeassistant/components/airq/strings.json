@@ -19,6 +19,23 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure air-Q integration",
+        "data": {
+          "scan_interval": "Polling interval in seconds",
+          "return_average": "Show values averaged by the device",
+          "clip_negatives": "Clip negative values"
+        },
+        "data_description": {
+          "scan_interval": "Setting the polling interval to low values (less than 2 seconds) is discouraged, as frequent polling can slow down the air-Q smartphone app",
+          "return_average": "air-Q allows to control the strength of sensor value averaging performed on the device. To poll noisy sensor readings from the device, switch this feature off",
+          "clip_negatives": "For baseline calibration purposes, certain sensor values may briefly become negative. The default behaviour is to clip such values to 0"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "acetaldehyde": {

@@ -18,6 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Query the device for the first time and initialise coordinator.data
     await coordinator.async_config_entry_first_refresh()
+    entry.async_on_unload(entry.add_update_listener(coordinator.async_set_options))
 
     # Record the coordinator in a global store
     hass.data.setdefault(DOMAIN, {})
