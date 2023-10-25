@@ -4596,12 +4596,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "random": {
-      "name": "Random",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "rapt_ble": {
       "name": "RAPT Bluetooth",
       "integration_type": "hub",
@@ -6765,6 +6759,12 @@
       "iot_class": "local_push"
     },
     "min_max": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
+    "random": {
+      "name": "Random",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
