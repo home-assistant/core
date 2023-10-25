@@ -18,7 +18,10 @@ def get_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--file",
         action="store_true",
-        help="Dump fixture to file in fixtures folder. By default, the fixture will be printed.",
+        help=(
+            "Dump fixture to file in fixtures folder. By default, the fixture will be "
+            "printed to standard output."
+        ),
     )
 
     arguments = parser.parse_args()
