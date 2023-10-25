@@ -24,7 +24,7 @@ from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.components.zha.light import FLASH_EFFECTS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, restore_state
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from .common import (
@@ -1924,38 +1924,6 @@ async def test_group_member_assume_state(
         await zha_gateway.async_remove_zigpy_group(zha_group.group_id)
         assert hass.states.get(group_entity_id) is None
         assert entity_registry.async_get(group_entity_id) is None
-
-
-@pytest.fixture
-def core_rs(hass_storage):
-    """Core.restore_state fixture."""
-
-    def _storage(entity_id, attributes, state):
-        now = dt_util.utcnow().isoformat()
-
-        hass_storage[restore_state.STORAGE_KEY] = {
-            "version": restore_state.STORAGE_VERSION,
-            "key": restore_state.STORAGE_KEY,
-            "data": [
-                {
-                    "state": {
-                        "entity_id": entity_id,
-                        "state": str(state),
-                        "attributes": attributes,
-                        "last_changed": now,
-                        "last_updated": now,
-                        "context": {
-                            "id": "3c2243ff5f30447eb12e7348cfd5b8ff",
-                            "user_id": None,
-                        },
-                    },
-                    "last_seen": now,
-                }
-            ],
-        }
-        return
-
-    return _storage
 
 
 @pytest.mark.parametrize(
