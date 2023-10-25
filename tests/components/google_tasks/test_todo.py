@@ -217,7 +217,7 @@ async def test_create_todo_list_item(
             LIST_TASK_LIST_RESPONSE,
             LIST_TASKS_RESPONSE,
             EMPTY_RESPONSE,  # update
-            LIST_TASKS_RESPONSE,  # refresh after create
+            LIST_TASKS_RESPONSE,  # refresh after update
         ]
     ],
 )
@@ -257,7 +257,7 @@ async def test_update_todo_list_item(
             LIST_TASK_LIST_RESPONSE,
             LIST_TASKS_RESPONSE,
             EMPTY_RESPONSE,  # update
-            LIST_TASKS_RESPONSE,  # refresh after create
+            LIST_TASKS_RESPONSE,  # refresh after update
         ]
     ],
 )
