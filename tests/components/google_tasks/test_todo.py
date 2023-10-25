@@ -297,7 +297,7 @@ async def test_partial_update_title(
             LIST_TASK_LIST_RESPONSE,
             LIST_TASKS_RESPONSE,
             EMPTY_RESPONSE,  # update
-            LIST_TASKS_RESPONSE,  # refresh after create
+            LIST_TASKS_RESPONSE,  # refresh after update
         ]
     ],
 )
