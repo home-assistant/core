@@ -101,7 +101,7 @@ class RingBinarySensor(RingEntityMixin, BinarySensorEntity):
         )
 
     @callback
-    def _dings_update_callback(self):
+    def _dings_update_callback(self) -> None:
         """Call update method."""
         self._update_alert()
         self.async_write_ha_state()

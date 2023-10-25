@@ -1,11 +1,27 @@
 """Configuration for Ring tests."""
 import re
+from unittest.mock import patch
 
+from firebase_messaging.proto.checkin_pb2 import AndroidCheckinResponse
 import pytest
 import requests_mock
+from ring_doorbell.listen import can_listen
 
-from tests.common import load_fixture
+from tests.common import load_fixture, load_json_value_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
+from tests.components.ring.common import load_fixture_as_msg
+
+
+@pytest.fixture(autouse=True)
+def listen_mock():
+    """Fixture to mock the push client connect and disconnect."""
+    if not can_listen:
+        return
+
+    with patch("firebase_messaging.FcmPushClient.start"), patch(
+        "firebase_messaging.FcmPushClient.stop"
+    ), patch("firebase_messaging.FcmPushClient.is_started", return_value=True):
+        yield
 
 
 @pytest.fixture(name="requests_mock")
@@ -52,5 +68,30 @@ def requests_mock_fixture():
             re.compile(r"https:\/\/api\.ring\.com\/clients_api\/chimes\/\d+\/health"),
             text=load_fixture("chime_health_attrs.json", "ring"),
         )
-
+        mock.post(
+            "https://android.clients.google.com/checkin",
+            content=load_fixture_as_msg(
+                "android_checkin_response.json", AndroidCheckinResponse
+            ).SerializeToString(),
+        )
+        mock.post(
+            "https://android.clients.google.com/c2dm/register3",
+            text=load_fixture("gcm_register_response.txt", "ring"),
+        )
+        mock.post(
+            "https://fcm.googleapis.com/fcm/connect/subscribe",
+            json=load_json_value_fixture("fcm_register_response.json", "ring"),
+        )
+        mock.patch(
+            "https://api.ring.com/clients_api/device",
+            status_code=204,
+            content=b"",
+        )
+        mock.get(
+            re.compile(
+                r"https:\/\/api\.ring\.com\/clients_api\/dings\/\d+\/share/play"
+            ),
+            status_code=200,
+            json={"url": "http://127.0.0.1/foo"},
+        )
         yield mock
