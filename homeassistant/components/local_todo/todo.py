@@ -75,7 +75,7 @@ def _convert_item(item: TodoItem) -> Todo:
     try:
         return Todo(**dataclasses.asdict(item, dict_factory=_todo_dict_factory))
     except ValidationError as err:
-        _LOGGER.debug("Error parsing todo input fields: %s (%s)", item, str(err))
+        _LOGGER.debug("Error parsing todo input fields: %s (%s)", item, err)
         raise HomeAssistantError("Error parsing todo input fields") from err
 
 
