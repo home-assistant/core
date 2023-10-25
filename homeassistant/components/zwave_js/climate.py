@@ -147,7 +147,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         for enum in ThermostatSetpointType:
             # when this is a setpoint thermostat, be sure not to pollute this entity's
             # setpoints with any other entities' setpoints
-            if self._current_mode or enum == self.info.primary_value.property_key:
+            if self._current_mode or enum.value == self.info.primary_value.property_key:
                 self._setpoint_values[enum] = self.get_zwave_value(
                     THERMOSTAT_SETPOINT_PROPERTY,
                     command_class=CommandClass.THERMOSTAT_SETPOINT,
