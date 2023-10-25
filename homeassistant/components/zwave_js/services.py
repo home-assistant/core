@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Generator, Sequence
 import logging
+import math
 from typing import Any
 
 import voluptuous as vol
@@ -56,6 +57,13 @@ def parameter_name_does_not_need_bitmask(
             "Don't include a bitmask when a parameter name is specified",
             path=[const.ATTR_CONFIG_PARAMETER, const.ATTR_CONFIG_PARAMETER_BITMASK],
         )
+    return val
+
+
+def check_base_2(val: int) -> int:
+    """Check if value is a power of 2."""
+    if not math.log2(val).is_integer():
+        raise vol.Invalid("Must be one of 1, 2, or 4")
     return val
 
 
@@ -221,10 +229,10 @@ class ZWaveServices:
                         vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
                             vol.Coerce(int), BITMASK_SCHEMA, cv.string
                         ),
-                        vol.Inclusive(const.ATTR_VALUE_SIZE, "size"): vol.All(
-                            vol.Coerce(int), vol.Range(min=1, max=4)
+                        vol.Inclusive(const.ATTR_VALUE_SIZE, "raw"): vol.All(
+                            vol.Coerce(int), vol.Range(min=1, max=4), check_base_2
                         ),
-                        vol.Inclusive(const.ATTR_VALUE_FORMAT, "size"): vol.Coerce(
+                        vol.Inclusive(const.ATTR_VALUE_FORMAT, "raw"): vol.Coerce(
                             ConfigurationValueFormat
                         ),
                     },
@@ -429,11 +437,16 @@ class ZWaveServices:
         value_size = service.data.get(const.ATTR_VALUE_SIZE)
         value_format = service.data.get(const.ATTR_VALUE_FORMAT)
 
-        nodes_without_endpoints = []
+        nodes_without_endpoints = set()
+        # Remove nodes that don't have the specified endpoint
         for node in nodes:
             if endpoint not in node.endpoints:
-                nodes.remove(node)
-                nodes_without_endpoints.append(node)
+                nodes_without_endpoints.add(node)
+        nodes = nodes.difference(nodes_without_endpoints)
+        if not nodes:
+            raise HomeAssistantError(
+                "None of the specified nodes have the specified endpoint"
+            )
         if nodes_without_endpoints and _LOGGER.isEnabledFor(logging.WARNING):
             _LOGGER.warning(
                 (
