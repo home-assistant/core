@@ -1,14 +1,10 @@
 """Test Shopping List intents."""
-from homeassistant.components.todo import intent as todo_intent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
 
 async def test_recent_items_intent(hass: HomeAssistant, sl_setup) -> None:
     """Test recent items."""
-    # HassShoppingListAddItem is in todo now
-    await todo_intent.async_setup_intents(hass)
-
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
     )

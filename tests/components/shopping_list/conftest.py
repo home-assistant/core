@@ -27,7 +27,6 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 async def sl_setup(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
     """Set up the shopping list."""
-
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
