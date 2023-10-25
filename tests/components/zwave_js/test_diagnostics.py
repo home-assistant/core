@@ -127,7 +127,7 @@ async def test_device_diagnostics(
     )
     assert diagnostics_data["state"] == {
         **multisensor_6.data,
-        "values": {id: val.data for id, val in multisensor_6.values.items()},
+        "values": [val.data for val in multisensor_6.values.values()],
         "endpoints": {
             str(idx): endpoint.data for idx, endpoint in multisensor_6.endpoints.items()
         },

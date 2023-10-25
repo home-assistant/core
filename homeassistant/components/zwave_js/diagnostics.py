@@ -65,10 +65,10 @@ def redact_node_state(node_state: dict) -> dict:
             for zwave_value in node_state["values"]
         ]
     else:
-        redacted_state["values"] = {
-            value_id: optionally_redact_value_of_zwave_value(zwave_value)
-            for value_id, zwave_value in node_state["values"].items()
-        }
+        redacted_state["values"] = [
+            optionally_redact_value_of_zwave_value(zwave_value)
+            for zwave_value in node_state["values"].values()
+        ]
     return redacted_state
 
 
