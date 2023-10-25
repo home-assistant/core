@@ -19,13 +19,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import (
-    CONF_BASE_URL,
-    CONF_CACHED_INFORMATION,
-    CONF_ENTRY_CODE,
-    CONF_USER_DATA,
-    DOMAIN,
-)
+from .const import CONF_BASE_URL, CONF_ENTRY_CODE, CONF_USER_DATA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Roborock."""
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -115,6 +109,5 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_USERNAME: username,
                 CONF_USER_DATA: user_data.as_dict(),
                 CONF_BASE_URL: client.base_url,
-                CONF_CACHED_INFORMATION: {},
             },
         )

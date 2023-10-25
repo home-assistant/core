@@ -5,7 +5,6 @@ import pytest
 
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
-    CONF_CACHED_INFORMATION,
     CONF_USER_DATA,
     DOMAIN,
 )
@@ -58,9 +57,8 @@ def mock_roborock_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_USERNAME: USER_EMAIL,
             CONF_USER_DATA: USER_DATA.as_dict(),
             CONF_BASE_URL: BASE_URL,
-            CONF_CACHED_INFORMATION: {},
         },
-        version=2,
+        version=1,
     )
     mock_entry.add_to_hass(hass)
     return mock_entry

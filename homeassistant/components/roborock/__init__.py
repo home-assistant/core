@@ -25,14 +25,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.storage import Store
 
-from .const import (
-    CONF_BASE_URL,
-    CONF_CACHED_INFORMATION,
-    CONF_USER_DATA,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS, STORE_VERSION
 from .coordinator import RoborockDataUpdateCoordinator
 from .models import CachedCoordinatorInformation
 
@@ -44,7 +39,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up roborock from a config entry."""
     _LOGGER.debug("Integration async setup entry: %s", entry.as_dict())
-
+    cached_storage = Store(hass, STORE_VERSION, DOMAIN)
+    current_cached_data = await cached_storage.async_load()
+    current_cached_data = current_cached_data if current_cached_data is not None else {}
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
     api_client = RoborockApiClient(entry.data[CONF_USERNAME], entry.data[CONF_BASE_URL])
     _LOGGER.debug("Getting home data")
@@ -61,7 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
     # Get a Coordinator if the device is available or if we have connected to the device before
     coordinators = await asyncio.gather(
-        *build_setup_functions(hass, device_map, user_data, product_info, entry)
+        *build_setup_functions(
+            hass, device_map, user_data, product_info, current_cached_data
+        )
     )
     # Valid coordinators are those where we had networking cached or we could get networking
     valid_coordinators: list[RoborockDataUpdateCoordinator] = [
@@ -95,9 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # If we are using the local client, disconnect from the cloud client so we don't try to keep it alive.
             disconnect_requests.append(coord.cloud_api.async_disconnect())
     await asyncio.gather(*disconnect_requests)
-    hass.config_entries.async_update_entry(
-        entry, data={**entry.data, CONF_CACHED_INFORMATION: updated_cached}
-    )
+    await cached_storage.async_save(updated_cached)
     return True
 
 
@@ -106,21 +103,19 @@ def build_setup_functions(
     device_map: dict[str, HomeDataDevice],
     user_data: UserData,
     product_info: dict[str, HomeDataProduct],
-    entry: ConfigEntry,
+    stored_cached_data: dict[str, dict],
 ) -> list[Coroutine[Any, Any, RoborockDataUpdateCoordinator | None]]:
     """Create a list of setup functions that can later be called asynchronously."""
     setup_functions = []
     for device in device_map.values():
         cached_info = None
-        if device.duid in entry.data[CONF_CACHED_INFORMATION]:
+        if device.duid in stored_cached_data:
             cached_info = CachedCoordinatorInformation(
                 network_info=NetworkInfo(
-                    **entry.data[CONF_CACHED_INFORMATION][device.duid]["network_info"]
+                    **stored_cached_data[device.duid]["network_info"]
                 ),
                 supported_entities=set(
-                    entry.data[CONF_CACHED_INFORMATION][device.duid][
-                        "supported_entities"
-                    ]
+                    stored_cached_data[device.duid]["supported_entities"]
                 ),
             )
         setup_functions.append(
@@ -206,17 +201,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-    if config_entry.version == 1:
-        new = {**config_entry.data, CONF_CACHED_INFORMATION: {}}
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=new)
-
-    _LOGGER.debug("Migration to version %s successful", config_entry.version)
-
-    return True

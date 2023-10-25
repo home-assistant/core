@@ -13,11 +13,7 @@ from roborock.containers import (
 )
 from roborock.roborock_typing import DeviceProp
 
-from homeassistant.components.roborock import (
-    CONF_BASE_URL,
-    CONF_CACHED_INFORMATION,
-    CONF_USER_DATA,
-)
+from homeassistant.components.roborock import CONF_BASE_URL, CONF_USER_DATA
 from homeassistant.const import CONF_USERNAME
 
 # All data is based on a U.S. customer with a Roborock S7 MaxV Ultra
@@ -58,7 +54,6 @@ MOCK_CONFIG = {
     CONF_USERNAME: USER_EMAIL,
     CONF_USER_DATA: USER_DATA.as_dict(),
     CONF_BASE_URL: None,
-    CONF_CACHED_INFORMATION: {},
 }
 
 HOME_DATA_RAW = {

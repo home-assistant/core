@@ -8,7 +8,6 @@ from roborock.exceptions import RoborockException
 from homeassistant.components.roborock import CachedCoordinatorInformation
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
-    CONF_CACHED_INFORMATION,
     CONF_USER_DATA,
     DOMAIN,
 )
@@ -82,14 +81,22 @@ async def test_get_networking_fails_no_cache(
 
 
 async def test_get_networking_fails_one_cache(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry, bypass_api_fixture
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    bypass_api_fixture,
+    hass_storage,
 ) -> None:
     """Test that if networking fails for both devices - but we have one cached, we setup the one that is cached."""
-    mock_roborock_entry.data[CONF_CACHED_INFORMATION]["abc123"] = asdict(
-        CachedCoordinatorInformation(
-            network_info=NETWORK_INFO, supported_entities=set()
-        )
-    )
+    hass_storage[DOMAIN] = {
+        "version": 1,
+        "data": {
+            "abc123": asdict(
+                CachedCoordinatorInformation(
+                    network_info=NETWORK_INFO, supported_entities=set()
+                )
+            )
+        },
+    }
     with patch(
         "homeassistant.components.roborock.RoborockMqttClient.get_networking",
         side_effect=RoborockException(),
@@ -99,19 +106,27 @@ async def test_get_networking_fails_one_cache(
 
 
 async def test_get_networking_fails_both_cached(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry, bypass_api_fixture
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    bypass_api_fixture,
+    hass_storage,
 ) -> None:
     """Test that if networking fails for both devices, but we have them cached, we still setup."""
-    mock_roborock_entry.data[CONF_CACHED_INFORMATION]["abc123"] = asdict(
-        CachedCoordinatorInformation(
-            network_info=NETWORK_INFO, supported_entities=set()
-        )
-    )
-    mock_roborock_entry.data[CONF_CACHED_INFORMATION]["device_2"] = asdict(
-        CachedCoordinatorInformation(
-            network_info=NETWORK_INFO, supported_entities=set()
-        )
-    )
+    hass_storage[DOMAIN] = {
+        "version": 1,
+        "data": {
+            "abc123": asdict(
+                CachedCoordinatorInformation(
+                    network_info=NETWORK_INFO, supported_entities=set()
+                )
+            ),
+            "device_2": asdict(
+                CachedCoordinatorInformation(
+                    network_info=NETWORK_INFO, supported_entities=set()
+                )
+            ),
+        },
+    }
 
     with patch(
         "homeassistant.components.roborock.RoborockMqttClient.get_networking",
@@ -122,24 +137,32 @@ async def test_get_networking_fails_both_cached(
 
 
 async def test_get_networking_fails_both_cached_connection_fails_for_one(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry, bypass_api_fixture
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    bypass_api_fixture,
+    hass_storage,
 ) -> None:
     """Test that if networking fails, and one device doesn't get props, still setup."""
-    mock_roborock_entry.data[CONF_CACHED_INFORMATION]["abc123"] = asdict(
-        CachedCoordinatorInformation(
-            network_info=NETWORK_INFO,
-            supported_entities={
-                "dnd_start_time_abc123",
-                "dnd_switch_abc123",
-                "volume_abc123",
-            },
-        )
-    )
-    mock_roborock_entry.data[CONF_CACHED_INFORMATION]["device_2"] = asdict(
-        CachedCoordinatorInformation(
-            network_info=NETWORK_INFO, supported_entities=set()
-        )
-    )
+    hass_storage[DOMAIN] = {
+        "version": 1,
+        "data": {
+            "abc123": asdict(
+                CachedCoordinatorInformation(
+                    network_info=NETWORK_INFO,
+                    supported_entities={
+                        "dnd_start_time_abc123",
+                        "dnd_switch_abc123",
+                        "volume_abc123",
+                    },
+                )
+            ),
+            "device_2": asdict(
+                CachedCoordinatorInformation(
+                    network_info=NETWORK_INFO, supported_entities=set()
+                )
+            ),
+        },
+    }
 
     with patch(
         "homeassistant.components.roborock.RoborockMqttClient.get_networking",
@@ -162,19 +185,30 @@ async def test_get_networking_fails_both_cached_connection_fails_for_one(
 
 
 async def test_get_networking_fails_both_cached_connection_fails_for_both(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry, bypass_api_fixture
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    bypass_api_fixture,
+    hass_storage,
 ) -> None:
     """Test that if networking fails, and both devices can't get props, setup with both unavailable."""
-    mock_roborock_entry.data[CONF_CACHED_INFORMATION]["abc123"] = asdict(
-        CachedCoordinatorInformation(
-            network_info=NETWORK_INFO, supported_entities={"status_abc123"}
-        )
-    )
-    mock_roborock_entry.data[CONF_CACHED_INFORMATION]["device_2"] = asdict(
-        CachedCoordinatorInformation(
-            network_info=NETWORK_INFO, supported_entities=set()
-        )
-    )
+    hass_storage[DOMAIN] = {
+        "version": 1,
+        "data": {
+            "abc123": asdict(
+                CachedCoordinatorInformation(
+                    network_info=NETWORK_INFO,
+                    supported_entities={
+                        "status_abc123",
+                    },
+                )
+            ),
+            "device_2": asdict(
+                CachedCoordinatorInformation(
+                    network_info=NETWORK_INFO, supported_entities=set()
+                )
+            ),
+        },
+    }
 
     with patch(
         "homeassistant.components.roborock.RoborockMqttClient.get_networking",
@@ -226,6 +260,4 @@ async def test_migrate_entry(hass: HomeAssistant, bypass_api_fixture):
     await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.LOADED
-    assert entry.version == 2
-    # At this point, the cached information will be loaded - so we cannot assert on its actual value.
-    assert CONF_CACHED_INFORMATION in entry.data
+    assert entry.version == 1
