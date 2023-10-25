@@ -1,5 +1,6 @@
 """Support for OpenUV binary sensors."""
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -21,6 +22,7 @@ BINARY_SENSOR_DESCRIPTION_PROTECTION_WINDOW = BinarySensorEntityDescription(
     key=TYPE_PROTECTION_WINDOW,
     translation_key="protection_window",
     icon="mdi:sunglasses",
+    device_class=BinarySensorDeviceClass.SAFETY
 )
 
 
