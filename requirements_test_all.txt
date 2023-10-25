@@ -772,7 +772,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.73.0
+hass-nabucasa==0.74.0
 
 # homeassistant.components.conversation
 hassil==1.2.5
