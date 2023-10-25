@@ -180,10 +180,17 @@ async def test_themes_api(hass: HomeAssistant, themes_ws_client) -> None:
     await themes_ws_client.send_json({"id": 6, "type": "frontend/get_themes"})
     msg = await themes_ws_client.receive_json()
 
-    assert msg["result"]["default_theme"] == "recovery_mode"
-    assert msg["result"]["themes"] == {
-        "recovery_mode": {"primary-color": "#db4437", "accent-color": "#ffca28"}
-    }
+    assert msg["result"]["default_theme"] == "default"
+    assert msg["result"]["themes"] == {}
+
+    # safe mode
+    hass.config.recovery_mode = False
+    hass.config.safe_mode = True
+    await themes_ws_client.send_json({"id": 7, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_theme"] == "default"
+    assert msg["result"]["themes"] == {}
 
 
 async def test_themes_persist(
@@ -374,7 +381,9 @@ async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
     assert msg["result"]["themes"] == {}
 
 
-async def test_extra_js(mock_http_client_with_extra_js, mock_onboarded):
+async def test_extra_js(
+    hass: HomeAssistant, mock_http_client_with_extra_js, mock_onboarded
+):
     """Test that extra javascript is loaded."""
     resp = await mock_http_client_with_extra_js.get("")
     assert resp.status == 200
@@ -383,6 +392,16 @@ async def test_extra_js(mock_http_client_with_extra_js, mock_onboarded):
     text = await resp.text()
     assert '"/local/my_module.js"' in text
     assert '"/local/my_es5.js"' in text
+
+    # safe mode
+    hass.config.safe_mode = True
+    resp = await mock_http_client_with_extra_js.get("")
+    assert resp.status == 200
+    assert "cache-control" not in resp.headers
+
+    text = await resp.text()
+    assert '"/local/my_module.js"' not in text
+    assert '"/local/my_es5.js"' not in text
 
 
 async def test_get_panels(

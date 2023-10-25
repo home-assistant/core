@@ -1494,6 +1494,7 @@ async def test_config_as_dict() -> None:
         "currency": "EUR",
         "country": None,
         "language": "en",
+        "safe_mode": False,
     }
 
     assert expected == config.as_dict()
