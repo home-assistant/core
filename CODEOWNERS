@@ -1501,8 +1501,8 @@ build.json @home-assistant/supervisor
 /tests/components/zerproc/ @emlove
 /homeassistant/components/zeversolar/ @kvanzuijlen
 /tests/components/zeversolar/ @kvanzuijlen
-/homeassistant/components/zha/ @dmulcahey @adminiuga @puddly
-/tests/components/zha/ @dmulcahey @adminiuga @puddly
+/homeassistant/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
+/tests/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /homeassistant/components/zodiac/ @JulienTant
 /tests/components/zodiac/ @JulienTant
 /homeassistant/components/zone/ @home-assistant/core
