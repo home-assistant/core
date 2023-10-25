@@ -198,7 +198,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for coordinator in hass.data[DOMAIN][entry.entry_id].values()
             )
         )
-        await Store(hass, STORE_VERSION, DOMAIN).async_remove()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
