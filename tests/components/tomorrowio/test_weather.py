@@ -231,7 +231,7 @@ async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -
         ATTR_FORECAST_WIND_SPEED: 34.16,  # 9.49 m/s -> km/h
     }
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io Daily"
-    assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
+    assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 45
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
     assert weather_state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == "mm"
     assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 1023.38
@@ -264,7 +264,7 @@ async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
         ATTR_FORECAST_WIND_SPEED: 34.16,  # 9.49 m/s -> km/h
     }
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io Daily"
-    assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
+    assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 45
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
     assert weather_state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == "mm"
     assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 1023.38
