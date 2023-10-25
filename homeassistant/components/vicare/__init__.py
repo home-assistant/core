@@ -23,6 +23,7 @@ from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     CONF_HEATING_TYPE,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     HEATING_TYPE_TO_CREATOR_METHOD,
     PLATFORMS,
@@ -67,6 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def vicare_login(hass: HomeAssistant, entry_data: Mapping[str, Any]) -> PyViCare:
     """Login via PyVicare API."""
     vicare_api = PyViCare()
+    vicare_api.setCacheDuration(
+        entry_data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    )
     vicare_api.setCacheDuration(entry_data[CONF_SCAN_INTERVAL])
     vicare_api.initWithCredentials(
         entry_data[CONF_USERNAME],
