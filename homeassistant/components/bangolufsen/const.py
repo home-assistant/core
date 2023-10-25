@@ -264,7 +264,6 @@ BANGOLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
 
 # Misc.
-NO_METADATA: Final[tuple] = (None, "", 0)
 WEBSOCKET_CONNECTION_DELAY: Final[float] = 3.0
 
 
