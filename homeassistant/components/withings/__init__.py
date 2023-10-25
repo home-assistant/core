@@ -7,10 +7,11 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 import contextlib
+from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohttp.hdrs import METH_HEAD, METH_POST
+from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
 from aiowithings import NotificationCategory, WithingsClient
 from aiowithings.util import to_enum
@@ -50,24 +51,18 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    BED_PRESENCE_COORDINATOR,
-    CONF_PROFILES,
-    CONF_USE_WEBHOOK,
-    DEFAULT_TITLE,
-    DOMAIN,
-    LOGGER,
-    MEASUREMENT_COORDINATOR,
-    SLEEP_COORDINATOR,
-)
+from .const import CONF_PROFILES, CONF_USE_WEBHOOK, DEFAULT_TITLE, DOMAIN, LOGGER
 from .coordinator import (
+    WithingsActivityDataUpdateCoordinator,
     WithingsBedPresenceDataUpdateCoordinator,
     WithingsDataUpdateCoordinator,
+    WithingsGoalsDataUpdateCoordinator,
     WithingsMeasurementDataUpdateCoordinator,
     WithingsSleepDataUpdateCoordinator,
+    WithingsWorkoutDataUpdateCoordinator,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -130,6 +125,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+@dataclass(slots=True)
+class WithingsData:
+    """Dataclass to hold withings domain data."""
+
+    client: WithingsClient
+    measurement_coordinator: WithingsMeasurementDataUpdateCoordinator
+    sleep_coordinator: WithingsSleepDataUpdateCoordinator
+    bed_presence_coordinator: WithingsBedPresenceDataUpdateCoordinator
+    goals_coordinator: WithingsGoalsDataUpdateCoordinator
+    activity_coordinator: WithingsActivityDataUpdateCoordinator
+    workout_coordinator: WithingsWorkoutDataUpdateCoordinator
+    coordinators: set[WithingsDataUpdateCoordinator] = field(default_factory=set)
+
+    def __post_init__(self) -> None:
+        """Collect all coordinators in a set."""
+        self.coordinators = {
+            self.measurement_coordinator,
+            self.sleep_coordinator,
+            self.bed_presence_coordinator,
+            self.goals_coordinator,
+            self.activity_coordinator,
+            self.workout_coordinator,
+        }
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Withings from a config entry."""
     if CONF_WEBHOOK_ID not in entry.data or entry.unique_id is None:
@@ -148,21 +168,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _refresh_token() -> str:
         await oauth_session.async_ensure_token_valid()
-        return oauth_session.token[CONF_ACCESS_TOKEN]
+        token = oauth_session.token[CONF_ACCESS_TOKEN]
+        if TYPE_CHECKING:
+            assert isinstance(token, str)
+        return token
 
     client.refresh_token_function = _refresh_token
-    coordinators: dict[str, WithingsDataUpdateCoordinator] = {
-        MEASUREMENT_COORDINATOR: WithingsMeasurementDataUpdateCoordinator(hass, client),
-        SLEEP_COORDINATOR: WithingsSleepDataUpdateCoordinator(hass, client),
-        BED_PRESENCE_COORDINATOR: WithingsBedPresenceDataUpdateCoordinator(
-            hass, client
-        ),
-    }
+    withings_data = WithingsData(
+        client=client,
+        measurement_coordinator=WithingsMeasurementDataUpdateCoordinator(hass, client),
+        sleep_coordinator=WithingsSleepDataUpdateCoordinator(hass, client),
+        bed_presence_coordinator=WithingsBedPresenceDataUpdateCoordinator(hass, client),
+        goals_coordinator=WithingsGoalsDataUpdateCoordinator(hass, client),
+        activity_coordinator=WithingsActivityDataUpdateCoordinator(hass, client),
+        workout_coordinator=WithingsWorkoutDataUpdateCoordinator(hass, client),
+    )
 
-    for coordinator in coordinators.values():
+    for coordinator in withings_data.coordinators:
         await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = withings_data
 
     async def unregister_webhook(
         _: Any,
@@ -170,7 +195,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.debug("Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID])
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         await async_unsubscribe_webhooks(client)
-        for coordinator in coordinators.values():
+        for coordinator in withings_data.coordinators:
             coordinator.webhook_subscription_listener(False)
 
     async def register_webhook(
@@ -197,11 +222,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DOMAIN,
             webhook_name,
             entry.data[CONF_WEBHOOK_ID],
-            get_webhook_handler(coordinators),
+            get_webhook_handler(withings_data),
+            allowed_methods=[METH_POST],
         )
 
         await async_subscribe_webhooks(client, webhook_url)
-        for coordinator in coordinators.values():
+        for coordinator in withings_data.coordinators:
             coordinator.webhook_subscription_listener(True)
         LOGGER.debug("Register Withings webhook: %s", webhook_url)
         entry.async_on_unload(
@@ -318,21 +344,13 @@ def json_message_response(message: str, message_code: int) -> Response:
 
 
 def get_webhook_handler(
-    coordinators: dict[str, WithingsDataUpdateCoordinator],
+    withings_data: WithingsData,
 ) -> Callable[[HomeAssistant, str, Request], Awaitable[Response | None]]:
     """Return webhook handler."""
 
     async def async_webhook_handler(
         hass: HomeAssistant, webhook_id: str, request: Request
     ) -> Response | None:
-        # Handle http head calls to the path.
-        # When creating a notify subscription, Withings will check that the endpoint is running by sending a HEAD request.
-        if request.method == METH_HEAD:
-            return Response()
-
-        if request.method != METH_POST:
-            return json_message_response("Invalid method", message_code=2)
-
         # Handle http post calls to the path.
         if not request.body_exists:
             return json_message_response("No request body", message_code=12)
@@ -350,7 +368,7 @@ def get_webhook_handler(
             NotificationCategory.UNKNOWN,
         )
 
-        for coordinator in coordinators.values():
+        for coordinator in withings_data.coordinators:
             if notification_category in coordinator.notification_categories:
                 await coordinator.async_webhook_data_updated(notification_category)
 
