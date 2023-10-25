@@ -6,9 +6,6 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from qbittorrent.client import Client, LoginRequired
-from requests.exceptions import RequestException
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -19,6 +16,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import QBittorrentDataCoordinator
