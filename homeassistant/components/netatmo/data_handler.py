@@ -235,12 +235,16 @@ class NetatmoDataHandler:
                 **self.publisher[signal_name].kwargs
             )
 
-        except (pyatmo.NoDevice, pyatmo.ApiError) as err:
-            _LOGGER.debug(err)
+        except pyatmo.NoDevice as err:
+            _LOGGER.warning(err)
             has_error = True
 
-        except (asyncio.TimeoutError, aiohttp.ClientConnectorError) as err:
-            _LOGGER.debug(err)
+        except (
+            aiohttp.ClientConnectorError,
+            asyncio.TimeoutError,
+            pyatmo.ApiError,
+        ) as err:
+            _LOGGER.error(err)
             return True
 
         for update_callback in self.publisher[signal_name].subscriptions:
