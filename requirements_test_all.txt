@@ -716,6 +716,7 @@ goalzero==0.2.2
 goodwe==0.2.31
 
 # homeassistant.components.google_mail
+# homeassistant.components.google_tasks
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
