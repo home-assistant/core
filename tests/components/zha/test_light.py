@@ -1927,10 +1927,34 @@ async def test_group_member_assume_state(
 
 
 @pytest.mark.parametrize(
-    ("restored_state", "expected_cm"),
+    ("restored_state", "expected_state"),
     [
-        (STATE_ON, ColorMode.XY),
-        (STATE_OFF, None),
+        (
+            STATE_ON,
+            {
+                "brightness": None,
+                "off_with_transition": None,
+                "off_brightness": None,
+                "color_mode": ColorMode.XY,  # color_mode defaults to what the light supports when restored with ON state
+                "color_temp": None,
+                "xy_color": None,
+                "hs_color": None,
+                "effect": None,
+            },
+        ),
+        (
+            STATE_OFF,
+            {
+                "brightness": None,
+                "off_with_transition": None,
+                "off_brightness": None,
+                "color_mode": None,
+                "color_temp": None,
+                "xy_color": None,
+                "hs_color": None,
+                "effect": None,
+            },
+        ),
     ],
 )
 async def test_restore_light_state(
@@ -1939,10 +1963,11 @@ async def test_restore_light_state(
     core_rs,
     zha_device_restored,
     restored_state,
-    expected_cm,
+    expected_state,
 ) -> None:
     """Test ZHA light restores without throwing an error when attributes are None."""
 
+    # restore state with None values
     attributes = {
         "brightness": None,
         "off_with_transition": None,
@@ -1969,10 +1994,6 @@ async def test_restore_light_state(
     assert entity_id is not None
     assert hass.states.get(entity_id).state == restored_state
 
-    for attr in attributes:
-        if attr == "color_mode":
-            # color_mode defaults to what the light supports when restored with ON state
-            assert hass.states.get(entity_id).attributes.get(attr) == expected_cm
-        else:
-            # all other attributes are set to None when restored as None
-            assert hass.states.get(entity_id).attributes.get(attr) is None
+    # compare actual restored state to expected state
+    for attribute, expected_value in expected_state.items():
+        assert hass.states.get(entity_id).attributes.get(attribute) == expected_value
