@@ -42,22 +42,20 @@ class FakeStore(LocalTodoListStore):
         read_side_effect: Any | None = None,
     ) -> None:
         """Initialize FakeStore."""
-        self._content = ics_content
-
-        mock_path = Mock()
+        mock_path = self._mock_path = Mock()
         mock_path.exists = self._mock_exists
         mock_path.read_text = Mock()
-        mock_path.read_text.return_value = self._content
+        mock_path.read_text.return_value = ics_content
         mock_path.read_text.side_effect = read_side_effect
         mock_path.write_text = self._mock_write_text
 
         super().__init__(hass, mock_path)
 
     def _mock_exists(self) -> bool:
-        return self._content is not None
+        return self._mock_path.read_text.return_value is not None
 
     def _mock_write_text(self, content: str) -> None:
-        self._content = content
+        self._mock_path.read_text.return_value = content
 
 
 @pytest.fixture(name="ics_content")
