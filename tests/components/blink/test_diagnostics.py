@@ -1,5 +1,5 @@
-"""Test AccuWeather diagnostics."""
-from unittest.mock import MagicMock, patch
+"""Test Blink diagnostics."""
+from unittest.mock import MagicMock
 
 from syrupy import SnapshotAssertion
 from syrupy.filters import props
@@ -23,9 +23,8 @@ async def test_entry_diagnostics(
 
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.blink.Blink", return_value=mock_blink_api):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry

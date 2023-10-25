@@ -1,4 +1,4 @@
-"""Diagnostics support for Aladdin Connect."""
+"""Diagnostics support for Blink."""
 from __future__ import annotations
 
 from typing import Any
@@ -22,13 +22,12 @@ async def async_get_config_entry_diagnostics(
 
     api: Blink = hass.data[DOMAIN][config_entry.entry_id].api
 
-    data = {}
-    for _, camera in api.cameras.items():
-        data[camera.name] = dict(camera.attributes.items())
+    data = {
+        camera.name: dict(camera.attributes.items())
+        for _, camera in api.cameras.items()
+    }
 
-    diagnostics_data = {
+    return {
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
         "cameras": async_redact_data(data, TO_REDACT),
     }
-
-    return diagnostics_data

@@ -52,12 +52,15 @@ def camera() -> MagicMock:
 @pytest.fixture(name="mock_blink_api")
 def blink_api_fixture(camera) -> MagicMock:
     """Set up Blink API fixture."""
-    with patch("homeassistant.components.blink.Blink", autospec=True) as mock_blink_api:
-        mock_blink_api.available = True
-        mock_blink_api.start = AsyncMock(return_value=True)
-        mock_blink_api.refresh = AsyncMock(return_value=True)
-        mock_blink_api.sync = MagicMock(return_value=True)
-        mock_blink_api.cameras = {camera.name: camera}
+    mock_blink_api = create_autospec(blinkpy.blinkpy.Blink, instance=True)
+    mock_blink_api.available = True
+    mock_blink_api.start = AsyncMock(return_value=True)
+    mock_blink_api.refresh = AsyncMock(return_value=True)
+    mock_blink_api.sync = MagicMock(return_value=True)
+    mock_blink_api.cameras = {camera.name: camera}
+
+    with patch("homeassistant.components.blink.Blink") as class_mock:
+        class_mock.return_value = mock_blink_api
         yield mock_blink_api
 
 
