@@ -1,12 +1,7 @@
 """Support for esphome texts."""
 from __future__ import annotations
 
-from aioesphomeapi import (
-    EntityInfo,
-    TextInfo,
-    TextMode as EsphomeTextMode,
-    TextState,
-)
+from aioesphomeapi import EntityInfo, TextInfo, TextMode as EsphomeTextMode, TextState
 
 from homeassistant.components.text import TextEntity, TextMode
 from homeassistant.config_entries import ConfigEntry
@@ -52,7 +47,7 @@ class EsphomeText(EsphomeEntity[TextInfo, TextState], TextEntity):
         self._attr_native_min = static_info.min_length
         self._attr_native_max = static_info.max_length
         self._attr_pattern = static_info.pattern
-        self._attr_mode = TEXT_MODES.from_esphome(static_info.mode)
+        self._attr_mode = TEXT_MODES.from_esphome(static_info.mode) or TextMode.TEXT
 
     @property
     @esphome_state_property

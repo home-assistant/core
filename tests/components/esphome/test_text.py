@@ -1,14 +1,8 @@
 """Test ESPHome texts."""
 
-import math
 from unittest.mock import call
 
-from aioesphomeapi import (
-    APIClient,
-    TextInfo,
-    TextMode as ESPHomeTextMode,
-    TextState,
-)
+from aioesphomeapi import APIClient, TextInfo, TextMode as ESPHomeTextMode, TextState
 
 from homeassistant.components.text import (
     ATTR_VALUE,
