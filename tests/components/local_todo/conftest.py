@@ -1,6 +1,7 @@
 """Common fixtures for the local_todo tests."""
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -34,23 +35,25 @@ class FakeStore(LocalTodoListStore):
         hass: HomeAssistant,
         path: Path,
         ics_content: str | None,
-        raise_error: bool,
+        read_side_effect: Any | None = None,
     ) -> None:
         """Initialize FakeStore."""
         self._content = ics_content
-        self._raise_error = raise_error
+
         mock_path = Mock()
         mock_path.exists = self._mock_exists
-        mock_path.read_text = self._mock_read_text
+        mock_path.read_text = Mock()
+        mock_path.read_text.side_effect = (
+            read_side_effect if read_side_effect else self._mock_read_text
+        )
         mock_path.write_text = self._mock_write_text
+
         super().__init__(hass, mock_path)
 
     def _mock_exists(self) -> bool:
         return self._content is not None
 
     def _mock_read_text(self) -> str:
-        if self._raise_error:
-            raise OSError("Fake Error")
         return self._content or ""
 
     def _mock_write_text(self, content: str) -> None:
@@ -63,21 +66,23 @@ def mock_ics_content() -> str | None:
     return ""
 
 
-@pytest.fixture(name="store_error")
-def mock_store_error() -> bool:
+@pytest.fixture(name="store_read_side_effect")
+def mock_store_read_side_effect() -> Any | None:
     """Fixture to raise errors from the FakeStore."""
-    return False
+    return None
 
 
 @pytest.fixture(name="store", autouse=True)
-def mock_store(ics_content: str, store_error: bool) -> Generator[None, None, None]:
+def mock_store(
+    ics_content: str, store_read_side_effect: Any | None
+) -> Generator[None, None, None]:
     """Fixture that sets up a fake local storage object."""
 
     stores: dict[Path, FakeStore] = {}
 
     def new_store(hass: HomeAssistant, path: Path) -> FakeStore:
         if path not in stores:
-            stores[path] = FakeStore(hass, path, ics_content, store_error)
+            stores[path] = FakeStore(hass, path, ics_content, store_read_side_effect)
         return stores[path]
 
     with patch("homeassistant.components.local_todo.LocalTodoListStore", new=new_store):

@@ -383,9 +383,9 @@ async def test_parse_existing_ics(
 
 
 @pytest.mark.parametrize(
-    ("store_error"),
+    ("store_read_side_effect"),
     [
-        (True),
+        (OSError("read error")),
     ],
 )
 async def test_store_os_error(
