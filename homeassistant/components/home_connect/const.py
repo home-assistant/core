@@ -30,6 +30,10 @@ BSH_DOOR_STATE_CLOSED = "BSH.Common.EnumType.DoorState.Closed"
 BSH_DOOR_STATE_LOCKED = "BSH.Common.EnumType.DoorState.Locked"
 BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
+REFRIGATION_DOOR_KEY_PREFIX = "Refrigeration.Common.Status.Door."
+REFRIGERATION_DOOR_STATE_CLOSED = "Refrigeration.Common.EnumType.Door.States.Closed"
+REFRIGERATION_DOOR_STATE_OPEN = "Refrigeration.Common.EnumType.Door.States.Open"
+
 BSH_PAUSE = "BSH.Common.Command.PauseProgram"
 BSH_RESUME = "BSH.Common.Command.ResumeProgram"
 

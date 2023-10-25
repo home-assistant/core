@@ -30,9 +30,11 @@ from .const import (
     ATTR_UNIT,
     ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
+    BSH_DOOR_STATE,
     BSH_OPERATION_STATE,
     BSH_POWER_OFF,
     BSH_POWER_STANDBY,
+    REFRIGATION_DOOR_KEY_PREFIX,
     SIGNAL_UPDATE_ENTITIES,
 )
 
@@ -211,14 +213,34 @@ class DeviceWithOpState(HomeConnectDevice):
 class DeviceWithDoor(HomeConnectDevice):
     """Device that has a door sensor."""
 
-    def get_door_entity(self):
+    def get_door_entities(self):
         """Get a dictionary with info about the door binary sensor."""
-        return {
-            ATTR_DEVICE: self,
-            ATTR_DESC: "Door",
-            ATTR_SENSOR_TYPE: "door",
-            ATTR_DEVICE_CLASS: "door",
-        }
+        entities = []
+        status_keys = self.appliance.get_status().keys()
+        for key in status_keys:
+            if key == BSH_DOOR_STATE:
+                entities.append(
+                    {
+                        ATTR_DEVICE: self,
+                        ATTR_DESC: "Door",
+                        ATTR_KEY: key,
+                        ATTR_SENSOR_TYPE: "door",
+                        ATTR_DEVICE_CLASS: "door",
+                    }
+                )
+            elif REFRIGATION_DOOR_KEY_PREFIX in key:
+                device_name = key.replace(REFRIGATION_DOOR_KEY_PREFIX, "")
+                desc = f"{device_name} Door"
+                entities.append(
+                    {
+                        ATTR_DEVICE: self,
+                        ATTR_DESC: desc,
+                        ATTR_KEY: key,
+                        ATTR_SENSOR_TYPE: "refrigeration_door",
+                        ATTR_DEVICE_CLASS: "door",
+                    }
+                )
+        return entities
 
 
 class DeviceWithLight(HomeConnectDevice):
@@ -272,14 +294,14 @@ class Dryer(
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
-        door_entity = self.get_door_entity()
+        door_entities = self.get_door_entities()
         remote_control = self.get_remote_control()
         remote_start = self.get_remote_start()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [door_entity, remote_control, remote_start],
+            "binary_sensor": [*door_entities, remote_control, remote_start],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
         }
@@ -297,14 +319,14 @@ class Dishwasher(
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
-        door_entity = self.get_door_entity()
+        door_entities = self.get_door_entities()
         remote_control = self.get_remote_control()
         remote_start = self.get_remote_start()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [door_entity, remote_control, remote_start],
+            "binary_sensor": [*door_entities, remote_control, remote_start],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
         }
@@ -323,14 +345,14 @@ class Oven(
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
-        door_entity = self.get_door_entity()
+        door_entities = self.get_door_entities()
         remote_control = self.get_remote_control()
         remote_start = self.get_remote_start()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [door_entity, remote_control, remote_start],
+            "binary_sensor": [*door_entities, remote_control, remote_start],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
         }
@@ -347,14 +369,14 @@ class Washer(
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
-        door_entity = self.get_door_entity()
+        door_entities = self.get_door_entities()
         remote_control = self.get_remote_control()
         remote_start = self.get_remote_start()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [door_entity, remote_control, remote_start],
+            "binary_sensor": [*door_entities, remote_control, remote_start],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
         }
@@ -371,14 +393,14 @@ class WasherDryer(
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
-        door_entity = self.get_door_entity()
+        door_entities = self.get_door_entities()
         remote_control = self.get_remote_control()
         remote_start = self.get_remote_start()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [door_entity, remote_control, remote_start],
+            "binary_sensor": [*door_entities, remote_control, remote_start],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
         }
@@ -434,8 +456,8 @@ class FridgeFreezer(DeviceWithDoor):
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
-        door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+        door_entities = self.get_door_entities()
+        return {"binary_sensor": door_entities}
 
 
 class Refrigerator(DeviceWithDoor):
@@ -443,8 +465,8 @@ class Refrigerator(DeviceWithDoor):
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
-        door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+        door_entities = self.get_door_entities()
+        return {"binary_sensor": door_entities}
 
 
 class Freezer(DeviceWithDoor):
@@ -452,8 +474,8 @@ class Freezer(DeviceWithDoor):
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
-        door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+        door_entities = self.get_door_entities()
+        return {"binary_sensor": door_entities}
 
 
 class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):

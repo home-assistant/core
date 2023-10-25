@@ -16,6 +16,8 @@ from .const import (
     BSH_REMOTE_CONTROL_ACTIVATION_STATE,
     BSH_REMOTE_START_ALLOWANCE_STATE,
     DOMAIN,
+    REFRIGERATION_DOOR_STATE_CLOSED,
+    REFRIGERATION_DOOR_STATE_OPEN,
 )
 from .entity import HomeConnectEntity
 
@@ -43,9 +45,10 @@ async def async_setup_entry(
 class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
     """Binary sensor for Home Connect."""
 
-    def __init__(self, device, desc, sensor_type, device_class=None):
+    def __init__(self, device, desc, sensor_type, device_class=None, key=None):
         """Initialize the entity."""
         super().__init__(device, desc)
+        self._key = key
         self._state = None
         self._device_class = device_class
         self._type = sensor_type
@@ -53,6 +56,10 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
             self._update_key = BSH_DOOR_STATE
             self._false_value_list = (BSH_DOOR_STATE_CLOSED, BSH_DOOR_STATE_LOCKED)
             self._true_value_list = [BSH_DOOR_STATE_OPEN]
+        elif self._type == "refrigeration_door" and self._key is not None:
+            self._update_key = self._key
+            self._false_value_list = [REFRIGERATION_DOOR_STATE_CLOSED]
+            self._true_value_list = [REFRIGERATION_DOOR_STATE_OPEN]
         elif self._type == "remote_control":
             self._update_key = BSH_REMOTE_CONTROL_ACTIVATION_STATE
             self._false_value_list = [False]
