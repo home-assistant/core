@@ -1,7 +1,6 @@
 """Representation of Z-Wave thermostats."""
 from __future__ import annotations
 
-import contextlib
 from typing import Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
@@ -146,12 +145,18 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         )
         self._setpoint_values: dict[ThermostatSetpointType, ZwaveValue | None] = {}
         for enum in ThermostatSetpointType:
-            self._setpoint_values[enum] = self.get_zwave_value(
-                THERMOSTAT_SETPOINT_PROPERTY,
-                command_class=CommandClass.THERMOSTAT_SETPOINT,
-                value_property_key=enum.value,
-                add_to_watched_value_ids=True,
-            )
+            # when this is a setpoint thermostat, be sure not to pollute this entity's
+            # setpoints with any other entities' setpoints
+            if self._current_mode or enum == self.info.primary_value.property_key:
+                self._setpoint_values[enum] = self.get_zwave_value(
+                    THERMOSTAT_SETPOINT_PROPERTY,
+                    command_class=CommandClass.THERMOSTAT_SETPOINT,
+                    value_property_key=enum.value,
+                    add_to_watched_value_ids=True,
+                )
+            else:
+                self._setpoint_values[enum] = None
+
             # Use the first found non N/A setpoint value to always determine the
             # temperature unit
             if (
@@ -259,25 +264,16 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def _current_mode_setpoint_enums(self) -> list[ThermostatSetpointType]:
         """Return the list of enums that are relevant to the current thermostat mode."""
-        if self._current_mode is None or self._current_mode.value is None:
-            # Thermostat with no support for setting a mode is just a setpoint.
+        if self._current_mode and self._current_mode.value is not None:
+            return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])
 
-            # Some devices have missing or invalid setpoint types. For backwards
-            # compatibility we unconditionally map these to the Heating setpoint
-            # (including the actual NA setpoint).
-            setpoint_type = ThermostatSetpointType.NA
-            if self.info.primary_value.property_key is not None:
-                with contextlib.suppress(ValueError):
-                    setpoint_type = ThermostatSetpointType(
-                        int(self.info.primary_value.property_key)
-                    )
+        # This should be a setpoint thermostat, with only a single setpoint
+        for setpoint, value in self._setpoint_values.items():
+            if value is not None:
+                return [setpoint]
 
-            if setpoint_type == ThermostatSetpointType.NA:
-                return [ThermostatSetpointType.HEATING]
-
-            return [setpoint_type]
-
-        return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])
+        # Some thermostats have unknown setpoints, but we don't catch those at discovery time.
+        return []
 
     @property
     def temperature_unit(self) -> str:
