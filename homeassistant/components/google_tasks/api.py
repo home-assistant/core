@@ -51,3 +51,31 @@ class AsyncConfigEntryAuth:
         )
         result = await self._hass.async_add_executor_job(cmd.execute)
         return result["items"]
+
+    async def insert(
+        self,
+        task_list_id: str,
+        task: dict[str, Any],
+    ) -> None:
+        """Create a new Task resource on the task list."""
+        service = await self._get_service()
+        cmd: HttpRequest = service.tasks().insert(
+            tasklist=task_list_id,
+            body=task,
+        )
+        await self._hass.async_add_executor_job(cmd.execute)
+
+    async def patch(
+        self,
+        task_list_id: str,
+        task_id: str,
+        task: dict[str, Any],
+    ) -> None:
+        """Update a task resource."""
+        service = await self._get_service()
+        cmd: HttpRequest = service.tasks().patch(
+            tasklist=task_list_id,
+            task=task_id,
+            body=task,
+        )
+        await self._hass.async_add_executor_job(cmd.execute)
