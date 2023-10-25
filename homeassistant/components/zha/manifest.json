@@ -2,7 +2,7 @@
   "domain": "zha",
   "name": "Zigbee Home Automation",
   "after_dependencies": ["onboarding", "usb"],
-  "codeowners": ["@dmulcahey", "@adminiuga", "@puddly"],
+  "codeowners": ["@dmulcahey", "@adminiuga", "@puddly", "@TheJulianJES"],
   "config_flow": true,
   "dependencies": ["file_upload"],
   "documentation": "https://www.home-assistant.io/integrations/zha",
