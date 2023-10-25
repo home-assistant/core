@@ -757,7 +757,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=HASSIO_UPDATE_INTERVAL,
             # We don't want an immediate refresh since we want to avoid
-            # hammering the Supervisor API on startup
+            # fetching the container stats right away and avoid hammering
+            # the Supervisor API on startup
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
