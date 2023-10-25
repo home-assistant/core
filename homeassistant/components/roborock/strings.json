@@ -28,6 +28,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "in_cleaning": {
+        "name": "Cleaning"
+      },
       "mop_attached": {
         "name": "Mop attached"
       },
