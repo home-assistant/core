@@ -20,7 +20,7 @@ import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
@@ -72,6 +72,7 @@ __all__ = [
     "async_get_media_source_audio",
     "async_support_options",
     "ATTR_AUDIO_OUTPUT",
+    "ATTR_PREFERRED_FORMAT",
     "CONF_LANG",
     "DEFAULT_CACHE_DIR",
     "generate_media_source_id",
@@ -88,6 +89,7 @@ ATTR_PLATFORM = "platform"
 ATTR_AUDIO_OUTPUT = "audio_output"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
+ATTR_PREFERRED_FORMAT = "preferred_format"
 
 CONF_LANG = "language"
 
@@ -378,9 +380,55 @@ class TextToSpeechEntity(RestoreEntity):
 
         Return a tuple of file extension and data as bytes.
         """
-        return await self.hass.async_add_executor_job(
+        extension, data = await self.hass.async_add_executor_job(
             partial(self.get_tts_audio, message, language, options=options)
         )
+        preferred_extension = options.get(ATTR_PREFERRED_FORMAT, extension)
+
+        if extension and data and (extension not in (preferred_extension, "raw")):
+            # Automatically convert to preferred format with ffmpeg
+            _LOGGER.debug(
+                "Automatically converting TTS audio from %s to %s",
+                extension,
+                preferred_extension,
+            )
+            data = await self._convert_audio(data, extension, preferred_extension)
+            extension = preferred_extension
+
+        return (extension, data)
+
+    async def _convert_audio(
+        self, audio_data: bytes, from_extension: str, to_extension: str
+    ) -> bytes:
+        """Convert audio from one format to another using ffmpeg."""
+        ffmpeg_manager = ffmpeg.get_ffmpeg_manager(self.hass)
+        ffmpeg_input = [
+            "-f",
+            from_extension,
+            "-i",
+            "pipe:",  # input from stdin
+        ]
+        ffmpeg_output = [
+            "-f",
+            to_extension,
+        ]
+
+        if to_extension == "mp3":
+            ffmpeg_output.extend(["-q:a", "0"])  # max quality
+
+        ffmpeg_output.append("pipe:")  # output to stdout
+
+        ffmpeg_proc = await asyncio.create_subprocess_exec(
+            ffmpeg_manager.binary,
+            *ffmpeg_input,
+            *ffmpeg_output,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+
+        stdout, _stderr = await ffmpeg_proc.communicate(input=audio_data)
+        return stdout
 
 
 def _hash_options(options: dict) -> str:
@@ -592,6 +640,11 @@ class SpeechManager:
         """
         if options is not None and ATTR_AUDIO_OUTPUT in options:
             expected_extension = options[ATTR_AUDIO_OUTPUT]
+            if expected_extension != "raw":
+                # Audio may be automatically converted
+                expected_extension = options.get(
+                    ATTR_PREFERRED_FORMAT, expected_extension
+                )
         else:
             expected_extension = None
 
