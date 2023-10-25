@@ -5,7 +5,7 @@ from typing import Any, Protocol
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAIN
+from homeassistant.const import CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.trigger import (
     TriggerActionType,
@@ -62,6 +62,16 @@ async def async_attach_trigger(
         hass, config[CONF_DOMAIN], DeviceAutomationType.TRIGGER
     )
     return await platform.async_attach_trigger(hass, config, action, trigger_info)
+
+
+async def async_get_action_completed_state(
+    hass: HomeAssistant, config: ConfigType
+) -> str | None:
+    """Return expected state when action is complete."""
+    platform = await async_get_device_automation_platform(
+        hass, config[CONF_DOMAIN], DeviceAutomationType.TRIGGER
+    )
+    return await platform.async_get_action_completed_state(config[CONF_TYPE])
 
 
 async def async_attach_trigger_from_prev_action(

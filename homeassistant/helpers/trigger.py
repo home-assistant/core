@@ -65,6 +65,9 @@ class TriggerProtocol(Protocol):
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
 
+    async def async_get_action_completed_state(self, action: str) -> str | None:
+        """Return expected state when action is complete."""
+
     async def async_attach_trigger_from_prev_action(
         self,
         hass: HomeAssistant,

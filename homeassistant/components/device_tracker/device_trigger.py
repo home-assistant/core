@@ -93,16 +93,6 @@ async def async_attach_trigger(
     )
 
 
-async def async_attach_trigger_from_prev_action(
-    hass: HomeAssistant,
-    config: ConfigType,
-    action: TriggerActionType,
-    trigger_info: TriggerInfo,
-) -> CALLBACK_TYPE:
-    """Attach a trigger based on previous action configuration."""
-    return lambda: None
-
-
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:

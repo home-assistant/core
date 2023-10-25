@@ -1309,3 +1309,12 @@ class ToggleEntity(Entity):
             await self.async_turn_off(**kwargs)
         else:
             await self.async_turn_on(**kwargs)
+
+    @classmethod
+    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
+        """Return expected state when action is complete."""
+        if action == "turn_on":
+            to_state = "turned_on"
+        else:
+            to_state = "turned_off"
+        return to_state

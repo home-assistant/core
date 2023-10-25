@@ -58,13 +58,3 @@ async def async_attach_trigger(
     if event == SUN_EVENT_SUNRISE:
         return async_track_sunrise(hass, call_action, offset)
     return async_track_sunset(hass, call_action, offset)
-
-
-async def async_attach_trigger_from_prev_action(
-    hass: HomeAssistant,
-    config: ConfigType,
-    action: TriggerActionType,
-    trigger_info: TriggerInfo,
-) -> CALLBACK_TYPE:
-    """Attach a trigger based on previous action configuration."""
-    return lambda: None

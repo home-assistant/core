@@ -27,6 +27,11 @@ async def async_attach_trigger(
     return await toggle_entity.async_attach_trigger(hass, config, action, trigger_info)
 
 
+async def async_get_action_completed_state(action: str) -> str | None:
+    """Return expected state when action is complete."""
+    return await toggle_entity.async_get_action_completed_state(action)
+
+
 async def async_attach_trigger_from_prev_action(
     hass: HomeAssistant,
     config: ConfigType,

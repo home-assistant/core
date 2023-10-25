@@ -795,6 +795,10 @@ class SensorEntity(Entity):
                 f"{DOMAIN}.private", "suggested_unit_of_measurement"
             )
 
+    async def async_get_action_completed_state(self, action: str | None) -> str | None:
+        """Return expected state when action is complete."""
+        return None
+
 
 @dataclass
 class SensorExtraStoredData(ExtraStoredData):

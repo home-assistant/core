@@ -12,7 +12,6 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
-    CONF_ENTITY_ID,
     CONF_PLATFORM,
     CONF_TYPE,
 )
@@ -113,22 +112,3 @@ async def async_attach_trigger(
     return await event_trigger.async_attach_trigger(
         hass, event_config, action, trigger_info, platform_type="device"
     )
-
-
-async def async_attach_trigger_from_prev_action(
-    hass: HomeAssistant,
-    config: ConfigType,
-    action: TriggerActionType,
-    trigger_info: TriggerInfo,
-) -> CALLBACK_TYPE:
-    """Listen for state changes based on previous action configuration."""
-    if config[CONF_TYPE] == "send_command":
-        to_state = CONF_TYPE_COMMAND
-    else:
-        to_state = CONF_TYPE_STATUS
-    trigger_config = {
-        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        CONF_TYPE: to_state,
-    }
-
-    return await async_attach_trigger(hass, trigger_config, action, trigger_info)

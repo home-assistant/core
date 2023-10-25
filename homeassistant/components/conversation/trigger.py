@@ -87,13 +87,3 @@ async def async_attach_trigger(
     assert isinstance(default_agent, DefaultAgent)
 
     return default_agent.register_trigger(sentences, call_action)
-
-
-async def async_attach_trigger_from_prev_action(
-    hass: HomeAssistant,
-    config: ConfigType,
-    action: TriggerActionType,
-    trigger_info: TriggerInfo,
-) -> CALLBACK_TYPE:
-    """Attach a trigger based on previous action configuration."""
-    return lambda: None

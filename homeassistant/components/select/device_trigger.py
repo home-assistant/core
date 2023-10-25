@@ -88,20 +88,6 @@ async def async_attach_trigger(
     )
 
 
-async def async_attach_trigger_from_prev_action(
-    hass: HomeAssistant,
-    config: ConfigType,
-    action: TriggerActionType,
-    trigger_info: TriggerInfo,
-) -> CALLBACK_TYPE:
-    """Listen for state changes based on previous action configuration."""
-    trigger_config = {
-        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-    }
-
-    return await async_attach_trigger(hass, trigger_config, action, trigger_info)
-
-
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:

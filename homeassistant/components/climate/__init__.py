@@ -589,6 +589,15 @@ class ClimateEntity(Entity):
         """Return the maximum humidity."""
         return self._attr_max_humidity
 
+    @classmethod
+    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
+        """Return expected state when action is complete."""
+        if action == SERVICE_SET_HVAC_MODE:
+            to_state = "hvac_mode_changed"
+        else:
+            to_state = None
+        return to_state
+
 
 async def async_service_aux_heat(
     entity: ClimateEntity, service_call: ServiceCall

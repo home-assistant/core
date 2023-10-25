@@ -59,13 +59,3 @@ async def async_attach_trigger(
             await task
 
     return hass.bus.async_listen(EVENT_TAG_SCANNED, handle_event)
-
-
-async def async_attach_trigger_from_prev_action(
-    hass: HomeAssistant,
-    config: ConfigType,
-    action: TriggerActionType,
-    trigger_info: TriggerInfo,
-) -> CALLBACK_TYPE:
-    """Attach a trigger based on previous action configuration."""
-    return lambda: None

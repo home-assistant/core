@@ -24,7 +24,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, const
+from . import DOMAIN, ClimateEntity as climate, const
 
 TRIGGER_TYPES = {
     "current_temperature_changed",
@@ -162,6 +162,15 @@ async def async_attach_trigger(
     )
 
 
+async def async_get_action_completed_state(action: str) -> str | None:
+    """Return expected state when action is complete."""
+    if action == const.SERVICE_SET_HVAC_MODE:
+        to_state = "hvac_mode_changed"
+    else:
+        to_state = None
+    return to_state
+
+
 async def async_attach_trigger_from_prev_action(
     hass: HomeAssistant,
     config: ConfigType,
@@ -169,10 +178,7 @@ async def async_attach_trigger_from_prev_action(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger based on previous action configuration."""
-    if config[CONF_TYPE] == const.SERVICE_SET_HVAC_MODE:
-        to_state = "hvac_mode_changed"
-    else:
-        to_state = None
+    to_state = await climate.async_get_action_completed_state(config[CONF_TYPE])
     trigger_config = {
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         CONF_TYPE: to_state,

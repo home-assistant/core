@@ -274,13 +274,3 @@ async def async_attach_trigger(
     )
     await listener.async_attach()
     return listener.async_detach
-
-
-async def async_attach_trigger_from_prev_action(
-    hass: HomeAssistant,
-    config: ConfigType,
-    action: TriggerActionType,
-    trigger_info: TriggerInfo,
-) -> CALLBACK_TYPE:
-    """Attach trigger for the specified calendar based on previous action configuration."""
-    return lambda: None

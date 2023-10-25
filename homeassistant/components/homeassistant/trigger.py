@@ -1,7 +1,7 @@
 """Home Assistant trigger dispatcher."""
 import importlib
 
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.trigger import (
     TriggerActionType,
@@ -35,6 +35,12 @@ async def async_attach_trigger(
     """Attach trigger of specified platform."""
     platform = _get_trigger_platform(config)
     return await platform.async_attach_trigger(hass, config, action, trigger_info)
+
+
+async def async_get_action_completed_state(config: ConfigType) -> str | None:
+    """Return expected state when action is complete."""
+    platform = _get_trigger_platform(config)
+    return await platform.async_get_action_completed_state(config[CONF_TYPE])
 
 
 async def async_attach_trigger_from_prev_action(

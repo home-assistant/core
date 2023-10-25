@@ -42,6 +42,8 @@ from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from .device_action import ACTION_TYPES
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "vacuum"
@@ -360,6 +362,15 @@ class _BaseVacuum(Entity):
             partial(self.send_command, command, params=params, **kwargs)
         )
 
+    @classmethod
+    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
+        """Return expected state when action is complete."""
+        if action in ["clean", SERVICE_START, SERVICE_CLEAN_SPOT]:
+            to_state = "cleaning"
+        else:
+            to_state = "docked"
+        return to_state
+
 
 @dataclass
 class VacuumEntityDescription(ToggleEntityDescription):
@@ -469,6 +480,13 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
+
+    @classmethod
+    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
+        """Return expected state when action is complete."""
+        if action in ACTION_TYPES:
+            return await _BaseVacuum.async_get_action_completed_state(action)
+        return await ToggleEntity.async_get_action_completed_state(action)
 
 
 @dataclass

@@ -23,7 +23,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
+from . import DOMAIN, LockEntity as lock
 
 TRIGGER_TYPES = {"locked", "unlocked", "locking", "unlocking", "jammed"}
 
@@ -105,6 +105,15 @@ async def async_attach_trigger(
     )
 
 
+async def async_get_action_completed_state(action: str) -> str | None:
+    """Return expected state when action is complete."""
+    if action == "lock":
+        to_state = STATE_LOCKED
+    else:
+        to_state = STATE_UNLOCKED
+    return to_state
+
+
 async def async_attach_trigger_from_prev_action(
     hass: HomeAssistant,
     config: ConfigType,
@@ -112,10 +121,7 @@ async def async_attach_trigger_from_prev_action(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on previous action configuration."""
-    if config[CONF_TYPE] == "lock":
-        to_state = STATE_LOCKED
-    else:
-        to_state = STATE_UNLOCKED
+    to_state = await lock.async_get_action_completed_state(config[CONF_TYPE])
     trigger_config = {
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         CONF_TYPE: to_state,
