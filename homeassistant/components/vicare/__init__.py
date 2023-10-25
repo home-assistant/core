@@ -72,7 +72,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
         )
 
-    hass.data[DOMAIN][entry.entry_id][DEVICE_CONFIG_LIST] = vicare_api.devices
+    hass.data[DOMAIN][entry.entry_id][DEVICE_CONFIG_LIST] = [(device, get_device(entry, device)) for device in vicare_api.devices]
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
