@@ -21,7 +21,7 @@ def mock_shopping_list_io():
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Config Entry fixture."""
-    return MockConfigEntry(domain="shopping_list")
+    return MockConfigEntry(domain="shopping_list", entry_id="1234")
 
 
 @pytest.fixture

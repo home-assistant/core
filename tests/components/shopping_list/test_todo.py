@@ -11,7 +11,8 @@ from homeassistant.exceptions import HomeAssistantError
 
 from tests.typing import WebSocketGenerator
 
-TEST_ENTITY = "todo.shopping_list"
+# NOTE: This depends on the config entry_id in sl_setup
+TEST_ENTITY = "todo.shopping_list_1234"
 
 
 @pytest.fixture
