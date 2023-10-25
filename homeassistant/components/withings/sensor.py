@@ -705,26 +705,28 @@ async def async_setup_entry(
 
     activity_coordinator = withings_data.activity_coordinator
 
-    activity_callback: Callable[[], None] | None = None
-
     activity_entities_setup_before = ent_reg.async_get_entity_id(
         Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_activity_steps_today"
     )
 
-    def _async_add_activity_entities() -> None:
-        """Add activity entities."""
-        if activity_coordinator.data is not None or activity_entities_setup_before:
-            async_add_entities(
-                WithingsActivitySensor(activity_coordinator, attribute)
-                for attribute in ACTIVITY_SENSORS
-            )
-            if activity_callback:
-                activity_callback()
-
     if activity_coordinator.data is not None or activity_entities_setup_before:
-        _async_add_activity_entities()
+        entities.extend(
+            WithingsActivitySensor(activity_coordinator, attribute)
+            for attribute in ACTIVITY_SENSORS
+        )
     else:
-        activity_callback = activity_coordinator.async_add_listener(
+        remove_activity_listener: Callable[[], None]
+
+        def _async_add_activity_entities() -> None:
+            """Add activity entities."""
+            if activity_coordinator.data is not None:
+                async_add_entities(
+                    WithingsActivitySensor(activity_coordinator, attribute)
+                    for attribute in ACTIVITY_SENSORS
+                )
+                remove_activity_listener()
+
+        remove_activity_listener = activity_coordinator.async_add_listener(
             _async_add_activity_entities
         )
 
