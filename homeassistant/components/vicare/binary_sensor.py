@@ -22,9 +22,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareRequiredKeysMixin
 from .const import DEVICE_CONFIG_LIST, DOMAIN
 from .entity import ViCareEntity
+from .types import ViCareRequiredKeysMixin
 from .utils import is_supported
 
 _LOGGER = logging.getLogger(__name__)

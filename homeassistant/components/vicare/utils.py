@@ -7,8 +7,8 @@ from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.config_entries import ConfigEntry
 
-from . import ViCareRequiredKeysMixin
 from .const import CONF_HEATING_TYPE, HEATING_TYPE_TO_CREATOR_METHOD, HeatingType
+from .types import ViCareRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
