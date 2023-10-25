@@ -26,7 +26,7 @@ from .const import DEFAULT_MAX, DEFAULT_MIN
 ATTR_MAXIMUM = "maximum"
 ATTR_MINIMUM = "minimum"
 
-DEFAULT_NAME = "Random Sensor"
+DEFAULT_NAME = "Random sensor"
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
