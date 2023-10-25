@@ -22,7 +22,8 @@ from .coordinator import BlinkUpdateCoordinator
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key=TYPE_CAMERA_ARMED,
-        translation_key="camera_armed",
+        icon="mdi:motion-sensor",
+        translation_key="camera_motion",
         device_class=SwitchDeviceClass.SWITCH,
     ),
 )
