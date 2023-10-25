@@ -1,10 +1,12 @@
 """Common methods used across the tests for ring devices."""
 from unittest.mock import patch
 
+from google.protobuf.json_format import Parse as JsonParse
+
 from homeassistant.components.ring import DOMAIN
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 async def setup_platform(hass, platform):
@@ -15,3 +17,10 @@ async def setup_platform(hass, platform):
     with patch("homeassistant.components.ring.PLATFORMS", [platform]):
         assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
+
+
+def load_fixture_as_msg(filename, msg_class):
+    """Load a fixture."""
+    msg = msg_class()
+    JsonParse(load_fixture(filename, "ring"), msg)
+    return msg
