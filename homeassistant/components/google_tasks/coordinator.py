@@ -16,7 +16,7 @@ UPDATE_INTERVAL: Final = datetime.timedelta(minutes=30)
 TIMEOUT = 10
 
 
-class TaskUpdateCoordinator(DataUpdateCoordinator):
+class TaskUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Coordinator for fetching Google Tasks for a Task List form the API."""
 
     def __init__(
