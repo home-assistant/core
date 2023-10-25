@@ -94,9 +94,8 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update router data."""
         _LOGGER.debug("Polling Vodafone Station host: %s", self._host)
-        logged = False
         try:
-            logged = await self.api.login()
+            await self.api.login()
         except exceptions.CannotConnect as err:
             _LOGGER.warning("Connection error for %s", self._host)
             await self.api.close()
@@ -105,9 +104,8 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             _LOGGER.warning("User %s already logged. Retrying", self.api.username)
             await self.api.close()
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
-        finally:
-            if not logged:
-                raise ConfigEntryAuthFailed
+        except exceptions.CannotAuthenticate:
+            raise ConfigEntryAuthFailed
 
         utc_point_in_time = dt_util.utcnow()
         data_devices = {
