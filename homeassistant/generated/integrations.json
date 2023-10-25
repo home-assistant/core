@@ -3111,6 +3111,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "local_todo": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "locative": {
       "name": "Locative",
       "integration_type": "hub",
@@ -6831,6 +6836,7 @@
     "islamic_prayer_times",
     "local_calendar",
     "local_ip",
+    "local_todo",
     "min_max",
     "mobile_app",
     "moehlenhoff_alpha2",
