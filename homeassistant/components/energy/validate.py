@@ -222,8 +222,6 @@ def _async_validate_usage_stat(
         sensor.SensorStateClass.MEASUREMENT,
         sensor.SensorStateClass.TOTAL,
         sensor.SensorStateClass.TOTAL_INCREASING,
-        sensor.SensorStateClass.SUM_OF_STATE,
-        sensor.SensorStateClass.SUM_OF_STATE_IF_DIFFERENT,
     ]
     if state_class not in allowed_state_classes:
         issues.add_issue(hass, "entity_unexpected_state_class", entity_id, state_class)

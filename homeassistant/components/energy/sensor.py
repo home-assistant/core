@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final, Literal, cast
 
-from ..sensor import (
+from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -39,8 +39,6 @@ SUPPORTED_STATE_CLASSES = {
     SensorStateClass.MEASUREMENT,
     SensorStateClass.TOTAL,
     SensorStateClass.TOTAL_INCREASING,
-    SensorStateClass.SUM_OF_STATE,
-    SensorStateClass.SUM_OF_STATE_IF_DIFFERENT,
 }
 VALID_ENERGY_UNITS: set[str] = {
     UnitOfEnergy.GIGA_JOULE,

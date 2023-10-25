@@ -444,16 +444,6 @@ class SensorStateClass(StrEnum):
     """The state represents a monotonically increasing total.
 
     For example: an amount of consumed gas"""
-    
-    SUM_OF_STATE = "sum_of_state"
-    """The state represents an amount that needs to be added to the previous amounts to form the total
-    
-    For example: a power outlet's delta update"""
-    
-    SUM_OF_STATE_IF_DIFFERENT = "sum_of_state_if_different"
-    """The state represents an amount that needs to be added to the previous amounts to form the total but only if the value has changed from the previous update
-    
-    For example: a power outlet's delta update"""
 
 
 STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorStateClass))
@@ -464,8 +454,6 @@ STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorStateClass))
 STATE_CLASS_MEASUREMENT: Final = "measurement"
 STATE_CLASS_TOTAL: Final = "total"
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
-STATE_CLASS_SUM_OF_STATE: Final = "sum_of_state"
-STATE_CLASS_SUM_OF_STATE_IF_DIFFERENT: Final = "sum_of_state_if_different"
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
@@ -582,8 +570,6 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.ENERGY: {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
-        SensorStateClass.SUM_OF_STATE,
-        SensorStateClass.SUM_OF_STATE_IF_DIFFERENT,
     },
     SensorDeviceClass.ENERGY_STORAGE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.ENUM: set(),
