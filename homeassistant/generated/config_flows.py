@@ -218,6 +218,7 @@ FLOWS = {
         "idasen_desk",
         "ifttt",
         "imap",
+        "improv_ble",
         "inkbird",
         "insteon",
         "intellifire",
