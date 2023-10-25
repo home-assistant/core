@@ -1,4 +1,4 @@
-"""Support for Blink Motion switches."""
+"""Support for Blink Motion detection switches."""
 from __future__ import annotations
 
 import asyncio
@@ -46,7 +46,7 @@ async def async_setup_entry(
 
 
 class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
-    """Representation of a Blink Motion Switch."""
+    """Representation of a Blink motion detection switch."""
 
     _attr_has_entity_name = True
     _attr_name = None
