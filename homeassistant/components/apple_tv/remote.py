@@ -71,9 +71,9 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
         for _ in range(num_repeats):
             for single_command in command:
                 attr_value = None
-                if single_command in COMMAND_TO_ATTRIBUTE:
+                if attributes := COMMAND_TO_ATTRIBUTE.get(single_command):
                     attr_value = self.atv
-                    for attr_name in COMMAND_TO_ATTRIBUTE[single_command]:
+                    for attr_name in attributes:
                         attr_value = getattr(attr_value, attr_name, None)
                 if not attr_value:
                     attr_value = getattr(self.atv.remote_control, single_command, None)
