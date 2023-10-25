@@ -3,13 +3,17 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 import functools
 import logging
+import sys
 from traceback import FrameSummary, extract_stack
 from typing import Any, TypeVar, cast
 
+from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import async_suggest_report_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,14 +23,15 @@ _REPORTED_INTEGRATIONS: set[str] = set()
 _CallableT = TypeVar("_CallableT", bound=Callable)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class IntegrationFrame:
     """Integration frame container."""
 
     custom_integration: bool
-    filename: str
     frame: FrameSummary
     integration: str
+    module: str | None
+    relative_filename: str
 
 
 def get_integration_frame(exclude_integrations: set | None = None) -> IntegrationFrame:
@@ -55,11 +60,20 @@ def get_integration_frame(exclude_integrations: set | None = None) -> Integratio
     if found_frame is None:
         raise MissingIntegrationFrame
 
+    found_module: str | None = None
+    for module, module_obj in dict(sys.modules).items():
+        if not hasattr(module_obj, "__file__"):
+            continue
+        if module_obj.__file__ == found_frame.filename:
+            found_module = module
+            break
+
     return IntegrationFrame(
-        path == "custom_components/",
-        found_frame.filename[index:],
-        found_frame,
-        integration,
+        custom_integration=path == "custom_components/",
+        frame=found_frame,
+        integration=integration,
+        module=found_module,
+        relative_filename=found_frame.filename[index:],
     )
 
 
@@ -107,23 +121,25 @@ def _report_integration(
         return
     _REPORTED_INTEGRATIONS.add(key)
 
-    if integration_frame.custom_integration:
-        extra = " to the custom integration author"
-    else:
-        extra = ""
+    hass: HomeAssistant | None = None
+    with suppress(HomeAssistantError):
+        hass = async_get_hass()
+    report_issue = async_suggest_report_issue(
+        hass,
+        integration_domain=integration_frame.integration,
+        module=integration_frame.module,
+    )
 
     _LOGGER.log(
         level,
-        (
-            "Detected integration that %s. "
-            "Please report issue%s for %s using this method at %s, line %s: %s"
-        ),
-        what,
-        extra,
+        "Detected that %sintegration '%s' %s at %s, line %s: %s, please %s",
+        "custom " if integration_frame.custom_integration else "",
         integration_frame.integration,
-        integration_frame.filename,
+        what,
+        integration_frame.relative_filename,
         found_frame.lineno,
         (found_frame.line or "?").strip(),
+        report_issue,
     )
 
 

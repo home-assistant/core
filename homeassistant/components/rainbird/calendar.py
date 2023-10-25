@@ -61,7 +61,7 @@ class RainBirdCalendarEntity(
         """Create the Calendar event device."""
         super().__init__(coordinator)
         self._event: CalendarEvent | None = None
-        if unique_id:
+        if unique_id is not None:
             self._attr_unique_id = unique_id
             self._attr_device_info = device_info
         else:

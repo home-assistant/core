@@ -109,6 +109,7 @@ class BluetoothManager:
         "_cancel_logging_listener",
         "_advertisement_tracker",
         "_fallback_intervals",
+        "_intervals",
         "_unavailable_callbacks",
         "_connectable_unavailable_callbacks",
         "_callback_index",
@@ -140,7 +141,8 @@ class BluetoothManager:
         self._cancel_logging_listener: CALLBACK_TYPE | None = None
 
         self._advertisement_tracker = AdvertisementTracker()
-        self._fallback_intervals: dict[str, float] = {}
+        self._fallback_intervals = self._advertisement_tracker.fallback_intervals
+        self._intervals = self._advertisement_tracker.intervals
 
         self._unavailable_callbacks: dict[
             str, list[Callable[[BluetoothServiceInfoBleak], None]]
@@ -359,7 +361,7 @@ class BluetoothManager:
                     # The second loop (connectable=False) is responsible for removing
                     # the device from all the interval tracking since it is no longer
                     # available for both connectable and non-connectable
-                    self._fallback_intervals.pop(address, None)
+                    tracker.async_remove_fallback_interval(address)
                     tracker.async_remove_address(address)
                     self._integration_matcher.async_clear_address(address)
                     self._async_dismiss_discoveries(address)
@@ -390,7 +392,7 @@ class BluetoothManager:
     ) -> bool:
         """Prefer previous advertisement from a different source if it is better."""
         if new.time - old.time > (
-            stale_seconds := self._advertisement_tracker.intervals.get(
+            stale_seconds := self._intervals.get(
                 new.address,
                 self._fallback_intervals.get(
                     new.address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
@@ -791,7 +793,7 @@ class BluetoothManager:
     @hass_callback
     def async_get_learned_advertising_interval(self, address: str) -> float | None:
         """Get the learned advertising interval for a MAC address."""
-        return self._advertisement_tracker.intervals.get(address)
+        return self._intervals.get(address)
 
     @hass_callback
     def async_get_fallback_availability_interval(self, address: str) -> float | None:

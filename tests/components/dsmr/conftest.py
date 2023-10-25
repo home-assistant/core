@@ -68,9 +68,15 @@ async def dsmr_connection_send_validate_fixture(hass):
     protocol = MagicMock(spec=DSMRProtocol)
 
     protocol.telegram = {
-        EQUIPMENT_IDENTIFIER: CosemObject([{"value": "12345678", "unit": ""}]),
-        EQUIPMENT_IDENTIFIER_GAS: CosemObject([{"value": "123456789", "unit": ""}]),
-        P1_MESSAGE_TIMESTAMP: CosemObject([{"value": "12345678", "unit": ""}]),
+        EQUIPMENT_IDENTIFIER: CosemObject(
+            EQUIPMENT_IDENTIFIER, [{"value": "12345678", "unit": ""}]
+        ),
+        EQUIPMENT_IDENTIFIER_GAS: CosemObject(
+            EQUIPMENT_IDENTIFIER_GAS, [{"value": "123456789", "unit": ""}]
+        ),
+        P1_MESSAGE_TIMESTAMP: CosemObject(
+            P1_MESSAGE_TIMESTAMP, [{"value": "12345678", "unit": ""}]
+        ),
     }
 
     async def connection_factory(*args, **kwargs):
@@ -78,20 +84,22 @@ async def dsmr_connection_send_validate_fixture(hass):
         if args[1] == "5L":
             protocol.telegram = {
                 LUXEMBOURG_EQUIPMENT_IDENTIFIER: CosemObject(
-                    [{"value": "12345678", "unit": ""}]
+                    LUXEMBOURG_EQUIPMENT_IDENTIFIER, [{"value": "12345678", "unit": ""}]
                 ),
                 EQUIPMENT_IDENTIFIER_GAS: CosemObject(
-                    [{"value": "123456789", "unit": ""}]
+                    EQUIPMENT_IDENTIFIER_GAS, [{"value": "123456789", "unit": ""}]
                 ),
             }
         if args[1] == "5S":
             protocol.telegram = {
-                P1_MESSAGE_TIMESTAMP: CosemObject([{"value": "12345678", "unit": ""}]),
+                P1_MESSAGE_TIMESTAMP: CosemObject(
+                    P1_MESSAGE_TIMESTAMP, [{"value": "12345678", "unit": ""}]
+                ),
             }
         if args[1] == "Q3D":
             protocol.telegram = {
                 Q3D_EQUIPMENT_IDENTIFIER: CosemObject(
-                    [{"value": "12345678", "unit": ""}]
+                    Q3D_EQUIPMENT_IDENTIFIER, [{"value": "12345678", "unit": ""}]
                 ),
             }
 
@@ -129,9 +137,15 @@ async def rfxtrx_dsmr_connection_send_validate_fixture(hass):
     protocol = MagicMock(spec=RFXtrxDSMRProtocol)
 
     protocol.telegram = {
-        EQUIPMENT_IDENTIFIER: CosemObject([{"value": "12345678", "unit": ""}]),
-        EQUIPMENT_IDENTIFIER_GAS: CosemObject([{"value": "123456789", "unit": ""}]),
-        P1_MESSAGE_TIMESTAMP: CosemObject([{"value": "12345678", "unit": ""}]),
+        EQUIPMENT_IDENTIFIER: CosemObject(
+            EQUIPMENT_IDENTIFIER, [{"value": "12345678", "unit": ""}]
+        ),
+        EQUIPMENT_IDENTIFIER_GAS: CosemObject(
+            EQUIPMENT_IDENTIFIER_GAS, [{"value": "123456789", "unit": ""}]
+        ),
+        P1_MESSAGE_TIMESTAMP: CosemObject(
+            P1_MESSAGE_TIMESTAMP, [{"value": "12345678", "unit": ""}]
+        ),
     }
 
     async def connection_factory(*args, **kwargs):
