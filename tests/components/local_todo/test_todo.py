@@ -380,21 +380,3 @@ async def test_parse_existing_ics(
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == expected_state
-
-
-@pytest.mark.parametrize(
-    ("store_read_side_effect"),
-    [
-        (OSError("read error")),
-    ],
-)
-async def test_store_os_error(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    setup_integration: None,
-    # expected_state: str,
-) -> None:
-    """Test failures loading the todo store."""
-
-    state = hass.states.get(TEST_ENTITY)
-    assert not state

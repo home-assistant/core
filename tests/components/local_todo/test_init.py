@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -39,3 +41,20 @@ async def test_remove_config_entry(
         assert await hass.config_entries.async_remove(config_entry.entry_id)
         await hass.async_block_till_done()
         unlink_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("store_read_side_effect"),
+    [
+        (OSError("read error")),
+    ],
+)
+async def test_load_failure(
+    hass: HomeAssistant, setup_integration: None, config_entry: MockConfigEntry
+) -> None:
+    """Test failures loading the todo store."""
+
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    state = hass.states.get(TEST_ENTITY)
+    assert not state

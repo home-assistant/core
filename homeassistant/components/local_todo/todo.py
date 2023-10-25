@@ -19,7 +19,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_TODO_LIST_NAME, DOMAIN
@@ -50,10 +50,7 @@ async def async_setup_entry(
     """Set up the local_todo todo platform."""
 
     store = hass.data[DOMAIN][config_entry.entry_id]
-    try:
-        ics = await store.async_load()
-    except OSError as err:
-        raise PlatformNotReady() from err
+    ics = await store.async_load()
     calendar = IcsCalendarStream.calendar_from_ics(ics)
     calendar.prodid = PRODID
 

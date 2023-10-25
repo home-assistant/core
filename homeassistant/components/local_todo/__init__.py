@@ -6,6 +6,7 @@ from pathlib import Path
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import slugify
 
 from .const import CONF_TODO_LIST_NAME, DOMAIN
@@ -23,7 +24,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     key = slugify(entry.data[CONF_TODO_LIST_NAME])
     path = Path(hass.config.path(STORAGE_PATH.format(key=key)))
-    hass.data[DOMAIN][entry.entry_id] = LocalTodoListStore(hass, path)
+    store = LocalTodoListStore(hass, path)
+    try:
+        await store.async_load()
+    except OSError as err:
+        raise ConfigEntryNotReady("Failed to load file {path}: {err}") from err
+
+    hass.data[DOMAIN][entry.entry_id] = store
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
