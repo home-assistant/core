@@ -620,7 +620,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
 
     async def async_update(self) -> None:
         """Update the entity."""
-        LOGGER.warning(
+        LOGGER.info(
             "Entity %s comes from a sleeping device, update is not possible",
             self.entity_id,
         )
@@ -664,7 +664,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
 
     async def async_update(self) -> None:
         """Update the entity."""
-        LOGGER.warning(
+        LOGGER.info(
             "Entity %s comes from a sleeping device, update is not possible",
             self.entity_id,
         )
