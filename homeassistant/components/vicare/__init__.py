@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import DEFAULT_SCAN_INTERVAL, DEVICE_CONFIG_LIST, DOMAIN, PLATFORMS
+from .utils import get_device
 
 _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
@@ -66,13 +67,17 @@ def vicare_login(hass: HomeAssistant, entry_data: Mapping[str, Any]) -> PyViCare
 def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
     vicare_api = vicare_login(hass, entry.data)
+    device_config_list = vicare_api.devices
 
-    for device in vicare_api.devices:
+    for device in device_config_list:
         _LOGGER.info(
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
         )
 
-    hass.data[DOMAIN][entry.entry_id][DEVICE_CONFIG_LIST] = [(device, get_device(entry, device)) for device in vicare_api.devices]
+    hass.data[DOMAIN][entry.entry_id][DEVICE_CONFIG_LIST] = [
+        (device_config, get_device(entry, device_config))
+        for device_config in device_config_list
+    ]
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

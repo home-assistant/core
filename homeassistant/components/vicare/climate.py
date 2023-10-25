@@ -37,7 +37,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEVICE_CONFIG_LIST, DOMAIN
 from .entity import ViCareEntity
-from .utils import get_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,8 +107,9 @@ async def async_setup_entry(
     """Set up the ViCare climate platform."""
     entities = []
 
-    for device_config in hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONFIG_LIST]:
-        device = get_device(config_entry, device_config)
+    for device_config, device in hass.data[DOMAIN][config_entry.entry_id][
+        DEVICE_CONFIG_LIST
+    ]:
         circuits = await hass.async_add_executor_job(_get_circuits, device)
         for circuit in circuits:
             suffix = ""
