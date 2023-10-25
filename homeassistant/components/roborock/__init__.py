@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up roborock from a config entry."""
     _LOGGER.debug("Integration async setup entry: %s", entry.as_dict())
-    cached_storage = Store(hass, STORE_VERSION, DOMAIN)
+    cached_storage: Store = Store(hass, STORE_VERSION, DOMAIN)
     current_cached_data = await cached_storage.async_load()
     current_cached_data = current_cached_data if current_cached_data is not None else {}
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
@@ -198,6 +198,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for coordinator in hass.data[DOMAIN][entry.entry_id].values()
             )
         )
+        await Store(hass, STORE_VERSION, DOMAIN).async_remove()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
