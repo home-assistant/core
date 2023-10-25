@@ -5,6 +5,7 @@ import logging
 from multiprocessing.pool import ApplyResult
 from typing import cast
 
+from mozart_api.exceptions import ServiceException
 from mozart_api.models import BatteryState
 from mozart_api.mozart_client import MozartClient
 from urllib3.exceptions import MaxRetryError
@@ -62,7 +63,7 @@ async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ApplyResult[BatteryState],
             client.get_battery_state(async_req=True, _request_timeout=3),
         ).get()
-    except MaxRetryError:
+    except (MaxRetryError, ServiceException):
         _LOGGER.error("Unable to connect to %s", entry.data[CONF_NAME])
         return False
 
