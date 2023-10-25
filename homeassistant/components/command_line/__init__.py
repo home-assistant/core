@@ -171,8 +171,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload Command Line."""
-        reload_config = await async_integration_yaml_config(hass, "command_line")
-        reset_platforms = async_get_platforms(hass, "command_line")
+        reload_config = await async_integration_yaml_config(hass, DOMAIN)
+        reset_platforms = async_get_platforms(hass, DOMAIN)
         for reset_platform in reset_platforms:
             _LOGGER.debug("Reload resetting platform: %s", reset_platform.domain)
             await reset_platform.async_reset()

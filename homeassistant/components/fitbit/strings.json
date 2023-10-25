@@ -6,6 +6,10 @@
       },
       "auth": {
         "title": "Link Fitbit"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Fitbit integration needs to re-authenticate your account"
       }
     },
     "abort": {
@@ -15,7 +19,9 @@
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_account": "The user credentials provided do not match this Fitbit account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"

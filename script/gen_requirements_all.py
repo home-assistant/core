@@ -72,9 +72,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.58.0
-grpcio-status==1.58.0
-grpcio-reflection==1.58.0
+grpcio==1.59.0
+grpcio-status==1.59.0
+grpcio-reflection==1.59.0
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -104,9 +104,9 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==3.7.1
+anyio==4.0.0
 h11==0.14.0
-httpcore==0.17.3
+httpcore==0.18.0
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation

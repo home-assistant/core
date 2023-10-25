@@ -9,11 +9,9 @@ from homeassistant.components.workday.const import (
     CONF_COUNTRY,
     CONF_EXCLUDES,
     CONF_OFFSET,
-    CONF_PROVINCE,
     CONF_REMOVE_HOLIDAYS,
     CONF_WORKDAYS,
     DEFAULT_EXCLUDES,
-    DEFAULT_NAME,
     DEFAULT_OFFSET,
     DEFAULT_WORKDAYS,
     DOMAIN,
@@ -23,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -53,7 +49,6 @@ async def test_form(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: [],
             CONF_REMOVE_HOLIDAYS: [],
-            CONF_PROVINCE: "none",
         },
     )
     await hass.async_block_till_done()
@@ -68,7 +63,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": [],
         "remove_holidays": [],
-        "province": None,
     }
 
 
@@ -84,7 +78,6 @@ async def test_form_no_country(hass: HomeAssistant) -> None:
         result["flow_id"],
         {
             CONF_NAME: "Workday Sensor",
-            CONF_COUNTRY: "none",
         },
     )
     await hass.async_block_till_done()
@@ -104,13 +97,11 @@ async def test_form_no_country(hass: HomeAssistant) -> None:
     assert result3["title"] == "Workday Sensor"
     assert result3["options"] == {
         "name": "Workday Sensor",
-        "country": None,
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": [],
         "remove_holidays": [],
-        "province": None,
     }
 
 
@@ -152,144 +143,7 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": [],
         "remove_holidays": [],
-        "province": None,
     }
-
-
-async def test_import_flow_success(hass: HomeAssistant) -> None:
-    """Test a successful import of yaml."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_NAME: DEFAULT_NAME,
-            CONF_COUNTRY: "DE",
-            CONF_EXCLUDES: DEFAULT_EXCLUDES,
-            CONF_OFFSET: DEFAULT_OFFSET,
-            CONF_WORKDAYS: DEFAULT_WORKDAYS,
-            CONF_ADD_HOLIDAYS: [],
-            CONF_REMOVE_HOLIDAYS: [],
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Workday Sensor"
-    assert result["options"] == {
-        "name": "Workday Sensor",
-        "country": "DE",
-        "excludes": ["sat", "sun", "holiday"],
-        "days_offset": 0,
-        "workdays": ["mon", "tue", "wed", "thu", "fri"],
-        "add_holidays": [],
-        "remove_holidays": [],
-        "province": None,
-    }
-
-    result2 = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_NAME: "Workday Sensor 2",
-            CONF_COUNTRY: "DE",
-            CONF_PROVINCE: "BW",
-            CONF_EXCLUDES: DEFAULT_EXCLUDES,
-            CONF_OFFSET: DEFAULT_OFFSET,
-            CONF_WORKDAYS: DEFAULT_WORKDAYS,
-            CONF_ADD_HOLIDAYS: [],
-            CONF_REMOVE_HOLIDAYS: [],
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Workday Sensor 2"
-    assert result2["options"] == {
-        "name": "Workday Sensor 2",
-        "country": "DE",
-        "province": "BW",
-        "excludes": ["sat", "sun", "holiday"],
-        "days_offset": 0,
-        "workdays": ["mon", "tue", "wed", "thu", "fri"],
-        "add_holidays": [],
-        "remove_holidays": [],
-    }
-
-
-async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
-    """Test import of yaml already exist."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={
-            "name": "Workday Sensor",
-            "country": "DE",
-            "excludes": ["sat", "sun", "holiday"],
-            "days_offset": 0,
-            "workdays": ["mon", "tue", "wed", "thu", "fri"],
-            "add_holidays": [],
-            "remove_holidays": [],
-            "province": None,
-        },
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_NAME: "Workday sensor 2",
-            CONF_COUNTRY: "DE",
-            CONF_EXCLUDES: ["sat", "sun", "holiday"],
-            CONF_OFFSET: 0,
-            CONF_WORKDAYS: ["mon", "tue", "wed", "thu", "fri"],
-            CONF_ADD_HOLIDAYS: [],
-            CONF_REMOVE_HOLIDAYS: [],
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_import_flow_province_no_conflict(hass: HomeAssistant) -> None:
-    """Test import of yaml with province."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={
-            "name": "Workday Sensor",
-            "country": "DE",
-            "excludes": ["sat", "sun", "holiday"],
-            "days_offset": 0,
-            "workdays": ["mon", "tue", "wed", "thu", "fri"],
-            "add_holidays": [],
-            "remove_holidays": [],
-        },
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_NAME: "Workday sensor 2",
-            CONF_COUNTRY: "DE",
-            CONF_PROVINCE: "BW",
-            CONF_EXCLUDES: ["sat", "sun", "holiday"],
-            CONF_OFFSET: 0,
-            CONF_WORKDAYS: ["mon", "tue", "wed", "thu", "fri"],
-            CONF_ADD_HOLIDAYS: [],
-            CONF_REMOVE_HOLIDAYS: [],
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 async def test_options_form(hass: HomeAssistant) -> None:
@@ -305,7 +159,6 @@ async def test_options_form(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
-            "province": None,
         },
     )
 
@@ -360,7 +213,6 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-xx-12"],
             CONF_REMOVE_HOLIDAYS: [],
-            CONF_PROVINCE: "none",
         },
     )
     await hass.async_block_till_done()
@@ -374,7 +226,6 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12"],
             CONF_REMOVE_HOLIDAYS: ["Does not exist"],
-            CONF_PROVINCE: "none",
         },
     )
     await hass.async_block_till_done()
@@ -389,7 +240,6 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12"],
             CONF_REMOVE_HOLIDAYS: ["Weihnachtstag"],
-            CONF_PROVINCE: "none",
         },
     )
     await hass.async_block_till_done()
@@ -404,7 +254,6 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": ["2022-12-12"],
         "remove_holidays": ["Weihnachtstag"],
-        "province": None,
     }
 
 
@@ -421,7 +270,6 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
-            "province": None,
         },
     )
 
@@ -522,7 +370,6 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
-            "province": "none",
         },
     )
 
@@ -554,7 +401,6 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12", "2022-12-30,2022-12-32"],
             CONF_REMOVE_HOLIDAYS: [],
-            CONF_PROVINCE: "none",
         },
     )
     await hass.async_block_till_done()
@@ -568,7 +414,6 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12"],
             CONF_REMOVE_HOLIDAYS: ["2022-12-25", "2022-12-30,2022-12-32"],
-            CONF_PROVINCE: "none",
         },
     )
     await hass.async_block_till_done()
@@ -583,7 +428,6 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12", "2022-12-01,2022-12-10"],
             CONF_REMOVE_HOLIDAYS: ["2022-12-25", "2022-12-30,2022-12-31"],
-            CONF_PROVINCE: "none",
         },
     )
     await hass.async_block_till_done()
@@ -598,7 +442,6 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": ["2022-12-12", "2022-12-01,2022-12-10"],
         "remove_holidays": ["2022-12-25", "2022-12-30,2022-12-31"],
-        "province": None,
     }
 
 
@@ -615,7 +458,6 @@ async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
-            "province": None,
         },
     )
 
