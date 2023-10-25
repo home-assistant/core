@@ -548,7 +548,7 @@ async def test_service_calls(
 
     assert aioclient_mock.call_count == 30
     assert aioclient_mock.mock_calls[-1][2] == {
-        "name": "2021-11-13 11:48:00",
+        "name": "2021-11-13 03:48:00",
         "homeassistant": True,
         "addons": ["test"],
         "folders": ["ssl"],
@@ -585,6 +585,7 @@ async def test_service_calls(
         {
             "name": "backup_name",
             "location": "backup_share",
+            "homeassistant_exclude_database": True,
         },
     )
     await hass.async_block_till_done()
@@ -593,6 +594,7 @@ async def test_service_calls(
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "backup_name",
         "location": "backup_share",
+        "homeassistant_exclude_database": True,
     }
 
     await hass.services.async_call(
@@ -605,6 +607,24 @@ async def test_service_calls(
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 34
+    assert aioclient_mock.mock_calls[-1][2] == {
+        "name": "2021-11-13 03:48:00",
+        "location": None,
+    }
+
+    # check backup with different timezone
+    await hass.config.async_update(time_zone="Europe/London")
+
+    await hass.services.async_call(
+        "hassio",
+        "backup_full",
+        {
+            "location": "/backup",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 36
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 11:48:00",
         "location": None,
@@ -672,6 +692,7 @@ async def test_service_calls_core(
     hassio_env, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Call core service and check the API calls behind that."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "hassio", {})
 
     aioclient_mock.post("http://127.0.0.1/homeassistant/restart", json={"result": "ok"})

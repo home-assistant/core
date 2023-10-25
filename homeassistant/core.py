@@ -28,7 +28,17 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import TYPE_CHECKING, Any, Generic, ParamSpec, Self, TypeVar, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Literal,
+    ParamSpec,
+    Self,
+    TypeVar,
+    cast,
+    overload,
+)
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -95,6 +105,7 @@ if TYPE_CHECKING:
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
+    from .helpers.entity import StateInfo
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
@@ -219,6 +230,19 @@ def async_get_hass() -> HomeAssistant:
     if not _hass.hass:
         raise HomeAssistantError("async_get_hass called from the wrong thread")
     return _hass.hass
+
+
+@callback
+def get_release_channel() -> Literal["beta", "dev", "nightly", "stable"]:
+    """Find release channel based on version number."""
+    version = __version__
+    if "dev0" in version:
+        return "dev"
+    if "dev" in version:
+        return "nightly"
+    if "b" in version:
+        return "beta"
+    return "stable"
 
 
 @enum.unique
@@ -1249,6 +1273,7 @@ class State:
         last_updated: datetime.datetime | None = None,
         context: Context | None = None,
         validate_entity_id: bool | None = True,
+        state_info: StateInfo | None = None,
     ) -> None:
         """Initialize a new state."""
         state = str(state)
@@ -1267,6 +1292,7 @@ class State:
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
+        self.state_info = state_info
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
@@ -1637,6 +1663,7 @@ class StateMachine:
         attributes: Mapping[str, Any] | None = None,
         force_update: bool = False,
         context: Context | None = None,
+        state_info: StateInfo | None = None,
     ) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -1688,6 +1715,7 @@ class StateMachine:
             now,
             context,
             old_state is None,
+            state_info,
         )
         if old_state is not None:
             old_state.expire()
@@ -2101,11 +2129,14 @@ class Config:
         # Dictionary of Media folders that integrations may use
         self.media_dirs: dict[str, str] = {}
 
-        # If Home Assistant is running in safe mode
-        self.safe_mode: bool = False
+        # If Home Assistant is running in recovery mode
+        self.recovery_mode: bool = False
 
         # Use legacy template behavior
         self.legacy_templates: bool = False
+
+        # If Home Assistant is running in safe mode
+        self.safe_mode: bool = False
 
     def distance(self, lat: float, lon: float) -> float | None:
         """Calculate distance from Home Assistant.
@@ -2180,13 +2211,14 @@ class Config:
             "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
-            "safe_mode": self.safe_mode,
+            "recovery_mode": self.recovery_mode,
             "state": self.hass.state.value,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
             "country": self.country,
             "language": self.language,
+            "safe_mode": self.safe_mode,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:

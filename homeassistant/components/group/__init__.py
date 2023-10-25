@@ -42,7 +42,6 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
     async_process_integration_platforms,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
@@ -285,8 +284,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = EntityComponent[Group](_LOGGER, DOMAIN, hass)
 
-    await async_process_integration_platform_for_component(hass, DOMAIN)
-
     component: EntityComponent[Group] = hass.data[DOMAIN]
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
@@ -472,6 +469,8 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None
 class GroupEntity(Entity):
     """Representation of a Group of entities."""
 
+    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID})
+
     _attr_should_poll = False
     _entity_ids: list[str]
 
@@ -527,12 +526,13 @@ class GroupEntity(Entity):
                 self.hass, self._entity_ids, async_state_changed_listener
             )
         )
+        self.async_on_remove(start.async_at_start(self.hass, self._update_at_start))
 
-        async def _update_at_start(_: HomeAssistant) -> None:
-            self.async_update_group_state()
-            self.async_write_ha_state()
-
-        self.async_on_remove(start.async_at_start(self.hass, _update_at_start))
+    @callback
+    def _update_at_start(self, _: HomeAssistant) -> None:
+        """Update the group state at start."""
+        self.async_update_group_state()
+        self.async_write_ha_state()
 
     @callback
     def async_defer_or_update_ha_state(self) -> None:
@@ -559,6 +559,8 @@ class GroupEntity(Entity):
 
 class Group(Entity):
     """Track a group of entity ids."""
+
+    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID, ATTR_ORDER, ATTR_AUTO})
 
     _attr_should_poll = False
     tracking: tuple[str, ...]

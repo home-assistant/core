@@ -102,6 +102,12 @@
           "home": "[%key:common::state::home%]",
           "sleep": "Sleep"
         }
+      },
+      "temperature_display_units": {
+        "state": {
+          "celsius": "Celsius",
+          "fahrenheit": "Fahrenheit"
+        }
       }
     },
     "sensor": {

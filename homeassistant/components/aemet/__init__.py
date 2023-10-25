@@ -1,5 +1,6 @@
 """The AEMET OpenData component."""
 
+import asyncio
 import logging
 
 from aemet_opendata.exceptions import TownNotFound
@@ -8,6 +9,7 @@ from aemet_opendata.interface import AEMET, ConnectionOptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
@@ -30,13 +32,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     longitude = entry.data[CONF_LONGITUDE]
     station_updates = entry.options.get(CONF_STATION_UPDATES, True)
 
-    options = ConnectionOptions(api_key, station_updates)
+    options = ConnectionOptions(api_key, station_updates, True)
     aemet = AEMET(aiohttp_client.async_get_clientsession(hass), options)
     try:
         await aemet.select_coordinates(latitude, longitude)
     except TownNotFound as err:
         _LOGGER.error(err)
         return False
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady("AEMET OpenData API timed out") from err
 
     weather_coordinator = WeatherUpdateCoordinator(hass, aemet)
     await weather_coordinator.async_config_entry_first_refresh()

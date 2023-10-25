@@ -7,7 +7,6 @@ DEVICE_ID = "Home Assistant"
 CONF_MIGRATE = "migrate"
 CONF_CAMERA = "camera"
 CONF_ALARM_CONTROL_PANEL = "alarm_control_panel"
-
 DEFAULT_BRAND = "Blink"
 DEFAULT_ATTRIBUTION = "Data provided by immedia-semi.com"
 DEFAULT_SCAN_INTERVAL = 300
