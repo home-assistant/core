@@ -31,6 +31,7 @@ SENSORS_MAPPINGS: dict[str, SensorEntityDescription] = {
         key="operational_mode",
         name="Operational Mode",
         device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "operational_status": SensorEntityDescription(
         key="operational_status",
@@ -60,11 +61,13 @@ SENSORS_MAPPINGS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "target_power_level": SensorEntityDescription(
         key="target_power_level",
         name="Target Power Level",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "current_power_level": SensorEntityDescription(
         key="current_power_level",
