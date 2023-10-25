@@ -4,14 +4,21 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from mcstatus import JavaServer
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_TYPE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
+from .api import MinecraftServer, MinecraftServerAddressError, MinecraftServerType
 from .const import DOMAIN, KEY_LATENCY, KEY_MOTD
 from .coordinator import MinecraftServerCoordinator
 
@@ -23,8 +30,20 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
 
+    # Check and create API instance.
+    try:
+        api = await hass.async_add_executor_job(
+            MinecraftServer,
+            entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION),
+            entry.data[CONF_ADDRESS],
+        )
+    except MinecraftServerAddressError as error:
+        raise ConfigEntryError(
+            f"Server address in configuration entry is invalid: {error}"
+        ) from error
+
     # Create coordinator instance.
-    coordinator = MinecraftServerCoordinator(hass, entry)
+    coordinator = MinecraftServerCoordinator(hass, entry.data[CONF_NAME], api)
     await coordinator.async_config_entry_first_refresh()
 
     # Store coordinator instance.
@@ -85,22 +104,22 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         # Migrate config entry.
         try:
             address = config_data[CONF_HOST]
-            JavaServer.lookup(address)
+            MinecraftServer(MinecraftServerType.JAVA_EDITION, address)
             host_only_lookup_success = True
-        except ValueError as error:
+        except MinecraftServerAddressError as error:
             host_only_lookup_success = False
             _LOGGER.debug(
-                "Hostname (without port) cannot be parsed (error: %s), trying again with port",
+                "Hostname (without port) cannot be parsed, trying again with port: %s",
                 error,
             )
 
         if not host_only_lookup_success:
             try:
                 address = f"{config_data[CONF_HOST]}:{config_data[CONF_PORT]}"
-                JavaServer.lookup(address)
-            except ValueError as error:
+                MinecraftServer(MinecraftServerType.JAVA_EDITION, address)
+            except MinecraftServerAddressError as error:
                 _LOGGER.exception(
-                    "Can't migrate configuration entry due to error while parsing server address (error: %s), try again later",
+                    "Can't migrate configuration entry due to error while parsing server address, try again later: %s",
                     error,
                 )
                 return False

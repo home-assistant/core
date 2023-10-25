@@ -43,6 +43,7 @@ from homeassistant.core import (
     State,
     SupportsResponse,
     callback,
+    get_release_channel,
 )
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -1448,7 +1449,7 @@ async def test_config_defaults() -> None:
     assert config.allowlist_external_dirs == set()
     assert config.allowlist_external_urls == set()
     assert config.media_dirs == {}
-    assert config.safe_mode is False
+    assert config.recovery_mode is False
     assert config.legacy_templates is False
     assert config.currency == "EUR"
     assert config.country is None
@@ -1486,13 +1487,14 @@ async def test_config_as_dict() -> None:
         "allowlist_external_urls": set(),
         "version": __version__,
         "config_source": ha.ConfigSource.DEFAULT,
-        "safe_mode": False,
+        "recovery_mode": False,
         "state": "RUNNING",
         "external_url": None,
         "internal_url": None,
         "currency": "EUR",
         "country": None,
         "language": "en",
+        "safe_mode": False,
     }
 
     assert expected == config.as_dict()
@@ -2481,3 +2483,18 @@ async def test_validate_state(hass: HomeAssistant) -> None:
     assert ha.validate_state("test") == "test"
     with pytest.raises(InvalidStateError):
         ha.validate_state("t" * 256)
+
+
+@pytest.mark.parametrize(
+    ("version", "release_channel"),
+    [
+        ("0.115.0.dev20200815", "nightly"),
+        ("0.115.0", "stable"),
+        ("0.115.0b4", "beta"),
+        ("0.115.0dev0", "dev"),
+    ],
+)
+async def test_get_release_channel(version: str, release_channel: str) -> None:
+    """Test if release channel detection works from Home Assistant version number."""
+    with patch("homeassistant.core.__version__", f"{version}"):
+        assert get_release_channel() == release_channel

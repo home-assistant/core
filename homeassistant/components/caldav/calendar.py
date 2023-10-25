@@ -114,8 +114,19 @@ def setup_platform(
                 )
             )
 
-        # Create a default calendar if there was no custom one
+        # Create a default calendar if there was no custom one for all calendars
+        # that support events.
         if not config[CONF_CUSTOM_CALENDARS]:
+            if (
+                supported_components := calendar.get_supported_components()
+            ) and "VEVENT" not in supported_components:
+                _LOGGER.debug(
+                    "Ignoring calendar '%s' (components=%s)",
+                    calendar.name,
+                    supported_components,
+                )
+                continue
+
             name = calendar.name
             device_id = calendar.name
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)

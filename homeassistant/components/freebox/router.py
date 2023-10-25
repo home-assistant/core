@@ -118,6 +118,7 @@ class FreeboxRouter:
 
     async def update_sensors(self) -> None:
         """Update Freebox sensors."""
+
         # System sensors
         syst_datas: dict[str, Any] = await self._api.system.get_config()
 
@@ -145,7 +146,6 @@ class FreeboxRouter:
         self.call_list = await self._api.call.get_calls_log()
 
         await self._update_disks_sensors()
-
         await self._update_raids_sensors()
 
         async_dispatcher_send(self.hass, self.signal_sensor_update)
@@ -165,6 +165,7 @@ class FreeboxRouter:
 
     async def _update_raids_sensors(self) -> None:
         """Update Freebox raids."""
+        # None at first request
         if not self.supports_raid:
             return
 

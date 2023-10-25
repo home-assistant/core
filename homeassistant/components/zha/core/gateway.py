@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import collections
 from collections.abc import Callable
+from contextlib import suppress
 from datetime import timedelta
 from enum import Enum
 import itertools
@@ -13,10 +14,17 @@ import time
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from zigpy.application import ControllerApplication
-from zigpy.config import CONF_DEVICE
+from zigpy.config import (
+    CONF_DATABASE,
+    CONF_DEVICE,
+    CONF_DEVICE_PATH,
+    CONF_NWK,
+    CONF_NWK_CHANNEL,
+    CONF_NWK_VALIDATE_SETTINGS,
+)
 import zigpy.device
 import zigpy.endpoint
-import zigpy.exceptions
+from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 import zigpy.group
 from zigpy.types.named import EUI64
 
@@ -38,10 +46,6 @@ from .const import (
     ATTR_NWK,
     ATTR_SIGNATURE,
     ATTR_TYPE,
-    CONF_DATABASE,
-    CONF_DEVICE_PATH,
-    CONF_NWK,
-    CONF_NWK_CHANNEL,
     CONF_RADIO_TYPE,
     CONF_USE_THREAD,
     CONF_ZIGPY,
@@ -159,6 +163,9 @@ class ZHAGateway:
         app_config[CONF_DATABASE] = database
         app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
 
+        if CONF_NWK_VALIDATE_SETTINGS not in app_config:
+            app_config[CONF_NWK_VALIDATE_SETTINGS] = True
+
         # The bellows UART thread sometimes propagates a cancellation into the main Core
         # event loop, when a connection to a TCP coordinator fails in a specific way
         if (
@@ -196,26 +203,33 @@ class ZHAGateway:
             start_radio=False,
         )
 
-        for attempt in range(STARTUP_RETRIES):
-            try:
-                await self.application_controller.startup(auto_form=True)
-            except zigpy.exceptions.TransientConnectionError as exc:
-                raise ConfigEntryNotReady from exc
-            except Exception as exc:  # pylint: disable=broad-except
-                _LOGGER.warning(
-                    "Couldn't start %s coordinator (attempt %s of %s)",
-                    self.radio_description,
-                    attempt + 1,
-                    STARTUP_RETRIES,
-                    exc_info=exc,
-                )
+        try:
+            for attempt in range(STARTUP_RETRIES):
+                try:
+                    await self.application_controller.startup(auto_form=True)
+                except TransientConnectionError as exc:
+                    raise ConfigEntryNotReady from exc
+                except NetworkSettingsInconsistent:
+                    raise
+                except Exception as exc:  # pylint: disable=broad-except
+                    _LOGGER.debug(
+                        "Couldn't start %s coordinator (attempt %s of %s)",
+                        self.radio_description,
+                        attempt + 1,
+                        STARTUP_RETRIES,
+                        exc_info=exc,
+                    )
 
-                if attempt == STARTUP_RETRIES - 1:
-                    raise exc
+                    if attempt == STARTUP_RETRIES - 1:
+                        raise exc
 
-                await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
-            else:
-                break
+                    await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
+                else:
+                    break
+        except Exception:
+            # Explicitly shut down the controller application on failure
+            await self.application_controller.shutdown()
+            raise
 
         zha_data = get_zha_data(self.hass)
         zha_data.gateway = self
@@ -231,12 +245,13 @@ class ZHAGateway:
         self.application_controller.groups.add_listener(self)
 
     def _find_coordinator_device(self) -> zigpy.device.Device:
+        zigpy_coordinator = self.application_controller.get_device(nwk=0x0000)
+
         if last_backup := self.application_controller.backups.most_recent_backup():
-            zigpy_coordinator = self.application_controller.get_device(
-                ieee=last_backup.node_info.ieee
-            )
-        else:
-            zigpy_coordinator = self.application_controller.get_device(nwk=0x0000)
+            with suppress(KeyError):
+                zigpy_coordinator = self.application_controller.get_device(
+                    ieee=last_backup.node_info.ieee
+                )
 
         return zigpy_coordinator
 

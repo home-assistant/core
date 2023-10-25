@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -38,15 +39,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    DATA_BRIDGE,
-    DATA_COORDINATOR,
-    DATA_LOCKS,
-    DATA_OPENERS,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-    ERROR_STATES,
-)
+from .const import DEFAULT_TIMEOUT, DOMAIN, ERROR_STATES
 from .helpers import NukiWebhookException, parse_id
 
 _NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
@@ -55,6 +48,16 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 UPDATE_INTERVAL = timedelta(seconds=30)
+
+
+@dataclass(slots=True)
+class NukiEntryData:
+    """Class to hold Nuki data."""
+
+    coordinator: NukiCoordinator
+    bridge: NukiBridge
+    locks: list[NukiLock]
+    openers: list[NukiOpener]
 
 
 def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOpener]]:
@@ -74,14 +77,15 @@ async def _create_webhook(
         except ValueError:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        locks = hass.data[DOMAIN][entry.entry_id][DATA_LOCKS]
-        openers = hass.data[DOMAIN][entry.entry_id][DATA_OPENERS]
+        entry_data: NukiEntryData = hass.data[DOMAIN][entry.entry_id]
+        locks = entry_data.locks
+        openers = entry_data.openers
 
         devices = [x for x in locks + openers if x.nuki_id == data["nukiId"]]
         if len(devices) == 1:
             devices[0].update_from_callback(data)
 
-        coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+        coordinator = entry_data.coordinator
         coordinator.async_set_updated_data(None)
 
         return web.Response(status=HTTPStatus.OK)
@@ -232,13 +236,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     coordinator = NukiCoordinator(hass, bridge, locks, openers)
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_COORDINATOR: coordinator,
-        DATA_BRIDGE: bridge,
-        DATA_LOCKS: locks,
-        DATA_OPENERS: openers,
-    }
+    hass.data[DOMAIN][entry.entry_id] = NukiEntryData(
+        coordinator=coordinator,
+        bridge=bridge,
+        locks=locks,
+        openers=openers,
+    )
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
@@ -251,11 +254,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the Nuki entry."""
     webhook.async_unregister(hass, entry.entry_id)
+    entry_data: NukiEntryData = hass.data[DOMAIN][entry.entry_id]
+
     try:
         async with asyncio.timeout(10):
             await hass.async_add_executor_job(
                 _remove_webhook,
-                hass.data[DOMAIN][entry.entry_id][DATA_BRIDGE],
+                entry_data.bridge,
                 entry.entry_id,
             )
     except InvalidCredentialsException as err:
