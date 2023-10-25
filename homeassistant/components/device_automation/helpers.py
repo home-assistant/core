@@ -63,11 +63,13 @@ async def async_validate_device_automation_config(
         raise InvalidDeviceAutomationConfig(
             f"Unknown device '{validated_config[CONF_DEVICE_ID]}'"
         )
-    if entity := validated_config.get(CONF_ENTITY_ID):
+    if entity_id := validated_config.get(CONF_ENTITY_ID):
         try:
-            er.async_validate_entity_id(er.async_get(hass), entity)
+            er.async_validate_entity_id(er.async_get(hass), entity_id)
         except vol.Invalid as err:
-            raise InvalidDeviceAutomationConfig(f"Unknown entity '{entity}'") from err
+            raise InvalidDeviceAutomationConfig(
+                f"Unknown entity '{entity_id}'"
+            ) from err
 
     if not hasattr(platform, DYNAMIC_VALIDATOR[automation_type]):
         # Pass the unvalidated config to avoid mutating the raw config twice
