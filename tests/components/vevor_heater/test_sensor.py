@@ -1,5 +1,5 @@
 """Unit tests for Vevor BLE Heater sensors."""
-
+from typing import Any, Optional
 from unittest.mock import patch
 
 from bleak import BLEDevice
@@ -13,9 +13,15 @@ from vevor_heater_ble.heater import (
 )
 
 from homeassistant.components.vevor_heater import DOMAIN
+from homeassistant.components.vevor_heater.const import DEFAULT_UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+FIXTURE_BLE_DEVICE = BLEDevice(
+    address="AB:CD:EF:01:23:45", name="FooBar", details=None, rssi=-1
+)
 
 
 async def test_sensors_target_level(
@@ -26,12 +32,10 @@ async def test_sensors_target_level(
 
     with patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=BLEDevice(
-            address="AB:CD:EF:01:23:45", name="FooBar", details=None, rssi=-1
-        ),
+        return_value=FIXTURE_BLE_DEVICE,
     ):
 
-        def update_self_status(self, bledevice):
+        def update_self_status(self, _):
             self.status = status_to_set
 
         with patch.object(
@@ -60,6 +64,9 @@ async def test_sensors_target_level(
                 error=HeaterError.NO_ERROR,
             )
 
+            async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_UPDATE_INTERVAL)
+            await hass.async_block_till_done()
+
             await hass.data[DOMAIN][entry.entry_id].async_refresh()
 
             for sensor, value, unit in [
@@ -74,13 +81,11 @@ async def test_sensors_target_level(
                 ("room_temperature", "25", "°C"),
                 ("error", "HeaterError.NO_ERROR", None),
             ]:
-                state = hass.states.get(f"sensor.{sensor}")
-                assert state is not None
-                assert state.state == value
-                if unit is None:
-                    assert "unit" not in state.attributes
-                else:
-                    assert state.attributes["unit_of_measurement"] == unit
+                state = hass.states.get(
+                    f"sensor.vevor_{FIXTURE_BLE_DEVICE.name.lower()}_{sensor}"
+                )
+                _assert_state(state, expected_value=value, expected_unit=unit)
+
             assert await hass.config_entries.async_unload(entry.entry_id)
             await hass.async_block_till_done()
 
@@ -95,12 +100,10 @@ async def test_sensors_target_temperature(
 
     with patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=BLEDevice(
-            address="AB:CD:EF:01:23:45", name="FooBar", details=None, rssi=-1
-        ),
+        return_value=FIXTURE_BLE_DEVICE,
     ):
 
-        def update_self_status(self, bledevice):
+        def update_self_status(self, _):
             self.status = status_to_set
 
         with patch.object(
@@ -129,7 +132,8 @@ async def test_sensors_target_temperature(
                 error=HeaterError.NO_ERROR,
             )
 
-            await hass.data[DOMAIN][entry.entry_id].async_refresh()
+            async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_UPDATE_INTERVAL)
+            await hass.async_block_till_done()
 
             for sensor, value, unit in [
                 ("operational_mode", "OperationalMode.TARGET_TEMPERATURE", None),
@@ -143,13 +147,10 @@ async def test_sensors_target_temperature(
                 ("room_temperature", "25", "°C"),
                 ("error", "HeaterError.NO_ERROR", None),
             ]:
-                state = hass.states.get(f"sensor.{sensor}")
-                assert state is not None
-                assert state.state == value
-                if unit is None:
-                    assert "unit" not in state.attributes
-                else:
-                    assert state.attributes["unit_of_measurement"] == unit
+                state = hass.states.get(
+                    f"sensor.vevor_{FIXTURE_BLE_DEVICE.name.lower()}_{sensor}"
+                )
+                _assert_state(state, expected_value=value, expected_unit=unit)
             assert await hass.config_entries.async_unload(entry.entry_id)
             await hass.async_block_till_done()
 
@@ -162,12 +163,10 @@ async def test_sensors_off(enable_bluetooth: None, hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=BLEDevice(
-            address="AB:CD:EF:01:23:45", name="FooBar", details=None, rssi=-1
-        ),
+        return_value=FIXTURE_BLE_DEVICE,
     ):
 
-        def update_self_status(self, bledevice):
+        def update_self_status(self, _):
             self.status = status_to_set
 
         with patch.object(
@@ -185,7 +184,8 @@ async def test_sensors_off(enable_bluetooth: None, hass: HomeAssistant) -> None:
             await hass.async_block_till_done()
             status_to_set = VevorHeaterStatus(power_status=PowerStatus.OFF)
 
-            await hass.data[DOMAIN][entry.entry_id].async_refresh()
+            async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_UPDATE_INTERVAL)
+            await hass.async_block_till_done()
 
             for sensor, value, unit in [
                 ("operational_mode", "unknown", None),
@@ -199,14 +199,27 @@ async def test_sensors_off(enable_bluetooth: None, hass: HomeAssistant) -> None:
                 ("room_temperature", "unknown", "°C"),
                 ("error", "unknown", None),
             ]:
-                state = hass.states.get(f"sensor.{sensor}")
-                assert state is not None
-                assert state.state == value
-                if unit is None:
-                    assert "unit" not in state.attributes
-                else:
-                    assert state.attributes["unit_of_measurement"] == unit
+                state = hass.states.get(
+                    f"sensor.vevor_{FIXTURE_BLE_DEVICE.name.lower()}_{sensor}"
+                )
+                _assert_state(state, expected_value=value, expected_unit=unit)
             assert await hass.config_entries.async_unload(entry.entry_id)
             await hass.async_block_till_done()
 
-            pass
+
+def _assert_state(
+    state: Any, expected_value: Any, expected_unit: Optional[str]
+) -> None:
+    if expected_value is None:
+        # If we expect the state not to be present it can't have any unit.
+        # Failing assert indicates a misconfiguration of the test, not a SUT malfunction.
+        assert expected_unit is None
+
+        # Now check the SUT
+        assert state is None
+    else:
+        assert state.state == expected_value
+        if expected_unit is None:
+            assert "unit" not in state.attributes
+        else:
+            assert state.attributes["unit_of_measurement"] == expected_unit

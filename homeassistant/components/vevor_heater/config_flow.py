@@ -111,7 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         assert self._discovery_info is not None
         discovery_info = self._discovery_info
-        title = "Vevor " + str(discovery_info.name or discovery_info.address)
+        title = f"Vevor {discovery_info.name or discovery_info.address}"
         if user_input is not None:
             return self.async_create_entry(title=title, data={})
 

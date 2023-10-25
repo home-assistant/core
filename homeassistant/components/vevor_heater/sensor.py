@@ -10,7 +10,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfElectricPotential, UnitOfLength, UnitOfTemperature
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfLength,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -31,6 +36,7 @@ SENSORS_MAPPINGS: dict[str, SensorEntityDescription] = {
         key="operational_status",
         name="Operational Status",
         device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "input_voltage": SensorEntityDescription(
         key="input_voltage",
@@ -38,6 +44,7 @@ SENSORS_MAPPINGS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "elevation": SensorEntityDescription(
         key="elevation",
@@ -45,6 +52,7 @@ SENSORS_MAPPINGS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "target_temperature": SensorEntityDescription(
         key="target_temperature",
@@ -62,6 +70,7 @@ SENSORS_MAPPINGS: dict[str, SensorEntityDescription] = {
         key="current_power_level",
         name="Current Power Level",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "combustion_temperature": SensorEntityDescription(
         key="combustion_temperature",
@@ -69,6 +78,7 @@ SENSORS_MAPPINGS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "room_temperature": SensorEntityDescription(
         key="room_temperature",
@@ -76,11 +86,13 @@ SENSORS_MAPPINGS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "error:": SensorEntityDescription(
         key="error",
         name="Error",
         device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
@@ -93,18 +105,17 @@ async def async_setup_entry(
     """Set up the Vevor BLE heater sensors."""
 
     coordinator: VevorHeaterUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
-    entities = []
     _LOGGER.debug("got sensors: %s", coordinator.data)
-    entities.extend(
+
+    async_add_entities(
         [VevorHeaterSensor(coordinator, sensor) for sensor in SENSORS_MAPPINGS.values()]
     )
-
-    async_add_entities(entities)
 
 
 class VevorHeaterSensor(CoordinatorEntity[VevorHeaterUpdateCoordinator], SensorEntity):
     """Vevor BLE heater sensors for the device."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

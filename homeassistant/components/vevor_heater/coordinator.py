@@ -22,7 +22,7 @@ class VevorHeaterUpdateCoordinator(DataUpdateCoordinator[VevorDevice]):
         self._ble_device = device
         self._vevor_device = VevorDevice(
             address=self._ble_device.address,
-            name="Vevor " + (self._ble_device.name or ""),
+            name=f"Vevor {self._ble_device.name or ''}",
         )
         super().__init__(
             hass, logger=_LOGGER, name=DOMAIN, update_interval=DEFAULT_UPDATE_INTERVAL
