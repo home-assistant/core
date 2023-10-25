@@ -68,9 +68,9 @@ def extract_fixture_data(diagnostics_data: Any) -> dict:
     return state
 
 
-def create_fixture_file(path: Path, state: dict) -> None:
+def create_fixture_file(path: Path, state_text: str) -> None:
     """Create a file for the state dump in the fixtures directory."""
-    path.write_text(json.dumps(state, indent=2), "utf8")
+    path.write_text(state_text, "utf8")
 
 
 def main() -> None:
@@ -79,11 +79,12 @@ def main() -> None:
     diagnostics_path: Path = args.diagnostics_file
     diagnostics = load_file(diagnostics_path)
     fixture_data = extract_fixture_data(diagnostics)
+    fixture_text = json.dumps(fixture_data, indent=2)
     if args.file:
         fixture_path = get_fixtures_dir_path(fixture_data)
-        create_fixture_file(fixture_path, fixture_data)
+        create_fixture_file(fixture_path, fixture_text)
         return
-    print(json.dumps(fixture_data, indent=2))  # noqa: T201
+    print(fixture_text)  # noqa: T201
 
 
 if __name__ == "__main__":
