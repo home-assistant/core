@@ -66,10 +66,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await desk.connect(discovery_info.device, auto_reconnect=False)
             except AuthFailedError:
-                _LOGGER.exception("Authentication failed")
                 errors["base"] = "auth_failed"
             except TimeoutError:
-                _LOGGER.exception("Connect timeout")
                 errors["base"] = "cannot_connect"
             except BleakError:
                 _LOGGER.exception("Unexpected Bluetooth error")
