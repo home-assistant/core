@@ -48,8 +48,7 @@ def get_fixtures_dir_path(data: dict) -> Path:
 
 def load_file(path: Path) -> Any:
     """Load file from path."""
-    with open(path, encoding="utf8") as f:
-        return json.load(f)
+    return json.loads(path.read_text("utf8"))
 
 
 def extract_fixture_data(diagnostics_data: Any) -> dict:
@@ -69,8 +68,7 @@ def extract_fixture_data(diagnostics_data: Any) -> dict:
 
 def create_fixture_file(path: Path, state: dict) -> None:
     """Create a file for the state dump in the fixtures directory."""
-    with open(path, mode="w", encoding="utf8") as fp:
-        json.dump(state, fp, indent=2)
+    path.write_text(json.dumps(state, indent=2), "utf8")
 
 
 def main() -> None:

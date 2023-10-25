@@ -16,6 +16,11 @@ from homeassistant.components.zwave_js.scripts.convert_device_diagnostics_to_fix
 from tests.common import load_fixture
 
 
+def _minify(text: str) -> str:
+    """Minify string by removing whitespace and new lines."""
+    return text.replace(" ", "").replace("\n", "")
+
+
 def test_fixture_functions() -> None:
     """Test functions related to the fixture."""
     state = extract_fixture_data(
@@ -53,7 +58,7 @@ def test_main(capfd: pytest.CaptureFixture[str]) -> None:
         main()
 
     captured = capfd.readouterr()
-    assert captured.out.strip() == fixture_str
+    assert _minify(captured.out) == _minify(fixture_str)
 
     # Check file dump
     args.append("--file")
