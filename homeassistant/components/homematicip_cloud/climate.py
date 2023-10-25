@@ -34,10 +34,13 @@ from .hap import HomematicipHAP
 
 HEATING_PROFILES = {"PROFILE_1": 0, "PROFILE_2": 1, "PROFILE_3": 2}
 COOLING_PROFILES = {"PROFILE_4": 3, "PROFILE_5": 4, "PROFILE_6": 5}
-HEATING_PROFILES_NAMES = {
+NICE_PROFILE_NAMES = {
     "PROFILE_1": "Default",
     "PROFILE_2": "Alternative 1",
     "PROFILE_3": "Alternative 2",
+    "PROFILE_4": "Cooling 1",
+    "PROFILE_5": "Cooling 2",
+    "PROFILE_6": "Cooling 3",
 }
 
 ATTR_PRESET_END_TIME = "preset_end_time"
@@ -213,7 +216,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode not in self.hvac_modes:
-            return
+            raise ValueError(f"Unsupported hvac mode: {hvac_mode}")
 
         if hvac_mode == HVACMode.AUTO:
             await self._device.set_control_mode(HMIP_AUTOMATIC_CM)
@@ -223,7 +226,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode not in self.preset_modes:
-            return
+            raise ValueError(f"Unsupported preset mode: {preset_mode}")
 
         if self._device.boostMode and preset_mode != PRESET_BOOST:
             await self._device.set_boost(False)
@@ -279,8 +282,8 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     def _get_qualified_profile_name(self, profile) -> str:
         if profile.name != "":
             return profile.name
-        if profile.index in HEATING_PROFILES_NAMES:
-            return HEATING_PROFILES_NAMES[profile.index]
+        if profile.index in NICE_PROFILE_NAMES:
+            return NICE_PROFILE_NAMES[profile.index]
 
         return profile.index
 

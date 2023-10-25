@@ -1,5 +1,6 @@
 """Tests for HomematicIP Cloud climate."""
 import datetime
+from unittest.mock import patch
 
 from homematicip.base.enums import AbsenceType
 from homematicip.functionalHomes import IndoorClimateHome
@@ -215,12 +216,14 @@ async def test_hmip_heating_group_heat(
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == HVACMode.AUTO
 
-    await hass.services.async_call(
-        "climate",
-        "set_hvac_mode",
-        {"entity_id": entity_id, "hvac_mode": "dry"},
-        blocking=True,
-    )
+    # hvac mode "dry" is not available. expect a valueerror.
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {"entity_id": entity_id, "hvac_mode": "dry"},
+            blocking=True,
+        )
     assert len(hmip_device.mock_calls) == service_call_counter + 24
     # Only fire event from last async_manipulate_test_data available.
     assert hmip_device.mock_calls[-1][0] == "fire_update_event"
@@ -458,6 +461,30 @@ async def test_hmip_heating_profile_naming(
         "Testprofile",
         "Alternative 1",
     ]
+
+    service_call_counter = len(hmip_device.mock_calls)
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": entity_id, "preset_mode": "Testprofile"},
+        blocking=True,
+    )
+    assert len(hmip_device.mock_calls) == service_call_counter + 1
+    assert hmip_device.mock_calls[-1][0] == "set_active_profile"
+    assert hmip_device.mock_calls[-1][1] == (0,)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_PRESET_MODE] == "Testprofile"
+
+    with patch(
+        "homeassistant.components.homematicip_cloud.climate.NICE_PROFILE_NAMES",
+        return_value={},
+    ):
+        await hass.services.async_call(
+            "climate",
+            "set_preset_mode",
+            {"entity_id": entity_id, "preset_mode": "Testprofile"},
+            blocking=True,
+        )
 
 
 async def test_hmip_climate_services(
