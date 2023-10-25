@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Generic, TypeVar
 
 from aiowithings import (
     Activity,
@@ -787,25 +788,32 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class WithingsSensor(WithingsEntity, SensorEntity):
+_T = TypeVar("_T", bound=WithingsDataUpdateCoordinator)
+_ED = TypeVar("_ED", bound=SensorEntityDescription)
+
+
+class WithingsSensor(WithingsEntity[_T], SensorEntity, Generic[_T, _ED]):
     """Implementation of a Withings sensor."""
+
+    entity_description: _ED
 
     def __init__(
         self,
-        coordinator: WithingsDataUpdateCoordinator,
-        entity_description: SensorEntityDescription,
+        coordinator: _T,
+        entity_description: _ED,
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
 
 
-class WithingsMeasurementSensor(WithingsSensor):
+class WithingsMeasurementSensor(
+    WithingsSensor[
+        WithingsMeasurementDataUpdateCoordinator,
+        WithingsMeasurementSensorEntityDescription,
+    ]
+):
     """Implementation of a Withings measurement sensor."""
-
-    coordinator: WithingsMeasurementDataUpdateCoordinator
-
-    entity_description: WithingsMeasurementSensorEntityDescription
 
     @property
     def native_value(self) -> float:
@@ -821,12 +829,13 @@ class WithingsMeasurementSensor(WithingsSensor):
         )
 
 
-class WithingsSleepSensor(WithingsSensor):
+class WithingsSleepSensor(
+    WithingsSensor[
+        WithingsSleepDataUpdateCoordinator,
+        WithingsSleepSensorEntityDescription,
+    ]
+):
     """Implementation of a Withings sleep sensor."""
-
-    coordinator: WithingsSleepDataUpdateCoordinator
-
-    entity_description: WithingsSleepSensorEntityDescription
 
     @property
     def native_value(self) -> StateType:
@@ -836,12 +845,13 @@ class WithingsSleepSensor(WithingsSensor):
         return self.entity_description.value_fn(self.coordinator.data)
 
 
-class WithingsGoalsSensor(WithingsSensor):
+class WithingsGoalsSensor(
+    WithingsSensor[
+        WithingsGoalsDataUpdateCoordinator,
+        WithingsGoalsSensorEntityDescription,
+    ]
+):
     """Implementation of a Withings goals sensor."""
-
-    coordinator: WithingsGoalsDataUpdateCoordinator
-
-    entity_description: WithingsGoalsSensorEntityDescription
 
     @property
     def native_value(self) -> StateType:
@@ -850,12 +860,13 @@ class WithingsGoalsSensor(WithingsSensor):
         return self.entity_description.value_fn(self.coordinator.data)
 
 
-class WithingsActivitySensor(WithingsSensor):
+class WithingsActivitySensor(
+    WithingsSensor[
+        WithingsActivityDataUpdateCoordinator,
+        WithingsActivitySensorEntityDescription,
+    ]
+):
     """Implementation of a Withings activity sensor."""
-
-    coordinator: WithingsActivityDataUpdateCoordinator
-
-    entity_description: WithingsActivitySensorEntityDescription
 
     @property
     def native_value(self) -> StateType:
@@ -870,12 +881,13 @@ class WithingsActivitySensor(WithingsSensor):
         return dt_util.start_of_local_day()
 
 
-class WithingsWorkoutSensor(WithingsSensor):
+class WithingsWorkoutSensor(
+    WithingsSensor[
+        WithingsWorkoutDataUpdateCoordinator,
+        WithingsWorkoutSensorEntityDescription,
+    ]
+):
     """Implementation of a Withings workout sensor."""
-
-    coordinator: WithingsWorkoutDataUpdateCoordinator
-
-    entity_description: WithingsWorkoutSensorEntityDescription
 
     @property
     def native_value(self) -> StateType:
