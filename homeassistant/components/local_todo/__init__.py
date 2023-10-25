@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import slugify
 
-from .const import CONF_TODO_LIST_NAME, DOMAIN
+from .const import CONF_STORAGE_KEY, CONF_TODO_LIST_NAME, DOMAIN
 from .store import LocalTodoListStore
 
 PLATFORMS: list[Platform] = [Platform.TODO]
@@ -22,8 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    key = slugify(entry.data[CONF_TODO_LIST_NAME])
-    path = Path(hass.config.path(STORAGE_PATH.format(key=key)))
+    path = Path(hass.config.path(STORAGE_PATH.format(key=entry.data[CONF_STORAGE_KEY])))
     store = LocalTodoListStore(hass, path)
     try:
         await store.async_load()

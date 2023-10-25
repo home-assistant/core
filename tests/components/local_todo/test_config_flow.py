@@ -8,7 +8,7 @@ from homeassistant.components.local_todo.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TODO_NAME
+from .conftest import STORAGE_KEY, TODO_NAME
 
 from tests.common import MockConfigEntry
 
@@ -33,7 +33,10 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == TODO_NAME
-    assert result2["data"] == {"todo_list_name": TODO_NAME}
+    assert result2["data"] == {
+        "todo_list_name": TODO_NAME,
+        "storage_key": STORAGE_KEY,
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 

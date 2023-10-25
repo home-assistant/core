@@ -7,14 +7,18 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant.components.local_todo import LocalTodoListStore
-from homeassistant.components.local_todo.const import CONF_TODO_LIST_NAME, DOMAIN
+from homeassistant.components.local_todo.const import (
+    CONF_STORAGE_KEY,
+    CONF_TODO_LIST_NAME,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.util import slugify
 
 from tests.common import MockConfigEntry
 
 TODO_NAME = "My Tasks"
 FRIENDLY_NAME = "My tasks"
+STORAGE_KEY = "my_tasks"
 TEST_ENTITY = "todo.my_tasks"
 
 
@@ -93,9 +97,8 @@ def mock_store(
 def mock_config_entry() -> MockConfigEntry:
     """Fixture for mock configuration entry."""
     return MockConfigEntry(
-        unique_id=slugify(TODO_NAME),
         domain=DOMAIN,
-        data={CONF_TODO_LIST_NAME: TODO_NAME},
+        data={CONF_STORAGE_KEY: STORAGE_KEY, CONF_TODO_LIST_NAME: TODO_NAME},
     )
 
 

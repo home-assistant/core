@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import slugify
 
-from .const import CONF_TODO_LIST_NAME, DOMAIN
+from .const import CONF_STORAGE_KEY, CONF_TODO_LIST_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,9 +32,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            _LOGGER.info(slugify(user_input[CONF_TODO_LIST_NAME]))
-            await self.async_set_unique_id(slugify(user_input[CONF_TODO_LIST_NAME]))
-            self._abort_if_unique_id_configured()
+            key = slugify(user_input[CONF_TODO_LIST_NAME])
+            self._async_abort_entries_match({CONF_STORAGE_KEY: key})
+            user_input[CONF_STORAGE_KEY] = key
             return self.async_create_entry(
                 title=user_input[CONF_TODO_LIST_NAME], data=user_input
             )
