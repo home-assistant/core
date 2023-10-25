@@ -894,6 +894,7 @@ class TelegramNotificationService:
                 chat_id=chat_id,
                 latitude=latitude,
                 longitude=longitude,
+                reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 timeout=params[ATTR_TIMEOUT],
             )
