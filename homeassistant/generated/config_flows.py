@@ -121,7 +121,6 @@ FLOWS = {
         "ecowitt",
         "edl21",
         "efergy",
-        "eight_sleep",
         "electrasmart",
         "electric_kiwi",
         "elgato",
