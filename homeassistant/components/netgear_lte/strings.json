@@ -17,10 +17,6 @@
     }
   },
   "issues": {
-    "deprecated_yaml": {
-      "title": "The Netgear LTE YAML configuration is being removed",
-      "description": "Configuring Netgear LTE using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Netgear LTE YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    },
     "deprecated_notify": {
       "title": "The Netgear LTE notify service is changing",
       "description": "The Netgear LTE notify service was previously set up via YAML configuration.\n\nThis created a service for a specified recipient without having to include the phone number.\n\nPlease adjust any automations or scripts you may have to use the `{name}` service and include target for specifying a recipient."

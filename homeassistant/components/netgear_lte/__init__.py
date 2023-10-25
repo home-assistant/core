@@ -18,7 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -159,12 +159,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         async_create_issue(
             hass,
-            DOMAIN,
-            "deprecated_yaml",
-            breaks_in_ha_version="2024.1.0",
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.5.0",
             is_fixable=False,
+            issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Netgear LTE",
+            },
         )
 
     return True
@@ -308,7 +313,7 @@ def _legacy_task(hass: HomeAssistant, entry: ConfigEntry) -> None:
         hass,
         DOMAIN,
         "deprecated_notify",
-        breaks_in_ha_version="2024.1.0",
+        breaks_in_ha_version="2024.5.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_notify",
