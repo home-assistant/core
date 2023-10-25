@@ -304,13 +304,13 @@ async def test_fires_on_camera_sound(
     setup_platform: PlatformSetup,
     calls,
 ) -> None:
-    """Test camera_person triggers firing."""
+    """Test camera_sound triggers firing."""
     create_device.create(
         raw_data=make_camera(
             device_id=DEVICE_ID,
             traits={
                 "sdm.devices.traits.CameraMotion": {},
-                "sdm.devices.traits.CameraPerson": {},
+                "sdm.devices.traits.CameraSound": {},
             },
         )
     )
@@ -344,7 +344,7 @@ async def test_fires_on_doorbell_chime(
             device_id=DEVICE_ID,
             traits={
                 "sdm.devices.traits.CameraMotion": {},
-                "sdm.devices.traits.CameraPerson": {},
+                "sdm.devices.traits.DoorbellChime": {},
             },
         )
     )
@@ -372,7 +372,7 @@ async def test_trigger_for_wrong_device_id(
     setup_platform: PlatformSetup,
     calls,
 ) -> None:
-    """Test for turn_on and turn_off triggers firing."""
+    """Test messages for the wrong device are ignored."""
     create_device.create(
         raw_data=make_camera(
             device_id=DEVICE_ID,
@@ -405,7 +405,7 @@ async def test_trigger_for_wrong_event_type(
     setup_platform: PlatformSetup,
     calls,
 ) -> None:
-    """Test for turn_on and turn_off triggers firing."""
+    """Test that messages for the wrong event type are ignored."""
     create_device.create(
         raw_data=make_camera(
             device_id=DEVICE_ID,
