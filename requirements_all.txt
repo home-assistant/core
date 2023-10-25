@@ -147,7 +147,7 @@ TwitterAPI==2.7.12
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==1.0.0
+accuweather==2.0.0
 
 # homeassistant.components.adax
 adax==0.3.0
@@ -237,7 +237,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.0.11
+aioesphomeapi==18.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -369,7 +369,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==63
+aiounifi==64
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -521,7 +521,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.36.5
+bellows==0.36.8
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.2
@@ -882,7 +882,7 @@ georss-qld-bushfire-alert-client==0.5
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==3.1.0
+gios==3.2.0
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -897,6 +897,7 @@ goalzero==0.2.2
 goodwe==0.2.31
 
 # homeassistant.components.google_mail
+# homeassistant.components.google_tasks
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
@@ -970,7 +971,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.73.0
+hass-nabucasa==0.74.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1006,7 +1007,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231005.0
+home-assistant-frontend==20231025.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.10.16
@@ -1045,6 +1046,7 @@ ibeacon-ble==1.0.1
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
+# homeassistant.components.local_todo
 ical==5.1.0
 
 # homeassistant.components.ping
@@ -1276,7 +1278,7 @@ netdata==1.1.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==2.1.0
+nettigo-air-monitor==2.2.0
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1291,7 +1293,7 @@ nextcloudmonitor==1.4.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==1.4.0
+nextdns==2.0.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.4.0
@@ -1455,7 +1457,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.33.1
+plugwise==0.33.2
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1512,6 +1514,9 @@ py-cpuinfo==9.0.0
 # homeassistant.components.dormakaba_dkey
 py-dormakaba-dkey==1.0.5
 
+# homeassistant.components.improv_ble
+py-improv-ble-client==1.0.3
+
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4
 
@@ -1547,9 +1552,6 @@ pyControl4==1.1.0
 
 # homeassistant.components.duotecno
 pyDuotecno==2023.10.1
-
-# homeassistant.components.eight_sleep
-pyEight==0.3.2
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.0
@@ -2792,7 +2794,7 @@ zeroconf==0.119.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.105
+zha-quirks==0.0.106
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.9
@@ -2804,7 +2806,7 @@ ziggo-mediabox-xl==1.1.0
 zigpy-deconz==0.21.1
 
 # homeassistant.components.zha
-zigpy-xbee==0.18.3
+zigpy-xbee==0.19.0
 
 # homeassistant.components.zha
 zigpy-zigate==0.11.0
@@ -2813,7 +2815,7 @@ zigpy-zigate==0.11.0
 zigpy-znp==0.11.6
 
 # homeassistant.components.zha
-zigpy==0.58.1
+zigpy==0.59.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
