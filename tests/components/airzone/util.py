@@ -313,6 +313,7 @@ async def async_init_integration(
 
     config_entry = MockConfigEntry(
         data=CONFIG,
+        entry_id="6e7a0798c1734ba81d26ced0e690eaec",
         domain=DOMAIN,
         unique_id="airzone_unique_id",
     )

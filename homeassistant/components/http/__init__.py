@@ -40,7 +40,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_start_setup, async_when_setup_or_start
-from homeassistant.util import ssl as ssl_util
+from homeassistant.util import dt as dt_util, ssl as ssl_util
 from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
@@ -318,7 +318,7 @@ class HomeAssistantHTTP:
         # By default aiohttp does a linear search for routing rules,
         # we have a lot of routes, so use a dict lookup with a fallback
         # to the linear search.
-        self.app._router = FastUrlDispatcher()  # pylint: disable=protected-access
+        self.app._router = FastUrlDispatcher()
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -445,7 +445,7 @@ class HomeAssistantHTTP:
                 context = ssl_util.server_context_modern()
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
         except OSError as error:
-            if not self.hass.config.safe_mode:
+            if not self.hass.config.recovery_mode:
                 raise HomeAssistantError(
                     f"Could not use SSL certificate from {self.ssl_certificate}:"
                     f" {error}"
@@ -465,7 +465,7 @@ class HomeAssistantHTTP:
                 context = None
             else:
                 _LOGGER.critical(
-                    "Home Assistant is running in safe mode with an emergency self"
+                    "Home Assistant is running in recovery mode with an emergency self"
                     " signed ssl certificate because the configured SSL certificate was"
                     " not usable"
                 )
@@ -503,14 +503,15 @@ class HomeAssistantHTTP:
                 x509.NameAttribute(NameOID.COMMON_NAME, host),
             ]
         )
+        now = dt_util.utcnow()
         cert = (
             x509.CertificateBuilder()
             .subject_name(subject)
             .issuer_name(issuer)
             .public_key(key.public_key())
             .serial_number(x509.random_serial_number())
-            .not_valid_before(datetime.datetime.utcnow())
-            .not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=30))
+            .not_valid_before(now)
+            .not_valid_after(now + datetime.timedelta(days=30))
             .add_extension(
                 x509.SubjectAlternativeName([x509.DNSName(host)]),
                 critical=False,
@@ -571,7 +572,7 @@ async def start_http_server_and_save_config(
     """Startup the http server and save the config."""
     await server.start()
 
-    # If we are set up successful, we store the HTTP settings for safe mode.
+    # If we are set up successful, we store the HTTP settings for recovery mode.
     store: storage.Store[dict[str, Any]] = storage.Store(
         hass, STORAGE_VERSION, STORAGE_KEY
     )

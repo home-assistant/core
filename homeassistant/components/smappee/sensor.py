@@ -341,6 +341,13 @@ class SmappeeSensor(SensorEntity):
         self.entity_description = description
         self._smappee_base = smappee_base
         self._service_location = service_location
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, service_location.device_serial_number)},
+            manufacturer="Smappee",
+            model=service_location.device_model,
+            name=service_location.service_location_name,
+            sw_version=service_location.firmware_version,
+        )
 
     @property
     def name(self):
@@ -370,17 +377,6 @@ class SmappeeSensor(SensorEntity):
             f"{self._service_location.device_serial_number}-"
             f"{self._service_location.service_location_id}-"
             f"{sensor_key}"
-        )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info for this sensor."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._service_location.device_serial_number)},
-            manufacturer="Smappee",
-            model=self._service_location.device_model,
-            name=self._service_location.service_location_name,
-            sw_version=self._service_location.firmware_version,
         )
 
     async def async_update(self) -> None:

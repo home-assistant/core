@@ -38,16 +38,12 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         super().__init__(coordinator, pump.spa, "pump")
         self.pump_id = pump.id
         self.pump_type = pump.type
+        self._attr_unique_id = f"{super().unique_id}-{pump.id}"
 
     @property
     def pump(self) -> SpaPump:
         """Return the underlying SpaPump object for this entity."""
         return self.coordinator.data[self.spa.id][ATTR_PUMPS][self.pump_id]
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for this pump entity."""
-        return f"{super().unique_id}-{self.pump_id}"
 
     @property
     def name(self) -> str:

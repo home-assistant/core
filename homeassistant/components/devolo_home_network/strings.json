@@ -48,6 +48,11 @@
         "name": "Start WPS"
       }
     },
+    "image": {
+      "image_guest_wifi": {
+        "name": "Guest Wifi credentials as QR code"
+      }
+    },
     "sensor": {
       "connected_plc_devices": {
         "name": "Connected PLC devices"

@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import Mock, call
 
-from gardena_bluetooth.const import Valve
+from gardena_bluetooth.const import Sensor, Valve
 from gardena_bluetooth.exceptions import (
     CharacteristicNoAccess,
     GardenaBluetoothException,
@@ -149,3 +149,28 @@ async def test_bluetooth_error_unavailable(
     await scan_step()
     assert hass.states.get("number.mock_title_remaining_open_time") == snapshot
     assert hass.states.get("number.mock_title_manual_watering_time") == snapshot
+
+
+async def test_connected_state(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_entry: MockConfigEntry,
+    mock_read_char_raw: dict[str, bytes],
+    scan_step: Callable[[], Awaitable[None]],
+) -> None:
+    """Verify that a connectivity error makes all entities unavailable."""
+
+    mock_read_char_raw[Sensor.connected_state.uuid] = Sensor.connected_state.encode(
+        False
+    )
+    mock_read_char_raw[Sensor.threshold.uuid] = Sensor.threshold.encode(45)
+
+    await setup_entry(hass, mock_entry, [Platform.NUMBER])
+    assert hass.states.get("number.mock_title_sensor_threshold") == snapshot
+
+    mock_read_char_raw[Sensor.connected_state.uuid] = Sensor.connected_state.encode(
+        True
+    )
+
+    await scan_step()
+    assert hass.states.get("number.mock_title_sensor_threshold") == snapshot

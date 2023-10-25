@@ -240,7 +240,9 @@ class TractiveClient:
                     self._config_entry.data[CONF_EMAIL],
                 )
                 return
-
+            except KeyError as error:
+                _LOGGER.error("Error while listening for events: %s", error)
+                continue
             except aiotractive.exceptions.TractiveError:
                 _LOGGER.debug(
                     (
@@ -283,12 +285,12 @@ class TractiveClient:
 
     def _send_wellness_update(self, event: dict[str, Any]) -> None:
         payload = {
-            ATTR_ACTIVITY_LABEL: event["wellness"]["activity_label"],
+            ATTR_ACTIVITY_LABEL: event["wellness"].get("activity_label"),
             ATTR_CALORIES: event["activity"]["calories"],
             ATTR_MINUTES_DAY_SLEEP: event["sleep"]["minutes_day_sleep"],
             ATTR_MINUTES_NIGHT_SLEEP: event["sleep"]["minutes_night_sleep"],
             ATTR_MINUTES_REST: event["activity"]["minutes_rest"],
-            ATTR_SLEEP_LABEL: event["wellness"]["sleep_label"],
+            ATTR_SLEEP_LABEL: event["wellness"].get("sleep_label"),
         }
         self._dispatch_tracker_event(
             TRACKER_WELLNESS_STATUS_UPDATED, event["pet_id"], payload

@@ -157,35 +157,16 @@ class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
         super().__init__(coordinator=coordinator)
         self._panel = panel
         self._device = elmax_device
-        self._panel_version = panel_version
-        self._client = coordinator.http_client
-
-    @property
-    def panel_id(self) -> str:
-        """Retrieve the panel id."""
-        return self._panel.hash
-
-    @property
-    def unique_id(self) -> str | None:
-        """Provide a unique id for this entity."""
-        return self._device.endpoint_id
-
-    @property
-    def name(self) -> str | None:
-        """Return the entity name."""
-        return self._device.name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._panel.hash)},
-            name=self._panel.get_name_by_user(
-                self.coordinator.http_client.get_authenticated_username()
+        self._attr_unique_id = elmax_device.endpoint_id
+        self._attr_name = elmax_device.name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, panel.hash)},
+            name=panel.get_name_by_user(
+                coordinator.http_client.get_authenticated_username()
             ),
             manufacturer="Elmax",
-            model=self._panel_version,
-            sw_version=self._panel_version,
+            model=panel_version,
+            sw_version=panel_version,
         )
 
     @property

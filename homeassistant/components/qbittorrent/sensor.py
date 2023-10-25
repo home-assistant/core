@@ -6,32 +6,21 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-import voluptuous as vol
+from qbittorrent.client import Client, LoginRequired
+from requests.exceptions import RequestException
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_URL,
-    CONF_USERNAME,
-    STATE_IDLE,
-    UnitOfDataRate,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_IDLE, UnitOfDataRate
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 from .coordinator import QBittorrentDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,43 +86,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         value_fn=lambda data: format_speed(data["server_state"]["up_info_speed"]),
     ),
 )
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_URL): cv.url,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the qBittorrent platform."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2023.11.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "qBittorrent",
-        },
-    )
 
 
 async def async_setup_entry(

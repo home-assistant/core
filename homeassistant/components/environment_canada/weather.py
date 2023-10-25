@@ -22,8 +22,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     DOMAIN as WEATHER_DOMAIN,
-    CoordinatorWeatherEntity,
     Forecast,
+    SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -33,7 +33,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -86,7 +86,7 @@ def _calculate_unique_id(config_entry_unique_id: str | None, hourly: bool) -> st
     return f"{config_entry_unique_id}{'-hourly' if hourly else '-daily'}"
 
 
-class ECWeather(CoordinatorWeatherEntity):
+class ECWeather(SingleCoordinatorWeatherEntity):
     """Representation of a weather condition."""
 
     _attr_has_entity_name = True
@@ -182,11 +182,13 @@ class ECWeather(CoordinatorWeatherEntity):
         """Return the forecast array."""
         return get_forecast(self.ec_data, self._hourly)
 
-    async def async_forecast_daily(self) -> list[Forecast] | None:
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return get_forecast(self.ec_data, False)
 
-    async def async_forecast_hourly(self) -> list[Forecast] | None:
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return get_forecast(self.ec_data, True)
 

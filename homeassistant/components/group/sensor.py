@@ -136,6 +136,23 @@ async def async_setup_entry(
     )
 
 
+@callback
+def async_create_preview_sensor(
+    name: str, validated_config: dict[str, Any]
+) -> SensorGroup:
+    """Create a preview sensor."""
+    return SensorGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+        validated_config.get(CONF_IGNORE_NON_NUMERIC, False),
+        validated_config[CONF_TYPE],
+        None,
+        None,
+        None,
+    )
+
+
 def calc_min(
     sensor_values: list[tuple[str, float, State]]
 ) -> tuple[dict[str, str | None], float | None]:

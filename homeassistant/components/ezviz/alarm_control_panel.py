@@ -66,12 +66,12 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
-    device_info: DeviceInfo = {
-        "identifiers": {(DOMAIN, entry.unique_id)},  # type: ignore[arg-type]
-        "name": "EZVIZ Alarm",
-        "model": "EZVIZ Alarm",
-        "manufacturer": MANUFACTURER,
-    }
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, entry.unique_id)},  # type: ignore[arg-type]
+        name="EZVIZ Alarm",
+        model="EZVIZ Alarm",
+        manufacturer=MANUFACTURER,
+    )
 
     async_add_entities(
         [EzvizAlarm(coordinator, entry.entry_id, device_info, ALARM_TYPE)]

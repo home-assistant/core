@@ -1,7 +1,7 @@
 {
   "domain": "airtouch4",
   "name": "AirTouch 4",
-  "codeowners": ["@LonePurpleWolf"],
+  "codeowners": ["@samsinnamon"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airtouch4",
   "iot_class": "local_polling",

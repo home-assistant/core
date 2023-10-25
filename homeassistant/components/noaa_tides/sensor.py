@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 import noaa_coops as coops
 import requests
@@ -16,6 +17,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_system import METRIC_SYSTEM
+
+if TYPE_CHECKING:
+    from pandas import Timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,40 +80,56 @@ def setup_platform(
     add_entities([noaa_sensor], True)
 
 
+class NOAATidesData(TypedDict):
+    """Representation of a single tide."""
+
+    time_stamp: list[Timestamp]
+    hi_lo: list[Literal["L"] | Literal["H"]]
+    predicted_wl: list[float]
+
+
 class NOAATidesAndCurrentsSensor(SensorEntity):
     """Representation of a NOAA Tides and Currents sensor."""
 
     _attr_attribution = "Data provided by NOAA"
 
-    def __init__(self, name, station_id, timezone, unit_system, station):
+    def __init__(self, name, station_id, timezone, unit_system, station) -> None:
         """Initialize the sensor."""
         self._name = name
         self._station_id = station_id
         self._timezone = timezone
         self._unit_system = unit_system
         self._station = station
-        self.data = None
+        self.data: NOAATidesData | None = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this device."""
-        attr = {}
+        attr: dict[str, Any] = {}
         if self.data is None:
             return attr
         if self.data["hi_lo"][1] == "H":
-            attr["high_tide_time"] = self.data.index[1].strftime("%Y-%m-%dT%H:%M")
+            attr["high_tide_time"] = self.data["time_stamp"][1].strftime(
+                "%Y-%m-%dT%H:%M"
+            )
             attr["high_tide_height"] = self.data["predicted_wl"][1]
-            attr["low_tide_time"] = self.data.index[2].strftime("%Y-%m-%dT%H:%M")
+            attr["low_tide_time"] = self.data["time_stamp"][2].strftime(
+                "%Y-%m-%dT%H:%M"
+            )
             attr["low_tide_height"] = self.data["predicted_wl"][2]
         elif self.data["hi_lo"][1] == "L":
-            attr["low_tide_time"] = self.data.index[1].strftime("%Y-%m-%dT%H:%M")
+            attr["low_tide_time"] = self.data["time_stamp"][1].strftime(
+                "%Y-%m-%dT%H:%M"
+            )
             attr["low_tide_height"] = self.data["predicted_wl"][1]
-            attr["high_tide_time"] = self.data.index[2].strftime("%Y-%m-%dT%H:%M")
+            attr["high_tide_time"] = self.data["time_stamp"][2].strftime(
+                "%Y-%m-%dT%H:%M"
+            )
             attr["high_tide_height"] = self.data["predicted_wl"][2]
         return attr
 
@@ -118,7 +138,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         """Return the state of the device."""
         if self.data is None:
             return None
-        api_time = self.data.index[0]
+        api_time = self.data["time_stamp"][0]
         if self.data["hi_lo"][0] == "H":
             tidetime = api_time.strftime("%-I:%M %p")
             return f"High tide at {tidetime}"
@@ -142,8 +162,13 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
                 units=self._unit_system,
                 time_zone=self._timezone,
             )
-            self.data = df_predictions.head()
-            _LOGGER.debug("Data = %s", self.data)
+            api_data = df_predictions.head()
+            self.data = NOAATidesData(
+                time_stamp=list(api_data.index),
+                hi_lo=list(api_data["hi_lo"].values),
+                predicted_wl=list(api_data["predicted_wl"].values),
+            )
+            _LOGGER.debug("Data = %s", api_data)
             _LOGGER.debug(
                 "Recent Tide data queried with start time set to %s",
                 begin.strftime("%m-%d-%Y %H:%M"),

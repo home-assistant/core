@@ -3,6 +3,8 @@ from datetime import UTC, datetime
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.environment_canada.const import (
     CONF_LANGUAGE,
     CONF_STATION,
@@ -72,7 +74,9 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
 
 
 async def test_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
 
@@ -80,8 +84,5 @@ async def test_entry_diagnostics(
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
     )
-    redacted_entry = json.loads(
-        load_fixture("environment_canada/config_entry_data.json")
-    )
 
-    assert diagnostics == redacted_entry
+    assert diagnostics == snapshot
