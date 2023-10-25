@@ -90,8 +90,6 @@ CONTAINER_STATS = "stats"
 CONTAINER_CHANGELOG = "changelog"
 CONTAINER_INFO = "info"
 
-NEEDS_FIRST_UPDATE = {CONTAINER_INFO}
-
 # This is a mapping of which endpoint the key in the addon data
 # is obtained from so we know which endpoint to update when the
 # coordinator polls for updates.
