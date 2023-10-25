@@ -128,7 +128,7 @@ Tami4EdgeAPI==2.1
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==1.0.0
+accuweather==2.0.0
 
 # homeassistant.components.adax
 adax==0.3.0
@@ -218,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.0.11
+aioesphomeapi==18.0.12
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -344,7 +344,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==63
+aiounifi==64
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -704,7 +704,7 @@ georss-qld-bushfire-alert-client==0.5
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==3.1.0
+gios==3.2.0
 
 # homeassistant.components.glances
 glances-api==0.4.3
@@ -996,7 +996,7 @@ nessclient==1.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==2.1.0
+nettigo-air-monitor==2.2.0
 
 # homeassistant.components.nexia
 nexia==2.0.7
@@ -1115,7 +1115,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.33.1
+plugwise==0.33.2
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1158,7 +1158,7 @@ py-cpuinfo==9.0.0
 py-dormakaba-dkey==1.0.5
 
 # homeassistant.components.improv_ble
-py-improv-ble-client==1.0.2
+py-improv-ble-client==1.0.3
 
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4

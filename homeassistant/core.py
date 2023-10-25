@@ -2135,6 +2135,9 @@ class Config:
         # Use legacy template behavior
         self.legacy_templates: bool = False
 
+        # If Home Assistant is running in safe mode
+        self.safe_mode: bool = False
+
     def distance(self, lat: float, lon: float) -> float | None:
         """Calculate distance from Home Assistant.
 
@@ -2215,6 +2218,7 @@ class Config:
             "currency": self.currency,
             "country": self.country,
             "language": self.language,
+            "safe_mode": self.safe_mode,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
