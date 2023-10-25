@@ -58,6 +58,7 @@ class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
                 self._addon_slug, self.entity_id, update_types
             )
         )
+        await self.coordinator.async_request_refresh()
 
 
 class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
@@ -147,6 +148,7 @@ class HassioSupervisorEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
                 SUPERVISOR_CONTAINER, self.entity_id, update_types
             )
         )
+        await self.coordinator.async_request_refresh()
 
 
 class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
@@ -183,3 +185,4 @@ class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
                 CORE_CONTAINER, self.entity_id, update_types
             )
         )
+        await self.coordinator.async_request_refresh()
