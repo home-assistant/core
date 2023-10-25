@@ -1,11 +1,9 @@
 """Support for Comelit."""
-import asyncio
 from datetime import timedelta
 from typing import Any
 
-from aiocomelit import ComeliteSerialBridgeApi, ComelitSerialBridgeObject
+from aiocomelit import ComeliteSerialBridgeApi, ComelitSerialBridgeObject, exceptions
 from aiocomelit.const import BRIDGE
-import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -73,8 +71,9 @@ class ComelitSerialBridge(DataUpdateCoordinator):
         logged = False
         try:
             logged = await self.api.login()
-        except (asyncio.exceptions.TimeoutError, aiohttp.ClientConnectorError) as err:
+        except exceptions.CannotConnect as err:
             _LOGGER.warning("Connection error for %s", self._host)
+            await self.api.close()
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
         finally:
             if not logged:
