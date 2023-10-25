@@ -104,13 +104,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def authenticate(self) -> None:
         """Authenticate using Wallbox API."""
-        try:
-            self._wallbox.authenticate()
-
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
-                raise ConfigEntryAuthFailed from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
+        self._wallbox.authenticate()
 
     def _validate(self) -> None:
         """Authenticate using Wallbox API."""
