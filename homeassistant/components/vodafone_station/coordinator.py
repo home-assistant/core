@@ -95,7 +95,8 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Update router data."""
         _LOGGER.debug("Polling Vodafone Station host: %s", self._host)
         try:
-            await self.api.login()
+            if not await self.api.login():
+                raise ConfigEntryAuthFailed
         except exceptions.CannotConnect as err:
             _LOGGER.warning("Connection error for %s", self._host)
             await self.api.close()
