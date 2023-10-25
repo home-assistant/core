@@ -42,7 +42,10 @@ from . import (
 from tests.common import async_fire_time_changed, load_fixture
 
 
-async def test_remote_scanner(hass: HomeAssistant, enable_bluetooth: None) -> None:
+@pytest.mark.parametrize("name_2", [None, "w"])
+async def test_remote_scanner(
+    hass: HomeAssistant, enable_bluetooth: None, name_2: str | None
+) -> None:
     """Test the remote scanner base class merges advertisement_data."""
     manager = _get_manager()
 
@@ -61,7 +64,7 @@ async def test_remote_scanner(hass: HomeAssistant, enable_bluetooth: None) -> No
     )
     switchbot_device_2 = generate_ble_device(
         "44:44:33:11:23:45",
-        "w",
+        name_2,
         {},
         rssi=-100,
     )
