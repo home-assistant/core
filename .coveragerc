@@ -286,9 +286,6 @@ omit =
     homeassistant/components/edl21/__init__.py
     homeassistant/components/edl21/sensor.py
     homeassistant/components/egardia/*
-    homeassistant/components/eight_sleep/__init__.py
-    homeassistant/components/eight_sleep/binary_sensor.py
-    homeassistant/components/eight_sleep/sensor.py
     homeassistant/components/electric_kiwi/__init__.py
     homeassistant/components/electric_kiwi/api.py
     homeassistant/components/electric_kiwi/oauth2.py
