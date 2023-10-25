@@ -5,9 +5,9 @@ from typing import cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, Platform
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from . import DeviceAutomationType, async_get_device_automation_platform
@@ -55,31 +55,40 @@ async def async_validate_device_automation_config(
     platform = await async_get_device_automation_platform(
         hass, validated_config[CONF_DOMAIN], automation_type
     )
+
+    # Make sure the referenced device and optional entity exist
+    device_registry = dr.async_get(hass)
+    if not (device := device_registry.async_get(validated_config[CONF_DEVICE_ID])):
+        # The device referenced by the device automation does not exist
+        raise InvalidDeviceAutomationConfig(
+            f"Unknown device '{validated_config[CONF_DEVICE_ID]}'"
+        )
+    if entity := validated_config.get(CONF_ENTITY_ID):
+        try:
+            er.async_validate_entity_id(er.async_get(hass), entity)
+        except vol.Invalid as err:
+            raise InvalidDeviceAutomationConfig(f"Unknown entity '{entity}'") from err
+
     if not hasattr(platform, DYNAMIC_VALIDATOR[automation_type]):
         # Pass the unvalidated config to avoid mutating the raw config twice
         return cast(
             ConfigType, getattr(platform, STATIC_VALIDATOR[automation_type])(config)
         )
 
-    # Bypass checks for entity platforms
+    # The entity platforms have dynamic validators for actions, bypass the checks below
+    # for the correct config entry
     if (
         automation_type == DeviceAutomationType.ACTION
         and validated_config[CONF_DOMAIN] in ENTITY_PLATFORMS
     ):
+        # Pass the unvalidated config to avoid mutating the raw config twice
         return cast(
             ConfigType,
             await getattr(platform, DYNAMIC_VALIDATOR[automation_type])(hass, config),
         )
 
-    # Only call the dynamic validator if the referenced device exists and the relevant
-    # config entry is loaded
-    registry = dr.async_get(hass)
-    if not (device := registry.async_get(validated_config[CONF_DEVICE_ID])):
-        # The device referenced by the device automation does not exist
-        raise InvalidDeviceAutomationConfig(
-            f"Unknown device '{validated_config[CONF_DEVICE_ID]}'"
-        )
-
+    # Only call the dynamic validator if the referenced is tied to a config entry from
+    # the right domain and the relevant config entry is loaded
     device_config_entry = None
     for entry_id in device.config_entries:
         if (
