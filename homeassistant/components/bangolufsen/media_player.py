@@ -402,6 +402,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     async def _update_volume(self, data: VolumeState) -> None:
         """Update _volume."""
         self._volume = data
+
         self.async_write_ha_state()
 
     @property
@@ -517,7 +518,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         ):
             if (
                 len(self._playback_metadata.art) == 0
-                and self._playback_source.name == SOURCE_ENUM.bluetooth
+                and self._source_change.name == SOURCE_ENUM.bluetooth
             ):
                 return SOURCE_ENUM.bluetooth
 
