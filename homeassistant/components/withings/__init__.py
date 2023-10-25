@@ -62,7 +62,7 @@ from .coordinator import (
     WithingsWorkoutDataUpdateCoordinator,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -129,6 +129,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class WithingsData:
     """Dataclass to hold withings domain data."""
 
+    client: WithingsClient
     measurement_coordinator: WithingsMeasurementDataUpdateCoordinator
     sleep_coordinator: WithingsSleepDataUpdateCoordinator
     bed_presence_coordinator: WithingsBedPresenceDataUpdateCoordinator
@@ -174,6 +175,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client.refresh_token_function = _refresh_token
     withings_data = WithingsData(
+        client=client,
         measurement_coordinator=WithingsMeasurementDataUpdateCoordinator(hass, client),
         sleep_coordinator=WithingsSleepDataUpdateCoordinator(hass, client),
         bed_presence_coordinator=WithingsBedPresenceDataUpdateCoordinator(hass, client),
