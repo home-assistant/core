@@ -77,39 +77,38 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         self._command_state = self.get_command_id(
             node["type"]["endpoints"], "signal", "state"
         )
-
-        self.set_state(STATE_IDLE)
-        self.add_features(self._router.home_devices[self._id])
-        self.update_node(self._router.home_devices[self._id])
+        self._set_features(self._router.home_devices[self._id])
+        self._update_attrs(self._router.home_devices[self._id])
+        self._set_state(STATE_IDLE)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if await self.set_home_endpoint_value(self._command_disarm):
-            self.set_state(STATE_ALARM_DISARMED)
+            self._set_state(STATE_ALARM_DISARMED)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if await self.set_home_endpoint_value(self._command_arm_away):
-            self.set_state(STATE_ALARM_ARMING)
+            self._set_state(STATE_ALARM_ARMING)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if await self.set_home_endpoint_value(self._command_arm_home):
-            self.set_state(STATE_ALARM_ARMING)
+            self._set_state(STATE_ALARM_ARMING)
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         if await self.set_home_endpoint_value(self._command_trigger):
-            self.set_state(STATE_ALARM_TRIGGERED)
+            self._set_state(STATE_ALARM_TRIGGERED)
 
     async def async_update_signal(self):
         """Update signal."""
         state = await self.get_home_endpoint_value(self._command_state)
         if state:
-            self.set_state(state)
-            self.update_node(self._router.home_devices[self._id])
+            self._set_state(state)
+            self._update_attrs(self._router.home_devices[self._id])
 
-    def add_features(self, node: dict[str, Any]) -> None:
+    def _set_features(self, node: dict[str, Any]) -> None:
         """Add alarm features."""
         # Search if the arm home feature is present => has an "alarm2" endpoint
         can_arm_home = False
@@ -135,7 +134,7 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         else:
             self._attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
 
-    def update_node(self, node: dict[str, Any]) -> None:
+    def _update_attrs(self, node: dict[str, Any]) -> None:
         """Update the alarm."""
         # Parse all endpoints values
         for endpoint in filter(
@@ -143,7 +142,7 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         ):
             self._attr_extra_state_attributes[endpoint["name"]] = endpoint["value"]
 
-    def set_state(self, state: str) -> None:
+    def _set_state(self, state: str) -> None:
         """Update state."""
         self._attr_state = FREEBOX_TO_STATUS.get(state)
         if not self._attr_state:
