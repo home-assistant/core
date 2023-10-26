@@ -7,6 +7,7 @@ from typing import Any, TypeVar, cast
 
 from fitbit import Fitbit
 from fitbit.exceptions import HTTPException, HTTPUnauthorized
+from oauthlib.oauth2.rfc6749.errors import OAuth2Error
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
@@ -135,6 +136,9 @@ class FitbitApi(ABC):
         except HTTPUnauthorized as err:
             _LOGGER.debug("Unauthorized error from fitbit API: %s", err)
             raise FitbitAuthException("Authentication error from fitbit API") from err
+        except OAuth2Error as err:
+            _LOGGER.debug("OAuth error from fitbit API: %s", err)
+            raise FitbitAuthException("OAuth2 error from fitbit API") from err
         except HTTPException as err:
             _LOGGER.debug("Error from fitbit API: %s", err)
             raise FitbitApiException("Error from fitbit API") from err
