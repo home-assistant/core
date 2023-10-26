@@ -1269,7 +1269,7 @@ pydroid-ipcam==2.0.0
 pyecoforest==0.3.0
 
 # homeassistant.components.econet
-pyeconet==0.1.20
+pyeconet==0.1.22
 
 # homeassistant.components.efergy
 pyefergy==22.1.1
