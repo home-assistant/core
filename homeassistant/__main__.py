@@ -203,7 +203,14 @@ def main() -> int:
         safe_mode=safe_mode,
     )
 
-    fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
+    if runtime_conf.log_file is not None and os.path.exists(
+        os.path.dirname(runtime_conf.log_file)
+    ):
+        fault_file_name = os.path.join(
+            os.path.dirname(os.path.abspath(runtime_conf.log_file)), FAULT_LOG_FILENAME
+        )
+    else:
+        fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
     with open(fault_file_name, mode="a", encoding="utf8") as fault_file:
         faulthandler.enable(fault_file)
         exit_code = runner.run(runtime_conf)
