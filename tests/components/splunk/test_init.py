@@ -82,7 +82,8 @@ async def test_event_failures(
     )
 
     await setup_platform(hass)
-    # Other Failure
+
+    # Splunk Failure
     with patch(
         "hass_splunk.hass_splunk.queue",
         side_effect=SplunkPayloadError(
