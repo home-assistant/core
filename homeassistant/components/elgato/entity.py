@@ -23,6 +23,7 @@ class ElgatoEntity(CoordinatorEntity[ElgatoDataUpdateCoordinator]):
         super().__init__(coordinator=coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data.info.serial_number)},
+            serial_number=coordinator.data.info.serial_number,
             manufacturer="Elgato",
             model=coordinator.data.info.product_name,
             name=coordinator.data.info.display_name,
