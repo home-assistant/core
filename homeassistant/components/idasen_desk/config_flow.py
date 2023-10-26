@@ -69,8 +69,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "auth_failed"
             except TimeoutError:
                 errors["base"] = "cannot_connect"
-            except BleakError as err:
-                _LOGGER.exception("Unexpected Bluetooth error", exc_info=err)
+            except BleakError:
+                _LOGGER.exception("Unexpected Bluetooth error")
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected error")
