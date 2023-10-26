@@ -90,6 +90,13 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    scan_filter: str | None = None
+    atv: BaseConfig | None = None
+    atv_identifiers: list[str] | None = None
+    protocol: Protocol | None = None
+    pairing: PairingHandler | None = None
+    protocols_to_pair: deque[Protocol] | None = None
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -100,13 +107,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize a new AppleTVConfigFlow."""
-        self.scan_filter: str | None = None
-        self.atv: BaseConfig | None = None
-        self.atv_identifiers: list[str] | None = None
-        self.protocol: Protocol | None = None
-        self.pairing: PairingHandler | None = None
         self.credentials: dict[int, str | None] = {}  # Protocol -> credentials
-        self.protocols_to_pair: deque[Protocol] = deque()
 
     @property
     def device_identifier(self) -> str | None:

@@ -95,15 +95,16 @@ class AppleTVManager(DeviceListener):
     in case of problems.
     """
 
+    atv: AppleTV | None = None
+    _connection_attempts = 0
+    _connection_was_lost = False
+    _task: asyncio.Task[None] | None = None
+
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize power manager."""
         self.config_entry = config_entry
         self.hass = hass
-        self.atv: AppleTV | None = None
         self.is_on = not config_entry.options.get(CONF_START_OFF, False)
-        self._connection_attempts = 0
-        self._connection_was_lost = False
-        self._task: asyncio.Task[None] | None = None
 
     async def init(self) -> None:
         """Initialize power management."""
