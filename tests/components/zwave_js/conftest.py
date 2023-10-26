@@ -677,9 +677,19 @@ def central_scene_node_state_fixture():
 # model fixtures
 
 
+@pytest.fixture(name="listen_block")
+def mock_listen_block_fixture():
+    """Mock a listen block."""
+    return asyncio.Event()
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(
-    controller_state, controller_node_state, version_state, log_config_state
+    controller_state,
+    controller_node_state,
+    version_state,
+    log_config_state,
+    listen_block,
 ):
     """Mock a client."""
     with patch(
@@ -693,9 +703,7 @@ def mock_client_fixture(
 
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
-            listen_block = asyncio.Event()
             await listen_block.wait()
-            pytest.fail("Listen wasn't canceled!")
 
         async def disconnect():
             client.connected = False

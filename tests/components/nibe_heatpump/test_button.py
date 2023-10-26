@@ -17,19 +17,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import async_add_entry
+from . import async_add_model
 
 from tests.common import async_fire_time_changed
-
-MOCK_ENTRY_DATA = {
-    "model": None,
-    "ip_address": "127.0.0.1",
-    "listening_port": 9999,
-    "remote_read_port": 10000,
-    "remote_write_port": 10001,
-    "word_swap": True,
-    "connection_type": "nibegw",
-}
 
 
 @pytest.fixture(autouse=True)
@@ -62,7 +52,7 @@ async def test_reset_button(
     coils[unit.alarm_reset] = 0
     coils[unit.alarm] = 0
 
-    await async_add_entry(hass, {**MOCK_ENTRY_DATA, "model": model.name})
+    await async_add_model(hass, model)
 
     state = hass.states.get(entity_id)
     assert state

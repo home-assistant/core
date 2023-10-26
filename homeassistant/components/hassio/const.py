@@ -16,6 +16,7 @@ ATTR_ENDPOINT = "endpoint"
 ATTR_FOLDERS = "folders"
 ATTR_HEALTHY = "healthy"
 ATTR_HOMEASSISTANT = "homeassistant"
+ATTR_HOMEASSISTANT_EXCLUDE_DATABASE = "homeassistant_exclude_database"
 ATTR_INPUT = "input"
 ATTR_ISSUES = "issues"
 ATTR_METHOD = "method"
@@ -99,6 +100,8 @@ KEY_TO_UPDATE_TYPES: dict[str, set[str]] = {
     ATTR_VERSION: {CONTAINER_INFO},
     ATTR_STATE: {CONTAINER_INFO},
 }
+
+REQUEST_REFRESH_DELAY = 10
 
 
 class SupervisorEntityModel(StrEnum):
