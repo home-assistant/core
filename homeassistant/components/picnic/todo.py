@@ -66,7 +66,7 @@ class PicnicCart(TodoListEntity, CoordinatorEntity):
                     TodoItem(
                         summary=f"{article['name']} ({article['unit_quantity']}) - €{article['price'] / 100}",
                         uid=f"{item['id']}-{article['id']}",
-                        status=TodoItemStatus.COMPLETED,
+                        status=TodoItemStatus.NEEDS_ACTION,  # We set 'NEEDS_ACTION' so they count as state
                     )
                 )
 
