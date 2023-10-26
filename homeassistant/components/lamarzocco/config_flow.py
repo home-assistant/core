@@ -47,8 +47,6 @@ LOGIN_DATA_SCHEMA = vol.Schema(
     extra=vol.PREVENT_EXTRA,
 )
 
-STEP_MACHINE_SELECTION_SCHEMA: vol.Schema
-
 STEP_REAUTH_DATA_SCHEMA = LOGIN_DATA_SCHEMA.extend(
     {
         vol.Required(CONF_CLIENT_ID, default=DEFAULT_CLIENT_ID): cv.string,
