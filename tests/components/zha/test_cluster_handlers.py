@@ -842,6 +842,29 @@ async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
     assert "missing_attr" in caplog.text
 
 
+async def test_standard_cluster_handler(hass: HomeAssistant, caplog) -> None:
+    """Test setting up a cluster handler that matches a standard cluster."""
+
+    mock_device = mock.AsyncMock(spec_set=zigpy.device.Device)
+    zigpy_ep = zigpy.endpoint.Endpoint(mock_device, endpoint_id=1)
+
+    cluster = zigpy_ep.add_input_cluster(zigpy.zcl.clusters.lighting.Color.cluster_id)
+    cluster.configure_reporting_multiple = AsyncMock(
+        spec_set=cluster.configure_reporting_multiple,
+        return_value=[
+            foundation.ConfigureReportingResponseRecord(
+                status=foundation.Status.SUCCESS
+            )
+        ],
+    )
+
+    mock_zha_device = mock.AsyncMock(spec=ZHADevice)
+    mock_zha_device.quirk_id = None
+    zha_endpoint = Endpoint(zigpy_ep, mock_zha_device)
+
+    zha_endpoint.add_all_cluster_handlers()
+
+
 # parametrize side effects:
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),

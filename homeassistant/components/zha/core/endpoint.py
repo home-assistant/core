@@ -117,17 +117,14 @@ class Endpoint:
             cluster_handler_classes = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
                 cluster_id, {None: ClusterHandler}
             )
-            cluster_handler_class = cluster_handler_classes.get(self.device.quirk_id)
-
-            if cluster_handler_class is None:
-                # This should never occur, but mypy doesn't like it.
-                _LOGGER.warning(
-                    "Cluster ID '%d' matched with Cluster classes: %s, but Quirk ID '%s' didn't match any of them",
-                    cluster_id,
-                    cluster_handler_classes,
-                    self.device.quirk_id,
-                )
-                cluster_handler_class = ClusterHandler
+            quirk_id = (
+                self.device.quirk_id
+                if self.device.quirk_id in cluster_handler_classes
+                else None
+            )
+            cluster_handler_class = cluster_handler_classes.get(
+                quirk_id, ClusterHandler
+            )
 
             # Allow cluster handler to filter out bad matches
             if not cluster_handler_class.matches(cluster, self):
