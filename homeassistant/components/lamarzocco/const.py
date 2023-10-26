@@ -32,3 +32,5 @@ DAYS: Final = [MON, TUE, WED, THU, FRI, SAT, SUN]
 
 MACHINE_NAME: Final = "machine_name"
 SERIAL_NUMBER: Final = "serial_number"
+
+CONF_MACHINE: Final = "machine"

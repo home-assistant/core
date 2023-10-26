@@ -62,11 +62,12 @@ class LaMarzoccoEntity(CoordinatorEntity):
             """Convert boolean values to strings to improve display in Lovelace."""
             return str(value) if isinstance(value, bool) else value
 
-        def tuple_to_str(key: tuple[str, ...]) -> str:
+        def tuple_to_str(key: tuple[str, ...] | str) -> str:
             """Convert tuple keys to strings."""
             if isinstance(key, tuple):
                 joined_key = "_".join(key)
-            return joined_key
+                return joined_key
+            return key
 
         data = self._lm_client.current_status
         attr = self.entity_description.extra_attributes.get(self._lm_client.model_name)

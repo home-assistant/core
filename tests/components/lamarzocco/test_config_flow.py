@@ -14,7 +14,8 @@ from . import (
     DISCOVERED_INFO,
     LM_SERVICE_INFO,
     LOGIN_INFO,
-    MACHINE_NAME,
+    MACHINE_DATA,
+    MACHINE_SELECTION,
     USER_INPUT,
     WRONG_LOGIN_INFO,
 )
@@ -47,21 +48,49 @@ async def test_form(hass: HomeAssistant, mock_lamarzocco: MagicMock) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "machine_selection"
 
-    assert result2["title"] == MACHINE_NAME
-    assert result2["data"] == USER_INPUT | DEFAULT_CONF
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        MACHINE_SELECTION,
+    )
+    await hass.async_block_till_done()
 
-    assert len(mock_lamarzocco.try_connect.mock_calls) == 1
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
 
-    # now test for single instance abort
+    assert result3["title"] == "GS3AV"
+    assert result3["data"] == USER_INPUT | DEFAULT_CONF | MACHINE_DATA
+
+    assert len(mock_lamarzocco.check_local_connection.mock_calls) == 1
+
+    # test abort if already configured
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
 
-    assert len(mock_lamarzocco.try_connect.mock_calls) == 1
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "machine_selection"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        MACHINE_SELECTION,
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.ABORT
+
+    assert result3["reason"] == "already_configured"
+
+    assert len(mock_lamarzocco.check_local_connection.mock_calls) == 1
 
 
 async def test_form_invalid_auth(
@@ -69,7 +98,7 @@ async def test_form_invalid_auth(
 ) -> None:
     """Test invalid auth error."""
 
-    mock_lamarzocco.try_connect.side_effect = AuthFail("")
+    mock_lamarzocco.get_all_machines.side_effect = AuthFail("")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -81,7 +110,39 @@ async def test_form_invalid_auth(
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
-    assert len(mock_lamarzocco.try_connect.mock_calls) == 1
+    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
+
+
+async def test_form_invalid_host(
+    hass: HomeAssistant, mock_lamarzocco: MagicMock
+) -> None:
+    """Test invalid auth error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    mock_lamarzocco.check_local_connection.return_value = False
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "machine_selection"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {"machine": "GS3AV (GS01234)", "host": "192.168.1.1"},
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["errors"] == {"host": "cannot_connect"}
+    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
 
 
 async def test_form_cannot_connect(
@@ -89,7 +150,7 @@ async def test_form_cannot_connect(
 ) -> None:
     """Test cannot connect error."""
 
-    mock_lamarzocco.try_connect.side_effect = RequestNotSuccessful("")
+    mock_lamarzocco.get_all_machines.side_effect = RequestNotSuccessful("")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -102,7 +163,7 @@ async def test_form_cannot_connect(
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
-    assert len(mock_lamarzocco.try_connect.mock_calls) == 1
+    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
 
 
 async def test_bluetooth_discovery(
@@ -122,9 +183,22 @@ async def test_bluetooth_discovery(
         result["flow_id"],
         USER_INPUT,
     )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["data"] == USER_INPUT | DEFAULT_CONF | DISCOVERED_INFO
-    assert len(mock_lamarzocco.try_connect.mock_calls) == 1
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "machine_selection"
+
+    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        MACHINE_SELECTION,
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+
+    assert result3["title"] == "GS3AV"
+    assert result3["data"] == USER_INPUT | DEFAULT_CONF | MACHINE_DATA | DISCOVERED_INFO
+
+    assert len(mock_lamarzocco.check_local_connection.mock_calls) == 1
 
 
 async def test_show_reauth(
@@ -172,7 +246,7 @@ async def test_reauth_flow(
     assert result2["type"] == FlowResultType.ABORT
     await hass.async_block_till_done()
     assert result2["reason"] == "reauth_successful"
-    assert len(mock_lamarzocco.try_connect.mock_calls) == 1
+    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
 
 
 async def test_reauth_errors(
@@ -191,7 +265,7 @@ async def test_reauth_errors(
         data=mock_config_entry.data,
     )
 
-    mock_lamarzocco.try_connect.side_effect = AuthFail("")
+    mock_lamarzocco.get_all_machines.side_effect = AuthFail("")
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -201,9 +275,9 @@ async def test_reauth_errors(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
-    assert len(mock_lamarzocco.try_connect.mock_calls) == 1
+    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
 
-    mock_lamarzocco.try_connect.side_effect = RequestNotSuccessful("")
+    mock_lamarzocco.get_all_machines.side_effect = RequestNotSuccessful("")
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -213,4 +287,4 @@ async def test_reauth_errors(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    assert len(mock_lamarzocco.try_connect.mock_calls) == 2
+    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 2

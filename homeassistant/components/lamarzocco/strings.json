@@ -3,7 +3,7 @@
     "flow_title": "La Marzocco Espresso {host}",
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -13,14 +13,21 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::ip%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "Local IP address of the machine",
           "password": "Your password from the La Marzocco app",
           "username": "Your username from the La Marzocco app"
+        }
+      },
+      "machine_selection": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "machine": "Machine"
+        },
+        "data_description": {
+          "host": "Local IP address of the machine"
         }
       },
       "reauth_confirm": {

@@ -79,7 +79,8 @@ class LaMarzoccoClient(LMCloud):
         """Connect to the machine."""
         _LOGGER.debug("Initializing Cloud API")
         await self._init_cloud_api(
-            credentials=self._get_credentials_from_entry_data(self._entry_data)
+            credentials=self._get_credentials_from_entry_data(self._entry_data),
+            machine_serial=self._entry_data.get(SERIAL_NUMBER),
         )
         _LOGGER.debug("Model name: %s", self.model_name)
 
