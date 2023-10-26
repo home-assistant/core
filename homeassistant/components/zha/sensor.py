@@ -1142,7 +1142,7 @@ class DanfossOpenWindowDetectionEnum(types.enum8):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss_thermostat"},
+    quirk_ids={"danfoss.thermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossOpenWindowDetection(EnumSensor):
@@ -1160,7 +1160,7 @@ class DanfossOpenWindowDetection(EnumSensor):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss_thermostat"},
+    quirk_ids={"danfoss.thermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossLoadEstimate(Sensor):
@@ -1174,7 +1174,7 @@ class DanfossLoadEstimate(Sensor):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss_thermostat"},
+    quirk_ids={"danfoss.thermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossAdaptationRunStatus(BitMapSensor):
@@ -1194,7 +1194,7 @@ class DanfossAdaptationRunStatus(BitMapSensor):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss_thermostat"},
+    quirk_ids={"danfoss.thermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossPreheatTime(Sensor):
@@ -1209,7 +1209,7 @@ class DanfossPreheatTime(Sensor):
 
 @MULTI_MATCH(
     cluster_handler_names="diagnostic",
-    quirk_ids={"danfoss_thermostat"},
+    quirk_ids={"danfoss.thermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossSoftwareErrorCode(BitMapSensor):
@@ -1242,7 +1242,7 @@ class DanfossSoftwareErrorCode(BitMapSensor):
 
 @MULTI_MATCH(
     cluster_handler_names="diagnostic",
-    quirk_ids={"danfoss_thermostat"},
+    quirk_ids={"danfoss.thermostat"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossMotorStepCounter(Sensor):
