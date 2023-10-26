@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
+from collections import deque
 from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
 import dataclasses
 from datetime import timedelta
@@ -74,6 +75,9 @@ DATA_ENTITY_SOURCE = "entity_info"
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
+
+# How many times per hour we allow capabilities to be updated before logging a warning
+CAPABILITIES_UPDATE_LIMIT = 100
 
 
 @callback
@@ -311,6 +315,8 @@ class Entity(ABC):
     # and removes the need for constant None checks or asserts.
     _state_info: StateInfo = None  # type: ignore[assignment]
 
+    __capabilities_updated_at: deque[float]
+    __capabilities_updated_at_reported: bool = False
     __remove_event: asyncio.Event | None = None
 
     # Entity Properties
@@ -848,7 +854,7 @@ class Entity(ABC):
         end = timer()
 
         if entry:
-            # Make sure capabilities in the entity registry is up to date. Capabilities
+            # Make sure capabilities in the entity registry are up to date. Capabilities
             # include capability attributes, device class and supported features
             device_class: str | None = attr.get(ATTR_DEVICE_CLASS)
             supported_features: int = attr.get(ATTR_SUPPORTED_FEATURES) or 0
@@ -857,6 +863,26 @@ class Entity(ABC):
                 or device_class != entry.original_device_class
                 or supported_features != entry.supported_features
             ):
+                time_now = hass.loop.time()
+                capabilities_updated_at = self.__capabilities_updated_at
+                capabilities_updated_at.append(time_now)
+                while time_now - capabilities_updated_at[0] > 3600:
+                    capabilities_updated_at.popleft()
+                if (
+                    not self.__capabilities_updated_at_reported
+                    and len(capabilities_updated_at) >= CAPABILITIES_UPDATE_LIMIT
+                ):
+                    self.__capabilities_updated_at_reported = True
+                    report_issue = self._suggest_report_issue()
+                    _LOGGER.warning(
+                        (
+                            "Entity %s (%s) is updating its capabilities too often. "
+                            "Please %s"
+                        ),
+                        entity_id,
+                        type(self),
+                        report_issue,
+                    )
                 entity_registry = er.async_get(self.hass)
                 self.registry_entry = entity_registry.async_update_entity(
                     self.entity_id,
@@ -1137,6 +1163,8 @@ class Entity(ABC):
                 )
             )
             self._async_subscribe_device_updates()
+
+        self.__capabilities_updated_at = deque(maxlen=CAPABILITIES_UPDATE_LIMIT)
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.

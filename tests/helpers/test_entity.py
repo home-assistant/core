@@ -8,6 +8,7 @@ import threading
 from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -1767,7 +1768,7 @@ async def test_update_capabilities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test calling async_update_capabilities."""
+    """Test entity capabilities are updated automatically."""
     platform = MockEntityPlatform(hass)
 
     entity = MockEntity(unique_id="qwer")
@@ -1801,7 +1802,7 @@ async def test_update_capabilities_no_unique_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test calling async_update_capabilities."""
+    """Test entity capabilities are updated automatically."""
     platform = MockEntityPlatform(hass)
 
     entity = MockEntity()
@@ -1813,3 +1814,88 @@ async def test_update_capabilities_no_unique_id(
     entity._values["supported_features"] = 127
     entity.async_write_ha_state()
     assert entity_registry.async_get(entity.entity_id) is None
+
+
+async def test_update_capabilities_too_often(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity capabilities are updated automatically."""
+    capabilities_too_often_warning = "is updating its capabilities too often"
+    platform = MockEntityPlatform(hass)
+
+    entity = MockEntity(unique_id="qwer")
+    await platform.async_add_entities([entity])
+
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry.capabilities is None
+    assert entry.device_class is None
+    assert entry.supported_features == 0
+
+    for supported_features in range(1, 100):
+        entity._values["capability_attributes"] = {"bla": "blu"}
+        entity._values["device_class"] = "some_class"
+        entity._values["supported_features"] = supported_features
+        entity.async_write_ha_state()
+        entry = entity_registry.async_get(entity.entity_id)
+        assert entry.capabilities == {"bla": "blu"}
+        assert entry.original_device_class == "some_class"
+        assert entry.supported_features == supported_features
+
+    assert capabilities_too_often_warning not in caplog.text
+
+    entity._values["capability_attributes"] = {"bla": "blu"}
+    entity._values["device_class"] = "some_class"
+    entity._values["supported_features"] = supported_features + 1
+    entity.async_write_ha_state()
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry.capabilities == {"bla": "blu"}
+    assert entry.original_device_class == "some_class"
+    assert entry.supported_features == supported_features + 1
+
+    assert capabilities_too_often_warning in caplog.text
+
+
+async def test_update_capabilities_too_often_cooldown(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test entity capabilities are updated automatically."""
+    capabilities_too_often_warning = "is updating its capabilities too often"
+    platform = MockEntityPlatform(hass)
+
+    entity = MockEntity(unique_id="qwer")
+    await platform.async_add_entities([entity])
+
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry.capabilities is None
+    assert entry.device_class is None
+    assert entry.supported_features == 0
+
+    for supported_features in range(1, 100):
+        entity._values["capability_attributes"] = {"bla": "blu"}
+        entity._values["device_class"] = "some_class"
+        entity._values["supported_features"] = supported_features
+        entity.async_write_ha_state()
+        entry = entity_registry.async_get(entity.entity_id)
+        assert entry.capabilities == {"bla": "blu"}
+        assert entry.original_device_class == "some_class"
+        assert entry.supported_features == supported_features
+
+    assert capabilities_too_often_warning not in caplog.text
+
+    freezer.tick(timedelta(minutes=60) + timedelta(seconds=1))
+
+    entity._values["capability_attributes"] = {"bla": "blu"}
+    entity._values["device_class"] = "some_class"
+    entity._values["supported_features"] = supported_features + 1
+    entity.async_write_ha_state()
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry.capabilities == {"bla": "blu"}
+    assert entry.original_device_class == "some_class"
+    assert entry.supported_features == supported_features + 1
+
+    assert capabilities_too_often_warning not in caplog.text
