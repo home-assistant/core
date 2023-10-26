@@ -13,6 +13,7 @@ APPLICATION_CREDENTIALS = [
     "google_sheets",
     "google_tasks",
     "home_connect",
+    "iotty",
     "lametric",
     "lyric",
     "myuplink",
