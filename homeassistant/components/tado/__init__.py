@@ -40,6 +40,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.SENSOR,
     Platform.WATER_HEATER,
+    Platform.DEVICE_TRACKER,
 ]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)

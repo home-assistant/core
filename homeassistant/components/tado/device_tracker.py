@@ -1,125 +1,92 @@
 """Support for Tado Smart device trackers."""
 from __future__ import annotations
 
-import asyncio
-from collections import namedtuple
-from datetime import timedelta
 import logging
+from typing import Any
 
-import voluptuous as vol
+from homeassistant.components.device_tracker import SourceType
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
-    DeviceScanner,
-)
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import Throttle
-
-from . import TadoConnector
-from .const import CONST_OVERLAY_TADO_DEFAULT
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_HOME_ID = "home_id"
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Tado device scannery entity."""
+    _LOGGER.debug("Setting up Tado device scanner entity")
+    tado_device = hass.data[DOMAIN][entry.entry_id]
+    tracked: set = set()
 
-PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOME_ID): cv.string,
-    }
-)
+    @callback
+    async def async_update_devices() -> None:
+        """Update the values of the devices."""
+        await async_add_tracked_entities(hass, tado_device, async_add_entities, tracked)
 
-
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> TadoDeviceScanner | None:
-    """Return a Tado scanner."""
-    scanner = TadoDeviceScanner(hass, config[DOMAIN])
-    return scanner if scanner.success_init else None  # type: ignore [has-type]
-
-
-Device = namedtuple("Device", ["mac", "name"])
+    await async_update_devices()
 
 
-class TadoDeviceScanner(DeviceScanner):
-    """Scanner for geofenced devices from Tado."""
+@callback
+async def async_add_tracked_entities(
+    hass: HomeAssistant,
+    tado_device: Any,
+    async_add_entities: AddEntitiesCallback,
+    tracked: set[str],
+) -> None:
+    """Add new tracker entities from Tado."""
+    new_tracked = []
+    _LOGGER.debug("Fetching Tado devices from API")
+    known_devices = await hass.async_add_executor_job(tado_device["data"].get_me)
 
-    def __init__(self, hass: HomeAssistant, config) -> None:
-        """Initialize the scanner."""
-        self.hass = hass
-        self.last_results: list[str] = []
-
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
-        self.fallback = CONST_OVERLAY_TADO_DEFAULT
-
-        # The Tado device tracker can work with or without a home_id
-        self.home_id = config[CONF_HOME_ID] if CONF_HOME_ID in config else None
-
-        self.tadoconnector = TadoConnector(
-            self.hass, self.username, self.password, self.fallback
-        )
-
-        self.success_init = asyncio.run_coroutine_threadsafe(
-            self._async_update_info(), hass.loop
-        ).result()
-
-        _LOGGER.info("Scanner initialized")
-
-    async def async_scan_devices(self):
-        """Scan for devices and return a list containing found device ids."""
-        await self._async_update_info()
-        return [device.mac for device in self.last_results]
-
-    async def async_get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        filter_named = [
-            result.name for result in self.last_results if result.mac == device
-        ]
-
-        if filter_named:
-            return filter_named[0]
-        return None
-
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
-    async def _async_update_info(self):
-        """Query Tado for device marked as at home.
-
-        Returns boolean if scanning successful.
-        """
-        _LOGGER.debug("Requesting Tado")
-        last_results = []
-
-        await self.hass.async_add_executor_job(self.tadoconnector.setup)
-        if self.home_id is None:
-            tado_json = await self.hass.async_add_executor_job(self.tadoconnector.getMe)
-        else:
-            tado_json = await self.hass.async_add_executor_job(
-                self.tadoconnector.getMobileDevices
+    for device in known_devices["mobileDevices"]:
+        if device["id"] in tracked:
+            continue
+        if device.get("location") and device["location"]["atHome"]:
+            _LOGGER.debug("Adding Tado device %s", device["name"])
+            new_tracked.append(
+                TadoDeviceTrackerEntity(str(device["id"]), device["name"])
             )
+            tracked.add(device["id"])
 
-        # Without a home_id, we fetched an URL where the mobile devices can be
-        # found under the mobileDevices key.
-        if "mobileDevices" in tado_json:
-            tado_json = tado_json["mobileDevices"]
+    _LOGGER.debug(
+        "Tado presence query successful, %d device(s) at home",
+        len(new_tracked),
+    )
+    async_add_entities(new_tracked)
 
-        # Find devices that have geofencing enabled, and are currently at home.
-        for mobile_device in tado_json:
-            if mobile_device.get("location") and mobile_device["location"]["atHome"]:
-                device_id = mobile_device["id"]
-                device_name = mobile_device["name"]
-                last_results.append(Device(device_id, device_name))
 
-        self.last_results = last_results
+class TadoDeviceTrackerEntity(ScannerEntity):
+    """A Tado Device Tracker entity."""
 
-        _LOGGER.debug(
-            "Tado presence query successful, %d device(s) at home",
-            len(self.last_results),
-        )
+    def __init__(self, device_id, device_name) -> None:
+        """Initialize a Tado Device Tracker entity."""
+        super().__init__()
+        self.device_id = device_id
+        self.device_name = device_name
 
+    @property
+    def name(self) -> str:
+        """Return the name of the device."""
+        return self.device_name
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self.device_id
+
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the device is connected and home."""
         return True
+
+    @property
+    def source_type(self) -> SourceType:
+        """Return the source type."""
+        return SourceType.GPS
