@@ -515,7 +515,7 @@ DATA_LAN_GET_HOSTS_LIST = [
 
 # Home
 # PIR node id 26, endpoint id 6
-DATA_HOME_GET_VALUES = {
+DATA_HOME_PIR_GET_VALUES = {
     "category": "",
     "ep_type": "signal",
     "id": 6,
