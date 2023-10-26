@@ -13,7 +13,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
-    STATE_IDLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -79,7 +78,6 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         )
         self._set_features(self._router.home_devices[self._id])
         self._update_attrs(self._router.home_devices[self._id])
-        self._set_state(STATE_IDLE)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
