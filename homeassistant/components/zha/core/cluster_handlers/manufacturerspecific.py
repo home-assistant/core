@@ -1,14 +1,13 @@
 """Manufacturer specific cluster handlers module for Zigbee Home Automation."""
 from __future__ import annotations
 
-from collections.abc import Collection
 import logging
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 import zigpy.zcl
-from zigpy.zcl.clusters.closures import DoorLock
 from zigpy.zcl import clusters
+from zigpy.zcl.clusters.closures import DoorLock
 
 from homeassistant.core import callback
 
@@ -389,104 +388,80 @@ class IkeaRemote(ClusterHandler):
 class XiaomiVibrationAQ1ClusterHandler(MultistateInput):
     """Xiaomi DoorLock Cluster is in fact a MultiStateInput Cluster."""
 
-def compare_quirk_class(endpoint: Endpoint, names: str | Collection[str]):
-    """Return True if the last two words separated by dots equal the words between the dots in name.
-
-    This function should probably be moved to the base class
-    """
-    if isinstance(names, str):
-        names = {names}
-
-    return tuple(endpoint.device.quirk_class.rsplit(".", 2)[1:]) in {
-        tuple(name.split(".")) for name in names
-    }
-
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    clusters.hvac.Thermostat.cluster_id
+    clusters.hvac.Thermostat.cluster_id, "danfoss_thermostat"
 )
-class ManufacturerSpecificThermostat(ThermostatClusterHandler):
+class DanfossThermostatClusterHandler(ThermostatClusterHandler):
     """TRV Channel class for the Danfoss TRV and derivatives."""
 
     def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Extend ThermostatClusterHandler."""
 
-        if compare_quirk_class(endpoint, "thermostat.DanfossThermostat"):
-            self.REPORT_CONFIG = (  # type: ignore[assignment]
-                *self.REPORT_CONFIG,
-                AttrReportConfig(
-                    attr="open_window_detection", config=REPORT_CONFIG_DEFAULT
-                ),
-                AttrReportConfig(attr="heat_required", config=REPORT_CONFIG_ASAP),
-                AttrReportConfig(
-                    attr="mounting_mode_active", config=REPORT_CONFIG_DEFAULT
-                ),
-                AttrReportConfig(attr="load_estimate", config=REPORT_CONFIG_DEFAULT),
-                AttrReportConfig(
-                    attr="adaptation_run_status", config=REPORT_CONFIG_DEFAULT
-                ),
-                AttrReportConfig(attr="preheat_status", config=REPORT_CONFIG_DEFAULT),
-                AttrReportConfig(attr="preheat_time", config=REPORT_CONFIG_DEFAULT),
-            )
+        self.REPORT_CONFIG = (  # type: ignore[assignment]
+            *self.REPORT_CONFIG,
+            AttrReportConfig(
+                attr="open_window_detection", config=REPORT_CONFIG_DEFAULT
+            ),
+            AttrReportConfig(attr="heat_required", config=REPORT_CONFIG_ASAP),
+            AttrReportConfig(attr="mounting_mode_active", config=REPORT_CONFIG_DEFAULT),
+            AttrReportConfig(attr="load_estimate", config=REPORT_CONFIG_DEFAULT),
+            AttrReportConfig(
+                attr="adaptation_run_status", config=REPORT_CONFIG_DEFAULT
+            ),
+            AttrReportConfig(attr="preheat_status", config=REPORT_CONFIG_DEFAULT),
+            AttrReportConfig(attr="preheat_time", config=REPORT_CONFIG_DEFAULT),
+        )
 
-            self.ZCL_INIT_ATTRS = {
-                **self.ZCL_INIT_ATTRS,
-                "external_open_window_detected": True,
-                "window_open_feature": True,
-                "exercise_day_of_week": True,
-                "exercise_trigger_time": True,
-                "mounting_mode_control": False,  # Can change
-                "orientation": True,
-                "external_measured_room_sensor": False,  # Can change
-                "radiator_covered": True,
-                "heat_available": True,
-                "load_balancing_enable": True,
-                "load_room_mean": False,  # Can change
-                "control_algorithm_scale_factor": True,
-                "regulation_setpoint_offset": True,
-                "adaptation_run_control": True,
-                "adaptation_run_settings": True,
-            }
+        self.ZCL_INIT_ATTRS = {
+            **self.ZCL_INIT_ATTRS,
+            "external_open_window_detected": True,
+            "window_open_feature": True,
+            "exercise_day_of_week": True,
+            "exercise_trigger_time": True,
+            "mounting_mode_control": False,  # Can change
+            "orientation": True,
+            "external_measured_room_sensor": False,  # Can change
+            "radiator_covered": True,
+            "heat_available": True,
+            "load_balancing_enable": True,
+            "load_room_mean": False,  # Can change
+            "control_algorithm_scale_factor": True,
+            "regulation_setpoint_offset": True,
+            "adaptation_run_control": True,
+            "adaptation_run_settings": True,
+        }
 
         super().__init__(cluster, endpoint)
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    clusters.hvac.UserInterface.cluster_id
+    clusters.hvac.UserInterface.cluster_id, "danfoss_thermostat"
 )
-class ManufacturerSpecificUserInterface(UserInterface):
+class DanfossUserInterfaceClusterHandler(UserInterface):
     """Interface Channel class for the Danfoss TRV and derivatives."""
 
     def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Extend UserInterface."""
 
-        if compare_quirk_class(endpoint, "thermostat.DanfossThermostat"):
-            self.ZCL_INIT_ATTRS = {**self.ZCL_INIT_ATTRS, "viewing_direction": True}
+        self.ZCL_INIT_ATTRS = {**self.ZCL_INIT_ATTRS, "viewing_direction": True}
 
         super().__init__(cluster, endpoint)
 
-    @classmethod
-    def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
-        """Filter the cluster match for specific devices."""
-        return compare_quirk_class(endpoint, "thermostat.DanfossThermostat")
-
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    clusters.homeautomation.Diagnostic.cluster_id
+    clusters.homeautomation.Diagnostic.cluster_id, "danfoss_thermostat"
 )
-class ManufacturerSpecificDiagnostic(Diagnostic):
+class DanfossDiagnosticClusterHandler(Diagnostic):
     """Diagnostic Channel class for the Danfoss TRV and derivatives."""
 
     def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Extend Diagnostic."""
 
-        if compare_quirk_class(endpoint, "thermostat.DanfossThermostat"):
-            self.REPORT_CONFIG = (
-                *self.REPORT_CONFIG,
-                AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
-                AttrReportConfig(
-                    attr="motor_step_counter", config=REPORT_CONFIG_DEFAULT
-                ),
-            )
+        self.REPORT_CONFIG = (
+            *self.REPORT_CONFIG,
+            AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
+            AttrReportConfig(attr="motor_step_counter", config=REPORT_CONFIG_DEFAULT),
+        )
 
         super().__init__(cluster, endpoint)
