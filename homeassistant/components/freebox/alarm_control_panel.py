@@ -123,8 +123,8 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
 
     def add_features(self, node: dict[str, Any]) -> None:
         """Add alarm features."""
-        # Search if Alarm2
-        has_alarm2 = False
+        # Search if the arm home feature is present => has an "alarm2" endpoint
+        can_arm_home = False
         for nodeid, local_node in self._router.home_devices.items():
             if nodeid == local_node["id"]:
                 alarm2 = next(
@@ -135,10 +135,10 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
                     None,
                 )
                 if alarm2:
-                    has_alarm2 = alarm2["value"]
+                    can_arm_home = alarm2["value"]
                     break
 
-        if has_alarm2:
+        if can_arm_home:
             self._attr_supported_features = (
                 AlarmControlPanelEntityFeature.ARM_AWAY
                 | AlarmControlPanelEntityFeature.ARM_HOME
