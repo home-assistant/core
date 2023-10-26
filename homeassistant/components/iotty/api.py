@@ -5,8 +5,6 @@ import logging
 from typing import Any
 
 from aiohttp import ClientSession
-
-# DA QUI: fallisce l'import (provare con PyPi, e non con TestPyPi?)
 from iottycloud.cloudapi import CloudApi
 from iottycloud.device import Device
 from iottycloud.verbs import RESULT, STATUS
