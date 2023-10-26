@@ -713,7 +713,7 @@ glances-api==0.4.3
 goalzero==0.2.2
 
 # homeassistant.components.goodwe
-goodwe==0.2.31
+goodwe==0.2.32
 
 # homeassistant.components.google_mail
 # homeassistant.components.google_tasks
