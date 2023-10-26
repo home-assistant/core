@@ -9,7 +9,6 @@ import logging
 from tuya_iot import TuyaCloudOpenAPIEndpoint
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
@@ -385,7 +384,6 @@ class DescriptionVirtualState:
     key: str
     virtual_state_name: str
     virtual_state_value: str
-    entity_description: EntityDescription
 
 @dataclass
 class UnitOfMeasurement:
