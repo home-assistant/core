@@ -3,6 +3,7 @@ import asyncio
 from collections.abc import Callable
 import logging
 import math
+from types import NoneType
 from unittest import mock
 from unittest.mock import AsyncMock, patch
 
@@ -97,7 +98,9 @@ def poll_control_ch(endpoint, zigpy_device_mock):
     )
 
     cluster = zigpy_dev.endpoints[1].in_clusters[cluster_id]
-    cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(cluster_id)
+    cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+        cluster_id
+    ).get(None)
     return cluster_handler_class(cluster, endpoint)
 
 
@@ -258,8 +261,8 @@ async def test_in_cluster_handler_config(
 
     cluster = zigpy_dev.endpoints[1].in_clusters[cluster_id]
     cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
-        cluster_id, cluster_handlers.ClusterHandler
-    )
+        cluster_id, {None, cluster_handlers.ClusterHandler}
+    ).get(None)
     cluster_handler = cluster_handler_class(cluster, endpoint)
 
     await cluster_handler.async_configure()
@@ -322,8 +325,8 @@ async def test_out_cluster_handler_config(
     cluster = zigpy_dev.endpoints[1].out_clusters[cluster_id]
     cluster.bind_only = True
     cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
-        cluster_id, cluster_handlers.ClusterHandler
-    )
+        cluster_id, {None: cluster_handlers.ClusterHandler}
+    ).get(None)
     cluster_handler = cluster_handler_class(cluster, endpoint)
 
     await cluster_handler.async_configure()
@@ -336,11 +339,14 @@ def test_cluster_handler_registry() -> None:
     """Test ZIGBEE cluster handler Registry."""
     for (
         cluster_id,
-        cluster_handler,
+        cluster_handler_classes,
     ) in registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.items():
         assert isinstance(cluster_id, int)
         assert 0 <= cluster_id <= 0xFFFF
-        assert issubclass(cluster_handler, cluster_handlers.ClusterHandler)
+        assert isinstance(dict, cluster_handler_classes)
+        for quirk_id, cluster_handler in cluster_handler_classes:
+            assert isinstance(quirk_id, NoneType) or isinstance(quirk_id, str)
+            assert issubclass(cluster_handler, cluster_handlers.ClusterHandler)
 
 
 def test_epch_unclaimed_cluster_handlers(cluster_handler) -> None:
@@ -828,7 +834,7 @@ async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
     # And one is also logged at runtime
     with patch.dict(
         registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY,
-        {cluster.cluster_id: TestZigbeeClusterHandler},
+        {cluster.cluster_id: {None: TestZigbeeClusterHandler}},
     ), caplog.at_level(logging.WARNING):
         zha_endpoint.add_all_cluster_handlers()
 
