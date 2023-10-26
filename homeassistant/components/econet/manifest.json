@@ -1,7 +1,7 @@
 {
   "domain": "econet",
   "name": "Rheem EcoNet Products",
-  "codeowners": ["@vangorra", "@w1ll1am23"],
+  "codeowners": ["@w1ll1am23"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/econet",
   "iot_class": "cloud_push",
