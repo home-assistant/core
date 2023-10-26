@@ -1,7 +1,7 @@
 {
   "domain": "tedee",
   "name": "Tedee",
-  "codeowners": ["@patrickhilker", "@joerg65", "@zweckj"],
+  "codeowners": ["@patrickhilker", "@zweckj"],
   "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/tedee",
