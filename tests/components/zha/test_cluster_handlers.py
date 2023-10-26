@@ -343,8 +343,8 @@ def test_cluster_handler_registry() -> None:
     ) in registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.items():
         assert isinstance(cluster_id, int)
         assert 0 <= cluster_id <= 0xFFFF
-        assert isinstance(dict, cluster_handler_classes)
-        for quirk_id, cluster_handler in cluster_handler_classes:
+        assert isinstance(cluster_handler_classes, dict)
+        for quirk_id, cluster_handler in cluster_handler_classes.items():
             assert isinstance(quirk_id, NoneType) or isinstance(quirk_id, str)
             assert issubclass(cluster_handler, cluster_handlers.ClusterHandler)
 
@@ -824,7 +824,8 @@ async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
         ],
     )
 
-    mock_zha_device = mock.AsyncMock(spec_set=ZHADevice)
+    mock_zha_device = mock.AsyncMock(spec=ZHADevice)
+    mock_zha_device.quirk_id = None
     zha_endpoint = Endpoint(zigpy_ep, mock_zha_device)
 
     # The cluster handler throws an error when matching this cluster
