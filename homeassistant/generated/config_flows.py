@@ -114,6 +114,7 @@ FLOWS = {
         "duotecno",
         "dwd_weather_warnings",
         "dynalite",
+        "e3dc_modbus",
         "eafm",
         "easyenergy",
         "ecobee",

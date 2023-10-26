@@ -1869,6 +1869,7 @@ pymitv==1.4.3
 # homeassistant.components.mochad
 pymochad==0.2.0
 
+# homeassistant.components.e3dc_modbus
 # homeassistant.components.modbus
 pymodbus==3.5.4
 

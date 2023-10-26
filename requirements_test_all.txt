@@ -1406,6 +1406,7 @@ pymeteoclimatic==0.0.6
 # homeassistant.components.mochad
 pymochad==0.2.0
 
+# homeassistant.components.e3dc_modbus
 # homeassistant.components.modbus
 pymodbus==3.5.4
 
