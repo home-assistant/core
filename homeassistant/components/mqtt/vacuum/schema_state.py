@@ -23,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import json_loads_object
@@ -154,17 +153,6 @@ PLATFORM_SCHEMA_STATE_MODERN = (
 )
 
 DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
-
-
-async def async_setup_entity_state(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None,
-) -> None:
-    """Set up a State MQTT Vacuum."""
-    async_add_entities([MqttStateVacuum(hass, config, config_entry, discovery_data)])
 
 
 class MqttStateVacuum(MqttEntity, StateVacuumEntity):
