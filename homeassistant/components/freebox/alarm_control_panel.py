@@ -86,25 +86,21 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         """Send disarm command."""
         if await self.set_home_endpoint_value(self._command_disarm):
             self.set_state(STATE_ALARM_DISARMED)
-            self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if await self.set_home_endpoint_value(self._command_arm_away):
             self.set_state(STATE_ALARM_ARMING)
-            self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if await self.set_home_endpoint_value(self._command_arm_home):
             self.set_state(STATE_ALARM_ARMING)
-            self.async_write_ha_state()
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         if await self.set_home_endpoint_value(self._command_trigger):
             self.set_state(STATE_ALARM_TRIGGERED)
-            self.async_write_ha_state()
 
     async def async_update_signal(self):
         """Update signal."""
@@ -112,7 +108,6 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         if state:
             self.set_state(state)
             self.update_node(self._router.home_devices[self._id])
-            self.async_write_ha_state()
 
     def add_features(self, node: dict[str, Any]) -> None:
         """Add alarm features."""
@@ -153,3 +148,4 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         self._attr_state = FREEBOX_TO_STATUS.get(state)
         if not self._attr_state:
             self._attr_state = STATE_ALARM_DISARMED
+        self.async_write_ha_state()
