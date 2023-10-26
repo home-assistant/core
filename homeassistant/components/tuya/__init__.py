@@ -44,7 +44,7 @@ from .const import (
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
     DPCode,
     VirtualStates,
-    PrefixedEntityDescriptionKey,
+    DescriptionVirtualState,
 )
 
 
@@ -252,17 +252,15 @@ class DeviceManager(TuyaDeviceManager):
         super().__init__(api, mq)
     
     @staticmethod
-    def get_prefixed_dpcodes(category: str) -> list[PrefixedEntityDescriptionKey]:
+    def get_category_virtual_states(category: str) -> list[DescriptionVirtualState]:
         to_return = []
-        all_dpcode = [member.value for member in DPCode]
-        for prefix in VirtualStates:
+        for virtual_state in VirtualStates:
             if (descriptions := SENSORS.get(category)):
                 for description in descriptions:
-                    if description.virtualstate is not None:
-                        # This Entity Description is prefixed, return it
-                        prefixed_key = PrefixedEntityDescriptionKey(description.key, description.key, prefix.name, prefix.value, description)
-                        to_return.append(prefixed_key)
-        
+                    if description.virtualstate is not None and description.virtualstate & virtual_state.value:
+                        # This VirtualState is applied to this key, let's return it
+                        found_virtual_state = DescriptionVirtualState(description.key, virtual_state.name, virtual_state.value, description)
+                        to_return.append(found_virtual_state)
         return to_return
     
     def _on_device_report(self, device_id: str, status: list):
@@ -270,18 +268,37 @@ class DeviceManager(TuyaDeviceManager):
         if not device:
             return
 
-        prefixed_dpcodes = DeviceManager.get_prefixed_dpcodes(device.category)
-        for prefixed_dpcode in prefixed_dpcodes:
-            if prefixed_dpcode.prefix_value == VirtualStates.STATE_UPDATED_ONLY_IF_IN_REPORTING_PAYLOAD:
-                if prefixed_dpcode.key in device.status:
-                    device.status[prefixed_dpcode.key] = 0
+        #DEBUG
+        """add_ele_found = False
+        for item in status:
+            if "code" in item and "value" in item and item["code"] == "add_ele":
+                add_ele_found = True
+        if add_ele_found == False:
+            new_add_ele = status[0]
+            new_add_ele["code"] = "add_ele"
+            new_add_ele["value"] = 1"""
+        #ENDDEBUG
+
+        virtual_states = DeviceManager.get_category_virtual_states(device.category)
+        LOGGER.debug(f"BEFORE device_id -> {device_id} device_status-> {device.status} status-> {status} VS-> {virtual_states}")
+        for virtual_state in virtual_states:
+            if virtual_state.virtual_state_value == VirtualStates.STATE_UPDATED_ONLY_IF_IN_REPORTING_PAYLOAD:
+                if virtual_state.key in device.status:
+                    for item in status:
+                        if "code" in item and "value" in item and item["code"] == virtual_state.key:
+                            item["value"] = None
+            elif virtual_state.virtual_state_value == VirtualStates.STATE_SUMMED_IN_REPORTING_PAYLOAD:
+                if virtual_state.key in device.status:
+                    for item in status:
+                        if "code" in item and "value" in item and item["code"] == virtual_state.key:
+                            item["value"] += device.status[virtual_state.key]
         
         for item in status:
-            if "code" in item and "value" in item:
+            if "code" in item and "value" in item and item["value"] is not None:
                 code = item["code"]
                 value = item["value"]
                 device.status[code] = value
-        LOGGER.debug(f"mq device_id -> {device_id} device_status-> {device.status} status-> {status}")
+        LOGGER.debug(f"AFTER device_id -> {device_id} device_status-> {device.status} status-> {status}")
         super()._on_device_report(device_id, [])
 
 class DeviceListener(TuyaDeviceListener):
