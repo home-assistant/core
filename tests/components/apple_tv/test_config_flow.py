@@ -125,7 +125,7 @@ async def test_user_adds_full_device(hass: HomeAssistant, full_device, pairing) 
         result["flow_id"], {"pin": 1111}
     )
     assert result4["type"] == data_entry_flow.FlowResultType.FORM
-    assert result4["description_placeholders"] == {"protocol": "DMAP", "pin": 1111}
+    assert result4["description_placeholders"] == {"protocol": "DMAP", "pin": "1111"}
 
     result5 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result5["type"] == data_entry_flow.FlowResultType.FORM
@@ -167,7 +167,7 @@ async def test_user_adds_dmap_device(
 
     result3 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result3["type"] == data_entry_flow.FlowResultType.FORM
-    assert result3["description_placeholders"] == {"pin": 1111, "protocol": "DMAP"}
+    assert result3["description_placeholders"] == {"pin": "1111", "protocol": "DMAP"}
 
     result6 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": 1234}
@@ -646,7 +646,7 @@ async def test_zeroconf_add_dmap_device(
         {},
     )
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["description_placeholders"] == {"protocol": "DMAP", "pin": 1111}
+    assert result2["description_placeholders"] == {"protocol": "DMAP", "pin": "1111"}
 
     result3 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result3["type"] == "create_entry"
