@@ -6,11 +6,13 @@ from unittest.mock import patch
 from aiohttp import ClientConnectionError, ClientResponseError
 from hass_splunk import SplunkPayloadError
 
+from homeassistant.components.splunk import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant, State
+from homeassistant.setup import async_setup_component
 
-from . import RETURN_BADAUTH, RETURN_SUCCESS, URL, setup_platform
+from . import CONFIG, RETURN_BADAUTH, RETURN_SUCCESS, URL, setup_platform
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -148,3 +150,21 @@ async def test_event_failures(
             },
         )
         await hass.async_block_till_done()
+
+
+async def test_import_from_yaml(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test import from YAML."""
+    aioclient_mock.post(URL, text=RETURN_SUCCESS)
+    with patch(
+        "homeassistant.components.splunk.async_setup_entry",
+        return_value=True,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: CONFIG})
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    assert entries[0].data == CONFIG
