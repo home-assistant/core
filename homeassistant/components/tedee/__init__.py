@@ -17,9 +17,7 @@ from .views import TedeeWebhookView
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [
-    Platform.BUTTON,
     Platform.LOCK,
-    Platform.SENSOR,
 ]
 
 _LOGGER = logging.getLogger(__name__)

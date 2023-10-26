@@ -56,22 +56,9 @@
     }
   },
   "entity": {
-    "button": {
-      "unlatch": {
-        "name": "Pull latch"
-      },
-      "unlock_unlatch": {
-        "name": "Unlock and pull latch"
-      }
-    },
     "lock": {
       "lock": {
         "name": "Lock"
-      }
-    },
-    "sensor": {
-      "battery_sensor": {
-        "name": "Battery"
       }
     }
   }
