@@ -186,7 +186,7 @@ async def test_scene_updates(
     )
     await hass.async_block_till_done()
     test_entity = hass.states.get(test_entity_id)
-    assert test_entity.name == "Test Room 2 Mocked Scene"
+    assert test_entity.attributes["group_name"] == "Test Room 2"
 
     # # test delete
     mock_bridge_v2.api.emit_event("delete", updated_resource)

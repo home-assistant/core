@@ -375,14 +375,16 @@ def _mocked_dav_client(*names, calendars=None):
     return client
 
 
-def _mock_calendar(name):
+def _mock_calendar(name, supported_components=None):
     calendar = Mock()
     events = []
     for idx, event in enumerate(EVENTS):
         events.append(Event(None, "%d.ics" % idx, event, calendar, str(idx)))
-
+    if supported_components is None:
+        supported_components = ["VEVENT"]
     calendar.search = MagicMock(return_value=events)
     calendar.name = name
+    calendar.get_supported_components = MagicMock(return_value=supported_components)
     return calendar
 
 
@@ -1066,3 +1068,40 @@ async def test_get_events_custom_calendars(
             "rrule": None,
         }
     ]
+
+
+async def test_calendar_components(
+    hass: HomeAssistant,
+) -> None:
+    """Test that only calendars that support events are created."""
+    calendars = [
+        _mock_calendar("Calendar 1", supported_components=["VEVENT"]),
+        _mock_calendar("Calendar 2", supported_components=["VEVENT", "VJOURNAL"]),
+        _mock_calendar("Calendar 3", supported_components=["VTODO"]),
+        # Fallback to allow when no components are supported to be conservative
+        _mock_calendar("Calendar 4", supported_components=[]),
+    ]
+    with patch(
+        "homeassistant.components.caldav.calendar.caldav.DAVClient",
+        return_value=_mocked_dav_client(calendars=calendars),
+    ):
+        assert await async_setup_component(
+            hass, "calendar", {"calendar": CALDAV_CONFIG}
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.calendar_1")
+    assert state.name == "Calendar 1"
+    assert state.state == STATE_OFF
+
+    state = hass.states.get("calendar.calendar_2")
+    assert state.name == "Calendar 2"
+    assert state.state == STATE_OFF
+
+    # No entity created for To-do only component
+    state = hass.states.get("calendar.calendar_3")
+    assert not state
+
+    state = hass.states.get("calendar.calendar_4")
+    assert state.name == "Calendar 4"
+    assert state.state == STATE_OFF

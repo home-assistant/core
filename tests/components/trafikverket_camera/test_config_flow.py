@@ -53,7 +53,7 @@ async def test_form(hass: HomeAssistant, get_camera: CameraInfo) -> None:
         "location": "Test location",
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result2["result"].unique_id == "trafikverket_camera-Test location"
+    assert result2["result"].unique_id == "trafikverket_camera-1234"
 
 
 async def test_form_no_location_data(
@@ -90,7 +90,7 @@ async def test_form_no_location_data(
         "location": "Test Camera",
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result2["result"].unique_id == "trafikverket_camera-Test Camera"
+    assert result2["result"].unique_id == "trafikverket_camera-1234"
 
 
 @pytest.mark.parametrize(
@@ -153,6 +153,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             CONF_LOCATION: "Test location",
         },
         unique_id="1234",
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -225,6 +226,7 @@ async def test_reauth_flow_error(
             CONF_LOCATION: "Test location",
         },
         unique_id="1234",
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.async_block_till_done()
