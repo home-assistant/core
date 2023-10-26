@@ -339,10 +339,10 @@ class AppleTVEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
     _attr_name = None
+    atv: AppleTV | None = None
 
     def __init__(self, name: str, identifier: str, manager: AppleTVManager) -> None:
         """Initialize device."""
-        self.atv: AppleTV | None = None
         self.manager = manager
         self._attr_unique_id = identifier
         self._attr_device_info = DeviceInfo(
