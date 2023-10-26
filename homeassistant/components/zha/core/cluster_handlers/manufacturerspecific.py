@@ -380,7 +380,7 @@ class IkeaRemote(ClusterHandler):
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    DoorLock.cluster_id, quirk_name="XiaomiVibrationAQ1"
+    DoorLock.cluster_id, "xiaomi_aqara_vibration_aq1"
 )
 class XiaomiVibrationAQ1ClusterHandler(MultistateInput):
     """Xiaomi DoorLock Cluster is in fact a MultiStateInput Cluster."""

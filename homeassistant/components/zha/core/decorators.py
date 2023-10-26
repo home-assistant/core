@@ -25,7 +25,7 @@ class NestedDictRegistry(dict[int | str, dict[int | str | None, _TypeT]]):
     """Dict Registry of multiple items per key."""
 
     def register(
-        self, name: int | str, quirk_name: int | str | None = None
+        self, name: int | str, sub_name: int | str | None = None
     ) -> Callable[[_TypeT], _TypeT]:
         """Return decorator to register item with a specific and a quirk name."""
 
@@ -33,7 +33,7 @@ class NestedDictRegistry(dict[int | str, dict[int | str | None, _TypeT]]):
             """Register decorated cluster handler or item."""
             if name not in self:
                 self[name] = {}
-            self[name][quirk_name] = cluster_handler
+            self[name][sub_name] = cluster_handler
             return cluster_handler
 
         return decorator
