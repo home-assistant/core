@@ -71,11 +71,13 @@ class ShoppingTodoListEntity(TodoListEntity):
         """Add an item to the To-do list."""
         await self._data.async_remove_items(set(uids))
 
-    async def async_move_todo_item(self, uid: str, pos: int) -> None:
+    async def async_move_todo_item(
+        self, uid: str, previous_uid: str | None = None
+    ) -> None:
         """Re-order an item to the To-do list."""
 
         try:
-            await self._data.async_move_item(uid, pos)
+            await self._data.async_move_item(uid, previous_uid)
         except NoMatchingShoppingListItem as err:
             raise HomeAssistantError(
                 f"Shopping list item '{uid}' could not be re-ordered"
