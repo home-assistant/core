@@ -67,11 +67,10 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self.data[CONF_EMAIL])
             self._abort_if_unique_id_configured()
 
-        if errors or user_input is None:
+        if errors or not user_input:
             return self.async_show_form(
                 step_id="user", data_schema=GET_EMAIL_SCHEMA, errors=errors
             )
-
         return await self.async_step_region()
 
     async def async_step_region(
@@ -152,13 +151,10 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-
         reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context.get("entry_id", "")
+            self.context["entry_id"]
         )
-
-        if not reauth_entry:
-            return self.async_abort(reason="unknown")
+        assert reauth_entry
 
         try:
             email: str = reauth_entry.data[CONF_EMAIL]
