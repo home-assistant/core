@@ -151,6 +151,24 @@
           "description": "Enable Follow Me mode."
         }
       }
+    },
+    "set_active_sensors": {
+      "name": "Set Active Sensors",
+      "description": "Sets the participating sensors for a climate.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Ecobee thermostat on which to set active sensors."
+        },
+        "climate_name": {
+          "name": "Climate Name",
+          "description": "Name of the climate program to set the sensors active on.\nDefaults to currently active program."
+        },
+        "sensors": {
+          "name": "Sensors",
+          "description": "Sensors to set as active."
+        }
+      }
     }
   }
 }
