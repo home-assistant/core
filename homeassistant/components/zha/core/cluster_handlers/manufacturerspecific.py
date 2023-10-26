@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 import zigpy.zcl
+from zigpy.zcl.clusters.closures import DoorLock
 from zigpy.zcl import clusters
 
 from homeassistant.core import callback
@@ -25,6 +26,7 @@ from ..const import (
     UNKNOWN,
 )
 from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
+from .general import MultistateInput
 from .homeautomation import Diagnostic
 from .hvac import ThermostatClusterHandler, UserInterface
 
@@ -380,6 +382,12 @@ class IkeaRemote(ClusterHandler):
 
     REPORT_CONFIG = ()
 
+
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    DoorLock.cluster_id, "xiaomi_aqara_vibration_aq1"
+)
+class XiaomiVibrationAQ1ClusterHandler(MultistateInput):
+    """Xiaomi DoorLock Cluster is in fact a MultiStateInput Cluster."""
 
 def compare_quirk_class(endpoint: Endpoint, names: str | Collection[str]):
     """Return True if the last two words separated by dots equal the words between the dots in name.
