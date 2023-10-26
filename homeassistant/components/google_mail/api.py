@@ -5,6 +5,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import Resource, build
 
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
@@ -32,7 +33,7 @@ class AsyncConfigEntryAuth:
                 self.oauth_session.config_entry.async_start_reauth(
                     self.oauth_session.hass
                 )
-            raise
+            raise HomeAssistantError(ex) from ex
         return self.access_token
 
     async def get_resource(self) -> Resource:
