@@ -259,7 +259,7 @@ class DeviceManager(TuyaDeviceManager):
                 for description in descriptions:
                     if description.virtualstate is not None and description.virtualstate & virtual_state.value:
                         # This VirtualState is applied to this key, let's return it
-                        found_virtual_state = DescriptionVirtualState(description.key, virtual_state.name, virtual_state.value, description)
+                        found_virtual_state = DescriptionVirtualState(description.key, virtual_state.name, virtual_state.value)
                         to_return.append(found_virtual_state)
         return to_return
     
