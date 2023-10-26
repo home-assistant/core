@@ -367,9 +367,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            icon="mdi:lightning-bolt-outline",
             entity_registry_enabled_default=True,
-            #force_update=True,
         ),
     ),
     # IoT Switch
@@ -404,7 +402,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             entity_registry_enabled_default=True,
-            force_update=True,
         ),
     ),
     # Luminance Sensor

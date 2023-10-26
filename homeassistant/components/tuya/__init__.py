@@ -268,17 +268,6 @@ class DeviceManager(TuyaDeviceManager):
         if not device:
             return
 
-        #DEBUG
-        """add_ele_found = False
-        for item in status:
-            if "code" in item and "value" in item and item["code"] == "add_ele":
-                add_ele_found = True
-        if add_ele_found == False:
-            new_add_ele = status[0]
-            new_add_ele["code"] = "add_ele"
-            new_add_ele["value"] = 1"""
-        #ENDDEBUG
-
         virtual_states = DeviceManager.get_category_virtual_states(device.category)
         LOGGER.debug(f"BEFORE device_id -> {device_id} device_status-> {device.status} status-> {status} VS-> {virtual_states}")
         for virtual_state in virtual_states:
