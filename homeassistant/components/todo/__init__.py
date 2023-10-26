@@ -152,8 +152,15 @@ class TodoListEntity(Entity):
         """Delete an item in the To-do list."""
         raise NotImplementedError()
 
-    async def async_move_todo_item(self, uid: str, previous_uid: str | None) -> None:
-        """Move an item in the To-do list."""
+    async def async_move_todo_item(
+        self, uid: str, previous_uid: str | None = None
+    ) -> None:
+        """Move an item in the To-do list.
+
+        The To-do item with the specified `uid` should be moved to the position
+        in the list after the specified by `previous_uid` or `None` for the first
+        position in the To-do list.
+        """
         raise NotImplementedError()
 
 
