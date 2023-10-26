@@ -566,6 +566,15 @@
       },
       "ias_zone": {
         "name": "IAS zone"
+      },
+      "mounting_mode_active": {
+        "name": "Mounting Mode Active"
+      },
+      "heat_required": {
+        "name": "Heat Required"
+      },
+      "preheat_status": {
+        "name": "Pre-heat Status"
       }
     },
     "button": {
@@ -721,6 +730,27 @@
       },
       "away_preset_temperature": {
         "name": "Away preset temperature"
+      },
+      "max_heat_setpoint_limit": {
+        "name": "Max Heat Setpoint Limit"
+      },
+      "min_heat_setpoint_limit": {
+        "name": "Min Heat Setpoint Limit"
+      },
+      "exercise_trigger_time": {
+        "name": "Exercise Start Time"
+      },
+      "external_temperature_sensor": {
+        "name": "External Temperature Sensor"
+      },
+      "load_room_mean": {
+        "name": "Load Room Mean"
+      },
+      "control_algorithm_scale_factor": {
+        "name": "Control Algorithm Scale Factor"
+      },
+      "regulation_setpoint_offset": {
+        "name": "Regulation Setpoint Offset"
       }
     },
     "select": {
@@ -774,6 +804,21 @@
       },
       "preset": {
         "name": "Preset"
+      },
+      "keypad_lockout": {
+        "name": "Keypad Lockout"
+      },
+      "exercise_day_of_week": {
+        "name": "Exercise Day of the Week"
+      },
+      "valve_orientation": {
+        "name": "Valve Orientation"
+      },
+      "adaptation_run_command": {
+        "name": "Adaptation Run Command"
+      },
+      "viewing_direction": {
+        "name": "Viewing Direction"
       }
     },
     "sensor": {
@@ -851,6 +896,30 @@
       },
       "smoke_density": {
         "name": "Smoke density"
+      },
+      "pi_heating_demand": {
+        "name": "Pi Heating Demand"
+      },
+      "setpoint_change_source": {
+        "name": "Setpoint Change Source"
+      },
+      "open_window_detected": {
+        "name": "Open Window Detected"
+      },
+      "load_estimate": {
+        "name": "Load Estimate"
+      },
+      "adaptation_run_status": {
+        "name": "Adaptation Run Status"
+      },
+      "preheat_time": {
+        "name": "Pre-heat Time"
+      },
+      "software_error": {
+        "name": "Software Error"
+      },
+      "motor_stepcount": {
+        "name": "Motor Stepcount"
       }
     },
     "switch": {
@@ -925,6 +994,27 @@
       },
       "buzzer_manual_alarm": {
         "name": "Buzzer manual alarm"
+      },
+      "external_window_sensor": {
+        "name": "External Window Sensor"
+      },
+      "use_external_window_detection": {
+        "name": "Use External Window Detection"
+      },
+      "mounting_mode": {
+        "name": "Mounting Mode"
+      },
+      "prioritize_external_temperature_sensor": {
+        "name": "Prioritize External Temperature Sensor"
+      },
+      "heat_available": {
+        "name": "Heat Available"
+      },
+      "use_load_balancing": {
+        "name": "Use Load Balancing"
+      },
+      "adaptation_run_enabled": {
+        "name": "Adaptation Run Enabled"
       }
     }
   }

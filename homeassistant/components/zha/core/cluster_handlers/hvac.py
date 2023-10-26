@@ -271,3 +271,5 @@ class ThermostatClusterHandler(ClusterHandler):
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.UserInterface.cluster_id)
 class UserInterface(ClusterHandler):
     """User interface (thermostat) cluster handler."""
+
+    ZCL_INIT_ATTRS = {"keypad_lockout": True}

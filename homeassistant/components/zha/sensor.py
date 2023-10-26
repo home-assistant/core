@@ -1039,3 +1039,216 @@ class AqaraSmokeDensityDbm(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_icon: str = "mdi:google-circles-communities"
     _attr_suggested_display_precision: int = 3
+
+
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class EnumSensor(Sensor):
+    """Sensor with value from enum."""
+
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
+    _enum: type[enum.Enum] | None = None
+
+    def formatter(self, value: int) -> str | None:
+        """Use name of enum."""
+        if self._enum is None:
+            return None
+        return self._enum(value).name
+
+
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class BitMapSensor(Sensor):
+    """A sensor with only state attributes.
+
+    The sensor value will be a sensor of the state attributes.
+    """
+
+    _default_value: str
+    _bitmap: dict[str, int]
+
+    def formatter(self, _value: int) -> str:
+        """Summary of all attributes."""
+        binary_state_attributes = [
+            key for (key, elem) in self.extra_state_attributes.items() if elem
+        ]
+
+        return (
+            ", ".join(binary_state_attributes)
+            if binary_state_attributes
+            else self._default_value
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Bitmap."""
+        value = self._cluster_handler.cluster.get(self._attribute_name)
+
+        state_attr = {}
+
+        for text, bit in self._bitmap.items():
+            state_attr[text] = bool(value & bit)
+
+        return state_attr
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class PiHeatingDemand(Sensor):
+    """Sensor that displays the percentage of heating power used.
+
+    Optional Thermostat attribute
+    """
+
+    _unique_id_suffix = "pi_heating_demand"
+    _attribute_name = "pi_heating_demand"
+    _attr_translation_key: str = "pi_heating_demand"
+    _attr_icon: str = "mdi:radiator"
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+
+
+class SetpointChangeSourceEnum(types.enum8):
+    """The source of the setpoint change."""
+
+    Manual = 0x00
+    Schedule = 0x01
+    External = 0x02
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SetpointChangeSource(EnumSensor):
+    """Sensor that displays the source of the setpoint change.
+
+    Optional Thermostat attribute
+    """
+
+    _unique_id_suffix = "setpoint_change_source"
+    _attribute_name = "setpoint_change_source"
+    _attr_translation_key: str = "setpoint_change_source"
+    _attr_icon: str = "mdi:thermostat"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _enum = SetpointChangeSourceEnum
+
+
+class DanfossOpenWindowDetectionEnum(types.enum8):
+    """Danfoss Open Window Detection judgments."""
+
+    Quarantine = 0x00
+    Closed = 0x01
+    Maybe = 0x02
+    Open = 0x03
+    External = 0x04
+
+
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossOpenWindowDetection(EnumSensor):
+    """Danfoss Proprietary attribute.
+
+    Sensor that displays whether the TRV detects an open window using the temperature sensor.
+    """
+
+    _unique_id_suffix = "open_window_detection"
+    _attribute_name = "open_window_detection"
+    _attr_translation_key: str = "open_window_detected"
+    _attr_icon: str = "mdi:window-open"
+    _enum = DanfossOpenWindowDetectionEnum
+
+
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossLoadEstimate(Sensor):
+    """Danfoss Proprietary attribute for communicating its estimate of the radiator load."""
+
+    _unique_id_suffix = "load_estimate"
+    _attribute_name = "load_estimate"
+    _attr_translation_key: str = "load_estimate"
+    _attr_icon: str = "mdi:scale-balance"
+
+
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossAdaptationRunStatus(BitMapSensor):
+    """Danfoss Proprietary attribute for showing the status of the adaptation run."""
+
+    _unique_id_suffix = "adaptation_run_status"
+    _attribute_name = "adaptation_run_status"
+    _attr_translation_key: str = "adaptation_run_status"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _default_value = "Nothing"
+    _bitmap = {
+        "In Progress": 0x0001,
+        "Run Successful": 0x0002,
+        "Valve characteristic lost": 0x0004,
+    }
+
+
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossPreheatTime(Sensor):
+    """Danfoss Proprietary attribute for communicating the time when it starts pre-heating."""
+
+    _unique_id_suffix = "preheat_time"
+    _attribute_name = "preheat_time"
+    _attr_translation_key: str = "preheat_time"
+    _attr_icon: str = "mdi:radiator"
+    _attr_entity_registry_enabled_default = False
+
+
+@MULTI_MATCH(
+    cluster_handler_names="diagnostic",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossSoftwareErrorCode(BitMapSensor):
+    """Danfoss Proprietary attribute for communicating the error code."""
+
+    _unique_id_suffix = "sw_error_code"
+    _attribute_name = "sw_error_code"
+    _attr_translation_key: str = "software_error"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _default_value = "Good"
+    _bitmap = {
+        "Top PCB sensor error": 0x0001,
+        "Side PCB sensor error": 0x0002,
+        "Non-volative Memory error": 0x0004,
+        "Unknown HW error": 0x0008,
+        # 0x0010 = N/A
+        "Motor error": 0x0020,
+        # 0x0040 = N/A
+        "Invalid internal communication": 0x0080,
+        # 0x0100 = N/A
+        "Invalid clock information": 0x0200,
+        # 0x0400 = N/A
+        "Radio communication error": 0x0800,
+        "Encoder Jammed": 0x1000,
+        "Low Battery": 0x2000,
+        "Critical Low Battery": 0x4000,
+        # 0x8000 = Reserved
+    }
+
+
+@MULTI_MATCH(
+    cluster_handler_names="diagnostic",
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossMotorStepCounter(Sensor):
+    """Danfoss Proprietary attribute for communicating the motor step counter."""
+
+    _unique_id_suffix = "motor_step_counter"
+    _attribute_name = "motor_step_counter"
+    _attr_translation_key: str = "motor_stepcount"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC

@@ -1,6 +1,7 @@
 """Support for ZHA AnalogOutput cluster."""
 from __future__ import annotations
 
+import ctypes
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
@@ -20,6 +21,7 @@ from .core.const import (
     CLUSTER_HANDLER_COLOR,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_LEVEL,
+    CLUSTER_HANDLER_THERMOSTAT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -931,3 +933,159 @@ class AqaraThermostatAwayTemp(ZHANumberConfigurationEntity):
     _attr_mode: NumberMode = NumberMode.SLIDER
     _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
     _attr_icon: str = ICONS[0]
+
+
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
+    """Common Entity Class for ZCL Temperature input."""
+
+    _attr_native_unit_of_measurement: str = "°C"
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_step: float = 0.01
+    _attr_multiplier: float = 0.01
+
+
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
+    """Min or Max Heat Setpoint setting on thermostats."""
+
+    _attr_icon: str = "mdi:thermostat"
+    _attr_native_step: float = 0.5
+
+    _min_source = "abs_min_heat_setpoint_limit"
+    _max_source = "abs_max_heat_setpoint_limit"
+
+    @property
+    def native_min_value(self) -> float:
+        """Return the minimum value."""
+        min_present_value = self._cluster_handler.cluster.get(self._min_source)
+        if min_present_value is None:
+            # This is a 16bit signed integer, which has to be converted to a python integer
+            min_present_value = ctypes.c_short(0x954D).value  # according to spec
+        return min_present_value * self._attr_multiplier
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the maximum value."""
+        max_present_value = self._cluster_handler.cluster.get(self._max_source)
+        if max_present_value is None:
+            max_present_value = 0x7FFF  # according to spec
+        return max_present_value * self._attr_multiplier
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class MaxHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
+    """Max Heat Setpoint setting on thermostats.
+
+    Optional Thermostat attribute
+    """
+
+    _unique_id_suffix = "max_heat_setpoint_limit"
+    _attribute_name: str = "max_heat_setpoint_limit"
+    _attr_translation_key: str = "max_heat_setpoint_limit"
+
+    _min_source = "min_heat_setpoint_limit"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
+    """Min Heat Setpoint setting on thermostats.
+
+    Optional Thermostat attribute
+    """
+
+    _unique_id_suffix = "min_heat_setpoint_limit"
+    _attribute_name: str = "min_heat_setpoint_limit"
+    _attr_translation_key: str = "min_heat_setpoint_limit"
+
+    _max_source = "max_heat_setpoint_limit"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossExerciseTriggerTime(ZHANumberConfigurationEntity):
+    """Danfoss Proprietary Attribute to set the time to exercise the valve."""
+
+    _unique_id_suffix = "exercise_trigger_time"
+    _attribute_name: str = "exercise_trigger_time"
+    _attr_translation_key: str = "exercise_trigger_time"
+    _attr_native_min_value: int = 0
+    _attr_native_max_value: int = 1439
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_unit_of_measurement: str = "Minutes"
+    _attr_icon: str = "mdi:clock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossExternalMeasuredRoomSensor(ZCLTemperatureEntity):
+    """Danfoss Proprietary Attribute to communicate the value of the external temperature sensor."""
+
+    _unique_id_suffix = "external_measured_room_sensor"
+    _attribute_name: str = "external_measured_room_sensor"
+    _attr_translation_key: str = "external_temperature_sensor"
+    _attr_native_min_value: float = -80
+    _attr_native_max_value: float = 35
+    _attr_icon: str = "mdi:thermometer"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossLoadRoomMean(ZHANumberConfigurationEntity):
+    """Danfoss Proprietary Attribute to set a value for the load."""
+
+    _unique_id_suffix = "load_room_mean"
+    _attribute_name: str = "load_room_mean"
+    _attr_translation_key: str = "load_room_mean"
+    _attr_native_min_value: int = -8000
+    _attr_native_max_value: int = 2000
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_icon: str = "mdi:scale-balance"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossControlAlgorithmScaleFactor(ZHANumberConfigurationEntity):
+    """Danfoss Proprietary Attribute to configure the aggressiveness of the control algorithm."""
+
+    _unique_id_suffix = "control_algorithm_scale_factor"
+    _attribute_name: str = "control_algorithm_scale_factor"
+    _attr_translation_key: str = "control_algorithm_scale_factor"
+    _attr_native_min_value: int = 1
+    _attr_native_max_value: int = 10
+    _attr_mode: NumberMode = NumberMode.SLIDER
+    _attr_icon: str = "mdi:knob"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossRegulationSetpointOffset(ZHANumberConfigurationEntity):
+    """Danfoss Proprietary Attribute to set the regulation setpoint offset."""
+
+    _unique_id_suffix = "regulation_setpoint_offset"
+    _attribute_name: str = "regulation_setpoint_offset"
+    _attr_translation_key: str = "regulation_setpoint_offset"
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_unit_of_measurement: str = "°C"
+    _attr_icon: str = "mdi:thermostat"
+    _attr_native_min_value: float = -2.5
+    _attr_native_max_value: float = 2.5
+    _attr_native_step: float = 0.1
+    _attr_multiplier = 1 / 10

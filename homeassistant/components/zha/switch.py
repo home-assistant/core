@@ -20,6 +20,7 @@ from .core.const import (
     CLUSTER_HANDLER_BASIC,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_ON_OFF,
+    CLUSTER_HANDLER_THERMOSTAT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -580,3 +581,95 @@ class AqaraBuzzerManualAlarm(ZHASwitchConfigurationEntity):
     _attribute_name = "buzzer_manual_alarm"
     _attr_translation_key = "buzzer_manual_alarm"
     _attr_icon: str = "mdi:bullhorn"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+class DanfossExternalOpenWindowDetected(ZHASwitchConfigurationEntity):
+    """Danfoss Proprietary attribute for communicating an open window."""
+
+    _unique_id_suffix = "external_open_window_detected"
+    _attribute_name: str = "external_open_window_detected"
+    _attr_translation_key: str = "external_window_sensor"
+    _attr_icon: str = "mdi:window-open"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+class DanfossWindowOpenFeature(ZHASwitchConfigurationEntity):
+    """Danfoss Proprietary attribute enabling open window detection."""
+
+    _unique_id_suffix = "window_open_feature"
+    _attribute_name: str = "window_open_feature"
+    _attr_translation_key: str = "use_external_window_detection"
+    _attr_icon: str = "mdi:window-open"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+class DanfossMountingModeControl(ZHASwitchConfigurationEntity):
+    """Danfoss Proprietary attribute for switching to mounting mode."""
+
+    _unique_id_suffix = "mounting_mode_control"
+    _attribute_name: str = "mounting_mode_control"
+    _attr_translation_key: str = "mounting_mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+class DanfossRadiatorCovered(ZHASwitchConfigurationEntity):
+    """Danfoss Proprietary attribute for communicating full usage of the external temperature sensor."""
+
+    _unique_id_suffix = "radiator_covered"
+    _attribute_name: str = "radiator_covered"
+    _attr_translation_key: str = "prioritize_external_temperature_sensor"
+    _attr_icon: str = "mdi:thermometer"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+class DanfossHeatAvailable(ZHASwitchConfigurationEntity):
+    """Danfoss Proprietary attribute for communicating available heat."""
+
+    _unique_id_suffix = "heat_available"
+    _attribute_name: str = "heat_available"
+    _attr_translation_key: str = "heat_available"
+    _attr_icon: str = "mdi:water-boiler"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+class DanfossLoadBalancingEnable(ZHASwitchConfigurationEntity):
+    """Danfoss Proprietary attribute for enabling load balancing."""
+
+    _unique_id_suffix = "load_balancing_enable"
+    _attribute_name: str = "load_balancing_enable"
+    _attr_translation_key: str = "use_load_balancing"
+    _attr_icon: str = "mdi:scale-balance"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_classes={"thermostat.DanfossThermostat"},
+)
+class DanfossAdaptationRunSettings(ZHASwitchConfigurationEntity):
+    """Danfoss Proprietary attribute for enabling daily adaptation run.
+
+    Actually a bitmap, but only the first bit is used.
+    """
+
+    _unique_id_suffix = "adaptation_run_settings"
+    _attribute_name: str = "adaptation_run_settings"
+    _attr_translation_key: str = "adaptation_run_enabled"
