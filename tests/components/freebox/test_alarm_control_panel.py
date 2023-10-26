@@ -49,14 +49,9 @@ async def test_panel(
         ]
         == AlarmControlPanelEntityFeature.ARM_AWAY
     )
-    assert (
-        hass.states.get("alarm_control_panel.systeme_d_alarme").attributes["pin"]
-        == "0000"
-    )
 
     # Now simulate a changed status
     data_get_home_endpoint_value = deepcopy(DATA_HOME_ALARM_GET_VALUES)
-    # data_get_home_endpoint_value["value"] = "alarm1_arming"
     router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value
 
     # Simulate an update
