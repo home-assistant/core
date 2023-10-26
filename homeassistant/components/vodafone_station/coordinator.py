@@ -95,18 +95,30 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Update router data."""
         _LOGGER.debug("Polling Vodafone Station host: %s", self._host)
         try:
-            if not await self.api.login():
+            try:
+                await self.api.login()
+            except exceptions.CannotAuthenticate:
+                _LOGGER.warning("Cannot authenticate for %s", self._host)
                 raise ConfigEntryAuthFailed
-        except exceptions.CannotConnect as err:
-            _LOGGER.warning("Connection error for %s", self._host)
+            except exceptions.CannotConnect as err:
+                _LOGGER.warning("Connection error for %s", self._host)
+                raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
+            except exceptions.AlreadyLogged as err:
+                _LOGGER.warning(
+                    "User %s already logged on %s. Retrying",
+                    self.api.username,
+                    self._host,
+                )
+                raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
+            except exceptions.GenericLoginError as err:
+                _LOGGER.warning("Unable to login to %s", self._host)
+                raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
+        except ConfigEntryAuthFailed:
+            raise
+        except UpdateFailed:
+            _LOGGER.debug("Closing aiohttp session")
             await self.api.close()
-            raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
-        except exceptions.AlreadyLogged as err:
-            _LOGGER.warning("User %s already logged. Retrying", self.api.username)
-            await self.api.close()
-            raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
-        except exceptions.CannotAuthenticate:
-            raise ConfigEntryAuthFailed
+            raise
 
         utc_point_in_time = dt_util.utcnow()
         data_devices = {
