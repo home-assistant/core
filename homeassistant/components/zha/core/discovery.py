@@ -207,7 +207,7 @@ class ProbeEndpoint:
                 cluster_id, {None: ClusterHandler}
             )
             cluster_handler_class = cluster_handler_classes.get(
-                cluster.endpoint.device.quirk_id
+                endpoint.device.quirk_id
             )
 
             if cluster_handler_class is None:
@@ -216,7 +216,7 @@ class ProbeEndpoint:
                     "Cluster ID '%d' matched with Cluster classes: %s, but Quirk ID '%s' didn't match any of them",
                     cluster_id,
                     cluster_handler_classes,
-                    cluster.endpoint.device.quirk_id,
+                    endpoint.device.quirk_id,
                 )
                 cluster_handler_class = ClusterHandler
 
