@@ -13,7 +13,7 @@ from aioesphomeapi import (
     VoiceAssistantEventType,
 )
 
-from homeassistant.components import stt, tts
+from homeassistant.components import ffmpeg, stt, tts
 from homeassistant.components.assist_pipeline import (
     AudioSettings,
     PipelineEvent,
@@ -227,10 +227,6 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         if audio_settings is None or audio_settings.volume_multiplier == 0:
             audio_settings = VoiceAssistantAudioSettings()
 
-        tts_audio_output = (
-            "raw" if self.device_info.voice_assistant_version >= 2 else "mp3"
-        )
-
         _LOGGER.debug("Starting pipeline")
         if flags & VoiceAssistantCommandFlag.USE_WAKE_WORD:
             start_stage = PipelineStage.WAKE_WORD
@@ -255,7 +251,6 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 ),
                 conversation_id=conversation_id,
                 device_id=device_id,
-                tts_audio_output=tts_audio_output,
                 start_stage=start_stage,
                 wake_word_settings=WakeWordSettings(timeout=5),
                 audio_settings=AudioSettings(
@@ -302,10 +297,14 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
             )
 
-            _extension, audio_bytes = await tts.async_get_media_source_audio(
+            extension, audio_bytes = await tts.async_get_media_source_audio(
                 self.hass,
                 media_id,
             )
+
+            if extension != "raw":
+                # Convert TTS output to raw 16Khz, 16-bit mono
+                audio_bytes = await self._convert_audio_to_raw(audio_bytes, extension)
 
             _LOGGER.debug("Sending %d bytes of audio", len(audio_bytes))
 
@@ -331,3 +330,43 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
             )
             self._tts_done.set()
+
+    async def _convert_audio_to_raw(
+        self,
+        audio_data: bytes,
+        from_extension: str,
+        rate: int = 16000,
+        channels: int = 1,
+    ) -> bytes:
+        """Convert audio to raw PCM S16_LE using ffmpeg."""
+        ffmpeg_manager = ffmpeg.get_ffmpeg_manager(self.hass)
+        ffmpeg_input = [
+            "-f",
+            from_extension,
+            "-i",
+            "pipe:",  # input from stdin
+        ]
+        ffmpeg_output = [
+            "-f",
+            "s16le",
+            "-acodec",
+            "pcm_s16le",
+            "-ac",
+            str(channels),
+            "-ar",
+            str(rate),
+        ]
+
+        ffmpeg_output.append("pipe:")  # output to stdout
+
+        ffmpeg_proc = await asyncio.create_subprocess_exec(
+            ffmpeg_manager.binary,
+            *ffmpeg_input,
+            *ffmpeg_output,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+
+        stdout, _stderr = await ffmpeg_proc.communicate(input=audio_data)
+        return stdout
