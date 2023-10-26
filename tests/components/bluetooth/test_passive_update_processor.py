@@ -1093,7 +1093,6 @@ async def test_integration_with_entity(
     assert entity_one.unique_id == "aa:bb:cc:dd:ee:ff-temperature-remote"
     assert entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff-remote")},
-        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Govee",
         "model": "H5178-REMOTE",
         "name": "B5178D6FB Remote",
