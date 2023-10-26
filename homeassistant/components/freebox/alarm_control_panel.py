@@ -77,7 +77,6 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
             node["type"]["endpoints"], "signal", "state"
         )
         self._set_features(self._router.home_devices[self._id])
-        self._update_attrs(self._router.home_devices[self._id])
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -104,7 +103,6 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         state = await self.get_home_endpoint_value(self._command_state)
         if state:
             self._set_state(state)
-            self._update_attrs(self._router.home_devices[self._id])
 
     def _set_features(self, node: dict[str, Any]) -> None:
         """Add alarm features."""
@@ -131,14 +129,6 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
 
         else:
             self._attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
-
-    def _update_attrs(self, node: dict[str, Any]) -> None:
-        """Update the alarm."""
-        # Parse all endpoints values
-        for endpoint in filter(
-            lambda x: (x["ep_type"] == "signal"), node["show_endpoints"]
-        ):
-            self._attr_extra_state_attributes[endpoint["name"]] = endpoint["value"]
 
     def _set_state(self, state: str) -> None:
         """Update state."""
