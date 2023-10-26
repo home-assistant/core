@@ -350,6 +350,55 @@ async def test_color_light(
     # tests
 
 
+async def test_color_light_turned_off(hass: HomeAssistant) -> None:
+    """Test color light discovery with turned off light."""
+    device = (
+        "light.test_off",
+        "off",
+        {
+            "friendly_name": "Test light off",
+            "supported_color_modes": ["color_temp", "hs"],
+            "hs_color": None,
+            "color_temp": None,
+            "brightness": None,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "light#test_off"
+    assert appliance["displayCategories"][0] == "LIGHT"
+    assert appliance["friendlyName"] == "Test light off"
+
+    assert_endpoint_capabilities(
+        appliance,
+        "Alexa.BrightnessController",
+        "Alexa.PowerController",
+        "Alexa.ColorController",
+        "Alexa.ColorTemperatureController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    properties = await reported_properties(hass, "light#test_off")
+    properties.assert_equal("Alexa.PowerController", "powerState", "OFF")
+    properties.assert_equal("Alexa.BrightnessController", "brightness", 0)
+    properties.assert_equal(
+        "Alexa.ColorController",
+        "color",
+        {"hue": 0.0, "saturation": 0.0, "brightness": 0.0},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.BrightnessController",
+        "SetBrightness",
+        "light#test_off",
+        "light.turn_on",
+        hass,
+        payload={"brightness": "50"},
+    )
+    assert call.data["brightness_pct"] == 50
+
+
 @pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_script(hass: HomeAssistant) -> None:
     """Test script discovery."""

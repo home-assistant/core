@@ -91,10 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IKEA Idasen from a config entry."""
     address: str = entry.data[CONF_ADDRESS].upper()
 
-    coordinator: IdasenDeskCoordinator = IdasenDeskCoordinator(
-        hass, _LOGGER, entry.title, address
-    )
-
+    coordinator = IdasenDeskCoordinator(hass, _LOGGER, entry.title, address)
     device_info = DeviceInfo(
         name=entry.title,
         connections={(dr.CONNECTION_BLUETOOTH, address)},
