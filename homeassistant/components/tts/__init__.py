@@ -380,55 +380,9 @@ class TextToSpeechEntity(RestoreEntity):
 
         Return a tuple of file extension and data as bytes.
         """
-        extension, data = await self.hass.async_add_executor_job(
+        return await self.hass.async_add_executor_job(
             partial(self.get_tts_audio, message, language, options=options)
         )
-        preferred_extension = options.get(ATTR_PREFERRED_FORMAT, extension)
-
-        if extension and data and (extension not in (preferred_extension, "raw")):
-            # Automatically convert to preferred format with ffmpeg
-            _LOGGER.debug(
-                "Automatically converting TTS audio from %s to %s",
-                extension,
-                preferred_extension,
-            )
-            data = await self._convert_audio(data, extension, preferred_extension)
-            extension = preferred_extension
-
-        return (extension, data)
-
-    async def _convert_audio(
-        self, audio_data: bytes, from_extension: str, to_extension: str
-    ) -> bytes:
-        """Convert audio from one format to another using ffmpeg."""
-        ffmpeg_manager = ffmpeg.get_ffmpeg_manager(self.hass)
-        ffmpeg_input = [
-            "-f",
-            from_extension,
-            "-i",
-            "pipe:",  # input from stdin
-        ]
-        ffmpeg_output = [
-            "-f",
-            to_extension,
-        ]
-
-        if to_extension == "mp3":
-            ffmpeg_output.extend(["-q:a", "0"])  # max quality
-
-        ffmpeg_output.append("pipe:")  # output to stdout
-
-        ffmpeg_proc = await asyncio.create_subprocess_exec(
-            ffmpeg_manager.binary,
-            *ffmpeg_input,
-            *ffmpeg_output,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.DEVNULL,
-        )
-
-        stdout, _stderr = await ffmpeg_proc.communicate(input=audio_data)
-        return stdout
 
 
 def _hash_options(options: dict) -> str:
@@ -667,6 +621,13 @@ class SpeechManager:
                     f"No TTS from {engine_instance.name} for '{message}'"
                 )
 
+            if extension not in (expected_extension, "raw"):
+                _LOGGER.debug(
+                    "Converting audio from %s to %s", extension, expected_extension
+                )
+                data = await self._convert_audio(data, extension, expected_extension)
+                extension = expected_extension
+
             # Create file infos
             filename = f"{cache_key}.{extension}".lower()
 
@@ -711,6 +672,39 @@ class SpeechManager:
             "pending": audio_task,
         }
         return filename
+
+    async def _convert_audio(
+        self, audio_data: bytes, from_extension: str, to_extension: str
+    ) -> bytes:
+        """Convert audio from one format to another using ffmpeg."""
+        ffmpeg_manager = ffmpeg.get_ffmpeg_manager(self.hass)
+        ffmpeg_input = [
+            "-f",
+            from_extension,
+            "-i",
+            "pipe:",  # input from stdin
+        ]
+        ffmpeg_output = [
+            "-f",
+            to_extension,
+        ]
+
+        if to_extension == "mp3":
+            ffmpeg_output.extend(["-q:a", "0"])  # max quality
+
+        ffmpeg_output.append("pipe:")  # output to stdout
+
+        ffmpeg_proc = await asyncio.create_subprocess_exec(
+            ffmpeg_manager.binary,
+            *ffmpeg_input,
+            *ffmpeg_output,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+
+        stdout, _stderr = await ffmpeg_proc.communicate(input=audio_data)
+        return stdout
 
     async def _async_save_tts_audio(
         self, cache_key: str, filename: str, data: bytes
