@@ -18,6 +18,9 @@ import zigpy.zcl.clusters
 import zigpy.zdo.types as zdo_t
 
 import homeassistant.components.zha.core.cluster_handlers as cluster_handlers
+from homeassistant.components.zha.core.cluster_handlers.lighting import (
+    ColorClusterHandler,
+)
 import homeassistant.components.zha.core.const as zha_const
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.endpoint import Endpoint
@@ -834,8 +837,8 @@ async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
 
     # And one is also logged at runtime
     with patch.dict(
-        registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY,
-        {cluster.cluster_id: {None: TestZigbeeClusterHandler}},
+        registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY[cluster.cluster_id],
+        {None: TestZigbeeClusterHandler},
     ), caplog.at_level(logging.WARNING):
         zha_endpoint.add_all_cluster_handlers()
 
@@ -844,6 +847,9 @@ async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
 
 async def test_standard_cluster_handler(hass: HomeAssistant, caplog) -> None:
     """Test setting up a cluster handler that matches a standard cluster."""
+
+    class TestZigbeeClusterHandler(ColorClusterHandler):
+        pass
 
     mock_device = mock.AsyncMock(spec_set=zigpy.device.Device)
     zigpy_ep = zigpy.endpoint.Endpoint(mock_device, endpoint_id=1)
@@ -862,7 +868,51 @@ async def test_standard_cluster_handler(hass: HomeAssistant, caplog) -> None:
     mock_zha_device.quirk_id = None
     zha_endpoint = Endpoint(zigpy_ep, mock_zha_device)
 
-    zha_endpoint.add_all_cluster_handlers()
+    with patch.dict(
+        registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY[cluster.cluster_id],
+        {"__test_quirk_id": TestZigbeeClusterHandler},
+    ):
+        zha_endpoint.add_all_cluster_handlers()
+
+    assert len(zha_endpoint.all_cluster_handlers) == 1
+    assert isinstance(
+        list(zha_endpoint.all_cluster_handlers.values())[0], ColorClusterHandler
+    )
+
+
+async def test_quirk_id_cluster_handler(hass: HomeAssistant, caplog) -> None:
+    """Test setting up a cluster handler that matches a standard cluster."""
+
+    class TestZigbeeClusterHandler(ColorClusterHandler):
+        pass
+
+    mock_device = mock.AsyncMock(spec_set=zigpy.device.Device)
+    zigpy_ep = zigpy.endpoint.Endpoint(mock_device, endpoint_id=1)
+
+    cluster = zigpy_ep.add_input_cluster(zigpy.zcl.clusters.lighting.Color.cluster_id)
+    cluster.configure_reporting_multiple = AsyncMock(
+        spec_set=cluster.configure_reporting_multiple,
+        return_value=[
+            foundation.ConfigureReportingResponseRecord(
+                status=foundation.Status.SUCCESS
+            )
+        ],
+    )
+
+    mock_zha_device = mock.AsyncMock(spec=ZHADevice)
+    mock_zha_device.quirk_id = "__test_quirk_id"
+    zha_endpoint = Endpoint(zigpy_ep, mock_zha_device)
+
+    with patch.dict(
+        registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY[cluster.cluster_id],
+        {"__test_quirk_id": TestZigbeeClusterHandler},
+    ):
+        zha_endpoint.add_all_cluster_handlers()
+
+    assert len(zha_endpoint.all_cluster_handlers) == 1
+    assert isinstance(
+        list(zha_endpoint.all_cluster_handlers.values())[0], TestZigbeeClusterHandler
+    )
 
 
 # parametrize side effects:
