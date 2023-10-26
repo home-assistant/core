@@ -621,7 +621,7 @@ class DanfossExerciseDayOfTheWeekEnum(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_classes={"thermostat.DanfossThermostat"},
+    quirk_ids={"danfoss_thermostat"},
 )
 class DanfossExerciseDayOfTheWeek(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for setting the day of the week for exercising."""
@@ -642,7 +642,7 @@ class DanfossOrientationEnum(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_classes={"thermostat.DanfossThermostat"},
+    quirk_ids={"danfoss_thermostat"},
 )
 class DanfossOrientation(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for setting the orientation of the valve.
@@ -666,7 +666,7 @@ class DanfossAdaptationRunControlEnum(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_classes={"thermostat.DanfossThermostat"},
+    quirk_ids={"danfoss_thermostat"},
 )
 class DanfossAdaptationRunControl(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for controlling the current adaptation run."""
@@ -686,7 +686,7 @@ class DanfossViewingDirectionEnum(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="thermostat_ui",
-    quirk_classes={"thermostat.DanfossThermostat"},
+    quirk_ids={"danfoss_thermostat"},
 )
 class DanfossViewingDirection(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for setting the viewing direction of the screen."""
