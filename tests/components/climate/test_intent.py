@@ -1,5 +1,6 @@
 """Test climate intents."""
 from collections.abc import Generator
+from unittest.mock import patch
 
 import pytest
 
@@ -163,3 +164,57 @@ async def test_get_temperature(
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
     assert response.matched_states[0].state == "55"
+
+
+async def test_get_temperature_no_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test HassClimateGetTemperature intent with no climate entities."""
+    await climate_intent.async_setup_intents(hass)
+
+    await create_mock_platform(hass, [])
+
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass, "test", climate_intent.INTENT_GET_TEMPERATURE, {}
+        )
+
+
+async def test_get_temperature_no_state(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test HassClimateGetTemperature intent when states are missing."""
+    await climate_intent.async_setup_intents(hass)
+
+    climate_1 = MockClimateEntity()
+    climate_1._attr_name = "Climate 1"
+    climate_1._attr_unique_id = "1234"
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "1234", suggested_object_id="climate_1"
+    )
+
+    await create_mock_platform(hass, [climate_1])
+
+    living_room_area = area_registry.async_create(name="Living Room")
+    entity_registry.async_update_entity(
+        climate_1.entity_id, area_id=living_room_area.id
+    )
+
+    with patch("homeassistant.core.StateMachine.get", return_value=None), pytest.raises(
+        intent.IntentHandleError
+    ):
+        await intent.async_handle(
+            hass, "test", climate_intent.INTENT_GET_TEMPERATURE, {}
+        )
+
+    with patch(
+        "homeassistant.core.StateMachine.async_all", return_value=[]
+    ), pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_GET_TEMPERATURE,
+            {"area": {"value": "Living Room"}},
+        )
