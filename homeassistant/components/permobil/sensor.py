@@ -176,6 +176,7 @@ class PermobilSensor(CoordinatorEntity[MyPermobilCoordinator], SensorEntity):
     _attr_has_entity_name = True
     _attr_suggested_display_precision = 0
     entity_description: PermobilSensorEntityDescription
+    _available = True
 
     def __init__(
         self,
@@ -188,6 +189,15 @@ class PermobilSensor(CoordinatorEntity[MyPermobilCoordinator], SensorEntity):
         self._attr_unique_id = (
             f"{coordinator.p_api.email}_{self.entity_description.key}"
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if the sensor has value."""
+        try:
+            self.entity_description.value_fn(self.coordinator.data)
+            return True
+        except KeyError:
+            return False
 
     @property
     def native_value(self) -> float | None:
