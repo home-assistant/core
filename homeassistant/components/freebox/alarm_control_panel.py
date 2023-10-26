@@ -63,27 +63,19 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
 
         self._attr_extra_state_attributes = {}
         self._state: str | Any
-        # Trigger
+        # Commands
         self._command_trigger = self.get_command_id(
             node["type"]["endpoints"], "slot", "trigger"
         )
-        # Alarme principale
-        self._command_alarm1 = self.get_command_id(
+        self._command_arm_away = self.get_command_id(
             node["type"]["endpoints"], "slot", "alarm1"
         )
-        # Alarme secondaire
-        self._command_alarm2 = self.get_command_id(
+        self._command_arm_home = self.get_command_id(
             node["type"]["endpoints"], "slot", "alarm2"
         )
-        # Passer le délai
-        self._command_skip = self.get_command_id(
-            node["type"]["endpoints"], "slot", "skip"
-        )
-        # Désactiver l'alarme
-        self._command_off = self.get_command_id(
+        self._command_disarm = self.get_command_id(
             node["type"]["endpoints"], "slot", "off"
         )
-        # État
         self._command_state = self.get_command_id(
             node["type"]["endpoints"], "signal", "state"
         )
@@ -99,19 +91,19 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        if await self.set_home_endpoint_value(self._command_off):
+        if await self.set_home_endpoint_value(self._command_disarm):
             self.set_state(STATE_ALARM_DISARMED)
             self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if await self.set_home_endpoint_value(self._command_alarm1):
+        if await self.set_home_endpoint_value(self._command_arm_away):
             self.set_state(STATE_ALARM_ARMING)
             self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        if await self.set_home_endpoint_value(self._command_alarm2):
+        if await self.set_home_endpoint_value(self._command_arm_home):
             self.set_state(STATE_ALARM_ARMING)
             self.async_write_ha_state()
 
