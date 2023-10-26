@@ -32,7 +32,7 @@ class AsyncConfigEntryAuth:
                 self.oauth_session.config_entry.async_start_reauth(
                     self.oauth_session.hass
                 )
-            raise ex
+            raise
         return self.access_token
 
     async def get_resource(self) -> Resource:

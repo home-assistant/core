@@ -1,6 +1,7 @@
 """Services tests for the Google Mail integration."""
 from unittest.mock import patch
 
+from aiohttp.client_exceptions import ClientResponseError
 from google.auth.exceptions import RefreshError
 import pytest
 
@@ -57,13 +58,23 @@ async def test_set_vacation(
     assert len(mock_client.mock_calls) == 5
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "expected_exception"),
+    (
+        (RefreshError, RefreshError),
+        (ClientResponseError("", (), status=400), ClientResponseError),
+    ),
+)
 async def test_reauth_trigger(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    side_effect,
+    expected_exception,
 ) -> None:
     """Test reauth is triggered after a refresh error during service call."""
     await setup_integration()
 
-    with patch(TOKEN, side_effect=RefreshError), pytest.raises(RefreshError):
+    with patch(TOKEN, side_effect=side_effect), pytest.raises(expected_exception):
         await hass.services.async_call(
             DOMAIN,
             "set_vacation",
