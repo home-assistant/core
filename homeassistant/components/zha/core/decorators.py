@@ -21,8 +21,8 @@ class DictRegistry(dict[int | str, _TypeT]):
         return decorator
 
 
-class DictofDictRegistry(dict[int | str, dict[int | str | None, _TypeT]]):
-    """Dict Registry of multiple items."""
+class NestedDictRegistry(dict[int | str, dict[int | str | None, _TypeT]]):
+    """Dict Registry of multiple items per key."""
 
     def register(
         self, name: int | str, quirk_name: int | str | None = None

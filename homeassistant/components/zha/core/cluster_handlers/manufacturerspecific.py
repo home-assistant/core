@@ -379,7 +379,7 @@ class IkeaRemote(ClusterHandler):
     REPORT_CONFIG = ()
 
 
-@registries.CUSTOM_CLUSTER_HANDLER_REGISTRY.register(
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     DoorLock.cluster_id, quirk_name="XiaomiVibrationAQ1"
 )
 class XiaomiVibrationAQ1ClusterHandler(MultistateInput):
