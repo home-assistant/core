@@ -48,7 +48,7 @@
           "description": "The day this task is due, in natural language."
         },
         "due_date_lang": {
-          "name": "Due data language",
+          "name": "Due date language",
           "description": "The language of due_date_string."
         },
         "due_date": {
