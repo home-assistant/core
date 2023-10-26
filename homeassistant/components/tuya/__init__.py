@@ -271,12 +271,7 @@ class DeviceManager(TuyaDeviceManager):
         virtual_states = DeviceManager.get_category_virtual_states(device.category)
         LOGGER.debug(f"BEFORE device_id -> {device_id} device_status-> {device.status} status-> {status} VS-> {virtual_states}")
         for virtual_state in virtual_states:
-            if virtual_state.virtual_state_value == VirtualStates.STATE_UPDATED_ONLY_IF_IN_REPORTING_PAYLOAD:
-                if virtual_state.key in device.status:
-                    for item in status:
-                        if "code" in item and "value" in item and item["code"] == virtual_state.key:
-                            item["value"] = None
-            elif virtual_state.virtual_state_value == VirtualStates.STATE_SUMMED_IN_REPORTING_PAYLOAD:
+            if virtual_state.virtual_state_value == VirtualStates.STATE_SUMMED_IN_REPORTING_PAYLOAD:
                 if virtual_state.key in device.status:
                     for item in status:
                         if "code" in item and "value" in item and item["code"] == virtual_state.key:

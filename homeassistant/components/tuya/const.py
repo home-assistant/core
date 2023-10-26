@@ -56,8 +56,7 @@ SMARTLIFE_APP = "smartlife"
 
 class VirtualStates(IntFlag):
     """Virtual states"""
-    STATE_UPDATED_ONLY_IF_IN_REPORTING_PAYLOAD  = 0X0001,   #Don't set the state if it's not reported 
-    STATE_SUMMED_IN_REPORTING_PAYLOAD           = 0X0002,   #Spoof the state value to make it a total instead of an incremental value
+    STATE_SUMMED_IN_REPORTING_PAYLOAD           = 0X0001,   #Spoof the state value to make it a total instead of an incremental value
 
 
 PLATFORMS = [
