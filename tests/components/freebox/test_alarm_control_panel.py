@@ -42,7 +42,7 @@ async def test_panel(
     await setup_platform(hass, ALARM_CONTROL_PANEL)
 
     # Initial state
-    assert hass.states.get("alarm_control_panel.systeme_d_alarme").state == "disarmed"
+    assert hass.states.get("alarm_control_panel.systeme_d_alarme").state == "unknown"
     assert (
         hass.states.get("alarm_control_panel.systeme_d_alarme").attributes[
             "supported_features"
