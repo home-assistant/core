@@ -91,14 +91,13 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         return [
             tts.ATTR_AUDIO_OUTPUT,
             tts.ATTR_VOICE,
-            tts.ATTR_PREFERRED_FORMAT,
             ATTR_SPEAKER,
         ]
 
     @property
     def default_options(self):
         """Return a dict include default options."""
-        return {tts.ATTR_AUDIO_OUTPUT: "wav", tts.ATTR_PREFERRED_FORMAT: "mp3"}
+        return {}
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[tts.Voice] | None:
@@ -148,7 +147,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         except (OSError, WyomingError):
             return (None, None)
 
-        if options[tts.ATTR_AUDIO_OUTPUT] == "wav":
+        if options.get(tts.ATTR_AUDIO_OUTPUT) != "raw":
             return ("wav", data)
 
         # Raw output (convert to 16Khz, 16-bit mono)

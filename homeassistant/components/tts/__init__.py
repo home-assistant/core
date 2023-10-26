@@ -72,7 +72,6 @@ __all__ = [
     "async_get_media_source_audio",
     "async_support_options",
     "ATTR_AUDIO_OUTPUT",
-    "ATTR_PREFERRED_FORMAT",
     "CONF_LANG",
     "DEFAULT_CACHE_DIR",
     "generate_media_source_id",
@@ -89,7 +88,6 @@ ATTR_PLATFORM = "platform"
 ATTR_AUDIO_OUTPUT = "audio_output"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
-ATTR_PREFERRED_FORMAT = "preferred_format"
 
 CONF_LANG = "language"
 
@@ -485,6 +483,11 @@ class SpeechManager:
         merged_options.update(options or {})
 
         supported_options = engine_instance.supported_options or []
+
+        # ATTR_AUDIO_OUTPUT is always "supported" since it's used to convert
+        # audio after the TTS has run (if necessary)
+        supported_options.append(ATTR_AUDIO_OUTPUT)
+
         invalid_opts = [
             opt_name for opt_name in merged_options if opt_name not in supported_options
         ]
@@ -594,11 +597,6 @@ class SpeechManager:
         """
         if options is not None and ATTR_AUDIO_OUTPUT in options:
             expected_extension = options[ATTR_AUDIO_OUTPUT]
-            if expected_extension != "raw":
-                # Audio may be automatically converted
-                expected_extension = options.get(
-                    ATTR_PREFERRED_FORMAT, expected_extension
-                )
         else:
             expected_extension = None
 

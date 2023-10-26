@@ -34,7 +34,6 @@ async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
     assert entity.supported_options == [
         tts.ATTR_AUDIO_OUTPUT,
         tts.ATTR_VOICE,
-        tts.ATTR_PREFERRED_FORMAT,
         wyoming.ATTR_SPEAKER,
     ]
     voices = entity.async_get_supported_voices("en-US")
@@ -58,10 +57,16 @@ async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) ->
     ) as mock_client:
         extension, data = await tts.async_get_media_source_audio(
             hass,
-            tts.generate_media_source_id(hass, "Hello world", "tts.test_tts", "en-US"),
+            tts.generate_media_source_id(
+                hass,
+                "Hello world",
+                "tts.test_tts",
+                "en-US",
+                options={tts.ATTR_AUDIO_OUTPUT: "mp3"},
+            ),
         )
 
-    # MP3 is the preferred format
+    # Requested MP3 format
     assert extension == "mp3"
     assert data is not None
 
@@ -82,7 +87,7 @@ async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) ->
                 "Hello world",
                 "tts.test_tts",
                 "en-US",
-                options={tts.ATTR_PREFERRED_FORMAT: "wav"},
+                options={tts.ATTR_AUDIO_OUTPUT: "wav"},
             ),
         )
 
