@@ -621,7 +621,7 @@ class SpeechManager:
                     f"No TTS from {engine_instance.name} for '{message}'"
                 )
 
-            if extension not in (expected_extension, "raw"):
+            if expected_extension and (extension not in (expected_extension, "raw")):
                 _LOGGER.debug(
                     "Converting audio from %s to %s", extension, expected_extension
                 )
