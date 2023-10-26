@@ -1456,7 +1456,7 @@ def async_call_at(
     | Callable[[datetime], Coroutine[Any, Any, None] | None],
     loop_time: float,
 ) -> CALLBACK_TYPE:
-    """Add a listener that is fires at or after <loop_time>.
+    """Add a listener that fires at or after <loop_time>.
 
     The listener is passed the time it fires in UTC time.
     """
@@ -1476,7 +1476,7 @@ def async_call_later(
     action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
     | Callable[[datetime], Coroutine[Any, Any, None] | None],
 ) -> CALLBACK_TYPE:
-    """Add a listener that is fires at or after <delay>.
+    """Add a listener that fires at or after <delay>.
 
     The listener is passed the time it fires in UTC time.
     """
