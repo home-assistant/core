@@ -1,6 +1,5 @@
 """Support to send data to a Splunk instance."""
 import asyncio
-from http import HTTPStatus
 import json
 import logging
 
@@ -118,9 +117,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await splunk.queue(json.dumps(payload, cls=JSONEncoder), send=True)
         except SplunkPayloadError as err:
-            # Catch 403
-            if err.status == HTTPStatus.FORBIDDEN:
-                raise ConfigEntryAuthFailed() from err
             _LOGGER.warning(err)
         except ClientConnectionError as err:
             _LOGGER.warning(err)

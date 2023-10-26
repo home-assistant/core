@@ -5,12 +5,10 @@ from unittest.mock import patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from hass_splunk import SplunkPayloadError
-import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant, State
-from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from . import RETURN_BADAUTH, RETURN_SUCCESS, URL, setup_platform
 
@@ -72,37 +70,6 @@ async def test_event(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
     )
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 2
-
-
-async def test_event_auth_failures(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test event."""
-    aioclient_mock.post(
-        URL,
-        text=RETURN_SUCCESS,
-    )
-
-    await setup_platform(hass)
-
-    # Auth Failure
-    with patch(
-        "hass_splunk.hass_splunk.queue",
-        side_effect=SplunkPayloadError(
-            message="Forbidden", code=5, status=HTTPStatus.FORBIDDEN
-        ),
-    ), pytest.raises(ConfigEntryAuthFailed):
-        # Test event
-        hass.bus.async_fire(
-            EVENT_STATE_CHANGED,
-            {
-                "entity_id": "splunk.test",
-                "old_state": None,
-                "new_state": State("splunk.test", "Success"),
-            },
-        )
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
 
 
 async def test_event_failures(
