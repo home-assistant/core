@@ -61,8 +61,6 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         """Initialize an alarm."""
         super().__init__(hass, router, node)
 
-        self._attr_extra_state_attributes = {}
-        self._state: str | Any
         # Commands
         self._command_trigger = self.get_command_id(
             node["type"]["endpoints"], "slot", "trigger"
@@ -83,11 +81,6 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         self.set_state(STATE_IDLE)
         self.add_features(self._router.home_devices[self._id])
         self.update_node(self._router.home_devices[self._id])
-
-    @property
-    def state(self) -> str:
-        """Return the state."""
-        return self._state
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -116,7 +109,7 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
     async def async_update_signal(self):
         """Update signal."""
         state = await self.get_home_endpoint_value(self._command_state)
-        if state is not None:
+        if state:
             self.set_state(state)
             self.update_node(self._router.home_devices[self._id])
             self.async_write_ha_state()
@@ -157,6 +150,6 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
 
     def set_state(self, state: str) -> None:
         """Update state."""
-        self._state = FREEBOX_TO_STATUS.get(state)
-        if self._state is None:
-            self._state = STATE_ALARM_DISARMED
+        self._attr_state = FREEBOX_TO_STATUS.get(state)
+        if not self._attr_state:
+            self._attr_state = STATE_ALARM_DISARMED
