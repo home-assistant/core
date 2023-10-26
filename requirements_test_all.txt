@@ -218,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.1.0
+aioesphomeapi==18.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -451,7 +451,7 @@ bellows==0.36.8
 bimmer-connected==0.14.2
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.2.1
+bleak-retry-connector==3.3.0
 
 # homeassistant.components.bluetooth
 bleak==0.21.1
@@ -805,7 +805,7 @@ home-assistant-intents==2023.10.16
 homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.15
+homematicip==1.0.16
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -1269,7 +1269,7 @@ pydroid-ipcam==2.0.0
 pyecoforest==0.3.0
 
 # homeassistant.components.econet
-pyeconet==0.1.20
+pyeconet==0.1.22
 
 # homeassistant.components.efergy
 pyefergy==22.1.1
