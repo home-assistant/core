@@ -24,7 +24,16 @@ INVALID_EMAIL = "this is not a valid email"
 
 async def test_flow_init(hass: HomeAssistant) -> None:
     """Test config flow init."""
+    AsyncMock()
+
+
+async def test_sucessful_config_flow(hass: HomeAssistant) -> None:
+    """Test the config flow from start to finish with no errors."""
     mock_api: AsyncMock = AsyncMock()
+    mock_api.request_region_names.return_value = MOCK_REGIONS
+    mock_api.request_application_code.return_value = None
+    mock_api.request_application_token.return_value = MOCK_TOKEN
+
     with patch(
         "homeassistant.components.permobil.config_flow.MyPermobil",
         return_value=mock_api,
@@ -35,14 +44,8 @@ async def test_flow_init(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
+    assert result["step_id"] == "user"
 
-
-async def test_sucessful_config_flow(hass: HomeAssistant) -> None:
-    """Test the config flow from start to finish with no errors."""
-    mock_api: AsyncMock = AsyncMock()
-    mock_api.request_region_names.return_value = MOCK_REGIONS
-    mock_api.request_application_code.return_value = None
-    mock_api.request_application_token.return_value = MOCK_TOKEN
     # init flow
     with patch(
         "homeassistant.components.permobil.config_flow.MyPermobil",
