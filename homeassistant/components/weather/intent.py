@@ -42,11 +42,7 @@ class GetWeatherIntent(intent.IntentHandler):
                 hass, name=weather_name, domains=[DOMAIN]
             )
             for weather_state in matching_states:
-                for maybe_weather in entities:
-                    if maybe_weather.name == weather_state.name:
-                        weather = maybe_weather
-                        break
-
+                weather = component.get_entity(weather_state.entity_id)
                 if weather is not None:
                     break
 
