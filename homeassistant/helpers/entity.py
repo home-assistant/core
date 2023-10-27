@@ -1049,13 +1049,6 @@ class Entity(ABC):
     async def __async_remove_impl(self, force_remove: bool) -> None:
         """Remove entity from Home Assistant."""
 
-        # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
-        if self.platform and self._platform_state != EntityPlatformState.ADDED:
-            raise HomeAssistantError(
-                f"Entity '{self.entity_id}' is not added to its platform"
-            )
-
         self._platform_state = EntityPlatformState.REMOVED
 
         self._call_on_remove_callbacks()
