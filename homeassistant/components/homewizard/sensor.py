@@ -216,7 +216,9 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        has_fn=lambda data: data.active_power_l1_w is not None,
+        has_fn=lambda data: (
+            data.active_power_l1_w is not None and data.active_power_l2_w is not None
+        ),
         value_fn=lambda data: data.active_power_l1_w,
     ),
     HomeWizardSensorEntityDescription(

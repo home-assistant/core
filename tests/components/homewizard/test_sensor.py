@@ -468,13 +468,39 @@ async def test_sensor_entity_active_power(
     assert ATTR_ICON not in state.attributes
 
 
+async def test_sensor_entity_active_power_l1_is_not_created(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
+    """Test entity not loads active power l1, when there is no l2."""
+
+    api = get_mock_device()
+    api.data = AsyncMock(return_value=Data.from_dict({"active_power_l1_w": 123.123}))
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not hass.states.get("sensor.product_name_aabbccddeeff_active_power_phase_1")
+
+
 async def test_sensor_entity_active_power_l1(
     hass: HomeAssistant, mock_config_entry_data, mock_config_entry
 ) -> None:
     """Test entity loads active power l1."""
 
     api = get_mock_device()
-    api.data = AsyncMock(return_value=Data.from_dict({"active_power_l1_w": 123.123}))
+    api.data = AsyncMock(
+        return_value=Data.from_dict(
+            {"active_power_l1_w": 123.123, "active_power_l2_w": 456.456}
+        )
+    )
 
     with patch(
         "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
