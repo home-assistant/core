@@ -73,7 +73,6 @@ async def async_get_service(
 class TvOverlayNotificationService(BaseNotificationService):
     """Notification service for TvOverlay."""
 
-    # def __init__(self, notify: Notifications, is_allowed_path: Any) -> None:
     def __init__(self, config: dict[str, Any], is_allowed_path: Any) -> None:
         """Initialize the service."""
         self.notify = Notifications(config[CONF_HOST])
