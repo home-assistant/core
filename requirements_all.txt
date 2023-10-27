@@ -375,7 +375,7 @@ aiounifi==64
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.4.1
+aiovodafone==0.4.2
 
 # homeassistant.components.waqi
 aiowaqi==2.1.0
@@ -387,7 +387,7 @@ aiowatttime==0.1.1
 aiowebostv==0.3.3
 
 # homeassistant.components.withings
-aiowithings==1.0.1
+aiowithings==1.0.2
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -894,7 +894,7 @@ glances-api==0.4.3
 goalzero==0.2.2
 
 # homeassistant.components.goodwe
-goodwe==0.2.31
+goodwe==0.2.32
 
 # homeassistant.components.google_mail
 # homeassistant.components.google_tasks
@@ -1007,7 +1007,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231025.1
+home-assistant-frontend==20231026.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.10.16
