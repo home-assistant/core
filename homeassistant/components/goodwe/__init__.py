@@ -1,6 +1,6 @@
 """The Goodwe inverter component."""
 
-from goodwe import InverterError, connect
+from goodwe import Inverter, InverterError, connect
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -19,19 +19,21 @@ from .const import (
 from .coordinator import GoodweUpdateCoordinator
 
 
+async def _connect_inverter(entry: ConfigEntry) -> Inverter:
+    return await connect(
+        host=entry.data[CONF_HOST],
+        family=entry.data[CONF_MODEL_FAMILY],
+        retries=10,
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Goodwe components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    host = entry.data[CONF_HOST]
-    model_family = entry.data[CONF_MODEL_FAMILY]
 
     # Connect to Goodwe inverter
     try:
-        inverter = await connect(
-            host=host,
-            family=model_family,
-            retries=10,
-        )
+        inverter = await _connect_inverter(entry)
     except InverterError as err:
         raise ConfigEntryNotReady from err
 
