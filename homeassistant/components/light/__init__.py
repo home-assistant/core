@@ -14,6 +14,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_EVENT,
+    CONF_SERVICE,
+    CONF_SERVICE_DATA,
+    RASC_START,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -1073,3 +1077,80 @@ class LightEntity(ToggleEntity):
     def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
+
+    async def async_get_action_target_state(
+        self, action: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Return expected state when action is complete.
+
+        Example action:
+        {
+            CONF_EVENT: "s"|"c",
+            CONF_SERVICE: "turn_on",
+            CONF_SERVICE_DATA: {
+                'transition': 10,
+                'brightness_pct': 50,
+                'device_id': ['70483e490873edc594fc7264fdaa75ad']
+            }
+        }
+
+        Example return value:
+        return = {
+            "attr1": value1, # "is_on": true
+            "attr2": value2  # "brightness": 50
+        }
+        """
+
+        def _target_start_state(
+            current: int | float | None, target_complete_state: int | float
+        ) -> int | float:
+            if current is None:
+                if target_complete_state > 0:
+                    return 0
+                return 100
+            if target_complete_state > current:
+                return current + 1
+            if target_complete_state < current:
+                return current - 1
+            return current
+
+        target: dict[str, Any] = {}
+        if action[CONF_SERVICE] == SERVICE_TURN_ON:
+            target["is_on"] = True
+        elif action[CONF_SERVICE] == SERVICE_TURN_OFF:
+            target["is_on"] = False
+        elif action[CONF_SERVICE] == SERVICE_TOGGLE:
+            target["is_on"] = not self.is_on
+
+        service_data = action[CONF_SERVICE_DATA]
+        supported_color_modes = self._light_internal_supported_color_modes
+        if (
+            ColorMode.COLOR_TEMP in supported_color_modes
+            and ATTR_COLOR_TEMP_KELVIN in service_data
+        ):
+            if ATTR_TRANSITION not in service_data and action[CONF_EVENT] == RASC_START:
+                target[ATTR_COLOR_TEMP_KELVIN] = _target_start_state(
+                    self.color_temp_kelvin, service_data[ATTR_COLOR_TEMP_KELVIN]
+                )
+            else:
+                target[ATTR_COLOR_TEMP_KELVIN] = service_data[ATTR_COLOR_TEMP_KELVIN]
+        if ColorMode.HS in supported_color_modes and ATTR_HS_COLOR in service_data:
+            if ATTR_TRANSITION not in service_data and action[CONF_EVENT] == RASC_START:
+                hue, sat = self.hs_color if self.hs_color is not None else (None, None)
+                target[ATTR_HS_COLOR] = (
+                    _target_start_state(hue, service_data[ATTR_HS_COLOR][0]),
+                    _target_start_state(sat, service_data[ATTR_HS_COLOR][1]),
+                )
+            else:
+                target[ATTR_HS_COLOR] = service_data[ATTR_HS_COLOR]
+        if (
+            ColorMode.BRIGHTNESS in supported_color_modes
+            and ATTR_BRIGHTNESS in service_data
+        ):
+            if ATTR_TRANSITION not in service_data and action[CONF_EVENT] == RASC_START:
+                target[ATTR_BRIGHTNESS] = _target_start_state(
+                    self.brightness, service_data[ATTR_BRIGHTNESS]
+                )
+            else:
+                target[ATTR_BRIGHTNESS] = service_data[ATTR_BRIGHTNESS]
+        return target
