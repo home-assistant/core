@@ -1449,7 +1449,7 @@ async def test_config_defaults() -> None:
     assert config.allowlist_external_dirs == set()
     assert config.allowlist_external_urls == set()
     assert config.media_dirs == {}
-    assert config.safe_mode is False
+    assert config.recovery_mode is False
     assert config.legacy_templates is False
     assert config.currency == "EUR"
     assert config.country is None
@@ -1487,13 +1487,14 @@ async def test_config_as_dict() -> None:
         "allowlist_external_urls": set(),
         "version": __version__,
         "config_source": ha.ConfigSource.DEFAULT,
-        "safe_mode": False,
+        "recovery_mode": False,
         "state": "RUNNING",
         "external_url": None,
         "internal_url": None,
         "currency": "EUR",
         "country": None,
         "language": "en",
+        "safe_mode": False,
     }
 
     assert expected == config.as_dict()

@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from aiocomelit import ComelitSerialBridgeObject
-from aiocomelit.const import IRRIGATION, OTHER
+from aiocomelit.const import IRRIGATION, OTHER, STATE_OFF, STATE_ON
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, STATE_OFF, STATE_ON
+from .const import DOMAIN
 from .coordinator import ComelitSerialBridge
 
 
@@ -25,13 +25,16 @@ async def async_setup_entry(
 
     coordinator: ComelitSerialBridge = hass.data[DOMAIN][config_entry.entry_id]
 
-    # Use config_entry.entry_id as base for unique_id because no serial number or mac is available
-    async_add_entities(
+    entities: list[ComelitSwitchEntity] = []
+    entities.extend(
         ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
-        for device in (
-            coordinator.data[OTHER].values() + coordinator.data[IRRIGATION].values()
-        )
+        for device in coordinator.data[IRRIGATION].values()
     )
+    entities.extend(
+        ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
+        for device in coordinator.data[OTHER].values()
+    )
+    async_add_entities(entities)
 
 
 class ComelitSwitchEntity(CoordinatorEntity[ComelitSerialBridge], SwitchEntity):
@@ -50,7 +53,9 @@ class ComelitSwitchEntity(CoordinatorEntity[ComelitSerialBridge], SwitchEntity):
         self._api = coordinator.api
         self._device = device
         super().__init__(coordinator)
-        self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
+        # Use config_entry.entry_id as base for unique_id
+        # because no serial number or mac is available
+        self._attr_unique_id = f"{config_entry_entry_id}-{device.type}-{device.index}"
         self._attr_device_info = coordinator.platform_device_info(device)
         if device.type == OTHER:
             self._attr_device_class = SwitchDeviceClass.OUTLET
