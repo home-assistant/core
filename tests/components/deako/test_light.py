@@ -107,7 +107,7 @@ async def test_light_initial_props(
     entity = entity_registry.async_get(f"{LIGHT_DOMAIN}.{device_name}")
     assert entity
     assert entity.unique_id == device_uuid
-    assert device_name == entity.original_name
+    assert entity.original_name is None
     if mock_devices.get_state(device_uuid).get("dim") is not None:
         assert ColorMode.BRIGHTNESS in entity.capabilities.get("supported_color_modes")
         assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
@@ -197,6 +197,7 @@ async def test_light_power_change_off(
     pydeako_deako_mock.return_value.control_device.assert_called_once_with(
         device_uuid,
         False,
+        None,
     )
 
 
@@ -256,7 +257,7 @@ async def test_light_on_update(
     pydeako_deako_mock.return_value.set_state_callback.side_effect = set_state_callback
 
     with patch(
-        "homeassistant.components.deako.light.DeakoLightSwitch.schedule_update_ha_state"
+        "homeassistant.components.deako.light.DeakoLightEntity.schedule_update_ha_state"
     ) as update_mock:
         mock_config_entry.add_to_hass(hass)
 

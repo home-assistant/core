@@ -9,3 +9,7 @@ ICON = "mdi:format-quote-close"
 
 # Data keys
 CONNECTION_ID = "connection_id"
+
+# Model names
+MODEL_SMART = "smart"
+MODEL_DIMMER = "dimmer"
