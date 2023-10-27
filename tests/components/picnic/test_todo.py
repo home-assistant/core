@@ -1,4 +1,4 @@
-"""Tests for Google Tasks todo platform."""
+"""Tests for Picnic Tasks todo platform."""
 
 
 import copy
