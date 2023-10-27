@@ -155,10 +155,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
             if not await self.gateway.async_set_heat_temp(
                 int(self._data_key), int(temperature)
             ):
-                raise HomeAssistantError(
-                    f"Failed to set_temperature {temperature} on body"
-                    f" {self.entity_data[ATTR.BODY_TYPE][ATTR.VALUE]}: Unexpected response"
-                )
+                raise ScreenLogicError("Unexpected response")
             _LOGGER.debug(
                 "Set temperature for body %s to %s", self._data_key, temperature
             )
@@ -179,10 +176,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
             if not await self.gateway.async_set_heat_mode(
                 int(self._data_key), mode.value
             ):
-                raise HomeAssistantError(
-                    f"Failed to set_hvac_mode {mode.name} on body"
-                    f" {self.entity_data[ATTR.BODY_TYPE][ATTR.VALUE]}: Unexpected response"
-                )
+                raise ScreenLogicError("Unexpected response")
             _LOGGER.debug("Set hvac_mode on body %s to %s", self._data_key, mode.name)
         except ScreenLogicError as sle:
             raise HomeAssistantError(
@@ -204,10 +198,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
             if not await self.gateway.async_set_heat_mode(
                 int(self._data_key), mode.value
             ):
-                raise HomeAssistantError(
-                    f"Failed to set_preset_mode {mode.name} on body"
-                    f" {self.entity_data[ATTR.BODY_TYPE][ATTR.VALUE]}: Unexpected response"
-                )
+                raise ScreenLogicError("Unexpected response")
             _LOGGER.debug("Set preset_mode on body %s to %s", self._data_key, mode.name)
         except ScreenLogicError as sle:
             raise HomeAssistantError(

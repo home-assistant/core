@@ -62,14 +62,14 @@ def async_load_screenlogic_services(hass: HomeAssistant):
             )
             try:
                 if not await coordinator.gateway.async_set_color_lights(color_num):
-                    raise HomeAssistantError(
-                        f"Failed to call service '{SERVICE_SET_COLOR_MODE}'"
-                    )
+                    raise ScreenLogicError("Unexpected response")
                 # Debounced refresh to catch any secondary
                 # changes in the device
                 await coordinator.async_request_refresh()
-            except ScreenLogicError as error:
-                raise HomeAssistantError(error) from error
+            except ScreenLogicError as sle:
+                raise HomeAssistantError(
+                    f"Failed to call service '{SERVICE_SET_COLOR_MODE}': {sle.msg}"
+                ) from sle
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_COLOR_MODE, async_set_color_mode, SET_COLOR_MODE_SCHEMA

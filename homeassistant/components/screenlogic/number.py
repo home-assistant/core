@@ -159,9 +159,7 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
 
         try:
             if not self._set_value_func(*args.values()):
-                raise HomeAssistantError(
-                    f"Failed to set {self._data_key} to {value}: Unexpected response"
-                )
+                raise ScreenLogicError("Unexpected response")
             _LOGGER.debug("Set '%s' to %s", self._data_key, value)
             await self._async_refresh()
         except ScreenLogicError as sle:

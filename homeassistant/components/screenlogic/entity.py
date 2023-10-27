@@ -172,9 +172,7 @@ class ScreenLogicCircuitEntity(ScreenLogicPushEntity):
     async def _async_set_circuit(self, state: ON_OFF) -> None:
         try:
             if not await self.gateway.async_set_circuit(self._data_key, state.value):
-                raise HomeAssistantError(
-                    f"Failed to set_circuit {self._data_key} {state.value}: Unexpected response"
-                )
+                raise ScreenLogicError("Unexpected response")
             _LOGGER.debug("Set circuit %s %s", self._data_key, state.value)
         except ScreenLogicError as sle:
             raise HomeAssistantError(
