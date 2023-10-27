@@ -388,6 +388,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Can be removed in 2023
     hass.http.register_redirect("/config/server_control", "/developer-tools/yaml")
 
+    # Shopping list panel was replaced by todo panel in 2023.11
+    hass.http.register_redirect("/shopping-list", "/todo")
+
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
     async_register_built_in_panel(hass, "profile")
