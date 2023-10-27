@@ -81,8 +81,7 @@ def error_message(
     if translation_key is not None:
         error_payload["translation_key"] = translation_key
         error_payload["translation_placeholders"] = translation_placeholders or {}
-    if translation_domain is not None:
-        error_payload["translation_domain"] = translation_domain
+        error_payload["translation_domain"] = translation_domain or const.DOMAIN
     return {
         "id": iden,
         **BASE_ERROR_MESSAGE,

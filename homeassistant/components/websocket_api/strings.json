@@ -1,6 +1,9 @@
 {
   "exceptions": {
     "service_not_found": {
+      "message": "[%key:common::exceptions::service_not_found::message%]"
+    },
+    "service_child_not_found": {
       "message": "Service {domain}.{service} not found."
     }
   }

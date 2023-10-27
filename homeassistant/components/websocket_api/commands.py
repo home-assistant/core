@@ -254,7 +254,7 @@ async def handle_call_service(
                 const.ERR_HOME_ASSISTANT_ERROR,
                 str(err),
                 translation_domain=const.DOMAIN,
-                translation_key="service_not_found",
+                translation_key="other_service_not_found",
                 translation_placeholders={
                     "domain": err.domain,
                     "service": err.service,

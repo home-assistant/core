@@ -349,7 +349,7 @@ async def test_call_service_not_found(
         "service": "test_service",
     }
     assert msg["error"]["translation_key"] == "service_not_found"
-    assert "translation_domain" not in msg["error"]
+    assert msg["error"]["translation_domain"] == "websocket_api"
 
 
 async def test_call_service_child_not_found(
@@ -382,7 +382,7 @@ async def test_call_service_child_not_found(
         "domain": "non",
         "service": "existing",
     }
-    assert msg["error"]["translation_key"] == "service_not_found"
+    assert msg["error"]["translation_key"] == "other_service_not_found"
     assert msg["error"]["translation_domain"] == "websocket_api"
 
 
