@@ -77,11 +77,12 @@ def error_message(
     error_payload: dict[str, Any] = {
         "code": code,
         "message": message,
+        "translation_key": translation_key,
+        "translation_placeholders": translation_placeholders,
+        # In case a ServiceNotFound error is raised
+        # we use 'websocket_api' as default translation_domain
+        "translation_domain": translation_domain or const.DOMAIN,
     }
-    if translation_key is not None:
-        error_payload["translation_key"] = translation_key
-        error_payload["translation_placeholders"] = translation_placeholders or {}
-        error_payload["translation_domain"] = translation_domain or const.DOMAIN
     return {
         "id": iden,
         **BASE_ERROR_MESSAGE,

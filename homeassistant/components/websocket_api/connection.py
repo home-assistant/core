@@ -143,7 +143,7 @@ class ActiveConnection:
         translation_domain: str | None = None,
         translation_placeholders: dict[str, Any] | None = None,
     ) -> None:
-        """Send a error message."""
+        """Send an error message."""
         self.send_message(
             messages.error_message(
                 msg_id,
