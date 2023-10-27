@@ -19,17 +19,6 @@ MODEL_LMU: Final = "Micra"
 
 BREW_ACTIVE: Final = "brew_active"
 
-GLOBAL: Final = "global"
-MON: Final = "mon"
-TUE: Final = "tue"
-WED: Final = "wed"
-THU: Final = "thu"
-FRI: Final = "fri"
-SAT: Final = "sat"
-SUN: Final = "sun"
-
-DAYS: Final = [MON, TUE, WED, THU, FRI, SAT, SUN]
-
 MACHINE_NAME: Final = "machine_name"
 SERIAL_NUMBER: Final = "serial_number"
 

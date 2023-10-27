@@ -2,7 +2,6 @@
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -14,22 +13,16 @@ from .coordinator import LmApiCoordinator
 
 
 @dataclass
-class LaMarzoccoEntityDescriptionMixin:
-    """Mixin for all LM entities."""
-
-    extra_attributes: dict
-
-
-@dataclass
-class LaMarzoccoEntityDescription(EntityDescription, LaMarzoccoEntityDescriptionMixin):
+class LaMarzoccoEntityDescription(EntityDescription):
     """Description for all LM entities."""
 
 
 @dataclass
-class LaMarzoccoEntity(CoordinatorEntity):
+class LaMarzoccoEntity(CoordinatorEntity[LmApiCoordinator]):
     """Common elements for all entities."""
 
     entity_description: LaMarzoccoEntityDescription
+    _attr_has_entity_name: bool = True
 
     def __init__(
         self,
@@ -42,7 +35,6 @@ class LaMarzoccoEntity(CoordinatorEntity):
         self._hass = hass
         self.entity_description = entity_description
         self._lm_client = self.coordinator.data
-        self._attr_has_entity_name = True
         self._attr_unique_id = (
             f"{self._lm_client.serial_number}_{self.entity_description.key}"
         )
@@ -53,29 +45,6 @@ class LaMarzoccoEntity(CoordinatorEntity):
             model=self._lm_client.true_model_name,
             sw_version=self._lm_client.firmware_version,
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the extra state attributes."""
-
-        def bool_to_str(value: bool | str) -> str:
-            """Convert boolean values to strings to improve display in Lovelace."""
-            return str(value) if isinstance(value, bool) else value
-
-        def tuple_to_str(key: tuple[str, ...] | str) -> str:
-            """Convert tuple keys to strings."""
-            if isinstance(key, tuple):
-                joined_key = "_".join(key)
-                return joined_key
-            return key
-
-        data = self._lm_client.current_status
-        attr = self.entity_description.extra_attributes.get(self._lm_client.model_name)
-        if attr is None:
-            return {}
-
-        keys = [tuple_to_str(key) for key in attr]
-        return {key: bool_to_str(data[key]) for key in keys if key in data}
 
     @callback
     def _handle_coordinator_update(self) -> None:

@@ -57,7 +57,6 @@ ENTITIES: tuple[LaMarzoccoWaterHeaterEntityDescription, ...] = (
         control_fn=lambda client, state: client.set_power(state),
         current_temp_fn=lambda client: client.current_status.get("coffee_temp", 0),
         target_temp_fn=lambda client: client.current_status.get("coffee_temp_set", 0),
-        extra_attributes={},
     ),
     LaMarzoccoWaterHeaterEntityDescription(
         key="steam_boiler",
@@ -72,7 +71,6 @@ ENTITIES: tuple[LaMarzoccoWaterHeaterEntityDescription, ...] = (
         control_fn=lambda client, state: client.set_steam_boiler_enable(state),
         current_temp_fn=lambda client: client.current_status.get("steam_temp", 0),
         target_temp_fn=lambda client: client.current_status.get("steam_temp_set", 0),
-        extra_attributes={},
     ),
 )
 
@@ -88,8 +86,6 @@ async def async_setup_entry(
     async_add_entities(
         LaMarzoccoWaterHeater(coordinator, hass, description)
         for description in ENTITIES
-        if not description.extra_attributes
-        or coordinator.lm.model_name in description.extra_attributes
     )
 
 
@@ -98,24 +94,15 @@ class LaMarzoccoWaterHeater(LaMarzoccoEntity, WaterHeaterEntity):
 
     entity_description: LaMarzoccoWaterHeaterEntityDescription
 
-    @property
-    def supported_features(self) -> WaterHeaterEntityFeature:
-        """Return the list of supported features."""
-        return (
-            WaterHeaterEntityFeature.TARGET_TEMPERATURE
-            | WaterHeaterEntityFeature.ON_OFF
-            | WaterHeaterEntityFeature.OPERATION_MODE
-        )
+    _attr_supported_features = (
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.ON_OFF
+        | WaterHeaterEntityFeature.OPERATION_MODE
+    )
 
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement used by the platform."""
-        return UnitOfTemperature.CELSIUS
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of the platform."""
-        return PRECISION_TENTHS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_precision = PRECISION_TENTHS
+    _attr_operation_list = OPERATION_MODES
 
     @property
     def current_temperature(self) -> float | None:
@@ -136,11 +123,6 @@ class LaMarzoccoWaterHeater(LaMarzoccoEntity, WaterHeaterEntity):
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self.entity_description.max_temp
-
-    @property
-    def operation_list(self) -> list[str] | None:
-        """Return the list of available operation modes."""
-        return OPERATION_MODES
 
     @property
     def current_operation(self) -> str | None:
