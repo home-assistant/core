@@ -7,8 +7,5 @@ DOMAIN_DATA = f"{DOMAIN}_data"
 # Icons
 ICON = "mdi:format-quote-close"
 
-# Platforms
-LIGHT = "light"
-PLATFORMS = [LIGHT]
-
+# Data keys
 CONNECTION_ID = "connection_id"

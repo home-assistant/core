@@ -20,16 +20,14 @@ PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up deako from a config entry."""
-    hass_data = hass.data.setdefault(DOMAIN, {})
-    if hass_data is None or not isinstance(hass_data, dict):
-        hass_data = {}
-        hass.data[DOMAIN] = hass_data
-
+    """Set up deako."""
     _zc = await zeroconf.async_get_instance(hass)
     discoverer = DeakoDiscoverer(_zc)
 
     connection = Deako(discoverer.get_address)
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = connection
+
     await connection.connect()
     try:
         await connection.find_devices()
@@ -42,8 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if len(devices) == 0:
         await connection.disconnect()
         raise ConfigEntryNotReady(devices)
-
-    hass.data[DOMAIN][entry.entry_id] = connection
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

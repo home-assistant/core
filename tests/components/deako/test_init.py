@@ -19,7 +19,6 @@ async def test_config_no_config(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
 
 
-@pytest.mark.parametrize("hass_data", [None, {}, 1])  # if not dict, set as dict
 @pytest.mark.asyncio
 async def test_deako_async_setup_entry(
     hass: HomeAssistant,
@@ -27,15 +26,11 @@ async def test_deako_async_setup_entry(
     mock_config_entry: MockConfigEntry,
     pydeako_deako_mock,
     pydeako_discoverer_mock,
-    hass_data,
 ) -> None:
     """Test successful setup entry."""
     pydeako_deako_mock.return_value.get_devices.return_value = [1, 2]
 
     mock_config_entry.add_to_hass(hass)
-
-    if hass_data is not None:
-        hass.data[DOMAIN] = hass_data
 
     with patch.object(
         hass.config_entries, "async_forward_entry_setups"
