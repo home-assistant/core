@@ -38,46 +38,46 @@ async def test_airzone_create_sensors(
     assert state.state == "-42"
 
     # Zones
-    state = hass.states.get("sensor.airzone_1_4_despacho_temperature")
+    state = hass.states.get("sensor.despacho_temperature")
     assert state.state == "21.20"
 
-    state = hass.states.get("sensor.airzone_1_4_despacho_humidity")
+    state = hass.states.get("sensor.despacho_humidity")
     assert state.state == "36"
 
-    state = hass.states.get("sensor.airzone_1_3_dorm_1_temperature")
+    state = hass.states.get("sensor.dorm_1_temperature")
     assert state.state == "20.8"
 
-    state = hass.states.get("sensor.airzone_1_3_dorm_1_humidity")
+    state = hass.states.get("sensor.dorm_1_humidity")
     assert state.state == "35"
 
-    state = hass.states.get("sensor.airzone_1_5_dorm_2_temperature")
+    state = hass.states.get("sensor.dorm_2_temperature")
     assert state.state == "20.5"
 
-    state = hass.states.get("sensor.airzone_1_5_dorm_2_humidity")
+    state = hass.states.get("sensor.dorm_2_humidity")
     assert state.state == "40"
 
-    state = hass.states.get("sensor.airzone_1_2_dorm_ppal_temperature")
+    state = hass.states.get("sensor.dorm_ppal_temperature")
     assert state.state == "21.1"
 
-    state = hass.states.get("sensor.airzone_1_2_dorm_ppal_humidity")
+    state = hass.states.get("sensor.dorm_ppal_humidity")
     assert state.state == "39"
 
-    state = hass.states.get("sensor.airzone_1_1_salon_temperature")
+    state = hass.states.get("sensor.salon_temperature")
     assert state.state == "19.6"
 
-    state = hass.states.get("sensor.airzone_1_1_salon_humidity")
+    state = hass.states.get("sensor.salon_humidity")
     assert state.state == "34"
 
-    state = hass.states.get("sensor.airzone_2_1_airzone_2_1_temperature")
+    state = hass.states.get("sensor.airzone_2_1_temperature")
     assert state.state == "22.3"
 
-    state = hass.states.get("sensor.airzone_2_1_airzone_2_1_humidity")
+    state = hass.states.get("sensor.airzone_2_1_humidity")
     assert state.state == "62"
 
-    state = hass.states.get("sensor.airzone_3_1_dkn_plus_temperature")
+    state = hass.states.get("sensor.dkn_plus_temperature")
     assert state.state == "21.7"
 
-    state = hass.states.get("sensor.airzone_3_1_dkn_plus_humidity")
+    state = hass.states.get("sensor.dkn_plus_humidity")
     assert state is None
 
 
@@ -110,8 +110,8 @@ async def test_airzone_sensors_availability(
         async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.airzone_1_2_dorm_ppal_temperature")
+    state = hass.states.get("sensor.dorm_ppal_temperature")
     assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get("sensor.airzone_1_2_dorm_ppal_humidity")
+    state = hass.states.get("sensor.dorm_ppal_humidity")
     assert state.state == STATE_UNAVAILABLE

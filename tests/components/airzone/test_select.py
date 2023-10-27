@@ -24,49 +24,49 @@ async def test_airzone_create_selects(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
-    state = hass.states.get("select.airzone_1_4_despacho_cold_angle")
+    state = hass.states.get("select.despacho_cold_angle")
     assert state.state == "90deg"
 
-    state = hass.states.get("select.airzone_1_4_despacho_heat_angle")
+    state = hass.states.get("select.despacho_heat_angle")
     assert state.state == "90deg"
 
-    state = hass.states.get("select.airzone_1_4_despacho_sleep")
+    state = hass.states.get("select.despacho_sleep")
     assert state.state == "off"
 
-    state = hass.states.get("select.airzone_1_3_dorm_1_cold_angle")
+    state = hass.states.get("select.dorm_1_cold_angle")
     assert state.state == "90deg"
 
-    state = hass.states.get("select.airzone_1_3_dorm_1_heat_angle")
+    state = hass.states.get("select.dorm_1_heat_angle")
     assert state.state == "90deg"
 
-    state = hass.states.get("select.airzone_1_3_dorm_1_sleep")
+    state = hass.states.get("select.dorm_1_sleep")
     assert state.state == "off"
 
-    state = hass.states.get("select.airzone_1_5_dorm_2_cold_angle")
+    state = hass.states.get("select.dorm_2_cold_angle")
     assert state.state == "90deg"
 
-    state = hass.states.get("select.airzone_1_5_dorm_2_heat_angle")
+    state = hass.states.get("select.dorm_2_heat_angle")
     assert state.state == "90deg"
 
-    state = hass.states.get("select.airzone_1_5_dorm_2_sleep")
+    state = hass.states.get("select.dorm_2_sleep")
     assert state.state == "off"
 
-    state = hass.states.get("select.airzone_1_2_dorm_ppal_cold_angle")
+    state = hass.states.get("select.dorm_ppal_cold_angle")
     assert state.state == "45deg"
 
-    state = hass.states.get("select.airzone_1_2_dorm_ppal_heat_angle")
+    state = hass.states.get("select.dorm_ppal_heat_angle")
     assert state.state == "50deg"
 
-    state = hass.states.get("select.airzone_1_2_dorm_ppal_sleep")
+    state = hass.states.get("select.dorm_ppal_sleep")
     assert state.state == "30m"
 
-    state = hass.states.get("select.airzone_1_1_salon_cold_angle")
+    state = hass.states.get("select.salon_cold_angle")
     assert state.state == "90deg"
 
-    state = hass.states.get("select.airzone_1_1_salon_heat_angle")
+    state = hass.states.get("select.salon_heat_angle")
     assert state.state == "90deg"
 
-    state = hass.states.get("select.airzone_1_1_salon_sleep")
+    state = hass.states.get("select.salon_sleep")
     assert state.state == "off"
 
 
@@ -90,7 +90,7 @@ async def test_airzone_select_sleep(hass: HomeAssistant) -> None:
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.airzone_1_3_dorm_1_sleep",
+                ATTR_ENTITY_ID: "select.dorm_1_sleep",
                 ATTR_OPTION: "Invalid",
             },
             blocking=True,
@@ -104,13 +104,13 @@ async def test_airzone_select_sleep(hass: HomeAssistant) -> None:
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.airzone_1_3_dorm_1_sleep",
+                ATTR_ENTITY_ID: "select.dorm_1_sleep",
                 ATTR_OPTION: "30m",
             },
             blocking=True,
         )
 
-    state = hass.states.get("select.airzone_1_3_dorm_1_sleep")
+    state = hass.states.get("select.dorm_1_sleep")
     assert state.state == "30m"
 
 
@@ -139,13 +139,13 @@ async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.airzone_1_3_dorm_1_cold_angle",
+                ATTR_ENTITY_ID: "select.dorm_1_cold_angle",
                 ATTR_OPTION: "50deg",
             },
             blocking=True,
         )
 
-    state = hass.states.get("select.airzone_1_3_dorm_1_cold_angle")
+    state = hass.states.get("select.dorm_1_cold_angle")
     assert state.state == "50deg"
 
     # Heat Angle
@@ -167,11 +167,11 @@ async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.airzone_1_3_dorm_1_heat_angle",
+                ATTR_ENTITY_ID: "select.dorm_1_heat_angle",
                 ATTR_OPTION: "45deg",
             },
             blocking=True,
         )
 
-    state = hass.states.get("select.airzone_1_3_dorm_1_heat_angle")
+    state = hass.states.get("select.dorm_1_heat_angle")
     assert state.state == "45deg"

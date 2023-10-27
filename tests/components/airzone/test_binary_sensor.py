@@ -18,75 +18,75 @@ async def test_airzone_create_binary_sensors(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
     # Zones
-    state = hass.states.get("binary_sensor.airzone_1_4_despacho_air_demand")
+    state = hass.states.get("binary_sensor.despacho_air_demand")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.airzone_1_4_despacho_battery")
+    state = hass.states.get("binary_sensor.despacho_battery")
     assert state.state == STATE_ON
 
-    state = hass.states.get("binary_sensor.airzone_1_4_despacho_floor_demand")
+    state = hass.states.get("binary_sensor.despacho_floor_demand")
     assert state is None
 
-    state = hass.states.get("binary_sensor.airzone_1_4_despacho_problem")
+    state = hass.states.get("binary_sensor.despacho_problem")
     assert state.state == STATE_ON
     assert state.attributes.get("errors") == [API_ERROR_LOW_BATTERY]
 
-    state = hass.states.get("binary_sensor.airzone_1_3_dorm_1_air_demand")
+    state = hass.states.get("binary_sensor.dorm_1_air_demand")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.airzone_1_3_dorm_1_battery")
+    state = hass.states.get("binary_sensor.dorm_1_battery")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.airzone_1_3_dorm_1_floor_demand")
+    state = hass.states.get("binary_sensor.dorm_1_floor_demand")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.airzone_1_3_dorm_1_problem")
+    state = hass.states.get("binary_sensor.dorm_1_problem")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.airzone_1_5_dorm_2_air_demand")
+    state = hass.states.get("binary_sensor.dorm_2_air_demand")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.airzone_1_5_dorm_2_battery")
+    state = hass.states.get("binary_sensor.dorm_2_battery")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.airzone_1_5_dorm_2_floor_demand")
+    state = hass.states.get("binary_sensor.dorm_2_floor_demand")
     assert state is None
 
-    state = hass.states.get("binary_sensor.airzone_1_5_dorm_2_problem")
+    state = hass.states.get("binary_sensor.dorm_2_problem")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.airzone_1_2_dorm_ppal_air_demand")
+    state = hass.states.get("binary_sensor.dorm_ppal_air_demand")
     assert state.state == STATE_ON
 
-    state = hass.states.get("binary_sensor.airzone_1_2_dorm_ppal_battery")
+    state = hass.states.get("binary_sensor.dorm_ppal_battery")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.airzone_1_2_dorm_ppal_floor_demand")
+    state = hass.states.get("binary_sensor.dorm_ppal_floor_demand")
     assert state.state == STATE_ON
 
-    state = hass.states.get("binary_sensor.airzone_1_2_dorm_ppal_problem")
+    state = hass.states.get("binary_sensor.dorm_ppal_problem")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.airzone_1_1_salon_air_demand")
+    state = hass.states.get("binary_sensor.salon_air_demand")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.airzone_1_1_salon_battery")
+    state = hass.states.get("binary_sensor.salon_battery")
     assert state is None
 
-    state = hass.states.get("binary_sensor.airzone_1_1_salon_floor_demand")
+    state = hass.states.get("binary_sensor.salon_floor_demand")
     assert state is None
 
-    state = hass.states.get("binary_sensor.airzone_1_1_salon_problem")
+    state = hass.states.get("binary_sensor.salon_problem")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.airzone_2_1_airzone_2_1_battery")
+    state = hass.states.get("binary_sensor.airzone_2_1_battery")
     assert state is None
 
-    state = hass.states.get("binary_sensor.airzone_2_1_airzone_2_1_problem")
+    state = hass.states.get("binary_sensor.airzone_2_1_problem")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.airzone_3_1_dkn_plus_battery")
+    state = hass.states.get("binary_sensor.dkn_plus_battery")
     assert state is None
 
-    state = hass.states.get("binary_sensor.airzone_3_1_dkn_plus_problem")
+    state = hass.states.get("binary_sensor.dkn_plus_problem")
     assert state.state == STATE_OFF

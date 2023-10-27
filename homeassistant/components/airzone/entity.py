@@ -174,7 +174,7 @@ class AirzoneZoneEntity(AirzoneEntity):
             identifiers={(DOMAIN, f"{entry.entry_id}_{system_zone_id}")},
             manufacturer=MANUFACTURER,
             model=self.get_airzone_value(AZD_THERMOSTAT_MODEL),
-            name=f"Airzone [{system_zone_id}] {zone_data[AZD_NAME]}",
+            name=zone_data[AZD_NAME],
             sw_version=self.get_airzone_value(AZD_THERMOSTAT_FW),
             via_device=(DOMAIN, f"{entry.entry_id}_{self.system_id}"),
         )

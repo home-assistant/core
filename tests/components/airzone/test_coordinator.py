@@ -56,5 +56,5 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         mock_hvac.assert_called_once()
 
-        state = hass.states.get("sensor.airzone_1_4_despacho_temperature")
+        state = hass.states.get("sensor.despacho_temperature")
         assert state.state == STATE_UNAVAILABLE

@@ -43,7 +43,7 @@ async def test_unique_id_migrate(hass: HomeAssistant) -> None:
 
     assert not config_entry.unique_id
     assert (
-        entity_registry.async_get("sensor.airzone_1_1_salon_temperature").unique_id
+        entity_registry.async_get("sensor.salon_temperature").unique_id
         == f"{config_entry.entry_id}_1:1_temp"
     )
 
@@ -68,7 +68,7 @@ async def test_unique_id_migrate(hass: HomeAssistant) -> None:
 
     assert config_entry.unique_id
     assert (
-        entity_registry.async_get("sensor.airzone_1_1_salon_temperature").unique_id
+        entity_registry.async_get("sensor.salon_temperature").unique_id
         == f"{config_entry.unique_id}_1:1_temp"
     )
 
