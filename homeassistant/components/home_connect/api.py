@@ -216,8 +216,7 @@ class DeviceWithDoor(HomeConnectDevice):
     def get_door_entities(self):
         """Get a dictionary with info about the door binary sensor."""
         entities = []
-        status_keys = self.appliance.get_status().keys()
-        for key in status_keys:
+        for key in self.appliance.get_status():
             if key == BSH_DOOR_STATE:
                 entities.append(
                     {
