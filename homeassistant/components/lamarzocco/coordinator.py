@@ -79,8 +79,7 @@ class LmApiCoordinator(DataUpdateCoordinator):
             str(property_updated),
             str(value),
         )
-        if property_updated:
-            self._lm.update_current_status(property_updated, value)
+        self._lm.update_current_status(property_updated, value)
 
         self.data = self._lm
 
