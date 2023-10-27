@@ -1,4 +1,5 @@
 """Coordinator for Tedee locks."""
+import asyncio
 from datetime import timedelta
 import logging
 import time
@@ -91,7 +92,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
 
         except TedeeDataUpdateException as ex:
             _LOGGER.debug("Error while updating data: %s", str(ex))
-        except (TedeeClientException, Exception) as ex:
+        except (TedeeClientException, asyncio.TimeoutError) as ex:
             raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
 
         if not self.tedee_client.locks_dict:

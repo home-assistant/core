@@ -1,5 +1,5 @@
 """Views for Tedee integration, to be used for webhook from Tedee Bridge."""
-# from aiohttp.hdrs import AUTHORIZATION
+
 from http import HTTPStatus
 import logging
 

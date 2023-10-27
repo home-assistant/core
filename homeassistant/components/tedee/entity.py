@@ -25,10 +25,11 @@ class TedeeEntityDescription(EntityDescription, TedeeEntityDescriptionMixin):
     """Describes Tedee entity."""
 
 
-class TedeeEntity(CoordinatorEntity):
+class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
     """Base class for Tedee entities."""
 
     entity_description: TedeeEntityDescription
+    _attr_has_entity_name: bool = True
 
     def __init__(
         self,
@@ -40,7 +41,6 @@ class TedeeEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._lock = lock
-        self._attr_has_entity_name = True
         self._attr_unique_id = self.entity_description.unique_id_fn(self._lock)
 
         self._attr_device_info = DeviceInfo(
