@@ -13,6 +13,7 @@ from aiowithings import (
     WithingsAuthenticationFailedError,
     WithingsClient,
     WithingsUnauthorizedError,
+    Workout,
     aggregate_measurements,
 )
 
@@ -224,3 +225,39 @@ class WithingsActivityDataUpdateCoordinator(
         if self._previous_data and self._previous_data.date == today:
             return self._previous_data
         return None
+
+
+class WithingsWorkoutDataUpdateCoordinator(
+    WithingsDataUpdateCoordinator[Workout | None]
+):
+    """Withings workout coordinator."""
+
+    _previous_data: Workout | None = None
+
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotificationCategory.ACTIVITY,
+        }
+
+    async def _internal_update_data(self) -> Workout | None:
+        """Retrieve latest workout."""
+        if self._last_valid_update is None:
+            now = dt_util.utcnow()
+            startdate = now - timedelta(days=14)
+            workouts = await self._client.get_workouts_in_period(
+                startdate.date(), now.date()
+            )
+        else:
+            workouts = await self._client.get_workouts_since(self._last_valid_update)
+        if not workouts:
+            return self._previous_data
+        latest_workout = max(workouts, key=lambda workout: workout.end_date)
+        if (
+            self._previous_data is None
+            or self._previous_data.end_date >= latest_workout.end_date
+        ):
+            self._previous_data = latest_workout
+            self._last_valid_update = latest_workout.end_date
+        return self._previous_data
