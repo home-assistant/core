@@ -269,7 +269,7 @@ async def handle_call_service(
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,
-            "Validation error.",
+            f"Validation error: {err}",
             translation_domain=err.translation_domain,
             translation_key=err.translation_key,
             translation_placeholders={**placeholders, **{"message": str(err)}},

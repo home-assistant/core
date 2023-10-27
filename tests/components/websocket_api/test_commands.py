@@ -522,7 +522,7 @@ async def test_call_service_error(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"] is False
     assert msg["error"]["code"] == "home_assistant_error"
-    assert msg["error"]["message"] == "Validation error."
+    assert msg["error"]["message"] == "Validation error: error_message"
     assert msg["error"]["translation_placeholders"] == {
         "option": "bla",
         "message": "error_message",
