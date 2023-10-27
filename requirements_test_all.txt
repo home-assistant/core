@@ -347,7 +347,7 @@ aiotractive==0.5.6
 aiounifi==64
 
 # homeassistant.components.vlc_telnet
-aiovlc==0.1.0
+aiovlc==0.3.2
 
 # homeassistant.components.vodafone_station
 aiovodafone==0.4.2
