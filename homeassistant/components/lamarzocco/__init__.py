@@ -25,7 +25,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up La Marzocco as config entry."""
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator = LmApiCoordinator(hass, entry)
+    hass.setdefault(DOMAIN, {})[entry.entry_id] = coordinator = LmApiCoordinator(hass, entry)
 
     async def async_close_connection(event: Event) -> None:
         """Close WebSocket connection on HA Stop."""
