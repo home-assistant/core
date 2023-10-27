@@ -68,15 +68,16 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
 
         self._attr_speed_count = len(SPEED_LIST)
 
-        self._update_state()
+        self._get_state_from_coordinator_data()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update_state()
+        self._get_state_from_coordinator_data()
         super()._handle_coordinator_update()
 
-    def _update_state(self) -> None:
+    def _get_state_from_coordinator_data(self) -> None:
+        """Populate the entity fields with values from the coordinator data."""
         data = self.coordinator.data
 
         # Power on/off
