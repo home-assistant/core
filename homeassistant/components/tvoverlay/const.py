@@ -2,7 +2,7 @@
 DOMAIN: str = "tvoverlay"
 DEFAULT_NAME = "TvOverlay"
 DEFAULT_TIMEOUT = 5
-DEFAULT_DURATION = 5
+DEFAULT_DURATION = "5"
 
 # Parameters for Notifications
 ATTR_ID = "id"
@@ -14,6 +14,7 @@ ATTR_BADGE_COLOR = "badge_color"
 ATTR_POSITION = "position"
 ATTR_DURATION = "duration"
 ATTR_IMAGE = "image"
+ATTR_VIDEO = "video"
 
 # Attributes for image and app icon
 ATTR_IMAGE_URL = "url"
