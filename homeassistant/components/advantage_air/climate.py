@@ -125,7 +125,6 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the selected zones current temperature."""
-        # This works when using MyZone, MyTemp, or MyAuto
         if self._myzone:
             return self._myzone["measuredTemp"]
         return None
