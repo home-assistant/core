@@ -1173,6 +1173,9 @@ class Entity(ABC):
         await self.async_remove(force_remove=True)
 
         self.entity_id = registry_entry.entity_id
+
+        # Clear the remove event to handle entity added again after entity id change
+        self.__remove_event = None
         self._platform_state = EntityPlatformState.NOT_ADDED
         await self.platform.async_add_entities([self])
 
