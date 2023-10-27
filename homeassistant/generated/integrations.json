@@ -1375,12 +1375,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "eight_sleep": {
-      "name": "Eight Sleep",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "electrasmart": {
       "name": "Electra Smart",
       "integration_type": "hub",
@@ -2162,6 +2156,12 @@
           "iot_class": "cloud_polling",
           "name": "Google Sheets"
         },
+        "google_tasks": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Tasks"
+        },
         "google_translate": {
           "integration_type": "hub",
           "config_flow": true,
@@ -2613,6 +2613,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
+    },
+    "improv_ble": {
+      "name": "Improv via BLE",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "incomfort": {
       "name": "Intergas InComfort/Intouch Lan2RF gateway",
@@ -3101,6 +3107,11 @@
       "iot_class": "local_polling"
     },
     "local_ip": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "local_todo": {
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4588,12 +4599,6 @@
       "name": "RainMachine",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "random": {
-      "name": "Random",
-      "integration_type": "hub",
-      "config_flow": false,
       "iot_class": "local_polling"
     },
     "rapt_ble": {
@@ -6763,6 +6768,12 @@
       "config_flow": true,
       "iot_class": "calculated"
     },
+    "random": {
+      "name": "Random",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "schedule": {
       "integration_type": "helper",
       "config_flow": false
@@ -6825,6 +6836,7 @@
     "islamic_prayer_times",
     "local_calendar",
     "local_ip",
+    "local_todo",
     "min_max",
     "mobile_app",
     "moehlenhoff_alpha2",

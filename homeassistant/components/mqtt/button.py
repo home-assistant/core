@@ -20,7 +20,11 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
 )
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_mqtt_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entity_entry_helper,
+)
 from .models import MqttCommandTemplate
 from .util import valid_publish_topic
 
@@ -48,7 +52,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT button through YAML and through MQTT discovery."""
-    await async_mqtt_entry_helper(
+    await async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttButton,
