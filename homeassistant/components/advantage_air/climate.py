@@ -123,6 +123,14 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             self._attr_fan_modes += [FAN_AUTO]
 
     @property
+    def current_temperature(self) -> float | None:
+        """Return the selected zones current temperature."""
+        # This works when using MyZone, MyTemp, or MyAuto
+        if self._myzone:
+            return self._myzone["measuredTemp"]
+        return None
+
+    @property
     def target_temperature(self) -> float | None:
         """Return the current target temperature."""
         # If the system is in MyZone mode, and a zone is set, return that temperature instead.
