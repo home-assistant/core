@@ -59,7 +59,7 @@ class LmApiCoordinator(DataUpdateCoordinator):
                             Maybe one of your credential details was invalid or you changed your password."
             _LOGGER.debug(msg, exc_info=True)
             raise ConfigEntryAuthFailed(msg) from ex
-        except (RequestNotSuccessful, Exception) as ex:
+        except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
             raise UpdateFailed("Querying API failed. Error: %s" % ex) from ex
 
