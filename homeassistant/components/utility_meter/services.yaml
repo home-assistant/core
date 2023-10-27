@@ -3,8 +3,9 @@
 reset:
   target:
     entity:
-      domain: select
-      integration: utility_meter
+      - domain: select
+      - domain: sensor
+        integration: utility_meter
 
 calibrate:
   target:
