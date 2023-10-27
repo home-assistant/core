@@ -43,7 +43,7 @@ async def test_manual_flow_works(
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == "P1 meter (aabbccddeeff)"
+    assert result["title"] == "P1 meter"
     assert result["data"][CONF_IP_ADDRESS] == "2.2.2.2"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1

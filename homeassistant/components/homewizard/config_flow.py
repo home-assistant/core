@@ -62,7 +62,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(
-                    title=f"{device_info.product_name} ({device_info.serial})",
+                    title=f"{device_info.product_name}",
                     data=user_input,
                 )
 
