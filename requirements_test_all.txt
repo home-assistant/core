@@ -173,7 +173,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.3.0
+aioairzone-cloud==0.3.1
 
 # homeassistant.components.airzone
 aioairzone==0.6.9
@@ -796,7 +796,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231026.0
+home-assistant-frontend==20231027.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.10.16
@@ -1979,7 +1979,7 @@ vallox-websocket-api==3.3.0
 vehicle==2.0.0
 
 # homeassistant.components.velbus
-velbus-aio==2023.10.1
+velbus-aio==2023.10.2
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
