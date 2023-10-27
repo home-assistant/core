@@ -110,7 +110,7 @@ class ActiveBluetoothDataUpdateCoordinator(
             return False
         poll_age: float | None = None
         if self._last_poll:
-            poll_age = monotonic_time_coarse() - self._last_poll
+            poll_age = service_info.time - self._last_poll
         return self._needs_poll_method(service_info, poll_age)
 
     async def _async_poll_data(

@@ -9,12 +9,11 @@ from types import MappingProxyType
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
 # Otherwise can't test just this file (import order issue)
-from homeassistant import exceptions
+from homeassistant import config_entries, exceptions
 import homeassistant.components.scene as scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -34,6 +33,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
     script,
     template,
@@ -44,6 +44,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    MockConfigEntry,
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
@@ -1000,7 +1001,7 @@ async def test_wait_basic_times_out(hass: HomeAssistant, action_type) -> None:
         assert script_obj.last_action == wait_alias
         hass.states.async_set("switch.test", "not_on")
 
-        async with timeout(0.1):
+        async with asyncio.timeout(0.1):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         timed_out = True
@@ -1054,6 +1055,7 @@ async def test_multiple_runs_wait(hass: HomeAssistant, action_type) -> None:
         hass.states.async_set("switch.test", "on")
         hass.async_create_task(script_obj.async_run(context=Context()))
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
 
         assert script_obj.is_running
         assert len(events) == 1
@@ -1063,6 +1065,7 @@ async def test_multiple_runs_wait(hass: HomeAssistant, action_type) -> None:
         wait_started_flag.clear()
         hass.async_create_task(script_obj.async_run())
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
     except (AssertionError, asyncio.TimeoutError):
         await script_obj.async_stop()
         raise
@@ -1386,7 +1389,7 @@ async def test_wait_template_with_utcnow_no_match(hass: HomeAssistant) -> None:
         ):
             async_fire_time_changed(hass, second_non_matching_time)
 
-        async with timeout(0.1):
+        async with asyncio.timeout(0.1):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         timed_out = True
@@ -4080,6 +4083,7 @@ async def test_script_mode_2(
         hass.states.async_set("switch.test", "on")
         hass.async_create_task(script_obj.async_run(context=Context()))
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
 
         assert script_obj.is_running
         assert len(events) == 1
@@ -4090,6 +4094,7 @@ async def test_script_mode_2(
         wait_started_flag.clear()
         hass.async_create_task(script_obj.async_run(context=Context()))
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
 
         assert script_obj.is_running
         assert len(events) == 2
@@ -4529,12 +4534,23 @@ async def test_set_redefines_variable(
     assert_action_trace(expected_trace)
 
 
-async def test_validate_action_config(hass: HomeAssistant) -> None:
+async def test_validate_action_config(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Validate action config."""
+
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.add_to_hass(hass)
+
+    mock_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:02")},
+    )
 
     def templated_device_action(message):
         return {
-            "device_id": "abcd",
+            "device_id": mock_device.id,
             "domain": "mobile_app",
             "message": f"{message} {{{{ 5 + 5}}}}",
             "type": "notify",

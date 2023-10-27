@@ -6,7 +6,6 @@ import json
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
 import voluptuous as vol
@@ -42,7 +41,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            async with timeout(15):
+            async with asyncio.timeout(15):
                 device_info = await fully.getDeviceInfo()
         except (
             ClientConnectorError,

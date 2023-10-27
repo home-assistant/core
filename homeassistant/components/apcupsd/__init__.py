@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +48,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    hass.data[DOMAIN].pop(entry.entry_id)
+    if unload_ok and DOMAIN in hass.data:
+        hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
 
@@ -80,16 +82,6 @@ class APCUPSdData:
         return None
 
     @property
-    def sw_version(self) -> str | None:
-        """Return the software version of the APCUPSd, if available."""
-        return self.status.get("VERSION")
-
-    @property
-    def hw_version(self) -> str | None:
-        """Return the firmware version of the UPS, if available."""
-        return self.status.get("FIRMWARE")
-
-    @property
     def serial_no(self) -> str | None:
         """Return the unique serial number of the UPS, if available."""
         return self.status.get("SERIALNO")
@@ -98,6 +90,21 @@ class APCUPSdData:
     def statflag(self) -> str | None:
         """Return the STATFLAG indicating the status of the UPS, if available."""
         return self.status.get("STATFLAG")
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return the DeviceInfo of this APC UPS for the sensors, if serial number is available."""
+        if self.serial_no is None:
+            return None
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.serial_no)},
+            model=self.model,
+            manufacturer="APC",
+            name=self.name if self.name is not None else "APC UPS",
+            hw_version=self.status.get("FIRMWARE"),
+            sw_version=self.status.get("VERSION"),
+        )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, **kwargs: Any) -> None:

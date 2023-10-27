@@ -12,7 +12,8 @@ from matter_server.common.helpers.util import create_attribute_path
 from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 from .helpers import get_device_id
@@ -78,6 +79,9 @@ class MatterEntity(Entity):
         sub_paths: list[str] = []
         for attr_cls in self._entity_info.attributes_to_watch:
             attr_path = self.get_matter_attribute_path(attr_cls)
+            if attr_path in sub_paths:
+                # prevent duplicate subscriptions
+                continue
             self._attributes_map[attr_cls] = attr_path
             sub_paths.append(attr_path)
             self._unsubscribes.append(

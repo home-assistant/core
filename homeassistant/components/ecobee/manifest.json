@@ -5,12 +5,15 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ecobee",
   "homekit": {
-    "models": ["EB-*", "ecobee*"]
+    "models": ["EB", "ecobee*"]
   },
   "iot_class": "cloud_polling",
   "loggers": ["pyecobee"],
   "requirements": ["python-ecobee-api==0.2.14"],
   "zeroconf": [
+    {
+      "type": "_ecobee._tcp.local."
+    },
     {
       "type": "_sideplay._tcp.local.",
       "properties": {

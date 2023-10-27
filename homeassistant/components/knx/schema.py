@@ -556,6 +556,44 @@ class CoverSchema(KNXPlatformSchema):
     )
 
 
+class DateSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX date."""
+
+    PLATFORM = Platform.DATE
+
+    DEFAULT_NAME = "KNX Date"
+
+    ENTITY_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+        }
+    )
+
+
+class DateTimeSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX date."""
+
+    PLATFORM = Platform.DATETIME
+
+    DEFAULT_NAME = "KNX DateTime"
+
+    ENTITY_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+        }
+    )
+
+
 class ExposeSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX exposures."""
 

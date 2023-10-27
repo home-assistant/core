@@ -11,10 +11,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
 
-from tests.common import (
-    async_capture_events,
-    async_get_device_automations,
-)
+from tests.common import async_capture_events, async_get_device_automations
 
 
 async def test_hue_event(
@@ -92,9 +89,9 @@ async def test_get_triggers(
             }
             for event_type in (
                 ButtonEvent.INITIAL_PRESS,
-                ButtonEvent.LONG_PRESS,
                 ButtonEvent.LONG_RELEASE,
                 ButtonEvent.REPEAT,
+                ButtonEvent.LONG_PRESS,
                 ButtonEvent.SHORT_RELEASE,
             )
             for control_id, resource_id in (

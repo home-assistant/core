@@ -16,7 +16,7 @@ from . import magic_client
 
 from tests.common import MockConfigEntry
 
-SWITCH_WIFI_GUEST_NETWORK = "switch.lte_wifi_guest_network"
+SWITCH_WIFI_GUEST_NETWORK = "switch.lte_wi_fi_guest_network"
 
 
 @patch("homeassistant.components.huawei_lte.Connection", MagicMock())

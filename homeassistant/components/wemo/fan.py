@@ -20,10 +20,7 @@ from homeassistant.util.percentage import (
 )
 
 from . import async_wemo_dispatcher_connect
-from .const import (
-    SERVICE_RESET_FILTER_LIFE,
-    SERVICE_SET_HUMIDITY,
-)
+from .const import SERVICE_RESET_FILTER_LIFE, SERVICE_SET_HUMIDITY
 from .entity import WemoBinaryStateEntity
 from .wemo_device import DeviceCoordinator
 

@@ -16,6 +16,15 @@
         "high_demand": "High Demand",
         "heat_pump": "Heat Pump",
         "performance": "Performance"
+      },
+      "state_attributes": {
+        "away_mode": {
+          "name": "Away mode",
+          "state": {
+            "off": "[%key:common::state::off%]",
+            "on": "[%key:common::state::on%]"
+          }
+        }
       }
     }
   },
@@ -53,6 +62,14 @@
           "description": "[%key:component::water_heater::services::set_temperature::fields::operation_mode::description%]"
         }
       }
+    },
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Turns water heater on."
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turns water heater off."
     }
   }
 }

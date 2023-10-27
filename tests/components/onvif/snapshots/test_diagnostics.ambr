@@ -1,0 +1,74 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+        'name': 'TestCamera',
+        'password': '**REDACTED**',
+        'port': 80,
+        'snapshot_auth': 'digest',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'onvif',
+      'entry_id': '1',
+      'options': dict({
+        'enable_webhooks': True,
+        'extra_arguments': '-pred 1',
+        'rtsp_transport': 'tcp',
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': 'aa:bb:cc:dd:ee',
+      'version': 1,
+    }),
+    'device': dict({
+      'capabilities': dict({
+        'events': False,
+        'imaging': True,
+        'ptz': True,
+        'snapshot': False,
+      }),
+      'info': dict({
+        'fw_version': 'TestFirmwareVersion',
+        'mac': 'aa:bb:cc:dd:ee',
+        'manufacturer': 'TestManufacturer',
+        'model': 'TestModel',
+        'serial_number': 'ABCDEFGHIJK',
+      }),
+      'profiles': list([
+        dict({
+          'index': 0,
+          'name': 'profile1',
+          'ptz': None,
+          'token': 'dummy',
+          'video': dict({
+            'encoding': 'any',
+            'resolution': dict({
+              'height': 480,
+              'width': 640,
+            }),
+          }),
+          'video_source_token': None,
+        }),
+      ]),
+      'services': dict({
+      }),
+      'xaddrs': dict({
+      }),
+    }),
+    'events': dict({
+      'pullpoint_manager_state': dict({
+        '__type': "<enum 'PullPointManagerState'>",
+        'repr': '<PullPointManagerState.PAUSED: 2>',
+      }),
+      'webhook_manager_state': dict({
+        '__type': "<enum 'WebHookManagerState'>",
+        'repr': '<WebHookManagerState.STARTED: 1>',
+      }),
+    }),
+  })
+# ---

@@ -122,6 +122,48 @@ async def test_invalid_json(
         assert not mock_dispatcher_send.called
 
 
+@pytest.mark.parametrize("domain", [*list(mqtt.PLATFORMS), "device_automation", "tag"])
+@pytest.mark.no_fail_on_log_exception
+async def test_discovery_schema_error(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    domain: Platform | str,
+) -> None:
+    """Test unexpected error JSON config."""
+    with patch(
+        f"homeassistant.components.mqtt.{domain}.DISCOVERY_SCHEMA",
+        side_effect=AttributeError("Attribute abc not found"),
+    ):
+        await mqtt_mock_entry()
+        async_fire_mqtt_message(
+            hass,
+            f"homeassistant/{domain}/bla/config",
+            '{"name": "Beer", "some_topic": "bla"}',
+        )
+        await hass.async_block_till_done()
+        assert "AttributeError: Attribute abc not found" in caplog.text
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.ALARM_CONTROL_PANEL])
+async def test_invalid_config(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sending in JSON that violates the platform schema."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/alarm_control_panel/bla/config",
+        '{"name": "abc", "state_topic": "home/alarm", '
+        '"command_topic": "home/alarm/set", '
+        '"qos": "some_invalid_value"}',
+    )
+    await hass.async_block_till_done()
+    assert "Error 'expected int for dictionary value @ data['qos']'" in caplog.text
+
+
 async def test_only_valid_components(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -166,6 +208,83 @@ async def test_correct_config_discovery(
     assert state is not None
     assert state.name == "Beer"
     assert ("binary_sensor", "bla") in hass.data["mqtt"].discovery_already_discovered
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+async def test_discovery_integration_info(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test logging discovery of new and updated items."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Beer", "state_topic": "test-topic", "o": {"name": "bla2mqtt", "sw": "1.0" } }',
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.beer")
+
+    assert state is not None
+    assert state.name == "Beer"
+
+    assert (
+        "Found new component: binary_sensor bla from external application bla2mqtt, version: 1.0"
+        in caplog.text
+    )
+    caplog.clear()
+
+    # Send an update and add support url
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Milk", "state_topic": "test-topic", "o": {"name": "bla2mqtt", "sw": "1.1", "url": "https://bla2mqtt.example.com/support" } }',
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.beer")
+
+    assert state is not None
+    assert state.name == "Milk"
+
+    assert (
+        "Component has already been discovered: binary_sensor bla, sending update from external application bla2mqtt, version: 1.1, support URL: https://bla2mqtt.example.com/support"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "config_message",
+    [
+        '{ "name": "Beer", "state_topic": "test-topic", "o": "bla2mqtt" }',
+        '{ "name": "Beer", "state_topic": "test-topic", "o": 2.0 }',
+        '{ "name": "Beer", "state_topic": "test-topic", "o": null }',
+        '{ "name": "Beer", "state_topic": "test-topic", "o": {"sw": "bla2mqtt"} }',
+    ],
+)
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+async def test_discovery_with_invalid_integration_info(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    config_message: str,
+) -> None:
+    """Test sending in correct JSON."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        config_message,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.beer")
+
+    assert state is None
+    assert (
+        "Unable to parse origin information from discovery message, got" in caplog.text
+    )
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.FAN])
@@ -1266,6 +1385,8 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_WILL_MESSAGE",
     "CONF_WS_PATH",
     "CONF_WS_HEADERS",
+    # Integration info
+    "CONF_SUPPORT_URL",
     # Undocumented device configuration
     "CONF_DEPRECATED_VIA_HUB",
     "CONF_VIA_DEVICE",

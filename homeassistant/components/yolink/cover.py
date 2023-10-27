@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from yolink.client_request import ClientRequest
-from yolink.const import ATTR_GARAGE_DOOR_CONTROLLER
+from yolink.const import ATTR_DEVICE_FINGER, ATTR_GARAGE_DOOR_CONTROLLER
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -30,7 +30,8 @@ async def async_setup_entry(
     entities = [
         YoLinkCoverEntity(config_entry, device_coordinator)
         for device_coordinator in device_coordinators.values()
-        if device_coordinator.device.device_type == ATTR_GARAGE_DOOR_CONTROLLER
+        if device_coordinator.device.device_type
+        in [ATTR_GARAGE_DOOR_CONTROLLER, ATTR_DEVICE_FINGER]
     ]
     async_add_entities(entities)
 
@@ -58,8 +59,12 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
         """Update HA Entity State."""
         if (state_val := state.get("state")) is None:
             return
-        self._attr_is_closed = state_val == "closed"
-        self.async_write_ha_state()
+        if self.coordinator.paired_device is None:
+            self._attr_is_closed = None
+            self.async_write_ha_state()
+        elif state_val in ["open", "closed"]:
+            self._attr_is_closed = state_val == "closed"
+            self.async_write_ha_state()
 
     async def toggle_garage_state(self) -> None:
         """Toggle Garage door state."""

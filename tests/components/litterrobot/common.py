@@ -142,3 +142,17 @@ FEEDER_ROBOT_DATA = {
 }
 
 VACUUM_ENTITY_ID = "vacuum.test_litter_box"
+
+
+async def remove_device(ws_client, device_id, config_entry_id):
+    """Remove config entry from a device."""
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    return response["success"]

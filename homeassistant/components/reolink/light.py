@@ -45,7 +45,7 @@ class ReolinkLightEntityDescription(
 LIGHT_ENTITIES = (
     ReolinkLightEntityDescription(
         key="floodlight",
-        name="Floodlight",
+        translation_key="floodlight",
         icon="mdi:spotlight-beam",
         supported_fn=lambda api, ch: api.supported(ch, "floodLight"),
         is_on_fn=lambda api, ch: api.whiteled_state(ch),
@@ -55,7 +55,7 @@ LIGHT_ENTITIES = (
     ),
     ReolinkLightEntityDescription(
         key="ir_lights",
-        name="Infra red lights in night mode",
+        translation_key="ir_lights",
         icon="mdi:led-off",
         entity_category=EntityCategory.CONFIG,
         supported_fn=lambda api, ch: api.supported(ch, "ir_lights"),
@@ -64,7 +64,7 @@ LIGHT_ENTITIES = (
     ),
     ReolinkLightEntityDescription(
         key="status_led",
-        name="Status LED",
+        translation_key="status_led",
         icon="mdi:lightning-bolt-circle",
         entity_category=EntityCategory.CONFIG,
         supported_fn=lambda api, ch: api.supported(ch, "power_led"),

@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 
-import async_timeout
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 from matter_server.common.errors import MatterError, NodeCommissionFailed, NodeNotExists
@@ -42,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     matter_client = MatterClient(entry.data[CONF_URL], async_get_clientsession(hass))
     try:
-        async with async_timeout.timeout(CONNECT_TIMEOUT):
+        async with asyncio.timeout(CONNECT_TIMEOUT):
             await matter_client.connect()
     except (CannotConnect, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady("Failed to connect to matter server") from err
@@ -87,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        async with async_timeout.timeout(LISTEN_READY_TIMEOUT):
+        async with asyncio.timeout(LISTEN_READY_TIMEOUT):
             await init_ready.wait()
     except asyncio.TimeoutError as err:
         listen_task.cancel()

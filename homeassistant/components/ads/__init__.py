@@ -1,12 +1,12 @@
 """Support for Automation Device Specification (ADS)."""
 import asyncio
+from asyncio import timeout
 from collections import namedtuple
 import ctypes
 import logging
 import struct
 import threading
 
-import async_timeout
 import pyads
 import voluptuous as vol
 
@@ -301,7 +301,7 @@ class AdsEntity(Entity):
             self._ads_hub.add_device_notification, ads_var, plctype, update
         )
         try:
-            async with async_timeout.timeout(10):
+            async with timeout(10):
                 await self._event.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug("Variable %s: Timeout during first update", ads_var)

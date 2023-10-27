@@ -8,6 +8,7 @@ from yolink.const import (
     ATTR_DEVICE_CO_SMOKE_SENSOR,
     ATTR_DEVICE_DIMMER,
     ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_FINGER,
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_LOCK,
     ATTR_DEVICE_MANIPULATOR,
@@ -67,6 +68,7 @@ class YoLinkSensorEntityDescription(
 SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_DIMMER,
     ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_FINGER,
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_MULTI_OUTLET,
@@ -86,9 +88,11 @@ SENSOR_DEVICE_TYPE = [
 
 BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_FINGER,
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_POWER_FAILURE_ALARM,
+    ATTR_DEVICE_SIREN,
     ATTR_DEVICE_SMART_REMOTER,
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
@@ -129,6 +133,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=cvt_battery,
         exists_fn=lambda device: device.device_type in BATTERY_POWER_SENSOR,
+        should_update_entity=lambda value: value is not None,
     ),
     YoLinkSensorEntityDescription(
         key="humidity",
@@ -256,3 +261,8 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
             return
         self._attr_native_value = attr_val
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return true is device is available."""
+        return super().available and self.coordinator.dev_online

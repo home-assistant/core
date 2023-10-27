@@ -1,16 +1,7 @@
 """Tests for the for the BMW Connected Drive integration."""
 
-from pathlib import Path
-from urllib.parse import urlparse
 
-from bimmer_connected.api.authentication import MyBMWAuthentication
-from bimmer_connected.const import (
-    REMOTE_SERVICE_POSITION_URL,
-    VEHICLE_CHARGING_DETAILS_URL,
-    VEHICLE_STATE_URL,
-    VEHICLES_URL,
-)
-import httpx
+from bimmer_connected.const import REMOTE_SERVICE_BASE_URL, VEHICLE_CHARGING_BASE_URL
 import respx
 
 from homeassistant import config_entries
@@ -23,12 +14,7 @@ from homeassistant.components.bmw_connected_drive.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import (
-    MockConfigEntry,
-    get_fixture_path,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
+from tests.common import MockConfigEntry
 
 FIXTURE_USER_INPUT = {
     CONF_USERNAME: "user@domain.com",
@@ -54,88 +40,6 @@ FIXTURE_CONFIG_ENTRY = {
     "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_REGION]}",
 }
 
-FIXTURE_PATH = Path(get_fixture_path("", integration=BMW_DOMAIN))
-FIXTURE_FILES = {
-    "vehicles": sorted(FIXTURE_PATH.rglob("*-eadrax-vcs_v4_vehicles.json")),
-    "states": {
-        p.stem.split("_")[-1]: p
-        for p in FIXTURE_PATH.rglob("*-eadrax-vcs_v4_vehicles_state_*.json")
-    },
-    "charging": {
-        p.stem.split("_")[-1]: p
-        for p in FIXTURE_PATH.rglob("*-eadrax-crccs_v2_vehicles_*.json")
-    },
-}
-
-
-def vehicles_sideeffect(request: httpx.Request) -> httpx.Response:
-    """Return /vehicles response based on x-user-agent."""
-    x_user_agent = request.headers.get("x-user-agent", "").split(";")
-    brand = x_user_agent[1]
-    vehicles = []
-    for vehicle_file in FIXTURE_FILES["vehicles"]:
-        if vehicle_file.name.startswith(brand):
-            vehicles.extend(
-                load_json_array_fixture(vehicle_file, integration=BMW_DOMAIN)
-            )
-    return httpx.Response(200, json=vehicles)
-
-
-def vehicle_state_sideeffect(request: httpx.Request) -> httpx.Response:
-    """Return /vehicles/state response."""
-    try:
-        state_file = FIXTURE_FILES["states"][request.headers["bmw-vin"]]
-        return httpx.Response(
-            200, json=load_json_object_fixture(state_file, integration=BMW_DOMAIN)
-        )
-    except KeyError:
-        return httpx.Response(404)
-
-
-def vehicle_charging_sideeffect(request: httpx.Request) -> httpx.Response:
-    """Return /vehicles/state response."""
-    try:
-        charging_file = FIXTURE_FILES["charging"][request.headers["bmw-vin"]]
-        return httpx.Response(
-            200, json=load_json_object_fixture(charging_file, integration=BMW_DOMAIN)
-        )
-    except KeyError:
-        return httpx.Response(404)
-
-
-def mock_vehicles() -> respx.Router:
-    """Return mocked adapter for vehicles."""
-    router = respx.mock(assert_all_called=False)
-
-    # Get vehicle list
-    router.get(VEHICLES_URL).mock(side_effect=vehicles_sideeffect)
-
-    # Get vehicle state
-    router.get(VEHICLE_STATE_URL).mock(side_effect=vehicle_state_sideeffect)
-
-    # Get vehicle charging details
-    router.get(VEHICLE_CHARGING_DETAILS_URL).mock(
-        side_effect=vehicle_charging_sideeffect
-    )
-
-    # Get vehicle position after remote service
-    router.post(urlparse(REMOTE_SERVICE_POSITION_URL).netloc).mock(
-        httpx.Response(
-            200,
-            json=load_json_object_fixture(
-                FIXTURE_PATH / "remote_service" / "eventposition.json",
-                integration=BMW_DOMAIN,
-            ),
-        )
-    )
-
-    return router
-
-
-async def mock_login(auth: MyBMWAuthentication) -> None:
-    """Mock a successful login."""
-    auth.access_token = "SOME_ACCESS_TOKEN"
-
 
 async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a fully setup config entry and all components based on fixtures."""
@@ -147,3 +51,52 @@ async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+def check_remote_service_call(
+    router: respx.MockRouter,
+    remote_service: str = None,
+    remote_service_params: dict = None,
+    remote_service_payload: dict = None,
+):
+    """Check if the last call was a successful remote service call."""
+
+    # Check if remote service call was made correctly
+    if remote_service:
+        # Get remote service call
+        first_remote_service_call: respx.models.Call = next(
+            c
+            for c in router.calls
+            if c.request.url.path.startswith(REMOTE_SERVICE_BASE_URL)
+            or c.request.url.path.startswith(
+                VEHICLE_CHARGING_BASE_URL.replace("/{vin}", "")
+            )
+        )
+        assert (
+            first_remote_service_call.request.url.path.endswith(remote_service) is True
+        )
+        assert first_remote_service_call.has_response is True
+        assert first_remote_service_call.response.is_success is True
+
+        # test params.
+        # we don't test payload as this creates a lot of noise in the tests
+        # and is end-to-end tested with the HA states
+        if remote_service_params:
+            assert (
+                dict(first_remote_service_call.request.url.params.items())
+                == remote_service_params
+            )
+
+    # Now check final result
+    last_event_status_call = next(
+        c for c in reversed(router.calls) if c.request.url.path.endswith("eventStatus")
+    )
+
+    assert last_event_status_call is not None
+    assert (
+        last_event_status_call.request.url.path
+        == "/eadrax-vrccs/v3/presentation/remote-commands/eventStatus"
+    )
+    assert last_event_status_call.has_response is True
+    assert last_event_status_call.response.is_success is True
+    assert last_event_status_call.response.json() == {"eventStatus": "EXECUTED"}

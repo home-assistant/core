@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import StarlinkUpdateCoordinator
 
-TO_REDACT = {"id"}
+TO_REDACT = {"id", "latitude", "longitude", "altitude"}
 
 
 async def async_get_config_entry_diagnostics(

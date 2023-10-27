@@ -52,6 +52,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -255,6 +256,91 @@ async def test_set_operation_optimistic(
     async_fire_mqtt_message(hass, "mode-state", "bogus mode")
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "performance"
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            water_heater.DOMAIN,
+            DEFAULT_CONFIG,
+            ({"power_command_topic": "power-command"},),
+        )
+    ],
+)
+async def test_set_operation_with_power_command(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test setting of new operation mode with power command enabled."""
+    mqtt_mock = await mqtt_mock_entry()
+
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.state == "off"
+    await common.async_set_operation_mode(hass, "electric", ENTITY_WATER_HEATER)
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.state == "electric"
+    mqtt_mock.async_publish.assert_has_calls([call("mode-topic", "electric", 0, False)])
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_set_operation_mode(hass, "off", ENTITY_WATER_HEATER)
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.state == "off"
+    mqtt_mock.async_publish.assert_has_calls([call("mode-topic", "off", 0, False)])
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_turn_on(hass, ENTITY_WATER_HEATER)
+    # the water heater is not updated optimistically as this is not supported
+    mqtt_mock.async_publish.assert_has_calls([call("power-command", "ON", 0, False)])
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_turn_off(hass, ENTITY_WATER_HEATER)
+    mqtt_mock.async_publish.assert_has_calls([call("power-command", "OFF", 0, False)])
+    mqtt_mock.async_publish.reset_mock()
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            water_heater.DOMAIN,
+            DEFAULT_CONFIG,
+            ({"power_command_topic": "power-command", "optimistic": True},),
+        )
+    ],
+)
+async def test_turn_on_and_off_optimistic_with_power_command(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test setting of turn on/off with power command enabled."""
+    mqtt_mock = await mqtt_mock_entry()
+
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.state == "off"
+    await common.async_set_operation_mode(hass, "electric", ENTITY_WATER_HEATER)
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.state == "electric"
+    mqtt_mock.async_publish.assert_has_calls([call("mode-topic", "electric", 0, False)])
+    mqtt_mock.async_publish.reset_mock()
+    await common.async_set_operation_mode(hass, "off", ENTITY_WATER_HEATER)
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.state == "off"
+
+    await common.async_turn_on(hass, ENTITY_WATER_HEATER)
+    # the water heater is not updated optimistically as this is not supported
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.state == "off"
+    mqtt_mock.async_publish.assert_has_calls([call("power-command", "ON", 0, False)])
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_set_operation_mode(hass, "gas", ENTITY_WATER_HEATER)
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.state == "gas"
+    await common.async_turn_off(hass, ENTITY_WATER_HEATER)
+    # the water heater is not updated optimistically as this is not supported
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.state == "gas"
+    mqtt_mock.async_publish.assert_has_calls([call("power-command", "OFF", 0, False)])
+    mqtt_mock.async_publish.reset_mock()
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -509,9 +595,11 @@ async def test_get_with_templates(
                     "name": "test",
                     "mode_command_topic": "mode-topic",
                     "temperature_command_topic": "temperature-topic",
+                    "power_command_topic": "power-topic",
                     # Create simple templates
                     "mode_command_template": "mode: {{ value }}",
                     "temperature_command_template": "temp: {{ value }}",
+                    "power_command_template": "pwr: {{ value }}",
                 }
             }
         }
@@ -543,6 +631,14 @@ async def test_set_and_templates(
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.attributes.get("temperature") == 107
+
+    # Power
+    await common.async_turn_on(hass, entity_id=ENTITY_WATER_HEATER)
+    mqtt_mock.async_publish.assert_called_once_with("power-topic", "pwr: ON", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    await common.async_turn_off(hass, entity_id=ENTITY_WATER_HEATER)
+    mqtt_mock.async_publish.assert_called_once_with("power-topic", "pwr: OFF", 0, False)
+    mqtt_mock.async_publish.reset_mock()
 
 
 @pytest.mark.parametrize(
@@ -1047,6 +1143,20 @@ async def test_precision_whole(
             20.1,
             "temperature_command_template",
         ),
+        (
+            water_heater.SERVICE_TURN_ON,
+            "power_command_topic",
+            {},
+            "ON",
+            "power_command_template",
+        ),
+        (
+            water_heater.SERVICE_TURN_OFF,
+            "power_command_topic",
+            {},
+            "OFF",
+            "power_command_template",
+        ),
     ],
 )
 async def test_publishing_with_custom_encoding(
@@ -1111,3 +1221,43 @@ async def test_unload_entry(
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            water_heater.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                    "mode_state_topic": "mode-state-topic",
+                    "current_temperature_topic": "current-temperature-topic",
+                    "temperature_state_topic": "temperature-state-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+        ("mode-state-topic", "gas", "electric"),
+        ("current-temperature-topic", "18.0", "18.1"),
+        ("temperature-state-topic", "18", "19"),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
