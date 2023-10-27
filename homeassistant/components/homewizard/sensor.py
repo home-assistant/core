@@ -213,6 +213,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         has_fn=lambda data: data.active_power_w is not None,
         value_fn=lambda data: data.active_power_w,
     ),
@@ -222,6 +223,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         has_fn=lambda data: (
             data.active_power_l1_w is not None and data.active_power_l2_w is not None
         ),
@@ -233,6 +235,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         has_fn=lambda data: data.active_power_l2_w is not None,
         value_fn=lambda data: data.active_power_l2_w,
     ),
@@ -242,6 +245,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         has_fn=lambda data: data.active_power_l3_w is not None,
         value_fn=lambda data: data.active_power_l3_w,
     ),
