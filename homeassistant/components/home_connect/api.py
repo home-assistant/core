@@ -229,12 +229,10 @@ class DeviceWithDoor(HomeConnectDevice):
                     }
                 )
             elif REFRIGATION_DOOR_KEY_PREFIX in key:
-                device_name = key.replace(REFRIGATION_DOOR_KEY_PREFIX, "")
-                desc = f"{device_name} Door"
                 entities.append(
                     {
                         ATTR_DEVICE: self,
-                        ATTR_DESC: desc,
+                        ATTR_DESC: f'{key.replace(REFRIGATION_DOOR_KEY_PREFIX, "")} Door',
                         ATTR_KEY: key,
                         ATTR_SENSOR_TYPE: "refrigeration_door",
                         ATTR_DEVICE_CLASS: "door",
@@ -456,8 +454,7 @@ class FridgeFreezer(DeviceWithDoor):
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
-        door_entities = self.get_door_entities()
-        return {"binary_sensor": door_entities}
+        return {"binary_sensor": self.get_door_entities()}
 
 
 class Refrigerator(DeviceWithDoor):
@@ -465,8 +462,7 @@ class Refrigerator(DeviceWithDoor):
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
-        door_entities = self.get_door_entities()
-        return {"binary_sensor": door_entities}
+        return {"binary_sensor": self.get_door_entities()}
 
 
 class Freezer(DeviceWithDoor):
@@ -474,8 +470,7 @@ class Freezer(DeviceWithDoor):
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
-        door_entities = self.get_door_entities()
-        return {"binary_sensor": door_entities}
+        return {"binary_sensor": self.get_door_entities()}
 
 
 class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):
