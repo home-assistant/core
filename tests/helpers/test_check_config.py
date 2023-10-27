@@ -125,6 +125,19 @@ async def test_component_not_found_recovery_mode(hass: HomeAssistant) -> None:
         assert not res.errors
 
 
+async def test_component_not_found_safe_mode(hass: HomeAssistant) -> None:
+    """Test no errors if component not found in safe mode."""
+    # Make sure they don't exist
+    files = {YAML_CONFIG_FILE: BASE_CONFIG + "beer:"}
+    hass.config.safe_mode = True
+    with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        assert res.keys() == {"homeassistant"}
+        assert not res.errors
+
+
 async def test_component_platform_not_found_2(hass: HomeAssistant) -> None:
     """Test errors if component or platform not found."""
     # Make sure they don't exist
