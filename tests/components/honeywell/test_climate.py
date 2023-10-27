@@ -1083,30 +1083,15 @@ async def test_async_update_errors(
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
-    await hass.async_block_till_done()
+    for _ in range(RETRY):
+        async_fire_time_changed(
+            hass,
+            utcnow() + SCAN_INTERVAL,
+        )
+        await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state.state == "off"
-
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state.state == "off"
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state.state == "off"
+        state = hass.states.get(entity_id)
+        assert state.state == "off"
 
     async_fire_time_changed(
         hass,
