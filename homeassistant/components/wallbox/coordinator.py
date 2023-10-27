@@ -159,7 +159,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
+            raise wallbox_connection_error
 
     async def async_set_charging_current(self, charging_current: float) -> None:
         """Set maximum charging current for Wallbox."""
@@ -171,12 +171,8 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @_require_authentication
     def _set_energy_cost(self, energy_cost: float) -> None:
         """Set energy cost for Wallbox."""
-        try:
-            self._wallbox.setEnergyCost(self._station, energy_cost)
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
+
+        self._wallbox.setEnergyCost(self._station, energy_cost)
 
     async def async_set_energy_cost(self, energy_cost: float) -> None:
         """Set energy cost for Wallbox."""
@@ -194,7 +190,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
+            raise wallbox_connection_error
 
     async def async_set_lock_unlock(self, lock: bool) -> None:
         """Set wallbox to locked or unlocked."""
@@ -204,15 +200,11 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @_require_authentication
     def _pause_charger(self, pause: bool) -> None:
         """Set wallbox to pause or resume."""
-        try:
-            if pause:
-                self._wallbox.pauseChargingSession(self._station)
-            else:
-                self._wallbox.resumeChargingSession(self._station)
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
+
+        if pause:
+            self._wallbox.pauseChargingSession(self._station)
+        else:
+            self._wallbox.resumeChargingSession(self._station)
 
     async def async_pause_charger(self, pause: bool) -> None:
         """Set wallbox to pause or resume."""
