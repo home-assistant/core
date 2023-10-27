@@ -114,39 +114,6 @@ class TvOverlayNotificationService(BaseNotificationService):
             image = image_data if await self._is_valid_file(image_data) else None
         return image
 
-    # async def _convert_to_seconds(self, duration: str | Any) -> Optional[int]:
-    #     """Convert string formatted duration 1w2d3h4m5s in to seconds."""
-    #     if not duration:
-    #         return None
-    #     if isinstance(duration, int):
-    #         return duration
-    #     duration = duration.replace(" ", "")
-    #     UNITS = {
-    #         "s": "seconds",
-    #         "m": "minutes",
-    #         "h": "hours",
-    #         "d": "days",
-    #         "w": "weeks",
-    #     }
-    #     try:
-    #         return int(
-    #             timedelta(
-    #                 **{
-    #                     UNITS.get(m.group("unit").lower(), "seconds"): float(
-    #                         m.group("val")
-    #                     )
-    #                     for m in re.finditer(
-    #                         r"(?P<val>\d+(\.\d+)?)(?P<unit>[smhdw])",
-    #                         duration,
-    #                         flags=re.I,
-    #                     )
-    #                 }
-    #             ).total_seconds()
-    #         )
-    #     except Exception as ex:  # pylint: disable=broad-except
-    #         _LOGGER.warning("Invalid duration: %s. %s", duration, ex)
-    #         return None
-
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a TvOverlay device."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
