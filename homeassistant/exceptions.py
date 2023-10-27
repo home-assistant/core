@@ -15,13 +15,13 @@ class HomeAssistantError(Exception):
     def __init__(
         self,
         *args: object,
-        domain: str | None = None,
+        translation_domain: str | None = None,
         translation_key: str | None = None,
         translation_placeholders: dict[str, str] | None = None,
     ) -> None:
         """Initialize exception."""
         super().__init__(*args)
-        self.domain = domain
+        self.translation_domain = translation_domain
         self.translation_key = translation_key
         self.translation_placeholders = translation_placeholders
 
@@ -182,8 +182,13 @@ class ServiceNotFound(HomeAssistantError):
 
     def __init__(self, domain: str, service: str) -> None:
         """Initialize error."""
-        super().__init__(self, f"Service {domain}.{service} not found")
-        self.translation_placeholders = {"domain": domain, "service": service}
+        super().__init__(
+            self,
+            f"Service {domain}.{service} not found",
+            translation_domain=None,
+            translation_key="service_not_found",
+            translation_placeholders={"domain": domain, "service": service},
+        )
         self.domain = domain
         self.service = service
 
