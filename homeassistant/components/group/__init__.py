@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Callable, Collection, Iterable, Mapping
+from collections.abc import Callable, Collection, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 import logging
 from typing import Any, Protocol, cast
@@ -37,6 +37,7 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv, entity_registry as er, start
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
@@ -293,14 +294,49 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await _async_process_config(hass, config)
 
     async def reload_service_handler(service: ServiceCall) -> None:
-        """Remove all user-defined groups and load new ones from config."""
-        auto = [e for e in component.entities if e.created_by_service]
-
-        if (conf := await component.async_prepare_reload()) is None:
+        """Remove groups not created by service calls and set them up again."""
+        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
-        await _async_process_config(hass, conf)
 
-        await component.async_add_entities(auto)
+        async def reset_group_platform(platform: EntityPlatform) -> None:
+            platform.async_cancel_retry_setup()
+
+            if not platform.entities:
+                return
+
+            tasks = [
+                entity.async_remove()
+                for entity in platform.entities.values()
+                if not cast(Group, entity).created_by_service
+            ]
+
+            await asyncio.gather(*tasks)
+
+            platform.async_unsub_polling()
+            # pylint: disable-next=protected-access
+            platform._setup_complete = False
+
+        def reset_platforms() -> list[Coroutine]:
+            tasks = []
+
+            # pylint: disable-next=protected-access
+            for key, platform in component._platforms.items():
+                if key == DOMAIN:
+                    tasks.append(reset_group_platform(platform))
+                else:
+                    tasks.append(platform.async_destroy())
+
+            return tasks
+
+        tasks = reset_platforms()
+        if tasks:
+            await asyncio.gather(*tasks)
+
+        # pylint: disable-next=protected-access
+        component._platforms = {DOMAIN: component._platforms[DOMAIN]}
+        component.config = None
+
+        await _async_process_config(hass, conf)
 
         await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
 
