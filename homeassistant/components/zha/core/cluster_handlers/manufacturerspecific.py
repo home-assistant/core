@@ -246,7 +246,7 @@ class InovelliConfigEntityClusterHandler(ClusterHandler):
         """Initialize Inovelli cluster handler."""
         super().__init__(cluster, endpoint)
         if self.cluster.endpoint.model == "VZM31-SN":
-          self.ZCL_INIT_ATTRS = {
+            self.ZCL_INIT_ATTRS = {
                 "dimming_speed_up_remote": True,
                 "dimming_speed_up_local": True,
                 "ramp_rate_off_to_on_local": True,

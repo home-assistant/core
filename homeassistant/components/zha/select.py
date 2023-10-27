@@ -514,8 +514,8 @@ class InovelliFanSwitchType(types.enum1):
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM35-SN"}
 )
-class InovelliSwitchTypeEntity(ZCLEnumSelectEntity):
-    """Inovelli switch type control."""
+class InovelliFanSwitchTypeEntity(ZCLEnumSelectEntity):
+    """Inovelli fan switch type control."""
 
     _unique_id_suffix = "switch_type"
     _attribute_name = "switch_type"
