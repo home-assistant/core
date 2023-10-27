@@ -254,6 +254,32 @@ async def test_sensor_entity_wifi_strength(
     assert entry.disabled
 
 
+async def test_no_sensor_entity_total_power_import_tariff_1_kwh(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
+    """Test entity does not load total power import t1 on single phase."""
+
+    api = get_mock_device()
+    api.data = AsyncMock(
+        return_value=Data.from_dict({"total_power_import_t1_kwh": 1234.123})
+    )
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not hass.states.get(
+        "sensor.product_name_aabbccddeeff_total_power_import_tariff_1"
+    )
+
+
 async def test_sensor_entity_total_power_import_tariff_1_kwh(
     hass: HomeAssistant, mock_config_entry_data, mock_config_entry
 ) -> None:
@@ -261,7 +287,12 @@ async def test_sensor_entity_total_power_import_tariff_1_kwh(
 
     api = get_mock_device()
     api.data = AsyncMock(
-        return_value=Data.from_dict({"total_power_import_t1_kwh": 1234.123})
+        return_value=Data.from_dict(
+            {
+                "total_power_import_t1_kwh": 1234.123,
+                "total_power_import_t2_kwh": 1234.123,
+            }
+        )
     )
 
     with patch(
@@ -342,6 +373,32 @@ async def test_sensor_entity_total_power_import_tariff_2_kwh(
     assert ATTR_ICON not in state.attributes
 
 
+async def test_no_sensor_entity_total_power_export_tariff_1_kwh(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
+    """Test entity not load total power export t1 on single phase."""
+
+    api = get_mock_device()
+    api.data = AsyncMock(
+        return_value=Data.from_dict({"total_power_export_t1_kwh": 1234.123})
+    )
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not hass.states.get(
+        "sensor.product_name_aabbccddeeff_total_power_export_tariff_1"
+    )
+
+
 async def test_sensor_entity_total_power_export_tariff_1_kwh(
     hass: HomeAssistant, mock_config_entry_data, mock_config_entry
 ) -> None:
@@ -349,7 +406,12 @@ async def test_sensor_entity_total_power_export_tariff_1_kwh(
 
     api = get_mock_device()
     api.data = AsyncMock(
-        return_value=Data.from_dict({"total_power_export_t1_kwh": 1234.123})
+        return_value=Data.from_dict(
+            {
+                "total_power_export_t1_kwh": 1234.123,
+                "total_power_export_t2_kwh": 1234.123,
+            }
+        )
     )
 
     with patch(
@@ -1704,7 +1766,7 @@ async def test_sensors_unreachable(
 
     api = get_mock_device()
     api.data = AsyncMock(
-        return_value=Data.from_dict({"total_power_import_t1_kwh": 1234.123})
+        return_value=Data.from_dict({"total_power_import_kwh": 1234.123})
     )
 
     with patch(
@@ -1720,9 +1782,7 @@ async def test_sensors_unreachable(
         utcnow = dt_util.utcnow()  # Time after the integration is setup
 
         assert (
-            hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_tariff_1"
-            ).state
+            hass.states.get("sensor.product_name_aabbccddeeff_total_power_import").state
             == "1234.123"
         )
 
@@ -1730,9 +1790,7 @@ async def test_sensors_unreachable(
         async_fire_time_changed(hass, utcnow + timedelta(seconds=5))
         await hass.async_block_till_done()
         assert (
-            hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_tariff_1"
-            ).state
+            hass.states.get("sensor.product_name_aabbccddeeff_total_power_import").state
             == "unavailable"
         )
 
@@ -1740,9 +1798,7 @@ async def test_sensors_unreachable(
         async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
         await hass.async_block_till_done()
         assert (
-            hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_tariff_1"
-            ).state
+            hass.states.get("sensor.product_name_aabbccddeeff_total_power_import").state
             == "1234.123"
         )
 
@@ -1754,7 +1810,7 @@ async def test_api_disabled(
 
     api = get_mock_device()
     api.data = AsyncMock(
-        return_value=Data.from_dict({"total_power_import_t1_kwh": 1234.123})
+        return_value=Data.from_dict({"total_power_import_kwh": 1234.123})
     )
 
     with patch(
@@ -1770,9 +1826,7 @@ async def test_api_disabled(
         utcnow = dt_util.utcnow()  # Time after the integration is setup
 
         assert (
-            hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_tariff_1"
-            ).state
+            hass.states.get("sensor.product_name_aabbccddeeff_total_power_import").state
             == "1234.123"
         )
 
@@ -1780,8 +1834,6 @@ async def test_api_disabled(
         async_fire_time_changed(hass, utcnow + timedelta(seconds=5))
         await hass.async_block_till_done()
         assert (
-            hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_tariff_1"
-            ).state
+            hass.states.get("sensor.product_name_aabbccddeeff_total_power_import").state
             == "unavailable"
         )
