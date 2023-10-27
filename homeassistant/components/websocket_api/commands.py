@@ -298,6 +298,7 @@ def _send_handle_get_states_response(
     connection.send_message(construct_result_message(msg_id, f"[{joined_states}]"))
 
 
+@callback
 def _forward_entity_changes(
     send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
     entity_ids: set[str],
@@ -337,14 +338,12 @@ def handle_subscribe_entities(
     states = _async_get_allowed_states(hass, connection)
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
-        callback(
-            partial(
-                _forward_entity_changes,
-                connection.send_message,
-                entity_ids,
-                connection.user,
-                msg["id"],
-            )
+        partial(
+            _forward_entity_changes,
+            connection.send_message,
+            entity_ids,
+            connection.user,
+            msg["id"],
         ),
         run_immediately=True,
     )
