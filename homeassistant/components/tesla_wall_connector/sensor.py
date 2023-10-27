@@ -128,7 +128,6 @@ WALL_CONNECTOR_SENSORS = [
     WallConnectorSensorDescription(
         key="session_energy_wh",
         translation_key="session_energy_wh",
-        name="Session Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].session_energy_wh,
         state_class=SensorStateClass.MEASUREMENT,
