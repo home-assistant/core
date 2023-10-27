@@ -1,16 +1,12 @@
 """Support for Google Mail."""
 from __future__ import annotations
 
-from aiohttp.client_exceptions import ClientError, ClientResponseError
+from aiohttp.client_exceptions import ClientError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -41,13 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     auth = AsyncConfigEntryAuth(session)
     try:
         await auth.check_and_refresh_token()
-    except HomeAssistantError as err:
-        resp = err.args[0]
-        if isinstance(resp, ClientResponseError) and 400 <= resp.status < 500:
-            raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauth required"
-            ) from err
-        raise ConfigEntryNotReady from err
     except ClientError as err:
         raise ConfigEntryNotReady from err
     hass.data[DOMAIN][entry.entry_id] = auth

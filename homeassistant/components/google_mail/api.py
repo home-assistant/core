@@ -4,8 +4,13 @@ from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import Resource, build
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
@@ -29,6 +34,15 @@ class AsyncConfigEntryAuth:
         try:
             await self.oauth_session.async_ensure_token_valid()
         except (RefreshError, ClientResponseError) as ex:
+            if (
+                self.oauth_session.config_entry.state
+                is ConfigEntryState.SETUP_IN_PROGRESS
+            ):
+                if isinstance(ex, ClientResponseError) and 400 <= ex.status < 500:
+                    raise ConfigEntryAuthFailed(
+                        "OAuth session is not valid, reauth required"
+                    ) from ex
+                raise ConfigEntryNotReady from ex
             if not hasattr(ex, "status") or ex.status == 400:
                 self.oauth_session.config_entry.async_start_reauth(
                     self.oauth_session.hass
