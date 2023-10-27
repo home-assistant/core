@@ -51,26 +51,7 @@ async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) ->
         AudioStop().event(),
     ]
 
-    with patch(
-        "homeassistant.components.wyoming.tts.AsyncTcpClient",
-        MockAsyncTcpClient(audio_events),
-    ) as mock_client:
-        extension, data = await tts.async_get_media_source_audio(
-            hass,
-            tts.generate_media_source_id(
-                hass,
-                "Hello world",
-                "tts.test_tts",
-                "en-US",
-                options={tts.ATTR_AUDIO_OUTPUT: "mp3"},
-            ),
-        )
-
-    # Requested MP3 format
-    assert extension == "mp3"
-    assert data is not None
-
-    # Force WAV output to verify audio
+    # Verify audio
     audio_events = [
         AudioChunk(audio=audio, rate=16000, width=2, channels=1).event(),
         AudioStop().event(),

@@ -977,9 +977,6 @@ class PipelineRun:
 
         if self.tts_audio_output is not None:
             tts_options[tts.ATTR_AUDIO_OUTPUT] = self.tts_audio_output
-        else:
-            # MP3 is preferred
-            tts_options[tts.ATTR_AUDIO_OUTPUT] = "mp3"
 
         try:
             options_supported = await tts.async_support_options(

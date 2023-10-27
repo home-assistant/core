@@ -3,6 +3,7 @@ import asyncio
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, patch
+import wave
 
 import pytest
 
@@ -1212,11 +1213,14 @@ async def test_load_cache_retrieve_without_mem_cache(
     """Set up component and load cache and get without mem cache."""
     tts_data = b""
     cache_file = mock_tts_cache_dir / (
-        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.wav"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
+    with wave.open(str(cache_file), "wb") as voice_file:
+        voice_file.setframerate(16000)
+        voice_file.setsampwidth(2)
+        voice_file.setnchannels(1)
+        voice_file.writeframes(tts_data)
 
     await mock_config_entry_setup(hass, mock_tts_entity)
 
@@ -1226,7 +1230,9 @@ async def test_load_cache_retrieve_without_mem_cache(
 
     req = await client.get(url)
     assert req.status == HTTPStatus.OK
-    assert await req.read() == tts_data
+
+    # File will actually get converted, so it will contain empty ID3 tags
+    assert (await req.read()).startswith(b"ID3")
 
 
 @pytest.mark.parametrize(

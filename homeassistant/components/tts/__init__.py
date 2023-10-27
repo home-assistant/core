@@ -533,6 +533,10 @@ class SpeechManager:
                 options,
             )
 
+            # Always use mp3. Audio will be automatically converted if requested.
+            filename_base = os.path.splitext(filename)[0]
+            filename = f"{filename_base}.mp3"
+
         return f"/api/tts_proxy/{filename}"
 
     async def async_get_tts_audio(
@@ -596,9 +600,9 @@ class SpeechManager:
         This method is a coroutine.
         """
         if options is not None and ATTR_AUDIO_OUTPUT in options:
-            expected_extension = options[ATTR_AUDIO_OUTPUT]
+            extension = options[ATTR_AUDIO_OUTPUT]
         else:
-            expected_extension = None
+            extension = None
 
         async def get_tts_data() -> str:
             """Handle data available."""
@@ -619,13 +623,6 @@ class SpeechManager:
                     f"No TTS from {engine_instance.name} for '{message}'"
                 )
 
-            if expected_extension and (extension not in (expected_extension, "raw")):
-                _LOGGER.debug(
-                    "Converting audio from %s to %s", extension, expected_extension
-                )
-                data = await self._convert_audio(data, extension, expected_extension)
-                extension = expected_extension
-
             # Create file infos
             filename = f"{cache_key}.{extension}".lower()
 
@@ -642,6 +639,7 @@ class SpeechManager:
                 data = self.write_tags(
                     filename, data, engine_instance.name, message, language, options
                 )
+
             self._async_store_to_memcache(cache_key, filename, data)
 
             if cache:
@@ -653,7 +651,7 @@ class SpeechManager:
 
         audio_task = self.hass.async_create_task(get_tts_data())
 
-        if expected_extension is None:
+        if extension is None:
             return await audio_task
 
         def handle_error(_future: asyncio.Future) -> None:
@@ -663,7 +661,7 @@ class SpeechManager:
 
         audio_task.add_done_callback(handle_error)
 
-        filename = f"{cache_key}.{expected_extension}".lower()
+        filename = f"{cache_key}.{extension}".lower()
         self.mem_cache[cache_key] = {
             "filename": filename,
             "voice": b"",
@@ -671,38 +669,27 @@ class SpeechManager:
         }
         return filename
 
-    async def _convert_audio(
-        self, audio_data: bytes, from_extension: str, to_extension: str
-    ) -> bytes:
-        """Convert audio from one format to another using ffmpeg."""
+    async def _convert_to_mp3(
+        self,
+        from_path: str,
+        to_path: str,
+    ) -> None:
+        """Convert audio file to mp3 using ffmpeg."""
         ffmpeg_manager = ffmpeg.get_ffmpeg_manager(self.hass)
-        ffmpeg_input = [
-            "-f",
-            from_extension,
+        command = [
             "-i",
-            "pipe:",  # input from stdin
+            from_path,
+            # max quality
+            "-q:a",
+            "0",
+            to_path,
         ]
-        ffmpeg_output = [
-            "-f",
-            to_extension,
-        ]
-
-        if to_extension == "mp3":
-            ffmpeg_output.extend(["-q:a", "0"])  # max quality
-
-        ffmpeg_output.append("pipe:")  # output to stdout
-
         ffmpeg_proc = await asyncio.create_subprocess_exec(
             ffmpeg_manager.binary,
-            *ffmpeg_input,
-            *ffmpeg_output,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
+            *command,
             stderr=asyncio.subprocess.DEVNULL,
         )
-
-        stdout, _stderr = await ffmpeg_proc.communicate(input=audio_data)
-        return stdout
+        await ffmpeg_proc.communicate()
 
     async def _async_save_tts_audio(
         self, cache_key: str, filename: str, data: bytes
@@ -792,11 +779,27 @@ class SpeechManager:
                 raise HomeAssistantError(f"{cache_key} not in cache!")
             await self._async_file_to_mem(cache_key)
 
-        content, _ = mimetypes.guess_type(filename)
         cached = self.mem_cache[cache_key]
         if pending := cached.get("pending"):
             await pending
             cached = self.mem_cache[cache_key]
+
+        # Convert to mp3 if necessary
+        if stored_filename := self.file_cache.get(cache_key):
+            stored_base, stored_ext = os.path.splitext(stored_filename)
+            if stored_ext != ".mp3":
+                stored_filepath = os.path.join(self.cache_dir, stored_filename)
+                mp3_filepath = os.path.join(self.cache_dir, f"{stored_base}.mp3")
+
+                _LOGGER.debug("Converting %s to %s", stored_filepath, mp3_filepath)
+                await self._convert_to_mp3(stored_filepath, mp3_filepath)
+
+                # Update cache
+                self.file_cache[cache_key] = mp3_filepath
+                await self._async_file_to_mem(cache_key)
+                cached = self.mem_cache[cache_key]
+
+        content, _ = mimetypes.guess_type(filename)
         return content, cached["voice"]
 
     @staticmethod
