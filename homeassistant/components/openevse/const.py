@@ -1,6 +1,26 @@
-"""Constants for the openevse platform."""
+"""Constant values for OpenEVSE."""
+
 DOMAIN = "openevse"
+BRAND = "OpenEVSE"
 
-DEFAULT_PORT = 80
+CONF_UNIQUE_ID = "unique_id"
+CONF_BASE_TOPIC = "base_topic"
+CONF_CONFIG_URL = "config_url"
 
-DATA_CHARGER = "charger"
+STATES = {
+    0: "unknown",
+    1: "not_connected",
+    2: "connected",
+    3: "charging",
+    4: "vent_required",
+    5: "diod_check_failed",
+    6: "gfci_fault",
+    7: "no_ground",
+    8: "stuck_relay",
+    9: "gfci_self_test_failure",
+    10: "over_temperature",
+    254: "sleeping",
+    255: "disabled",
+}
+
+DEVICE_SUGGESTED_AREA = "Garage"

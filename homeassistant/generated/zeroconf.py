@@ -583,11 +583,6 @@ ZEROCONF = {
             "domain": "octoprint",
         },
     ],
-    "_openevse._tcp.local.": [
-        {
-            "domain": "openevse",
-        },
-    ],
     "_plexmediasvr._tcp.local.": [
         {
             "domain": "plex",

@@ -10,6 +10,9 @@ MQTT = {
     "fully_kiosk": [
         "fully/deviceInfo/+",
     ],
+    "openevse": [
+        "openevse/announce/#",
+    ],
     "tasmota": [
         "tasmota/discovery/#",
     ],

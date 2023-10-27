@@ -1,222 +1,73 @@
-"""Config flow for openevse integration."""
+"""Config flow to configure OpenEVSE."""
 from __future__ import annotations
 
+from collections.abc import Awaitable
+import json
 import logging
+from typing import Any
 
-from openevsewifi import Charger, InvalidAuthentication
-import voluptuous as vol
-
-from homeassistant import config_entries, core, exceptions
-from homeassistant.components import zeroconf
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
-from homeassistant.core import callback
+from homeassistant.components import onboarding
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import CONF_BASE_TOPIC, CONF_CONFIG_URL, CONF_UNIQUE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_http(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect over HTTP."""
-
-    host_with_port = f"{data[CONF_HOST]}:{data[CONF_PORT]}"
-    charger = Charger(
-        host=host_with_port,
-        username=data[CONF_USERNAME],
-        password=data[CONF_PASSWORD],
-    )
-
-    _LOGGER.debug("Connecting to %s for initial status check", host_with_port)
-    try:
-        status = await hass.async_add_executor_job(Charger.status.fget, charger)
-        _LOGGER.info("Connected to charger with status '%s'", status)
-    except InvalidAuthentication as error:
-        raise InvalidAuth from error
+async def _async_has_devices(_: HomeAssistant) -> bool:
+    """MQTT is set as dependency, so that should be sufficient."""
+    return True
 
 
-class OpenEvseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for openevse."""
+class OpenEvseFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN):
+    """Handle OpenEVSE config flow. The MQTT step is inherited from the parent class."""
 
     VERSION = 1
 
     def __init__(self) -> None:
-        """Initialize flow."""
-        self._host: str | None = None
-        self._port: int | None = DEFAULT_PORT
-        self._name: str | None = None
-        self._username: str | None = None
-        self._password: str | None = None
-        self._discovery_name: str | None = None
+        """Set up the config flow."""
+        super().__init__(DOMAIN, "OpenEVSE", _async_has_devices)
 
-    async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
+        """Handle a flow initialized by MQTT discovery."""
+        device_info: dict[str, Any] = json.loads(discovery_info.payload)
+        _LOGGER.debug("async_step_mqtt got discovery_info: %s", discovery_info)
+        _LOGGER.debug("async_step_mqtt got device info: %s", device_info)
+
+        device_id: str = device_info["id"]
+        await self.async_set_unique_id(device_id)
+        self._abort_if_unique_id_configured()
+
+        # Remember discovered device details for later step
+        self.context[CONF_BASE_TOPIC] = device_info["mqtt"]
+        self.context[CONF_CONFIG_URL] = device_info["http"]
+
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle zeroconf discovery."""
-        self._host = discovery_info.host
-        self._port = discovery_info.port or DEFAULT_PORT
-        self._name = discovery_info.hostname.removesuffix(".local.")
-        if not (uid := discovery_info.properties.get("id")):
-            return self.async_abort(reason="no_id")
+        """Confirm setup."""
+        # if user_input is None:
+        #     # TODO: Is this confirm step even necessary?
+        #     return self.async_show_form(step_id="confirm")
 
-        self._discovery_name = discovery_info.name
+        if user_input is None and onboarding.async_is_onboarded(self.hass):
+            self._set_confirm_only()
+            return self.async_show_form(step_id="confirm")
 
-        await self.async_set_unique_id(uid)
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_HOST: self._host,
-                CONF_PORT: self._port,
-                CONF_NAME: self._name,
-            }
-        )
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
-        self.context.update({"title_placeholders": {CONF_NAME: self._name}})
-
-        try:
-            await validate_http(self.hass, self._get_data())
-        except InvalidAuth:
-            return await self.async_step_credentials()
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-
-        return await self.async_step_discovery_confirm()
-
-    async def async_step_discovery_confirm(self, user_input=None):
-        """Handle user-confirmation of discovered node."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="discovery_confirm",
-                description_placeholders={"name": self._name},
-            )
-
-        return self._create_entry()
-
-    async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
-        errors = {}
-
-        if user_input is not None:
-            self._host = user_input[CONF_HOST]
-            self._port = user_input[CONF_PORT]
-
-            try:
-                await validate_http(self.hass, self._get_data())
-            except InvalidAuth:
-                return await self.async_step_credentials()
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                return self._create_entry()
-
-        return self._show_user_form(errors)
-
-    async def async_step_credentials(self, user_input=None):
-        """Handle username and password input."""
-        errors = {}
-
-        if user_input is not None:
-            self._username = user_input.get(CONF_USERNAME)
-            self._password = user_input.get(CONF_PASSWORD)
-
-            try:
-                await validate_http(self.hass, self._get_data())
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                return self._create_entry()
-
-        return self._show_credentials_form(errors)
-
-    async def async_step_import(self, data):
-        """Handle import from YAML."""
-        reason = None
-        try:
-            await validate_http(self.hass, data)
-        except InvalidAuth:
-            _LOGGER.exception("Invalid credentials")
-            reason = "invalid_auth"
-        except CannotConnect:
-            _LOGGER.exception("Cannot connect")
-            reason = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            reason = "unknown"
-        else:
-            return self.async_create_entry(title=data[CONF_NAME], data=data)
-
-        return self.async_abort(reason=reason)
-
-    @callback
-    def _show_credentials_form(self, errors=None):
-        schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_USERNAME, description={"suggested_value": self._username}
-                ): str,
-                vol.Optional(
-                    CONF_PASSWORD, description={"suggested_value": self._password}
-                ): str,
-            }
-        )
-
-        return self.async_show_form(
-            step_id="credentials", data_schema=schema, errors=errors or {}
-        )
-
-    @callback
-    def _show_user_form(self, errors=None):
-        default_port = self._port or DEFAULT_PORT
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=self._host): str,
-                vol.Required(CONF_PORT, default=default_port): int,
-            }
-        )
-
-        return self.async_show_form(
-            step_id="user", data_schema=schema, errors=errors or {}
-        )
-
-    @callback
-    def _create_entry(self):
+        # Build ConfigEntry using data we discovered earlier
         return self.async_create_entry(
-            title=self._name or self._host,
-            data=self._get_data(),
+            title=self._title,
+            data={
+                CONF_UNIQUE_ID: self.context[CONF_UNIQUE_ID],
+                CONF_BASE_TOPIC: self.context[CONF_BASE_TOPIC],
+                CONF_CONFIG_URL: self.context[CONF_CONFIG_URL],
+            },
         )
-
-    @callback
-    def _get_data(self):
-        data = {
-            CONF_NAME: self._name,
-            CONF_HOST: self._host,
-            CONF_PORT: self._port,
-            CONF_USERNAME: self._username,
-            CONF_PASSWORD: self._password,
-        }
-
-        return data
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""

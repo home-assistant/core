@@ -1,0 +1,43 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "step": {
+      "confirm": {
+        "description": "Set up this OpenEVSE device using MQTT?"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "session_elapsed": {
+        "name": "Session elapsed"
+      },
+      "session_energy": {
+        "name": "Session energy delivered"
+      },
+      "total_energy": {
+        "name": "Total energy delivered"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "unknown": "Unknown",
+          "not_connected": "Not connected",
+          "connected": "Connected",
+          "charging": "Charging",
+          "vent_required": "Vent required",
+          "diode_check_failed": "Diode check failed",
+          "gfci_fault": "GFCI fault",
+          "no_ground": "No ground",
+          "stuck_relay": "Stuck relay",
+          "gfci_self_test_failure": "GFCI self-test failure",
+          "over_temperature": "Over temperature",
+          "sleeping": "Sleeping",
+          "disabled": "Disabled"
+        }
+      }
+    }
+  }
+}
