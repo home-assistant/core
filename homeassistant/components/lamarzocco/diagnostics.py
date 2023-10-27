@@ -23,23 +23,21 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: LmApiCoordinator = hass.data[DOMAIN][entry.entry_id]
     # collect all data sources
-    data = {}
-    data["current_status"] = coordinator.data.current_status
-    data["machine_info"] = coordinator.data.machine_info
-    data["config"] = coordinator.data.config
-    data["statistics"] = coordinator.data.statistics
-
-    # build a firmware section
-    data["firmware"] = {}
-    data["firmware"]["machine"] = {}
-    data["firmware"]["machine"]["version"] = coordinator.data.firmware_version
-    data["firmware"]["machine"][
-        "latest_version"
-    ] = coordinator.data.latest_firmware_version
-    data["firmware"]["gateway"] = {}
-    data["firmware"]["gateway"]["version"] = coordinator.data.gateway_version
-    data["firmware"]["gateway"][
-        "latest_version"
-    ] = coordinator.data.latest_gateway_version
+    data = {
+        "current_status": coordinator.data.current_status,
+        "machine_info": coordinator.data.machine_info,
+        "config": coordinator.data.config,
+        "statistics": coordinator.data.statistics,
+        "firmware": {
+            "machine": {
+                "version": coordinator.data.firmware_version,
+                "latest_version": coordinator.data.latest_firmware_version,
+            },
+            "gateway": {
+                "version": coordinator.data.gateway_version,
+                "latest_version": coordinator.data.latest_gateway_version,
+            },
+        },
+    }
 
     return async_redact_data(data, TO_REDACT)
