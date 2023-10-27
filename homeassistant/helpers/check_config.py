@@ -48,6 +48,7 @@ class HomeAssistantConfig(OrderedDict):
         """Initialize HA config."""
         super().__init__()
         self.errors: list[CheckConfigError] = []
+        self.warnings: list[CheckConfigError] = []
 
     def add_error(
         self,
@@ -55,14 +56,29 @@ class HomeAssistantConfig(OrderedDict):
         domain: str | None = None,
         config: ConfigType | None = None,
     ) -> Self:
-        """Add a single error."""
+        """Add an error."""
         self.errors.append(CheckConfigError(str(message), domain, config))
         return self
 
     @property
     def error_str(self) -> str:
-        """Return errors as a string."""
+        """Concatenate all errors to a string."""
         return "\n".join([err.message for err in self.errors])
+
+    def add_warning(
+        self,
+        message: str,
+        domain: str | None = None,
+        config: ConfigType | None = None,
+    ) -> Self:
+        """Add a warning."""
+        self.warnings.append(CheckConfigError(str(message), domain, config))
+        return self
+
+    @property
+    def warning_str(self) -> str:
+        """Concatenate all warnings to a string."""
+        return "\n".join([err.message for err in self.warnings])
 
 
 async def async_check_ha_config_file(  # noqa: C901
@@ -82,11 +98,11 @@ async def async_check_ha_config_file(  # noqa: C901
         message = f"Package {package} setup failed. Component {component} {message}"
         domain = f"homeassistant.packages.{package}.{component}"
         pack_config = core_config[CONF_PACKAGES].get(package, config)
-        result.add_error(message, domain, pack_config)
+        result.add_warning(message, domain, pack_config)
 
     def _comp_error(ex: Exception, domain: str, config: ConfigType) -> None:
         """Handle errors from components: async_log_exception."""
-        result.add_error(_format_config_error(ex, domain, config)[0], domain, config)
+        result.add_warning(_format_config_error(ex, domain, config)[0], domain, config)
 
     # Load configuration.yaml
     config_path = hass.config.path(YAML_CONFIG_FILE)
@@ -128,16 +144,16 @@ async def async_check_ha_config_file(  # noqa: C901
             integration = await async_get_integration_with_requirements(hass, domain)
         except loader.IntegrationNotFound as ex:
             if not hass.config.recovery_mode and not hass.config.safe_mode:
-                result.add_error(f"Integration error: {domain} - {ex}")
+                result.add_warning(f"Integration error: {domain} - {ex}")
             continue
         except RequirementsNotFound as ex:
-            result.add_error(f"Integration error: {domain} - {ex}")
+            result.add_warning(f"Integration error: {domain} - {ex}")
             continue
 
         try:
             component = integration.get_component()
         except ImportError as ex:
-            result.add_error(f"Component error: {domain} - {ex}")
+            result.add_warning(f"Component error: {domain} - {ex}")
             continue
 
         # Check if the integration has a custom config validator
@@ -217,13 +233,13 @@ async def async_check_ha_config_file(  # noqa: C901
                 platform = p_integration.get_platform(domain)
             except loader.IntegrationNotFound as ex:
                 if not hass.config.recovery_mode and not hass.config.safe_mode:
-                    result.add_error(f"Platform error {domain}.{p_name} - {ex}")
+                    result.add_warning(f"Platform error {domain}.{p_name} - {ex}")
                 continue
             except (
                 RequirementsNotFound,
                 ImportError,
             ) as ex:
-                result.add_error(f"Platform error {domain}.{p_name} - {ex}")
+                result.add_warning(f"Platform error {domain}.{p_name} - {ex}")
                 continue
 
             # Validate platform specific schema

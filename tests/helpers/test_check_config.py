@@ -47,13 +47,12 @@ async def test_bad_core_config(hass: HomeAssistant) -> None:
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
+        assert len(res.errors) == 1
+        assert len(res.warnings) == 0
+
         assert isinstance(res.errors[0].message, str)
         assert res.errors[0].domain == "homeassistant"
         assert res.errors[0].config == {"unit_system": "bad"}
-
-        # Only 1 error expected
-        res.errors.pop(0)
-        assert not res.errors
 
 
 async def test_config_platform_valid(hass: HomeAssistant) -> None:
@@ -66,6 +65,7 @@ async def test_config_platform_valid(hass: HomeAssistant) -> None:
         assert res.keys() == {"homeassistant", "light"}
         assert res["light"] == [{"platform": "demo"}]
         assert not res.errors
+        assert not res.warnings
 
 
 async def test_component_platform_not_found(hass: HomeAssistant) -> None:
@@ -76,14 +76,13 @@ async def test_component_platform_not_found(hass: HomeAssistant) -> None:
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
+        assert len(res.errors) == 0
+        assert len(res.warnings) == 1
+
         assert res.keys() == {"homeassistant"}
-        assert res.errors[0] == CheckConfigError(
+        assert res.warnings[0] == CheckConfigError(
             "Integration error: beer - Integration 'beer' not found.", None, None
         )
-
-        # Only 1 error expected
-        res.errors.pop(0)
-        assert not res.errors
 
 
 async def test_component_requirement_not_found(hass: HomeAssistant) -> None:
@@ -97,8 +96,11 @@ async def test_component_requirement_not_found(hass: HomeAssistant) -> None:
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
+        assert len(res.errors) == 0
+        assert len(res.warnings) == 1
+
         assert res.keys() == {"homeassistant"}
-        assert res.errors[0] == CheckConfigError(
+        assert res.warnings[0] == CheckConfigError(
             (
                 "Integration error: test_custom_component - Requirements for"
                 " test_custom_component not found: ['any']."
@@ -106,10 +108,6 @@ async def test_component_requirement_not_found(hass: HomeAssistant) -> None:
             None,
             None,
         )
-
-        # Only 1 error expected
-        res.errors.pop(0)
-        assert not res.errors
 
 
 async def test_component_not_found_recovery_mode(hass: HomeAssistant) -> None:
@@ -123,6 +121,7 @@ async def test_component_not_found_recovery_mode(hass: HomeAssistant) -> None:
 
         assert res.keys() == {"homeassistant"}
         assert not res.errors
+        assert not res.warnings
 
 
 async def test_component_not_found_safe_mode(hass: HomeAssistant) -> None:
@@ -136,6 +135,7 @@ async def test_component_not_found_safe_mode(hass: HomeAssistant) -> None:
 
         assert res.keys() == {"homeassistant"}
         assert not res.errors
+        assert not res.warnings
 
 
 async def test_component_platform_not_found_2(hass: HomeAssistant) -> None:
@@ -149,13 +149,12 @@ async def test_component_platform_not_found_2(hass: HomeAssistant) -> None:
         assert res.keys() == {"homeassistant", "light"}
         assert res["light"] == []
 
-        assert res.errors[0] == CheckConfigError(
+        assert len(res.errors) == 0
+        assert len(res.warnings) == 1
+
+        assert res.warnings[0] == CheckConfigError(
             "Platform error light.beer - Integration 'beer' not found.", None, None
         )
-
-        # Only 1 error expected
-        res.errors.pop(0)
-        assert not res.errors
 
 
 async def test_platform_not_found_recovery_mode(hass: HomeAssistant) -> None:
@@ -171,6 +170,7 @@ async def test_platform_not_found_recovery_mode(hass: HomeAssistant) -> None:
         assert res["light"] == []
 
         assert not res.errors
+        assert not res.warnings
 
 
 async def test_platform_not_found_safe_mode(hass: HomeAssistant) -> None:
@@ -186,6 +186,7 @@ async def test_platform_not_found_safe_mode(hass: HomeAssistant) -> None:
         assert res["light"] == []
 
         assert not res.errors
+        assert not res.warnings
 
 
 async def test_package_invalid(hass: HomeAssistant) -> None:
@@ -195,11 +196,11 @@ async def test_package_invalid(hass: HomeAssistant) -> None:
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
-        assert res.errors[0].domain == "homeassistant.packages.p1.group"
-        assert res.errors[0].config == {"group": ["a"]}
-        # Only 1 error expected
-        res.errors.pop(0)
-        assert not res.errors
+        assert len(res.errors) == 0
+        assert len(res.warnings) == 1
+
+        assert res.warnings[0].domain == "homeassistant.packages.p1.group"
+        assert res.warnings[0].config == {"group": ["a"]}
 
         assert res.keys() == {"homeassistant"}
 
@@ -211,11 +212,10 @@ async def test_bootstrap_error(hass: HomeAssistant) -> None:
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
-        assert res.errors[0].domain is None
+        assert len(res.errors) == 1
+        assert len(res.warnings) == 0
 
-        # Only 1 error expected
-        res.errors.pop(0)
-        assert not res.errors
+        assert res.errors[0].domain is None
 
 
 async def test_automation_config_platform(hass: HomeAssistant) -> None:
@@ -251,6 +251,7 @@ action:
         res = await async_check_ha_config_file(hass)
         assert len(res.get("automation", [])) == 1
         assert len(res.errors) == 0
+        assert len(res.warnings) == 0
         assert "input_datetime" in res
 
 
@@ -271,6 +272,7 @@ bla:
     with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
         res = await async_check_ha_config_file(hass)
         assert len(res.errors) == 1
+        assert len(res.warnings) == 0
         err = res.errors[0]
         assert err.domain == "bla"
         assert err.message == "Unexpected error calling config validator: Broken"
@@ -292,3 +294,5 @@ async def test_removed_yaml_support(hass: HomeAssistant) -> None:
         log_ha_config(res)
 
         assert res.keys() == {"homeassistant"}
+        assert len(res.errors) == 0
+        assert len(res.warnings) == 0
