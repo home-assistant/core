@@ -275,7 +275,7 @@ async def test_notify_8(
             {
                 "message": "Message",
                 "title": "Title",
-                "data": {"app_icon": "mdi:bell", "duration": "100000000000w2d3h4m5s"},
+                "data": {"app_icon": "mdi:bell", "duration": "3h4m5s"},
             },
             blocking=True,
         )
@@ -283,7 +283,7 @@ async def test_notify_8(
         assert mock_notify.mock_calls[0].args[0] == "Message"
         assert mock_notify.mock_calls[0].kwargs["title"] == "Title"
         assert mock_notify.mock_calls[0].kwargs["appIcon"] == "mdi:bell"
-        assert mock_notify.mock_calls[0].kwargs["seconds"] == 5
+        assert mock_notify.mock_calls[0].kwargs["duration"] == "3h4m5s"
 
 
 async def test_notify_9(
