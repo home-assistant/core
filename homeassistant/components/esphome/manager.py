@@ -596,6 +596,10 @@ def _async_setup_device_registry(
         model = project_name[1]
         hw_version = device_info.project_version
 
+    suggested_area = None
+    if device_info.suggested_area:
+        suggested_area = device_info.suggested_area
+
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -606,6 +610,7 @@ def _async_setup_device_registry(
         model=model,
         sw_version=sw_version,
         hw_version=hw_version,
+        suggested_area=suggested_area,
     )
     return device_entry.id
 

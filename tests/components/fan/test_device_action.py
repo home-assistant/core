@@ -171,6 +171,7 @@ async def test_action(
     hass.bus.async_fire("test_event_turn_off")
     await hass.async_block_till_done()
     assert len(turn_off_calls) == 1
+    assert turn_off_calls[0].data["entity_id"] == entry.entity_id
     assert len(turn_on_calls) == 0
     assert len(toggle_calls) == 0
 
@@ -178,6 +179,7 @@ async def test_action(
     await hass.async_block_till_done()
     assert len(turn_off_calls) == 1
     assert len(turn_on_calls) == 1
+    assert turn_on_calls[0].data["entity_id"] == entry.entity_id
     assert len(toggle_calls) == 0
 
     hass.bus.async_fire("test_event_toggle")
@@ -185,6 +187,7 @@ async def test_action(
     assert len(turn_off_calls) == 1
     assert len(turn_on_calls) == 1
     assert len(toggle_calls) == 1
+    assert toggle_calls[0].data["entity_id"] == entry.entity_id
 
 
 async def test_action_legacy(

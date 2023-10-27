@@ -8,7 +8,7 @@ atomicwrites-homeassistant==1.4.1
 attrs==23.1.0
 awesomeversion==23.8.0
 bcrypt==4.0.1
-bleak-retry-connector==3.2.1
+bleak-retry-connector==3.3.0
 bleak==0.21.1
 bluetooth-adapters==0.16.1
 bluetooth-auto-recovery==1.2.3
@@ -19,10 +19,10 @@ cryptography==41.0.4
 dbus-fast==2.12.0
 fnv-hash-fast==0.5.0
 ha-av==10.1.1
-hass-nabucasa==0.73.0
+hass-nabucasa==0.74.0
 hassil==1.2.5
 home-assistant-bluetooth==1.10.4
-home-assistant-frontend==20231005.0
+home-assistant-frontend==20231027.0
 home-assistant-intents==2023.10.16
 httpx==0.25.0
 ifaddr==0.2.0
