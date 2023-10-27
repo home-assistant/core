@@ -227,6 +227,7 @@
       }),
       'webserver': dict({
         'mac': '**REDACTED**',
+        'model': 'Airzone WebServer',
         'wifi_channel': 6,
         'wifi_rssi': -42,
       }),

@@ -302,7 +302,7 @@ HVAC_VERSION_MOCK = {
 
 HVAC_WEBSERVER_MOCK = {
     API_MAC: "11:22:33:44:55:66",
-    AZD_MODEL: 1,
+    AZD_MODEL: "Airzone WebServer",
     API_WIFI_CHANNEL: 6,
     API_WIFI_RSSI: -42,
 }
