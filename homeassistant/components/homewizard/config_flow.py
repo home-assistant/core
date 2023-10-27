@@ -121,14 +121,18 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": ex.error_code}
             else:
                 return self.async_create_entry(
-                    title=f"{self.discovery.product_name} ({self.discovery.serial})",
+                    title=self.discovery.product_name,
                     data={CONF_IP_ADDRESS: self.discovery.ip},
                 )
 
         self._set_confirm_only()
-        self.context["title_placeholders"] = {
-            "name": f"{self.discovery.product_name} ({self.discovery.serial})"
-        }
+
+        # We won't be adding mac/serial to the title for devices
+        # that users generally don't have multiple of.
+        name = self.discovery.product_name
+        if self.discovery.product_type not in ["HWE-P1", "HWE-WTR"]:
+            name = f"{name} ({self.discovery.serial})"
+        self.context["title_placeholders"] = {"name": name}
 
         return self.async_show_form(
             step_id="discovery_confirm",
