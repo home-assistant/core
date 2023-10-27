@@ -35,7 +35,11 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er, start
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import (
+    Entity,
+    EntityPlatformState,
+    async_generate_entity_id,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
     EventStateChangedData,
@@ -299,6 +303,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if (conf := await component.async_prepare_reload()) is None:
             return
         await _async_process_config(hass, conf)
+
+        for e in auto:
+            # pylint: disable-next=protected-access
+            e._platform_state = EntityPlatformState.NOT_ADDED
 
         await component.async_add_entities(auto)
 
