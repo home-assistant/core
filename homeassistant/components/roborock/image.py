@@ -64,6 +64,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
             Drawable.PATH,
             Drawable.CHARGER,
             Drawable.ROOM_NAMES,
+            Drawable.VACUUM_POSITION,
         ]
         self.parser = RoborockMapDataParser(
             ColorsPalette(), Sizes(), drawables, ImageConfig(), []
