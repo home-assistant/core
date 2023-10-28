@@ -53,7 +53,7 @@ from .const import (
     DOMAIN,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
-    WETHER_FORECAST_MODES,
+    WEATHER_FORECAST_MODES,
 )
 from .entity import AemetEntity
 from .weather_update_coordinator import WeatherUpdateCoordinator
@@ -98,9 +98,9 @@ async def async_setup_entry(
     if entity_registry.async_get_entity_id(
         WEATHER_DOMAIN,
         DOMAIN,
-        f"{config_entry.unique_id} {WETHER_FORECAST_MODES[AOD_FORECAST_HOURLY]}",
+        f"{config_entry.unique_id} {WEATHER_FORECAST_MODES[AOD_FORECAST_HOURLY]}",
     ):
-        for mode, mode_id in WETHER_FORECAST_MODES.items():
+        for mode, mode_id in WEATHER_FORECAST_MODES.items():
             name = f"{domain_data[ENTRY_NAME]} {mode_id}"
             unique_id = f"{config_entry.unique_id} {mode_id}"
             entities.append(AemetWeather(name, unique_id, weather_coordinator, mode))
