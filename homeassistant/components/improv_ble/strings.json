@@ -38,7 +38,6 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_provisioned": "The device is already connected to Wi-Fi. If you want to connect it to another network, try factory resetting it first.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "characteristic_missing": "The device is either already connected to Wi-Fi, or no longer able to connect to Wi-Fi. If you want to connect it to another network, try factory resetting it first.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
