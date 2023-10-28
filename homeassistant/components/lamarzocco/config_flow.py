@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
-import voluptuous as vol  # type: ignore[import]
+import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.components.bluetooth import BluetoothServiceInfo
