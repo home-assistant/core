@@ -53,13 +53,34 @@ async def test_set_temp_schema(
     assert len(calls) == 1
     assert calls[-1].data == data
 
+async def test_set_temp_schema_high(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the set temperature schema with ok required data."""
+    domain = "water_heater"
+    service = "test_set_temperature"
+    schema = SET_TEMPERATURE_SCHEMA
+    calls = async_mock_service(hass, domain, service, schema)
+
+    data = {
+        "target_temp_high": 30.0,
+        "target_temp_low": 20.0,
+        "operation_mode": "gas",
+        "entity_id": ["water_heater.test_id"],
+    }
+    await hass.services.async_call(domain, service, data)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[-1].data == data
+
 
 class MockWaterHeaterEntity(WaterHeaterEntity):
     """Mock water heater device to use in tests."""
 
     _attr_operation_list: list[str] = ["off", "heat_pump", "gas"]
     _attr_operation = "heat_pump"
-    _attr_supported_features = WaterHeaterEntityFeature.ON_OFF
+    _attr_supported_features = WaterHeaterEntityFeature.ON_OFF | WaterHeaterEntityFeature.TARGET_TEMPERATURE_RANGE
 
 
 async def test_sync_turn_on(hass: HomeAssistant) -> None:
