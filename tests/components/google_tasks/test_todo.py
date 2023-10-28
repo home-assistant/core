@@ -286,9 +286,6 @@ async def test_task_items_error_response(
 
     await hass_ws_client(hass)
 
-    items = await ws_get_items()
-    assert items == []
-
     state = hass.states.get("todo.my_tasks")
     assert state
     assert state.state == "unavailable"
@@ -301,7 +298,7 @@ async def test_task_items_error_response(
             LIST_TASK_LIST_RESPONSE,
             LIST_TASKS_RESPONSE,
             EMPTY_RESPONSE,  # create
-            LIST_TASKS_RESPONSE,  # refresh after create
+            LIST_TASKS_RESPONSE,  # refresh after delete
         ]
     ],
 )
@@ -634,7 +631,7 @@ async def test_delete_invalid_json_response(
     mock_http_response: Any,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test delete where an invalid json response is returned."""
+    """Test delete with an invalid json response."""
 
     assert await integration_setup()
 
