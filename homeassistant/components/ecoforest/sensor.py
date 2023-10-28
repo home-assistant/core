@@ -110,18 +110,6 @@ SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
         value_fn=lambda data: data.working_hours,
     ),
     EcoforestSensorEntityDescription(
-        key="working_state",
-        translation_key="working_state",
-        entity_registry_enabled_default=False,
-        value_fn=lambda data: data.working_state,
-    ),
-    EcoforestSensorEntityDescription(
-        key="working_level",
-        translation_key="working_level",
-        entity_registry_enabled_default=False,
-        value_fn=lambda data: data.working_level,
-    ),
-    EcoforestSensorEntityDescription(
         key="ignitions",
         translation_key="ignitions",
         entity_registry_enabled_default=False,
