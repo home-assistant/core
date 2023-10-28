@@ -242,7 +242,7 @@ async def handle_call_service(
             connection.send_error(
                 msg["id"],
                 const.ERR_NOT_FOUND,
-                "Service not found.",
+                f"Service {err.domain}.{err.service} not found.",
                 translation_domain=err.translation_domain,
                 translation_key=err.translation_key,
                 translation_placeholders=err.translation_placeholders,
@@ -252,12 +252,15 @@ async def handle_call_service(
             connection.send_error(
                 msg["id"],
                 const.ERR_HOME_ASSISTANT_ERROR,
-                str(err),
-                translation_domain=const.DOMAIN,
-                translation_key="other_service_not_found",
+                f"Service {err.domain}.{err.service} called "
+                f"{msg['domain']}.{msg['service']} which was not found.",
+                translation_domain=err.translation_domain,
+                translation_key="child_service_not_found",
                 translation_placeholders={
                     "domain": err.domain,
                     "service": err.service,
+                    "child_domain": msg["domain"],
+                    "child_service": msg["service"],
                 },
             )
     except vol.Invalid as err:

@@ -184,8 +184,8 @@ class ServiceNotFound(HomeAssistantError):
         """Initialize error."""
         super().__init__(
             self,
-            f"Service {domain}.{service} not found",
-            translation_domain=None,
+            f"Service {domain}.{service} not found.",
+            translation_domain="homeassistant",
             translation_key="service_not_found",
             translation_placeholders={"domain": domain, "service": service},
         )
@@ -194,7 +194,7 @@ class ServiceNotFound(HomeAssistantError):
 
     def __str__(self) -> str:
         """Return string representation."""
-        return f"Unable to find service {self.domain}.{self.service}"
+        return f"Service {self.domain}.{self.service} not found."
 
 
 class MaxLengthExceeded(HomeAssistantError):

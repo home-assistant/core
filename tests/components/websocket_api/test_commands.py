@@ -343,13 +343,13 @@ async def test_call_service_not_found(
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_NOT_FOUND
-    assert msg["error"]["message"] == "Service not found."
+    assert msg["error"]["message"] == "Service domain_test.test_service not found."
     assert msg["error"]["translation_placeholders"] == {
         "domain": "domain_test",
         "service": "test_service",
     }
     assert msg["error"]["translation_key"] == "service_not_found"
-    assert msg["error"]["translation_domain"] == "websocket_api"
+    assert msg["error"]["translation_domain"] == "homeassistant"
 
 
 async def test_call_service_child_not_found(
@@ -377,13 +377,18 @@ async def test_call_service_child_not_found(
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_HOME_ASSISTANT_ERROR
-    assert msg["error"]["message"] == "Unable to find service non.existing"
+    assert (
+        msg["error"]["message"]
+        == "Service non.existing called domain_test.test_service which was not found."
+    )
     assert msg["error"]["translation_placeholders"] == {
         "domain": "non",
         "service": "existing",
+        "child_domain": "domain_test",
+        "child_service": "test_service",
     }
-    assert msg["error"]["translation_key"] == "other_service_not_found"
-    assert msg["error"]["translation_domain"] == "websocket_api"
+    assert msg["error"]["translation_key"] == "child_service_not_found"
+    assert msg["error"]["translation_domain"] == "homeassistant"
 
 
 async def test_call_service_schema_validation_error(
