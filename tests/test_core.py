@@ -2534,3 +2534,25 @@ def test_is_callback_check_partial():
     assert HassJob(ha.callback(functools.partial(not_callback_func))).job_type == (
         ha.HassJobType.Executor
     )
+
+
+def test_hassjob_passing_job_type():
+    """Test passing the job type to HassJob when we already know it."""
+
+    @ha.callback
+    def callback_func():
+        pass
+
+    def not_callback_func():
+        pass
+
+    assert (
+        HassJob(callback_func, job_type=ha.HassJobType.Callback).job_type
+        == ha.HassJobType.Callback
+    )
+
+    # We should trust the job_type passed in
+    assert (
+        HassJob(not_callback_func, job_type=ha.HassJobType.Callback).job_type
+        == ha.HassJobType.Callback
+    )
