@@ -34,6 +34,10 @@ async def async_setup_entry(
 class PicnicCart(TodoListEntity, CoordinatorEntity):
     """A Picnic Shopping Card TodoListEntity."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "shopping_cart"
+    _attr_icon = "mdi:cart"
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[Any],
@@ -48,8 +52,6 @@ class PicnicCart(TodoListEntity, CoordinatorEntity):
             model=config_entry.unique_id,
         )
         self._attr_unique_id = f"{config_entry.unique_id}-cart"
-        self._attr_name = "Picnic Shopping cart"
-        self._attr_icon = "mdi:cart"
 
     @property
     def todo_items(self) -> list[TodoItem] | None:
