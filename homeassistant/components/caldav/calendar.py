@@ -38,7 +38,6 @@ CONF_CALENDAR = "calendar"
 CONF_SEARCH = "search"
 CONF_DAYS = "days"
 
-OFFSET = "!!"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
