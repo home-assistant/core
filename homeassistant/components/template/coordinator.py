@@ -3,7 +3,7 @@ from collections.abc import Callable
 import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.core import CoreState, callback
+from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers import discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
@@ -85,10 +85,14 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         )
 
     async def _handle_triggered(self, run_variables, context=None):
+        # Create a new context referring to the old context.
+        parent_id = None if context is None else context.id
+        trigger_context = Context(parent_id=parent_id)
+
         if self._script:
-            script_result = await self._script.async_run(run_variables, context)
+            script_result = await self._script.async_run(run_variables, trigger_context)
             if script_result:
                 run_variables = script_result.variables
         self.async_set_updated_data(
-            {"run_variables": run_variables, "context": context}
+            {"run_variables": run_variables, "context": trigger_context}
         )
