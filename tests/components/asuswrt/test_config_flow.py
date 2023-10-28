@@ -260,11 +260,13 @@ async def test_options_flow_ap(hass: HomeAssistant, patch_setup_entry) -> None:
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options[CONF_CONSIDER_HOME] == 20
-    assert config_entry.options[CONF_TRACK_UNKNOWN] is True
-    assert config_entry.options[CONF_INTERFACE] == "aaa"
-    assert config_entry.options[CONF_DNSMASQ] == "bbb"
-    assert config_entry.options[CONF_REQUIRE_IP] is False
+    assert config_entry.options == {
+        CONF_CONSIDER_HOME: 20,
+        CONF_TRACK_UNKNOWN: True,
+        CONF_INTERFACE: "aaa",
+        CONF_DNSMASQ: "bbb",
+        CONF_REQUIRE_IP: False,
+    }
 
 
 async def test_options_flow_router(hass: HomeAssistant, patch_setup_entry) -> None:
@@ -294,7 +296,9 @@ async def test_options_flow_router(hass: HomeAssistant, patch_setup_entry) -> No
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options[CONF_CONSIDER_HOME] == 20
-    assert config_entry.options[CONF_TRACK_UNKNOWN] is True
-    assert config_entry.options[CONF_INTERFACE] == "aaa"
-    assert config_entry.options[CONF_DNSMASQ] == "bbb"
+    assert config_entry.options == {
+        CONF_CONSIDER_HOME: 20,
+        CONF_TRACK_UNKNOWN: True,
+        CONF_INTERFACE: "aaa",
+        CONF_DNSMASQ: "bbb",
+    }

@@ -1,7 +1,9 @@
 """Fixtures for Asuswrt component."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
+from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
+from aioasuswrt.connection import TelnetConnection
 import pytest
 
 from .common import ASUSWRT_BASE, MOCK_MACS, ROUTER_MAC_ADDR, new_device
@@ -42,59 +44,41 @@ def mock_available_temps_fixture():
 @pytest.fixture(name="connect_legacy")
 def mock_controller_connect_legacy(mock_devices_legacy, mock_available_temps):
     """Mock a successful connection with legacy library."""
-    with patch(ASUSWRT_LEGACY_LIB) as service_mock:
-        service_mock.return_value.connection.async_connect = AsyncMock()
-        service_mock.return_value.is_connected = True
-        service_mock.return_value.connection.disconnect = Mock()
-        service_mock.return_value.async_get_nvram = AsyncMock(
-            return_value={
-                "label_mac": ROUTER_MAC_ADDR,
-                "model": "abcd",
-                "firmver": "efg",
-                "buildno": "123",
-            }
+    with patch(ASUSWRT_LEGACY_LIB, spec=AsusWrtLegacy) as service_mock:
+        service_mock.return_value.connection = Mock(spec=TelnetConnection)
+        service_mock.return_value.is_connected.return_value = True
+        service_mock.return_value.async_get_nvram.return_value = {
+            "label_mac": ROUTER_MAC_ADDR,
+            "model": "abcd",
+            "firmver": "efg",
+            "buildno": "123",
+        }
+        service_mock.return_value.async_get_connected_devices.return_value = (
+            mock_devices_legacy
         )
-        service_mock.return_value.async_get_connected_devices = AsyncMock(
-            return_value=mock_devices_legacy
+        service_mock.return_value.async_get_bytes_total.return_value = MOCK_BYTES_TOTAL
+        service_mock.return_value.async_get_current_transfer_rates.return_value = (
+            MOCK_CURRENT_TRANSFER_RATES
         )
-        service_mock.return_value.async_get_mesh_nodes = AsyncMock(return_value=None)
-        service_mock.return_value.async_get_bytes_total = AsyncMock(
-            return_value=MOCK_BYTES_TOTAL
-        )
-        service_mock.return_value.async_get_current_transfer_rates = AsyncMock(
-            return_value=MOCK_CURRENT_TRANSFER_RATES
-        )
-        service_mock.return_value.async_get_loadavg = AsyncMock(
-            return_value=MOCK_LOAD_AVG
-        )
-        service_mock.return_value.async_get_temperature = AsyncMock(
-            return_value=MOCK_TEMPERATURES
-        )
-        service_mock.return_value.async_find_temperature_commands = AsyncMock(
-            return_value=mock_available_temps
+        service_mock.return_value.async_get_loadavg.return_value = MOCK_LOAD_AVG
+        service_mock.return_value.async_get_temperature.return_value = MOCK_TEMPERATURES
+        service_mock.return_value.async_find_temperature_commands.return_value = (
+            mock_available_temps
         )
         yield service_mock
 
 
 @pytest.fixture(name="connect_legacy_sens_fail")
-def mock_controller_connect_legacy_sens_fail():
+def mock_controller_connect_legacy_sens_fail(connect_legacy):
     """Mock a successful connection using legacy library with sensors fail."""
-    with patch(ASUSWRT_LEGACY_LIB) as service_mock:
-        service_mock.return_value.connection.async_connect = AsyncMock()
-        service_mock.return_value.is_connected = True
-        service_mock.return_value.connection.disconnect = Mock()
-        service_mock.return_value.async_get_nvram = AsyncMock(side_effect=OSError)
-        service_mock.return_value.async_get_connected_devices = AsyncMock(
-            side_effect=OSError
-        )
-        service_mock.return_value.async_get_mesh_nodes = AsyncMock(return_value=None)
-        service_mock.return_value.async_get_bytes_total = AsyncMock(side_effect=OSError)
-        service_mock.return_value.async_get_current_transfer_rates = AsyncMock(
-            side_effect=OSError
-        )
-        service_mock.return_value.async_get_loadavg = AsyncMock(side_effect=OSError)
-        service_mock.return_value.async_get_temperature = AsyncMock(side_effect=OSError)
-        service_mock.return_value.async_find_temperature_commands = AsyncMock(
-            return_value=[True, True, True]
-        )
-        yield service_mock
+    connect_legacy.return_value.async_get_nvram.side_effect = OSError
+    connect_legacy.return_value.async_get_connected_devices.side_effect = OSError
+    connect_legacy.return_value.async_get_bytes_total.side_effect = OSError
+    connect_legacy.return_value.async_get_current_transfer_rates.side_effect = OSError
+    connect_legacy.return_value.async_get_loadavg.side_effect = OSError
+    connect_legacy.return_value.async_get_temperature.side_effect = OSError
+    connect_legacy.return_value.async_find_temperature_commands.return_value = [
+        True,
+        True,
+        True,
+    ]
