@@ -71,6 +71,12 @@ async def test_init(hass: HomeAssistant, mock_light) -> None:
         ATTR_FRIENDLY_NAME: "Bedroom",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
         ATTR_SUPPORTED_FEATURES: 0,
+        ATTR_COLOR_MODE: None,
+        ATTR_BRIGHTNESS: None,
+        ATTR_HS_COLOR: None,
+        ATTR_RGB_COLOR: None,
+        ATTR_XY_COLOR: None,
+        ATTR_RGBW_COLOR: None,
     }
 
     with patch.object(hass.loop, "stop"):
@@ -191,6 +197,12 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
         ATTR_FRIENDLY_NAME: "Bedroom",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
         ATTR_SUPPORTED_FEATURES: 0,
+        ATTR_COLOR_MODE: None,
+        ATTR_BRIGHTNESS: None,
+        ATTR_HS_COLOR: None,
+        ATTR_RGB_COLOR: None,
+        ATTR_RGBW_COLOR: None,
+        ATTR_XY_COLOR: None,
     }
 
     # Test an exception during discovery

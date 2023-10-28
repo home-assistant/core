@@ -327,7 +327,10 @@ class ESPHomeManager:
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_udp_server is not None:
-            return None
+            _LOGGER.warning("Voice assistant UDP server was not stopped")
+            self.voice_assistant_udp_server.stop()
+            self.voice_assistant_udp_server.close()
+            self.voice_assistant_udp_server = None
 
         hass = self.hass
         self.voice_assistant_udp_server = VoiceAssistantUDPServer(
@@ -447,7 +450,9 @@ class ESPHomeManager:
 
         try:
             entity_infos, services = await cli.list_entities_services()
-            await entry_data.async_update_static_infos(hass, entry, entity_infos)
+            await entry_data.async_update_static_infos(
+                hass, entry, entity_infos, device_info.mac_address
+            )
             await _setup_services(hass, entry_data, services)
             await cli.subscribe_states(entry_data.async_update_state)
             await cli.subscribe_service_calls(self.async_on_service_call)
@@ -535,13 +540,16 @@ class ESPHomeManager:
             on_connect=self.on_connect,
             on_disconnect=self.on_disconnect,
             zeroconf_instance=self.zeroconf_instance,
-            name=self.host,
+            name=entry.data.get(CONF_DEVICE_NAME, self.host),
             on_connect_error=self.on_connect_error,
         )
         self.reconnect_logic = reconnect_logic
 
         infos, services = await entry_data.async_load_from_store()
-        await entry_data.async_update_static_infos(hass, entry, infos)
+        if entry.unique_id:
+            await entry_data.async_update_static_infos(
+                hass, entry, infos, entry.unique_id.upper()
+            )
         await _setup_services(hass, entry_data, services)
 
         if entry_data.device_info is not None and entry_data.device_info.name:
@@ -588,6 +596,10 @@ def _async_setup_device_registry(
         model = project_name[1]
         hw_version = device_info.project_version
 
+    suggested_area = None
+    if device_info.suggested_area:
+        suggested_area = device_info.suggested_area
+
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -598,6 +610,7 @@ def _async_setup_device_registry(
         model=model,
         sw_version=sw_version,
         hw_version=hw_version,
+        suggested_area=suggested_area,
     )
     return device_entry.id
 
