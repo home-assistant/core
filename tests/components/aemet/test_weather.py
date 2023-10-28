@@ -62,17 +62,17 @@ async def test_aemet_weather(
     assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 12.2
     assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 3.2
     forecast = state.attributes[ATTR_FORECAST][0]
-    assert forecast.get(ATTR_FORECAST_CONDITION) == ATTR_CONDITION_PARTLYCLOUDY
-    assert forecast.get(ATTR_FORECAST_PRECIPITATION) is None
-    assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 30
-    assert forecast.get(ATTR_FORECAST_TEMP) == 4
-    assert forecast.get(ATTR_FORECAST_TEMP_LOW) == -4
+    assert forecast[ATTR_FORECAST_CONDITION] == ATTR_CONDITION_PARTLYCLOUDY
+    assert ATTR_FORECAST_PRECIPITATION not in forecast
+    assert forecast[ATTR_FORECAST_PRECIPITATION_PROBABILITY] == 30
+    assert forecast[ATTR_FORECAST_TEMP] == 4
+    assert forecast[ATTR_FORECAST_TEMP_LOW] == -4
     assert (
-        forecast.get(ATTR_FORECAST_TIME)
+        forecast[ATTR_FORECAST_TIME]
         == dt_util.parse_datetime("2021-01-10 00:00:00+00:00").isoformat()
     )
-    assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 45.0
-    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 20.0  # 5.56 m/s -> km/h
+    assert forecast[ATTR_FORECAST_WIND_BEARING] == 45.0
+    assert forecast[ATTR_FORECAST_WIND_SPEED] == 20.0  # 5.56 m/s -> km/h
 
     state = hass.states.get("weather.aemet_hourly")
     assert state is None
@@ -106,17 +106,17 @@ async def test_aemet_weather_legacy(
     assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 12.2
     assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 3.2
     forecast = state.attributes[ATTR_FORECAST][0]
-    assert forecast.get(ATTR_FORECAST_CONDITION) == ATTR_CONDITION_PARTLYCLOUDY
-    assert forecast.get(ATTR_FORECAST_PRECIPITATION) is None
-    assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 30
-    assert forecast.get(ATTR_FORECAST_TEMP) == 4
-    assert forecast.get(ATTR_FORECAST_TEMP_LOW) == -4
+    assert forecast[ATTR_FORECAST_CONDITION] == ATTR_CONDITION_PARTLYCLOUDY
+    assert ATTR_FORECAST_PRECIPITATION not in forecast
+    assert forecast[ATTR_FORECAST_PRECIPITATION_PROBABILITY] == 30
+    assert forecast[ATTR_FORECAST_TEMP] == 4
+    assert forecast[ATTR_FORECAST_TEMP_LOW] == -4
     assert (
-        forecast.get(ATTR_FORECAST_TIME)
+        forecast[ATTR_FORECAST_TIME]
         == dt_util.parse_datetime("2021-01-10 00:00:00+00:00").isoformat()
     )
-    assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 45.0
-    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 20.0  # 5.56 m/s -> km/h
+    assert forecast[ATTR_FORECAST_WIND_BEARING] == 45.0
+    assert forecast[ATTR_FORECAST_WIND_SPEED] == 20.0  # 5.56 m/s -> km/h
 
     state = hass.states.get("weather.aemet_hourly")
     assert state is None
