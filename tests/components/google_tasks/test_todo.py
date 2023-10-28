@@ -13,6 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.typing import WebSocketGenerator
 
@@ -29,12 +30,30 @@ EMPTY_RESPONSE = {}
 LIST_TASKS_RESPONSE = {
     "items": [],
 }
+ERROR_RESPONSE = {
+    "error": {
+        "code": 400,
+        "message": "Invalid task ID",
+        "errors": [
+            {"message": "Invalid task ID", "domain": "global", "reason": "invalid"}
+        ],
+    }
+}
+CONTENT_ID = "Content-ID"
 
 LIST_TASKS_RESPONSE_WATER = {
     "items": [
         {"id": "some-task-id", "title": "Water", "status": "needsAction"},
     ],
 }
+LIST_TASKS_RESPONSE_MULTIPLE = {
+    "items": [
+        {"id": "some-task-id-1", "title": "Water", "status": "needsAction"},
+        {"id": "some-task-id-2", "title": "Milk", "status": "needsAction"},
+        {"id": "some-task-id-3", "title": "Cheese", "status": "needsAction"},
+    ],
+}
+
 
 
 @pytest.fixture
@@ -88,14 +107,84 @@ def mock_api_responses() -> list[dict | list]:
     return []
 
 
+def create_response_object(api_response: dict | list) -> tuple[Response, bytes]:
+    """Create an http response."""
+    return (
+        Response({"Content-Type": "application/json"}),
+        json.dumps(api_response).encode(),
+    )
+
+
+def create_batch_response_object(
+    contentids: list[str], api_responses: list[dict | list]
+) -> tuple[Response, bytes]:
+    """Create a batch response in the multipart/mixed format."""
+    assert len(api_responses) == len(contentids)
+    boundary = "batch_A5hf4ziMWA3Fv_lZehai_lZ2zaxr"
+    content = []
+    for api_response in api_responses:
+        body = json.dumps(api_response)
+        content.extend(
+            [
+                f"--{boundary}",
+                "Content-Type: application/http",
+                f"{CONTENT_ID}: {contentids.pop()}",
+                "",
+                "HTTP/1.1 200 OK",
+                "Content-Type: application/json; charset=UTF-8",
+                "",
+                body,
+            ]
+        )
+    content.append(f"--{boundary}--")
+    body = ("\r\n".join(content)).encode()
+    return (
+        Response(
+            {
+                "Content-Type": f"multipart/mixed; boundary={boundary}",
+                "Content-ID": "1",
+                "Content-Length": len(body),
+            }
+        ),
+        body,
+    )
+
+
+def create_batch_response_handler(
+    api_responses: list[dict | list],
+) -> Callable[[Any], tuple[Response, bytes]]:
+    """Create a fake http2lib response handler that supports generating batch responses.
+
+    Multi-part response objects are dynamically generated since they
+    need to match the Content-ID of the incoming request.
+    """
+
+    def _handler(url, method, **kwargs) -> tuple[Response, bytes]:
+        next_api_response = api_responses.pop(0)
+        if method == "POST" and (body := kwargs.get("body")):
+            contentids = [
+                line[len(CONTENT_ID) + 2 :]
+                for line in body.splitlines()
+                if line.startswith(f"{CONTENT_ID}:")
+            ]
+            if contentids:
+                return create_batch_response_object(contentids, next_api_response)
+        return create_response_object(next_api_response)
+
+    return _handler
+
+
+@pytest.fixture(name="response_handler")
+def mock_response_handler(api_responses: list[dict | list]) -> list:
+    """Create a mock http2lib response handler."""
+    return [create_response_object(api_response) for api_response in api_responses]
+
+
 @pytest.fixture(autouse=True)
-def mock_http_response(api_responses: list[dict | list]) -> Mock:
+def mock_http_response(response_handler: list | Callable) -> Mock:
     """Fixture to fake out http2lib responses."""
-    responses = [
-        (Response({}), bytes(json.dumps(api_response), encoding="utf-8"))
-        for api_response in api_responses
-    ]
-    with patch("httplib2.Http.request", side_effect=responses) as mock_response:
+
+    with patch("httplib2.Http.request", side_effect=response_handler) as mock_response:
         yield mock_response
 
 
@@ -181,6 +270,36 @@ async def test_empty_todo_list(
     [
         [
             LIST_TASK_LIST_RESPONSE,
+            ERROR_RESPONSE,
+        ]
+    ],
+)
+async def test_task_items_error_response(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    hass_ws_client: WebSocketGenerator,
+    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+) -> None:
+    """Test an error while getting todo list items."""
+
+    assert await integration_setup()
+
+    await hass_ws_client(hass)
+
+    items = await ws_get_items()
+    assert items == []
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "unavailable"
+
+
+@pytest.mark.parametrize(
+    "api_responses",
+    [
+        [
+            LIST_TASK_LIST_RESPONSE,
             LIST_TASKS_RESPONSE,
             EMPTY_RESPONSE,  # create
             LIST_TASKS_RESPONSE,  # refresh after create
@@ -222,6 +341,41 @@ async def test_create_todo_list_item(
         [
             LIST_TASK_LIST_RESPONSE,
             LIST_TASKS_RESPONSE_WATER,
+            ERROR_RESPONSE,
+        ]
+    ],
+)
+async def test_create_todo_list_item_error(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    mock_http_response: Mock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for an error response when creating a To-do Item."""
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "1"
+
+    with pytest.raises(HomeAssistantError, match="Invalid task ID"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "add_item",
+            {"item": "Soda"},
+            target={"entity_id": "todo.my_tasks"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "api_responses",
+    [
+        [
+            LIST_TASK_LIST_RESPONSE,
+            LIST_TASKS_RESPONSE_WATER,
             EMPTY_RESPONSE,  # update
             LIST_TASKS_RESPONSE,  # refresh after update
         ]
@@ -254,6 +408,41 @@ async def test_update_todo_list_item(
     assert call
     assert call.args == snapshot
     assert call.kwargs.get("body") == snapshot
+
+
+@pytest.mark.parametrize(
+    "api_responses",
+    [
+        [
+            LIST_TASK_LIST_RESPONSE,
+            LIST_TASKS_RESPONSE_WATER,
+            ERROR_RESPONSE,  # update fails
+        ]
+    ],
+)
+async def test_update_todo_list_item_error(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    mock_http_response: Any,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for an error response when updating a To-do Item."""
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "1"
+
+    with pytest.raises(HomeAssistantError, match="Invalid task ID"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "update_item",
+            {"item": "some-task-id", "rename": "Soda", "status": "completed"},
+            target={"entity_id": "todo.my_tasks"},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -334,3 +523,131 @@ async def test_partial_update_status(
     assert call
     assert call.args == snapshot
     assert call.kwargs.get("body") == snapshot
+
+
+@pytest.mark.parametrize(
+    "response_handler",
+    [
+        (
+            create_batch_response_handler(
+                [
+                    LIST_TASK_LIST_RESPONSE,
+                    LIST_TASKS_RESPONSE_MULTIPLE,
+                    [EMPTY_RESPONSE, EMPTY_RESPONSE, EMPTY_RESPONSE],  # Delete batch
+                    LIST_TASKS_RESPONSE,  # refresh after create
+                ]
+            )
+        )
+    ],
+)
+async def test_delete_todo_list_item(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    mock_http_response: Any,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for deleting multiple To-do Items."""
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "3"
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "remove_item",
+        {"item": ["some-task-id-1", "some-task-id-2", "some-task-id-3"]},
+        target={"entity_id": "todo.my_tasks"},
+        blocking=True,
+    )
+    assert len(mock_http_response.call_args_list) == 4
+    call = mock_http_response.call_args_list[2]
+    assert call
+    assert call.args == snapshot
+
+
+@pytest.mark.parametrize(
+    "response_handler",
+    [
+        (
+            create_batch_response_handler(
+                [
+                    LIST_TASK_LIST_RESPONSE,
+                    LIST_TASKS_RESPONSE_MULTIPLE,
+                    [
+                        EMPTY_RESPONSE,
+                        ERROR_RESPONSE,  # one item is a failure
+                        EMPTY_RESPONSE,
+                    ],
+                    LIST_TASKS_RESPONSE,  # refresh after create
+                ]
+            )
+        )
+    ],
+)
+async def test_delete_partial_failure(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    mock_http_response: Any,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for partial failure when deleting multiple To-do Items."""
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "3"
+
+    with pytest.raises(HomeAssistantError, match="Invalid task ID"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "remove_item",
+            {"item": ["some-task-id-1", "some-task-id-2", "some-task-id-3"]},
+            target={"entity_id": "todo.my_tasks"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "response_handler",
+    [
+        (
+            create_batch_response_handler(
+                [
+                    LIST_TASK_LIST_RESPONSE,
+                    LIST_TASKS_RESPONSE_MULTIPLE,
+                    [
+                        "1234-invalid-json",
+                    ],
+                ]
+            )
+        )
+    ],
+)
+async def test_delete_invalid_json_response(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    mock_http_response: Any,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test delete where an invalid json response is returned."""
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "3"
+
+    with pytest.raises(HomeAssistantError, match="unexpected response"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "remove_item",
+            {"item": ["some-task-id-1"]},
+            target={"entity_id": "todo.my_tasks"},
+            blocking=True,
+        )
