@@ -2,6 +2,7 @@
 
 
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 import json
 from typing import Any
 from unittest.mock import Mock, patch
@@ -117,20 +118,25 @@ def create_response_object(api_response: dict | list) -> tuple[Response, bytes]:
 
 
 def create_batch_response_object(
-    contentids: list[str], api_responses: list[dict | list]
+    contentids: list[str], api_responses: list[dict | list | Response]
 ) -> tuple[Response, bytes]:
     """Create a batch response in the multipart/mixed format."""
     assert len(api_responses) == len(contentids)
     content = []
     for api_response in api_responses:
-        body = json.dumps(api_response)
+        status = 200
+        body = ""
+        if isinstance(api_response, Response):
+            status = api_response.status
+        else:
+            body = json.dumps(api_response)
         content.extend(
             [
                 f"--{BOUNDARY}",
                 "Content-Type: application/http",
                 f"{CONTENT_ID}: {contentids.pop()}",
                 "",
-                "HTTP/1.1 200 OK",
+                f"HTTP/1.1 {status} OK",
                 "Content-Type: application/json; charset=UTF-8",
                 "",
                 body,
@@ -150,7 +156,7 @@ def create_batch_response_object(
 
 
 def create_batch_response_handler(
-    api_responses: list[dict | list],
+    api_responses: list[dict | list | Response],
 ) -> Callable[[Any], tuple[Response, bytes]]:
     """Create a fake http2lib response handler that supports generating batch responses.
 
@@ -232,6 +238,29 @@ async def test_get_items(
     state = hass.states.get("todo.my_tasks")
     assert state
     assert state.state == "1"
+
+
+@pytest.mark.parametrize(
+    "response_handler",
+    [
+        ([(Response({"status": HTTPStatus.INTERNAL_SERVER_ERROR}), b"")]),
+    ],
+)
+async def test_list_items_server_error(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    hass_ws_client: WebSocketGenerator,
+    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+) -> None:
+    """Test an error returned by the server when setting up the platform."""
+
+    assert await integration_setup()
+
+    await hass_ws_client(hass)
+
+    state = hass.states.get("todo.my_tasks")
+    assert state is None
 
 
 @pytest.mark.parametrize(
@@ -644,6 +673,45 @@ async def test_delete_invalid_json_response(
             TODO_DOMAIN,
             "remove_item",
             {"item": ["some-task-id-1"]},
+            target={"entity_id": "todo.my_tasks"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "response_handler",
+    [
+        (
+            create_batch_response_handler(
+                [
+                    LIST_TASK_LIST_RESPONSE,
+                    LIST_TASKS_RESPONSE,
+                    [Response({"status": HTTPStatus.INTERNAL_SERVER_ERROR})],
+                ]
+            )
+        )
+    ],
+)
+async def test_delete_server_error(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    mock_http_response: Any,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test delete with an invalid json response."""
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "0"
+
+    with pytest.raises(HomeAssistantError, match="responded with error"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "delete_item",
+            {"uid": ["some-task-id-1"]},
             target={"entity_id": "todo.my_tasks"},
             blocking=True,
         )

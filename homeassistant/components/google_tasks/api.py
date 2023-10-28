@@ -58,7 +58,7 @@ class AsyncConfigEntryAuth:
         """Get all TaskList resources."""
         service = await self._get_service()
         cmd: HttpRequest = service.tasklists().list()
-        result = await self._hass.async_add_executor_job(cmd.execute)
+        result = await self._execute(cmd)
         return result["items"]
 
     async def list_tasks(self, task_list_id: str) -> list[dict[str, Any]]:
@@ -67,8 +67,7 @@ class AsyncConfigEntryAuth:
         cmd: HttpRequest = service.tasks().list(
             tasklist=task_list_id, maxResults=MAX_TASK_RESULTS
         )
-        result = await self._hass.async_add_executor_job(cmd.execute)
-        _raise_if_error(result)
+        result = await self._execute(cmd)
         return result["items"]
 
     async def insert(
@@ -82,8 +81,7 @@ class AsyncConfigEntryAuth:
             tasklist=task_list_id,
             body=task,
         )
-        result = await self._hass.async_add_executor_job(cmd.execute)
-        _raise_if_error(result)
+        await self._execute(cmd)
 
     async def patch(
         self,
@@ -98,8 +96,7 @@ class AsyncConfigEntryAuth:
             task=task_id,
             body=task,
         )
-        result = await self._hass.async_add_executor_job(cmd.execute)
-        _raise_if_error(result)
+        await self._execute(cmd)
 
     async def delete(
         self,
@@ -112,7 +109,9 @@ class AsyncConfigEntryAuth:
 
         def response_handler(_, response, exception: HttpError) -> None:
             if exception is not None:
-                return
+                raise GoogleTasksApiError(
+                    f"Google Tasks API responded with error ({exception.status_code})"
+                ) from exception
             data = json.loads(response)
             _raise_if_error(data)
 
@@ -125,4 +124,15 @@ class AsyncConfigEntryAuth:
                 request_id=task_id,
                 callback=response_handler,
             )
-        await self._hass.async_add_executor_job(batch.execute)
+        await self._execute(batch)
+
+    async def _execute(self, request: HttpRequest | BatchHttpRequest) -> Any:
+        try:
+            result = await self._hass.async_add_executor_job(request.execute)
+        except HttpError as err:
+            raise GoogleTasksApiError(
+                f"Google Tasks API responded with error ({err.status_code})"
+            ) from err
+        if result:
+            _raise_if_error(result)
+        return result
