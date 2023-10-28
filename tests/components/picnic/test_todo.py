@@ -70,7 +70,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         """Test loading of shopping cart."""
         await self._setup_platform(CART_FULL_RESPONSE)
 
-        state = self.hass.states.get("todo.picnic_shopping_cart")
+        state = self.hass.states.get("todo.mock_title_shopping_cart")
         assert state
         assert state.state == "10"
 
@@ -78,7 +78,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         """Test loading of shopping cart."""
         await self._setup_platform(CART_EMPTY_RESPONSE)
 
-        state = self.hass.states.get("todo.picnic_shopping_cart")
+        state = self.hass.states.get("todo.mock_title_shopping_cart")
         assert state
         assert state.state == "0"
 
@@ -86,5 +86,5 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         """Test loading of shopping cart."""
         await self._setup_platform(CART_NO_RESPONSE)
 
-        state = self.hass.states.get("todo.picnic_shopping_cart")
+        state = self.hass.states.get("todo.mock_title_shopping_cart")
         assert state is None
