@@ -33,6 +33,20 @@
           "description": "Value to set."
         }
       }
+    },
+    "set_speaker_setting": {
+      "name": "Sets speaker setting",
+      "description": "Change speaker setting.",
+      "fields": {
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "Name of the setting."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Value to set."
+        }
+      }
     }
   }
 }

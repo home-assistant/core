@@ -33,7 +33,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ENDPOINT, DOMAIN, ERROR_REQUEST_RETRY, SET_SOUND_SETTING
+from .const import (
+    CONF_ENDPOINT,
+    DOMAIN,
+    ERROR_REQUEST_RETRY,
+    SET_SOUND_SETTING,
+    SET_SPEAKER_SETTING,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +90,11 @@ async def async_setup_entry(
         SET_SOUND_SETTING,
         {vol.Required(PARAM_NAME): cv.string, vol.Required(PARAM_VALUE): cv.string},
         "async_set_sound_setting",
+    )
+    platform.async_register_entity_service(
+        SET_SPEAKER_SETTING,
+        {vol.Required(PARAM_NAME): cv.string, vol.Required(PARAM_VALUE): cv.string},
+        "async_set_speaker_setting",
     )
 
 
@@ -224,6 +235,11 @@ class SongpalEntity(MediaPlayerEntity):
         """Change a setting on the device."""
         _LOGGER.debug("Calling set_sound_setting with %s: %s", name, value)
         await self._dev.set_sound_settings(name, value)
+
+    async def async_set_speaker_setting(self, name, value):
+        """Change a setting on the device."""
+        _LOGGER.debug("Calling set_speaker_settings with %s: %s", name, value)
+        await self._dev.set_speaker_settings(name, value)
 
     async def async_update(self) -> None:
         """Fetch updates from the device."""

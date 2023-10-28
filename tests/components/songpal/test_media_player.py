@@ -17,6 +17,7 @@ from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.songpal.const import (
     ERROR_REQUEST_RETRY,
     SET_SOUND_SETTING,
+    SET_SPEAKER_SETTING,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -263,6 +264,15 @@ async def test_services(hass: HomeAssistant) -> None:
     mocked_device.set_sound_settings.assert_called_once_with("name", "value")
     mocked_device.set_sound_settings.reset_mock()
 
+    await hass.services.async_call(
+        songpal.DOMAIN,
+        SET_SPEAKER_SETTING,
+        {"entity_id": ENTITY_ID, "name": "name", "value": "value"},
+        blocking=True,
+    )
+    mocked_device.set_speaker_settings.assert_called_once_with("name", "value")
+    mocked_device.set_speaker_settings.reset_mock()
+
     mocked_device2 = _create_mocked_device(wired_mac="mac2")
     entry2 = MockConfigEntry(
         domain=songpal.DOMAIN, data={CONF_NAME: "d2", CONF_ENDPOINT: ENDPOINT}
@@ -283,6 +293,17 @@ async def test_services(hass: HomeAssistant) -> None:
     mocked_device.set_sound_settings.reset_mock()
     mocked_device2.set_sound_settings.reset_mock()
 
+    await hass.services.async_call(
+        songpal.DOMAIN,
+        SET_SPEAKER_SETTING,
+        {"entity_id": "all", "name": "name", "value": "value"},
+        blocking=True,
+    )
+    mocked_device.set_speaker_settings.assert_called_once_with("name", "value")
+    mocked_device2.set_speaker_settings.assert_called_once_with("name", "value")
+    mocked_device.set_speaker_settings.reset_mock()
+    mocked_device2.set_speaker_settings.reset_mock()
+
     mocked_device3 = _create_mocked_device(wired_mac=None, wireless_mac=WIRELESS_MAC)
     entry3 = MockConfigEntry(
         domain=songpal.DOMAIN, data={CONF_NAME: "d2", CONF_ENDPOINT: ENDPOINT}
@@ -301,6 +322,16 @@ async def test_services(hass: HomeAssistant) -> None:
     mocked_device.set_sound_settings.assert_called_once_with("name", "value")
     mocked_device2.set_sound_settings.assert_called_once_with("name", "value")
     mocked_device3.set_sound_settings.assert_called_once_with("name", "value")
+
+    await hass.services.async_call(
+        songpal.DOMAIN,
+        SET_SPEAKER_SETTING,
+        {"entity_id": "all", "name": "name", "value": "value"},
+        blocking=True,
+    )
+    mocked_device.set_speaker_settings.assert_called_once_with("name", "value")
+    mocked_device2.set_speaker_settings.assert_called_once_with("name", "value")
+    mocked_device3.set_speaker_settings.assert_called_once_with("name", "value")
 
 
 async def test_websocket_events(hass: HomeAssistant) -> None:

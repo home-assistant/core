@@ -14,3 +14,20 @@ set_sound_setting:
       example: "on"
       selector:
         text:
+
+set_speaker_setting:
+  target:
+    entity:
+      integration: songpal
+      domain: media_player
+  fields:
+    name:
+      required: true
+      example: "subwooferLevel"
+      selector:
+        text:
+    value:
+      required: true
+      example: "-7.0"
+      selector:
+        text:
