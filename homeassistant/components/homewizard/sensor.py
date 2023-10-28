@@ -40,7 +40,7 @@ class HomeWizardEntityDescriptionMixin:
     """Mixin values for HomeWizard entities."""
 
     has_fn: Callable[[Data], bool]
-    value_fn: Callable[[Data], float | int | str | None]
+    value_fn: Callable[[Data], StateType]
 
 
 @dataclass
