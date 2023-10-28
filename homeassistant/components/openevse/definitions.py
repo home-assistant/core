@@ -4,12 +4,17 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntityDescription,
+)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -26,12 +31,28 @@ def status_transform(value):
 
 
 @dataclass
+class OpenEVSEBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Sensor entity description for OpenEVSE."""
+
+    topic: str | None = None  # If not provided, assume key is topic
+
+
+@dataclass
 class OpenEVSESensorEntityDescription(SensorEntityDescription):
     """Sensor entity description for OpenEVSE."""
 
     state: Callable | None = None
     topic: str | None = None  # If not provided, assume key is topic
 
+
+BINARY_SENSORS: tuple[OpenEVSEBinarySensorEntityDescription, ...] = (
+    OpenEVSEBinarySensorEntityDescription(
+        key="vehicle_connected",
+        translation_key="vehicle_connected",
+        device_class=BinarySensorDeviceClass.PLUG,
+        topic="vehicle",
+    ),
+)
 
 SENSORS: tuple[OpenEVSESensorEntityDescription, ...] = (
     OpenEVSESensorEntityDescription(
@@ -40,6 +61,7 @@ SENSORS: tuple[OpenEVSESensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OpenEVSESensorEntityDescription(
         key="voltage",
@@ -47,6 +69,17 @@ SENSORS: tuple[OpenEVSESensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    OpenEVSESensorEntityDescription(
+        key="charge_rate_limit",
+        translation_key="charge_rate_limit",
+        topic="pilot",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:speedometer",
     ),
     OpenEVSESensorEntityDescription(
         key="power",
@@ -54,6 +87,7 @@ SENSORS: tuple[OpenEVSESensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OpenEVSESensorEntityDescription(
         key="session_elapsed",
@@ -61,6 +95,7 @@ SENSORS: tuple[OpenEVSESensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OpenEVSESensorEntityDescription(
         key="session_energy",
@@ -68,6 +103,7 @@ SENSORS: tuple[OpenEVSESensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OpenEVSESensorEntityDescription(
         key="status",

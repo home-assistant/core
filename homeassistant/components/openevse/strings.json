@@ -11,6 +11,9 @@
   },
   "entity": {
     "sensor": {
+      "charge_rate_limit": {
+        "name": "Charge rate limit"
+      },
       "session_elapsed": {
         "name": "Session elapsed"
       },
@@ -37,6 +40,9 @@
           "sleeping": "Sleeping",
           "disabled": "Disabled"
         }
+      },
+      "vehicle_connected": {
+        "name": "Vehicle"
       }
     }
   }
