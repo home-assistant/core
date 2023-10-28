@@ -53,7 +53,7 @@ from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
 from .connection import ActiveConnection
-from .messages import construct_event_message, construct_result_message
+from .messages import construct_result_message
 
 ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
 
@@ -294,8 +294,9 @@ def _send_handle_get_states_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle get states response."""
-    joined_states = ",".join(serialized_states)
-    connection.send_message(construct_result_message(msg_id, f"[{joined_states}]"))
+    connection.send_message(
+        construct_result_message(msg_id, f'[{",".join(serialized_states)}]')
+    )
 
 
 @callback
@@ -383,9 +384,8 @@ def _send_handle_entities_init_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle entities init response."""
-    joined_states = ",".join(serialized_states)
     connection.send_message(
-        construct_event_message(msg_id, f'{{"a":{{{joined_states}}}}}')
+        f'{{"id":{msg_id},"type":"event","event":{{"a":{{{",".join(serialized_states)}}}}}}}'
     )
 
 
