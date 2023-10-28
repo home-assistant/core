@@ -37,6 +37,7 @@ class DeakoLightEntity(LightEntity):
     """Deako LightEntity class."""
 
     _attr_has_entity_name = True
+    _attr_is_on = False
 
     def __init__(self, client: Deako, uuid: str) -> None:
         """Save connection reference."""
@@ -48,9 +49,16 @@ class DeakoLightEntity(LightEntity):
         # since light entity is the main feature of deako devices
         self._attr_name = None
 
+        state = self.get_state()
+        dimmable = state is not None and state.get("dim") is not None
+
         model = MODEL_SMART
-        if ColorMode.BRIGHTNESS in self.supported_color_modes:
+        self._attr_color_mode = ColorMode.ONOFF
+        if dimmable:
             model = MODEL_DIMMER
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+
+        self._attr_supported_color_modes = {self._attr_color_mode}
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, uuid)},
@@ -60,9 +68,11 @@ class DeakoLightEntity(LightEntity):
         )
 
         client.set_state_callback(uuid, self.on_update)
+        self.update()  # set initial state
 
     def on_update(self) -> None:
         """State update callback."""
+        self.update()
         self.schedule_update_ha_state()
 
     def get_state(self) -> dict | None:
@@ -76,42 +86,6 @@ class DeakoLightEntity(LightEntity):
         if self._attr_unique_id is not None:
             await self.client.control_device(self._attr_unique_id, power, dim)
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if the light is on."""
-        state = self.get_state()
-        if state is not None:
-            power = state.get("power", False)
-            return bool(power)
-        return False
-
-    @property
-    def brightness(self) -> int:
-        """Return the brightness of this light between 0..255."""
-        state = self.get_state()
-        if state is not None:
-            return int(round(state.get("dim", 0) * 2.55))
-        return 0
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode]:
-        """Flag supported features."""
-        color_modes: set[ColorMode] = set()
-        state = self.get_state()
-        if state is not None and state.get("dim") is None:
-            color_modes.add(ColorMode.ONOFF)
-        else:
-            color_modes.add(ColorMode.BRIGHTNESS)
-        return color_modes
-
-    @property
-    def color_mode(self) -> ColorMode:
-        """Return the color mode of the light."""
-        state = self.get_state()
-        if state is not None and state.get("dim") is None:
-            return ColorMode.ONOFF
-        return ColorMode.BRIGHTNESS
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         dim = None
@@ -122,3 +96,14 @@ class DeakoLightEntity(LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         await self.control_device(False)
+
+    def update(self) -> None:
+        """Call to update state."""
+        state = self.get_state()
+        if state is not None:
+            self._attr_is_on = bool(state.get("power", False))
+            if (
+                self._attr_supported_color_modes is not None
+                and ColorMode.BRIGHTNESS in self._attr_supported_color_modes
+            ):
+                self._attr_brightness = int(round(state.get("dim", 0) * 2.55))
