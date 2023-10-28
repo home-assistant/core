@@ -573,8 +573,8 @@ async def async_setup_platform(
         # Refresh the token before importing to ensure it is working and not
         # expired on first initialization.
         authd_client = Fitbit(
-            config_file.get(CONF_CLIENT_ID),
-            config_file.get(CONF_CLIENT_SECRET),
+            config_file[CONF_CLIENT_ID],
+            config_file[CONF_CLIENT_SECRET],
             access_token=config_file[ATTR_ACCESS_TOKEN],
             refresh_token=config_file[ATTR_REFRESH_TOKEN],
             expires_at=config_file[ATTR_LAST_SAVED_AT],
