@@ -92,6 +92,7 @@ def pong_message(iden: int) -> dict[str, Any]:
     return {"id": iden, "type": "pong"}
 
 
+@callback
 def _forward_events_check_permissions(
     send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
     user: User,
@@ -109,6 +110,7 @@ def _forward_events_check_permissions(
     send_message(messages.cached_event_message(msg_id, event))
 
 
+@callback
 def _forward_events_unconditional(
     send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
     msg_id: int,
@@ -135,17 +137,15 @@ def handle_subscribe_events(
         raise Unauthorized
 
     if event_type == EVENT_STATE_CHANGED:
-        forward_events = callback(
-            partial(
-                _forward_events_check_permissions,
-                connection.send_message,
-                connection.user,
-                msg["id"],
-            )
+        forward_events = partial(
+            _forward_events_check_permissions,
+            connection.send_message,
+            connection.user,
+            msg["id"],
         )
     else:
-        forward_events = callback(
-            partial(_forward_events_unconditional, connection.send_message, msg["id"])
+        forward_events = partial(
+            _forward_events_unconditional, connection.send_message, msg["id"]
         )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
@@ -298,6 +298,7 @@ def _send_handle_get_states_response(
     connection.send_message(construct_result_message(msg_id, f"[{joined_states}]"))
 
 
+@callback
 def _forward_entity_changes(
     send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
     entity_ids: set[str],
@@ -337,14 +338,12 @@ def handle_subscribe_entities(
     states = _async_get_allowed_states(hass, connection)
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
-        callback(
-            partial(
-                _forward_entity_changes,
-                connection.send_message,
-                entity_ids,
-                connection.user,
-                msg["id"],
-            )
+        partial(
+            _forward_entity_changes,
+            connection.send_message,
+            entity_ids,
+            connection.user,
+            msg["id"],
         ),
         run_immediately=True,
     )
