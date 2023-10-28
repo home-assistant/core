@@ -581,7 +581,7 @@ async def async_setup_platform(
             refresh_cb=lambda x: None,
         )
         try:
-            authd_client.client.refresh_token()
+            await hass.async_add_executor_job(authd_client.client.refresh_token)
         except OAuth2Error as err:
             _LOGGER.debug("Unable to import fitbit OAuth2 credentials: %s", err)
             translation_key = "deprecated_yaml_import_issue_cannot_connect"
