@@ -37,6 +37,7 @@ ALLOW_NAME_TRANSLATION = {
     "islamic_prayer_times",
     "local_calendar",
     "local_ip",
+    "local_todo",
     "nmap_tracker",
     "rpi_power",
     "waze_travel_time",
