@@ -1,5 +1,5 @@
 """Test the MyPermobil config flow."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from mypermobil import MyPermobilAPIException, MyPermobilClientException
 import pytest
@@ -265,12 +265,8 @@ async def test_config_flow_region_request_error(hass: HomeAssistant) -> None:
 
 async def test_config_flow_invalid_email(hass: HomeAssistant) -> None:
     """Test the config flow from start to until the request for regions and have the API return error."""
-
-    def set_email(_):
-        raise MyPermobilClientException
-
     mock_api: AsyncMock = AsyncMock()
-    mock_api.set_email = set_email
+    mock_api.set_email: Mock = Mock(side_effect=MyPermobilClientException())
     # init flow
     # here the set_email raises a MyPermobilClientException
     with patch(
