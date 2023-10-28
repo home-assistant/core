@@ -146,7 +146,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
         assert (
             energy_consumption_peak_today.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.TOTAL
+            is SensorStateClass.TOTAL_INCREASING
         )
         assert (
             energy_consumption_peak_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -167,7 +167,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
         assert (
             energy_consumption_off_peak_today.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.TOTAL
+            is SensorStateClass.TOTAL_INCREASING
         )
         assert (
             energy_consumption_off_peak_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -188,7 +188,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
         assert (
             energy_production_peak_today.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.TOTAL
+            is SensorStateClass.TOTAL_INCREASING
         )
         assert (
             energy_production_peak_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -209,7 +209,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
         assert (
             energy_production_off_peak_today.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.TOTAL
+            is SensorStateClass.TOTAL_INCREASING
         )
         assert (
             energy_production_off_peak_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
