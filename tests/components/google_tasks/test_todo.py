@@ -40,6 +40,7 @@ ERROR_RESPONSE = {
     }
 }
 CONTENT_ID = "Content-ID"
+BOUNDARY = "batch_00972cc8-75bd-11ee-9692-0242ac110002"  # Arbitrary uuid
 
 LIST_TASKS_RESPONSE_WATER = {
     "items": [
@@ -120,13 +121,12 @@ def create_batch_response_object(
 ) -> tuple[Response, bytes]:
     """Create a batch response in the multipart/mixed format."""
     assert len(api_responses) == len(contentids)
-    boundary = "batch_A5hf4ziMWA3Fv_lZehai_lZ2zaxr"
     content = []
     for api_response in api_responses:
         body = json.dumps(api_response)
         content.extend(
             [
-                f"--{boundary}",
+                f"--{BOUNDARY}",
                 "Content-Type: application/http",
                 f"{CONTENT_ID}: {contentids.pop()}",
                 "",
@@ -136,14 +136,13 @@ def create_batch_response_object(
                 body,
             ]
         )
-    content.append(f"--{boundary}--")
+    content.append(f"--{BOUNDARY}--")
     body = ("\r\n".join(content)).encode()
     return (
         Response(
             {
-                "Content-Type": f"multipart/mixed; boundary={boundary}",
+                "Content-Type": f"multipart/mixed; boundary={BOUNDARY}",
                 "Content-ID": "1",
-                "Content-Length": len(body),
             }
         ),
         body,
