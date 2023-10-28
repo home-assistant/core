@@ -31,7 +31,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         device: HomeDataDevice,
         device_networking: NetworkInfo,
         product_info: HomeDataProduct,
-        cloud_api: RoborockMqttClient | None = None,
+        cloud_api: RoborockMqttClient,
     ) -> None:
         """Initialize."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
@@ -51,6 +51,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             model=self.roborock_device_info.product.model,
             sw_version=self.roborock_device_info.device.fv,
         )
+        self.current_map: int | None = None
 
     async def verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
@@ -84,6 +85,16 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         """Update data via library."""
         try:
             await self._update_device_prop()
+            self._set_current_map()
         except RoborockException as ex:
             raise UpdateFailed(ex) from ex
         return self.roborock_device_info.props
+
+    def _set_current_map(self) -> None:
+        if (
+            self.roborock_device_info.props.status is not None
+            and self.roborock_device_info.props.status.map_status is not None
+        ):
+            self.current_map = (
+                self.roborock_device_info.props.status.map_status - 3
+            ) // 4

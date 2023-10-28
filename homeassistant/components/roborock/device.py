@@ -3,6 +3,7 @@
 from typing import Any
 
 from roborock.api import AttributeCache, RoborockClient
+from roborock.cloud_api import RoborockMqttClient
 from roborock.command_cache import CacheableAttribute
 from roborock.containers import Status
 from roborock.exceptions import RoborockException
@@ -86,9 +87,14 @@ class RoborockCoordinatedEntity(
                 return status
         return Status({})
 
+    @property
+    def cloud_api(self) -> RoborockMqttClient:
+        """Return the cloud api."""
+        return self.coordinator.cloud_api
+
     async def send(
         self,
-        command: RoborockCommand,
+        command: RoborockCommand | str,
         params: dict[str, Any] | list[Any] | int | None = None,
     ) -> dict:
         """Overloads normal send command but refreshes coordinator."""

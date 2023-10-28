@@ -14,4 +14,5 @@ PLATFORMS = [
     Platform.TIME,
     Platform.NUMBER,
     Platform.BINARY_SENSOR,
+    Platform.IMAGE,
 ]
