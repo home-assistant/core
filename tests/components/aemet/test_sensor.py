@@ -93,7 +93,7 @@ async def test_aemet_weather_create_sensors(
     assert state.state == "1004.4"
 
     state = hass.states.get("sensor.aemet_rain")
-    assert state.state == "1.8"
+    assert state.state == "7.0"
 
     state = hass.states.get("sensor.aemet_rain_probability")
     assert state.state == "100"
@@ -132,10 +132,10 @@ async def test_aemet_weather_create_sensors(
     assert state.state == "2021-01-09T11:47:45+00:00"
 
     state = hass.states.get("sensor.aemet_wind_bearing")
-    assert state.state == "90.0"
+    assert state.state == "122.0"
 
     state = hass.states.get("sensor.aemet_wind_max_speed")
-    assert state.state == "24"
+    assert state.state == "12.2"
 
     state = hass.states.get("sensor.aemet_wind_speed")
-    assert state.state == "15"
+    assert state.state == "3.2"
