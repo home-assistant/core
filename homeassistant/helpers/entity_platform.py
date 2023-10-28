@@ -123,7 +123,6 @@ class EntityPlatform:
         self.config_entry: config_entries.ConfigEntry | None = None
         self.entities: dict[str, Entity] = {}
         self.component_translations: dict[str, Any] = {}
-        self.exception_translations: dict[str, Any] = {}
         self.platform_translations: dict[str, Any] = {}
         self.object_id_component_translations: dict[str, Any] = {}
         self.object_id_platform_translations: dict[str, Any] = {}
@@ -328,9 +327,6 @@ class EntityPlatform:
 
         self.component_translations = await get_translations(
             hass.config.language, "entity_component", self.domain
-        )
-        self.exception_translations = await get_translations(
-            hass.config.language, "exceptions", self.domain
         )
         self.platform_translations = await get_translations(
             hass.config.language, "entity", self.platform_name

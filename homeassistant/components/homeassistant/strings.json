@@ -138,9 +138,6 @@
     }
   },
   "exceptions": {
-    "child_service_not_found": {
-      "message": "Service {domain}.{service} called {child_domain}.{child_service} which was not found."
-    },
     "service_not_found": {
       "message": "Service {domain}.{service} not found."
     }

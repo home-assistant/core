@@ -254,7 +254,7 @@ async def handle_call_service(
                 const.ERR_HOME_ASSISTANT_ERROR,
                 f"Service {err.domain}.{err.service} called "
                 f"{msg['domain']}.{msg['service']} which was not found.",
-                translation_domain=err.translation_domain,
+                translation_domain=const.DOMAIN,
                 translation_key="child_service_not_found",
                 translation_placeholders={
                     "domain": err.domain,
@@ -268,14 +268,13 @@ async def handle_call_service(
     except ServiceValidationError as err:
         connection.logger.error(err)
         connection.logger.debug("", exc_info=err)
-        placeholders = err.translation_placeholders or {}
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,
             f"Validation error: {err}",
             translation_domain=err.translation_domain,
             translation_key=err.translation_key,
-            translation_placeholders={**placeholders, **{"message": str(err)}},
+            translation_placeholders=err.translation_placeholders,
         )
     except HomeAssistantError as err:
         connection.logger.exception(err)

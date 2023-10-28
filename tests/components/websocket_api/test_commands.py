@@ -388,7 +388,7 @@ async def test_call_service_child_not_found(
         "child_service": "test_service",
     }
     assert msg["error"]["translation_key"] == "child_service_not_found"
-    assert msg["error"]["translation_domain"] == "homeassistant"
+    assert msg["error"]["translation_domain"] == "websocket_api"
 
 
 async def test_call_service_schema_validation_error(
@@ -528,10 +528,7 @@ async def test_call_service_error(
     assert msg["success"] is False
     assert msg["error"]["code"] == "home_assistant_error"
     assert msg["error"]["message"] == "Validation error: error_message"
-    assert msg["error"]["translation_placeholders"] == {
-        "option": "bla",
-        "message": "error_message",
-    }
+    assert msg["error"]["translation_placeholders"] == {"option": "bla"}
     assert msg["error"]["translation_key"] == "custom_error"
     assert msg["error"]["translation_domain"] == "test"
 
