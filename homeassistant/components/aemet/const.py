@@ -12,6 +12,8 @@ from aemet_opendata.const import (
     AOD_COND_RAINY,
     AOD_COND_SNOWY,
     AOD_COND_SUNNY,
+    AOD_FORECAST_DAILY,
+    AOD_FORECAST_HOURLY,
 )
 
 from homeassistant.components.weather import (
@@ -121,4 +123,9 @@ FORECAST_MODES = [
 FORECAST_MODE_ATTR_API = {
     FORECAST_MODE_DAILY: ATTR_API_FORECAST_DAILY,
     FORECAST_MODE_HOURLY: ATTR_API_FORECAST_HOURLY,
+}
+
+WETHER_FORECAST_MODES = {
+    AOD_FORECAST_DAILY: "daily",
+    AOD_FORECAST_HOURLY: "hourly",
 }

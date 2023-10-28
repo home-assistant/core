@@ -261,6 +261,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_WIND_BEARING: wind_bearing,
             ATTR_API_WIND_MAX_SPEED: wind_max_speed,
             ATTR_API_WIND_SPEED: wind_speed,
+            "lib": self.aemet.data(),
         }
 
     def _get_daily_forecast_from_weather_response(self, weather_response, now):
