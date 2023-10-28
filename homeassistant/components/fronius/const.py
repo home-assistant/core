@@ -82,11 +82,7 @@ class MeterLocationCodeOption(StrEnum):
 
 def get_meter_location_description(code: StateType) -> MeterLocationCodeOption | None:
     """Return a location_description for a given location code."""
-    try:
-        code = int(code)  # type: ignore[arg-type]
-    except ValueError:
-        return None
-    match code:
+    match int(code):  # type: ignore[arg-type]
         case 0:
             return MeterLocationCodeOption.FEED_IN
         case 1:

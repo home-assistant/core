@@ -178,7 +178,6 @@ async def test_symo_meter(
 async def test_symo_meter_forged(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    freezer: FrozenDateTimeFactory,
     location_code: int | None,
     expected_code: int | str,
     expected_description: str,
@@ -204,22 +203,6 @@ async def test_symo_meter_forged(
     assert_state(
         "sensor.smart_meter_63a_meter_location_description", expected_description
     )
-    # location code returning null after entity was created
-    # would not create the entity if null was returned at setup
-    mock_responses(
-        aioclient_mock,
-        fixture_set="symo",
-        override_data={
-            "symo/GetMeterRealtimeData.json": [
-                (["Body", "Data", "0", "Meter_Location_Current"], None),
-            ],
-        },
-    )
-    freezer.tick(FroniusInverterUpdateCoordinator.default_interval)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert_state("sensor.smart_meter_63a_meter_location", "unknown")
-    assert_state("sensor.smart_meter_63a_meter_location_description", "unknown")
 
 
 async def test_symo_power_flow(
