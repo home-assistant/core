@@ -37,7 +37,6 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv, entity_registry as er, start
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
@@ -302,27 +301,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
 
-        async def reset_group_platform(platform: EntityPlatform) -> None:
-            # Simplified + modified version of EntityPlatform.async_reset:
-            # - group.group never retries setup
-            # - group.group never polls
-            # - We don't need to reset EntityPlatform._setup_complete
-            # - Only remove entities which were not created by service calls
-            if not platform.entities:
-                return
-
-            tasks = [
-                entity.async_remove()
-                for entity in platform.entities.values()
-                if not cast(Group, entity).created_by_service
-            ]
-
-            await asyncio.gather(*tasks)
-
         # There's only a group.group platform, no group.xxx platforms with
         # entities.
         # pylint: disable-next=protected-access
-        await reset_group_platform(component._platforms[DOMAIN])
+        platform = component._platforms[DOMAIN]
+
+        # Simplified + modified version of EntityPlatform.async_reset:
+        # - group.group never retries setup
+        # - group.group never polls
+        # - We don't need to reset EntityPlatform._setup_complete
+        # - Only remove entities which were not created by service calls
+        if not platform.entities:
+            return
+
+        tasks = [
+            entity.async_remove()
+            for entity in platform.entities.values()
+            if not cast(Group, entity).created_by_service
+        ]
+
+        await asyncio.gather(*tasks)
 
         component.config = None
 
