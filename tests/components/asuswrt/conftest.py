@@ -11,7 +11,6 @@ from .common import ASUSWRT_BASE, MOCK_MACS, ROUTER_MAC_ADDR, new_device
 ASUSWRT_LEGACY_LIB = f"{ASUSWRT_BASE}.bridge.AsusWrtLegacy"
 
 MOCK_BYTES_TOTAL = [60000000000, 50000000000]
-MOCK_CPU_USAGE = {"cpu1_usage": 0.1, "cpu2_usage": 0.2, "cpu_total_usage": 0.1}
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
 MOCK_LOAD_AVG = [1.1, 1.2, 1.3]
 MOCK_TEMPERATURES = {"2.4GHz": 40.2, "CPU": 71.2}
@@ -46,7 +45,7 @@ def mock_controller_connect_legacy(mock_devices_legacy, mock_available_temps):
     """Mock a successful connection with legacy library."""
     with patch(ASUSWRT_LEGACY_LIB, spec=AsusWrtLegacy) as service_mock:
         service_mock.return_value.connection = Mock(spec=TelnetConnection)
-        service_mock.return_value.is_connected.return_value = True
+        service_mock.return_value.is_connected = True
         service_mock.return_value.async_get_nvram.return_value = {
             "label_mac": ROUTER_MAC_ADDR,
             "model": "abcd",
