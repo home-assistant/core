@@ -12,11 +12,13 @@ from pathlib import Path
 from queue import Queue
 from threading import Thread
 import time
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 import wave
 
 import voluptuous as vol
-from webrtc_noise_gain import AudioProcessor
+
+if TYPE_CHECKING:
+    from webrtc_noise_gain import AudioProcessor
 
 from homeassistant.components import (
     conversation,
@@ -522,6 +524,12 @@ class PipelineRun:
         # Initialize with audio settings
         self.audio_processor_buffer = AudioBuffer(AUDIO_PROCESSOR_BYTES)
         if self.audio_settings.needs_processor:
+            # Delay import of webrtc so HA start up is not crashing
+            # on older architectures (armhf).
+            #
+            # pylint: disable=import-outside-toplevel
+            from webrtc_noise_gain import AudioProcessor
+
             self.audio_processor = AudioProcessor(
                 self.audio_settings.auto_gain_dbfs,
                 self.audio_settings.noise_suppression_level,
@@ -681,7 +689,8 @@ class PipelineRun:
             wake_word_output: dict[str, Any] = {}
         else:
             # Avoid duplicate detections by checking cooldown
-            last_wake_up = self.hass.data.get(DATA_LAST_WAKE_UP)
+            wake_up_key = f"{self.wake_word_entity_id}.{result.wake_word_id}"
+            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(wake_up_key)
             if last_wake_up is not None:
                 sec_since_last_wake_up = time.monotonic() - last_wake_up
                 if sec_since_last_wake_up < wake_word_settings.cooldown_seconds:
@@ -689,7 +698,7 @@ class PipelineRun:
                     raise WakeWordDetectionAborted
 
             # Record last wake up time to block duplicate detections
-            self.hass.data[DATA_LAST_WAKE_UP] = time.monotonic()
+            self.hass.data[DATA_LAST_WAKE_UP][wake_up_key] = time.monotonic()
 
             if result.queued_audio:
                 # Add audio that was pending at detection.
