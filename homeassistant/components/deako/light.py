@@ -36,6 +36,10 @@ async def async_setup_entry(
 class DeakoLightEntity(LightEntity):
     """Deako LightEntity class."""
 
+    # retype because these will be set
+    _attr_unique_id: str
+    _attr_supported_color_modes: set[ColorMode]
+
     _attr_has_entity_name = True
     _attr_is_on = False
 
@@ -50,7 +54,7 @@ class DeakoLightEntity(LightEntity):
         self._attr_name = None
 
         state = self.get_state()
-        dimmable = state is not None and state.get("dim") is not None
+        dimmable = state.get("dim") is not None
 
         model = MODEL_SMART
         self._attr_color_mode = ColorMode.ONOFF
@@ -75,16 +79,13 @@ class DeakoLightEntity(LightEntity):
         self.update()
         self.schedule_update_ha_state()
 
-    def get_state(self) -> dict | None:
+    def get_state(self) -> dict:
         """Return state of entity from client."""
-        if self._attr_unique_id is None:
-            return None
-        return self.client.get_state(self._attr_unique_id)
+        return self.client.get_state(self._attr_unique_id) or {}
 
     async def control_device(self, power: bool, dim: int | None = None) -> None:
         """Control entity state via client."""
-        if self._attr_unique_id is not None:
-            await self.client.control_device(self._attr_unique_id, power, dim)
+        await self.client.control_device(self._attr_unique_id, power, dim)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -100,10 +101,6 @@ class DeakoLightEntity(LightEntity):
     def update(self) -> None:
         """Call to update state."""
         state = self.get_state()
-        if state is not None:
-            self._attr_is_on = bool(state.get("power", False))
-            if (
-                self._attr_supported_color_modes is not None
-                and ColorMode.BRIGHTNESS in self._attr_supported_color_modes
-            ):
-                self._attr_brightness = int(round(state.get("dim", 0) * 2.55))
+        self._attr_is_on = bool(state.get("power", False))
+        if ColorMode.BRIGHTNESS in self._attr_supported_color_modes:
+            self._attr_brightness = int(round(state.get("dim", 0) * 2.55))
