@@ -252,7 +252,7 @@ async def handle_call_service(
             connection.send_error(
                 msg["id"],
                 const.ERR_HOME_ASSISTANT_ERROR,
-                f"Service {err.domain}.{err.service} called "
+                f"Service {err.domain}.{err.service} called service "
                 f"{msg['domain']}.{msg['service']} which was not found.",
                 translation_domain=const.DOMAIN,
                 translation_key="child_service_not_found",

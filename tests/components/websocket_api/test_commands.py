@@ -378,8 +378,8 @@ async def test_call_service_child_not_found(
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_HOME_ASSISTANT_ERROR
     assert (
-        msg["error"]["message"]
-        == "Service non.existing called domain_test.test_service which was not found."
+        msg["error"]["message"] == "Service non.existing called service "
+        "domain_test.test_service which was not found."
     )
     assert msg["error"]["translation_placeholders"] == {
         "domain": "non",
