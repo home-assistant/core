@@ -32,7 +32,7 @@ async def async_setup_entry(
     )
 
 
-class IdasenDeskCover(CoordinatorEntity, CoverEntity):
+class IdasenDeskCover(CoordinatorEntity[IdasenDeskCoordinator], CoverEntity):
     """Representation of Idasen Desk device."""
 
     _attr_device_class = CoverDeviceClass.DAMPER

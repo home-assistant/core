@@ -9,7 +9,7 @@ from homeassistant.components.assist_pipeline.pipeline import Pipeline, Pipeline
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import MockWakeWordEntity
+from .conftest import MockWakeWordEntity, MockWakeWordEntity2
 
 from tests.typing import WebSocketGenerator
 
@@ -1809,14 +1809,14 @@ async def test_audio_pipeline_with_enhancements(
     assert msg["result"] == {"events": events}
 
 
-async def test_wake_word_cooldown(
+async def test_wake_word_cooldown_same_id(
     hass: HomeAssistant,
     init_components,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that duplicate wake word detections are blocked during the cooldown period."""
+    """Test that duplicate wake word detections with the same id are blocked during the cooldown period."""
     client_1 = await hass_ws_client(hass)
     client_2 = await hass_ws_client(hass)
 
@@ -1888,3 +1888,219 @@ async def test_wake_word_cooldown(
 
     # One should be a wake up, one should be an error
     assert {event_type_1, event_type_2} == {"wake_word-end", "error"}
+
+
+async def test_wake_word_cooldown_different_ids(
+    hass: HomeAssistant,
+    init_components,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that duplicate wake word detections are allowed with different ids."""
+    with patch.object(mock_wake_word_provider_entity, "alternate_detections", True):
+        client_1 = await hass_ws_client(hass)
+        client_2 = await hass_ws_client(hass)
+
+        await client_1.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "wake_word",
+                "end_stage": "tts",
+                "input": {
+                    "sample_rate": 16000,
+                    "no_vad": True,
+                    "no_chunking": True,
+                },
+            }
+        )
+
+        await client_2.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "wake_word",
+                "end_stage": "tts",
+                "input": {
+                    "sample_rate": 16000,
+                    "no_vad": True,
+                    "no_chunking": True,
+                },
+            }
+        )
+
+        # result
+        msg = await client_1.receive_json()
+        assert msg["success"], msg
+
+        msg = await client_2.receive_json()
+        assert msg["success"], msg
+
+        # run start
+        msg = await client_1.receive_json()
+        assert msg["event"]["type"] == "run-start"
+        msg["event"]["data"]["pipeline"] = ANY
+        handler_id_1 = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
+        assert msg["event"]["data"] == snapshot
+
+        msg = await client_2.receive_json()
+        assert msg["event"]["type"] == "run-start"
+        msg["event"]["data"]["pipeline"] = ANY
+        handler_id_2 = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
+        assert msg["event"]["data"] == snapshot
+
+        # wake_word
+        msg = await client_1.receive_json()
+        assert msg["event"]["type"] == "wake_word-start"
+        assert msg["event"]["data"] == snapshot
+
+        msg = await client_2.receive_json()
+        assert msg["event"]["type"] == "wake_word-start"
+        assert msg["event"]["data"] == snapshot
+
+        # Wake both up at the same time, but they will have different wake word ids
+        await client_1.send_bytes(bytes([handler_id_1]) + b"wake word")
+        await client_2.send_bytes(bytes([handler_id_2]) + b"wake word")
+
+        # Get response events
+        msg = await client_1.receive_json()
+        event_type_1 = msg["event"]["type"]
+        assert msg["event"]["data"] == snapshot
+
+        msg = await client_2.receive_json()
+        event_type_2 = msg["event"]["type"]
+        assert msg["event"]["data"] == snapshot
+
+        # Both should wake up now
+        assert {event_type_1, event_type_2} == {"wake_word-end"}
+
+
+async def test_wake_word_cooldown_different_entities(
+    hass: HomeAssistant,
+    init_components,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    mock_wake_word_provider_entity2: MockWakeWordEntity2,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that duplicate wake word detections are allowed with different entities."""
+    client_pipeline = await hass_ws_client(hass)
+    await client_pipeline.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "homeassistant",
+            "conversation_language": "en-US",
+            "language": "en",
+            "name": "pipeline_with_wake_word_1",
+            "stt_engine": "test",
+            "stt_language": "en-US",
+            "tts_engine": "test",
+            "tts_language": "en-US",
+            "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": mock_wake_word_provider_entity.entity_id,
+            "wake_word_id": "test_ww",
+        }
+    )
+    msg = await client_pipeline.receive_json()
+    assert msg["success"]
+    pipeline_id_1 = msg["result"]["id"]
+
+    await client_pipeline.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "homeassistant",
+            "conversation_language": "en-US",
+            "language": "en",
+            "name": "pipeline_with_wake_word_2",
+            "stt_engine": "test",
+            "stt_language": "en-US",
+            "tts_engine": "test",
+            "tts_language": "en-US",
+            "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": mock_wake_word_provider_entity2.entity_id,
+            "wake_word_id": "test_ww",
+        }
+    )
+    msg = await client_pipeline.receive_json()
+    assert msg["success"]
+    pipeline_id_2 = msg["result"]["id"]
+
+    # Wake word clients
+    client_1 = await hass_ws_client(hass)
+    client_2 = await hass_ws_client(hass)
+
+    await client_1.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "pipeline": pipeline_id_1,
+            "start_stage": "wake_word",
+            "end_stage": "tts",
+            "input": {
+                "sample_rate": 16000,
+                "no_vad": True,
+                "no_chunking": True,
+            },
+        }
+    )
+
+    # Use different wake word entity
+    await client_2.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "pipeline": pipeline_id_2,
+            "start_stage": "wake_word",
+            "end_stage": "tts",
+            "input": {
+                "sample_rate": 16000,
+                "no_vad": True,
+                "no_chunking": True,
+            },
+        }
+    )
+
+    # result
+    msg = await client_1.receive_json()
+    assert msg["success"], msg
+
+    msg = await client_2.receive_json()
+    assert msg["success"], msg
+
+    # run start
+    msg = await client_1.receive_json()
+    assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
+    handler_id_1 = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
+    assert msg["event"]["data"] == snapshot
+
+    msg = await client_2.receive_json()
+    assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
+    handler_id_2 = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
+    assert msg["event"]["data"] == snapshot
+
+    # wake_word
+    msg = await client_1.receive_json()
+    assert msg["event"]["type"] == "wake_word-start"
+    assert msg["event"]["data"] == snapshot
+
+    msg = await client_2.receive_json()
+    assert msg["event"]["type"] == "wake_word-start"
+    assert msg["event"]["data"] == snapshot
+
+    # Wake both up at the same time.
+    # They will have the same wake word id, but different entities.
+    await client_1.send_bytes(bytes([handler_id_1]) + b"wake word")
+    await client_2.send_bytes(bytes([handler_id_2]) + b"wake word")
+
+    # Get response events
+    msg = await client_1.receive_json()
+    assert msg["event"]["type"] == "wake_word-end", msg
+    ww_id_1 = msg["event"]["data"]["wake_word_output"]["wake_word_id"]
+    assert msg["event"]["data"] == snapshot
+
+    msg = await client_2.receive_json()
+    assert msg["event"]["type"] == "wake_word-end", msg
+    ww_id_2 = msg["event"]["data"]["wake_word_output"]["wake_word_id"]
+    assert msg["event"]["data"] == snapshot
+
+    # Wake words should be the same
+    assert ww_id_1 == ww_id_2
