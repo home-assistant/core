@@ -1,20 +1,12 @@
 """Support for the AEMET OpenData service."""
-from typing import Any, cast
 
 from aemet_opendata.const import (
     AOD_CONDITION,
-    AOD_FORECAST,
     AOD_FORECAST_DAILY,
     AOD_FORECAST_HOURLY,
     AOD_HUMIDITY,
-    AOD_PRECIPITATION,
-    AOD_PRECIPITATION_PROBABILITY,
     AOD_PRESSURE,
     AOD_TEMP,
-    AOD_TEMP_MAX,
-    AOD_TEMP_MIN,
-    AOD_TIMESTAMP,
-    AOD_TOWN,
     AOD_WEATHER,
     AOD_WIND_DIRECTION,
     AOD_WIND_SPEED,
@@ -22,15 +14,6 @@ from aemet_opendata.const import (
 )
 
 from homeassistant.components.weather import (
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_NATIVE_PRECIPITATION,
-    ATTR_FORECAST_NATIVE_TEMP,
-    ATTR_FORECAST_NATIVE_TEMP_LOW,
-    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
-    ATTR_FORECAST_NATIVE_WIND_SPEED,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_BEARING,
     DOMAIN as WEATHER_DOMAIN,
     Forecast,
     SingleCoordinatorWeatherEntity,
@@ -57,28 +40,6 @@ from .const import (
 )
 from .entity import AemetEntity
 from .weather_update_coordinator import WeatherUpdateCoordinator
-
-FORECAST_MAP = {
-    AOD_FORECAST_DAILY: {
-        AOD_CONDITION: ATTR_FORECAST_CONDITION,
-        AOD_PRECIPITATION_PROBABILITY: ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-        AOD_TEMP_MAX: ATTR_FORECAST_NATIVE_TEMP,
-        AOD_TEMP_MIN: ATTR_FORECAST_NATIVE_TEMP_LOW,
-        AOD_TIMESTAMP: ATTR_FORECAST_TIME,
-        AOD_WIND_DIRECTION: ATTR_FORECAST_WIND_BEARING,
-        AOD_WIND_SPEED: ATTR_FORECAST_NATIVE_WIND_SPEED,
-    },
-    AOD_FORECAST_HOURLY: {
-        AOD_CONDITION: ATTR_FORECAST_CONDITION,
-        AOD_PRECIPITATION_PROBABILITY: ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-        AOD_PRECIPITATION: ATTR_FORECAST_NATIVE_PRECIPITATION,
-        AOD_TEMP: ATTR_FORECAST_NATIVE_TEMP,
-        AOD_TIMESTAMP: ATTR_FORECAST_TIME,
-        AOD_WIND_DIRECTION: ATTR_FORECAST_WIND_BEARING,
-        AOD_WIND_SPEED_MAX: ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
-        AOD_WIND_SPEED: ATTR_FORECAST_NATIVE_WIND_SPEED,
-    },
-}
 
 
 async def async_setup_entry(
@@ -154,35 +115,20 @@ class AemetWeather(
         cond = self.get_aemet_value([AOD_WEATHER, AOD_CONDITION])
         return CONDITIONS_MAP.get(cond)
 
-    def _forecast(self, forecast_mode: str) -> list[Forecast]:
-        """Return the forecast array."""
-        forecasts = self.get_aemet_value([AOD_TOWN, forecast_mode, AOD_FORECAST])
-        forecast_map = FORECAST_MAP[forecast_mode]
-        forecast_list: list[dict[str, Any]] = []
-        for forecast in forecasts:
-            cur_forecast: dict[str, Any] = {}
-            for api_key, ha_key in forecast_map.items():
-                value = forecast[api_key]
-                if api_key == AOD_CONDITION:
-                    value = CONDITIONS_MAP.get(value)
-                cur_forecast[ha_key] = value
-            forecast_list += [cur_forecast]
-        return cast(list[Forecast], forecast_list)
-
     @property
     def forecast(self) -> list[Forecast]:
         """Return the forecast array."""
-        return self._forecast(self._forecast_mode)
+        return self.get_aemet_forecast(self._forecast_mode)
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
-        return self._forecast(AOD_FORECAST_DAILY)
+        return self.get_aemet_forecast(AOD_FORECAST_DAILY)
 
     @callback
     def _async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast in native units."""
-        return self._forecast(AOD_FORECAST_HOURLY)
+        return self.get_aemet_forecast(AOD_FORECAST_HOURLY)
 
     @property
     def humidity(self):
