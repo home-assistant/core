@@ -54,14 +54,14 @@ async def test_aemet_weather(
     state = hass.states.get("weather.aemet")
     assert state
     assert state.state == ATTR_CONDITION_SNOWY
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 99.0
-    assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1004.4  # 100440.0 Pa -> hPa
-    assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == -0.7
-    assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 122.0
-    assert state.attributes.get(ATTR_WEATHER_WIND_GUST_SPEED) == 12.2
-    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 3.2
-    forecast = state.attributes.get(ATTR_FORECAST)[0]
+    assert state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
+    assert state.attributes[ATTR_WEATHER_HUMIDITY] == 99.0
+    assert state.attributes[ATTR_WEATHER_PRESSURE] == 1004.4  # 100440.0 Pa -> hPa
+    assert state.attributes[ATTR_WEATHER_TEMPERATURE] == -0.7
+    assert state.attributes[ATTR_WEATHER_WIND_BEARING] == 122.0
+    assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 12.2
+    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 3.2
+    forecast = state.attributes[ATTR_FORECAST][0]
     assert forecast.get(ATTR_FORECAST_CONDITION) == ATTR_CONDITION_PARTLYCLOUDY
     assert forecast.get(ATTR_FORECAST_PRECIPITATION) is None
     assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 30
@@ -98,14 +98,14 @@ async def test_aemet_weather_legacy(
     state = hass.states.get("weather.aemet_daily")
     assert state
     assert state.state == ATTR_CONDITION_SNOWY
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 99.0
-    assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1004.4  # 100440.0 Pa -> hPa
-    assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == -0.7
-    assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 122.0
-    assert state.attributes.get(ATTR_WEATHER_WIND_GUST_SPEED) == 12.2
-    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 3.2
-    forecast = state.attributes.get(ATTR_FORECAST)[0]
+    assert state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
+    assert state.attributes[ATTR_WEATHER_HUMIDITY] == 99.0
+    assert state.attributes[ATTR_WEATHER_PRESSURE] == 1004.4  # 100440.0 Pa -> hPa
+    assert state.attributes[ATTR_WEATHER_TEMPERATURE] == -0.7
+    assert state.attributes[ATTR_WEATHER_WIND_BEARING] == 122.0
+    assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 12.2
+    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 3.2
+    forecast = state.attributes[ATTR_FORECAST][0]
     assert forecast.get(ATTR_FORECAST_CONDITION) == ATTR_CONDITION_PARTLYCLOUDY
     assert forecast.get(ATTR_FORECAST_PRECIPITATION) is None
     assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 30
