@@ -112,6 +112,7 @@ SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
     EcoforestSensorEntityDescription(
         key="ignitions",
         translation_key="ignitions",
+        native_unit_of_measurement="ignitions",
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.ignitions,
     ),
