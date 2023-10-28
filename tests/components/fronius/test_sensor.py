@@ -1,6 +1,6 @@
 """Tests for the Fronius sensor platform."""
-
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.components.fronius.coordinator import (
@@ -161,6 +161,65 @@ async def test_symo_meter(
     assert_state("sensor.smart_meter_63a_voltage_phase_3_1", 398)
     assert_state("sensor.smart_meter_63a_meter_location", 0)
     assert_state("sensor.smart_meter_63a_meter_location_description", "feed_in")
+
+
+@pytest.mark.parametrize(
+    ("location_code", "expected_code", "expected_description"),
+    [
+        (-1, -1, "unknown"),
+        (3, 3, "external_generator"),
+        (4, 4, "external_battery"),
+        (7, 7, "unknown"),
+        (256, 256, "subload"),
+        (511, 511, "subload"),
+        (512, 512, "unknown"),
+    ],
+)
+async def test_symo_meter_forged(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    location_code: int | None,
+    expected_code: int | str,
+    expected_description: str,
+) -> None:
+    """Tests for meter location codes we have no fixture for."""
+
+    def assert_state(entity_id, expected_state):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == str(expected_state)
+
+    mock_responses(
+        aioclient_mock,
+        fixture_set="symo",
+        override_data={
+            "symo/GetMeterRealtimeData.json": [
+                (["Body", "Data", "0", "Meter_Location_Current"], location_code),
+            ],
+        },
+    )
+    await setup_fronius_integration(hass)
+    assert_state("sensor.smart_meter_63a_meter_location", expected_code)
+    assert_state(
+        "sensor.smart_meter_63a_meter_location_description", expected_description
+    )
+    # location code returning null after entity was created
+    # would not create the entity if null was returned at setup
+    mock_responses(
+        aioclient_mock,
+        fixture_set="symo",
+        override_data={
+            "symo/GetMeterRealtimeData.json": [
+                (["Body", "Data", "0", "Meter_Location_Current"], None),
+            ],
+        },
+    )
+    freezer.tick(FroniusInverterUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert_state("sensor.smart_meter_63a_meter_location", "unknown")
+    assert_state("sensor.smart_meter_63a_meter_location_description", "unknown")
 
 
 async def test_symo_power_flow(
