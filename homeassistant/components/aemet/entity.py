@@ -15,7 +15,7 @@ class AemetEntity(CoordinatorEntity[WeatherUpdateCoordinator]):
     """Define an AEMET entity."""
 
     def get_aemet_forecast(self, forecast_mode: str) -> list[Forecast]:
-        """Return AEMET entity value by keys."""
+        """Return AEMET entity forecast by mode."""
         return self.coordinator.data["forecast"][forecast_mode]
 
     def get_aemet_value(self, keys: list[str]) -> Any:
