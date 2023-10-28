@@ -1169,7 +1169,7 @@ async def test_trigger_entity(
     assert state.attributes.get("entity_picture") == "/local/dogs.png"
     assert state.attributes.get("plus_one") == 3
     assert state.attributes.get("unit_of_measurement") == "%"
-    assert state.context is context
+    assert state.context.parent_id is context.id
 
     assert len(entity_registry.entities) == 2
     assert (
@@ -1189,7 +1189,7 @@ async def test_trigger_entity(
     assert state.attributes.get("plus_one") == 3
     assert state.attributes.get("unit_of_measurement") == "%"
     assert state.attributes.get("state_class") == "measurement"
-    assert state.context is context
+    assert state.context.parent_id is context.id
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
@@ -1667,4 +1667,4 @@ async def test_trigger_action(
 
     state = hass.states.get("sensor.hello_name")
     assert state.state == "3"
-    assert state.context is context
+    assert state.context.parent_id is context.id

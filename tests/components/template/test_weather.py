@@ -635,7 +635,7 @@ async def test_trigger_action(
     state = hass.states.get("weather.hello_name")
     assert state.state == "sunny"
     assert state.attributes["temperature"] == 3.0
-    assert state.context is context
+    assert state.context.parent_id is context.id
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
@@ -752,7 +752,7 @@ async def test_trigger_weather_services(
     assert state.attributes["cloud_coverage"] == 3.0
     assert state.attributes["dew_point"] == 3.0
     assert state.attributes["apparent_temperature"] == 3.0
-    assert state.context is context
+    assert state.context.parent_id is context.id
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,

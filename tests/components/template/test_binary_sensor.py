@@ -1123,7 +1123,7 @@ async def test_trigger_entity(
     assert state.attributes.get("icon") == "mdi:pirate"
     assert state.attributes.get("entity_picture") == "/local/dogs.png"
     assert state.attributes.get("plus_one") == 3
-    assert state.context is context
+    assert state.context.parent_id is context.id
 
     assert len(entity_registry.entities) == 2
     assert (
@@ -1142,7 +1142,7 @@ async def test_trigger_entity(
     assert state.attributes.get("entity_picture") == "/local/dogs.png"
     assert state.attributes.get("plus_one") == 3
     assert state.attributes.get("another") == 1
-    assert state.context is context
+    assert state.context.parent_id is context.id
 
     # Even if state itself didn't change, attributes might have changed
     hass.bus.async_fire("test_event", {"beer": 2, "uno_mas": "si"})
