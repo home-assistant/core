@@ -42,7 +42,7 @@ async def test_switch_entities(
     method: str,
     parameter: str,
 ) -> None:
-    """Test entity loads smr version."""
+    """Test that switch handles state changes correctly."""
     assert (state := hass.states.get(entity_id))
     assert snapshot == state
 
