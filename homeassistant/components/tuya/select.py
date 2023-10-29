@@ -242,6 +242,12 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:timer-cog-outline",
             translation_key="countdown",
         ),
+        SelectEntityDescription(
+            key=DPCode.MIST,
+            name="Mist",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:weather-fog",
+        ),
     ),
     # Curtain
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
