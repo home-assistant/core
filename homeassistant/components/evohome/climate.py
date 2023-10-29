@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from datetime import datetime as dt
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from evohomeasync2.zone import Zone
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -47,6 +49,10 @@ from .const import (
     EVO_TEMPOVER,
 )
 
+if TYPE_CHECKING:
+    from . import EvoBroker
+
+
 _LOGGER = logging.getLogger(__name__)
 
 PRESET_RESET = "Reset"  # reset all child zones to EVO_FOLLOW
@@ -85,7 +91,7 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    broker = hass.data[DOMAIN]["broker"]
+    broker: EvoBroker = hass.data[DOMAIN]["broker"]
 
     _LOGGER.debug(
         "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
@@ -98,6 +104,8 @@ async def async_setup_platform(
     entities: list[EvoClimateEntity] = [EvoController(broker, broker.tcs)]
 
     for zone in broker.tcs.zones.values():
+        assert isinstance(zone, Zone)  # mypy hint
+
         if zone.modelType == "HeatingZone" or zone.zoneType == "Thermostat":
             _LOGGER.debug(
                 "Adding: %s (%s), id=%s, name=%s",
@@ -141,7 +149,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
     _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(self, evo_broker: EvoBroker, evo_device: Zone) -> None:
         """Initialize a Honeywell TCC Zone."""
         super().__init__(evo_broker, evo_device)
 
@@ -306,12 +314,12 @@ class EvoController(EvoClimateEntity):
     _attr_icon = "mdi:thermostat"
     _attr_precision = PRECISION_TENTHS
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(self, evo_broker: EvoBroker, evo_device: EvoDevice) -> None:
         """Initialize a Honeywell TCC Controller/Location."""
         super().__init__(evo_broker, evo_device)
 
-        self._attr_unique_id = evo_device.systemId
-        self._attr_name = evo_device.location.name
+        self._attr_unique_id = evo_device.systemId  # type: ignore[attr-defined]
+        self._attr_name = evo_device.location.name  # type: ignore[attr-defined]
 
         modes = [m["systemMode"] for m in evo_broker.config["allowedSystemModes"]]
         self._attr_preset_modes = [
