@@ -20,10 +20,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Tuya scenes."""
     hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
-    scenes = await hass.async_add_executor_job(hass_data.home_manager.query_scenes)
-    async_add_entities(
-        TuyaSceneEntity(hass_data.home_manager, scene) for scene in scenes
-    )
+    scenes = await hass.async_add_executor_job(hass_data.manager.query_scenes)
+    async_add_entities(TuyaSceneEntity(hass_data.manager, scene) for scene in scenes)
 
 
 class TuyaSceneEntity(Scene):
@@ -37,7 +35,7 @@ class TuyaSceneEntity(Scene):
         """Init Tuya Scene."""
         super().__init__()
         self._attr_unique_id = f"tys{scene.scene_id}"
-        self.home_manager = home_manager
+        self.manager = home_manager
         self.scene = scene
 
     @property
@@ -57,4 +55,4 @@ class TuyaSceneEntity(Scene):
 
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        self.home_manager.trigger_scene(self.scene.home_id, self.scene.scene_id)
+        self.manager.trigger_scene(self.scene.home_id, self.scene.scene_id)

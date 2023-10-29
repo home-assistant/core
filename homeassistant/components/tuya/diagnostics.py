@@ -49,8 +49,8 @@ def _async_get_diagnostics(
     hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
 
     mqtt_connected = None
-    if hass_data.home_manager.mq.client:
-        mqtt_connected = hass_data.home_manager.mq.client.is_connected()
+    if hass_data.manager.mq.client:
+        mqtt_connected = hass_data.manager.mq.client.is_connected()
 
     data = {
         "endpoint": entry.data[CONF_ENDPOINT],
