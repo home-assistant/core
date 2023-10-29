@@ -54,6 +54,7 @@ from .const import (
     COMPRESSED_STATE_ATTRIBUTES,
     COMPRESSED_STATE_CONTEXT,
     COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_LAST_REFRESHED,
     COMPRESSED_STATE_LAST_UPDATED,
     COMPRESSED_STATE_STATE,
     EVENT_CALL_SERVICE,
@@ -1283,6 +1284,7 @@ class State:
         attributes: Mapping[str, Any] | None = None,
         last_changed: datetime.datetime | None = None,
         last_updated: datetime.datetime | None = None,
+        last_refreshed: datetime.datetime | None = None,
         context: Context | None = None,
         validate_entity_id: bool | None = True,
         state_info: StateInfo | None = None,
@@ -1301,7 +1303,8 @@ class State:
         self.entity_id = entity_id
         self.state = state
         self.attributes = ReadOnlyDict(attributes or {})
-        self.last_updated = last_updated or dt_util.utcnow()
+        self.last_refreshed = last_refreshed or dt_util.utcnow()
+        self.last_updated = last_updated or self.last_refreshed
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
         self.state_info = state_info
@@ -1329,6 +1332,10 @@ class State:
                 last_updated_isoformat = last_changed_isoformat
             else:
                 last_updated_isoformat = self.last_updated.isoformat()
+            if self.last_updated == self.last_refreshed:
+                last_refreshed_isoformat = last_updated_isoformat
+            else:
+                last_refreshed_isoformat = self.last_refreshed.isoformat()
             self._as_dict = ReadOnlyDict(
                 {
                     "entity_id": self.entity_id,
@@ -1336,6 +1343,7 @@ class State:
                     "attributes": self.attributes,
                     "last_changed": last_changed_isoformat,
                     "last_updated": last_updated_isoformat,
+                    "last_refreshed": last_refreshed_isoformat,
                     "context": self.context.as_dict(),
                 }
             )
@@ -1369,6 +1377,10 @@ class State:
             compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
                 self.last_updated
             )
+        if self.last_refreshed != self.last_updated:
+            compressed_state[
+                COMPRESSED_STATE_LAST_REFRESHED
+            ] = dt_util.utc_to_timestamp(self.last_refreshed)
         return compressed_state
 
     @cached_property
@@ -1402,6 +1414,11 @@ class State:
         if isinstance(last_updated, str):
             last_updated = dt_util.parse_datetime(last_updated)
 
+        last_refreshed = json_dict.get("last_refreshed")
+
+        if isinstance(last_refreshed, str):
+            last_refreshed = dt_util.parse_datetime(last_refreshed)
+
         if context := json_dict.get("context"):
             context = Context(id=context.get("id"), user_id=context.get("user_id"))
 
@@ -1411,6 +1428,7 @@ class State:
             json_dict.get("attributes"),
             last_changed,
             last_updated,
+            last_refreshed,
             context,
         )
 
@@ -1693,13 +1711,12 @@ class StateMachine:
             same_state = False
             same_attr = False
             last_changed = None
+            last_updated = None
         else:
             same_state = old_state.state == new_state and not force_update
             same_attr = old_state.attributes == attributes
             last_changed = old_state.last_changed if same_state else None
-
-        if same_state and same_attr:
-            return
+            last_updated = old_state.last_updated if same_attr else None
 
         if context is None:
             # It is much faster to convert a timestamp to a utc datetime object
@@ -1724,6 +1741,7 @@ class StateMachine:
             new_state,
             attributes,
             last_changed,
+            last_updated,
             now,
             context,
             old_state is None,
@@ -1731,6 +1749,11 @@ class StateMachine:
         )
         if old_state is not None:
             old_state.expire()
+
+        # Do not fire state change on refresh only
+        if same_state and same_attr:
+            return
+
         self._states[entity_id] = state
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
