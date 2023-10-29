@@ -1072,7 +1072,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.37
+opower==0.0.38
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2043,7 +2043,7 @@ xiaomi-ble==0.21.1
 xknx==2.11.2
 
 # homeassistant.components.knx
-xknxproject==3.3.0
+xknxproject==3.4.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

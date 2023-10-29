@@ -34,6 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator], ABC):
     """Define an Airzone Cloud entity."""
 
+    _attr_has_entity_name = True
+
     @property
     def available(self) -> bool:
         """Return Airzone Cloud entity availability."""
