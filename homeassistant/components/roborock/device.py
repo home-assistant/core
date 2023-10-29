@@ -4,7 +4,7 @@ from typing import Any
 
 from roborock.api import AttributeCache, RoborockClient
 from roborock.command_cache import CacheableAttribute
-from roborock.containers import Status
+from roborock.containers import Status, RoborockBase
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
@@ -36,7 +36,9 @@ class RoborockEntity(Entity):
 
     def get_cache(self, attribute: CacheableAttribute) -> AttributeCache:
         """Get an item from the api cache."""
-        return self._api.cache.get(attribute)
+        if attribute not in self._api.cache:
+            raise HomeAssistantError(f"Attempted to get {attribute.name} from the cache - but it does not exist.")
+        return self._api.cache[attribute]
 
     async def send(
         self,
@@ -45,7 +47,7 @@ class RoborockEntity(Entity):
     ) -> dict:
         """Send a command to a vacuum cleaner."""
         try:
-            response = await self._api.send_command(command, params)
+            response: dict = await self._api.send_command(command, params)
         except RoborockException as err:
             raise HomeAssistantError(
                 f"Error while calling {command.name if isinstance(command, RoborockCommand) else command} with {params}"
@@ -84,11 +86,11 @@ class RoborockCoordinatedEntity(
             status = data.status
             if status:
                 return status
-        return Status({})
+        return Status(None)
 
     async def send(
         self,
-        command: RoborockCommand,
+        command: RoborockCommand | str,
         params: dict[str, Any] | list[Any] | int | None = None,
     ) -> dict:
         """Overloads normal send command but refreshes coordinator."""

@@ -26,7 +26,7 @@ class RoborockSelectDescriptionMixin:
     # Gets the current value of the select entity.
     value_fn: Callable[[Status], str]
     # Gets all options of the select entity.
-    options_lambda: Callable[[Status], list[str]]
+    options_lambda: Callable[[Status], list[str] | None]
     # Takes the value from the select entiy and converts it for the api.
     parameter_lambda: Callable[[str, Status], list[int]]
 
@@ -46,7 +46,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         value_fn=lambda data: data.water_box_mode.name,
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda data: data.water_box_mode.keys()
-        if data.water_box_mode
+        if data.water_box_mode is not None
         else None,
         parameter_lambda=lambda key, status: [status.water_box_mode.as_dict().get(key)],
     ),
@@ -56,7 +56,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         api_command=RoborockCommand.SET_MOP_MODE,
         value_fn=lambda data: data.mop_mode.name,
         entity_category=EntityCategory.CONFIG,
-        options_lambda=lambda data: data.mop_mode.keys() if data.mop_mode else None,
+        options_lambda=lambda data: data.mop_mode.keys() if data.mop_mode is not None else None,
         parameter_lambda=lambda key, status: [status.mop_mode.as_dict().get(key)],
     ),
 ]
