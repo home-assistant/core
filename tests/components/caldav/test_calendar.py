@@ -306,28 +306,10 @@ def platforms() -> list[Platform]:
     return [Platform.CALENDAR]
 
 
-@pytest.fixture
-def set_tz(request):
-    """Set the default TZ to the one requested."""
-    return request.getfixturevalue(request.param)
-
-
-@pytest.fixture
-def utc(hass):
-    """Set the default TZ to UTC."""
-    hass.config.set_time_zone("UTC")
-
-
-@pytest.fixture
-def new_york(hass):
-    """Set the default TZ to America/New_York."""
-    hass.config.set_time_zone("America/New_York")
-
-
-@pytest.fixture
-def baghdad(hass):
-    """Set the default TZ to Asia/Baghdad."""
-    hass.config.set_time_zone("Asia/Baghdad")
+@pytest.fixture(name="tz")
+def mock_tz() -> str | None:
+    """Fixture to specify the Home Assistant timezone to use during the test."""
+    return None
 
 
 @pytest.fixture(autouse=True)
@@ -1091,10 +1073,7 @@ async def test_get_events_custom_calendars(
         ]
     ],
 )
-async def test_calendar_components(
-    hass: HomeAssistant,
-    dav_client: Mock,
-) -> None:
+async def test_calendar_components(hass: HomeAssistant) -> None:
     """Test that only calendars that support events are created."""
 
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
@@ -1120,23 +1099,25 @@ async def test_calendar_components(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize("tz", [UTC])
+@freeze_time(_local_datetime(17, 30))
 async def test_setup_config_entry(
     hass: HomeAssistant,
-    mock_dav_client: Mock,
     setup_integration: Callable[[], Awaitable[bool]],
-    get_api_events: Callable[[str], dict[str, Any]],
 ) -> None:
-    """Test a config entry with calendars."""
-    assert setup_integration()
+    """Test a calendar entity from a config entry."""
+    assert await setup_integration()
 
-    state = hass.states.get("calendar.first")
+    state = hass.states.get(TEST_ENTITY)
     assert state
-    assert state.name == "First"
-    assert state.attributes == {}
-    state = hass.states.get("calendar.second")
-    assert state
-    assert state.name == "Second"
-    assert state.attributes == {}
-
-    events = await get_api_events("calendar.first")
-    assert len(events) == 18
+    assert state.name == CALENDAR_NAME
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": CALENDAR_NAME,
+        "message": "This is an all day event",
+        "all_day": True,
+        "start_time": "2017-11-27 00:00:00",
+        "end_time": "2017-11-28 00:00:00",
+        "location": "Hamburg",
+        "description": "What a beautiful day",
+    }
