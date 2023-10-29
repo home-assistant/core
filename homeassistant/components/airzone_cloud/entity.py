@@ -80,14 +80,16 @@ class AirzoneAidooEntity(AirzoneEntity):
 
     async def _async_update_params(self, params: dict[str, Any]) -> None:
         """Send Aidoo parameters to Cloud API."""
-        _LOGGER.debug("aidoo=%s: update_params=%s", self.name, params)
+        _LOGGER.debug(
+            "aidoo=%s: update_params=%s", self.get_airzone_value(AZD_NAME), params
+        )
         try:
             await self.coordinator.airzone.api_set_aidoo_id_params(
                 self.aidoo_id, params
             )
         except AirzoneCloudError as error:
             raise HomeAssistantError(
-                f"Failed to set {self.name} params: {error}"
+                f"Failed to set {self.get_airzone_value(AZD_NAME)} params: {error}"
             ) from error
 
         self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
@@ -122,14 +124,16 @@ class AirzoneGroupEntity(AirzoneEntity):
 
     async def _async_update_params(self, params: dict[str, Any]) -> None:
         """Send Group parameters to Cloud API."""
-        _LOGGER.debug("group=%s: update_params=%s", self.name, params)
+        _LOGGER.debug(
+            "group=%s: update_params=%s", self.get_airzone_value(AZD_NAME), params
+        )
         try:
             await self.coordinator.airzone.api_set_group_id_params(
                 self.group_id, params
             )
         except AirzoneCloudError as error:
             raise HomeAssistantError(
-                f"Failed to set {self.name} params: {error}"
+                f"Failed to set {self.get_airzone_value(AZD_NAME)} params: {error}"
             ) from error
 
         self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
@@ -164,14 +168,18 @@ class AirzoneInstallationEntity(AirzoneEntity):
 
     async def _async_update_params(self, params: dict[str, Any]) -> None:
         """Send Installation parameters to Cloud API."""
-        _LOGGER.debug("installation=%s: update_params=%s", self.name, params)
+        _LOGGER.debug(
+            "installation=%s: update_params=%s",
+            self.get_airzone_value(AZD_NAME),
+            params,
+        )
         try:
             await self.coordinator.airzone.api_set_installation_id_params(
                 self.inst_id, params
             )
         except AirzoneCloudError as error:
             raise HomeAssistantError(
-                f"Failed to set {self.name} params: {error}"
+                f"Failed to set {self.get_airzone_value(AZD_NAME)} params: {error}"
             ) from error
 
         self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
@@ -267,12 +275,14 @@ class AirzoneZoneEntity(AirzoneEntity):
 
     async def _async_update_params(self, params: dict[str, Any]) -> None:
         """Send Zone parameters to Cloud API."""
-        _LOGGER.debug("zone=%s: update_params=%s", self.name, params)
+        _LOGGER.debug(
+            "zone=%s: update_params=%s", self.get_airzone_value(AZD_NAME), params
+        )
         try:
             await self.coordinator.airzone.api_set_zone_id_params(self.zone_id, params)
         except AirzoneCloudError as error:
             raise HomeAssistantError(
-                f"Failed to set {self.name} params: {error}"
+                f"Failed to set {self.get_airzone_value(AZD_NAME)} params: {error}"
             ) from error
 
         self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
