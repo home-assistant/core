@@ -51,6 +51,7 @@ class FullySensorEntityDescription(SensorEntityDescription):
 SENSORS: tuple[FullySensorEntityDescription, ...] = (
     FullySensorEntityDescription(
         key="batteryLevel",
+        translation_key="battery_level",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,

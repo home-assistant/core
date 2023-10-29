@@ -86,6 +86,9 @@
       },
       "ram_total_memory": {
         "name": "Total memory"
+      },
+      "battery_level": {
+        "name": "Battery"
       }
     },
     "switch": {
