@@ -493,7 +493,7 @@ class InovelliSwitchType(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM31-SN"}
 )
 class InovelliSwitchTypeEntity(ZCLEnumSelectEntity):
     """Inovelli switch type control."""
