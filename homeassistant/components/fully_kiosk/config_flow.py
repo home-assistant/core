@@ -37,7 +37,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device_info: dict[str, Any] = {}
 
     async def _create_entry(
-        self, host: str, user_input: dict[str, Any], errors: dict[str, str]
+        self,
+        host: str,
+        user_input: dict[str, Any],
+        errors: dict[str, str],
+        description_placeholders: dict[str, str] | Any = None,
     ) -> FlowResult | None:
         fully = FullyKiosk(
             async_get_clientsession(self.hass),
@@ -58,10 +62,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ) as error:
             LOGGER.debug(error.args, exc_info=True)
             errors["base"] = "cannot_connect"
+            description_placeholders["error_detail"] = str(error.args)
             return None
         except Exception as error:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception: %s", error)
             errors["base"] = "unknown"
+            description_placeholders["error_detail"] = str(error.args)
             return None
 
         await self.async_set_unique_id(device_info["deviceID"], raise_on_progress=False)
@@ -82,13 +88,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
         if user_input is not None:
-            if user_input is not None:
-                result = await self._create_entry(
-                    user_input[CONF_HOST], user_input, errors
-                )
-                if result:
-                    return result
+            result = await self._create_entry(
+                user_input[CONF_HOST], user_input, errors, placeholders
+            )
+            if result:
+                return result
 
         return self.async_show_form(
             step_id="user",
@@ -100,6 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
+            description_placeholders=placeholders,
             errors=errors,
         )
 
