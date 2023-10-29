@@ -401,12 +401,6 @@ async def mock_setup_platform_cb(
     return _run
 
 
-@pytest.fixture(name="setup_platform")
-async def mock_setup_platform(setup_platform_cb: Callable[[], Awaitable[None]]) -> None:
-    """Fixture to setup the calendar platform."""
-    await setup_platform_cb()
-
-
 @pytest.mark.parametrize(
     ("calendar_names", "config", "expected_entities"),
     [
@@ -435,9 +429,10 @@ async def test_setup_component_config(
     hass: HomeAssistant,
     config: dict[str, Any],
     expected_entities: list[str],
-    setup_platform: None,
+    setup_platform_cb: Callable[[], Awaitable[None]],
 ) -> None:
     """Test setup component with wrong calendar."""
+    await setup_platform_cb()
 
     all_calendar_entities = hass.states.async_entity_ids("calendar")
     assert all_calendar_entities == expected_entities
@@ -1012,10 +1007,12 @@ async def test_event_rrule_hourly(
 async def test_get_events(
     hass: HomeAssistant,
     get_api_events: Callable[[str], Awaitable[dict[str, Any]]],
-    setup_platform: None,
+    setup_platform_cb: Callable[[], Awaitable[None]],
     calendars: list[Mock],
 ) -> None:
     """Test that all events are returned on API."""
+    await setup_platform_cb()
+
     events = await get_api_events(TEST_ENTITY)
     assert len(events) == 18
     assert calendars[0].call
@@ -1038,9 +1035,10 @@ async def test_get_events(
 async def test_get_events_custom_calendars(
     hass: HomeAssistant,
     get_api_events: Callable[[str], Awaitable[dict[str, Any]]],
-    setup_platform: None,
+    setup_platform_cb: Callable[[], Awaitable[None]],
 ) -> None:
     """Test that only searched events are returned on API."""
+    await setup_platform_cb()
 
     events = await get_api_events("calendar.example_example")
     assert events == [
