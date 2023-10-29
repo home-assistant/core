@@ -8,6 +8,8 @@ import logging
 import os
 from typing import Any, Final, cast
 
+from fitbit import Fitbit
+from oauthlib.oauth2.rfc6749.errors import OAuth2Error
 import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
@@ -567,34 +569,51 @@ async def async_setup_platform(
 
     if config_file is not None:
         _LOGGER.debug("Importing existing fitbit.conf application credentials")
-        await async_import_client_credential(
-            hass,
-            DOMAIN,
-            ClientCredential(
-                config_file[CONF_CLIENT_ID], config_file[CONF_CLIENT_SECRET]
-            ),
+
+        # Refresh the token before importing to ensure it is working and not
+        # expired on first initialization.
+        authd_client = Fitbit(
+            config_file[CONF_CLIENT_ID],
+            config_file[CONF_CLIENT_SECRET],
+            access_token=config_file[ATTR_ACCESS_TOKEN],
+            refresh_token=config_file[ATTR_REFRESH_TOKEN],
+            expires_at=config_file[ATTR_LAST_SAVED_AT],
+            refresh_cb=lambda x: None,
         )
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                "auth_implementation": DOMAIN,
-                CONF_TOKEN: {
-                    ATTR_ACCESS_TOKEN: config_file[ATTR_ACCESS_TOKEN],
-                    ATTR_REFRESH_TOKEN: config_file[ATTR_REFRESH_TOKEN],
-                    "expires_at": config_file[ATTR_LAST_SAVED_AT],
-                },
-                CONF_CLOCK_FORMAT: config[CONF_CLOCK_FORMAT],
-                CONF_UNIT_SYSTEM: config[CONF_UNIT_SYSTEM],
-                CONF_MONITORED_RESOURCES: config[CONF_MONITORED_RESOURCES],
-            },
-        )
-        translation_key = "deprecated_yaml_import"
-        if (
-            result.get("type") == FlowResultType.ABORT
-            and result.get("reason") == "cannot_connect"
-        ):
+        try:
+            await hass.async_add_executor_job(authd_client.client.refresh_token)
+        except OAuth2Error as err:
+            _LOGGER.debug("Unable to import fitbit OAuth2 credentials: %s", err)
             translation_key = "deprecated_yaml_import_issue_cannot_connect"
+        else:
+            await async_import_client_credential(
+                hass,
+                DOMAIN,
+                ClientCredential(
+                    config_file[CONF_CLIENT_ID], config_file[CONF_CLIENT_SECRET]
+                ),
+            )
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    "auth_implementation": DOMAIN,
+                    CONF_TOKEN: {
+                        ATTR_ACCESS_TOKEN: config_file[ATTR_ACCESS_TOKEN],
+                        ATTR_REFRESH_TOKEN: config_file[ATTR_REFRESH_TOKEN],
+                        "expires_at": config_file[ATTR_LAST_SAVED_AT],
+                    },
+                    CONF_CLOCK_FORMAT: config[CONF_CLOCK_FORMAT],
+                    CONF_UNIT_SYSTEM: config[CONF_UNIT_SYSTEM],
+                    CONF_MONITORED_RESOURCES: config[CONF_MONITORED_RESOURCES],
+                },
+            )
+            translation_key = "deprecated_yaml_import"
+            if (
+                result.get("type") == FlowResultType.ABORT
+                and result.get("reason") == "cannot_connect"
+            ):
+                translation_key = "deprecated_yaml_import_issue_cannot_connect"
     else:
         translation_key = "deprecated_yaml_no_import"
 
