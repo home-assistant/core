@@ -26,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
@@ -39,7 +40,7 @@ class HomeWizardEntityDescriptionMixin:
     """Mixin values for HomeWizard entities."""
 
     has_fn: Callable[[Data], bool]
-    value_fn: Callable[[Data], float | int | str | None]
+    value_fn: Callable[[Data], StateType]
 
 
 @dataclass
@@ -433,7 +434,7 @@ async def async_setup_entry(
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        HomeWizardSensorEntity(coordinator, entry, description)
+        HomeWizardSensorEntity(coordinator, description)
         for description in SENSORS
         if description.has_fn(coordinator.data.data)
     )
@@ -447,18 +448,17 @@ class HomeWizardSensorEntity(HomeWizardEntity, SensorEntity):
     def __init__(
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
-        entry: ConfigEntry,
         description: HomeWizardSensorEntityDescription,
     ) -> None:
         """Initialize Sensor Domain."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
         if not description.enabled_fn(self.coordinator.data.data):
             self._attr_entity_registry_enabled_default = False
 
     @property
-    def native_value(self) -> float | int | str | None:
+    def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data.data)
 

@@ -929,15 +929,13 @@ class DomainStates:
 class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_collect", "_entity_id", "__dict__")
-
     _state: State
 
     __setitem__ = _readonly
     __delitem__ = _readonly
 
     # Inheritance is done so functions that check against State keep working
-    # pylint: disable=super-init-not-called
+    # pylint: disable-next=super-init-not-called
     def __init__(self, hass: HomeAssistant, collect: bool, entity_id: str) -> None:
         """Initialize template state."""
         self._hass = hass
@@ -1958,6 +1956,41 @@ def is_number(value):
     return True
 
 
+def _is_list(value: Any) -> bool:
+    """Return whether a value is a list."""
+    return isinstance(value, list)
+
+
+def _is_set(value: Any) -> bool:
+    """Return whether a value is a set."""
+    return isinstance(value, set)
+
+
+def _is_tuple(value: Any) -> bool:
+    """Return whether a value is a tuple."""
+    return isinstance(value, tuple)
+
+
+def _to_set(value: Any) -> set[Any]:
+    """Convert value to set."""
+    return set(value)
+
+
+def _to_tuple(value):
+    """Convert value to tuple."""
+    return tuple(value)
+
+
+def _is_datetime(value: Any) -> bool:
+    """Return whether a value is a datetime."""
+    return isinstance(value, datetime)
+
+
+def _is_string_like(value: Any) -> bool:
+    """Return whether a value is a string or string like object."""
+    return isinstance(value, (str, bytes, bytearray))
+
+
 def regex_match(value, find="", ignorecase=False):
     """Match value using regex."""
     if not isinstance(value, str):
@@ -2389,6 +2422,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
         self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["is_number"] = is_number
+        self.globals["set"] = _to_set
+        self.globals["tuple"] = _to_tuple
         self.globals["int"] = forgiving_int
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack
@@ -2397,6 +2432,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
         self.tests["is_number"] = is_number
+        self.tests["list"] = _is_list
+        self.tests["set"] = _is_set
+        self.tests["tuple"] = _is_tuple
+        self.tests["datetime"] = _is_datetime
+        self.tests["string_like"] = _is_string_like
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
         self.tests["contains"] = contains
@@ -2515,7 +2555,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["expand"] = hassfunction(expand)
         self.filters["expand"] = self.globals["expand"]
         self.globals["closest"] = hassfunction(closest)
-        self.filters["closest"] = hassfunction(closest_filter)
+        self.filters["closest"] = hassfunction(closest_filter)  # type: ignore[arg-type]
         self.globals["distance"] = hassfunction(distance)
         self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
         self.tests["is_hidden_entity"] = hassfunction(

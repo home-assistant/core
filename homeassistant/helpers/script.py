@@ -911,7 +911,7 @@ class _ScriptRun:
 
     async def _async_choose_step(self) -> None:
         """Choose a sequence."""
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         choose_data = await self._script._async_get_choose_data(self._step)
 
         with trace_path("choose"):
@@ -933,7 +933,7 @@ class _ScriptRun:
 
     async def _async_if_step(self) -> None:
         """If sequence."""
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         if_data = await self._script._async_get_if_data(self._step)
 
         test_conditions = False
@@ -1047,7 +1047,7 @@ class _ScriptRun:
     @async_trace_path("parallel")
     async def _async_parallel_step(self) -> None:
         """Run a sequence in parallel."""
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         scripts = await self._script._async_get_parallel_scripts(self._step)
 
         async def async_run_with_trace(idx: int, script: Script) -> None:
@@ -1107,9 +1107,8 @@ class _QueuedScriptRun(_ScriptRun):
             await super().async_run()
 
     def _finish(self) -> None:
-        # pylint: disable=protected-access
         if self.lock_acquired:
-            self._script._queue_lck.release()
+            self._script._queue_lck.release()  # pylint: disable=protected-access
             self.lock_acquired = False
         super()._finish()
 

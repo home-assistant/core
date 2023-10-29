@@ -232,7 +232,7 @@ ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         key="ethanol",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Ethanol",
+        translation_key="ethanol",
         value_fn=lambda data: data.etoh,
         extra_fn=None,
     ),

@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_SENSORS,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -37,6 +38,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 from homeassistant.util.dt import utcnow
 
@@ -116,7 +118,7 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class SensorTrend(BinarySensorEntity):
+class SensorTrend(BinarySensorEntity, RestoreEntity):
     """Representation of a trend Sensor."""
 
     _attr_should_poll = False
@@ -193,6 +195,12 @@ class SensorTrend(BinarySensorEntity):
                 self.hass, [self._entity_id], trend_sensor_state_listener
             )
         )
+
+        if not (state := await self.async_get_last_state()):
+            return
+        if state.state == STATE_UNKNOWN:
+            return
+        self._state = state.state == STATE_ON
 
     async def async_update(self) -> None:
         """Get the latest data and update the states."""

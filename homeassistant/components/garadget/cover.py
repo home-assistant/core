@@ -92,6 +92,8 @@ def setup_platform(
 class GaradgetCover(CoverEntity):
     """Representation of a Garadget cover."""
 
+    _attr_device_class = CoverDeviceClass.GARAGE
+
     def __init__(self, hass, args):
         """Initialize the cover."""
         self.particle_url = "https://api.particle.io"
@@ -173,11 +175,6 @@ class GaradgetCover(CoverEntity):
         if self._state is None:
             return None
         return self._state == STATE_CLOSED
-
-    @property
-    def device_class(self) -> CoverDeviceClass:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return CoverDeviceClass.GARAGE
 
     def get_token(self):
         """Get new token for usage during this session."""
