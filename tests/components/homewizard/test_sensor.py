@@ -1,4 +1,4 @@
-"""Test the update coordinator for HomeWizard."""
+"""Test sensor entity for HomeWizard."""
 
 from unittest.mock import MagicMock
 
@@ -75,7 +75,7 @@ async def test_sensors_p1_meter(
     snapshot: SnapshotAssertion,
     entity_ids: list[str],
 ) -> None:
-    """Test entity loads smr version."""
+    """Test that sensor entity snapshots match."""
     for entity_id in entity_ids:
         assert (state := hass.states.get(entity_id))
         assert snapshot(name=f"{entity_id}:state") == state

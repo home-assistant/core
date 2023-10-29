@@ -1,4 +1,4 @@
-"""Test the update coordinator for HomeWizard."""
+"""Test the number entity for HomeWizard."""
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import DisabledError, RequestError
@@ -26,7 +26,7 @@ async def test_number_entities(
     mock_homewizardenergy: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test entity does not load number when brightness is not available."""
+    """Test number handles state changes correctly."""
     assert (state := hass.states.get("number.device_status_light_brightness"))
     assert snapshot == state
 
