@@ -13,7 +13,11 @@ async def test_proximities(hass: HomeAssistant) -> None:
                 "devices": ["device_tracker.test1", "device_tracker.test2"],
                 "tolerance": "1",
             },
-            "work": {"devices": ["device_tracker.test1"], "tolerance": "1"},
+            "work": {
+                "devices": ["device_tracker.test1"],
+                "tolerance": "1",
+                "zone": "work",
+            },
         }
     }
 
@@ -42,7 +46,7 @@ async def test_proximities_setup(hass: HomeAssistant) -> None:
                 "devices": ["device_tracker.test1", "device_tracker.test2"],
                 "tolerance": "1",
             },
-            "work": {"tolerance": "1"},
+            "work": {"tolerance": "1", "zone": "work"},
         }
     }
 
