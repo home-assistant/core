@@ -588,7 +588,6 @@ async def async_setup_platform(
             _LOGGER.debug("Unable to import fitbit OAuth2 credentials: %s", err)
             translation_key = "deprecated_yaml_import_issue_cannot_connect"
         else:
-            _LOGGER.info("Updated refresh token: %s", updated_token)
             await async_import_client_credential(
                 hass,
                 DOMAIN,
