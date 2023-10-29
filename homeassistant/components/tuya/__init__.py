@@ -59,6 +59,7 @@ class HomeAssistantTuyaData(NamedTuple):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
     hass.data.setdefault(DOMAIN, {})
+    device_ids: set[str] = set()
 
     # If the config entry has an app type, it indicates an old config entry
     # in case it is using the Tuya Smart app, we have no migration path.
@@ -99,7 +100,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             tuya_mq = TuyaOpenMQ(api)
             tuya_mq.start()
 
-            device_ids: set[str] = set()
             device_manager = TuyaDeviceManager(api, tuya_mq)
             home_manager = TuyaHomeManager(api, tuya_mq, device_manager)
             listener = LegacyDeviceListener(hass, device_manager, device_ids)

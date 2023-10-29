@@ -54,9 +54,9 @@ def _async_get_diagnostics(
 
     data = {
         "endpoint": entry.data[CONF_ENDPOINT],
-        "auth_type": entry.data[CONF_AUTH_TYPE],
-        "country_code": entry.data[CONF_COUNTRY_CODE],
-        "app_type": entry.data[CONF_APP_TYPE],
+        "auth_type": entry.data.get(CONF_AUTH_TYPE),
+        "country_code": entry.data.get(CONF_COUNTRY_CODE),
+        "app_type": entry.data.get(CONF_APP_TYPE),
         "mqtt_connected": mqtt_connected,
         "disabled_by": entry.disabled_by,
         "disabled_polling": entry.pref_disable_polling,
