@@ -31,10 +31,15 @@ CONF_DIASPORA = "diaspora"
 CONF_CANDLE_LIGHT_MINUTES = "candle_lighting_minutes_before_sunset"
 CONF_HAVDALAH_OFFSET_MINUTES = "havdalah_minutes_after_sunset"
 DEFAULT_NAME = "Jewish Calendar"
-DEFAULT_CANDLE_LIGHT = 18
 DEFAULT_DIASPORA = False
-DEFAULT_HAVDALAH_OFFSET_MINUTES = 0
 DEFAULT_LANGUAGE = "english"
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_CANDLE_LIGHT_MINUTES, default=18): int,
+        vol.Optional(CONF_HAVDALAH_OFFSET_MINUTES, default=0): int,
+    }
+)
 
 LANGUAGE = [
     SelectOptionDict(value="hebrew", label="Hebrew"),
@@ -131,22 +136,4 @@ class JewishCalendarOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Manage the Jewish Calendar options."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        options = {
-            vol.Optional(
-                CONF_CANDLE_LIGHT_MINUTES,
-                default=self.config_entry.options.get(
-                    CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
-                ),
-            ): int,
-            vol.Optional(
-                CONF_HAVDALAH_OFFSET_MINUTES,
-                default=self.config_entry.options.get(
-                    CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
-                ),
-            ): int,
-        }
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(step_id="init", data_schema=OPTIONS_SCHEMA)
