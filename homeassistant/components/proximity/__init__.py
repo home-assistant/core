@@ -88,7 +88,7 @@ def async_setup_proximity_component(
         proximity_zone,
         unit_of_measurement,
     )
-    proximity.entity_id = f"{DOMAIN}.{proximity_zone}"
+    proximity.entity_id = f"{DOMAIN}.{zone_friendly_name}"
 
     proximity.async_write_ha_state()
 

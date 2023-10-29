@@ -13,6 +13,11 @@ async def test_proximities(hass: HomeAssistant) -> None:
                 "devices": ["device_tracker.test1", "device_tracker.test2"],
                 "tolerance": "1",
             },
+            "home_test2": {
+                "ignored_zones": ["work"],
+                "devices": ["device_tracker.test1", "device_tracker.test2"],
+                "tolerance": "1",
+            },
             "work": {
                 "devices": ["device_tracker.test1"],
                 "tolerance": "1",
@@ -23,7 +28,7 @@ async def test_proximities(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(hass, DOMAIN, config)
 
-    proximities = ["home", "work"]
+    proximities = ["home", "home_test2", "work"]
 
     for prox in proximities:
         state = hass.states.get(f"proximity.{prox}")
