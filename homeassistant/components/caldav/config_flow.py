@@ -23,8 +23,8 @@ SETTINGS_URL = "https://todoist.com/app/settings/integrations"
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): str,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD, default=""): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )

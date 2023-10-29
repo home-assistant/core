@@ -113,7 +113,9 @@ def setup_platform(
                 include_all_day=True,
                 search=cust_calendar[CONF_SEARCH],
             )
-            calendar_devices.append(WebDavCalendarEntity(name, entity_id, coordinator))
+            calendar_devices.append(
+                WebDavCalendarEntity(name, entity_id, coordinator, supports_offset=True)
+            )
 
         # Create a default calendar if there was no custom one for all calendars
         # that support events.
@@ -138,7 +140,9 @@ def setup_platform(
                 include_all_day=False,
                 search=None,
             )
-            calendar_devices.append(WebDavCalendarEntity(name, entity_id, coordinator))
+            calendar_devices.append(
+                WebDavCalendarEntity(name, entity_id, coordinator, supports_offset=True)
+            )
 
     add_entities(calendar_devices, True)
 
@@ -152,19 +156,44 @@ async def async_setup_entry(
     client: caldav.DAVClient = hass.data[DOMAIN][entry.entry_id]
     calendars = await hass.async_add_executor_job(client.principal().calendars)
     async_add_entities(
-        (ConfigEntryCalendarEntity(entry.entry_id, calendar) for calendar in calendars),
+        (
+            WebDavCalendarEntity(
+                calendar.name,
+                generate_entity_id(ENTITY_ID_FORMAT, calendar.name, hass=hass),
+                CalDavUpdateCoordinator(
+                    hass,
+                    calendar=calendar,
+                    days=CONFIG_ENTRY_DEFAULT_DAYS,
+                    include_all_day=True,
+                    search=None,
+                ),
+                unique_id=f"{entry.entry_id}-{calendar.id}",
+            )
+            for calendar in calendars
+            if calendar.name
+        ),
         True,
     )
 
 class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
 
-    def __init__(self, name, entity_id, coordinator):
+    def __init__(
+        self,
+        name: str,
+        entity_id: str,
+        coordinator: CalDavUpdateCoordinator,
+        unique_id: str | None = None,
+        supports_offset: bool = False,
+    ) -> None:
         """Create the WebDav Calendar Event Device."""
         super().__init__(coordinator)
         self.entity_id = entity_id
         self._event: CalendarEvent | None = None
         self._attr_name = name
+        if unique_id is not None:
+            self._attr_unique_id = unique_id
+        self._supports_offset = supports_offset
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -181,13 +210,14 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
     def _handle_coordinator_update(self) -> None:
         """Update event data."""
         self._event = self.coordinator.data
-        self._attr_extra_state_attributes = {
-            "offset_reached": is_offset_reached(
-                self._event.start_datetime_local, self.coordinator.offset
-            )
-            if self._event
-            else False
-        }
+        if self._supports_offset:
+            self._attr_extra_state_attributes = {
+                "offset_reached": is_offset_reached(
+                    self._event.start_datetime_local, self.coordinator.offset
+                )
+                if self._event
+                else False
+            }
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:

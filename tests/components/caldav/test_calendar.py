@@ -10,7 +10,7 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -300,10 +300,34 @@ TEST_ENTITY = "calendar.example"
 CALENDAR_NAME = "Example"
 
 
-@pytest.fixture(name="tz")
-def mock_tz() -> str | None:
-    """Fixture to specify the Home Assistant timezone to use during the test."""
-    return None
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set up config entry platforms."""
+    return [Platform.CALENDAR]
+
+
+@pytest.fixture
+def set_tz(request):
+    """Set the default TZ to the one requested."""
+    return request.getfixturevalue(request.param)
+
+
+@pytest.fixture
+def utc(hass):
+    """Set the default TZ to UTC."""
+    hass.config.set_time_zone("UTC")
+
+
+@pytest.fixture
+def new_york(hass):
+    """Set the default TZ to America/New_York."""
+    hass.config.set_time_zone("America/New_York")
+
+
+@pytest.fixture
+def baghdad(hass):
+    """Set the default TZ to Asia/Baghdad."""
+    hass.config.set_time_zone("Asia/Baghdad")
 
 
 @pytest.fixture(autouse=True)
@@ -1094,3 +1118,25 @@ async def test_calendar_components(
     assert state
     assert state.name == "Calendar 4"
     assert state.state == STATE_OFF
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    mock_dav_client: Mock,
+    setup_integration: Callable[[], Awaitable[bool]],
+    get_api_events: Callable[[str], dict[str, Any]],
+) -> None:
+    """Test a config entry with calendars."""
+    assert setup_integration()
+
+    state = hass.states.get("calendar.first")
+    assert state
+    assert state.name == "First"
+    assert state.attributes == {}
+    state = hass.states.get("calendar.second")
+    assert state
+    assert state.name == "Second"
+    assert state.attributes == {}
+
+    events = await get_api_events("calendar.first")
+    assert len(events) == 18
