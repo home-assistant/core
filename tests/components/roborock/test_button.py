@@ -25,7 +25,7 @@ async def test_update_success(
     setup_entry: MockConfigEntry,
     entity_id: str,
 ) -> None:
-    """Test allowed changing values for number entities."""
+    """Test pressing the button entities."""
     # Ensure that the entity exist, as these test can pass even if there is no entity.
     assert hass.states.get(entity_id) is not None
     with patch(
