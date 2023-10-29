@@ -19,7 +19,6 @@ from aioairzone.const import (
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
-    AZD_NAME,
     AZD_ON,
     AZD_SPEED,
     AZD_SPEEDS,
@@ -114,6 +113,7 @@ async def async_setup_entry(
 class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
     """Define an Airzone sensor."""
 
+    _attr_name = None
     _speeds: dict[int, str] = {}
     _speeds_reverse: dict[str, int] = {}
 
@@ -127,7 +127,6 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         """Initialize Airzone climate entity."""
         super().__init__(coordinator, entry, system_zone_id, zone_data)
 
-        self._attr_name = f"{zone_data[AZD_NAME]}"
         self._attr_unique_id = f"{self._attr_unique_id}_{system_zone_id}"
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = API_TEMPERATURE_STEP

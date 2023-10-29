@@ -74,11 +74,6 @@ def error_message(iden: int | None, code: str, message: str) -> dict[str, Any]:
     }
 
 
-def construct_event_message(iden: int, payload: str) -> str:
-    """Construct an event message JSON."""
-    return f'{{"id":{iden},"type":"event","event":{payload}}}'
-
-
 def event_message(iden: int, event: Any) -> dict[str, Any]:
     """Return an event message."""
     return {"id": iden, "type": "event", "event": event}
