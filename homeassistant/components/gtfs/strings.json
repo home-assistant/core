@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "Name of the route",
+          "origin": "Origin Stop ID",
+          "destination": "Destination Stop ID",
+          "offset": "Offset in minutes",
+          "refresh_interval": "Refresh interval in minutes",
+          "file": "Datafile",
+          "include_tomorrow": "Include tomorrow"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "stop_incorrect": "Start and/or End destination probably incorrect, check logs",
+      "generic_failure": "Overall failure, check logs",
+      "no_data_file": "Data file: name incorrect / does not exist / not in the correct folder"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
