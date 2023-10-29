@@ -2682,7 +2682,7 @@ volvooncall==0.10.3
 vsure==2.6.6
 
 # homeassistant.components.vasttrafik
-vtjp==0.1.14
+vtjp==0.2.1
 
 # homeassistant.components.vulcan
 vulcan-api==2.3.0
