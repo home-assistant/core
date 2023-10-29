@@ -224,6 +224,12 @@ class ReolinkVODMediaSource(MediaSource):
             if not isinstance(camera, ReolinkCamera):
                 continue
 
+            # for now ignore NVR's (via_device is set for them) until a proper solution is found
+            if (dev_info := camera.device_info) and dev_info.get(
+                "via_device"
+            ) is not None:
+                continue
+
             children.append(
                 BrowseMediaSource(
                     domain=DOMAIN,
