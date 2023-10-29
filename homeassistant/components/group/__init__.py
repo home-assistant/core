@@ -311,16 +311,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # - group.group never polls
         # - We don't need to reset EntityPlatform._setup_complete
         # - Only remove entities which were not created by service calls
-        if not platform.entities:
-            return
-
         tasks = [
             entity.async_remove()
             for entity in platform.entities.values()
             if not cast(Group, entity).created_by_service
         ]
 
-        await asyncio.gather(*tasks)
+        if tasks:
+            await asyncio.gather(*tasks)
 
         component.config = None
 
