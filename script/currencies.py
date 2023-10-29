@@ -3,7 +3,10 @@
 from pathlib import Path
 from bs4 import BeautifulSoup
 import requests
+
 from .hassfest.serializer import format_python_namespace
+
+
 # Constants for the URLs
 ACTIVE_CURRENCIES_URL = "https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml"
 HISTORIC_CURRENCIES_URL = "https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-three.xml"
