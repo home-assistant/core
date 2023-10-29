@@ -633,8 +633,11 @@ class NetatmoRoomSensor(NetatmoBase, SensorEntity):
 
         self._attr_name = f"{self._room.name} {self.entity_description.name}"
         self._room_id = self._room.entity_id
-        self._model = f"{self._room.climate_type}"
         self._config_url = CONF_URL_ENERGY
+
+        if not self._room.climate_type:
+            raise ValueError("Climate type is not set")
+        self._model = self._room.climate_type
 
         self._attr_unique_id = (
             f"{self._id}-{self._room.entity_id}-{self.entity_description.key}"
