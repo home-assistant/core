@@ -22,7 +22,6 @@ PLATFORMS = [
 IMAGE_DRAWABLES: list[Drawable] = [
     Drawable.PATH,
     Drawable.CHARGER,
-    Drawable.ROOM_NAMES,
     Drawable.VACUUM_POSITION,
 ]
 
