@@ -28,7 +28,6 @@ from .const import (
     CONF_COUNTRY_CODE,
     CONF_ENDPOINT,
     CONF_PASSWORD,
-    CONF_PROJECT_TYPE,
     CONF_USERNAME,
     DOMAIN,
     LOGGER,
@@ -49,13 +48,6 @@ class HomeAssistantTuyaData(NamedTuple):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
     hass.data.setdefault(DOMAIN, {})
-
-    # Project type has been renamed to auth type in the upstream Tuya IoT SDK.
-    # This migrates existing config entries to reflect that name change.
-    if CONF_PROJECT_TYPE in entry.data:
-        data = {**entry.data, CONF_AUTH_TYPE: entry.data[CONF_PROJECT_TYPE]}
-        data.pop(CONF_PROJECT_TYPE)
-        hass.config_entries.async_update_entry(entry, data=data)
 
     auth_type = AuthType(entry.data[CONF_AUTH_TYPE])
     api = TuyaOpenAPI(
