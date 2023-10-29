@@ -2043,7 +2043,7 @@ xiaomi-ble==0.21.1
 xknx==2.11.2
 
 # homeassistant.components.knx
-xknxproject==3.3.0
+xknxproject==3.4.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
