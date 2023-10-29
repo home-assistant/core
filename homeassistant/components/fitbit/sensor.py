@@ -581,11 +581,14 @@ async def async_setup_platform(
             refresh_cb=lambda x: None,
         )
         try:
-            await hass.async_add_executor_job(authd_client.client.refresh_token)
+            updated_token = await hass.async_add_executor_job(
+                authd_client.client.refresh_token
+            )
         except OAuth2Error as err:
             _LOGGER.debug("Unable to import fitbit OAuth2 credentials: %s", err)
             translation_key = "deprecated_yaml_import_issue_cannot_connect"
         else:
+            _LOGGER.info("Updated refresh token: %s", updated_token)
             await async_import_client_credential(
                 hass,
                 DOMAIN,
@@ -599,9 +602,10 @@ async def async_setup_platform(
                 data={
                     "auth_implementation": DOMAIN,
                     CONF_TOKEN: {
-                        ATTR_ACCESS_TOKEN: config_file[ATTR_ACCESS_TOKEN],
-                        ATTR_REFRESH_TOKEN: config_file[ATTR_REFRESH_TOKEN],
-                        "expires_at": config_file[ATTR_LAST_SAVED_AT],
+                        ATTR_ACCESS_TOKEN: updated_token[ATTR_ACCESS_TOKEN],
+                        ATTR_REFRESH_TOKEN: updated_token[ATTR_REFRESH_TOKEN],
+                        "expires_at": updated_token["expires_at"],
+                        "scope": " ".join(updated_token.get("scope", [])),
                     },
                     CONF_CLOCK_FORMAT: config[CONF_CLOCK_FORMAT],
                     CONF_UNIT_SYSTEM: config[CONF_UNIT_SYSTEM],
