@@ -230,7 +230,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     loc_idx = config[DOMAIN][CONF_LOCATION_IDX]
     try:
-        loc_config = client_v2.installation()[loc_idx]
+        loc_config = client_v2.installation_info[loc_idx]
     except IndexError:
         _LOGGER.error(
             (
@@ -239,7 +239,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
             CONF_LOCATION_IDX,
             loc_idx,
-            len(client_v2.installation()) - 1,
+            len(client_v2.installation_info) - 1,
         )
         return False
 
