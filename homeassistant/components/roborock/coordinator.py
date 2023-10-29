@@ -95,6 +95,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             self.roborock_device_info.props.status is not None
             and self.roborock_device_info.props.status.map_status is not None
         ):
+            # The map status represents the map flag as flag * 4 + 3 -
+            # so we have to invert that in order to get the map flag that we can use to set the current map.
             self.current_map = (
                 self.roborock_device_info.props.status.map_status - 3
             ) // 4

@@ -5,7 +5,6 @@ from itertools import chain
 
 from roborock import MultiMapsList, RoborockCommand
 from vacuum_map_parser_base.config.color import ColorsPalette
-from vacuum_map_parser_base.config.drawable import Drawable
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.config.size import Sizes
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
@@ -18,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, IMAGE_CACHE_INTERVAL, IMAGE_DRAWABLES
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 
@@ -60,33 +59,27 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
         self._attr_name = map_name
-        drawables: list[Drawable] = [
-            Drawable.PATH,
-            Drawable.CHARGER,
-            Drawable.ROOM_NAMES,
-            Drawable.VACUUM_POSITION,
-        ]
         self.parser = RoborockMapDataParser(
-            ColorsPalette(), Sizes(), drawables, ImageConfig(), []
+            ColorsPalette(), Sizes(), IMAGE_DRAWABLES, ImageConfig(), []
         )
-        self.async_update_token()
         self._attr_image_last_updated = dt_util.utcnow()
         self.map_flag = map_flag
         self.cached_map = self._create_image(starting_map)
 
-    def should_update(self) -> bool:
+    def is_cache_expired(self) -> bool:
         """Update this map if it is the current active map, it's been long enough, and the vacuum is cleaning."""
         return (
             self.map_flag == self.coordinator.current_map
             and self.image_last_updated is not None
-            and (dt_util.utcnow() - self.image_last_updated).total_seconds() > 90
+            and (dt_util.utcnow() - self.image_last_updated).total_seconds()
+            > IMAGE_CACHE_INTERVAL
             and self.coordinator.roborock_device_info.props.status is not None
             and self.coordinator.roborock_device_info.props.status.in_cleaning
         )
 
     async def async_image(self) -> bytes | None:
         """Update the image if it is not cached."""
-        if self.should_update():
+        if self.is_cache_expired():
             map_data: bytes = await self.cloud_api.get_map_v1()
             self.cached_map = self._create_image(map_data)
             self._attr_image_last_updated = dt_util.utcnow()
@@ -105,17 +98,21 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
 async def create_coordinator_maps(
     coord: RoborockDataUpdateCoordinator,
 ) -> list[RoborockMap]:
-    """Get the starting map information for all maps for this device. The following steps must be done synchronously."""
+    """Get the starting map information for all maps for this device. The following steps must be done synchronously.
+
+    Only one map can be loaded at a time per device.
+    """
     entities = []
     maps: MultiMapsList = await coord.cloud_api.get_multi_maps_list()
     cur_map = coord.current_map
     for roborock_map in maps.map_info:
+        # Load the map - so we can access it with get_map_v1
         await coord.api.send_command(
             RoborockCommand.LOAD_MULTI_MAP, [roborock_map.mapFlag]
         )
-        await asyncio.sleep(
-            3
-        )  # We cannot get the map until the roborock servers fully process the map change.
+        # We cannot get the map until the roborock servers fully process the map change.
+        await asyncio.sleep(3)
+        # Get the map data
         api_data: bytes = await coord.cloud_api.get_map_v1()
         entities.append(
             RoborockMap(
@@ -126,5 +123,6 @@ async def create_coordinator_maps(
                 roborock_map.name,
             )
         )
+    # Set the map back to the map the user previously had selected so that it does not change the end user experience.
     await coord.cloud_api.send_command(RoborockCommand.LOAD_MULTI_MAP, [cur_map])
     return entities
