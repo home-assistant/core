@@ -4,6 +4,7 @@ Such systems include evohome, Round Thermostat, and others.
 """
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import logging
@@ -13,6 +14,7 @@ from typing import Any
 import aiohttp.client_exceptions
 import evohomeasync
 import evohomeasync2
+from evohomeasync2.zone import _ZoneBase
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -139,7 +141,7 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _handle_exception(err) -> None:
+def _handle_exception(err: Exception) -> None:
     """Return False if the exception can't be ignored."""
     try:
         raise err
@@ -166,14 +168,14 @@ def _handle_exception(err) -> None:
             err,
         )
 
-    except aiohttp.ClientResponseError:
-        if err.status == HTTPStatus.SERVICE_UNAVAILABLE:
+    except aiohttp.ClientResponseError as exc:
+        if exc.status == HTTPStatus.SERVICE_UNAVAILABLE:
             _LOGGER.warning(
                 "The vendor says their server is currently unavailable. "
                 "Check the vendor's service status page"
             )
 
-        elif err.status == HTTPStatus.TOO_MANY_REQUESTS:
+        elif exc.status == HTTPStatus.TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 (
                     "The vendor's API rate limit has been exceeded. "
@@ -227,7 +229,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     loc_idx = config[DOMAIN][CONF_LOCATION_IDX]
     try:
-        loc_config = client_v2.installation_info[loc_idx]
+        loc_config = client_v2.installation()[loc_idx]
     except IndexError:
         _LOGGER.error(
             (
@@ -236,7 +238,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
             CONF_LOCATION_IDX,
             loc_idx,
-            len(client_v2.installation_info) - 1,
+            len(client_v2.installation()) - 1,
         )
         return False
 
@@ -419,7 +421,7 @@ class EvoBroker:
         self.params = params
 
         loc_idx = params[CONF_LOCATION_IDX]
-        self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
+        self.config = client._full_config[loc_idx][GWS][0][TCS][0]
         self.tcs = client.locations[loc_idx]._gateways[0]._control_systems[0]
         self.tcs_utc_offset = timedelta(
             minutes=client.locations[loc_idx].timeZone[UTC_OFFSET]
@@ -448,7 +450,9 @@ class EvoBroker:
 
         await self._store.async_save(app_storage)
 
-    async def call_client_api(self, api_function, update_state=True) -> Any:
+    async def call_client_api(
+        self, api_function: Awaitable, update_state: bool = True
+    ) -> Any:
         """Call a client API and update the broker state if required."""
         try:
             result = await api_function
@@ -545,7 +549,7 @@ class EvoDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(self, evo_broker: EvoBroker, evo_device: _ZoneBase) -> None:
         """Initialize the evohome entity."""
         self._evo_device = evo_device
         self._evo_broker = evo_broker
@@ -597,7 +601,7 @@ class EvoChild(EvoDevice):
     This includes (up to 12) Heating Zones and (optionally) a DHW controller.
     """
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(self, evo_broker: EvoBroker, evo_device: EvoDevice) -> None:
         """Initialize a evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
         self._schedule: dict[str, Any] = {}

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 
+from evohomeasync2.hotwater import HotWater
+
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
@@ -19,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import EvoChild
+from . import EvoBroker, EvoChild
 from .const import DOMAIN, EVO_FOLLOW, EVO_PERMOVER
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,13 +44,14 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    broker = hass.data[DOMAIN]["broker"]
+    broker: EvoBroker = hass.data[DOMAIN]["broker"]
 
     _LOGGER.debug(
         "Adding: DhwController (%s), id=%s",
         broker.tcs.hotwater.zone_type,
         broker.tcs.hotwater.zoneId,
     )
+
     new_entity = EvoDHW(broker, broker.tcs.hotwater)
 
     async_add_entities([new_entity], update_before_add=True)
@@ -62,7 +65,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     _attr_operation_list = list(HA_STATE_TO_EVO)
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(self, evo_broker: EvoBroker, evo_device: HotWater) -> None:
         """Initialize an evohome DHW controller."""
         super().__init__(evo_broker, evo_device)
 
