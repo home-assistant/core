@@ -107,11 +107,13 @@ async def create_coordinator_maps(
     cur_map = coord.current_map
     for roborock_map in maps.map_info:
         # Load the map - so we can access it with get_map_v1
-        await coord.api.send_command(
-            RoborockCommand.LOAD_MULTI_MAP, [roborock_map.mapFlag]
-        )
-        # We cannot get the map until the roborock servers fully process the map change.
-        await asyncio.sleep(3)
+        if len(maps.map_info) != 1:
+            # Only change the map and sleep if we have multiple maps.
+            await coord.api.send_command(
+                RoborockCommand.LOAD_MULTI_MAP, [roborock_map.mapFlag]
+            )
+            # We cannot get the map until the roborock servers fully process the map change.
+            await asyncio.sleep(3)
         # Get the map data
         api_data: bytes = await coord.cloud_api.get_map_v1()
         entities.append(
@@ -123,6 +125,8 @@ async def create_coordinator_maps(
                 roborock_map.name,
             )
         )
-    # Set the map back to the map the user previously had selected so that it does not change the end user experience.
-    await coord.cloud_api.send_command(RoborockCommand.LOAD_MULTI_MAP, [cur_map])
+    if len(maps.map_info) != 1:
+        # Set the map back to the map the user previously had selected so that it does not change the end user's app
+        # Only needs to happen when we changed maps above.
+        await coord.cloud_api.send_command(RoborockCommand.LOAD_MULTI_MAP, [cur_map])
     return entities
