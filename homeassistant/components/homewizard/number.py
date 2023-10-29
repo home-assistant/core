@@ -48,12 +48,16 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
         await self.coordinator.async_refresh()
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.data.state is not None
+
+    @property
     def native_value(self) -> float | None:
         """Return the current value."""
         if (
-            self.coordinator.data.state is None
-            or self.coordinator.data.state.brightness is None
+            not self.coordinator.data.state
+            or (brightness := self.coordinator.data.state.brightness) is None
         ):
             return None
-        brightness: float = self.coordinator.data.state.brightness
         return round(brightness * (100 / 255))

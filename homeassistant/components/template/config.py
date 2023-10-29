@@ -9,6 +9,7 @@ from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_exception, config_without_domain
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_SENSORS, CONF_UNIQUE_ID
 from homeassistant.helpers import config_validation as cv
@@ -21,6 +22,7 @@ from . import (
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
+    weather as weather_platform,
 )
 from .const import CONF_ACTION, CONF_TRIGGER, DOMAIN
 
@@ -54,6 +56,9 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         ),
         vol.Optional(IMAGE_DOMAIN): vol.All(
             cv.ensure_list, [image_platform.IMAGE_SCHEMA]
+        ),
+        vol.Optional(WEATHER_DOMAIN): vol.All(
+            cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
         ),
     }
 )

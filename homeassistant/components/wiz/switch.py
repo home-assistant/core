@@ -30,6 +30,8 @@ async def async_setup_entry(
 class WizSocketEntity(WizToggleEntity, SwitchEntity):
     """Representation of a WiZ socket."""
 
+    _attr_name = None
+
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize a WiZ socket."""
         super().__init__(wiz_data, name)

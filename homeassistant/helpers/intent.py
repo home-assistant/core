@@ -31,6 +31,7 @@ INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
 INTENT_TOGGLE = "HassToggle"
 INTENT_GET_STATE = "HassGetState"
+INTENT_NEVERMIND = "HassNevermind"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 

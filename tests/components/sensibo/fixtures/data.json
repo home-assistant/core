@@ -608,7 +608,7 @@
       "isGeofenceOnExitEnabled": false,
       "isClimateReactGeofenceOnExitEnabled": false,
       "isMotionGeofenceOnExitEnabled": false,
-      "serial": "0987654321",
+      "serial": "0987654329",
       "sensorsCalibration": {
         "temperature": 0.0,
         "humidity": 0.0
@@ -699,7 +699,7 @@
         "ssid": "Sensibo-09876",
         "password": null
       },
-      "macAddress": "00:01:00:01:00:01",
+      "macAddress": "00:03:00:03:00:03",
       "autoOffMinutes": null,
       "autoOffEnabled": false,
       "antiMoldTimer": null,

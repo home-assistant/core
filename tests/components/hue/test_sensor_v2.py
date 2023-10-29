@@ -28,7 +28,6 @@ async def test_sensors(
     assert sensor.attributes["device_class"] == "temperature"
     assert sensor.attributes["state_class"] == "measurement"
     assert sensor.attributes["unit_of_measurement"] == "°C"
-    assert sensor.attributes["temperature_valid"] is True
 
     # test illuminance sensor
     sensor = hass.states.get("sensor.hue_motion_sensor_illuminance")
@@ -39,7 +38,6 @@ async def test_sensors(
     assert sensor.attributes["state_class"] == "measurement"
     assert sensor.attributes["unit_of_measurement"] == "lx"
     assert sensor.attributes["light_level"] == 18027
-    assert sensor.attributes["light_level_valid"] is True
 
     # test battery sensor
     sensor = hass.states.get("sensor.wall_switch_with_2_controls_battery")

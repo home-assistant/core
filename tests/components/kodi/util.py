@@ -1,4 +1,6 @@
 """Test the Kodi config flow."""
+from ipaddress import ip_address
+
 from homeassistant.components import zeroconf
 from homeassistant.components.kodi.const import DEFAULT_SSL
 
@@ -8,7 +10,6 @@ TEST_HOST = {
     "ssl": DEFAULT_SSL,
 }
 
-
 TEST_CREDENTIALS = {"username": "username", "password": "password"}
 
 
@@ -16,8 +17,8 @@ TEST_WS_PORT = {"ws_port": 9090}
 
 UUID = "11111111-1111-1111-1111-111111111111"
 TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
-    host="1.1.1.1",
-    addresses=["1.1.1.1"],
+    ip_address=ip_address("1.1.1.1"),
+    ip_addresses=[ip_address("1.1.1.1")],
     port=8080,
     hostname="hostname.local.",
     type="_xbmc-jsonrpc-h._tcp.local.",
@@ -27,8 +28,8 @@ TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
 
 
 TEST_DISCOVERY_WO_UUID = zeroconf.ZeroconfServiceInfo(
-    host="1.1.1.1",
-    addresses=["1.1.1.1"],
+    ip_address=ip_address("1.1.1.1"),
+    ip_addresses=[ip_address("1.1.1.1")],
     port=8080,
     hostname="hostname.local.",
     type="_xbmc-jsonrpc-h._tcp.local.",

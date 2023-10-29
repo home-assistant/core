@@ -24,7 +24,6 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    ADDRESS,
     ATTRIBUTION,
     CONF_COORDINATOR,
     DOMAIN,
@@ -255,15 +254,12 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
         super().__init__(coordinator)
         self.entity_description = description
 
-        self.entity_id = f"sensor.picnic_{description.key}"
-
         self._attr_unique_id = f"{config_entry.unique_id}.{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, cast(str, config_entry.unique_id))},
             manufacturer="Picnic",
             model=config_entry.unique_id,
-            name=f"Picnic: {coordinator.data[ADDRESS]}",
         )
 
     @property

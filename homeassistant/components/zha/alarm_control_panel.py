@@ -81,7 +81,7 @@ async def async_setup_entry(
 class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
     """Entity for ZHA alarm control devices."""
 
-    _attr_name: str = "Alarm control panel"
+    _attr_translation_key: str = "alarm_control_panel"
     _attr_code_format = CodeFormat.TEXT
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME

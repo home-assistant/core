@@ -50,7 +50,7 @@ class MultiFactorAuthModule:
 
         Default is same as type
         """
-        return self.config.get(CONF_ID, self.type)
+        return self.config.get(CONF_ID, self.type)  # type: ignore[no-any-return]
 
     @property
     def type(self) -> str:
@@ -60,7 +60,7 @@ class MultiFactorAuthModule:
     @property
     def name(self) -> str:
         """Return the name of the auth module."""
-        return self.config.get(CONF_NAME, self.DEFAULT_TITLE)
+        return self.config.get(CONF_NAME, self.DEFAULT_TITLE)  # type: ignore[no-any-return]
 
     # Implement by extending class
 

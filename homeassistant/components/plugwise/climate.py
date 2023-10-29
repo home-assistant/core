@@ -66,13 +66,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
             self._attr_preset_modes = presets
 
-        # Determine hvac modes and current hvac mode
-        self._attr_hvac_modes = [HVACMode.HEAT]
-        if self.coordinator.data.gateway["cooling_present"]:
-            self._attr_hvac_modes = [HVACMode.HEAT_COOL]
-        if self.device["available_schedules"] != ["None"]:
-            self._attr_hvac_modes.append(HVACMode.AUTO)
-
         self._attr_min_temp = self.device["thermostat"]["lower_bound"]
         self._attr_max_temp = self.device["thermostat"]["upper_bound"]
         # Ensure we don't drop below 0.1
@@ -118,18 +111,20 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         return HVACMode(mode)
 
     @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return the list of available HVACModes."""
+        hvac_modes = [HVACMode.HEAT]
+        if self.coordinator.data.gateway["cooling_present"]:
+            hvac_modes = [HVACMode.HEAT_COOL]
+
+        if self.device["available_schedules"] != ["None"]:
+            hvac_modes.append(HVACMode.AUTO)
+
+        return hvac_modes
+
+    @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
-        # When control_state is present, prefer this data
-        if (control_state := self.device.get("control_state")) == "cooling":
-            return HVACAction.COOLING
-        # Support preheating state as heating,
-        # until preheating is added as a separate state
-        if control_state in ["heating", "preheating"]:
-            return HVACAction.HEATING
-        if control_state == "off":
-            return HVACAction.IDLE
-
         heater: str | None = self.coordinator.data.gateway["heater_id"]
         if heater:
             heater_data = self.coordinator.data.devices[heater]
@@ -174,9 +169,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             raise HomeAssistantError("Unsupported hvac_mode")
 
         await self.coordinator.api.set_schedule_state(
-            self.device["location"],
-            self.device["last_used"],
-            "on" if hvac_mode == HVACMode.AUTO else "off",
+            self.device["location"], "on" if hvac_mode == HVACMode.AUTO else "off"
         )
 
     @plugwise_command

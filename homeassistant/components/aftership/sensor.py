@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -20,6 +21,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
@@ -58,19 +60,43 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the AfterShip sensor platform."""
-    apikey = config[CONF_API_KEY]
-    name = config[CONF_NAME]
-
-    session = async_get_clientsession(hass)
-    aftership = AfterShip(api_key=apikey, session=session)
-
+    aftership = AfterShip(
+        api_key=config[CONF_API_KEY], session=async_get_clientsession(hass)
+    )
     try:
         await aftership.trackings.list()
-    except AfterShipException as err:
-        _LOGGER.error("No tracking data found. Check API key is correct: %s", err)
-        return
+    except AfterShipException:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_import_issue_cannot_connect",
+            breaks_in_ha_version="2024.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue_cannot_connect",
+            translation_placeholders={
+                "integration_title": "AfterShip",
+                "url": "/config/integrations/dashboard/add?domain=aftership",
+            },
+        )
 
-    async_add_entities([AfterShipSensor(aftership, name)], True)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up AfterShip sensor entities based on a config entry."""
+    aftership: AfterShip = hass.data[DOMAIN][config_entry.entry_id]
+
+    async_add_entities([AfterShipSensor(aftership, config_entry.title)], True)
 
     async def handle_add_tracking(call: ServiceCall) -> None:
         """Call when a user adds a new Aftership tracking from Home Assistant."""

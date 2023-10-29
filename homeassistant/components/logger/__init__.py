@@ -6,6 +6,7 @@ import re
 
 import voluptuous as vol
 
+from homeassistant.const import EVENT_LOGGING_CHANGED  # noqa: F401
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -14,7 +15,6 @@ from . import websocket_api
 from .const import (
     ATTR_LEVEL,
     DOMAIN,
-    EVENT_LOGGING_CHANGED,  # noqa: F401
     LOGGER_DEFAULT,
     LOGGER_FILTERS,
     LOGGER_LOGS,

@@ -19,13 +19,13 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL
+from homeassistant.const import ATTR_SW_VERSION, CONF_MODEL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_VERSION,
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
@@ -52,8 +52,9 @@ async def async_setup_entry(
 
     client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     device_info = hass.data[DOMAIN][config_entry.entry_id][DATA_DEVICE_INFO]
+    software_version = hass.data[DOMAIN][config_entry.entry_id][ATTR_SW_VERSION]
 
-    entity = TwinklyLight(config_entry, client, device_info)
+    entity = TwinklyLight(config_entry, client, device_info, software_version)
 
     async_add_entities([entity], update_before_add=True)
 
@@ -68,6 +69,7 @@ class TwinklyLight(LightEntity):
         conf: ConfigEntry,
         client: Twinkly,
         device_info,
+        software_version: str | None = None,
     ) -> None:
         """Initialize a TwinklyLight entity."""
         self._attr_unique_id: str = conf.data[CONF_ID]
@@ -98,7 +100,7 @@ class TwinklyLight(LightEntity):
         self._attr_available = False
         self._current_movie: dict[Any, Any] = {}
         self._movies: list[Any] = []
-        self._software_version = ""
+        self._software_version = software_version
         # We guess that most devices are "new" and support effects
         self._attr_supported_features = LightEntityFeature.EFFECT
 
@@ -135,15 +137,20 @@ class TwinklyLight(LightEntity):
 
     async def async_added_to_hass(self) -> None:
         """Device is added to hass."""
-        software_version = await self._client.get_firmware_version()
-        if ATTR_VERSION in software_version:
-            self._software_version = software_version[ATTR_VERSION]
-
+        if self._software_version:
             if AwesomeVersion(self._software_version) < AwesomeVersion(
                 MIN_EFFECT_VERSION
             ):
                 self._attr_supported_features = (
                     self.supported_features & ~LightEntityFeature.EFFECT
+                )
+            device_registry = dr.async_get(self.hass)
+            device_entry = device_registry.async_get_device(
+                {(DOMAIN, self._attr_unique_id)}, set()
+            )
+            if device_entry:
+                device_registry.async_update_device(
+                    device_entry.id, sw_version=self._software_version
                 )
 
     async def async_turn_on(self, **kwargs: Any) -> None:

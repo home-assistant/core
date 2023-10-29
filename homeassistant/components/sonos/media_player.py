@@ -629,7 +629,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.play_uri(item.get_uri())
                 return
             try:
-                playlists = soco.get_sonos_playlists()
+                playlists = soco.get_sonos_playlists(complete_result=True)
                 playlist = next(p for p in playlists if p.title == media_id)
             except StopIteration:
                 _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)

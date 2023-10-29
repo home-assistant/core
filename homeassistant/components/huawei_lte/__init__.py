@@ -143,9 +143,11 @@ class Router:
     url: str
 
     data: dict[str, Any] = field(default_factory=dict, init=False)
-    subscriptions: dict[str, set[str]] = field(
+    # Values are lists rather than sets, because the same item may be used by more than
+    # one thing, such as MonthDuration for CurrentMonth{Download,Upload}.
+    subscriptions: dict[str, list[str]] = field(
         default_factory=lambda: defaultdict(
-            set, ((x, {"initial_scan"}) for x in ALL_KEYS)
+            list, ((x, ["initial_scan"]) for x in ALL_KEYS)
         ),
         init=False,
     )

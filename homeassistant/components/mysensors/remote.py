@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
-from .device import MySensorsEntity
+from .device import MySensorsChildEntity
 from .helpers import on_unload
 
 
@@ -50,7 +50,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsRemote(MySensorsEntity, RemoteEntity):
+class MySensorsRemote(MySensorsChildEntity, RemoteEntity):
     """Representation of a MySensors IR transceiver."""
 
     _current_command: str | None = None

@@ -11,7 +11,6 @@ from aioairzone.const import (
     API_SLEEP,
     AZD_COLD_ANGLE,
     AZD_HEAT_ANGLE,
-    AZD_NAME,
     AZD_SLEEP,
     AZD_ZONES,
 )
@@ -60,7 +59,6 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         api_param=API_COLD_ANGLE,
         entity_category=EntityCategory.CONFIG,
         key=AZD_COLD_ANGLE,
-        name="Cold Angle",
         options=list(GRILLE_ANGLE_DICT),
         options_dict=GRILLE_ANGLE_DICT,
         translation_key="grille_angles",
@@ -69,16 +67,14 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         api_param=API_HEAT_ANGLE,
         entity_category=EntityCategory.CONFIG,
         key=AZD_HEAT_ANGLE,
-        name="Heat Angle",
         options=list(GRILLE_ANGLE_DICT),
         options_dict=GRILLE_ANGLE_DICT,
-        translation_key="grille_angles",
+        translation_key="heat_angles",
     ),
     AirzoneSelectDescription(
         api_param=API_SLEEP,
         entity_category=EntityCategory.CONFIG,
         key=AZD_SLEEP,
-        name="Sleep",
         options=list(SLEEP_DICT),
         options_dict=SLEEP_DICT,
         translation_key="sleep_times",
@@ -146,7 +142,6 @@ class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneBaseSelect):
         """Initialize."""
         super().__init__(coordinator, entry, system_zone_id, zone_data)
 
-        self._attr_name = f"{zone_data[AZD_NAME]} {description.name}"
         self._attr_unique_id = (
             f"{self._attr_unique_id}_{system_zone_id}_{description.key}"
         )

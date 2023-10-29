@@ -48,8 +48,8 @@ async def test_lovelace_from_storage(
 
     assert response["result"] == {"yo": "hello"}
 
-    # Test with safe mode
-    hass.config.safe_mode = True
+    # Test with recovery mode
+    hass.config.recovery_mode = True
     await client.send_json({"id": 8, "type": "lovelace/config"})
     response = await client.receive_json()
     assert not response["success"]

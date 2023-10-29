@@ -4,12 +4,13 @@ from __future__ import annotations
 from collections.abc import Callable
 import functools
 import math
-from typing import Any, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
 from aioesphomeapi import (
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
+    build_unique_id,
 )
 import voluptuous as vol
 
@@ -215,9 +216,12 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         This method can be overridden in child classes to know
         when the static info changes.
         """
-        static_info = cast(_InfoT, static_info)
+        device_info = self._entry_data.device_info
+        if TYPE_CHECKING:
+            static_info = cast(_InfoT, static_info)
+            assert device_info
         self._static_info = static_info
-        self._attr_unique_id = static_info.unique_id
+        self._attr_unique_id = build_unique_id(device_info.mac_address, static_info)
         self._attr_entity_registry_enabled_default = not static_info.disabled_by_default
         self._attr_name = static_info.name
         if entity_category := static_info.entity_category:

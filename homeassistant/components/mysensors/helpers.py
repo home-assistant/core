@@ -19,9 +19,12 @@ from homeassistant.util.decorator import Registry
 from .const import (
     ATTR_DEVICES,
     ATTR_GATEWAY_ID,
+    ATTR_NODE_ID,
     DOMAIN,
     FLAT_PLATFORM_TYPES,
+    MYSENSORS_DISCOVERED_NODES,
     MYSENSORS_DISCOVERY,
+    MYSENSORS_NODE_DISCOVERY,
     MYSENSORS_ON_UNLOAD,
     TYPE_TO_PLATFORMS,
     DevId,
@@ -63,6 +66,27 @@ def discover_mysensors_platform(
             ATTR_GATEWAY_ID: gateway_id,
         },
     )
+
+
+@callback
+def discover_mysensors_node(
+    hass: HomeAssistant, gateway_id: GatewayId, node_id: int
+) -> None:
+    """Discover a MySensors node."""
+    discovered_nodes = hass.data[DOMAIN].setdefault(
+        MYSENSORS_DISCOVERED_NODES.format(gateway_id), set()
+    )
+
+    if node_id not in discovered_nodes:
+        discovered_nodes.add(node_id)
+        async_dispatcher_send(
+            hass,
+            MYSENSORS_NODE_DISCOVERY,
+            {
+                ATTR_GATEWAY_ID: gateway_id,
+                ATTR_NODE_ID: node_id,
+            },
+        )
 
 
 def default_schema(

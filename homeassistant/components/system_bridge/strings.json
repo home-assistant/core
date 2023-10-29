@@ -29,6 +29,11 @@
     }
   },
   "entity": {
+    "media_player": {
+      "media": {
+        "name": "Media"
+      }
+    },
     "sensor": {
       "boot_time": {
         "name": "Boot time"

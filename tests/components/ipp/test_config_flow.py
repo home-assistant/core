@@ -1,5 +1,6 @@
 """Tests for the IPP config flow."""
 import dataclasses
+from ipaddress import ip_address
 import json
 from unittest.mock import MagicMock, patch
 
@@ -326,7 +327,9 @@ async def test_zeroconf_with_uuid_device_exists_abort_new_host(
     """Test we abort zeroconf flow if printer already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO, host="1.2.3.9")
+    discovery_info = dataclasses.replace(
+        MOCK_ZEROCONF_IPP_SERVICE_INFO, ip_address=ip_address("1.2.3.9")
+    )
     discovery_info.properties = {
         **MOCK_ZEROCONF_IPP_SERVICE_INFO.properties,
         "UUID": "cfe92100-67c4-11d4-a45f-f8d027761251",

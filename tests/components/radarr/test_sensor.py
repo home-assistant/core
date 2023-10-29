@@ -1,7 +1,11 @@
 """The tests for Radarr sensor platform."""
 import pytest
 
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 
@@ -55,3 +59,17 @@ async def test_sensors(
     state = hass.states.get("sensor.mock_title_start_time")
     assert state.state == "2020-09-01T23:50:20+00:00"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
+    state = hass.states.get("sensor.mock_title_queue")
+    assert state.state == "2"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Movies"
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
+
+
+async def test_windows(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test for successfully setting up the Radarr platform on Windows."""
+    await setup_integration(hass, aioclient_mock, windows=True)
+
+    state = hass.states.get("sensor.mock_title_disk_space_tv")
+    assert state.state == "263.10"

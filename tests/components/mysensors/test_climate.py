@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 
@@ -36,6 +36,7 @@ async def test_hvac_node_auto(
 
     assert state
     assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 0
 
     # Test set hvac mode auto
     await hass.services.async_call(
@@ -150,6 +151,7 @@ async def test_hvac_node_heat(
 
     assert state
     assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 0
 
     # Test set hvac mode heat
     await hass.services.async_call(
@@ -259,6 +261,7 @@ async def test_hvac_node_cool(
 
     assert state
     assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 0
 
     # Test set hvac mode heat
     await hass.services.async_call(

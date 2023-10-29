@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.components.wled.const import CONF_KEEP_MASTER_LIGHT, SCAN_INTERVAL
+from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
@@ -355,7 +355,7 @@ async def test_single_segment_with_keep_main_light(
     assert not hass.states.get("light.wled_rgb_light_main")
 
     hass.config_entries.async_update_entry(
-        init_integration, options={CONF_KEEP_MASTER_LIGHT: True}
+        init_integration, options={CONF_KEEP_MAIN_LIGHT: True}
     )
     await hass.async_block_till_done()
 

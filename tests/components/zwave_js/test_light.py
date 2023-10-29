@@ -26,9 +26,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     AEON_SMART_SWITCH_LIGHT_ENTITY,
+    BASIC_LIGHT_ENTITY,
     BULB_6_MULTI_COLOR_LIGHT_ENTITY,
     EATON_RF9640_ENTITY,
     ZEN_31_ENTITY,
@@ -127,7 +129,7 @@ async def test_light(
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_COLOR_TEMP] == 370
-    assert ATTR_RGB_COLOR in state.attributes
+    assert state.attributes[ATTR_RGB_COLOR] is not None
 
     # Test turning on with same brightness
     await hass.services.async_call(
@@ -252,7 +254,7 @@ async def test_light(
     assert state.attributes[ATTR_COLOR_MODE] == "hs"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_RGB_COLOR] == (255, 76, 255)
-    assert ATTR_COLOR_TEMP not in state.attributes
+    assert state.attributes[ATTR_COLOR_TEMP] is None
 
     client.async_send_command.reset_mock()
 
@@ -430,8 +432,8 @@ async def test_light(
 
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
     assert state.state == STATE_UNKNOWN
-    assert ATTR_COLOR_MODE not in state.attributes
-    assert ATTR_BRIGHTNESS not in state.attributes
+    assert state.attributes[ATTR_COLOR_MODE] is None
+    assert state.attributes[ATTR_BRIGHTNESS] is None
 
 
 async def test_v4_dimmer_light(
@@ -859,3 +861,144 @@ async def test_black_is_off_zdb5100(
         "property": "targetColor",
     }
     assert args["value"] == {"red": 255, "green": 76, "blue": 255}
+
+
+async def test_basic_cc_light(
+    hass: HomeAssistant, client, ge_in_wall_dimmer_switch, integration
+) -> None:
+    """Test light is created from Basic CC."""
+    node = ge_in_wall_dimmer_switch
+
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(BASIC_LIGHT_ENTITY)
+
+    assert entity_entry
+    assert not entity_entry.disabled
+
+    state = hass.states.get(BASIC_LIGHT_ENTITY)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["supported_features"] == 0
+
+    # Send value to 0
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 2,
+            "args": {
+                "commandClassName": "Basic",
+                "commandClass": 32,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": 0,
+                "prevValue": None,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(BASIC_LIGHT_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+    # Turn on light
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": BASIC_LIGHT_ENTITY},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 32,
+        "endpoint": 0,
+        "property": "targetValue",
+    }
+    assert args["value"] == 255
+
+    # Due to optimistic updates, the state should be on even though the Z-Wave state
+    # hasn't been updated yet
+    state = hass.states.get(BASIC_LIGHT_ENTITY)
+
+    assert state
+    assert state.state == STATE_ON
+
+    client.async_send_command.reset_mock()
+
+    # Send value to 0
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 2,
+            "args": {
+                "commandClassName": "Basic",
+                "commandClass": 32,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": 0,
+                "prevValue": None,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(BASIC_LIGHT_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+    # Turn on light with brightness
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": BASIC_LIGHT_ENTITY, ATTR_BRIGHTNESS: 128},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 32,
+        "endpoint": 0,
+        "property": "targetValue",
+    }
+    assert args["value"] == 50
+
+    # Since we specified a brightness, there is no optimistic update so the state
+    # should be off
+    state = hass.states.get(BASIC_LIGHT_ENTITY)
+
+    assert state
+    assert state.state == STATE_OFF
+
+    client.async_send_command.reset_mock()
+
+    # Turn off light
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": BASIC_LIGHT_ENTITY},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 32,
+        "endpoint": 0,
+        "property": "targetValue",
+    }
+    assert args["value"] == 0

@@ -107,11 +107,11 @@ async def test_setup_configuration_failure(
 
 @pytest.mark.parametrize("subscriber_side_effect", [SubscriberException()])
 async def test_setup_susbcriber_failure(
-    hass: HomeAssistant, warning_caplog, failing_subscriber, setup_base_platform
+    hass: HomeAssistant, caplog, failing_subscriber, setup_base_platform
 ) -> None:
     """Test configuration error."""
     await setup_base_platform()
-    assert "Subscriber error:" in warning_caplog.text
+    assert "Subscriber error:" in caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -119,7 +119,7 @@ async def test_setup_susbcriber_failure(
 
 
 async def test_setup_device_manager_failure(
-    hass: HomeAssistant, warning_caplog, setup_base_platform
+    hass: HomeAssistant, caplog, setup_base_platform
 ) -> None:
     """Test device manager api failure."""
     with patch(
@@ -130,7 +130,7 @@ async def test_setup_device_manager_failure(
     ):
         await setup_base_platform()
 
-    assert "Device manager error:" in warning_caplog.text
+    assert "Device manager error:" in caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1

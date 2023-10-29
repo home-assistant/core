@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
+from homeassistant.const import CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -61,23 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
-
-    configuration_url = None
-    if host := entry.data[CONF_HOST]:
-        configuration_url = f"http://{host}/"
-
-    assert entry.unique_id
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id)},
-        manufacturer="Netgear",
-        name=router.device_name,
-        model=router.model,
-        sw_version=router.firmware_version,
-        hw_version=router.hardware_version,
-        configuration_url=configuration_url,
-    )
 
     async def async_update_devices() -> bool:
         """Fetch data from the router."""

@@ -1669,7 +1669,7 @@ async def test_zha_group_light_entity(
         ColorMode.XY,
     ]
     # Light which is off has no color mode
-    assert "color_mode" not in group_state.attributes
+    assert group_state.attributes["color_mode"] is None
 
     # test turning the lights on and off from the HA
     await async_test_on_off_from_hass(hass, group_cluster_on_off, group_entity_id)

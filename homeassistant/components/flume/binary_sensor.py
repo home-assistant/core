@@ -15,8 +15,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
-    FLUME_AUTH,
     FLUME_DEVICES,
+    FLUME_NOTIFICATIONS_COORDINATOR,
     FLUME_TYPE_BRIDGE,
     FLUME_TYPE_SENSOR,
     KEY_DEVICE_ID,
@@ -84,7 +84,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Flume binary sensor.."""
     flume_domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    flume_auth = flume_domain_data[FLUME_AUTH]
     flume_devices = flume_domain_data[FLUME_DEVICES]
 
     flume_entity_list: list[
@@ -94,9 +93,7 @@ async def async_setup_entry(
     connection_coordinator = FlumeDeviceConnectionUpdateCoordinator(
         hass=hass, flume_devices=flume_devices
     )
-    notification_coordinator = FlumeNotificationDataUpdateCoordinator(
-        hass=hass, auth=flume_auth
-    )
+    notification_coordinator = flume_domain_data[FLUME_NOTIFICATIONS_COORDINATOR]
     flume_devices = get_valid_flume_devices(flume_devices)
     for device in flume_devices:
         device_id = device[KEY_DEVICE_ID]

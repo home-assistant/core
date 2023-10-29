@@ -25,6 +25,7 @@ from homeassistant.const import (
 
 from .const import (
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
@@ -32,6 +33,7 @@ from .const import (
     CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
@@ -82,7 +84,7 @@ DEFAULT_STRUCT_FORMAT = {
     DataType.INT64: ENTRY("q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
     DataType.UINT64: ENTRY("Q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
     DataType.FLOAT64: ENTRY("d", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.STRING: ENTRY("s", 1, PARM_IS_LEGAL(True, False, False, False, False)),
+    DataType.STRING: ENTRY("s", -1, PARM_IS_LEGAL(True, False, False, False, False)),
     DataType.CUSTOM: ENTRY("?", 0, PARM_IS_LEGAL(True, True, False, False, False)),
 }
 
@@ -97,6 +99,10 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     count = config.get(CONF_COUNT, None)
     structure = config.get(CONF_STRUCTURE, None)
     slave_count = config.get(CONF_SLAVE_COUNT, None)
+    slave_name = CONF_SLAVE_COUNT
+    if not slave_count:
+        slave_count = config.get(CONF_VIRTUAL_COUNT, 0)
+        slave_name = CONF_VIRTUAL_COUNT
     swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
     validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
     if count and not validator.count:
@@ -112,7 +118,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         error = f"{name}: `{CONF_STRUCTURE}` missing or empty, demanded with `{CONF_DATA_TYPE}: {data_type}`"
         raise vol.Invalid(error)
     if slave_count and not validator.slave_count:
-        error = f"{name}: `{CONF_SLAVE_COUNT}: {slave_count}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
+        error = f"{name}: `{slave_name}: {slave_count}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
         raise vol.Invalid(error)
     if swap_type != CONF_SWAP_NONE:
         swap_type_validator = {
@@ -137,7 +143,8 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
                 f"{name}: Size of structure is {size} bytes but `{CONF_COUNT}: {count}` is {bytecount} bytes"
             )
     else:
-        config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type].register_count
+        if data_type != DataType.STRING:
+            config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type].register_count
         if slave_count:
             structure = (
                 f">{slave_count + 1}{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
@@ -241,7 +248,8 @@ def duplicate_entity_validator(config: dict) -> dict:
                     addr += "_" + str(entry[CONF_COMMAND_ON])
                 if CONF_COMMAND_OFF in entry:
                     addr += "_" + str(entry[CONF_COMMAND_OFF])
-                addr += "_" + str(entry.get(CONF_SLAVE, 0))
+                inx = entry.get(CONF_SLAVE, None) or entry.get(CONF_DEVICE_ADDRESS, 0)
+                addr += "_" + str(inx)
                 if addr in addresses:
                     err = (
                         f"Modbus {component}/{name} address {addr} is duplicate, second"

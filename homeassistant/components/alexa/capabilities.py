@@ -580,8 +580,8 @@ class AlexaBrightnessController(AlexaCapability):
         """Read and return a property."""
         if name != "brightness":
             raise UnsupportedProperty(name)
-        if "brightness" in self.entity.attributes:
-            return round(self.entity.attributes["brightness"] / 255.0 * 100)
+        if brightness := self.entity.attributes.get("brightness"):
+            return round(brightness / 255.0 * 100)
         return 0
 
 
@@ -630,12 +630,16 @@ class AlexaColorController(AlexaCapability):
         if name != "color":
             raise UnsupportedProperty(name)
 
-        hue, saturation = self.entity.attributes.get(light.ATTR_HS_COLOR, (0, 0))
+        hue_saturation: tuple[float, float] | None
+        if (hue_saturation := self.entity.attributes.get(light.ATTR_HS_COLOR)) is None:
+            hue_saturation = (0, 0)
+        if (brightness := self.entity.attributes.get(light.ATTR_BRIGHTNESS)) is None:
+            brightness = 0
 
         return {
-            "hue": hue,
-            "saturation": saturation / 100.0,
-            "brightness": self.entity.attributes.get(light.ATTR_BRIGHTNESS, 0) / 255.0,
+            "hue": hue_saturation[0],
+            "saturation": hue_saturation[1] / 100.0,
+            "brightness": brightness / 255.0,
         }
 
 
@@ -683,10 +687,8 @@ class AlexaColorTemperatureController(AlexaCapability):
         """Read and return a property."""
         if name != "colorTemperatureInKelvin":
             raise UnsupportedProperty(name)
-        if "color_temp" in self.entity.attributes:
-            return color_util.color_temperature_mired_to_kelvin(
-                self.entity.attributes["color_temp"]
-            )
+        if color_temp := self.entity.attributes.get("color_temp"):
+            return color_util.color_temperature_mired_to_kelvin(color_temp)
         return None
 
 

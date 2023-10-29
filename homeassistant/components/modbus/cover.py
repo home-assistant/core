@@ -138,14 +138,9 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         """Update the state of the cover."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
-        # do not allow multiple active calls to the same platform
-        if self._call_active:
-            return
-        self._call_active = True
         result = await self._hub.async_pb_call(
             self._slave, self._address, 1, self._input_type
         )
-        self._call_active = False
         if result is None:
             if self._lazy_errors:
                 self._lazy_errors -= 1

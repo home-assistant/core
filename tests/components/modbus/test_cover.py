@@ -7,6 +7,7 @@ from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_STATE_CLOSED,
@@ -57,6 +58,18 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_ADDRESS: 1234,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SLAVE: 10,
+                    CONF_SCAN_INTERVAL: 20,
+                    CONF_LAZY_ERROR: 10,
+                }
+            ]
+        },
+        {
+            CONF_COVERS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_DEVICE_ADDRESS: 10,
                     CONF_SCAN_INTERVAL: 20,
                     CONF_LAZY_ERROR: 10,
                 }

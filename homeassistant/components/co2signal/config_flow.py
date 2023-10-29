@@ -9,14 +9,20 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
-from . import APIRatelimitExceeded, InvalidAuth, get_data
 from .const import CONF_COUNTRY_CODE, DOMAIN
+from .coordinator import get_data
+from .exceptions import APIRatelimitExceeded, InvalidAuth
 from .util import get_extra_name
 
-TYPE_USE_HOME = "Use home location"
-TYPE_SPECIFY_COORDINATES = "Specify coordinates"
-TYPE_SPECIFY_COUNTRY = "Specify country code"
+TYPE_USE_HOME = "use_home_location"
+TYPE_SPECIFY_COORDINATES = "specify_coordinates"
+TYPE_SPECIFY_COUNTRY = "specify_country_code"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -31,11 +37,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         data_schema = vol.Schema(
             {
-                vol.Required("location", default=TYPE_USE_HOME): vol.In(
-                    (
-                        TYPE_USE_HOME,
-                        TYPE_SPECIFY_COORDINATES,
-                        TYPE_SPECIFY_COUNTRY,
+                vol.Required("location"): SelectSelector(
+                    SelectSelectorConfig(
+                        translation_key="location",
+                        mode=SelectSelectorMode.LIST,
+                        options=[
+                            TYPE_USE_HOME,
+                            TYPE_SPECIFY_COORDINATES,
+                            TYPE_SPECIFY_COUNTRY,
+                        ],
                     )
                 ),
                 vol.Required(CONF_API_KEY): cv.string,

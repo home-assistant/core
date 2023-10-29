@@ -1,4 +1,5 @@
 """Tests for the GogoGate2 component."""
+from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 from ismartgate import GogoGate2Api, ISmartGateApi
@@ -104,8 +105,8 @@ async def test_form_homekit_unique_id_already_setup(hass: HomeAssistant) -> None
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -132,8 +133,8 @@ async def test_form_homekit_unique_id_already_setup(hass: HomeAssistant) -> None
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -157,8 +158,8 @@ async def test_form_homekit_ip_address_already_setup(hass: HomeAssistant) -> Non
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -176,8 +177,8 @@ async def test_form_homekit_ip_address(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -259,8 +260,8 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,

@@ -19,6 +19,7 @@ from homeassistant.components.alexa import (
 from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.aiohttp import MockRequest, serialize_response
@@ -85,6 +86,11 @@ class CloudClient(Interface):
     def remote_autostart(self) -> bool:
         """Return true if we want start a remote connection."""
         return self._prefs.remote_enabled
+
+    @property
+    def client_name(self) -> str:
+        """Return the client name that will be used for API calls."""
+        return SERVER_SOFTWARE
 
     @property
     def relayer_region(self) -> str | None:

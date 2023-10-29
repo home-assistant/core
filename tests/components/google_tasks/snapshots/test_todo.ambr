@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_create_todo_list_item[api_responses0]
+  tuple(
+    'https://tasks.googleapis.com/tasks/v1/lists/task-list-id-1/tasks?alt=json',
+    'POST',
+  )
+# ---
+# name: test_create_todo_list_item[api_responses0].1
+  '{"title": "Soda", "status": "needsAction"}'
+# ---
+# name: test_partial_update_status[api_responses0]
+  tuple(
+    'https://tasks.googleapis.com/tasks/v1/lists/task-list-id-1/tasks/some-task-id?alt=json',
+    'PATCH',
+  )
+# ---
+# name: test_partial_update_status[api_responses0].1
+  '{"status": "needsAction"}'
+# ---
+# name: test_partial_update_title[api_responses0]
+  tuple(
+    'https://tasks.googleapis.com/tasks/v1/lists/task-list-id-1/tasks/some-task-id?alt=json',
+    'PATCH',
+  )
+# ---
+# name: test_partial_update_title[api_responses0].1
+  '{"title": "Soda"}'
+# ---
+# name: test_update_todo_list_item[api_responses0]
+  tuple(
+    'https://tasks.googleapis.com/tasks/v1/lists/task-list-id-1/tasks/some-task-id?alt=json',
+    'PATCH',
+  )
+# ---
+# name: test_update_todo_list_item[api_responses0].1
+  '{"title": "Soda", "status": "completed"}'
+# ---

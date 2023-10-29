@@ -1,4 +1,6 @@
 """Tests for the Roku component."""
+from ipaddress import ip_address
+
 from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_SERIAL
 
@@ -23,8 +25,8 @@ MOCK_SSDP_DISCOVERY_INFO = ssdp.SsdpServiceInfo(
 HOMEKIT_HOST = "192.168.1.161"
 
 MOCK_HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    host=HOMEKIT_HOST,
-    addresses=[HOMEKIT_HOST],
+    ip_address=ip_address(HOMEKIT_HOST),
+    ip_addresses=[ip_address(HOMEKIT_HOST)],
     hostname="mock_hostname",
     name="onn._hap._tcp.local.",
     port=None,

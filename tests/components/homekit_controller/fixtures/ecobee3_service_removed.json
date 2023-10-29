@@ -1,0 +1,561 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "type": "3E",
+        "characteristics": [
+          {
+            "value": "HomeW",
+            "perms": ["pr"],
+            "type": "23",
+            "format": "string",
+            "iid": 2
+          },
+          {
+            "value": "ecobee Inc.",
+            "perms": ["pr"],
+            "type": "20",
+            "format": "string",
+            "iid": 3
+          },
+          {
+            "value": "123456789012",
+            "perms": ["pr"],
+            "type": "30",
+            "format": "string",
+            "iid": 4
+          },
+          {
+            "value": "ecobee3",
+            "perms": ["pr"],
+            "type": "21",
+            "format": "string",
+            "iid": 5
+          },
+          {
+            "perms": ["pw"],
+            "type": "14",
+            "format": "bool",
+            "iid": 6
+          },
+          {
+            "value": "4.2.394",
+            "perms": ["pr"],
+            "type": "52",
+            "format": "string",
+            "iid": 8
+          },
+          {
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "type": "A6",
+            "format": "uint32",
+            "iid": 9
+          }
+        ],
+        "iid": 1
+      },
+      {
+        "type": "A2",
+        "characteristics": [
+          {
+            "value": "1.1.0",
+            "perms": ["pr"],
+            "maxLen": 64,
+            "type": "37",
+            "format": "string",
+            "iid": 31
+          }
+        ],
+        "iid": 30
+      },
+      {
+        "primary": true,
+        "type": "4A",
+        "characteristics": [
+          {
+            "value": 1,
+            "maxValue": 2,
+            "minStep": 1,
+            "perms": ["pr", "ev"],
+            "type": "F",
+            "minValue": 0,
+            "format": "uint8",
+            "iid": 17
+          },
+          {
+            "value": 1,
+            "maxValue": 3,
+            "minStep": 1,
+            "perms": ["pr", "pw", "ev"],
+            "type": "33",
+            "minValue": 0,
+            "format": "uint8",
+            "iid": 18
+          },
+          {
+            "value": 21.8,
+            "maxValue": 100,
+            "minStep": 0.1,
+            "perms": ["pr", "ev"],
+            "unit": "celsius",
+            "type": "11",
+            "minValue": 0,
+            "format": "float",
+            "iid": 19
+          },
+          {
+            "value": 22.2,
+            "maxValue": 33.3,
+            "minStep": 0.1,
+            "perms": ["pr", "pw", "ev"],
+            "unit": "celsius",
+            "type": "35",
+            "minValue": 7.2,
+            "format": "float",
+            "iid": 20
+          },
+          {
+            "value": 1,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "pw", "ev"],
+            "type": "36",
+            "minValue": 0,
+            "format": "uint8",
+            "iid": 21
+          },
+          {
+            "value": 24.4,
+            "maxValue": 33.3,
+            "minStep": 0.1,
+            "perms": ["pr", "pw", "ev"],
+            "unit": "celsius",
+            "type": "D",
+            "minValue": 18.3,
+            "format": "float",
+            "iid": 22
+          },
+          {
+            "value": 22.2,
+            "maxValue": 26.1,
+            "minStep": 0.1,
+            "perms": ["pr", "pw", "ev"],
+            "unit": "celsius",
+            "type": "12",
+            "minValue": 7.2,
+            "format": "float",
+            "iid": 23
+          },
+          {
+            "value": 34,
+            "maxValue": 100,
+            "minStep": 1,
+            "perms": ["pr", "ev"],
+            "unit": "percentage",
+            "type": "10",
+            "minValue": 0,
+            "format": "float",
+            "iid": 24
+          },
+          {
+            "value": 36,
+            "maxValue": 50,
+            "minStep": 1,
+            "perms": ["pr", "pw", "ev"],
+            "unit": "percentage",
+            "type": "34",
+            "minValue": 20,
+            "format": "float",
+            "iid": 25
+          },
+          {
+            "value": "HomeW",
+            "perms": ["pr"],
+            "type": "23",
+            "format": "string",
+            "iid": 27
+          }
+        ],
+        "iid": 16
+      }
+    ]
+  },
+  {
+    "aid": 2,
+    "services": [
+      {
+        "type": "3E",
+        "characteristics": [
+          {
+            "value": "Kitchen",
+            "perms": ["pr"],
+            "type": "23",
+            "format": "string",
+            "iid": 2049
+          },
+          {
+            "value": "ecobee Inc.",
+            "perms": ["pr"],
+            "type": "20",
+            "format": "string",
+            "iid": 2050
+          },
+          {
+            "value": "AB1C",
+            "perms": ["pr"],
+            "type": "30",
+            "format": "string",
+            "iid": 2051
+          },
+          {
+            "value": "REMOTE SENSOR",
+            "perms": ["pr"],
+            "type": "21",
+            "format": "string",
+            "iid": 2052
+          },
+          {
+            "value": "1.0.0",
+            "perms": ["pr"],
+            "type": "52",
+            "format": "string",
+            "iid": 8
+          },
+          {
+            "perms": ["pw"],
+            "type": "14",
+            "format": "bool",
+            "iid": 2053
+          }
+        ],
+        "iid": 1
+      },
+      {
+        "type": "8A",
+        "characteristics": [
+          {
+            "value": 21.5,
+            "maxValue": 100,
+            "minStep": 0.1,
+            "perms": ["pr", "ev"],
+            "unit": "celsius",
+            "type": "11",
+            "minValue": 0,
+            "format": "float",
+            "iid": 2064
+          },
+          {
+            "value": "Kitchen",
+            "perms": ["pr"],
+            "type": "23",
+            "format": "string",
+            "iid": 2067
+          },
+          {
+            "value": true,
+            "perms": ["pr", "ev"],
+            "type": "75",
+            "format": "bool",
+            "iid": 2066
+          },
+          {
+            "value": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "ev"],
+            "type": "79",
+            "minValue": 0,
+            "format": "uint8",
+            "iid": 2065
+          }
+        ],
+        "iid": 55
+      },
+      {
+        "type": "85",
+        "characteristics": [
+          {
+            "value": false,
+            "perms": ["pr", "ev"],
+            "type": "22",
+            "format": "bool",
+            "iid": 2060
+          },
+          {
+            "value": "Kitchen",
+            "perms": ["pr"],
+            "type": "23",
+            "format": "string",
+            "iid": 2063
+          },
+          {
+            "value": true,
+            "perms": ["pr", "ev"],
+            "type": "75",
+            "format": "bool",
+            "iid": 2062
+          },
+          {
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "ev"],
+            "type": "79",
+            "value": 0,
+            "format": "uint8",
+            "iid": 2061
+          },
+          {
+            "minValue": -1,
+            "maxValue": 86400,
+            "perms": ["pr", "ev"],
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "value": 3620,
+            "format": "int",
+            "iid": 2059
+          }
+        ],
+        "iid": 56
+      }
+    ]
+  },
+  {
+    "aid": 3,
+    "services": [
+      {
+        "type": "3E",
+        "characteristics": [
+          {
+            "value": "Porch",
+            "perms": ["pr"],
+            "type": "23",
+            "format": "string",
+            "iid": 3073
+          },
+          {
+            "value": "ecobee Inc.",
+            "perms": ["pr"],
+            "type": "20",
+            "format": "string",
+            "iid": 3074
+          },
+          {
+            "value": "AB2C",
+            "perms": ["pr"],
+            "type": "30",
+            "format": "string",
+            "iid": 3075
+          },
+          {
+            "value": "REMOTE SENSOR",
+            "perms": ["pr"],
+            "type": "21",
+            "format": "string",
+            "iid": 3076
+          },
+          {
+            "value": "1.0.0",
+            "perms": ["pr"],
+            "type": "52",
+            "format": "string",
+            "iid": 8
+          },
+          {
+            "perms": ["pw"],
+            "type": "14",
+            "format": "bool",
+            "iid": 3077
+          }
+        ],
+        "iid": 1
+      },
+      {
+        "type": "8A",
+        "characteristics": [
+          {
+            "value": 21,
+            "maxValue": 100,
+            "minStep": 0.1,
+            "perms": ["pr", "ev"],
+            "unit": "celsius",
+            "type": "11",
+            "minValue": 0,
+            "format": "float",
+            "iid": 3088
+          },
+          {
+            "value": "Porch",
+            "perms": ["pr"],
+            "type": "23",
+            "format": "string",
+            "iid": 3091
+          },
+          {
+            "value": true,
+            "perms": ["pr", "ev"],
+            "type": "75",
+            "format": "bool",
+            "iid": 3090
+          },
+          {
+            "value": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "ev"],
+            "type": "79",
+            "minValue": 0,
+            "format": "uint8",
+            "iid": 3089
+          }
+        ],
+        "iid": 55
+      },
+      {
+        "type": "85",
+        "characteristics": [
+          {
+            "value": false,
+            "perms": ["pr", "ev"],
+            "type": "22",
+            "format": "bool",
+            "iid": 3084
+          },
+          {
+            "value": "Porch",
+            "perms": ["pr"],
+            "type": "23",
+            "format": "string",
+            "iid": 3087
+          },
+          {
+            "value": true,
+            "perms": ["pr", "ev"],
+            "type": "75",
+            "format": "bool",
+            "iid": 3086
+          },
+          {
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "ev"],
+            "type": "79",
+            "value": 0,
+            "format": "uint8",
+            "iid": 3085
+          },
+          {
+            "minValue": -1,
+            "maxValue": 86400,
+            "perms": ["pr", "ev"],
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "value": 5766,
+            "format": "int",
+            "iid": 3083
+          }
+        ],
+        "iid": 56
+      }
+    ]
+  },
+  {
+    "aid": 4,
+    "services": [
+      {
+        "type": "3E",
+        "characteristics": [
+          {
+            "value": "Basement",
+            "perms": ["pr"],
+            "type": "23",
+            "format": "string",
+            "iid": 4097
+          },
+          {
+            "value": "ecobee Inc.",
+            "perms": ["pr"],
+            "type": "20",
+            "format": "string",
+            "iid": 4098
+          },
+          {
+            "value": "AB3C",
+            "perms": ["pr"],
+            "type": "30",
+            "format": "string",
+            "iid": 4099
+          },
+          {
+            "value": "REMOTE SENSOR",
+            "perms": ["pr"],
+            "type": "21",
+            "format": "string",
+            "iid": 4100
+          },
+          {
+            "value": "1.0.0",
+            "perms": ["pr"],
+            "type": "52",
+            "format": "string",
+            "iid": 8
+          },
+          {
+            "perms": ["pw"],
+            "type": "14",
+            "format": "bool",
+            "iid": 4101
+          }
+        ],
+        "iid": 1
+      },
+      {
+        "type": "85",
+        "characteristics": [
+          {
+            "value": false,
+            "perms": ["pr", "ev"],
+            "type": "22",
+            "format": "bool",
+            "iid": 4108
+          },
+          {
+            "value": "Basement",
+            "perms": ["pr"],
+            "type": "23",
+            "format": "string",
+            "iid": 4111
+          },
+          {
+            "value": true,
+            "perms": ["pr", "ev"],
+            "type": "75",
+            "format": "bool",
+            "iid": 4110
+          },
+          {
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "ev"],
+            "type": "79",
+            "value": 0,
+            "format": "uint8",
+            "iid": 4109
+          },
+          {
+            "minValue": -1,
+            "maxValue": 86400,
+            "perms": ["pr", "ev"],
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "value": 5472,
+            "format": "int",
+            "iid": 4107
+          }
+        ],
+        "iid": 56
+      }
+    ]
+  }
+]

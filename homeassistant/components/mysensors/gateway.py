@@ -42,6 +42,7 @@ from .const import (
 )
 from .handler import HANDLERS
 from .helpers import (
+    discover_mysensors_node,
     discover_mysensors_platform,
     on_unload,
     validate_child,
@@ -244,6 +245,7 @@ async def _discover_persistent_devices(
     for node_id in gateway.sensors:
         if not validate_node(gateway, node_id):
             continue
+        discover_mysensors_node(hass, entry.entry_id, node_id)
         node: Sensor = gateway.sensors[node_id]
         for child in node.children.values():  # child is of type ChildSensor
             validated = validate_child(entry.entry_id, gateway, node_id, child)

@@ -470,3 +470,19 @@ def text_node(gateway_nodes: dict[int, Sensor], text_node_state: dict) -> Sensor
     nodes = update_gateway_nodes(gateway_nodes, text_node_state)
     node = nodes[1]
     return node
+
+
+@pytest.fixture(name="battery_sensor_state", scope="session")
+def battery_sensor_state_fixture() -> dict:
+    """Load the battery sensor state."""
+    return load_nodes_state("battery_sensor_state.json")
+
+
+@pytest.fixture
+def battery_sensor(
+    gateway_nodes: dict[int, Sensor], battery_sensor_state: dict
+) -> Sensor:
+    """Load the battery sensor."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(battery_sensor_state))
+    node = nodes[1]
+    return node

@@ -190,7 +190,11 @@ async def test_lookup_media_for_other_integrations(
     assert result.shuffle
 
     # Test with media not found
-    with patch("plexapi.library.LibrarySection.search", return_value=None):
+    with patch(
+        "plexapi.library.LibrarySection.search",
+        return_value=None,
+        __qualname__="search",
+    ):
         with pytest.raises(HomeAssistantError) as excinfo:
             process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID_BAD_MEDIA)
         assert f"No {MediaType.MUSIC} results in 'Music' for" in str(excinfo.value)

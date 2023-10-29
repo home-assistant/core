@@ -207,7 +207,7 @@ async def test_setup_zha_multipan(
         "radio_type": "ezsp",
     }
     assert config_entry.options == {}
-    assert config_entry.title == "SkyConnect Multi-PAN"
+    assert config_entry.title == "SkyConnect Multiprotocol"
 
 
 async def test_setup_zha_multipan_other_device(

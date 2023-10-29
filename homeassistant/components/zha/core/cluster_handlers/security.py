@@ -369,12 +369,11 @@ class IASZoneClusterHandler(ClusterHandler):
         ieee = self.cluster.endpoint.device.application.state.node_info.ieee
 
         try:
-            res = await self.write_attributes_safe({"cie_addr": ieee})
+            await self.write_attributes_safe({"cie_addr": ieee})
             self.debug(
-                "wrote cie_addr: %s to '%s' cluster: %s",
+                "wrote cie_addr: %s to '%s' cluster",
                 str(ieee),
                 self._cluster.ep_attribute,
-                res[0],
             )
         except HomeAssistantError as ex:
             self.debug(

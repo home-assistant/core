@@ -28,7 +28,17 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import TYPE_CHECKING, Any, Generic, ParamSpec, Self, TypeVar, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Literal,
+    ParamSpec,
+    Self,
+    TypeVar,
+    cast,
+    overload,
+)
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -95,6 +105,7 @@ if TYPE_CHECKING:
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
+    from .helpers.entity import StateInfo
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
@@ -198,6 +209,18 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
+def is_callback_check_partial(target: Callable[..., Any]) -> bool:
+    """Check if function is safe to be called in the event loop.
+
+    This version of is_callback will also check if the target is a partial
+    and walk the chain of partials to find the original function.
+    """
+    check_target = target
+    while isinstance(check_target, functools.partial):
+        check_target = check_target.func
+    return is_callback(check_target)
+
+
 class _Hass(threading.local):
     """Container which makes a HomeAssistant instance available to the event loop."""
 
@@ -219,6 +242,19 @@ def async_get_hass() -> HomeAssistant:
     if not _hass.hass:
         raise HomeAssistantError("async_get_hass called from the wrong thread")
     return _hass.hass
+
+
+@callback
+def get_release_channel() -> Literal["beta", "dev", "nightly", "stable"]:
+    """Find release channel based on version number."""
+    version = __version__
+    if "dev0" in version:
+        return "dev"
+    if "dev" in version:
+        return "nightly"
+    if "b" in version:
+        return "beta"
+    return "stable"
 
 
 @enum.unique
@@ -1117,9 +1153,9 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if event_filter is not None and not is_callback(event_filter):
+        if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
-        if run_immediately and not is_callback(listener):
+        if run_immediately and not is_callback_check_partial(listener):
             raise HomeAssistantError(f"Event listener {listener} is not a callback")
         return self._async_listen_filterable_job(
             event_type,
@@ -1249,6 +1285,7 @@ class State:
         last_updated: datetime.datetime | None = None,
         context: Context | None = None,
         validate_entity_id: bool | None = True,
+        state_info: StateInfo | None = None,
     ) -> None:
         """Initialize a new state."""
         state = str(state)
@@ -1267,6 +1304,7 @@ class State:
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
+        self.state_info = state_info
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
@@ -1637,6 +1675,7 @@ class StateMachine:
         attributes: Mapping[str, Any] | None = None,
         force_update: bool = False,
         context: Context | None = None,
+        state_info: StateInfo | None = None,
     ) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -1688,6 +1727,7 @@ class StateMachine:
             now,
             context,
             old_state is None,
+            state_info,
         )
         if old_state is not None:
             old_state.expire()
@@ -2101,11 +2141,14 @@ class Config:
         # Dictionary of Media folders that integrations may use
         self.media_dirs: dict[str, str] = {}
 
-        # If Home Assistant is running in safe mode
-        self.safe_mode: bool = False
+        # If Home Assistant is running in recovery mode
+        self.recovery_mode: bool = False
 
         # Use legacy template behavior
         self.legacy_templates: bool = False
+
+        # If Home Assistant is running in safe mode
+        self.safe_mode: bool = False
 
     def distance(self, lat: float, lon: float) -> float | None:
         """Calculate distance from Home Assistant.
@@ -2180,13 +2223,14 @@ class Config:
             "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
-            "safe_mode": self.safe_mode,
+            "recovery_mode": self.recovery_mode,
             "state": self.hass.state.value,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
             "country": self.country,
             "language": self.language,
+            "safe_mode": self.safe_mode,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:

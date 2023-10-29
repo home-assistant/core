@@ -21,6 +21,7 @@
     'model': 'Mock Model',
     'name': 'Mock Title',
     'name_by_user': None,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': '1.2.3',
     'via_device_id': None,

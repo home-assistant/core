@@ -39,6 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
     """Define an Airzone entity."""
 
+    _attr_has_entity_name = True
+
     def get_airzone_value(self, key: str) -> Any:
         """Return Airzone entity value by key."""
         raise NotImplementedError()
@@ -62,7 +64,7 @@ class AirzoneSystemEntity(AirzoneEntity):
             identifiers={(DOMAIN, f"{entry.entry_id}_{self.system_id}")},
             manufacturer=MANUFACTURER,
             model=self.get_airzone_value(AZD_MODEL),
-            name=self.get_airzone_value(AZD_FULL_NAME),
+            name=f"System {self.system_id}",
             sw_version=self.get_airzone_value(AZD_FIRMWARE),
             via_device=(DOMAIN, f"{entry.entry_id}_ws"),
         )
@@ -172,7 +174,7 @@ class AirzoneZoneEntity(AirzoneEntity):
             identifiers={(DOMAIN, f"{entry.entry_id}_{system_zone_id}")},
             manufacturer=MANUFACTURER,
             model=self.get_airzone_value(AZD_THERMOSTAT_MODEL),
-            name=f"Airzone [{system_zone_id}] {zone_data[AZD_NAME]}",
+            name=zone_data[AZD_NAME],
             sw_version=self.get_airzone_value(AZD_THERMOSTAT_FW),
             via_device=(DOMAIN, f"{entry.entry_id}_{self.system_id}"),
         )

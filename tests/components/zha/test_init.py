@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from zigpy.application import ControllerApplication
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import TransientConnectionError
 
@@ -12,8 +13,14 @@ from homeassistant.components.zha.core.const import (
     CONF_USB_PATH,
     DOMAIN,
 )
-from homeassistant.const import MAJOR_VERSION, MINOR_VERSION, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.components.zha.core.helpers import get_zha_data
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    MAJOR_VERSION,
+    MINOR_VERSION,
+    Platform,
+)
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
 
@@ -136,7 +143,10 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
     "homeassistant.components.zha.websocket_api.async_load_api", Mock(return_value=True)
 )
 async def test_setup_with_v3_cleaning_uri(
-    hass: HomeAssistant, path: str, cleaned_path: str, mock_zigpy_connect
+    hass: HomeAssistant,
+    path: str,
+    cleaned_path: str,
+    mock_zigpy_connect: ControllerApplication,
 ) -> None:
     """Test migration of config entry from v3, applying corrections to the port path."""
     config_entry_v3 = MockConfigEntry(
@@ -166,7 +176,7 @@ async def test_zha_retry_unique_ids(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     zigpy_device_mock,
-    mock_zigpy_connect,
+    mock_zigpy_connect: ControllerApplication,
     caplog,
 ) -> None:
     """Test that ZHA retrying creates unique entity IDs."""
@@ -174,7 +184,7 @@ async def test_zha_retry_unique_ids(
     config_entry.add_to_hass(hass)
 
     # Ensure we have some device to try to load
-    app = mock_zigpy_connect.return_value
+    app = mock_zigpy_connect
     light = zigpy_device_mock(LIGHT_ON_OFF)
     app.devices[light.ieee] = light
 
@@ -199,3 +209,26 @@ async def test_zha_retry_unique_ids(
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert "does not generate unique IDs" not in caplog.text
+
+
+async def test_shutdown_on_ha_stop(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test that the ZHA gateway is stopped when HA is shut down."""
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    zha_data = get_zha_data(hass)
+
+    with patch.object(
+        zha_data.gateway, "shutdown", wraps=zha_data.gateway.shutdown
+    ) as mock_shutdown:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.state = CoreState.stopping
+        await hass.async_block_till_done()
+
+    assert len(mock_shutdown.mock_calls) == 1

@@ -394,8 +394,8 @@ def _async_track_event(
     if listeners_key not in hass_data:
         hass_data[listeners_key] = hass.bus.async_listen(
             event_type,
-            callback(ft.partial(dispatcher_callable, hass, callbacks)),
-            event_filter=callback(ft.partial(filter_callable, hass, callbacks)),
+            ft.partial(dispatcher_callable, hass, callbacks),
+            event_filter=ft.partial(filter_callable, hass, callbacks),
         )
 
     job = HassJob(action, f"track {event_type} event {keys}")
@@ -1357,7 +1357,10 @@ def async_track_point_in_time(
     | Callable[[datetime], Coroutine[Any, Any, None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
-    """Add a listener that fires once after a specific point in time."""
+    """Add a listener that fires once at or after a specific point in time.
+
+    The listener is passed the time it fires in local time.
+    """
     job = (
         action
         if isinstance(action, HassJob)
@@ -1388,7 +1391,10 @@ def async_track_point_in_utc_time(
     | Callable[[datetime], Coroutine[Any, Any, None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
-    """Add a listener that fires once after a specific point in UTC time."""
+    """Add a listener that fires once at or after a specific point in time.
+
+    The listener is passed the time it fires in UTC time.
+    """
     # Ensure point_in_time is UTC
     utc_point_in_time = dt_util.as_utc(point_in_time)
     expected_fire_timestamp = dt_util.utc_to_timestamp(utc_point_in_time)
@@ -1450,7 +1456,10 @@ def async_call_at(
     | Callable[[datetime], Coroutine[Any, Any, None] | None],
     loop_time: float,
 ) -> CALLBACK_TYPE:
-    """Add a listener that is called at <loop_time>."""
+    """Add a listener that fires at or after <loop_time>.
+
+    The listener is passed the time it fires in UTC time.
+    """
     job = (
         action
         if isinstance(action, HassJob)
@@ -1467,7 +1476,10 @@ def async_call_later(
     action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
     | Callable[[datetime], Coroutine[Any, Any, None] | None],
 ) -> CALLBACK_TYPE:
-    """Add a listener that is called in <delay>."""
+    """Add a listener that fires at or after <delay>.
+
+    The listener is passed the time it fires in UTC time.
+    """
     if isinstance(delay, timedelta):
         delay = delay.total_seconds()
     job = (
@@ -1492,7 +1504,10 @@ def async_track_time_interval(
     name: str | None = None,
     cancel_on_shutdown: bool | None = None,
 ) -> CALLBACK_TYPE:
-    """Add a listener that fires repetitively at every timedelta interval."""
+    """Add a listener that fires repetitively at every timedelta interval.
+
+    The listener is passed the time it fires in UTC time.
+    """
     remove: CALLBACK_TYPE
     interval_listener_job: HassJob[[datetime], None]
     interval_seconds = interval.total_seconds()
@@ -1636,7 +1651,10 @@ def async_track_utc_time_change(
     second: Any | None = None,
     local: bool = False,
 ) -> CALLBACK_TYPE:
-    """Add a listener that will fire if time matches a pattern."""
+    """Add a listener that will fire every time the UTC or local time matches a pattern.
+
+    The listener is passed the time it fires in UTC or local time.
+    """
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
     if all(val is None or val == "*" for val in (hour, minute, second)):
@@ -1711,7 +1729,10 @@ def async_track_time_change(
     minute: Any | None = None,
     second: Any | None = None,
 ) -> CALLBACK_TYPE:
-    """Add a listener that will fire if local time matches a pattern."""
+    """Add a listener that will fire every time the local time matches a pattern.
+
+    The listener is passed the time it fires in local time.
+    """
     return async_track_utc_time_change(hass, action, hour, minute, second, local=True)
 
 

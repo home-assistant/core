@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components import homeassistant_sky_connect, usb
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
-from homeassistant.components.zha.core.const import (
+from homeassistant.components.zha import (
     CONF_DEVICE_PATH,
     DOMAIN as ZHA_DOMAIN,
     RadioType,

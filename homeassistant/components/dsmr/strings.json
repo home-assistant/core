@@ -76,6 +76,12 @@
       "gas_meter_reading": {
         "name": "Gas consumption"
       },
+      "current_average_demand": {
+        "name": "Current average demand"
+      },
+      "maximum_demand_current_month": {
+        "name": "Maximum demand current month"
+      },
       "instantaneous_active_power_l1_negative": {
         "name": "Power production phase L1"
       },

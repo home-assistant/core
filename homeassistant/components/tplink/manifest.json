@@ -155,6 +155,14 @@
     {
       "hostname": "k[lps]*",
       "macaddress": "788CB5*"
+    },
+    {
+      "hostname": "k[lps]*",
+      "macaddress": "3460F9*"
+    },
+    {
+      "hostname": "k[lps]*",
+      "macaddress": "1C61B4*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/tplink",

@@ -5,6 +5,7 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
 from datetime import timedelta
+import time
 from typing import Any, cast
 
 import jwt
@@ -12,7 +13,6 @@ import jwt
 from homeassistant import data_entry_flow
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.util import dt as dt_util
 
 from . import auth_store, jwt_wrapper, models
 from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN
@@ -505,12 +505,13 @@ class AuthManager:
 
         self._store.async_log_refresh_token_usage(refresh_token, remote_ip)
 
-        now = dt_util.utcnow()
+        now = int(time.time())
+        expire_seconds = int(refresh_token.access_token_expiration.total_seconds())
         return jwt.encode(
             {
                 "iss": refresh_token.id,
                 "iat": now,
-                "exp": now + refresh_token.access_token_expiration,
+                "exp": now + expire_seconds,
             },
             refresh_token.jwt_key,
             algorithm="HS256",

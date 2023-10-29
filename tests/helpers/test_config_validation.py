@@ -563,6 +563,9 @@ def test_string_with_no_html() -> None:
     with pytest.raises(vol.Invalid):
         schema("<b>Bold</b>")
 
+    with pytest.raises(vol.Invalid):
+        schema("HTML element names are <EM>case-insensitive</eM>.")
+
     for value in (
         True,
         3,

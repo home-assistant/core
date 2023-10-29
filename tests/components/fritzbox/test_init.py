@@ -21,12 +21,14 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import FritzDeviceSwitchMock, setup_config_entry
 from .const import CONF_FAKE_AIN, CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
@@ -248,6 +250,68 @@ async def test_unload_remove(hass: HomeAssistant, fritz: Mock) -> None:
     assert entry.state is ConfigEntryState.NOT_LOADED
     state = hass.states.get(entity_id)
     assert state is None
+
+
+async def test_remove_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    fritz: Mock,
+) -> None:
+    """Test removing of a device."""
+    assert await async_setup_component(hass, "config", {})
+    assert await setup_config_entry(
+        hass,
+        MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        f"{FB_DOMAIN}.{CONF_FAKE_NAME}",
+        FritzDeviceSwitchMock(),
+        fritz,
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries()
+    assert len(entries) == 1
+
+    entry = entries[0]
+    assert entry.supports_remove_device
+
+    entity = entity_registry.async_get("switch.fake_name")
+    good_device = device_registry.async_get(entity.device_id)
+
+    orphan_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(FB_DOMAIN, "0000 000000")},
+    )
+
+    # try to delete good_device
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": entry.entry_id,
+            "device_id": good_device.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "unknown_error"
+    await hass.async_block_till_done()
+
+    # try to delete orphan_device
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": entry.entry_id,
+            "device_id": orphan_device.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
 
 
 async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) -> None:

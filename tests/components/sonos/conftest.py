@@ -1,5 +1,6 @@
 """Configuration for Sonos tests."""
 from copy import copy
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -69,8 +70,8 @@ class SonosMockEvent:
 def zeroconf_payload():
     """Return a default zeroconf payload."""
     return zeroconf.ZeroconfServiceInfo(
-        host="192.168.4.2",
-        addresses=["192.168.4.2"],
+        ip_address=ip_address("192.168.4.2"),
+        ip_addresses=[ip_address("192.168.4.2")],
         hostname="Sonos-aaa",
         name="Sonos-aaa@Living Room._sonos._tcp.local.",
         port=None,

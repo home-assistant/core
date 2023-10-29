@@ -72,7 +72,8 @@ class AbstractOAuth2Implementation(ABC):
         Pass external data in with:
 
         await hass.config_entries.flow.async_configure(
-            flow_id=flow_id, user_input={'code': 'abcd', 'state': { … }
+            flow_id=flow_id, user_input={'code': 'abcd', 'state': … }
+
         )
 
         """
@@ -317,6 +318,10 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         except asyncio.TimeoutError as err:
             _LOGGER.error("Timeout resolving OAuth token: %s", err)
             return self.async_abort(reason="oauth2_timeout")
+
+        if "expires_in" not in token:
+            _LOGGER.warning("Invalid token: %s", token)
+            return self.async_abort(reason="oauth_error")
 
         # Force int for non-compliant oauth2 providers
         try:

@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if len(hass.data[UNIFI_DOMAIN]) == 1:
         async_setup_services(hass)
 
-    api.start_websocket()
+    controller.start_websocket()
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)

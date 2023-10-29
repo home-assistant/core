@@ -159,8 +159,6 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
 class AirzoneAidooBinarySensor(AirzoneAidooEntity, AirzoneBinarySensor):
     """Define an Airzone Cloud Aidoo binary sensor."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -180,8 +178,6 @@ class AirzoneAidooBinarySensor(AirzoneAidooEntity, AirzoneBinarySensor):
 class AirzoneSystemBinarySensor(AirzoneSystemEntity, AirzoneBinarySensor):
     """Define an Airzone Cloud System binary sensor."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -200,8 +196,6 @@ class AirzoneSystemBinarySensor(AirzoneSystemEntity, AirzoneBinarySensor):
 
 class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
     """Define an Airzone Cloud Zone binary sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

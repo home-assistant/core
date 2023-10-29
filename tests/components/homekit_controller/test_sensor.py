@@ -311,10 +311,9 @@ async def test_sensor_unavailable(hass: HomeAssistant, utcnow) -> None:
     """Test a sensor becoming unavailable."""
     helper = await setup_test_component(hass, create_switch_with_sensor)
 
-    # Find the energy sensor and mark it as offline
     outlet = helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
+    on_char = outlet[CharacteristicsTypes.ON]
     realtime_energy = outlet[CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY]
-    realtime_energy.status = HapStatusCode.UNABLE_TO_COMMUNICATE
 
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
     energy_helper = Helper(
@@ -325,9 +324,31 @@ async def test_sensor_unavailable(hass: HomeAssistant, utcnow) -> None:
         helper.config_entry,
     )
 
+    # Find the outlet on char and mark it as offline
+    await helper.async_set_aid_iid_status(
+        [
+            (
+                helper.accessory.aid,
+                on_char.iid,
+                HapStatusCode.UNABLE_TO_COMMUNICATE.value,
+            )
+        ]
+    )
+
     # Outlet has non-responsive characteristics so should be unavailable
     state = await helper.poll_and_get_state()
     assert state.state == "unavailable"
+
+    # Find the energy sensor and mark it as offline
+    await helper.async_set_aid_iid_status(
+        [
+            (
+                energy_helper.accessory.aid,
+                realtime_energy.iid,
+                HapStatusCode.UNABLE_TO_COMMUNICATE.value,
+            )
+        ]
+    )
 
     # Energy sensor has non-responsive characteristics so should be unavailable
     state = await energy_helper.poll_and_get_state()

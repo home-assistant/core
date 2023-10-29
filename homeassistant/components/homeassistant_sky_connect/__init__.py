@@ -45,7 +45,7 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
         return
 
     hw_discovery_data = {
-        "name": "SkyConnect Multi-PAN",
+        "name": "SkyConnect Multiprotocol",
         "port": {
             "path": get_zigbee_socket(),
         },

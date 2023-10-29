@@ -18,15 +18,18 @@ set:
     entities:
       example: domain.entity_id1, domain.entity_id2
       selector:
-        object:
+        entity:
+          multiple: true
     add_entities:
       example: domain.entity_id1, domain.entity_id2
       selector:
-        object:
+        entity:
+          multiple: true
     remove_entities:
       example: domain.entity_id1, domain.entity_id2
       selector:
-        object:
+        entity:
+          multiple: true
     all:
       selector:
         boolean:

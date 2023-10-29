@@ -5,7 +5,6 @@ from datetime import timedelta
 from http import HTTPStatus
 
 from aiounifi.models.message import MessageKey
-from aiounifi.websocket import WebsocketState
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
@@ -65,6 +64,7 @@ async def test_wlan_qr_code(
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
     mock_unifi_websocket,
+    websocket_mock,
 ) -> None:
     """Test the update_clients function when no clients are found."""
     await setup_unifi_integration(hass, aioclient_mock, wlans_response=[WLAN])
@@ -121,13 +121,11 @@ async def test_wlan_qr_code(
     # Availability signalling
 
     # Controller disconnects
-    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-    await hass.async_block_till_done()
+    await websocket_mock.disconnect()
     assert hass.states.get("image.ssid_1_qr_code").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    mock_unifi_websocket(state=WebsocketState.RUNNING)
-    await hass.async_block_till_done()
+    await websocket_mock.reconnect()
     assert hass.states.get("image.ssid_1_qr_code").state != STATE_UNAVAILABLE
 
     # WLAN gets disabled

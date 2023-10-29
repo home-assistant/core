@@ -1,5 +1,6 @@
 """Test the Smappee component config flow module."""
 from http import HTTPStatus
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow, setup
@@ -59,8 +60,8 @@ async def test_show_zeroconf_connection_error_form(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="1.2.3.4",
-                addresses=["1.2.3.4"],
+                ip_address=ip_address("1.2.3.4"),
+                ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
                 hostname="Smappee1006000212.local.",
                 type="_ssh._tcp.local.",
@@ -91,8 +92,8 @@ async def test_show_zeroconf_connection_error_form_next_generation(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="1.2.3.4",
-                addresses=["1.2.3.4"],
+                ip_address=ip_address("1.2.3.4"),
+                ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
                 hostname="Smappee5001000212.local.",
                 type="_ssh._tcp.local.",
@@ -174,8 +175,8 @@ async def test_zeroconf_wrong_mdns(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             port=22,
             hostname="example.local.",
             type="_ssh._tcp.local.",
@@ -285,8 +286,8 @@ async def test_zeroconf_device_exists_abort(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="1.2.3.4",
-                addresses=["1.2.3.4"],
+                ip_address=ip_address("1.2.3.4"),
+                ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
                 hostname="Smappee1006000212.local.",
                 type="_ssh._tcp.local.",
@@ -335,8 +336,8 @@ async def test_zeroconf_abort_if_cloud_device_exists(hass: HomeAssistant) -> Non
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             port=22,
             hostname="Smappee1006000212.local.",
             type="_ssh._tcp.local.",
@@ -357,8 +358,8 @@ async def test_zeroconf_confirm_abort_if_cloud_device_exists(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             port=22,
             hostname="Smappee1006000212.local.",
             type="_ssh._tcp.local.",
@@ -480,8 +481,8 @@ async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="1.2.3.4",
-                addresses=["1.2.3.4"],
+                ip_address=ip_address("1.2.3.4"),
+                ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
                 hostname="Smappee1006000212.local.",
                 type="_ssh._tcp.local.",
@@ -559,8 +560,8 @@ async def test_full_zeroconf_flow_next_generation(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="1.2.3.4",
-                addresses=["1.2.3.4"],
+                ip_address=ip_address("1.2.3.4"),
+                ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
                 hostname="Smappee5001000212.local.",
                 type="_ssh._tcp.local.",

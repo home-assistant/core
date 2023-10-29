@@ -44,7 +44,6 @@ async def test_islamic_prayer_times_sensors(
     ), freeze_time(NOW):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
         assert (
             hass.states.get(sensor_name).state
             == PRAYER_TIMES_TIMESTAMPS[key].astimezone(dt_util.UTC).isoformat()

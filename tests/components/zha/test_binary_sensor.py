@@ -98,10 +98,22 @@ async def async_test_iaszone_on_off(hass, cluster, entity_id):
 
 
 @pytest.mark.parametrize(
-    ("device", "on_off_test", "cluster_name", "reporting"),
+    ("device", "on_off_test", "cluster_name", "reporting", "name"),
     [
-        (DEVICE_IAS, async_test_iaszone_on_off, "ias_zone", (0,)),
-        (DEVICE_OCCUPANCY, async_test_binary_sensor_on_off, "occupancy", (1,)),
+        (
+            DEVICE_IAS,
+            async_test_iaszone_on_off,
+            "ias_zone",
+            (0,),
+            "FakeManufacturer FakeModel IAS zone",
+        ),
+        (
+            DEVICE_OCCUPANCY,
+            async_test_binary_sensor_on_off,
+            "occupancy",
+            (1,),
+            "FakeManufacturer FakeModel Occupancy",
+        ),
     ],
 )
 async def test_binary_sensor(
@@ -112,6 +124,7 @@ async def test_binary_sensor(
     on_off_test,
     cluster_name,
     reporting,
+    name,
 ) -> None:
     """Test ZHA binary_sensor platform."""
     zigpy_device = zigpy_device_mock(device)
@@ -119,6 +132,7 @@ async def test_binary_sensor(
     entity_id = find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
     assert entity_id is not None
 
+    assert hass.states.get(entity_id).name == name
     assert hass.states.get(entity_id).state == STATE_OFF
     await async_enable_traffic(hass, [zha_device], enabled=False)
     # test that the sensors exist and are in the unavailable state
@@ -186,11 +200,12 @@ async def test_binary_sensor_migration_not_migrated(
 ) -> None:
     """Test temporary ZHA IasZone binary_sensor migration to zigpy cache."""
 
-    entity_id = "binary_sensor.fakemanufacturer_fakemodel_iaszone"
+    entity_id = "binary_sensor.fakemanufacturer_fakemodel_ias_zone"
     core_rs(entity_id, state=restored_state, attributes={})  # migration sensor state
     await async_mock_load_restore_state_from_storage(hass)
 
     zigpy_device = zigpy_device_mock(DEVICE_IAS)
+
     zha_device = await zha_device_restored(zigpy_device)
     entity_id = find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
 
@@ -209,7 +224,7 @@ async def test_binary_sensor_migration_already_migrated(
 ) -> None:
     """Test temporary ZHA IasZone binary_sensor migration doesn't migrate multiple times."""
 
-    entity_id = "binary_sensor.fakemanufacturer_fakemodel_iaszone"
+    entity_id = "binary_sensor.fakemanufacturer_fakemodel_ias_zone"
     core_rs(entity_id, state=STATE_OFF, attributes={"migrated_to_cache": True})
     await async_mock_load_restore_state_from_storage(hass)
 

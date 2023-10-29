@@ -39,6 +39,9 @@
       },
       "restore_battery_level": {
         "name": "Restore battery level"
+      },
+      "reserve_soc": {
+        "name": "Reserve battery level"
       }
     },
     "select": {
@@ -74,6 +77,14 @@
           "not_powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::not_powered%]",
           "schedule": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::schedule%]",
           "none": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::none%]"
+        }
+      },
+      "storage_mode": {
+        "name": "Storage mode",
+        "state": {
+          "self_consumption": "Self consumption",
+          "backup": "Full backup",
+          "savings": "Savings mode"
         }
       }
     },
@@ -122,6 +133,9 @@
       }
     },
     "switch": {
+      "charge_from_grid": {
+        "name": "Charge from grid"
+      },
       "grid_enabled": {
         "name": "Grid enabled"
       }

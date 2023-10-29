@@ -1,15 +1,14 @@
 """Test ZHA registries."""
 from __future__ import annotations
 
-import importlib
-import inspect
 import typing
 from unittest import mock
 
 import pytest
-import zhaquirks
+import zigpy.quirks as zigpy_quirks
 
 from homeassistant.components.zha.binary_sensor import IASZone
+from homeassistant.components.zha.core.const import ATTR_QUIRK_ID
 import homeassistant.components.zha.core.registries as registries
 from homeassistant.helpers import entity_registry as er
 
@@ -19,7 +18,7 @@ if typing.TYPE_CHECKING:
 MANUFACTURER = "mock manufacturer"
 MODEL = "mock model"
 QUIRK_CLASS = "mock.test.quirk.class"
-QUIRK_CLASS_SHORT = "quirk.class"
+QUIRK_ID = "quirk_id"
 
 
 @pytest.fixture
@@ -29,6 +28,7 @@ def zha_device():
     dev.manufacturer = MANUFACTURER
     dev.model = MODEL
     dev.quirk_class = QUIRK_CLASS
+    dev.quirk_id = QUIRK_ID
     return dev
 
 
@@ -107,17 +107,17 @@ def cluster_handlers(cluster_handler):
             ),
             False,
         ),
-        (registries.MatchRule(quirk_classes=QUIRK_CLASS), True),
-        (registries.MatchRule(quirk_classes="no match"), False),
+        (registries.MatchRule(quirk_ids=QUIRK_ID), True),
+        (registries.MatchRule(quirk_ids="no match"), False),
         (
             registries.MatchRule(
-                quirk_classes=QUIRK_CLASS, aux_cluster_handlers="aux_cluster_handler"
+                quirk_ids=QUIRK_ID, aux_cluster_handlers="aux_cluster_handler"
             ),
             True,
         ),
         (
             registries.MatchRule(
-                quirk_classes="no match", aux_cluster_handlers="aux_cluster_handler"
+                quirk_ids="no match", aux_cluster_handlers="aux_cluster_handler"
             ),
             False,
         ),
@@ -128,7 +128,7 @@ def cluster_handlers(cluster_handler):
                 cluster_handler_names={"on_off", "level"},
                 manufacturers=MANUFACTURER,
                 models=MODEL,
-                quirk_classes=QUIRK_CLASS,
+                quirk_ids=QUIRK_ID,
             ),
             True,
         ),
@@ -187,33 +187,31 @@ def cluster_handlers(cluster_handler):
         (
             registries.MatchRule(
                 cluster_handler_names="on_off",
-                quirk_classes={"random quirk", QUIRK_CLASS},
+                quirk_ids={"random quirk", QUIRK_ID},
             ),
             True,
         ),
         (
             registries.MatchRule(
                 cluster_handler_names="on_off",
-                quirk_classes={"random quirk", "another quirk"},
+                quirk_ids={"random quirk", "another quirk"},
             ),
             False,
         ),
         (
             registries.MatchRule(
-                cluster_handler_names="on_off", quirk_classes=lambda x: x == QUIRK_CLASS
+                cluster_handler_names="on_off", quirk_ids=lambda x: x == QUIRK_ID
             ),
             True,
         ),
         (
             registries.MatchRule(
-                cluster_handler_names="on_off", quirk_classes=lambda x: x != QUIRK_CLASS
+                cluster_handler_names="on_off", quirk_ids=lambda x: x != QUIRK_ID
             ),
             False,
         ),
         (
-            registries.MatchRule(
-                cluster_handler_names="on_off", quirk_classes=QUIRK_CLASS_SHORT
-            ),
+            registries.MatchRule(cluster_handler_names="on_off", quirk_ids=QUIRK_ID),
             True,
         ),
     ],
@@ -221,8 +219,7 @@ def cluster_handlers(cluster_handler):
 def test_registry_matching(rule, matched, cluster_handlers) -> None:
     """Test strict rule matching."""
     assert (
-        rule.strict_matched(MANUFACTURER, MODEL, cluster_handlers, QUIRK_CLASS)
-        is matched
+        rule.strict_matched(MANUFACTURER, MODEL, cluster_handlers, QUIRK_ID) is matched
     )
 
 
@@ -314,8 +311,8 @@ def test_registry_matching(rule, matched, cluster_handlers) -> None:
         (registries.MatchRule(manufacturers=MANUFACTURER), True),
         (registries.MatchRule(models=MODEL), True),
         (registries.MatchRule(models="no match"), False),
-        (registries.MatchRule(quirk_classes=QUIRK_CLASS), True),
-        (registries.MatchRule(quirk_classes="no match"), False),
+        (registries.MatchRule(quirk_ids=QUIRK_ID), True),
+        (registries.MatchRule(quirk_ids="no match"), False),
         # match everything
         (
             registries.MatchRule(
@@ -323,7 +320,7 @@ def test_registry_matching(rule, matched, cluster_handlers) -> None:
                 cluster_handler_names={"on_off", "level"},
                 manufacturers=MANUFACTURER,
                 models=MODEL,
-                quirk_classes=QUIRK_CLASS,
+                quirk_ids=QUIRK_ID,
             ),
             True,
         ),
@@ -332,8 +329,7 @@ def test_registry_matching(rule, matched, cluster_handlers) -> None:
 def test_registry_loose_matching(rule, matched, cluster_handlers) -> None:
     """Test loose rule matching."""
     assert (
-        rule.loose_matched(MANUFACTURER, MODEL, cluster_handlers, QUIRK_CLASS)
-        is matched
+        rule.loose_matched(MANUFACTURER, MODEL, cluster_handlers, QUIRK_ID) is matched
     )
 
 
@@ -397,12 +393,12 @@ def entity_registry():
 
 
 @pytest.mark.parametrize(
-    ("manufacturer", "model", "quirk_class", "match_name"),
+    ("manufacturer", "model", "quirk_id", "match_name"),
     (
         ("random manufacturer", "random model", "random.class", "OnOff"),
         ("random manufacturer", MODEL, "random.class", "OnOffModel"),
         (MANUFACTURER, "random model", "random.class", "OnOffManufacturer"),
-        ("random manufacturer", "random model", QUIRK_CLASS, "OnOffQuirk"),
+        ("random manufacturer", "random model", QUIRK_ID, "OnOffQuirk"),
         (MANUFACTURER, MODEL, "random.class", "OnOffModelManufacturer"),
         (MANUFACTURER, "some model", "random.class", "OnOffMultimodel"),
     ),
@@ -412,7 +408,7 @@ def test_weighted_match(
     entity_registry: er.EntityRegistry,
     manufacturer,
     model,
-    quirk_class,
+    quirk_id,
     match_name,
 ) -> None:
     """Test weightedd match."""
@@ -453,7 +449,7 @@ def test_weighted_match(
         pass
 
     @entity_registry.strict_match(
-        s.component, cluster_handler_names="on_off", quirk_classes=QUIRK_CLASS
+        s.component, cluster_handler_names="on_off", quirk_ids=QUIRK_ID
     )
     class OnOffQuirk:
         pass
@@ -462,7 +458,7 @@ def test_weighted_match(
     ch_level = cluster_handler("level", 8)
 
     match, claimed = entity_registry.get_entity(
-        s.component, manufacturer, model, [ch_on_off, ch_level], quirk_class
+        s.component, manufacturer, model, [ch_on_off, ch_level], quirk_id
     )
 
     assert match.__name__ == match_name
@@ -490,7 +486,7 @@ def test_multi_sensor_match(
         "manufacturer",
         "model",
         cluster_handlers=[ch_se, ch_illuminati],
-        quirk_class="quirk_class",
+        quirk_id="quirk_id",
     )
 
     assert s.binary_sensor in match
@@ -520,7 +516,7 @@ def test_multi_sensor_match(
         "manufacturer",
         "model",
         cluster_handlers={ch_se, ch_illuminati},
-        quirk_class="quirk_class",
+        quirk_id="quirk_id",
     )
 
     assert s.binary_sensor in match
@@ -554,18 +550,10 @@ def iter_all_rules() -> typing.Iterable[registries.MatchRule, list[type[ZhaEntit
 
 
 def test_quirk_classes() -> None:
-    """Make sure that quirk_classes in components matches are valid."""
-
-    def find_quirk_class(base_obj, quirk_mod, quirk_cls):
-        """Find a specific quirk class."""
-
-        module = importlib.import_module(quirk_mod)
-        clss = dict(inspect.getmembers(module, inspect.isclass))
-        # Check quirk_cls in module classes
-        return quirk_cls in clss
+    """Make sure that all quirk IDs in components matches exist."""
 
     def quirk_class_validator(value):
-        """Validate quirk classes during self test."""
+        """Validate quirk IDs during self test."""
         if callable(value):
             # Callables cannot be tested
             return
@@ -576,16 +564,22 @@ def test_quirk_classes() -> None:
                 quirk_class_validator(v)
             return
 
-        quirk_tok = value.rsplit(".", 1)
-        if len(quirk_tok) != 2:
-            # quirk_class is at least __module__.__class__
-            raise ValueError(f"Invalid quirk class : '{value}'")
+        if value not in all_quirk_ids:
+            raise ValueError(f"Quirk ID '{value}' does not exist.")
 
-        if not find_quirk_class(zhaquirks, quirk_tok[0], quirk_tok[1]):
-            raise ValueError(f"Quirk class '{value}' does not exists.")
+    # get all quirk ID from zigpy quirks registry
+    all_quirk_ids = []
+    for manufacturer in zigpy_quirks._DEVICE_REGISTRY._registry.values():
+        for model_quirk_list in manufacturer.values():
+            for quirk in model_quirk_list:
+                quirk_id = getattr(quirk, ATTR_QUIRK_ID, None)
+                if quirk_id is not None and quirk_id not in all_quirk_ids:
+                    all_quirk_ids.append(quirk_id)
+    del quirk, model_quirk_list, manufacturer
 
+    # validate all quirk IDs used in component match rules
     for rule, _ in iter_all_rules():
-        quirk_class_validator(rule.quirk_classes)
+        quirk_class_validator(rule.quirk_ids)
 
 
 def test_entity_names() -> None:
@@ -596,6 +590,13 @@ def test_entity_names() -> None:
             if hasattr(entity, "_attr_name"):
                 # The entity has a name
                 assert isinstance(entity._attr_name, str) and entity._attr_name
+            elif hasattr(entity, "_attr_translation_key"):
+                assert (
+                    isinstance(entity._attr_translation_key, str)
+                    and entity._attr_translation_key
+                )
+            elif hasattr(entity, "_attr_device_class"):
+                assert entity._attr_device_class
             else:
                 # The only exception (for now) is IASZone
                 assert entity is IASZone

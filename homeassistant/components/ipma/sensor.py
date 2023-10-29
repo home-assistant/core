@@ -8,6 +8,8 @@ import logging
 
 from pyipma.api import IPMA_API
 from pyipma.location import Location
+from pyipma.rcm import RCM
+from pyipma.uv import UV
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -33,11 +35,19 @@ class IPMASensorEntityDescription(SensorEntityDescription, IPMARequiredKeysMixin
     """Describes IPMA sensor entity."""
 
 
-async def async_retrive_rcm(location: Location, api: IPMA_API) -> int | None:
+async def async_retrieve_rcm(location: Location, api: IPMA_API) -> int | None:
     """Retrieve RCM."""
-    fire_risk = await location.fire_risk(api)
+    fire_risk: RCM = await location.fire_risk(api)
     if fire_risk:
         return fire_risk.rcm
+    return None
+
+
+async def async_retrieve_uvi(location: Location, api: IPMA_API) -> int | None:
+    """Retrieve UV."""
+    uv_risk: UV = await location.uv_risk(api)
+    if uv_risk:
+        return round(uv_risk.iUv)
     return None
 
 
@@ -45,7 +55,12 @@ SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
     IPMASensorEntityDescription(
         key="rcm",
         translation_key="fire_risk",
-        value_fn=async_retrive_rcm,
+        value_fn=async_retrieve_rcm,
+    ),
+    IPMASensorEntityDescription(
+        key="uvi",
+        translation_key="uv_index",
+        value_fn=async_retrieve_uvi,
     ),
 )
 
@@ -81,7 +96,7 @@ class IPMASensor(SensorEntity, IPMADevice):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
-        """Update Fire risk."""
+        """Update sensors."""
         async with asyncio.timeout(10):
             self._attr_native_value = await self.entity_description.value_fn(
                 self._location, self._api

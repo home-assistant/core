@@ -50,6 +50,8 @@ from aioairzone.const import (
     API_VERSION,
     API_WIFI_CHANNEL,
     API_WIFI_RSSI,
+    API_WS_AZ,
+    API_WS_TYPE,
     API_ZONE_ID,
 )
 
@@ -301,6 +303,7 @@ HVAC_VERSION_MOCK = {
 
 HVAC_WEBSERVER_MOCK = {
     API_MAC: "11:22:33:44:55:66",
+    API_WS_TYPE: API_WS_AZ,
     API_WIFI_CHANNEL: 6,
     API_WIFI_RSSI: -42,
 }

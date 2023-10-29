@@ -38,7 +38,27 @@ from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
 DECONZ_GROUP = "is_deconz_group"
-EFFECT_TO_DECONZ = {EFFECT_COLORLOOP: LightEffect.COLOR_LOOP, "None": LightEffect.NONE}
+EFFECT_TO_DECONZ = {
+    EFFECT_COLORLOOP: LightEffect.COLOR_LOOP,
+    "None": LightEffect.NONE,
+    # Specific to Lidl christmas light
+    "carnival": LightEffect.CARNIVAL,
+    "collide": LightEffect.COLLIDE,
+    "fading": LightEffect.FADING,
+    "fireworks": LightEffect.FIREWORKS,
+    "flag": LightEffect.FLAG,
+    "glow": LightEffect.GLOW,
+    "rainbow": LightEffect.RAINBOW,
+    "snake": LightEffect.SNAKE,
+    "snow": LightEffect.SNOW,
+    "sparkles": LightEffect.SPARKLES,
+    "steady": LightEffect.STEADY,
+    "strobe": LightEffect.STROBE,
+    "twinkle": LightEffect.TWINKLE,
+    "updown": LightEffect.UPDOWN,
+    "vintage": LightEffect.VINTAGE,
+    "waves": LightEffect.WAVES,
+}
 FLASH_TO_DECONZ = {FLASH_SHORT: LightAlert.SHORT, FLASH_LONG: LightAlert.LONG}
 
 DECONZ_TO_COLOR_MODE = {
@@ -46,6 +66,25 @@ DECONZ_TO_COLOR_MODE = {
     LightColorMode.HS: ColorMode.HS,
     LightColorMode.XY: ColorMode.XY,
 }
+
+TS0601_EFFECTS = [
+    "carnival",
+    "collide",
+    "fading",
+    "fireworks",
+    "flag",
+    "glow",
+    "rainbow",
+    "snake",
+    "snow",
+    "sparkles",
+    "steady",
+    "strobe",
+    "twinkle",
+    "updown",
+    "vintage",
+    "waves",
+]
 
 _LightDeviceT = TypeVar("_LightDeviceT", bound=Group | Light)
 
@@ -161,6 +200,8 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
         if device.effect is not None:
             self._attr_supported_features |= LightEntityFeature.EFFECT
             self._attr_effect_list = [EFFECT_COLORLOOP]
+            if device.model_id == "TS0601":
+                self._attr_effect_list += TS0601_EFFECTS
 
     @property
     def color_mode(self) -> str | None:

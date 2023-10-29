@@ -1,5 +1,7 @@
 """Constants used for mocking data."""
 
+from ipaddress import ip_address
+
 from devolo_plc_api.device_api import (
     UPDATE_AVAILABLE,
     WIFI_BAND_2G,
@@ -30,8 +32,8 @@ CONNECTED_STATIONS = [
 NO_CONNECTED_STATIONS = []
 
 DISCOVERY_INFO = ZeroconfServiceInfo(
-    host=IP,
-    addresses=[IP],
+    ip_address=ip_address(IP),
+    ip_addresses=[ip_address(IP)],
     port=14791,
     hostname="test.local.",
     type="_dvl-deviceapi._tcp.local.",
@@ -51,8 +53,8 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
 )
 
 DISCOVERY_INFO_CHANGED = ZeroconfServiceInfo(
-    host=IP_ALT,
-    addresses=[IP_ALT],
+    ip_address=ip_address(IP_ALT),
+    ip_addresses=[ip_address(IP_ALT)],
     port=14791,
     hostname="test.local.",
     type="_dvl-deviceapi._tcp.local.",
@@ -72,8 +74,8 @@ DISCOVERY_INFO_CHANGED = ZeroconfServiceInfo(
 )
 
 DISCOVERY_INFO_WRONG_DEVICE = ZeroconfServiceInfo(
-    host="mock_host",
-    addresses=["mock_host"],
+    ip_address=ip_address("127.0.0.2"),
+    ip_addresses=[ip_address("127.0.0.2")],
     hostname="mock_hostname",
     name="mock_name",
     port=None,

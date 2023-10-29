@@ -337,6 +337,14 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
+    CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION,
+        name="Valve position",
+        icon="mdi:pipe-valve",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
 }
 
 
@@ -573,6 +581,11 @@ class RSSISensor(HomeKitEntity, SensorEntity):
     _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     _attr_should_poll = False
 
+    def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
+        """Initialise a HomeKit Controller RSSI sensor."""
+        super().__init__(accessory, devinfo)
+        self._attr_unique_id = f"{accessory.unique_id}_rssi"
+
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return []
@@ -593,11 +606,6 @@ class RSSISensor(HomeKitEntity, SensorEntity):
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-rssi"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
-        return f"{self._accessory.unique_id}_rssi"
 
     @property
     def native_value(self) -> int | None:
@@ -659,6 +667,7 @@ async def async_setup_entry(
         accessory_info = accessory.services.first(
             service_type=ServicesTypes.ACCESSORY_INFORMATION
         )
+        assert accessory_info
         info = {"aid": accessory.aid, "iid": accessory_info.iid}
         entity = RSSISensor(conn, info)
         conn.async_migrate_unique_id(

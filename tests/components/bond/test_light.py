@@ -726,7 +726,7 @@ async def test_brightness_support(hass: HomeAssistant) -> None:
 
     state = hass.states.get("light.name_1")
     assert state.state == "off"
-    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_COLOR_MODE] is None
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
@@ -752,7 +752,7 @@ async def test_brightness_not_supported(hass: HomeAssistant) -> None:
 
     state = hass.states.get("light.name_1")
     assert state.state == "off"
-    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_COLOR_MODE] is None
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 

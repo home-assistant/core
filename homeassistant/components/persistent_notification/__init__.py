@@ -30,10 +30,6 @@ ATTR_TITLE: Final = "title"
 ATTR_STATUS: Final = "status"
 
 
-# Remove EVENT_PERSISTENT_NOTIFICATIONS_UPDATED in Home Assistant 2023.9
-EVENT_PERSISTENT_NOTIFICATIONS_UPDATED = "persistent_notifications_updated"
-
-
 class Notification(TypedDict):
     """Persistent notification."""
 

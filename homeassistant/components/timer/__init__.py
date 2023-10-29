@@ -205,7 +205,8 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         """Initialize a timer."""
         self._config: dict = config
         self._state: str = STATUS_IDLE
-        self._duration = cv.time_period_str(config[CONF_DURATION])
+        self._configured_duration = cv.time_period_str(config[CONF_DURATION])
+        self._running_duration: timedelta = self._configured_duration
         self._remaining: timedelta | None = None
         self._end: datetime | None = None
         self._listener: Callable[[], None] | None = None
@@ -248,7 +249,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
-            ATTR_DURATION: _format_timedelta(self._duration),
+            ATTR_DURATION: _format_timedelta(self._running_duration),
             ATTR_EDITABLE: self.editable,
         }
         if self._end is not None:
@@ -275,12 +276,12 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         # Begin restoring state
         self._state = state.state
-        self._duration = cv.time_period(state.attributes[ATTR_DURATION])
 
         # Nothing more to do if the timer is idle
         if self._state == STATUS_IDLE:
             return
 
+        self._running_duration = cv.time_period(state.attributes[ATTR_DURATION])
         # If the timer was paused, we restore the remaining time
         if self._state == STATUS_PAUSED:
             self._remaining = cv.time_period(state.attributes[ATTR_REMAINING])
@@ -314,11 +315,11 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._state = STATUS_ACTIVE
         start = dt_util.utcnow().replace(microsecond=0)
 
-        # Set remaining to new value if needed
+        # Set remaining and running duration unless resuming or restarting
         if duration:
-            self._remaining = self._duration = duration
+            self._remaining = self._running_duration = duration
         elif not self._remaining:
-            self._remaining = self._duration
+            self._remaining = self._running_duration
 
         self._end = start + self._remaining
 
@@ -336,9 +337,9 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             raise HomeAssistantError(
                 f"Timer {self.entity_id} is not running, only active timers can be changed"
             )
-        if self._remaining and (self._remaining + duration) > self._duration:
+        if self._remaining and (self._remaining + duration) > self._running_duration:
             raise HomeAssistantError(
-                f"Not possible to change timer {self.entity_id} beyond configured duration"
+                f"Not possible to change timer {self.entity_id} beyond duration"
             )
         if self._remaining and (self._remaining + duration) < timedelta():
             raise HomeAssistantError(
@@ -377,6 +378,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = None
+        self._running_duration = self._configured_duration
         self.hass.bus.async_fire(
             EVENT_TIMER_CANCELLED, {ATTR_ENTITY_ID: self.entity_id}
         )
@@ -395,6 +397,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = None
+        self._running_duration = self._configured_duration
         self.hass.bus.async_fire(
             EVENT_TIMER_FINISHED,
             {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
@@ -412,6 +415,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         end = self._end
         self._end = None
         self._remaining = None
+        self._running_duration = self._configured_duration
         self.hass.bus.async_fire(
             EVENT_TIMER_FINISHED,
             {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
@@ -421,6 +425,8 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
-        self._duration = cv.time_period_str(config[CONF_DURATION])
+        self._configured_duration = cv.time_period_str(config[CONF_DURATION])
+        if self._state == STATUS_IDLE:
+            self._running_duration = self._configured_duration
         self._restore = config.get(CONF_RESTORE, DEFAULT_RESTORE)
         self.async_write_ha_state()

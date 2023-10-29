@@ -30,6 +30,13 @@
       "integration_not_setup": "UniFi integration is not set up"
     },
     "step": {
+      "configure_entity_sources": {
+        "data": {
+          "client_source": "Create entities from network clients"
+        },
+        "description": "Select sources to create entities from",
+        "title": "UniFi Network Entity Sources"
+      },
       "device_tracker": {
         "data": {
           "detection_time": "Time in seconds from last seen until considered away",

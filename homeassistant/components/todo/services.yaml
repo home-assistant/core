@@ -1,0 +1,55 @@
+create_item:
+  target:
+    entity:
+      domain: todo
+      supported_features:
+        - todo.TodoListEntityFeature.CREATE_TODO_ITEM
+  fields:
+    summary:
+      required: true
+      example: "Submit income tax return"
+      selector:
+        text:
+    status:
+      example: "needs_action"
+      selector:
+        select:
+          translation_key: status
+          options:
+            - needs_action
+            - completed
+update_item:
+  target:
+    entity:
+      domain: todo
+      supported_features:
+        - todo.TodoListEntityFeature.UPDATE_TODO_ITEM
+  fields:
+    uid:
+      selector:
+        text:
+    summary:
+      example: "Submit income tax return"
+      selector:
+        text:
+    status:
+      example: "needs_action"
+      selector:
+        select:
+          translation_key: status
+          options:
+            - needs_action
+            - completed
+delete_item:
+  target:
+    entity:
+      domain: todo
+      supported_features:
+        - todo.TodoListEntityFeature.DELETE_TODO_ITEM
+  fields:
+    uid:
+      selector:
+        object:
+    summary:
+      selector:
+        object:
