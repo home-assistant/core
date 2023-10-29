@@ -6,6 +6,7 @@ from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 
@@ -22,7 +23,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = Airtouch5SimpleClient(host)
 
     # Connect to the API
-    await client.connect_and_stay_connected()
+    try:
+        await client.connect_and_stay_connected()
+    except TimeoutError as t:
+        raise ConfigEntryNotReady() from t
 
     # Store an API object for your platforms to access
     hass.data[DOMAIN][entry.entry_id] = client
