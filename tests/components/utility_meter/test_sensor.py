@@ -1351,7 +1351,7 @@ async def test_self_reset_hourly(hass: HomeAssistant) -> None:
 
 
 async def test_self_reset_hourly_dst(hass: HomeAssistant) -> None:
-    """Test quarter-hourly reset of meter."""
+    """Test hourly reset of meter in DST change conditions."""
 
     hass.config.time_zone = "Europe/Lisbon"
     dt_util.set_default_time_zone(dt_util.get_time_zone(hass.config.time_zone))
