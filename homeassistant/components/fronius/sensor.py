@@ -99,9 +99,6 @@ class FroniusSensorEntityDescription(SensorEntityDescription):
     """Describes Fronius sensor entity."""
 
     default_value: StateType | None = None
-    # Gen24 devices may report 0 for total energy while doing firmware updates.
-    # Handling such values shall mitigate spikes in delta calculations.
-    invalid_when_falsy: bool = False
 
 
 INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
@@ -122,7 +119,6 @@ INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        invalid_when_falsy=True,
     ),
     FroniusSensorEntityDescription(
         key="frequency_ac",
@@ -257,7 +253,6 @@ METER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:lightning-bolt-outline",
         entity_registry_enabled_default=False,
-        invalid_when_falsy=True,
     ),
     FroniusSensorEntityDescription(
         key="energy_reactive_ac_produced",
@@ -265,7 +260,6 @@ METER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:lightning-bolt-outline",
         entity_registry_enabled_default=False,
-        invalid_when_falsy=True,
     ),
     FroniusSensorEntityDescription(
         key="energy_real_ac_minus",
@@ -273,7 +267,6 @@ METER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        invalid_when_falsy=True,
     ),
     FroniusSensorEntityDescription(
         key="energy_real_ac_plus",
@@ -281,21 +274,18 @@ METER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        invalid_when_falsy=True,
     ),
     FroniusSensorEntityDescription(
         key="energy_real_consumed",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        invalid_when_falsy=True,
     ),
     FroniusSensorEntityDescription(
         key="energy_real_produced",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        invalid_when_falsy=True,
     ),
     FroniusSensorEntityDescription(
         key="frequency_phase_average",
@@ -471,7 +461,6 @@ OHMPILOT_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        invalid_when_falsy=True,
     ),
     FroniusSensorEntityDescription(
         key="power_real_ac",
@@ -519,7 +508,6 @@ POWER_FLOW_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        invalid_when_falsy=True,
         entity_registry_enabled_default=False,
     ),
     FroniusSensorEntityDescription(
@@ -660,8 +648,6 @@ class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEn
         ]["value"]
         if new_value is None:
             return self.entity_description.default_value
-        if self.entity_description.invalid_when_falsy and not new_value:
-            raise ValueError(f"Ignoring zero value for {self.entity_id}.")
         if isinstance(new_value, float):
             return round(new_value, 4)
         return new_value
@@ -671,10 +657,8 @@ class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEn
         """Handle updated data from the coordinator."""
         try:
             self._attr_native_value = self._get_entity_value()
-        except (KeyError, ValueError):
+        except KeyError:
             # sets state to `None` if no default_value is defined in entity description
-            # KeyError: raised when omitted in response - eg. at night when no production
-            # ValueError: raised when invalid zero value received
             self._attr_native_value = self.entity_description.default_value
         self.async_write_ha_state()
 

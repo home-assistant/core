@@ -1,6 +1,6 @@
 """Support for Duotecno binary sensors."""
 
-from duotecno.unit import ControlUnit, VirtualUnit
+from duotecno.unit import ControlUnit
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -19,15 +19,14 @@ async def async_setup_entry(
     """Set up Duotecno binary sensor on config_entry."""
     cntrl = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        DuotecnoBinarySensor(channel)
-        for channel in cntrl.get_units(["ControlUnit", "VirtualUnit"])
+        DuotecnoBinarySensor(channel) for channel in cntrl.get_units("ControlUnit")
     )
 
 
 class DuotecnoBinarySensor(DuotecnoEntity, BinarySensorEntity):
     """Representation of a DuotecnoBinarySensor."""
 
-    _unit: ControlUnit | VirtualUnit
+    _unit: ControlUnit
 
     @property
     def is_on(self) -> bool:

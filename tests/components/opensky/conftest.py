@@ -1,8 +1,10 @@
 """Configure tests for the OpenSky integration."""
 from collections.abc import Awaitable, Callable
+import json
 from unittest.mock import patch
 
 import pytest
+from python_opensky import StatesResponse
 
 from homeassistant.components.opensky.const import (
     CONF_ALTITUDE,
@@ -19,9 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import get_states_response_fixture
-
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 ComponentSetup = Callable[[MockConfigEntry], Awaitable[None]]
 
@@ -88,9 +88,10 @@ async def mock_setup_integration(
 
     async def func(mock_config_entry: MockConfigEntry) -> None:
         mock_config_entry.add_to_hass(hass)
+        json_fixture = load_fixture("opensky/states.json")
         with patch(
             "python_opensky.OpenSky.get_states",
-            return_value=get_states_response_fixture("opensky/states.json"),
+            return_value=StatesResponse.parse_obj(json.loads(json_fixture)),
         ):
             assert await async_setup_component(hass, DOMAIN, {})
             await hass.async_block_till_done()

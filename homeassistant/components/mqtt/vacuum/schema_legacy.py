@@ -17,12 +17,14 @@ from homeassistant.components.vacuum import (
     VacuumEntity,
     VacuumEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.json import json_dumps
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .. import subscription
 from ..config import MQTT_BASE_SCHEMA
@@ -197,6 +199,17 @@ _COMMANDS = {
         "status": "Returning home...",
     },
 }
+
+
+async def async_setup_entity_legacy(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None,
+) -> None:
+    """Set up a MQTT Vacuum Legacy."""
+    async_add_entities([MqttVacuum(hass, config, config_entry, discovery_data)])
 
 
 class MqttVacuum(MqttEntity, VacuumEntity):

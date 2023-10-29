@@ -9,17 +9,15 @@ from requests.models import Response
 from todoist_api_python.models import Collaborator, Due, Label, Project, Task
 
 from homeassistant.components.todoist import DOMAIN
-from homeassistant.const import CONF_TOKEN, Platform
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
-PROJECT_ID = "project-id-1"
 SUMMARY = "A task"
 TOKEN = "some-token"
-TODAY = dt_util.now().strftime("%Y-%m-%d")
 
 
 @pytest.fixture
@@ -39,49 +37,38 @@ def mock_due() -> Due:
     )
 
 
-def make_api_task(
-    id: str | None = None,
-    content: str | None = None,
-    is_completed: bool = False,
-    due: Due | None = None,
-    project_id: str | None = None,
-) -> Task:
+@pytest.fixture(name="task")
+def mock_task(due: Due) -> Task:
     """Mock a todoist Task instance."""
     return Task(
         assignee_id="1",
         assigner_id="1",
         comment_count=0,
-        is_completed=is_completed,
-        content=content or SUMMARY,
+        is_completed=False,
+        content=SUMMARY,
         created_at="2021-10-01T00:00:00",
         creator_id="1",
         description="A task",
-        due=due or Due(is_recurring=False, date=TODAY, string="today"),
-        id=id or "1",
+        due=due,
+        id="1",
         labels=["Label1"],
         order=1,
         parent_id=None,
         priority=1,
-        project_id=project_id or PROJECT_ID,
+        project_id="12345",
         section_id=None,
         url="https://todoist.com",
         sync_id=None,
     )
 
 
-@pytest.fixture(name="tasks")
-def mock_tasks(due: Due) -> list[Task]:
-    """Mock a todoist Task instance."""
-    return [make_api_task(due=due)]
-
-
 @pytest.fixture(name="api")
-def mock_api(tasks: list[Task]) -> AsyncMock:
+def mock_api(task) -> AsyncMock:
     """Mock the api state."""
     api = AsyncMock()
     api.get_projects.return_value = [
         Project(
-            id=PROJECT_ID,
+            id="12345",
             color="blue",
             comment_count=0,
             is_favorite=False,
@@ -101,7 +88,7 @@ def mock_api(tasks: list[Task]) -> AsyncMock:
     api.get_collaborators.return_value = [
         Collaborator(email="user@gmail.com", id="1", name="user")
     ]
-    api.get_tasks.return_value = tasks
+    api.get_tasks.return_value = [task]
     return api
 
 
@@ -134,25 +121,15 @@ def mock_todoist_domain() -> str:
     return DOMAIN
 
 
-@pytest.fixture(autouse=True)
-def platforms() -> list[Platform]:
-    """Fixture to specify platforms to test."""
-    return []
-
-
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant,
-    platforms: list[Platform],
     api: AsyncMock,
     todoist_config_entry: MockConfigEntry | None,
 ) -> None:
     """Mock setup of the todoist integration."""
     if todoist_config_entry is not None:
         todoist_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.todoist.TodoistAPIAsync", return_value=api
-    ), patch("homeassistant.components.todoist.PLATFORMS", platforms):
+    with patch("homeassistant.components.todoist.TodoistAPIAsync", return_value=api):
         assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
         yield

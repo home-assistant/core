@@ -78,7 +78,6 @@ async def _setup_config_entry(hass: HomeAssistant, config: dict[str, Any]) -> St
     data = _get_config_schema(hass, SOURCE_USER)(config)
     data[CONF_NAME] = DEFAULT_NAME
     config_entry = MockConfigEntry(
-        title=DEFAULT_NAME,
         domain=DOMAIN,
         data=data,
         options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
@@ -229,7 +228,7 @@ async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -
         ATTR_FORECAST_WIND_BEARING: 239.6,
         ATTR_FORECAST_WIND_SPEED: 34.16,  # 9.49 m/s -> km/h
     }
-    assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io Daily"
+    assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io - Daily"
     assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
     assert weather_state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == "mm"
@@ -262,7 +261,7 @@ async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
         ATTR_FORECAST_WIND_BEARING: 239.6,
         ATTR_FORECAST_WIND_SPEED: 34.16,  # 9.49 m/s -> km/h
     }
-    assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io Daily"
+    assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io - Daily"
     assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
     assert weather_state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == "mm"

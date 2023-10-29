@@ -87,7 +87,6 @@ class ElectricalMeasurementClusterHandler(ClusterHandler):
         "measurement_type": True,
         "power_divisor": True,
         "power_multiplier": True,
-        "power_factor": True,
     }
 
     async def async_update(self):

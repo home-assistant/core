@@ -371,15 +371,11 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     @property
     def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
-        if (
-            self._playing
-            and self._is_feature_available(FeatureName.Repeat)
-            and (repeat := self._playing.repeat)
-        ):
+        if self._playing and self._is_feature_available(FeatureName.Repeat):
             return {
                 RepeatState.Track: RepeatMode.ONE,
                 RepeatState.All: RepeatMode.ALL,
-            }.get(repeat, RepeatMode.OFF)
+            }.get(self._playing.repeat, RepeatMode.OFF)
         return None
 
     @property

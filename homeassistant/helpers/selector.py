@@ -99,7 +99,6 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.media_player import MediaPlayerEntityFeature
     from homeassistant.components.remote import RemoteEntityFeature
     from homeassistant.components.siren import SirenEntityFeature
-    from homeassistant.components.todo import TodoListEntityFeature
     from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
     from homeassistant.components.water_heater import WaterHeaterEntityFeature
@@ -119,7 +118,6 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "MediaPlayerEntityFeature": MediaPlayerEntityFeature,
         "RemoteEntityFeature": RemoteEntityFeature,
         "SirenEntityFeature": SirenEntityFeature,
-        "TodoListEntityFeature": TodoListEntityFeature,
         "UpdateEntityFeature": UpdateEntityFeature,
         "VacuumEntityFeature": VacuumEntityFeature,
         "WaterHeaterEntityFeature": WaterHeaterEntityFeature,

@@ -1,0 +1,20 @@
+heat_set:
+  target:
+    entity:
+      integration: eight_sleep
+      domain: sensor
+  fields:
+    duration:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 28800
+          unit_of_measurement: seconds
+    target:
+      required: true
+      selector:
+        number:
+          min: -100
+          max: 100
+          unit_of_measurement: "°"

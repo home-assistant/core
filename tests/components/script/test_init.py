@@ -6,7 +6,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import script
 from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED, ScriptEntity
 from homeassistant.const import (
@@ -28,7 +27,7 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import ServiceNotFound
-from homeassistant.helpers import device_registry as dr, entity_registry as er, template
+from homeassistant.helpers import entity_registry as er, template
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -43,12 +42,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml
 import homeassistant.util.dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_restore_cache,
-)
+from tests.common import async_fire_time_changed, async_mock_service, mock_restore_cache
 from tests.components.logbook.common import MockRow, mock_humanify
 from tests.typing import WebSocketGenerator
 
@@ -713,23 +707,8 @@ async def test_extraction_functions_unavailable_script(hass: HomeAssistant) -> N
     assert script.entities_in_script(hass, entity_id) == []
 
 
-async def test_extraction_functions(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
-) -> None:
+async def test_extraction_functions(hass: HomeAssistant) -> None:
     """Test extraction functions."""
-    config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
-    config_entry.add_to_hass(hass)
-
-    device_in_both = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:02")},
-    )
-    device_in_last = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:03")},
-    )
-
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -749,7 +728,7 @@ async def test_extraction_functions(
                             "entity_id": "light.device_in_both",
                             "domain": "light",
                             "type": "turn_on",
-                            "device_id": device_in_both.id,
+                            "device_id": "device-in-both",
                         },
                         {
                             "service": "test.test",
@@ -773,13 +752,13 @@ async def test_extraction_functions(
                             "entity_id": "light.device_in_both",
                             "domain": "light",
                             "type": "turn_on",
-                            "device_id": device_in_both.id,
+                            "device_id": "device-in-both",
                         },
                         {
                             "entity_id": "light.device_in_last",
                             "domain": "light",
                             "type": "turn_on",
-                            "device_id": device_in_last.id,
+                            "device_id": "device-in-last",
                         },
                     ],
                 },
@@ -818,13 +797,13 @@ async def test_extraction_functions(
         "light.in_both",
         "light.in_first",
     }
-    assert set(script.scripts_with_device(hass, device_in_both.id)) == {
+    assert set(script.scripts_with_device(hass, "device-in-both")) == {
         "script.test1",
         "script.test2",
     }
     assert set(script.devices_in_script(hass, "script.test2")) == {
-        device_in_both.id,
-        device_in_last.id,
+        "device-in-both",
+        "device-in-last",
     }
     assert set(script.scripts_with_area(hass, "area-in-both")) == {
         "script.test1",

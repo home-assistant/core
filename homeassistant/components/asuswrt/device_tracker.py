@@ -10,8 +10,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_ASUSWRT, DOMAIN
 from .router import AsusWrtDevInfo, AsusWrtRouter
 
-ATTR_LAST_TIME_REACHABLE = "last_time_reachable"
-
 DEFAULT_DEVICE_NAME = "Unknown device"
 
 
@@ -53,8 +51,6 @@ def add_entities(
 
 class AsusWrtDevice(ScannerEntity):
     """Representation of a AsusWrt device."""
-
-    _unrecorded_attributes = frozenset({ATTR_LAST_TIME_REACHABLE})
 
     _attr_should_poll = False
 
@@ -101,7 +97,7 @@ class AsusWrtDevice(ScannerEntity):
         self._attr_extra_state_attributes = {}
         if self._device.last_activity:
             self._attr_extra_state_attributes[
-                ATTR_LAST_TIME_REACHABLE
+                "last_time_reachable"
             ] = self._device.last_activity.isoformat(timespec="seconds")
         self.async_write_ha_state()
 

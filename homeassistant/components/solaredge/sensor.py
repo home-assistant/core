@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -51,7 +50,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="lifetime_energy",
         json_key="lifeTimeData",
-        translation_key="lifetime_energy",
+        name="Lifetime energy",
         icon="mdi:solar-power",
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -60,7 +59,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="energy_this_year",
         json_key="lastYearData",
-        translation_key="energy_this_year",
+        name="Energy this year",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -69,7 +68,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="energy_this_month",
         json_key="lastMonthData",
-        translation_key="energy_this_month",
+        name="Energy this month",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -78,7 +77,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="energy_today",
         json_key="lastDayData",
-        translation_key="energy_today",
+        name="Energy today",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -87,7 +86,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="current_power",
         json_key="currentPower",
-        translation_key="current_power",
+        name="Current Power",
         icon="mdi:solar-power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -96,71 +95,71 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="site_details",
         json_key="status",
-        translation_key="site_details",
+        name="Site details",
         entity_registry_enabled_default=False,
     ),
     SolarEdgeSensorEntityDescription(
         key="meters",
         json_key="meters",
-        translation_key="meters",
+        name="Meters",
         entity_registry_enabled_default=False,
     ),
     SolarEdgeSensorEntityDescription(
         key="sensors",
         json_key="sensors",
-        translation_key="sensors",
+        name="Sensors",
         entity_registry_enabled_default=False,
     ),
     SolarEdgeSensorEntityDescription(
         key="gateways",
         json_key="gateways",
-        translation_key="gateways",
+        name="Gateways",
         entity_registry_enabled_default=False,
     ),
     SolarEdgeSensorEntityDescription(
         key="batteries",
         json_key="batteries",
-        translation_key="batteries",
+        name="Batteries",
         entity_registry_enabled_default=False,
     ),
     SolarEdgeSensorEntityDescription(
         key="inverters",
         json_key="inverters",
-        translation_key="inverters",
+        name="Inverters",
         entity_registry_enabled_default=False,
     ),
     SolarEdgeSensorEntityDescription(
         key="power_consumption",
         json_key="LOAD",
-        translation_key="power_consumption",
+        name="Power Consumption",
         entity_registry_enabled_default=False,
         icon="mdi:flash",
     ),
     SolarEdgeSensorEntityDescription(
         key="solar_power",
         json_key="PV",
-        translation_key="solar_power",
+        name="Solar Power",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
     ),
     SolarEdgeSensorEntityDescription(
         key="grid_power",
         json_key="GRID",
-        translation_key="grid_power",
+        name="Grid Power",
         entity_registry_enabled_default=False,
         icon="mdi:power-plug",
     ),
     SolarEdgeSensorEntityDescription(
         key="storage_power",
         json_key="STORAGE",
-        translation_key="storage_power",
+        name="Storage Power",
         entity_registry_enabled_default=False,
         icon="mdi:car-battery",
     ),
     SolarEdgeSensorEntityDescription(
         key="purchased_energy",
         json_key="Purchased",
-        translation_key="purchased_energy",
+        name="Imported Energy",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -169,7 +168,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="production_energy",
         json_key="Production",
-        translation_key="production_energy",
+        name="Production Energy",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -178,7 +177,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="consumption_energy",
         json_key="Consumption",
-        translation_key="consumption_energy",
+        name="Consumption Energy",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -187,7 +186,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="selfconsumption_energy",
         json_key="SelfConsumption",
-        translation_key="selfconsumption_energy",
+        name="SelfConsumption Energy",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -196,7 +195,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="feedin_energy",
         json_key="FeedIn",
-        translation_key="feedin_energy",
+        name="Exported Energy",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -205,7 +204,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="storage_level",
         json_key="STORAGE",
-        translation_key="storage_level",
+        name="Storage Level",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -222,7 +221,9 @@ async def async_setup_entry(
     # Add the needed sensors to hass
     api: Solaredge = hass.data[DOMAIN][entry.entry_id][DATA_API_CLIENT]
 
-    sensor_factory = SolarEdgeSensorFactory(hass, entry.data[CONF_SITE_ID], api)
+    sensor_factory = SolarEdgeSensorFactory(
+        hass, entry.title, entry.data[CONF_SITE_ID], api
+    )
     for service in sensor_factory.all_services:
         service.async_setup()
         await service.coordinator.async_refresh()
@@ -238,8 +239,11 @@ async def async_setup_entry(
 class SolarEdgeSensorFactory:
     """Factory which creates sensors based on the sensor_key."""
 
-    def __init__(self, hass: HomeAssistant, site_id: str, api: Solaredge) -> None:
+    def __init__(
+        self, hass: HomeAssistant, platform_name: str, site_id: str, api: Solaredge
+    ) -> None:
         """Initialize the factory."""
+        self.platform_name = platform_name
 
         details = SolarEdgeDetailsDataService(hass, api, site_id)
         overview = SolarEdgeOverviewDataService(hass, api, site_id)
@@ -290,7 +294,7 @@ class SolarEdgeSensorFactory:
         """Create and return a sensor based on the sensor_key."""
         sensor_class, service = self.services[sensor_type.key]
 
-        return sensor_class(sensor_type, service)
+        return sensor_class(self.platform_name, sensor_type, service)
 
 
 class SolarEdgeSensorEntity(
@@ -298,22 +302,21 @@ class SolarEdgeSensorEntity(
 ):
     """Abstract class for a solaredge sensor."""
 
-    _attr_has_entity_name = True
-
     entity_description: SolarEdgeSensorEntityDescription
 
     def __init__(
         self,
+        platform_name: str,
         description: SolarEdgeSensorEntityDescription,
         data_service: SolarEdgeDataService,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(data_service.coordinator)
+        self.platform_name = platform_name
         self.entity_description = description
         self.data_service = data_service
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, data_service.site_id)}, manufacturer="SolarEdge"
-        )
+
+        self._attr_name = f"{platform_name} ({description.name})"
 
     @property
     def unique_id(self) -> str | None:
@@ -372,11 +375,12 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
 
     def __init__(
         self,
+        platform_name: str,
         sensor_type: SolarEdgeSensorEntityDescription,
         data_service: SolarEdgeEnergyDetailsService,
     ) -> None:
         """Initialize the power flow sensor."""
-        super().__init__(sensor_type, data_service)
+        super().__init__(platform_name, sensor_type, data_service)
 
         self._attr_native_unit_of_measurement = data_service.unit
 
@@ -398,11 +402,12 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
 
     def __init__(
         self,
+        platform_name: str,
         description: SolarEdgeSensorEntityDescription,
         data_service: SolarEdgePowerFlowDataService,
     ) -> None:
         """Initialize the power flow sensor."""
-        super().__init__(description, data_service)
+        super().__init__(platform_name, description, data_service)
 
         self._attr_native_unit_of_measurement = data_service.unit
 

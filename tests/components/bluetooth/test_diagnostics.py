@@ -157,7 +157,6 @@ async def test_diagnostics(
                 },
                 "advertisement_tracker": {
                     "intervals": {},
-                    "fallback_intervals": {},
                     "sources": {},
                     "timings": {},
                 },
@@ -329,7 +328,6 @@ async def test_diagnostics_macos(
                 },
                 "advertisement_tracker": {
                     "intervals": {},
-                    "fallback_intervals": {},
                     "sources": {"44:44:33:11:23:45": "local"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
                 },
@@ -522,7 +520,6 @@ async def test_diagnostics_remote_adapter(
                 },
                 "advertisement_tracker": {
                     "intervals": {},
-                    "fallback_intervals": {},
                     "sources": {"44:44:33:11:23:45": "esp32"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
                 },

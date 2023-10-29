@@ -6,7 +6,6 @@ import re
 
 from .const import CORE_PROJECT_ID, FRONTEND_PROJECT_ID, INTEGRATIONS_DIR
 from .lokalise import get_api
-from .util import load_json_from_path
 
 FRONTEND_REPO = pathlib.Path("../frontend/")
 
@@ -165,7 +164,7 @@ def find_and_rename_keys():
         if not strings_file.is_file():
             continue
 
-        strings = load_json_from_path(strings_file)
+        strings = json.loads(strings_file.read_text())
 
         if "title" in strings.get("config", {}):
             from_key = f"component::{integration.name}::config::title"
@@ -195,12 +194,12 @@ def interactive_update():
         if not strings_file.is_file():
             continue
 
-        strings = load_json_from_path(strings_file)
+        strings = json.loads(strings_file.read_text())
 
         if "title" not in strings:
             continue
 
-        manifest = load_json_from_path(integration / "manifest.json")
+        manifest = json.loads((integration / "manifest.json").read_text())
 
         print("Processing", manifest["name"])
         print("Translation title", strings["title"])
@@ -248,8 +247,9 @@ def find_frontend_states():
     Source key -> target key
     Add key to integrations strings.json
     """
-    path = FRONTEND_REPO / "src/translations/en.json"
-    frontend_states = load_json_from_path(path)["state"]
+    frontend_states = json.loads(
+        (FRONTEND_REPO / "src/translations/en.json").read_text()
+    )["state"]
 
     # domain => state object
     to_write = {}
@@ -307,7 +307,7 @@ def find_frontend_states():
     for domain, state in to_write.items():
         strings = INTEGRATIONS_DIR / domain / "strings.json"
         if strings.is_file():
-            content = load_json_from_path(strings)
+            content = json.loads(strings.read_text())
         else:
             content = {}
 
@@ -326,7 +326,7 @@ def find_frontend_states():
 def apply_data_references(to_migrate):
     """Apply references."""
     for strings_file in INTEGRATIONS_DIR.glob("*/strings.json"):
-        strings = load_json_from_path(strings_file)
+        strings = json.loads(strings_file.read_text())
         steps = strings.get("config", {}).get("step")
 
         if not steps:

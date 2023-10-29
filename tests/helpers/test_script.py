@@ -13,7 +13,7 @@ import pytest
 import voluptuous as vol
 
 # Otherwise can't test just this file (import order issue)
-from homeassistant import config_entries, exceptions
+from homeassistant import exceptions
 import homeassistant.components.scene as scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -33,7 +33,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry as dr,
     entity_registry as er,
     script,
     template,
@@ -44,7 +43,6 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
-    MockConfigEntry,
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
@@ -4534,23 +4532,12 @@ async def test_set_redefines_variable(
     assert_action_trace(expected_trace)
 
 
-async def test_validate_action_config(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
-) -> None:
+async def test_validate_action_config(hass: HomeAssistant) -> None:
     """Validate action config."""
-
-    config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
-    config_entry.add_to_hass(hass)
-
-    mock_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:02")},
-    )
 
     def templated_device_action(message):
         return {
-            "device_id": mock_device.id,
+            "device_id": "abcd",
             "domain": "mobile_app",
             "message": f"{message} {{{{ 5 + 5}}}}",
             "type": "notify",

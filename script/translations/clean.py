@@ -1,10 +1,11 @@
 """Find translation keys that are in Lokalise but no longer defined in source."""
 import argparse
+import json
 
 from .const import CORE_PROJECT_ID, FRONTEND_DIR, FRONTEND_PROJECT_ID, INTEGRATIONS_DIR
 from .error import ExitApp
 from .lokalise import get_api
-from .util import get_base_arg_parser, load_json_from_path
+from .util import get_base_arg_parser
 
 
 def get_arguments() -> argparse.Namespace:
@@ -45,9 +46,9 @@ def find_core():
 
         translations = int_dir / "translations" / "en.json"
 
-        strings_json = load_json_from_path(strings)
+        strings_json = json.loads(strings.read_text())
         if translations.is_file():
-            translations_json = load_json_from_path(translations)
+            translations_json = json.loads(translations.read_text())
         else:
             translations_json = {}
 
@@ -68,8 +69,8 @@ def find_frontend():
 
     missing_keys = []
     find_extra(
-        load_json_from_path(source),
-        load_json_from_path(translated),
+        json.loads(source.read_text()),
+        json.loads(translated.read_text()),
         "",
         missing_keys,
     )

@@ -1,30 +1,21 @@
 """Test the Fibaro scene platform."""
-from unittest.mock import Mock
+
+from pyfibaro.fibaro_scene import SceneModel
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import init_integration
-
-from tests.common import MockConfigEntry
+from .conftest import setup_platform
 
 
-async def test_entity_attributes(
-    hass: HomeAssistant,
-    mock_fibaro_client: Mock,
-    mock_config_entry: MockConfigEntry,
-    mock_scene: Mock,
-    mock_room: Mock,
-) -> None:
+async def test_entity_attributes(hass: HomeAssistant, fibaro_scene: SceneModel) -> None:
     """Test that the attributes of the entity are correct."""
     # Arrange
-    mock_fibaro_client.read_rooms.return_value = [mock_room]
-    mock_fibaro_client.read_scenes.return_value = [mock_scene]
     entity_registry = er.async_get(hass)
     # Act
-    await init_integration(hass, mock_config_entry)
+    await setup_platform(hass, Platform.SCENE, "Room 1", [fibaro_scene])
     # Assert
     entry = entity_registry.async_get("scene.room_1_test_scene")
 
@@ -34,20 +25,13 @@ async def test_entity_attributes(
 
 
 async def test_entity_attributes_without_room(
-    hass: HomeAssistant,
-    mock_fibaro_client: Mock,
-    mock_config_entry: MockConfigEntry,
-    mock_scene: Mock,
-    mock_room: Mock,
+    hass: HomeAssistant, fibaro_scene: SceneModel
 ) -> None:
     """Test that the attributes of the entity are correct."""
     # Arrange
-    mock_room.name = None
-    mock_fibaro_client.read_rooms.return_value = [mock_room]
-    mock_fibaro_client.read_scenes.return_value = [mock_scene]
     entity_registry = er.async_get(hass)
     # Act
-    await init_integration(hass, mock_config_entry)
+    await setup_platform(hass, Platform.SCENE, None, [fibaro_scene])
     # Assert
     entry = entity_registry.async_get("scene.unknown_test_scene")
 
@@ -55,19 +39,10 @@ async def test_entity_attributes_without_room(
     assert entry.unique_id == "hc2_111111.scene.1"
 
 
-async def test_activate_scene(
-    hass: HomeAssistant,
-    mock_fibaro_client: Mock,
-    mock_config_entry: MockConfigEntry,
-    mock_scene: Mock,
-    mock_room: Mock,
-) -> None:
+async def test_activate_scene(hass: HomeAssistant, fibaro_scene: SceneModel) -> None:
     """Test activate scene is called."""
     # Arrange
-    mock_fibaro_client.read_rooms.return_value = [mock_room]
-    mock_fibaro_client.read_scenes.return_value = [mock_scene]
-    # Act
-    await init_integration(hass, mock_config_entry)
+    await setup_platform(hass, Platform.SCENE, "Room 1", [fibaro_scene])
     # Act
     await hass.services.async_call(
         SCENE_DOMAIN,
@@ -76,4 +51,4 @@ async def test_activate_scene(
         blocking=True,
     )
     # Assert
-    assert mock_scene.start.call_count == 1
+    assert fibaro_scene.start.call_count == 1

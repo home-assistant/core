@@ -93,9 +93,7 @@ def get_arguments() -> argparse.Namespace:
         help="Directory that contains the Home Assistant configuration",
     )
     parser.add_argument(
-        "--recovery-mode",
-        action="store_true",
-        help="Start Home Assistant in recovery mode",
+        "--safe-mode", action="store_true", help="Start Home Assistant in safe mode"
     )
     parser.add_argument(
         "--debug", action="store_true", help="Start Home Assistant in debug mode"
@@ -185,9 +183,7 @@ def main() -> int:
     ensure_config_path(config_dir)
 
     # pylint: disable-next=import-outside-toplevel
-    from . import config, runner
-
-    safe_mode = config.safe_mode_enabled(config_dir)
+    from . import runner
 
     runtime_conf = runner.RuntimeConfig(
         config_dir=config_dir,
@@ -197,10 +193,9 @@ def main() -> int:
         log_no_color=args.log_no_color,
         skip_pip=args.skip_pip,
         skip_pip_packages=args.skip_pip_packages,
-        recovery_mode=args.recovery_mode,
+        safe_mode=args.safe_mode,
         debug=args.debug,
         open_ui=args.open_ui,
-        safe_mode=safe_mode,
     )
 
     fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)

@@ -1,6 +1,7 @@
 """Support for MQTT water heater devices."""
 from __future__ import annotations
 
+import functools
 import logging
 from typing import Any
 
@@ -37,7 +38,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .climate import MqttTemperatureControlEntity
@@ -66,7 +67,7 @@ from .const import (
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
-    async_setup_entity_entry_helper,
+    async_setup_entry_helper,
     write_state_on_attr_change,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
@@ -169,15 +170,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT water heater device through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
-        hass,
-        config_entry,
-        MqttWaterHeater,
-        water_heater.DOMAIN,
-        async_add_entities,
-        DISCOVERY_SCHEMA,
-        PLATFORM_SCHEMA_MODERN,
+    setup = functools.partial(
+        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
+    await async_setup_entry_helper(hass, water_heater.DOMAIN, setup, DISCOVERY_SCHEMA)
+
+
+async def _async_setup_entity(
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the MQTT water heater devices."""
+    async_add_entities([MqttWaterHeater(hass, config, config_entry, discovery_data)])
 
 
 class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):

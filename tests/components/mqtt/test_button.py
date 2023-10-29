@@ -456,7 +456,8 @@ async def test_invalid_device_class(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device_class option with invalid value."""
-    assert await mqtt_mock_entry()
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
     assert "expected ButtonDeviceClass" in caplog.text
 
 

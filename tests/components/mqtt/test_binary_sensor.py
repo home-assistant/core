@@ -580,8 +580,9 @@ async def test_invalid_device_class(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test the setting of an invalid sensor class."""
-    assert await mqtt_mock_entry()
-    assert "expected BinarySensorDeviceClass" in caplog.text
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
+    assert "Invalid config for [mqtt]: expected BinarySensorDeviceClass" in caplog.text
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])

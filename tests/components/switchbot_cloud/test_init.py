@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from switchbot_api import CannotConnect, Device, InvalidAuth, PowerState, Remote
+from switchbot_api import CannotConnect, Device, InvalidAuth, PowerState
 
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.config_entries import ConfigEntryState
@@ -32,24 +32,12 @@ async def test_setup_entry_success(
 ) -> None:
     """Test successful setup of entry."""
     mock_list_devices.return_value = [
-        Remote(
-            deviceId="air-conditonner-id-1",
-            deviceName="air-conditonner-name-1",
-            remoteType="Air Conditioner",
-            hubDeviceId="test-hub-id",
-        ),
         Device(
-            deviceId="plug-id-1",
-            deviceName="plug-name-1",
+            deviceId="test-id",
+            deviceName="test-name",
             deviceType="Plug",
             hubDeviceId="test-hub-id",
-        ),
-        Remote(
-            deviceId="plug-id-2",
-            deviceName="plug-name-2",
-            remoteType="DIY Plug",
-            hubDeviceId="test-hub-id",
-        ),
+        )
     ]
     mock_get_status.return_value = {"power": PowerState.ON.value}
     entry = configure_integration(hass)

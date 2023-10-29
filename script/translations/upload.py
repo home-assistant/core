@@ -8,7 +8,7 @@ import subprocess
 
 from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
 from .error import ExitApp
-from .util import get_current_branch, get_lokalise_token, load_json_from_path
+from .util import get_current_branch, get_lokalise_token
 
 FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
 LOCAL_FILE = pathlib.Path("build/translations-upload.json").absolute()
@@ -52,7 +52,7 @@ def run_upload_docker():
 
 def generate_upload_data():
     """Generate the data for uploading."""
-    translations = load_json_from_path(INTEGRATIONS_DIR.parent / "strings.json")
+    translations = json.loads((INTEGRATIONS_DIR.parent / "strings.json").read_text())
     translations["component"] = {}
 
     for path in INTEGRATIONS_DIR.glob(f"*{os.sep}strings*.json"):
@@ -66,7 +66,7 @@ def generate_upload_data():
             platforms = parent.setdefault("platform", {})
             parent = platforms.setdefault(platform, {})
 
-        parent.update(load_json_from_path(path))
+        parent.update(json.loads(path.read_text()))
 
     return translations
 

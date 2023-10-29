@@ -11,10 +11,6 @@ from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
 
 _LOGGER = logging.getLogger(__name__)
 
-LOOKUP_TIMEOUT: float = 10
-DATA_UPDATE_TIMEOUT: float = 10
-DATA_UPDATE_RETRIES: int = 3
-
 
 @dataclass
 class MinecraftServerData:
@@ -61,16 +57,13 @@ class MinecraftServer:
         """Initialize server instance."""
         try:
             if server_type == MinecraftServerType.JAVA_EDITION:
-                self._server = JavaServer.lookup(address, timeout=LOOKUP_TIMEOUT)
+                self._server = JavaServer.lookup(address)
             else:
-                self._server = BedrockServer.lookup(address, timeout=LOOKUP_TIMEOUT)
+                self._server = BedrockServer.lookup(address)
         except (ValueError, LifetimeTimeout) as error:
             raise MinecraftServerAddressError(
-                f"Lookup of '{address}' failed: {self._get_error_message(error)}"
+                f"{server_type} server address '{address}' is invalid (error: {error})"
             ) from error
-
-        self._server.timeout = DATA_UPDATE_TIMEOUT
-        self._address = address
 
         _LOGGER.debug(
             "%s server instance created with address '%s'", server_type, address
@@ -90,10 +83,10 @@ class MinecraftServer:
         status_response: BedrockStatusResponse | JavaStatusResponse
 
         try:
-            status_response = await self._server.async_status(tries=DATA_UPDATE_RETRIES)
+            status_response = await self._server.async_status()
         except OSError as error:
             raise MinecraftServerConnectionError(
-                f"Status request to '{self._address}' failed: {self._get_error_message(error)}"
+                f"Fetching data from the server failed (error: {error})"
             ) from error
 
         if isinstance(status_response, JavaStatusResponse):
@@ -139,11 +132,3 @@ class MinecraftServer:
             game_mode=status_response.gamemode,
             map_name=status_response.map_name,
         )
-
-    def _get_error_message(self, error: BaseException) -> str:
-        """Get error message of an exception."""
-        if not str(error):
-            # Fallback to error type in case of an empty error message.
-            return repr(error)
-
-        return str(error)

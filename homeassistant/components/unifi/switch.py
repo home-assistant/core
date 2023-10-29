@@ -61,14 +61,6 @@ CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UN
 
 
 @callback
-def async_block_client_allowed_fn(controller: UniFiController, obj_id: str) -> bool:
-    """Check if client is allowed."""
-    if obj_id in controller.option_supported_clients:
-        return True
-    return obj_id in controller.option_block_clients
-
-
-@callback
 def async_dpi_group_is_on_fn(
     controller: UniFiController, dpi_group: DPIRestrictionGroup
 ) -> bool:
@@ -206,7 +198,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
         icon="mdi:ethernet",
-        allowed_fn=async_block_client_allowed_fn,
+        allowed_fn=lambda controller, obj_id: obj_id in controller.option_block_clients,
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, obj_id: controller.available,
         control_fn=async_block_client_control_fn,

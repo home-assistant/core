@@ -253,8 +253,9 @@ async def test_fail_setup_if_no_command_topic(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if command fails with command topic."""
-    assert await mqtt_mock_entry()
-    assert "required key not provided" in caplog.text
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
+    assert "Invalid config for [mqtt]: required key not provided" in caplog.text
 
 
 @pytest.mark.parametrize(

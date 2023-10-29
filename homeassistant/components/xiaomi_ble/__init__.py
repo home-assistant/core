@@ -15,11 +15,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers.device_registry import (
-    CONNECTION_BLUETOOTH,
-    DeviceRegistry,
-    async_get,
-)
+from homeassistant.helpers.device_registry import DeviceRegistry, async_get
 
 from .const import (
     CONF_DISCOVERED_EVENT_CLASSES,
@@ -59,7 +55,6 @@ def process_service_info(
             sensor_device_info = update.devices[device_key.device_id]
             device = device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
-                connections={(CONNECTION_BLUETOOTH, address)},
                 identifiers={(BLUETOOTH_DOMAIN, address)},
                 manufacturer=sensor_device_info.manufacturer,
                 model=sensor_device_info.model,

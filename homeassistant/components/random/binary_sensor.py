@@ -1,9 +1,7 @@
 """Support for showing random states."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from random import getrandbits
-from typing import Any
 
 import voluptuous as vol
 
@@ -12,14 +10,13 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-DEFAULT_NAME = "Random binary sensor"
+DEFAULT_NAME = "Random Binary Sensor"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -36,32 +33,20 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Random binary sensor."""
+    name = config.get(CONF_NAME)
+    device_class = config.get(CONF_DEVICE_CLASS)
 
-    async_add_entities([RandomBinarySensor(config)], True)
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Initialize config entry."""
-    async_add_entities(
-        [RandomBinarySensor(config_entry.options, config_entry.entry_id)], True
-    )
+    async_add_entities([RandomSensor(name, device_class)], True)
 
 
-class RandomBinarySensor(BinarySensorEntity):
+class RandomSensor(BinarySensorEntity):
     """Representation of a Random binary sensor."""
 
-    _state: bool | None = None
-
-    def __init__(self, config: Mapping[str, Any], entry_id: str | None = None) -> None:
+    def __init__(self, name, device_class):
         """Initialize the Random binary sensor."""
-        self._name = config.get(CONF_NAME)
-        self._device_class = config.get(CONF_DEVICE_CLASS)
-        if entry_id:
-            self._attr_unique_id = entry_id
+        self._name = name
+        self._device_class = device_class
+        self._state = None
 
     @property
     def name(self):

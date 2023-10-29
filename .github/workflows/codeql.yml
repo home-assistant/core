@@ -7,11 +7,14 @@ on:
       - dev
       - rc
       - master
+  pull_request:
+    branches:
+      - dev
   schedule:
     - cron: "30 18 * * 4"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -29,11 +32,11 @@ jobs:
         uses: actions/checkout@v4.1.1
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2.22.4
+        uses: github/codeql-action/init@v2.22.3
         with:
           languages: python
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2.22.4
+        uses: github/codeql-action/analyze@v2.22.3
         with:
           category: "/language:python"

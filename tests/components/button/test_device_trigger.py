@@ -105,21 +105,10 @@ async def test_get_triggers_hidden_auxiliary(
 
 
 async def test_if_fires_on_state_change(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    calls,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entry = entity_registry.async_get_or_create(
-        DOMAIN, "test", "5678", device_id=device_entry.id
-    )
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
 
     hass.states.async_set(entry.entity_id, "unknown")
 
@@ -132,7 +121,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": device_entry.id,
+                        "device_id": "",
                         "entity_id": entry.id,
                         "type": "pressed",
                     },
@@ -165,21 +154,10 @@ async def test_if_fires_on_state_change(
 
 
 async def test_if_fires_on_state_change_legacy(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    calls,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entry = entity_registry.async_get_or_create(
-        DOMAIN, "test", "5678", device_id=device_entry.id
-    )
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
 
     hass.states.async_set(entry.entity_id, "unknown")
 
@@ -192,7 +170,7 @@ async def test_if_fires_on_state_change_legacy(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": device_entry.id,
+                        "device_id": "",
                         "entity_id": entry.entity_id,
                         "type": "pressed",
                     },

@@ -50,8 +50,6 @@ class Number(CoilEntity, NumberEntity):
                 self._attr_native_min_value,
                 self._attr_native_max_value,
             ) = _get_numeric_limits(coil.size)
-            self._attr_native_min_value /= coil.factor
-            self._attr_native_max_value /= coil.factor
         else:
             self._attr_native_min_value = float(coil.min)
             self._attr_native_max_value = float(coil.max)

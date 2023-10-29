@@ -8,7 +8,6 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
-from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.bootstrap import async_setup_component
@@ -369,7 +368,7 @@ async def test_create_event_service_invalid_params(
     date_fields: dict[str, Any],
     expected_error: type[Exception],
     error_match: str | None,
-) -> None:
+):
     """Test creating an event using the create_event service."""
 
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
@@ -398,10 +397,7 @@ async def test_create_event_service_invalid_params(
     ],
 )
 async def test_list_events_service(
-    hass: HomeAssistant,
-    set_time_zone: None,
-    start_time: str,
-    end_time: str,
+    hass: HomeAssistant, set_time_zone: None, start_time: str, end_time: str
 ) -> None:
     """Test listing events from the service call using exlplicit start and end time.
 
@@ -437,22 +433,21 @@ async def test_list_events_service(
 
 
 @pytest.mark.parametrize(
-    ("entity", "duration"),
+    ("entity", "duration", "expected_events"),
     [
         # Calendar 1 has an hour long event starting in 30 minutes. No events in the
         # next 15 minutes, but it shows up an hour from now.
-        ("calendar.calendar_1", "00:15:00"),
-        ("calendar.calendar_1", "01:00:00"),
+        ("calendar.calendar_1", "00:15:00", []),
+        ("calendar.calendar_1", "01:00:00", ["Future Event"]),
         # Calendar 2 has a active event right now
-        ("calendar.calendar_2", "00:15:00"),
+        ("calendar.calendar_2", "00:15:00", ["Current Event"]),
     ],
 )
-@pytest.mark.freeze_time("2023-10-19 13:50:05")
 async def test_list_events_service_duration(
     hass: HomeAssistant,
     entity: str,
     duration: str,
-    snapshot: SnapshotAssertion,
+    expected_events: list[str],
 ) -> None:
     """Test listing events using a time duration."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
@@ -468,7 +463,10 @@ async def test_list_events_service_duration(
         blocking=True,
         return_response=True,
     )
-    assert response == snapshot
+    assert response
+    assert "events" in response
+    events = response["events"]
+    assert [event["summary"] for event in events] == expected_events
 
 
 async def test_list_events_positive_duration(hass: HomeAssistant) -> None:

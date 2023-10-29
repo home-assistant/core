@@ -11,7 +11,6 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
           "pin": "[%key:common::config_flow::data::pin%]"
         }
       }

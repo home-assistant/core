@@ -44,7 +44,7 @@ HVAC_SYSTEM_MODE_MAP = {
 }
 SystemModeEnum = clusters.Thermostat.Enums.ThermostatSystemMode
 ControlSequenceEnum = clusters.Thermostat.Enums.ThermostatControlSequence
-ThermostatFeature = clusters.Thermostat.Bitmaps.Feature
+ThermostatFeature = clusters.Thermostat.Bitmaps.ThermostatFeature
 
 
 class ThermostatRunningState(IntEnum):
@@ -268,7 +268,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     @staticmethod
     def _create_optional_setpoint_command(
-        mode: clusters.Thermostat.Enums.SetpointAdjustMode | int,
+        mode: clusters.Thermostat.Enums.SetpointAdjustMode,
         target_temp: float,
         current_target_temp: float,
     ) -> clusters.Thermostat.Commands.SetpointRaiseLower | None:

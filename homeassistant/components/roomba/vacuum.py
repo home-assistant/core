@@ -7,9 +7,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import roomba_reported_state
 from .braava import BraavaJet
-from .const import DOMAIN
+from .const import BLID, DOMAIN, ROOMBA_SESSION
 from .irobot_base import IRobotVacuum
-from .models import RoombaData
 from .roomba import RoombaVacuum, RoombaVacuumCarpetBoost
 
 
@@ -19,9 +18,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the iRobot Roomba vacuum cleaner."""
-    domain_data: RoombaData = hass.data[DOMAIN][config_entry.entry_id]
-    roomba = domain_data.roomba
-    blid = domain_data.blid
+    domain_data = hass.data[DOMAIN][config_entry.entry_id]
+    roomba = domain_data[ROOMBA_SESSION]
+    blid = domain_data[BLID]
 
     # Get the capabilities of our unit
     state = roomba_reported_state(roomba)
@@ -37,4 +36,4 @@ async def async_setup_entry(
         constructor = RoombaVacuum
 
     roomba_vac = constructor(roomba, blid)
-    async_add_entities([roomba_vac])
+    async_add_entities([roomba_vac], True)

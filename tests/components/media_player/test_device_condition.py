@@ -132,21 +132,10 @@ async def test_get_conditions_hidden_auxiliary(
 
 
 async def test_if_state(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    calls,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
 ) -> None:
     """Test for turn_on and turn_off conditions."""
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entry = entity_registry.async_get_or_create(
-        DOMAIN, "test", "5678", device_id=device_entry.id
-    )
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
 
     hass.states.async_set(entry.entity_id, STATE_ON)
 
@@ -161,7 +150,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": device_entry.id,
+                            "device_id": "",
                             "entity_id": entry.id,
                             "type": "is_on",
                         }
@@ -179,7 +168,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": device_entry.id,
+                            "device_id": "",
                             "entity_id": entry.id,
                             "type": "is_off",
                         }
@@ -197,7 +186,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": device_entry.id,
+                            "device_id": "",
                             "entity_id": entry.id,
                             "type": "is_idle",
                         }
@@ -215,7 +204,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": device_entry.id,
+                            "device_id": "",
                             "entity_id": entry.id,
                             "type": "is_paused",
                         }
@@ -233,7 +222,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": device_entry.id,
+                            "device_id": "",
                             "entity_id": entry.id,
                             "type": "is_playing",
                         }
@@ -251,7 +240,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": device_entry.id,
+                            "device_id": "",
                             "entity_id": entry.id,
                             "type": "is_buffering",
                         }
@@ -333,21 +322,10 @@ async def test_if_state(
 
 
 async def test_if_state_legacy(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    calls,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
 ) -> None:
     """Test for turn_on and turn_off conditions."""
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entry = entity_registry.async_get_or_create(
-        DOMAIN, "test", "5678", device_id=device_entry.id
-    )
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
 
     hass.states.async_set(entry.entity_id, STATE_ON)
 
@@ -362,7 +340,7 @@ async def test_if_state_legacy(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": device_entry.id,
+                            "device_id": "",
                             "entity_id": entry.id,
                             "type": "is_on",
                         }

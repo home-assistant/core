@@ -296,10 +296,6 @@
         "location": {
           "name": "[%key:common::config_flow::data::location%]",
           "description": "Name of a backup network storage to host backups."
-        },
-        "homeassistant_exclude_database": {
-          "name": "Home Assistant exclude database",
-          "description": "Exclude the Home Assistant database file from backup"
         }
       }
     },
@@ -320,11 +316,11 @@
           "description": "List of directories to include in the backup."
         },
         "name": {
-          "name": "[%key:common::config_flow::data::name%]",
+          "name": "[%key:component::hassio::services::backup_full::fields::name::name%]",
           "description": "[%key:component::hassio::services::backup_full::fields::name::description%]"
         },
         "password": {
-          "name": "[%key:common::config_flow::data::password%]",
+          "name": "[%key:component::hassio::services::backup_full::fields::password::name%]",
           "description": "[%key:component::hassio::services::backup_full::fields::password::description%]"
         },
         "compressed": {
@@ -332,12 +328,8 @@
           "description": "[%key:component::hassio::services::backup_full::fields::compressed::description%]"
         },
         "location": {
-          "name": "[%key:common::config_flow::data::location%]",
+          "name": "[%key:component::hassio::services::backup_full::fields::location::name%]",
           "description": "[%key:component::hassio::services::backup_full::fields::location::description%]"
-        },
-        "homeassistant_exclude_database": {
-          "name": "Home Assistant exclude database",
-          "description": "Exclude the Home Assistant database file from backup"
         }
       }
     },
@@ -350,7 +342,7 @@
           "description": "Slug of backup to restore from."
         },
         "password": {
-          "name": "[%key:common::config_flow::data::password%]",
+          "name": "[%key:component::hassio::services::backup_full::fields::password::name%]",
           "description": "Optional password."
         }
       }
@@ -376,7 +368,7 @@
           "description": "[%key:component::hassio::services::backup_partial::fields::addons::description%]"
         },
         "password": {
-          "name": "[%key:common::config_flow::data::password%]",
+          "name": "[%key:component::hassio::services::backup_full::fields::password::name%]",
           "description": "[%key:component::hassio::services::restore_full::fields::password::description%]"
         }
       }

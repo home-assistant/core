@@ -21,7 +21,7 @@ from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
-SwitchFeature = clusters.Switch.Bitmaps.Feature
+SwitchFeature = clusters.Switch.Bitmaps.SwitchFeature
 
 EVENT_TYPES_MAP = {
     # mapping from raw event id's to translation keys

@@ -16,3 +16,5 @@ PING_ATTEMPTS_COUNT = 3
 
 DOMAIN = "ping"
 PLATFORMS = [Platform.BINARY_SENSOR]
+
+PING_PRIVS = "ping_privs"

@@ -124,18 +124,10 @@ class WindowCoveringClient(ClientClusterHandler):
 class WindowCovering(ClusterHandler):
     """Window cluster handler."""
 
-    _value_attribute_lift = (
-        closures.WindowCovering.AttributeDefs.current_position_lift_percentage.id
-    )
-    _value_attribute_tilt = (
-        closures.WindowCovering.AttributeDefs.current_position_tilt_percentage.id
-    )
+    _value_attribute = 8
     REPORT_CONFIG = (
         AttrReportConfig(
             attr="current_position_lift_percentage", config=REPORT_CONFIG_IMMEDIATE
-        ),
-        AttrReportConfig(
-            attr="current_position_tilt_percentage", config=REPORT_CONFIG_IMMEDIATE
         ),
     )
 
@@ -148,19 +140,8 @@ class WindowCovering(ClusterHandler):
         if result is not None:
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                self._value_attribute_lift,
+                8,
                 "current_position_lift_percentage",
-                result,
-            )
-        result = await self.get_attribute_value(
-            "current_position_tilt_percentage", from_cache=False
-        )
-        self.debug("read current tilt position: %s", result)
-        if result is not None:
-            self.async_send_signal(
-                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                self._value_attribute_tilt,
-                "current_position_tilt_percentage",
                 result,
             )
 
@@ -171,7 +152,7 @@ class WindowCovering(ClusterHandler):
         self.debug(
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )
-        if attrid in (self._value_attribute_lift, self._value_attribute_tilt):
+        if attrid == self._value_attribute:
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )

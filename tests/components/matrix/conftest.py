@@ -14,8 +14,6 @@ from nio import (
     LoginError,
     LoginResponse,
     Response,
-    RoomResolveAliasError,
-    RoomResolveAliasResponse,
     UploadResponse,
     WhoamiError,
     WhoamiResponse,
@@ -50,15 +48,8 @@ from tests.common import async_capture_events
 
 TEST_NOTIFIER_NAME = "matrix_notify"
 
-TEST_HOMESERVER = "example.com"
 TEST_DEFAULT_ROOM = "!DefaultNotificationRoom:example.com"
-TEST_ROOM_A_ID = "!RoomA-ID:example.com"
-TEST_ROOM_B_ID = "!RoomB-ID:example.com"
-TEST_ROOM_B_ALIAS = "#RoomB-Alias:example.com"
-TEST_JOINABLE_ROOMS = {
-    TEST_ROOM_A_ID: TEST_ROOM_A_ID,
-    TEST_ROOM_B_ALIAS: TEST_ROOM_B_ID,
-}
+TEST_JOINABLE_ROOMS = ["!RoomIdString:example.com", "#RoomAliasString:example.com"]
 TEST_BAD_ROOM = "!UninvitedRoom:example.com"
 TEST_MXID = "@user:example.com"
 TEST_DEVICE_ID = "FAKEID"
@@ -74,16 +65,8 @@ class _MockAsyncClient(AsyncClient):
     async def close(self):
         return None
 
-    async def room_resolve_alias(self, room_alias: str):
-        if room_id := TEST_JOINABLE_ROOMS.get(room_alias):
-            return RoomResolveAliasResponse(
-                room_alias=room_alias, room_id=room_id, servers=[TEST_HOMESERVER]
-            )
-        else:
-            return RoomResolveAliasError(message=f"Could not resolve {room_alias}")
-
     async def join(self, room_id: RoomID):
-        if room_id in TEST_JOINABLE_ROOMS.values():
+        if room_id in TEST_JOINABLE_ROOMS:
             return JoinResponse(room_id=room_id)
         else:
             return JoinError(message="Not allowed to join this room.")
@@ -119,10 +102,10 @@ class _MockAsyncClient(AsyncClient):
     async def room_send(self, *args, **kwargs):
         if not self.logged_in:
             raise LocalProtocolError
-        if kwargs["room_id"] not in TEST_JOINABLE_ROOMS.values():
-            return ErrorResponse(message="Cannot send a message in this room.")
-        else:
+        if kwargs["room_id"] in TEST_JOINABLE_ROOMS:
             return Response()
+        else:
+            return ErrorResponse(message="Cannot send a message in this room.")
 
     async def sync(self, *args, **kwargs):
         return None
@@ -140,7 +123,7 @@ MOCK_CONFIG_DATA = {
         CONF_USERNAME: TEST_MXID,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_VERIFY_SSL: True,
-        CONF_ROOMS: list(TEST_JOINABLE_ROOMS),
+        CONF_ROOMS: TEST_JOINABLE_ROOMS,
         CONF_COMMANDS: [
             {
                 CONF_WORD: "WordTrigger",
@@ -160,35 +143,35 @@ MOCK_CONFIG_DATA = {
 }
 
 MOCK_WORD_COMMANDS = {
-    TEST_ROOM_A_ID: {
+    "!RoomIdString:example.com": {
         "WordTrigger": {
             "word": "WordTrigger",
             "name": "WordTriggerEventName",
-            "rooms": [TEST_ROOM_A_ID, TEST_ROOM_B_ID],
+            "rooms": ["!RoomIdString:example.com", "#RoomAliasString:example.com"],
         }
     },
-    TEST_ROOM_B_ID: {
+    "#RoomAliasString:example.com": {
         "WordTrigger": {
             "word": "WordTrigger",
             "name": "WordTriggerEventName",
-            "rooms": [TEST_ROOM_A_ID, TEST_ROOM_B_ID],
+            "rooms": ["!RoomIdString:example.com", "#RoomAliasString:example.com"],
         }
     },
 }
 
 MOCK_EXPRESSION_COMMANDS = {
-    TEST_ROOM_A_ID: [
+    "!RoomIdString:example.com": [
         {
             "expression": re.compile("My name is (?P<name>.*)"),
             "name": "ExpressionTriggerEventName",
-            "rooms": [TEST_ROOM_A_ID, TEST_ROOM_B_ID],
+            "rooms": ["!RoomIdString:example.com", "#RoomAliasString:example.com"],
         }
     ],
-    TEST_ROOM_B_ID: [
+    "#RoomAliasString:example.com": [
         {
             "expression": re.compile("My name is (?P<name>.*)"),
             "name": "ExpressionTriggerEventName",
-            "rooms": [TEST_ROOM_A_ID, TEST_ROOM_B_ID],
+            "rooms": ["!RoomIdString:example.com", "#RoomAliasString:example.com"],
         }
     ],
 }

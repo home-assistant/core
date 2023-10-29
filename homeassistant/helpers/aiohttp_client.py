@@ -7,7 +7,7 @@ from contextlib import suppress
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
 from aiohttp import web
@@ -29,8 +29,9 @@ if TYPE_CHECKING:
 
 
 DATA_CONNECTOR = "aiohttp_connector"
+DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
 DATA_CLIENTSESSION = "aiohttp_clientsession"
-
+DATA_CLIENTSESSION_NOTVERIFY = "aiohttp_clientsession_notverify"
 SERVER_SOFTWARE = "{0}/{1} aiohttp/{2} Python/{3[0]}.{3[1]}".format(
     APPLICATION_NAME, __version__, aiohttp.__version__, sys.version_info
 )
@@ -87,31 +88,22 @@ class HassClientResponse(aiohttp.ClientResponse):
 @callback
 @bind_hass
 def async_get_clientsession(
-    hass: HomeAssistant, verify_ssl: bool = True, family: int = 0
+    hass: HomeAssistant, verify_ssl: bool = True
 ) -> aiohttp.ClientSession:
     """Return default aiohttp ClientSession.
 
     This method must be run in the event loop.
     """
-    session_key = _make_key(verify_ssl, family)
-    if DATA_CLIENTSESSION not in hass.data:
-        sessions: dict[tuple[bool, int], aiohttp.ClientSession] = {}
-        hass.data[DATA_CLIENTSESSION] = sessions
-    else:
-        sessions = hass.data[DATA_CLIENTSESSION]
+    key = DATA_CLIENTSESSION if verify_ssl else DATA_CLIENTSESSION_NOTVERIFY
 
-    if session_key not in sessions:
-        session = _async_create_clientsession(
+    if key not in hass.data:
+        hass.data[key] = _async_create_clientsession(
             hass,
             verify_ssl,
             auto_cleanup_method=_async_register_default_clientsession_shutdown,
-            family=family,
         )
-        sessions[session_key] = session
-    else:
-        session = sessions[session_key]
 
-    return session
+    return cast(aiohttp.ClientSession, hass.data[key])
 
 
 @callback
@@ -120,7 +112,6 @@ def async_create_clientsession(
     hass: HomeAssistant,
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
-    family: int = 0,
     **kwargs: Any,
 ) -> aiohttp.ClientSession:
     """Create a new ClientSession with kwargs, i.e. for cookies.
@@ -140,7 +131,6 @@ def async_create_clientsession(
         hass,
         verify_ssl,
         auto_cleanup_method=auto_cleanup_method,
-        family=family,
         **kwargs,
     )
 
@@ -153,12 +143,11 @@ def _async_create_clientsession(
     verify_ssl: bool = True,
     auto_cleanup_method: Callable[[HomeAssistant, aiohttp.ClientSession], None]
     | None = None,
-    family: int = 0,
     **kwargs: Any,
 ) -> aiohttp.ClientSession:
     """Create a new ClientSession with kwargs, i.e. for cookies."""
     clientsession = aiohttp.ClientSession(
-        connector=_async_get_connector(hass, verify_ssl, family),
+        connector=_async_get_connector(hass, verify_ssl),
         json_serialize=json_dumps,
         response_class=HassClientResponse,
         **kwargs,
@@ -287,28 +276,17 @@ def _async_register_default_clientsession_shutdown(
 
 
 @callback
-def _make_key(verify_ssl: bool = True, family: int = 0) -> tuple[bool, int]:
-    """Make a key for connector or session pool."""
-    return (verify_ssl, family)
-
-
-@callback
 def _async_get_connector(
-    hass: HomeAssistant, verify_ssl: bool = True, family: int = 0
+    hass: HomeAssistant, verify_ssl: bool = True
 ) -> aiohttp.BaseConnector:
     """Return the connector pool for aiohttp.
 
     This method must be run in the event loop.
     """
-    connector_key = _make_key(verify_ssl, family)
-    if DATA_CONNECTOR not in hass.data:
-        connectors: dict[tuple[bool, int], aiohttp.BaseConnector] = {}
-        hass.data[DATA_CONNECTOR] = connectors
-    else:
-        connectors = hass.data[DATA_CONNECTOR]
+    key = DATA_CONNECTOR if verify_ssl else DATA_CONNECTOR_NOTVERIFY
 
-    if connector_key in connectors:
-        return connectors[connector_key]
+    if key in hass.data:
+        return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
         ssl_context: bool | SSLContext = ssl_util.get_default_context()
@@ -316,13 +294,12 @@ def _async_get_connector(
         ssl_context = ssl_util.get_default_no_verify_context()
 
     connector = aiohttp.TCPConnector(
-        family=family,
         enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
     )
-    connectors[connector_key] = connector
+    hass.data[key] = connector
 
     async def _async_close_connector(event: Event) -> None:
         """Close connector pool."""

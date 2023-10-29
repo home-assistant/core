@@ -378,21 +378,10 @@ async def test_get_trigger_capabilities_set_tilt_pos(
 
 
 async def test_if_fires_on_state_change(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    calls,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
 ) -> None:
     """Test for state triggers firing."""
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entry = entity_registry.async_get_or_create(
-        DOMAIN, "test", "5678", device_id=device_entry.id
-    )
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
 
     hass.states.async_set(entry.entity_id, STATE_CLOSED)
 
@@ -405,7 +394,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": device_entry.id,
+                        "device_id": "",
                         "entity_id": entry.id,
                         "type": "opened",
                     },
@@ -427,7 +416,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": device_entry.id,
+                        "device_id": "",
                         "entity_id": entry.id,
                         "type": "closed",
                     },
@@ -449,7 +438,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": device_entry.id,
+                        "device_id": "",
                         "entity_id": entry.id,
                         "type": "opening",
                     },
@@ -471,7 +460,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": device_entry.id,
+                        "device_id": "",
                         "entity_id": entry.id,
                         "type": "closing",
                     },
@@ -531,21 +520,10 @@ async def test_if_fires_on_state_change(
 
 
 async def test_if_fires_on_state_change_legacy(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    calls,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
 ) -> None:
     """Test for state triggers firing."""
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entry = entity_registry.async_get_or_create(
-        DOMAIN, "test", "5678", device_id=device_entry.id
-    )
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
 
     hass.states.async_set(entry.entity_id, STATE_CLOSED)
 
@@ -558,7 +536,7 @@ async def test_if_fires_on_state_change_legacy(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": device_entry.id,
+                        "device_id": "",
                         "entity_id": entry.entity_id,
                         "type": "opened",
                     },
@@ -591,21 +569,10 @@ async def test_if_fires_on_state_change_legacy(
 
 
 async def test_if_fires_on_state_change_with_for(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    calls,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
 ) -> None:
     """Test for triggers firing with delay."""
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entry = entity_registry.async_get_or_create(
-        DOMAIN, "test", "5678", device_id=device_entry.id
-    )
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
 
     hass.states.async_set(entry.entity_id, STATE_CLOSED)
 
@@ -618,7 +585,7 @@ async def test_if_fires_on_state_change_with_for(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": device_entry.id,
+                        "device_id": "",
                         "entity_id": entry.id,
                         "type": "opened",
                         "for": {"seconds": 5},
@@ -660,7 +627,6 @@ async def test_if_fires_on_state_change_with_for(
 
 async def test_if_fires_on_position(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
@@ -672,14 +638,7 @@ async def test_if_fires_on_position(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
     entry = entity_registry.async_get(ent.entity_id)
-    entity_registry.async_update_entity(entry.entity_id, device_id=device_entry.id)
 
     assert await async_setup_component(
         hass,
@@ -691,7 +650,7 @@ async def test_if_fires_on_position(
                         {
                             "platform": "device",
                             "domain": DOMAIN,
-                            "device_id": device_entry.id,
+                            "device_id": "",
                             "entity_id": entry.id,
                             "type": "position",
                             "above": 45,
@@ -716,7 +675,7 @@ async def test_if_fires_on_position(
                         {
                             "platform": "device",
                             "domain": DOMAIN,
-                            "device_id": device_entry.id,
+                            "device_id": "",
                             "entity_id": entry.id,
                             "type": "position",
                             "below": 90,
@@ -741,7 +700,7 @@ async def test_if_fires_on_position(
                         {
                             "platform": "device",
                             "domain": DOMAIN,
-                            "device_id": device_entry.id,
+                            "device_id": "",
                             "entity_id": entry.id,
                             "type": "position",
                             "above": 45,
@@ -814,7 +773,6 @@ async def test_if_fires_on_position(
 
 async def test_if_fires_on_tilt_position(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
@@ -826,14 +784,7 @@ async def test_if_fires_on_tilt_position(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
     entry = entity_registry.async_get(ent.entity_id)
-    entity_registry.async_update_entity(entry.entity_id, device_id=device_entry.id)
 
     assert await async_setup_component(
         hass,
@@ -845,7 +796,7 @@ async def test_if_fires_on_tilt_position(
                         {
                             "platform": "device",
                             "domain": DOMAIN,
-                            "device_id": device_entry.id,
+                            "device_id": "",
                             "entity_id": entry.id,
                             "type": "tilt_position",
                             "above": 45,
@@ -870,7 +821,7 @@ async def test_if_fires_on_tilt_position(
                         {
                             "platform": "device",
                             "domain": DOMAIN,
-                            "device_id": device_entry.id,
+                            "device_id": "",
                             "entity_id": entry.id,
                             "type": "tilt_position",
                             "below": 90,
@@ -895,7 +846,7 @@ async def test_if_fires_on_tilt_position(
                         {
                             "platform": "device",
                             "domain": DOMAIN,
-                            "device_id": device_entry.id,
+                            "device_id": "",
                             "entity_id": entry.id,
                             "type": "tilt_position",
                             "above": 45,

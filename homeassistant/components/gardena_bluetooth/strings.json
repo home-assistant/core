@@ -4,7 +4,7 @@
       "user": {
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
-          "address": "[%key:common::config_flow::data::device%]"
+          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
         }
       },
       "confirm": {

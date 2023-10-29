@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Final, cast
 
+from webrtc_noise_gain import AudioProcessor
+
 _SAMPLE_RATE: Final = 16000  # Hz
 _SAMPLE_WIDTH: Final = 2  # bytes
 
@@ -49,12 +51,6 @@ class WebRtcVad(VoiceActivityDetector):
 
     def __init__(self) -> None:
         """Initialize webrtcvad."""
-        # Delay import of webrtc so HA start up is not crashing
-        # on older architectures (armhf).
-        #
-        # pylint: disable=import-outside-toplevel
-        from webrtc_noise_gain import AudioProcessor
-
         # Just VAD: no noise suppression or auto gain
         self._audio_processor = AudioProcessor(0, 0)
 

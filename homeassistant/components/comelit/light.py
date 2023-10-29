@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from aiocomelit import ComelitSerialBridgeObject
-from aiocomelit.const import LIGHT, STATE_OFF, STATE_ON
+from aiocomelit.const import LIGHT
 
 from homeassistant.components.light import LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, STATE_OFF, STATE_ON
 from .coordinator import ComelitSerialBridge
 
 
@@ -25,6 +25,7 @@ async def async_setup_entry(
 
     coordinator: ComelitSerialBridge = hass.data[DOMAIN][config_entry.entry_id]
 
+    # Use config_entry.entry_id as base for unique_id because no serial number or mac is available
     async_add_entities(
         ComelitLightEntity(coordinator, device, config_entry.entry_id)
         for device in coordinator.data[LIGHT].values()
@@ -47,8 +48,6 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
         self._api = coordinator.api
         self._device = device
         super().__init__(coordinator)
-        # Use config_entry.entry_id as base for unique_id
-        # because no serial number or mac is available
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
         self._attr_device_info = coordinator.platform_device_info(device)
 

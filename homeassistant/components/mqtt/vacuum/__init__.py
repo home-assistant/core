@@ -5,29 +5,30 @@
 
 from __future__ import annotations
 
+import functools
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components import vacuum
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, async_get_hass, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from ..const import DOMAIN
-from ..mixins import async_setup_entity_entry_helper
+from ..mixins import async_setup_entry_helper
 from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import (
     DISCOVERY_SCHEMA_LEGACY,
     PLATFORM_SCHEMA_LEGACY_MODERN,
-    MqttVacuum,
+    async_setup_entity_legacy,
 )
 from .schema_state import (
     DISCOVERY_SCHEMA_STATE,
     PLATFORM_SCHEMA_STATE_MODERN,
-    MqttStateVacuum,
+    async_setup_entity_state,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,13 +39,13 @@ MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 # The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
 # and will be removed with HA Core 2024.2.0
 def warn_for_deprecation_legacy_schema(
-    hass: HomeAssistant, config: ConfigType, discovery: bool
+    hass: HomeAssistant, config: ConfigType, discovery_data: DiscoveryInfoType | None
 ) -> None:
     """Warn for deprecation of legacy schema."""
     if config[CONF_SCHEMA] == STATE:
         return
 
-    key_suffix = "discovery" if discovery else "yaml"
+    key_suffix = "yaml" if discovery_data is None else "discovery"
     translation_key = f"deprecation_mqtt_legacy_vacuum_{key_suffix}"
     async_create_issue(
         hass,
@@ -62,7 +63,6 @@ def warn_for_deprecation_legacy_schema(
     )
 
 
-@callback
 def validate_mqtt_vacuum_discovery(config_value: ConfigType) -> ConfigType:
     """Validate MQTT vacuum schema."""
 
@@ -71,12 +71,9 @@ def validate_mqtt_vacuum_discovery(config_value: ConfigType) -> ConfigType:
 
     schemas = {LEGACY: DISCOVERY_SCHEMA_LEGACY, STATE: DISCOVERY_SCHEMA_STATE}
     config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
-    hass = async_get_hass()
-    warn_for_deprecation_legacy_schema(hass, config, True)
     return config
 
 
-@callback
 def validate_mqtt_vacuum_modern(config_value: ConfigType) -> ConfigType:
     """Validate MQTT vacuum modern schema."""
 
@@ -88,10 +85,6 @@ def validate_mqtt_vacuum_modern(config_value: ConfigType) -> ConfigType:
         STATE: PLATFORM_SCHEMA_STATE_MODERN,
     }
     config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
-    # The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
-    # and will be removed with HA Core 2024.2.0
-    hass = async_get_hass()
-    warn_for_deprecation_legacy_schema(hass, config, False)
     return config
 
 
@@ -110,13 +103,28 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT vacuum through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
-        hass,
-        config_entry,
-        None,
-        vacuum.DOMAIN,
-        async_add_entities,
-        DISCOVERY_SCHEMA,
-        PLATFORM_SCHEMA_MODERN,
-        {"legacy": MqttVacuum, "state": MqttStateVacuum},
+    setup = functools.partial(
+        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    )
+    await async_setup_entry_helper(hass, vacuum.DOMAIN, setup, DISCOVERY_SCHEMA)
+
+
+async def _async_setup_entity(
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the MQTT vacuum."""
+
+    # The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
+    # and will be removed with HA Core 2024.2.0
+    warn_for_deprecation_legacy_schema(hass, config, discovery_data)
+    setup_entity = {
+        LEGACY: async_setup_entity_legacy,
+        STATE: async_setup_entity_state,
+    }
+    await setup_entity[config[CONF_SCHEMA]](
+        hass, config, async_add_entities, config_entry, discovery_data
     )

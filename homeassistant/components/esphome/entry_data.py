@@ -29,7 +29,6 @@ from aioesphomeapi import (
     SensorInfo,
     SensorState,
     SwitchInfo,
-    TextInfo,
     TextSensorInfo,
     UserService,
     build_unique_id,
@@ -69,7 +68,6 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     SelectInfo: Platform.SELECT,
     SensorInfo: Platform.SENSOR,
     SwitchInfo: Platform.SWITCH,
-    TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
 }
 

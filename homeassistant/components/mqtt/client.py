@@ -176,13 +176,7 @@ async def async_subscribe(
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
         )
-    try:
-        mqtt_data = get_mqtt_data(hass)
-    except KeyError as ex:
-        raise HomeAssistantError(
-            f"Cannot subscribe to topic '{topic}', "
-            "make sure MQTT is set up correctly"
-        ) from ex
+    mqtt_data = get_mqtt_data(hass)
     async_remove = await mqtt_data.client.async_subscribe(
         topic,
         catch_log_exception(

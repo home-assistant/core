@@ -205,13 +205,11 @@ async def test_controlling_validation_state_via_topic(
     ],
 )
 async def test_attribute_validation_max_greater_then_min(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the validation of min and max configuration attributes."""
-    assert await mqtt_mock_entry()
-    assert "not a valid value" in caplog.text
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
 
 
 @pytest.mark.parametrize(
@@ -230,13 +228,11 @@ async def test_attribute_validation_max_greater_then_min(
     ],
 )
 async def test_attribute_validation_max_not_greater_then_max_state_length(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the max value of of max configuration attribute."""
-    assert await mqtt_mock_entry()
-    assert "not a valid value" in caplog.text
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
 
 
 @pytest.mark.parametrize(

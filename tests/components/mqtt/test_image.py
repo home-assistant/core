@@ -1,5 +1,6 @@
 """The tests for mqtt image component."""
 from base64 import b64encode
+from contextlib import suppress
 from http import HTTPStatus
 import json
 import ssl
@@ -503,7 +504,7 @@ async def test_image_from_url_fails(
                     }
                 }
             },
-            "Expected one of [`image_topic`, `url_topic`], got none",
+            "Invalid config for [mqtt]: Expected one of [`image_topic`, `url_topic`], got none",
         ),
     ],
 )
@@ -515,7 +516,8 @@ async def test_image_config_fails(
     error_msg: str,
 ) -> None:
     """Test setup with minimum configuration."""
-    assert await mqtt_mock_entry()
+    with suppress(AssertionError):
+        await mqtt_mock_entry()
     assert error_msg in caplog.text
 
 

@@ -230,164 +230,53 @@ async def test_no_triggers(
     assert triggers == []
 
 
-async def test_fires_on_camera_motion(
-    hass: HomeAssistant,
-    create_device: CreateDevice,
-    setup_platform: PlatformSetup,
-    calls,
-) -> None:
+async def test_fires_on_camera_motion(hass: HomeAssistant, calls) -> None:
     """Test camera_motion triggers firing."""
-    create_device.create(
-        raw_data=make_camera(
-            device_id=DEVICE_ID,
-            traits={
-                "sdm.devices.traits.CameraMotion": {},
-                "sdm.devices.traits.CameraPerson": {},
-            },
-        )
-    )
-    await setup_platform()
+    assert await setup_automation(hass, DEVICE_ID, "camera_motion")
 
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
-
-    assert await setup_automation(hass, device_entry.id, "camera_motion")
-
-    message = {
-        "device_id": device_entry.id,
-        "type": "camera_motion",
-        "timestamp": utcnow(),
-    }
+    message = {"device_id": DEVICE_ID, "type": "camera_motion", "timestamp": utcnow()}
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_fires_on_camera_person(
-    hass: HomeAssistant,
-    create_device: CreateDevice,
-    setup_platform: PlatformSetup,
-    calls,
-) -> None:
+async def test_fires_on_camera_person(hass: HomeAssistant, calls) -> None:
     """Test camera_person triggers firing."""
-    create_device.create(
-        raw_data=make_camera(
-            device_id=DEVICE_ID,
-            traits={
-                "sdm.devices.traits.CameraMotion": {},
-                "sdm.devices.traits.CameraPerson": {},
-            },
-        )
-    )
-    await setup_platform()
+    assert await setup_automation(hass, DEVICE_ID, "camera_person")
 
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
-
-    assert await setup_automation(hass, device_entry.id, "camera_person")
-
-    message = {
-        "device_id": device_entry.id,
-        "type": "camera_person",
-        "timestamp": utcnow(),
-    }
+    message = {"device_id": DEVICE_ID, "type": "camera_person", "timestamp": utcnow()}
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_fires_on_camera_sound(
-    hass: HomeAssistant,
-    create_device: CreateDevice,
-    setup_platform: PlatformSetup,
-    calls,
-) -> None:
-    """Test camera_sound triggers firing."""
-    create_device.create(
-        raw_data=make_camera(
-            device_id=DEVICE_ID,
-            traits={
-                "sdm.devices.traits.CameraMotion": {},
-                "sdm.devices.traits.CameraSound": {},
-            },
-        )
-    )
-    await setup_platform()
+async def test_fires_on_camera_sound(hass: HomeAssistant, calls) -> None:
+    """Test camera_person triggers firing."""
+    assert await setup_automation(hass, DEVICE_ID, "camera_sound")
 
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
-
-    assert await setup_automation(hass, device_entry.id, "camera_sound")
-
-    message = {
-        "device_id": device_entry.id,
-        "type": "camera_sound",
-        "timestamp": utcnow(),
-    }
+    message = {"device_id": DEVICE_ID, "type": "camera_sound", "timestamp": utcnow()}
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_fires_on_doorbell_chime(
-    hass: HomeAssistant,
-    create_device: CreateDevice,
-    setup_platform: PlatformSetup,
-    calls,
-) -> None:
+async def test_fires_on_doorbell_chime(hass: HomeAssistant, calls) -> None:
     """Test doorbell_chime triggers firing."""
-    create_device.create(
-        raw_data=make_camera(
-            device_id=DEVICE_ID,
-            traits={
-                "sdm.devices.traits.CameraMotion": {},
-                "sdm.devices.traits.DoorbellChime": {},
-            },
-        )
-    )
-    await setup_platform()
+    assert await setup_automation(hass, DEVICE_ID, "doorbell_chime")
 
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
-
-    assert await setup_automation(hass, device_entry.id, "doorbell_chime")
-
-    message = {
-        "device_id": device_entry.id,
-        "type": "doorbell_chime",
-        "timestamp": utcnow(),
-    }
+    message = {"device_id": DEVICE_ID, "type": "doorbell_chime", "timestamp": utcnow()}
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_trigger_for_wrong_device_id(
-    hass: HomeAssistant,
-    create_device: CreateDevice,
-    setup_platform: PlatformSetup,
-    calls,
-) -> None:
-    """Test messages for the wrong device are ignored."""
-    create_device.create(
-        raw_data=make_camera(
-            device_id=DEVICE_ID,
-            traits={
-                "sdm.devices.traits.CameraMotion": {},
-                "sdm.devices.traits.CameraPerson": {},
-            },
-        )
-    )
-    await setup_platform()
-
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
-
-    assert await setup_automation(hass, device_entry.id, "camera_motion")
+async def test_trigger_for_wrong_device_id(hass: HomeAssistant, calls) -> None:
+    """Test for turn_on and turn_off triggers firing."""
+    assert await setup_automation(hass, DEVICE_ID, "camera_motion")
 
     message = {
         "device_id": "wrong-device-id",
@@ -399,31 +288,12 @@ async def test_trigger_for_wrong_device_id(
     assert len(calls) == 0
 
 
-async def test_trigger_for_wrong_event_type(
-    hass: HomeAssistant,
-    create_device: CreateDevice,
-    setup_platform: PlatformSetup,
-    calls,
-) -> None:
-    """Test that messages for the wrong event type are ignored."""
-    create_device.create(
-        raw_data=make_camera(
-            device_id=DEVICE_ID,
-            traits={
-                "sdm.devices.traits.CameraMotion": {},
-                "sdm.devices.traits.CameraPerson": {},
-            },
-        )
-    )
-    await setup_platform()
-
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
-
-    assert await setup_automation(hass, device_entry.id, "camera_motion")
+async def test_trigger_for_wrong_event_type(hass: HomeAssistant, calls) -> None:
+    """Test for turn_on and turn_off triggers firing."""
+    assert await setup_automation(hass, DEVICE_ID, "camera_motion")
 
     message = {
-        "device_id": device_entry.id,
+        "device_id": DEVICE_ID,
         "type": "wrong-event-type",
         "timestamp": utcnow(),
     }

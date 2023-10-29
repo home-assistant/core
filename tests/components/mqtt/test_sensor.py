@@ -708,13 +708,11 @@ async def test_default_availability_list_payload_any(
 
 
 async def test_default_availability_list_single(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test availability list and availability_topic are mutually exclusive."""
     await help_test_default_availability_list_single(
-        hass, mqtt_mock_entry, caplog, sensor.DOMAIN, DEFAULT_CONFIG
+        hass, caplog, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -756,8 +754,11 @@ async def test_invalid_device_class(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device_class option with invalid value."""
-    assert await mqtt_mock_entry()
-    assert "expected SensorDeviceClass or one of" in caplog.text
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
+    assert (
+        "Invalid config for [mqtt]: expected SensorDeviceClass or one of" in caplog.text
+    )
 
 
 @pytest.mark.parametrize(
@@ -817,8 +818,11 @@ async def test_invalid_state_class(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test state_class option with invalid value."""
-    assert await mqtt_mock_entry()
-    assert "expected SensorStateClass or one of" in caplog.text
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
+    assert (
+        "Invalid config for [mqtt]: expected SensorStateClass or one of" in caplog.text
+    )
 
 
 @pytest.mark.parametrize(

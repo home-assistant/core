@@ -68,13 +68,7 @@
     },
     "restart": {
       "name": "[%key:common::action::restart%]",
-      "description": "Restarts Home Assistant.",
-      "fields": {
-        "safe_mode": {
-          "name": "Safe mode",
-          "description": "Disable custom integrations and custom cards."
-        }
-      }
+      "description": "Restarts Home Assistant."
     },
     "set_location": {
       "name": "Set location",

@@ -197,8 +197,9 @@ async def test_fail_setup_if_no_command_topic(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if setup fails with no command topic."""
-    assert await mqtt_mock_entry()
-    assert "required key not provided" in caplog.text
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
+    assert "Invalid config for [mqtt]: required key not provided" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -216,8 +217,12 @@ async def test_fail_setup_if_color_mode_deprecated(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if setup fails if color mode is combined with deprecated config keys."""
-    assert await mqtt_mock_entry()
-    assert "color_mode must not be combined with any of" in caplog.text
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
+    assert (
+        "Invalid config for [mqtt]: color_mode must not be combined with any of"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(
@@ -245,7 +250,7 @@ async def test_fail_setup_if_color_mode_deprecated(
                 COLOR_MODES_CONFIG,
                 ({"supported_color_modes": ["unknown"]},),
             ),
-            "value must be one of [<ColorMode.",
+            "Invalid config for [mqtt]: value must be one of [<ColorMode.",
         ),
     ],
 )
@@ -256,7 +261,8 @@ async def test_fail_setup_if_color_modes_invalid(
     error: str,
 ) -> None:
     """Test if setup fails if supported color modes is invalid."""
-    assert await mqtt_mock_entry()
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
     assert error in caplog.text
 
 

@@ -36,7 +36,7 @@ DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 4
+STORAGE_VERSION_MINOR = 3
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
@@ -79,7 +79,6 @@ class DeviceInfo(TypedDict, total=False):
     manufacturer: str | None
     model: str | None
     name: str | None
-    serial_number: str | None
     suggested_area: str | None
     sw_version: str | None
     hw_version: str | None
@@ -103,7 +102,6 @@ DEVICE_INFO_TYPES = {
         "manufacturer",
         "model",
         "name",
-        "serial_number",
         "suggested_area",
         "sw_version",
         "via_device",
@@ -231,7 +229,6 @@ class DeviceEntry:
     model: str | None = attr.ib(default=None)
     name_by_user: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
-    serial_number: str | None = attr.ib(default=None)
     suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
@@ -260,7 +257,6 @@ class DeviceEntry:
             "model": self.model,
             "name_by_user": self.name_by_user,
             "name": self.name,
-            "serial_number": self.serial_number,
             "sw_version": self.sw_version,
             "via_device_id": self.via_device_id,
         }
@@ -363,10 +359,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Version 1.3 adds hw_version
                 for device in old_data["devices"]:
                     device["hw_version"] = None
-            if old_minor_version < 4:
-                # Introduced in 2023.11
-                for device in old_data["devices"]:
-                    device["serial_number"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -498,7 +490,6 @@ class DeviceRegistry:
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
-        serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device: tuple[str, str] | None | UndefinedType = UNDEFINED,
@@ -523,7 +514,6 @@ class DeviceRegistry:
             ("manufacturer", manufacturer),
             ("model", model),
             ("name", name),
-            ("serial_number", serial_number),
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("via_device", via_device),
@@ -601,7 +591,6 @@ class DeviceRegistry:
             merge_identifiers=identifiers or UNDEFINED,
             model=model,
             name=name,
-            serial_number=serial_number,
             suggested_area=suggested_area,
             sw_version=sw_version,
             via_device_id=via_device_id,
@@ -631,7 +620,6 @@ class DeviceRegistry:
         name: str | None | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
-        serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device_id: str | None | UndefinedType = UNDEFINED,
@@ -721,7 +709,6 @@ class DeviceRegistry:
             ("model", model),
             ("name", name),
             ("name_by_user", name_by_user),
-            ("serial_number", serial_number),
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("via_device_id", via_device_id),
@@ -815,7 +802,6 @@ class DeviceRegistry:
                     model=device["model"],
                     name_by_user=device["name_by_user"],
                     name=device["name"],
-                    serial_number=device["serial_number"],
                     sw_version=device["sw_version"],
                     via_device_id=device["via_device_id"],
                 )
@@ -865,7 +851,6 @@ class DeviceRegistry:
                 "model": entry.model,
                 "name_by_user": entry.name_by_user,
                 "name": entry.name,
-                "serial_number": entry.serial_number,
                 "sw_version": entry.sw_version,
                 "via_device_id": entry.via_device_id,
             }

@@ -203,33 +203,28 @@ class ZHAGateway:
             start_radio=False,
         )
 
-        try:
-            for attempt in range(STARTUP_RETRIES):
-                try:
-                    await self.application_controller.startup(auto_form=True)
-                except TransientConnectionError as exc:
-                    raise ConfigEntryNotReady from exc
-                except NetworkSettingsInconsistent:
-                    raise
-                except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.debug(
-                        "Couldn't start %s coordinator (attempt %s of %s)",
-                        self.radio_description,
-                        attempt + 1,
-                        STARTUP_RETRIES,
-                        exc_info=exc,
-                    )
+        for attempt in range(STARTUP_RETRIES):
+            try:
+                await self.application_controller.startup(auto_form=True)
+            except NetworkSettingsInconsistent:
+                raise
+            except TransientConnectionError as exc:
+                raise ConfigEntryNotReady from exc
+            except Exception as exc:  # pylint: disable=broad-except
+                _LOGGER.warning(
+                    "Couldn't start %s coordinator (attempt %s of %s)",
+                    self.radio_description,
+                    attempt + 1,
+                    STARTUP_RETRIES,
+                    exc_info=exc,
+                )
 
-                    if attempt == STARTUP_RETRIES - 1:
-                        raise exc
+                if attempt == STARTUP_RETRIES - 1:
+                    raise exc
 
-                    await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
-                else:
-                    break
-        except Exception:
-            # Explicitly shut down the controller application on failure
-            await self.application_controller.shutdown()
-            raise
+                await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
+            else:
+                break
 
         zha_data = get_zha_data(self.hass)
         zha_data.gateway = self
