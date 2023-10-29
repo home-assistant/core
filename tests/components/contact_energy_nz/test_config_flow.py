@@ -1,4 +1,5 @@
 """Test the Contact Energy NZ config flow."""
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 from contact_energy_nz import ContactEnergyApi
@@ -91,3 +92,69 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_auth_exception(hass: HomeAssistant) -> None:
+    """Test we handle auth error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.contact_energy_nz.config_flow.ContactEnergyApi.from_credentials",
+        side_effect=InvalidAuth,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_timeout(hass: HomeAssistant) -> None:
+    """Test we handle request timeout error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.contact_energy_nz.config_flow.ContactEnergyApi.from_credentials",
+        side_effect=asyncio.TimeoutError(),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_validate_input_unknown_exception(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.contact_energy_nz.config_flow.validate_input",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
