@@ -78,7 +78,6 @@ PyNaCl==1.5.0
 
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.homekit
-# homeassistant.components.tuya
 PyQRCode==1.2.1
 
 # homeassistant.components.rmvtransport
@@ -1774,6 +1773,9 @@ screenlogicpy==0.9.4
 
 # homeassistant.components.backup
 securetar==2023.3.0
+
+# homeassistant.components.tuya
+segno==1.5.3
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
