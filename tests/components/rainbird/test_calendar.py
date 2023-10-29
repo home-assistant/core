@@ -14,6 +14,7 @@ import pytest
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import ComponentSetup, mock_response, mock_response_error
 
@@ -176,6 +177,7 @@ async def test_event_state(
     freezer: FrozenDateTimeFactory,
     freeze_time: datetime.datetime,
     expected_state: str,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test calendar upcoming event state."""
     freezer.move_to(freeze_time)
@@ -195,6 +197,10 @@ async def test_event_state(
         "icon": "mdi:sprinkler",
     }
     assert state.state == expected_state
+
+    entity = entity_registry.async_get(TEST_ENTITY)
+    assert entity
+    assert entity.unique_id == 1263613994342
 
 
 @pytest.mark.parametrize(
@@ -270,3 +276,27 @@ async def test_program_schedule_disabled(
         "friendly_name": "Rain Bird Controller",
         "icon": "mdi:sprinkler",
     }
+
+
+@pytest.mark.parametrize(
+    ("config_entry_unique_id"),
+    [
+        (None),
+    ],
+)
+async def test_no_unique_id(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    get_events: GetEventsFn,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test calendar entity with no unique id."""
+
+    assert await setup_integration()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state is not None
+    assert state.attributes.get("friendly_name") == "Rain Bird Controller"
+
+    entity_entry = entity_registry.async_get(TEST_ENTITY)
+    assert not entity_entry

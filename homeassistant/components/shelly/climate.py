@@ -148,6 +148,7 @@ class BlockSleepingClimate(
         self.last_state_attributes: Mapping[str, Any]
         self._preset_modes: list[str] = []
         self._last_target_temp = SHTRV_01_TEMPERATURE_SETTINGS["default"]
+        self._attr_name = coordinator.name
 
         if self.block is not None and self.device_block is not None:
             self._unique_id = f"{self.coordinator.mac}-{self.block.description}"
@@ -160,6 +161,9 @@ class BlockSleepingClimate(
             ]
         elif entry is not None:
             self._unique_id = entry.unique_id
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)},
+        )
 
         self._channel = cast(int, self._unique_id.split("_")[1])
 
@@ -172,11 +176,6 @@ class BlockSleepingClimate(
     def unique_id(self) -> str:
         """Set unique id of entity."""
         return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Name of entity."""
-        return self.coordinator.name
 
     @property
     def target_temperature(self) -> float | None:
@@ -255,13 +254,6 @@ class BlockSleepingClimate(
     def preset_modes(self) -> list[str]:
         """Preset available modes."""
         return self._preset_modes
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self.coordinator.mac)},
-        )
 
     def _check_is_off(self) -> bool:
         """Return if valve is off or on."""
@@ -354,7 +346,7 @@ class BlockSleepingClimate(
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="device_not_calibrated",
                 translation_placeholders={
-                    "device_name": self.name,
+                    "device_name": self.coordinator.name,
                     "ip_address": self.coordinator.device.ip_address,
                 },
             )

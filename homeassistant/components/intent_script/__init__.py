@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TypedDict
+from typing import Any, TypedDict
 
 import voluptuous as vol
 
@@ -64,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_reload(hass: HomeAssistant, service_call: ServiceCall) -> None:
-    """Handle start Intent Script service call."""
+    """Handle reload Intent Script service call."""
     new_config = await async_integration_yaml_config(hass, DOMAIN)
     existing_intents = hass.data[DOMAIN]
 
@@ -144,7 +144,7 @@ class ScriptIntentHandler(intent.IntentHandler):
         card: _IntentCardData | None = self.config.get(CONF_CARD)
         action: script.Script | None = self.config.get(CONF_ACTION)
         is_async_action: bool = self.config[CONF_ASYNC_ACTION]
-        slots: dict[str, str] = {
+        slots: dict[str, Any] = {
             key: value["value"] for key, value in intent_obj.slots.items()
         }
 
@@ -164,7 +164,11 @@ class ScriptIntentHandler(intent.IntentHandler):
                     action.async_run(slots, intent_obj.context)
                 )
             else:
-                await action.async_run(slots, intent_obj.context)
+                action_res = await action.async_run(slots, intent_obj.context)
+
+                # if the action returns a response, make it available to the speech/reprompt templates below
+                if action_res and action_res.service_response is not None:
+                    slots["action_response"] = action_res.service_response
 
         response = intent_obj.create_response()
 

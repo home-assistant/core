@@ -88,6 +88,8 @@ INTEGRATION_LOAD_EXCEPTIONS = (
     *LOAD_EXCEPTIONS,
 )
 
+SAFE_MODE_FILENAME = "safe-mode"
+
 DEFAULT_CONFIG = f"""
 # Loads default set of integrations. Do not remove.
 default_config:
@@ -378,14 +380,16 @@ def _write_default_config(config_dir: str) -> bool:
         return True
 
     except OSError:
-        print("Unable to create default configuration file", config_path)  # noqa: T201
+        print(  # noqa: T201
+            f"Unable to create default configuration file {config_path}"
+        )
         return False
 
 
 async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     """Load YAML from a Home Assistant configuration file.
 
-    This function allow a component inside the asyncio loop to reload its
+    This function allows a component inside the asyncio loop to reload its
     configuration by itself. Include package merge.
     """
     secrets = Secrets(Path(hass.config.config_dir))
@@ -1005,3 +1009,24 @@ def async_notify_setup_error(
     persistent_notification.async_create(
         hass, message, "Invalid config", "invalid_config"
     )
+
+
+def safe_mode_enabled(config_dir: str) -> bool:
+    """Return if safe mode is enabled.
+
+    If safe mode is enabled, the safe mode file will be removed.
+    """
+    safe_mode_path = os.path.join(config_dir, SAFE_MODE_FILENAME)
+    safe_mode = os.path.exists(safe_mode_path)
+    if safe_mode:
+        os.remove(safe_mode_path)
+    return safe_mode
+
+
+async def async_enable_safe_mode(hass: HomeAssistant) -> None:
+    """Enable safe mode."""
+
+    def _enable_safe_mode() -> None:
+        Path(hass.config.path(SAFE_MODE_FILENAME)).touch()
+
+    await hass.async_add_executor_job(_enable_safe_mode)
