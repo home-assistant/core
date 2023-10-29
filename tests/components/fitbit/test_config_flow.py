@@ -204,7 +204,9 @@ async def test_config_entry_already_exists(
 
 
 @pytest.mark.parametrize(
-    "token_expiration_time", [time.time() + 86400, time.time() - 86400]
+    "token_expiration_time",
+    [time.time() + 86400, time.time() - 86400],
+    ids=("token_active", "token_expired"),
 )
 async def test_import_fitbit_config(
     hass: HomeAssistant,
