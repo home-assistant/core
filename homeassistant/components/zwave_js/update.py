@@ -33,7 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.restore_state import ExtraStoredData
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DATA_CLIENT, DOMAIN, LOGGER
 from .helpers import get_device_info, get_valueless_base_unique_id
@@ -103,7 +103,7 @@ async def async_setup_entry(
     )
 
 
-class ZWaveNodeFirmwareUpdate(UpdateEntity):
+class ZWaveNodeFirmwareUpdate(UpdateEntity, RestoreEntity):
     """Representation of a firmware update entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
