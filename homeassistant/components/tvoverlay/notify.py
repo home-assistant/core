@@ -15,6 +15,7 @@ from tvoverlay.const import (
     Positions,
     Shapes,
 )
+import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -62,57 +63,54 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> TvOverlayNotificationService | None:
     """Get the TvOverlay notification service."""
-    return (
-        TvOverlayNotificationService(discovery_info, hass.config.is_allowed_path)
-        if discovery_info
-        else None
-    )
+    return TvOverlayNotificationService(discovery_info) if discovery_info else None
 
 
 class TvOverlayNotificationService(BaseNotificationService):
     """Notification service for TvOverlay."""
 
-    def __init__(self, config: dict[str, Any], is_allowed_path: Any) -> None:
+    def __init__(self, config: dict[str, Any]) -> None:
         """Initialize the service."""
         self.notify = Notifications(config[CONF_HOST])
-        self.is_allowed_path = is_allowed_path
 
     async def _is_valid_url(self, url: str) -> bool:
         """Check if a valid url and in allowlist_external_urls."""
-        if url.startswith(("http://", "https://")):
-            if not self.hass.config.is_allowed_external_url(url):
-                _LOGGER.warning(
-                    "URL is not allowed: %s, check allowlist_external_urls in configuration.yaml",
-                    url,
-                )
-                return False
-        else:
+        try:
+            cv.url(url)
+        except vol.Invalid:
             _LOGGER.warning("Invalid URL: %s", url)
             return False
-        return True
+
+        if self.hass.config.is_allowed_external_url(url):
+            return True
+
+        _LOGGER.warning(
+            "URL is not allowed: %s, check allowlist_external_urls in configuration.yaml",
+            url,
+        )
+        return False
 
     async def _is_valid_file(self, filename: str) -> bool:
         """Check if a file exists on disk and is in allowlist_external_dirs."""
-        if not self.hass.config.is_allowed_path(filename):
+        if not self.hass.config.is_allowed_path(filename) or not os.path.isfile(
+            filename
+        ):
             _LOGGER.warning(
-                "Path is not allowed: %s, check allowlist_external_dirs in configuration.yaml",
+                "Validation failed for file: %s. Check allowlist_external_dirs in configuration.yaml",
                 filename,
             )
-            return False
-        if not os.path.isfile(filename):
-            _LOGGER.warning("Not a valid file: %s", filename)
             return False
         return True
 
     async def _validate_image(self, image_data: str) -> str | None:
         """Validate image_data is valid and in allowed list."""
-        if image_data.startswith(("http://", "https://")):
-            image = image_data if await self._is_valid_url(image_data) else None
-        elif image_data.startswith("mdi:"):
-            image = image_data
-        else:
-            image = image_data if await self._is_valid_file(image_data) else None
-        return image
+        if await self._is_valid_url(image_data):
+            return image_data
+        if image_data.startswith("mdi:"):
+            return image_data
+        if await self._is_valid_file(image_data):
+            return image_data
+        return None
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a TvOverlay device."""
