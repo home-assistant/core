@@ -35,9 +35,9 @@ def patch_config_flow_tv(mocked_tv: AsyncMock):
     )
 
 
-def mocked_tvoverlay_info():
+def mocked_tvoverlay_info(device_name: str = NAME):
     """Create mocked tvoverlay."""
-    mocked_tvoverlay_info = {"result": {"settings": {"deviceName": NAME}}}
+    mocked_tvoverlay_info = {"result": {"settings": {"deviceName": device_name}}}
     return patch(
         "homeassistant.components.tvoverlay.config_flow.Notifications.async_connect",
         return_value=mocked_tvoverlay_info,
@@ -58,14 +58,5 @@ def mocked_send_persistent_notification():
     mocked_tvoverlay_info = {"result": {"settings": {"deviceName": NAME}}}
     return patch(
         "homeassistant.components.tvoverlay.config_flow.Notifications.async_send_fixed",
-        return_value=mocked_tvoverlay_info,
-    )
-
-
-def mocked_tvoverlay_default_info():
-    """Create mocked tvoverlay with default name."""
-    mocked_tvoverlay_info = {"result": {"settings": {"deviceName": DEFAULT_NAME}}}
-    return patch(
-        "homeassistant.components.tvoverlay.config_flow.Notifications.async_connect",
         return_value=mocked_tvoverlay_info,
     )
