@@ -138,7 +138,7 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _handle_exception(err: evohomeasync2.EvohomeError) -> None:
+def _handle_exception(err) -> None:
     """Return False if the exception can't be ignored."""
     try:
         raise err
@@ -446,7 +446,7 @@ class EvoBroker:
 
         await self._store.async_save(app_storage)
 
-    async def call_client_api(self, api_function, update_state: bool = True) -> Any:
+    async def call_client_api(self, api_function, update_state=True) -> Any:
         """Call a client API and update the broker state if required."""
         try:
             result = await api_function
@@ -507,7 +507,7 @@ class EvoBroker:
                 ),
                 err,
             )
-            self.client_v1 = self.temps = None
+            self.temps = self.client_v1 = None
 
         else:
             if (
