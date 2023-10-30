@@ -1684,7 +1684,7 @@ pydroid-ipcam==2.0.0
 pyebox==1.1.4
 
 # homeassistant.components.ecoforest
-pyecoforest==0.3.0
+pyecoforest==0.4.0
 
 # homeassistant.components.econet
 pyeconet==0.1.22
@@ -2491,7 +2491,7 @@ starline==0.1.5
 starlingbank==3.2
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.1.2
+starlink-grpc-core==1.1.3
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -2515,7 +2515,7 @@ streamlabswater==1.0.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.7.6
+subarulink==0.7.8
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
