@@ -143,10 +143,10 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _handle_exception(err: Exception) -> None:
+def _handle_exception(exc: evohomeasync2.RequestFailed) -> None:
     """Return False if the exception can't be ignored."""
     try:
-        raise err
+        raise exc
 
     except evohomeasync2.AuthenticationFailed:
         _LOGGER.error(
@@ -156,27 +156,27 @@ def _handle_exception(err: Exception) -> None:
                 " correctly via the website will not work via the web API. Message"
                 " is: %s"
             ),
-            err,
+            exc,
         )
 
     except evohomeasync2.RequestFailed:
-        if err.status is None:
+        if exc.status is None:
             _LOGGER.warning(
                 (
                     "Unable to connect with the vendor's server. "
                     "Check your network and the vendor's service status page. "
                     "Message is: %s"
                 ),
-                err,
+                exc,
             )
 
-        elif err.status == HTTPStatus.SERVICE_UNAVAILABLE:
+        elif exc.status == HTTPStatus.SERVICE_UNAVAILABLE:
             _LOGGER.warning(
                 "The vendor says their server is currently unavailable. "
                 "Check the vendor's service status page"
             )
 
-        elif err.status == HTTPStatus.TOO_MANY_REQUESTS:
+        elif exc.status == HTTPStatus.TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 (
                     "The vendor's API rate limit has been exceeded. "
@@ -469,7 +469,7 @@ class EvoBroker:
     async def _update_v1_api_temps(self, *args, **kwargs) -> None:
         """Get the latest high-precision temperatures of the default Location."""
 
-        assert self.client_v1
+        assert self.client_v1  # mypy
 
         def get_session_id(client_v1) -> str | None:
             user_data = client_v1.user_data if client_v1 else None
@@ -502,31 +502,7 @@ class EvoBroker:
                 ),
                 exc,
             )
-            self.temps = None  # these are now stale, will fall back to v2 temps
-
-        except KeyError as err:
-            _LOGGER.warning(
-                (
-                    "Unable to obtain high-precision temperatures. "
-                    "It appears the JSON schema is not as expected, "
-                    "so the high-precision feature will be disabled until next restart."
-                    "Message is: %s"
-                ),
-                err,
-            )
-            self.client_v1 = self.temps = None
-
-        except KeyError as err:
-            _LOGGER.warning(
-                (
-                    "Unable to obtain high-precision temperatures. "
-                    "It appears the JSON schema is not as expected, "
-                    "so the high-precision feature will be disabled until next restart."
-                    "Message is: %s"
-                ),
-                err,
-            )
-            self.client_v1 = self.temps = None
+            self.temps = None
 
         else:
             if (
@@ -538,7 +514,7 @@ class EvoBroker:
                     "the v1 API's default location (there is more than one location), "
                     "so the high-precision feature will be disabled until next restart"
                 )
-                self.client_v1 = self.temps = None
+                self.temps = self.client_v1 = None
             else:
                 self.temps = {str(i["id"]): i["temp"] for i in temps}
 
