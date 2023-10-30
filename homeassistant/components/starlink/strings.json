@@ -77,7 +77,15 @@
         "name": "Stowed"
       },
       "sleep_schedule": {
-        "name": "Sleep Schedule"
+        "name": "Sleep schedule"
+      }
+    },
+    "time": {
+      "sleep_start": {
+        "name": "Sleep start"
+      },
+      "sleep_end": {
+        "name": "Sleep end"
       }
     }
   }
