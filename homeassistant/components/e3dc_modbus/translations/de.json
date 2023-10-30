@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Gerät ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ungültige Authentifizierung",
+            "invalid_host": "Ungültige Host-Adresse. Bitte gib eine gültige Adresse ein.",
+            "invalid_port": "Ungültiger Port. Bitte gib einen gültigen Port zwischen 1 und 65535 ein.",
+            "host_already_configured": "Dieser Host wurde bereits konfiguriert. Bitte wähle einen anderen Host.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "modbus_address": "Modbus-Adresse",
+                    "name": "Name",
+                    "port": "Port",
+                    "scan_interval": "Scan-Intervall"
+                }
+            }
+        }
+    }
+}
