@@ -94,7 +94,8 @@ class GTFSDepartureSensor(CoordinatorEntity, SensorEntity):
             manufacturer="GTFS",
             model=self._name,
         )
-        self._update_attrs()
+        self._attributes = self._update_attrs()
+        self._attr_extra_state_attributes = self._attributes
 
     @property
     def name(self) -> str:
@@ -363,7 +364,6 @@ class GTFSDepartureSensor(CoordinatorEntity, SensorEntity):
 
         self._attributes["updated_at"] = dt_util.now().replace(tzinfo=None)
         self._attr_extra_state_attributes = self._attributes
-        _LOGGER.debug("Extra State Attributes: %s", {self._attr_extra_state_attributes})
         return self._attr_extra_state_attributes
 
     @staticmethod
