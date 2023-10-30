@@ -6,8 +6,13 @@ import datetime
 from typing import Any
 
 from aiohttp import ClientConnectionError
-from aiosomecomfort import SomeComfortError, UnauthorizedError, UnexpectedResponse
-from aiosomecomfort.device import Device as SomeComfortDevice
+from aiosomecomfort import (  # type: ignore[import]
+    AuthError,
+    SomeComfortError,
+    UnauthorizedError,
+    UnexpectedResponse,
+)
+from aiosomecomfort.device import Device as SomeComfortDevice  # type: ignore[import]
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -482,31 +487,33 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def async_update(self) -> None:
         """Get the latest state from the service."""
-        try:
-            await self._device.refresh()
-            self._attr_available = True
-            self._retry = 0
 
-        except UnauthorizedError:
+        async def _async_update(login=False) -> None:
+            """Get the latest state from the service."""
             try:
-                await self._data.client.login()
                 await self._device.refresh()
                 self._attr_available = True
                 self._retry = 0
 
-            except (
-                SomeComfortError,
-                ClientConnectionError,
-                asyncio.TimeoutError,
-            ):
+            except UnauthorizedError:
+                if not login:
+                    try:
+                        await self._data.client.login()
+                    except (
+                        ClientConnectionError,
+                        asyncio.TimeoutError,
+                        AuthError,
+                    ):
+                        self._retry += 1
+                        self._attr_available = self._retry <= RETRY
+
+                    await _async_update(login=True)
+
+            except (ClientConnectionError, asyncio.TimeoutError):
                 self._retry += 1
-                if self._retry > RETRY:
-                    self._attr_available = False
+                self._attr_available = self._retry <= RETRY
 
-        except (ClientConnectionError, asyncio.TimeoutError):
-            self._retry += 1
-            if self._retry > RETRY:
-                self._attr_available = False
+            except UnexpectedResponse:
+                pass
 
-        except UnexpectedResponse:
-            pass
+        await _async_update()
