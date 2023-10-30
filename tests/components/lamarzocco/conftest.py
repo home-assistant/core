@@ -81,7 +81,7 @@ def mock_lamarzocco() -> Generator[MagicMock, None, None]:
         lamarzocco.statistics = json.loads(load_fixture("statistics.json", DOMAIN))
 
         lamarzocco.get_all_machines.return_value = [
-            ("GS3AV", "GS01234"),
+            ("GS01234", "GS3 AV"),
         ]
         lamarzocco.check_local_connection.return_value = True
         yield lamarzocco

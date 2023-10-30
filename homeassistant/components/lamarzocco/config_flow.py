@@ -73,7 +73,7 @@ async def get_machines(hass: core.HomeAssistant, data: dict[str, Any]) -> list[s
         _LOGGER.error("Failed to connect to server")
         raise CannotConnect
 
-    available_machines = [f"{machine[0]} ({machine[1]})" for machine in machines]
+    available_machines = [f"{machine[1]} ({machine[0]})" for machine in machines]
 
     return available_machines
 
@@ -125,8 +125,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Let user select machine to connect to."""
         errors = {}
         if user_input is not None:
-            machine_name, serial_number = user_input[CONF_MACHINE].split(" ")
-            serial_number = serial_number.strip("()")
+            machine_name, serial_number = user_input[CONF_MACHINE].split("(")
+            machine_name = machine_name.strip(" ")
+            serial_number = serial_number.strip(")")
             await self.async_set_unique_id(serial_number)
             self._abort_if_unique_id_configured()
             self._config[SERIAL_NUMBER] = serial_number

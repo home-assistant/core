@@ -112,12 +112,6 @@ class LaMarzoccoClient(LMCloud):
             _LOGGER.debug("Initializing local API")
             await self._init_local_api(host=host, port=DEFAULT_PORT_LOCAL)
 
-    async def try_connect(self, data: Mapping[str, Any]) -> dict[str, Any]:
-        """Try to connect to the machine, used for validation."""
-        self.client = await self._connect(self._get_credentials_from_entry_data(data))
-        machine_info = await self._get_machine_info()
-        return machine_info
-
     async def set_power(self, enabled: bool) -> None:
         """Set the power state of the machine."""
         await self.get_hass_bt_client()

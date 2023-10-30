@@ -59,7 +59,7 @@ async def test_form(hass: HomeAssistant, mock_lamarzocco: MagicMock) -> None:
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
 
-    assert result3["title"] == "GS3AV"
+    assert result3["title"] == "GS3 AV"
     assert result3["data"] == USER_INPUT | DEFAULT_CONF | MACHINE_DATA
 
     assert len(mock_lamarzocco.check_local_connection.mock_calls) == 1
@@ -136,7 +136,7 @@ async def test_form_invalid_host(
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
-        {"machine": "GS3AV (GS01234)", "host": "192.168.1.1"},
+        MACHINE_SELECTION,
     )
     await hass.async_block_till_done()
 
@@ -195,7 +195,7 @@ async def test_bluetooth_discovery(
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
 
-    assert result3["title"] == "GS3AV"
+    assert result3["title"] == "GS3 AV"
     assert result3["data"] == USER_INPUT | DEFAULT_CONF | MACHINE_DATA | DISCOVERED_INFO
 
     assert len(mock_lamarzocco.check_local_connection.mock_calls) == 1
