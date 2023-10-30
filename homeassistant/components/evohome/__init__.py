@@ -495,7 +495,7 @@ class EvoBroker:
                 ),
                 exc,
             )
-            self.temps = None
+            self.temps = None  # these are now stale, will fall back to v2 temps
 
         except KeyError as err:
             _LOGGER.warning(
@@ -507,7 +507,7 @@ class EvoBroker:
                 ),
                 err,
             )
-            self.temps = self.client_v1 = None
+            self.client_v1 = self.temps = None
 
         else:
             if (
@@ -519,7 +519,7 @@ class EvoBroker:
                     "the v1 API's default location (there is more than one location), "
                     "so the high-precision feature will be disabled until next restart"
                 )
-                self.temps = self.client_v1 = None
+                self.client_v1 = self.temps = None
             else:
                 self.temps = {str(i["id"]): i["temp"] for i in temps}
 
