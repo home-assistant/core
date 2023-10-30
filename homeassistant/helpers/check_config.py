@@ -216,7 +216,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 )
                 platform = p_integration.get_platform(domain)
             except loader.IntegrationNotFound as ex:
-                if not hass.config.recovery_mode:
+                if not hass.config.recovery_mode and not hass.config.safe_mode:
                     result.add_error(f"Platform error {domain}.{p_name} - {ex}")
                 continue
             except (
