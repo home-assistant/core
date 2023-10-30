@@ -501,6 +501,18 @@ class EvoBroker:
             )
             self.temps = None
 
+        except KeyError as err:
+            _LOGGER.warning(
+                (
+                    "Unable to obtain high-precision temperatures. "
+                    "It appears the JSON schema is not as expected, "
+                    "so the high-precision feature will be disabled until next restart."
+                    "Message is: %s"
+                ),
+                err,
+            )
+            self.client_v1 = self.temps = None
+
         else:
             if (
                 str(self.client_v1.location_id)

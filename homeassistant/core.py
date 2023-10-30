@@ -282,11 +282,12 @@ class HassJob(Generic[_P, _R_co]):
         name: str | None = None,
         *,
         cancel_on_shutdown: bool | None = None,
+        job_type: HassJobType | None = None,
     ) -> None:
         """Create a job object."""
         self.target = target
         self.name = name
-        self.job_type = _get_hassjob_callable_job_type(target)
+        self.job_type = job_type or _get_hassjob_callable_job_type(target)
         self._cancel_on_shutdown = cancel_on_shutdown
 
     @property
@@ -1153,13 +1154,20 @@ class EventBus:
 
         This method must be run in the event loop.
         """
+        job_type: HassJobType | None = None
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
-        if run_immediately and not is_callback_check_partial(listener):
-            raise HomeAssistantError(f"Event listener {listener} is not a callback")
+        if run_immediately:
+            if not is_callback_check_partial(listener):
+                raise HomeAssistantError(f"Event listener {listener} is not a callback")
+            job_type = HassJobType.Callback
         return self._async_listen_filterable_job(
             event_type,
-            (HassJob(listener, f"listen {event_type}"), event_filter, run_immediately),
+            (
+                HassJob(listener, f"listen {event_type}", job_type=job_type),
+                event_filter,
+                run_immediately,
+            ),
         )
 
     @callback
@@ -1234,7 +1242,11 @@ class EventBus:
         )
 
         filterable_job = (
-            HassJob(_onetime_listener, f"onetime listen {event_type} {listener}"),
+            HassJob(
+                _onetime_listener,
+                f"onetime listen {event_type} {listener}",
+                job_type=HassJobType.Callback,
+            ),
             None,
             False,
         )
