@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
+import time
 from typing import Any
 from unittest.mock import patch
 
@@ -16,9 +17,7 @@ from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
 
 from .conftest import (
     CLIENT_ID,
-    FAKE_ACCESS_TOKEN,
     FAKE_AUTH_IMPL,
-    FAKE_REFRESH_TOKEN,
     PROFILE_API_URL,
     PROFILE_USER_ID,
     SERVER_ACCESS_TOKEN,
@@ -204,6 +203,11 @@ async def test_config_entry_already_exists(
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.parametrize(
+    "token_expiration_time",
+    [time.time() + 86400, time.time() - 86400],
+    ids=("token_active", "token_expired"),
+)
 async def test_import_fitbit_config(
     hass: HomeAssistant,
     fitbit_config_setup: None,
@@ -235,16 +239,20 @@ async def test_import_fitbit_config(
     assert config_entry.unique_id == PROFILE_USER_ID
 
     data = dict(config_entry.data)
+    # Verify imported values from fitbit.conf and configuration.yaml and
+    # that the token is updated.
     assert "token" in data
+    expires_at = data["token"]["expires_at"]
+    assert expires_at > time.time()
     del data["token"]["expires_at"]
-    # Verify imported values from fitbit.conf and configuration.yaml
     assert dict(config_entry.data) == {
         "auth_implementation": DOMAIN,
         "clock_format": "24H",
         "monitored_resources": ["activities/steps"],
         "token": {
-            "access_token": FAKE_ACCESS_TOKEN,
-            "refresh_token": FAKE_REFRESH_TOKEN,
+            "access_token": "server-access-token",
+            "refresh_token": "server-refresh-token",
+            "scope": "activity heartrate nutrition profile settings sleep weight",
         },
         "unit_system": "default",
     }
