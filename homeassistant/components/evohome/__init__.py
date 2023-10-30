@@ -450,7 +450,7 @@ class EvoBroker:
 
         await self._store.async_save(app_storage)
 
-    async def call_client_api(self, api_function, update_state: bool = True) -> Any:
+    async def call_client_api(self, api_function, update_state=True) -> Any:
         """Call a client API and update the broker state if required."""
         try:
             result = await api_function
