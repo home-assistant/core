@@ -130,7 +130,8 @@ class E3DCModbusHub:
             host=host, port=port, timeout=max(3, (scan_interval - 1))
         )
         self._lock = threading.Lock()
-        self._name = name
+        # self._name = name
+        self._name = "E3/DC"
         self._address = modbus_address
         self._scan_interval = timedelta(seconds=scan_interval)
         # self.max_export_control_site_limit = max_export_control_site_limit
