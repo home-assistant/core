@@ -135,7 +135,7 @@ set_occupancy_modes:
       selector:
         boolean:
 
-set_active_sensors:
+set_sensors_used_in_climate:
   fields:
     entity_id:
       required: true

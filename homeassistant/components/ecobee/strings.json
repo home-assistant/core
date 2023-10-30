@@ -152,8 +152,8 @@
         }
       }
     },
-    "set_active_sensors": {
-      "name": "Set Active Sensors",
+    "set_sensors_used_in_climate": {
+      "name": "Set Sensors Used in Cliate",
       "description": "Sets the participating sensors for a climate.",
       "fields": {
         "entity_id": {
@@ -166,7 +166,7 @@
         },
         "sensors": {
           "name": "Sensors",
-          "description": "Sensors to set as active."
+          "description": "Sensors to set as participating sensors."
         }
       }
     }

@@ -116,7 +116,7 @@ SERVICE_SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
 SERVICE_SET_DST_MODE = "set_dst_mode"
 SERVICE_SET_MIC_MODE = "set_mic_mode"
 SERVICE_SET_OCCUPANCY_MODES = "set_occupancy_modes"
-SERVICE_SET_ACTIVE_SENSORS = "set_active_sensors"
+SERVICE_SET_SENSORS_USED_IN_CLIMATE = "set_sensors_used_in_climate"
 
 DTGROUP_INCLUSIVE_MSG = (
     f"{ATTR_START_DATE}, {ATTR_START_TIME}, {ATTR_END_DATE}, "
@@ -309,12 +309,12 @@ async def async_setup_entry(
     )
 
     platform.async_register_entity_service(
-        SERVICE_SET_ACTIVE_SENSORS,
+        SERVICE_SET_SENSORS_USED_IN_CLIMATE,
         {
             vol.Optional(ATTR_CLIMATE_NAME): cv.string,
             vol.Required(ATTR_SENSOR_LIST): cv.ensure_list,
         },
-        "set_active_sensors",
+        "set_sensors_used_in_climate",
     )
 
 
@@ -739,7 +739,7 @@ class Thermostat(ClimateEntity):
         )
         self.update_without_throttle = True
 
-    def set_active_sensors(
+    def set_sensors_used_in_climate(
         self, sensors: list[str], climate_name: str | None = None
     ) -> None:
         """Set the currently active sensors on a thermostat."""
