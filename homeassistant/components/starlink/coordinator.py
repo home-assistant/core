@@ -14,8 +14,10 @@ from starlink_grpc import (
     LocationDict,
     ObstructionDict,
     StatusDict,
+    get_sleep_config,
     location_data,
     reboot,
+    set_sleep_config,
     set_stow_state,
     status_data,
 )
@@ -32,6 +34,7 @@ class StarlinkData:
     """Contains data pulled from the Starlink system."""
 
     location: LocationDict
+    sleep: tuple[int, int, bool]
     status: StatusDict
     obstruction: ObstructionDict
     alert: AlertDict
@@ -60,7 +63,10 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
                 location = await self.hass.async_add_executor_job(
                     location_data, self.channel_context
                 )
-                return StarlinkData(location, *status)
+                sleep = await self.hass.async_add_executor_job(
+                    get_sleep_config, self.channel_context
+                )
+                return StarlinkData(location, sleep, *status)
             except GrpcError as exc:
                 raise UpdateFailed from exc
 
@@ -79,5 +85,47 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         async with asyncio.timeout(4):
             try:
                 await self.hass.async_add_executor_job(reboot, self.channel_context)
+            except GrpcError as exc:
+                raise HomeAssistantError from exc
+
+    async def async_set_sleep_schedule_enabled(self, sleep_schedule: bool) -> None:
+        """Set whether Starlink system uses the configured sleep schedule."""
+        async with asyncio.timeout(4):
+            try:
+                await self.hass.async_add_executor_job(
+                    set_sleep_config,
+                    self.data.sleep[0],
+                    self.data.sleep[1],
+                    sleep_schedule,
+                    self.channel_context,
+                )
+            except GrpcError as exc:
+                raise HomeAssistantError from exc
+
+    async def async_set_sleep_start(self, start: int) -> None:
+        """Set Starlink system sleep schedule start time."""
+        async with asyncio.timeout(4):
+            try:
+                await self.hass.async_add_executor_job(
+                    set_sleep_config,
+                    start,
+                    self.data.sleep[1],
+                    self.data.sleep[2],
+                    self.channel_context,
+                )
+            except GrpcError as exc:
+                raise HomeAssistantError from exc
+
+    async def async_set_sleep_duration(self, end: int) -> None:
+        """Set Starlink system sleep schedule end time."""
+        async with asyncio.timeout(4):
+            try:
+                await self.hass.async_add_executor_job(
+                    set_sleep_config,
+                    self.data.sleep[0],
+                    end,
+                    self.data.sleep[2],
+                    self.channel_context,
+                )
             except GrpcError as exc:
                 raise HomeAssistantError from exc
