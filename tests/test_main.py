@@ -3,6 +3,7 @@ from unittest.mock import PropertyMock, patch
 
 from homeassistant import __main__ as main
 from homeassistant.const import REQUIRED_PYTHON_VER
+from homeassistant import config, runner
 
 
 @patch("sys.exit")
@@ -85,3 +86,34 @@ def test_skip_pip_mutually_exclusive(mock_exit) -> None:
     assert mock_exit.called is False
     args = parse_args("--skip-pip", "--skip-pip-packages", "foo")
     assert mock_exit.called is True
+
+
+@patch("sys.exit")
+def test_set_fault_log_path(mock_exit) -> None:
+    """Test if the path for the fault log path is set correctly."""
+    default_config_dir = config.get_default_config_dir()
+    LOG_FILENAME = "home-assistant.log"
+
+    # Access denied to write into the directory
+    runtime_conf = runner.RuntimeConfig(
+        config_dir=default_config_dir, log_file=os.path.join("/root", LOG_FILENAME)
+    )
+    log_path = main.set_fault_log_path(runtime_conf, main.FAULT_LOG_FILENAME)
+    assert log_path == os.path.join(default_config_dir, main.FAULT_LOG_FILENAME)
+
+    # Path does not exist
+    runtime_conf = runner.RuntimeConfig(
+        config_dir=default_config_dir,
+        log_file=os.path.join("/pathnotexist", LOG_FILENAME),
+    )
+    log_path = main.set_fault_log_path(runtime_conf, main.FAULT_LOG_FILENAME)
+    assert log_path == os.path.join(default_config_dir, main.FAULT_LOG_FILENAME)
+
+    # Path exists
+    runtime_conf = runner.RuntimeConfig(
+        config_dir="/root", log_file=os.path.join(default_config_dir, LOG_FILENAME)
+    )
+    log_path = main.set_fault_log_path(runtime_conf, main.FAULT_LOG_FILENAME)
+    assert log_path == os.path.join(default_config_dir, main.FAULT_LOG_FILENAME)
+
+    assert mock_exit.called is False

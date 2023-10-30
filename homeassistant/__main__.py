@@ -75,6 +75,18 @@ def ensure_config_path(config_dir: str) -> None:
             sys.exit(1)
 
 
+def set_fault_log_path(runtime_conf: runner.RuntimeConfig, log_filename: str) -> str:
+    """Set and return the path for the fault log file."""
+    if runtime_conf.log_file is not None:
+        log_dir = os.path.dirname(os.path.abspath(runtime_conf.log_file))
+    if not os.path.exists(log_dir) or not os.access(log_dir, os.W_OK):
+        # If the log directory does not exist or write access is not available,
+        # fall back to the config path.
+        log_dir = runtime_conf.config_dir
+    fault_file_name = os.path.join(log_dir, log_filename)
+    return fault_file_name
+
+
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
     # pylint: disable-next=import-outside-toplevel
@@ -203,14 +215,7 @@ def main() -> int:
         safe_mode=safe_mode,
     )
 
-    if runtime_conf.log_file is not None and os.path.exists(
-        os.path.dirname(runtime_conf.log_file)
-    ):
-        fault_file_name = os.path.join(
-            os.path.dirname(os.path.abspath(runtime_conf.log_file)), FAULT_LOG_FILENAME
-        )
-    else:
-        fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
+    fault_file_name = set_fault_log_path(runtime_conf, FAULT_LOG_FILENAME)
     with open(fault_file_name, mode="a", encoding="utf8") as fault_file:
         faulthandler.enable(fault_file)
         exit_code = runner.run(runtime_conf)
