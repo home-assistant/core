@@ -19,7 +19,6 @@ from aioairzone.const import (
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
-    AZD_NAME,
     AZD_ON,
     AZD_SPEED,
     AZD_SPEEDS,
@@ -210,7 +209,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
 
         if slave_raise:
             raise HomeAssistantError(
-                f"Mode can't be changed on slave zone {self.get_airzone_value(AZD_NAME)}"
+                f"Mode can't be changed on slave zone {self.entity_id}"
             )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:

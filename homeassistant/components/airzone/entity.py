@@ -203,7 +203,7 @@ class AirzoneZoneEntity(AirzoneEntity):
             await self.coordinator.airzone.set_hvac_parameters(_params)
         except AirzoneError as error:
             raise HomeAssistantError(
-                f"Failed to set zone {self.get_airzone_value(AZD_NAME)}: {error}"
+                f"Failed to set zone {self.entity_id}: {error}"
             ) from error
 
         self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
