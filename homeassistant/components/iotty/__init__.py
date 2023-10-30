@@ -14,9 +14,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# _TODO uncomment these when developing
-_LOGGER.setLevel(logging.DEBUG)
-logging.getLogger("iottycloud").setLevel(logging.DEBUG)
+# Uncomment these when developing
+# _LOGGER.setLevel(logging.DEBUG)
+# logging.getLogger("iottycloud").setLevel(logging.DEBUG)
 
 # For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.SWITCH]
