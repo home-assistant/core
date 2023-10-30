@@ -1123,7 +1123,7 @@ insteon-frontend-home-assistant==0.4.0
 intellifire4py==2.2.2
 
 # homeassistant.components.iotty
-iottycloud==0.0.3
+iottycloud==0.1.0
 
 # homeassistant.components.iperf3
 iperf3==0.1.11
