@@ -139,7 +139,7 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="zeroconf_confirm",
-                description_placeholders={"name": self.discovery_info[CONF_NAME]},
+                description_placeholders={CONF_NAME: self.discovery_info[CONF_NAME]},
                 errors={},
             )
 
