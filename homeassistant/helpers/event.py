@@ -394,8 +394,8 @@ def _async_track_event(
     if listeners_key not in hass_data:
         hass_data[listeners_key] = hass.bus.async_listen(
             event_type,
-            callback(ft.partial(dispatcher_callable, hass, callbacks)),
-            event_filter=callback(ft.partial(filter_callable, hass, callbacks)),
+            ft.partial(dispatcher_callable, hass, callbacks),
+            event_filter=ft.partial(filter_callable, hass, callbacks),
         )
 
     job = HassJob(action, f"track {event_type} event {keys}")
