@@ -2,7 +2,7 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.5
+AEMET-OpenData==0.4.6
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -113,7 +113,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.1
 
 # homeassistant.components.vicare
-PyViCare==2.25.0
+PyViCare==2.28.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -414,7 +414,7 @@ amberelectric==1.0.4
 amcrest==1.9.8
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.72
+androidtv[async]==0.0.73
 
 # homeassistant.components.androidtv_remote
 androidtvremote2==0.0.14
@@ -2127,7 +2127,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==2.1.2
+python-homewizard-energy==3.0.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
