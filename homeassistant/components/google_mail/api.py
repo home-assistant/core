@@ -1,5 +1,5 @@
 """API for Google Mail bound to Home Assistant OAuth."""
-from aiohttp.client_exceptions import ClientResponseError
+from aiohttp.client_exceptions import ClientError, ClientResponseError
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import Resource, build
@@ -33,7 +33,7 @@ class AsyncConfigEntryAuth:
         """Check the token."""
         try:
             await self.oauth_session.async_ensure_token_valid()
-        except (RefreshError, ClientResponseError) as ex:
+        except (RefreshError, ClientResponseError, ClientError) as ex:
             if (
                 self.oauth_session.config_entry.state
                 is ConfigEntryState.SETUP_IN_PROGRESS
@@ -43,7 +43,11 @@ class AsyncConfigEntryAuth:
                         "OAuth session is not valid, reauth required"
                     ) from ex
                 raise ConfigEntryNotReady from ex
-            if not hasattr(ex, "status") or ex.status == 400:
+            if (
+                isinstance(ex, RefreshError)
+                or hasattr(ex, "status")
+                and ex.status == 400
+            ):
                 self.oauth_session.config_entry.async_start_reauth(
                     self.oauth_session.hass
                 )
