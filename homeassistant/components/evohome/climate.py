@@ -312,12 +312,12 @@ class EvoController(EvoClimateEntity):
     _attr_icon = "mdi:thermostat"
     _attr_precision = PRECISION_TENTHS
 
-    def __init__(self, evo_broker, evo_device: EvoDevice) -> None:
+    def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Honeywell TCC Controller/Location."""
         super().__init__(evo_broker, evo_device)
 
-        self._attr_unique_id = evo_device.systemId  # type: ignore[attr-defined]
-        self._attr_name = evo_device.location.name  # type: ignore[attr-defined]
+        self._attr_unique_id = evo_device.systemId
+        self._attr_name = evo_device.location.name
 
         modes = [m["systemMode"] for m in evo_broker.config["allowedSystemModes"]]
         self._attr_preset_modes = [
