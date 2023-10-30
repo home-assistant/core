@@ -2649,7 +2649,16 @@ async def test_closest_function_home_vs_group_entity_id(hass: HomeAssistant) -> 
 
     assert await async_setup_component(hass, "group", {})
     await hass.async_block_till_done()
-    await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
+    await group.Group.async_create_group(
+        hass,
+        "location group",
+        created_by_service=False,
+        entity_ids=["test_domain.object"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
     assert_result_info(
@@ -2677,7 +2686,16 @@ async def test_closest_function_home_vs_group_state(hass: HomeAssistant) -> None
 
     assert await async_setup_component(hass, "group", {})
     await hass.async_block_till_done()
-    await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
+    await group.Group.async_create_group(
+        hass,
+        "location group",
+        created_by_service=False,
+        entity_ids=["test_domain.object"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
     assert_result_info(
@@ -2727,7 +2745,16 @@ async def test_expand(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(hass, "group", {})
     await hass.async_block_till_done()
-    await group.Group.async_create_group(hass, "new group", ["test.object"])
+    await group.Group.async_create_group(
+        hass,
+        "new group",
+        created_by_service=False,
+        entity_ids=["test.object"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
 
     info = render_to_info(
         hass,
@@ -2769,7 +2796,14 @@ async def test_expand(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "group", {})
     await hass.async_block_till_done()
     await group.Group.async_create_group(
-        hass, "power sensors", ["sensor.power_1", "sensor.power_2", "sensor.power_3"]
+        hass,
+        "power sensors",
+        created_by_service=False,
+        entity_ids=["sensor.power_1", "sensor.power_2", "sensor.power_3"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     info = render_to_info(
