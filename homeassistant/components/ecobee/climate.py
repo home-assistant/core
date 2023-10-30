@@ -742,7 +742,7 @@ class Thermostat(ClimateEntity):
     def set_sensors_used_in_climate(
         self, sensors: list[str], climate_name: str | None = None
     ) -> None:
-        """Set the currently active sensors on a thermostat."""
+        """Set the sensors used on a climate for a thermostat."""
         if climate_name is None:
             climate_name = self.preset_mode
 
@@ -765,15 +765,15 @@ class Thermostat(ClimateEntity):
             _LOGGER.error(msg)
             raise HomeAssistantError(msg)
 
-        # Check if sensors are currently active on thermostat.
-        current_active_sensors = self.active_sensors(climate_name)
-        if set(sensor_names) == set(current_active_sensors):
-            msg = f"This action would not be an update, currently active sensors are: {', '.join(current_active_sensors)}"
+        # Check if sensors are currently used on the climate for the thermostat.
+        current_sensors_in_climate = self.sensors_in_climate(climate_name)
+        if set(sensor_names) == set(current_sensors_in_climate):
+            msg = f"This action would not be an update, current sensors on climate ({climate_name}) are: {', '.join(current_sensors_in_climate)}"
             _LOGGER.error(msg)
             raise HomeAssistantError(msg)
 
         _LOGGER.debug(
-            "Setting sensors %s active on thermostat %s for program %s",
+            "Setting sensors %s to be used on thermostat %s for program %s",
             sensor_names,
             self.device_info.get("name"),
             climate_name,
@@ -783,8 +783,8 @@ class Thermostat(ClimateEntity):
         )
         self.update_without_throttle = True
 
-    def active_sensors(self, climate_name: str | None = None) -> list[str]:
-        """Return currently active sensors."""
+    def sensors_in_climate(self, climate_name: str | None = None) -> list[str]:
+        """Return current sensors used in climate."""
         if climate_name is None:
             climate_name = self.preset_mode
         climates = self.thermostat["program"]["climates"]
