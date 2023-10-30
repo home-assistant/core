@@ -48,8 +48,8 @@ async def async_setup_platform(
 
     _LOGGER.debug(
         "Adding: DhwController (%s), id=%s",
-        broker.tcs.hotwater.zone_type,
-        broker.tcs.hotwater.zoneId,
+        broker.tcs.hotwater.TYPE,
+        broker.tcs.hotwater.dhwId,
     )
 
     new_entity = EvoDHW(broker, broker.tcs.hotwater)

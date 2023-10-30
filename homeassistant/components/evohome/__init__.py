@@ -11,7 +11,6 @@ import logging
 import re
 from typing import Any
 
-import aiohttp.client_exceptions
 import evohomeasync
 import evohomeasync2
 from evohomeasync2.zone import _ZoneBase
@@ -141,12 +140,12 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _handle_exception(err: Exception) -> None:
+def _handle_exception(err: evohomeasync2.EvohomeError) -> None:
     """Return False if the exception can't be ignored."""
     try:
         raise err
 
-    except evohomeasync2.AuthenticationError:
+    except evohomeasync2.AuthenticationFailed:
         _LOGGER.error(
             (
                 "Failed to authenticate with the vendor's server. Check your username"
@@ -157,25 +156,24 @@ def _handle_exception(err: Exception) -> None:
             err,
         )
 
-    except aiohttp.ClientConnectionError:
-        # this appears to be a common occurrence with the vendor's servers
-        _LOGGER.warning(
-            (
-                "Unable to connect with the vendor's server. "
-                "Check your network and the vendor's service status page. "
-                "Message is: %s"
-            ),
-            err,
-        )
+    except evohomeasync2.RequestFailed:
+        if err.status is None:
+            _LOGGER.warning(
+                (
+                    "Unable to connect with the vendor's server. "
+                    "Check your network and the vendor's service status page. "
+                    "Message is: %s"
+                ),
+                err,
+            )
 
-    except aiohttp.ClientResponseError as exc:
-        if exc.status == HTTPStatus.SERVICE_UNAVAILABLE:
+        elif err.status == HTTPStatus.SERVICE_UNAVAILABLE:
             _LOGGER.warning(
                 "The vendor says their server is currently unavailable. "
                 "Check the vendor's service status page"
             )
 
-        elif exc.status == HTTPStatus.TOO_MANY_REQUESTS:
+        elif err.status == HTTPStatus.TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 (
                     "The vendor's API rate limit has been exceeded. "
@@ -221,7 +219,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         await client_v2.login()
-    except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
+    except evohomeasync2.AuthenticationFailed as err:
         _handle_exception(err)
         return False
     finally:
@@ -456,7 +454,7 @@ class EvoBroker:
         """Call a client API and update the broker state if required."""
         try:
             result = await api_function
-        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
+        except evohomeasync2.EvohomeError as err:
             _handle_exception(err)
             return
 
@@ -479,19 +477,7 @@ class EvoBroker:
         try:
             temps = list(await self.client_v1.temperatures(force_refresh=True))
 
-        except aiohttp.ClientError as err:
-            _LOGGER.warning(
-                (
-                    "Unable to obtain the latest high-precision temperatures. "
-                    "Check your network and the vendor's service status page. "
-                    "Proceeding with low-precision temperatures. "
-                    "Message is: %s"
-                ),
-                err,
-            )
-            self.temps = None  # these are now stale, will fall back to v2 temps
-
-        except KeyError as err:
+        except evohomeasync.InvalidSchema as exc:
             _LOGGER.warning(
                 (
                     "Unable to obtain high-precision temperatures. "
@@ -499,9 +485,21 @@ class EvoBroker:
                     "so the high-precision feature will be disabled until next restart."
                     "Message is: %s"
                 ),
-                err,
+                exc,
             )
-            self.client_v1 = self.temps = None
+            self.temps = self.client_v1 = None
+
+        except evohomeasync.EvohomeError as exc:
+            _LOGGER.warning(
+                (
+                    "Unable to obtain the latest high-precision temperatures. "
+                    "Check your network and the vendor's service status page. "
+                    "Proceeding without high-precision temperatures for now. "
+                    "Message is: %s"
+                ),
+                exc,
+            )
+            self.temps = None
 
         else:
             if (
@@ -513,14 +511,15 @@ class EvoBroker:
                     "the v1 API's default location (there is more than one location), "
                     "so the high-precision feature will be disabled until next restart"
                 )
-                self.client_v1 = self.temps = None
+                self.temps = self.client_v1 = None
             else:
                 self.temps = {str(i["id"]): i["temp"] for i in temps}
 
-        _LOGGER.debug("Temperatures = %s", self.temps)
+        finally:
+            if session_id != get_session_id(self.client_v1):
+                await self.save_auth_tokens()
 
-        if session_id != get_session_id(self.client_v1):
-            await self.save_auth_tokens()
+        _LOGGER.debug("Temperatures = %s", self.temps)
 
     async def _update_v2_api_state(self, *args, **kwargs) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
@@ -528,8 +527,8 @@ class EvoBroker:
 
         loc_idx = self.params[CONF_LOCATION_IDX]
         try:
-            status = await self.client.locations[loc_idx].status()
-        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
+            status = await self.client.locations[loc_idx].refresh_status()
+        except evohomeasync2.EvohomeError as err:
             _handle_exception(err)
         else:
             async_dispatcher_send(self.hass, DOMAIN)
@@ -547,7 +546,10 @@ class EvoBroker:
         Zones, DHW controller).
         """
         if self.client_v1:
-            await self._update_v1_api_temps()
+            try:
+                await self._update_v1_api_temps()
+            except evohomeasync.EvohomeError:
+                self.temps = None  # these are now stale, will fall back to v2 temps
 
         await self._update_v2_api_state()
 
@@ -622,11 +624,13 @@ class EvoChild(EvoDevice):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature of a Zone."""
-        if (
-            self._evo_broker.temps
-            and self._evo_broker.temps[self._evo_device.zoneId] != 128
-        ):
-            return self._evo_broker.temps[self._evo_device.zoneId]
+        if self._evo_device.TYPE == "domesticHotWater":
+            dev_id = self._evo_device.dhwId
+        else:
+            dev_id = self._evo_device.zoneId
+
+        if self._evo_broker.temps and self._evo_broker.temps[dev_id] is not None:
+            return self._evo_broker.temps[dev_id]
 
         if self._evo_device.temperatureStatus["isAvailable"]:
             return self._evo_device.temperatureStatus["temperature"]
@@ -699,7 +703,7 @@ class EvoChild(EvoDevice):
     async def _update_schedule(self) -> None:
         """Get the latest schedule, if any."""
         self._schedule = await self._evo_broker.call_client_api(
-            self._evo_device.schedule(), update_state=False
+            self._evo_device.get_schedule(), update_state=False
         )
 
         _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
