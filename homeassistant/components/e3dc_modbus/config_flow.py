@@ -72,31 +72,31 @@ class PlaceholderHub:
         return True
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
+# async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+#    """Validate the user input allows us to connect.
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    # TO_DO validate the data can be used to set up a connection.
+#    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+#    """
+# TO_DO validate the data can be used to set up a connection.
 
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
+# If your PyPI package is not built with async, pass your methods
+# to the executor:
+# await hass.async_add_executor_job(
+#     your_validate_func, data["username"], data["password"]
+# )
 
-    hub = PlaceholderHub(data["host"])
+# hub = PlaceholderHub(data["host"])
 
-    if not await hub.authenticate(data["username"], data["password"]):
-        raise InvalidAuth
+# if not await hub.authenticate(data["username"], data["password"]):
+#    raise InvalidAuth
 
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
+# If you cannot connect:
+# throw CannotConnect
+# If the authentication is wrong:
+# InvalidAuth
 
-    # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+# Return info that you want to store in the config entry.
+# return {"title": "Name of the device"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -136,6 +136,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 self.host = user_input[CONF_HOST]
+
+                # Extract the name from the user input here or use the default value
+                # self.name = user_input.get(CONF_NAME, DEFAULT_NAME)
 
                 await self.async_set_unique_id(user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()
