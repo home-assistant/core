@@ -1,60 +1,36 @@
 """The tests for http static files."""
 
+
+from pathlib import Path
+
+from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import EVENT_HOMEASSISTANT_START, HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-async def http(hass):
+async def http(hass: HomeAssistant) -> None:
     """Ensure http is set up."""
-    assert await async_setup_component(
-        hass,
-        "frontend",
-        {},
-    )
+    assert await async_setup_component(hass, "http", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
-def aiohttp_client(event_loop, aiohttp_client, socket_enabled):
-    """Return aiohttp_client and allow opening sockets."""
-    return aiohttp_client
-
-
-@pytest.fixture
-async def mock_http_client(hass, aiohttp_client):
+async def mock_http_client(hass: HomeAssistant, aiohttp_client: ClientSessionGenerator):
     """Start the Home Assistant HTTP component."""
     return await aiohttp_client(hass.http.app)
 
 
-async def test_static_path_cache(hass: HomeAssistant, mock_http_client) -> None:
-    """Test static paths cache."""
-    resp = await mock_http_client.get("/lovelace/default_view", allow_redirects=False)
-    assert resp.status == 404
+async def test_static_path_blocks_anchors(
+    hass: HomeAssistant, mock_http_client: TestClient, tmp_path: Path
+) -> None:
+    """Test static paths block anchors."""
+    hass.http.register_static_path(r"/static/D:\path", str(tmp_path))
 
-    resp = await mock_http_client.get("/frontend_latest/", allow_redirects=False)
+    resp = await mock_http_client.get(r"/static/D:\path", allow_redirects=False)
     assert resp.status == 403
-
-    resp = await mock_http_client.get(
-        "/static/icons/favicon.ico", allow_redirects=False
-    )
-    assert resp.status == 200
-
-    # and again to make sure the cache works
-    resp = await mock_http_client.get(
-        "/static/icons/favicon.ico", allow_redirects=False
-    )
-    assert resp.status == 200
-
-    resp = await mock_http_client.get(
-        "/static/fonts/roboto/Roboto-Bold.woff2", allow_redirects=False
-    )
-    assert resp.status == 200
-
-    resp = await mock_http_client.get("/static/does-not-exist", allow_redirects=False)
-    assert resp.status == 404
-
-    # and again to make sure the cache works
-    resp = await mock_http_client.get("/static/does-not-exist", allow_redirects=False)
-    assert resp.status == 404

@@ -70,4 +70,5 @@ class CachingStaticResource(StaticResource):
                 chunk_size=self._chunk_size,
                 headers=CACHE_HEADERS,
             )
+
         return await super()._handle(request)
