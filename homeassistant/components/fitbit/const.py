@@ -37,13 +37,6 @@ DEFAULT_CONFIG: Final[dict[str, str]] = {
 }
 DEFAULT_CLOCK_FORMAT: Final = "24H"
 
-BATTERY_LEVELS: Final[dict[str, int]] = {
-    "High": 100,
-    "Medium": 50,
-    "Low": 20,
-    "Empty": 0,
-}
-
 
 class FitbitUnitSystem(StrEnum):
     """Fitbit unit system set when sending requests to the Fitbit API.

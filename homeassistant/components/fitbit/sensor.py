@@ -52,7 +52,6 @@ from .const import (
     ATTR_LAST_SAVED_AT,
     ATTR_REFRESH_TOKEN,
     ATTRIBUTION,
-    BATTERY_LEVELS,
     CONF_CLOCK_FORMAT,
     CONF_MONITORED_RESOURCES,
     DEFAULT_CLOCK_FORMAT,
@@ -505,8 +504,11 @@ SLEEP_START_TIME_12HR = FitbitSensorEntityDescription(
 FITBIT_RESOURCE_BATTERY = FitbitSensorEntityDescription(
     key="devices/battery",
     name="Battery",
+    native_unit_of_measurement=PERCENTAGE,
     icon="mdi:battery",
+    device_class=SensorDeviceClass.BATTERY,
     scope=FitbitScope.DEVICE,
+    state_class=SensorStateClass.MEASUREMENT,
     entity_category=EntityCategory.DIAGNOSTIC,
 )
 
@@ -769,11 +771,9 @@ class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
             self._attr_entity_registry_enabled_default = True
 
     @property
-    def icon(self) -> str | None:
-        """Icon to use in the frontend, if any."""
-        if battery_level := BATTERY_LEVELS.get(self.device.battery):
-            return icon_for_battery_level(battery_level=battery_level)
-        return self.entity_description.icon
+    def icon(self) -> str:
+        """Icon to use in the frontend."""
+        return icon_for_battery_level(battery_level=self.device.battery_level)
 
     @property
     def extra_state_attributes(self) -> dict[str, str | None]:
@@ -781,6 +781,7 @@ class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
         return {
             "model": self.device.device_version,
             "type": self.device.type.lower() if self.device.type is not None else None,
+            "battery": self.device.battery,
         }
 
     async def async_added_to_hass(self) -> None:
@@ -792,5 +793,5 @@ class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.device = self.coordinator.data[self.device.id]
-        self._attr_native_value = self.device.battery
+        self._attr_native_value = self.device.battery_level
         self.async_write_ha_state()
