@@ -83,23 +83,15 @@ def count_torrents(data: dict[str, Any], filter_state=None) -> int:
     return count
 
 
-def _map_torrent_state(raw_state: str) -> str:
-    """Given a raw torrent state, return the normalized state which matches with it."""
-    for key, options in QBITTORRENT_TORRENT_STATES.items():
-        if raw_state in options:
-            return key
-    return "unknown"
-
-
-def list_torrents(data: dict[str, Any], filter_state=None) -> Mapping[str, str]:
+def list_torrents(data: dict[str, Any], filter_state=None) -> Mapping[str, Any]:
     """Return a map from torrent name to the torrent's status, for torrents matching the given state filter."""
     torrents = data["torrents"]
-    attrs = {}
+    attrs: Mapping[str, Any] = {"torrent_names": []}
 
     for torrent in torrents.values():
         if not filter_state or torrent["state"] in filter_state:
             torrent_name = torrent["name"]
-            attrs[torrent_name] = _map_torrent_state(torrent["state"])
+            attrs["torrent_names"].append(torrent_name)
 
     return attrs
 
