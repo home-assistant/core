@@ -1,7 +1,6 @@
 """Support for the Fitbit API."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
@@ -9,6 +8,8 @@ import logging
 import os
 from typing import Any, Final, cast
 
+from fitbit import Fitbit
+from oauthlib.oauth2.rfc6749.errors import OAuth2Error
 import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
@@ -568,34 +569,54 @@ async def async_setup_platform(
 
     if config_file is not None:
         _LOGGER.debug("Importing existing fitbit.conf application credentials")
-        await async_import_client_credential(
-            hass,
-            DOMAIN,
-            ClientCredential(
-                config_file[CONF_CLIENT_ID], config_file[CONF_CLIENT_SECRET]
-            ),
+
+        # Refresh the token before importing to ensure it is working and not
+        # expired on first initialization.
+        authd_client = Fitbit(
+            config_file[CONF_CLIENT_ID],
+            config_file[CONF_CLIENT_SECRET],
+            access_token=config_file[ATTR_ACCESS_TOKEN],
+            refresh_token=config_file[ATTR_REFRESH_TOKEN],
+            expires_at=config_file[ATTR_LAST_SAVED_AT],
+            refresh_cb=lambda x: None,
         )
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                "auth_implementation": DOMAIN,
-                CONF_TOKEN: {
-                    ATTR_ACCESS_TOKEN: config_file[ATTR_ACCESS_TOKEN],
-                    ATTR_REFRESH_TOKEN: config_file[ATTR_REFRESH_TOKEN],
-                    "expires_at": config_file[ATTR_LAST_SAVED_AT],
-                },
-                CONF_CLOCK_FORMAT: config[CONF_CLOCK_FORMAT],
-                CONF_UNIT_SYSTEM: config[CONF_UNIT_SYSTEM],
-                CONF_MONITORED_RESOURCES: config[CONF_MONITORED_RESOURCES],
-            },
-        )
-        translation_key = "deprecated_yaml_import"
-        if (
-            result.get("type") == FlowResultType.ABORT
-            and result.get("reason") == "cannot_connect"
-        ):
+        try:
+            updated_token = await hass.async_add_executor_job(
+                authd_client.client.refresh_token
+            )
+        except OAuth2Error as err:
+            _LOGGER.debug("Unable to import fitbit OAuth2 credentials: %s", err)
             translation_key = "deprecated_yaml_import_issue_cannot_connect"
+        else:
+            await async_import_client_credential(
+                hass,
+                DOMAIN,
+                ClientCredential(
+                    config_file[CONF_CLIENT_ID], config_file[CONF_CLIENT_SECRET]
+                ),
+            )
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    "auth_implementation": DOMAIN,
+                    CONF_TOKEN: {
+                        ATTR_ACCESS_TOKEN: updated_token[ATTR_ACCESS_TOKEN],
+                        ATTR_REFRESH_TOKEN: updated_token[ATTR_REFRESH_TOKEN],
+                        "expires_at": updated_token["expires_at"],
+                        "scope": " ".join(updated_token.get("scope", [])),
+                    },
+                    CONF_CLOCK_FORMAT: config[CONF_CLOCK_FORMAT],
+                    CONF_UNIT_SYSTEM: config[CONF_UNIT_SYSTEM],
+                    CONF_MONITORED_RESOURCES: config[CONF_MONITORED_RESOURCES],
+                },
+            )
+            translation_key = "deprecated_yaml_import"
+            if (
+                result.get("type") == FlowResultType.ABORT
+                and result.get("reason") == "cannot_connect"
+            ):
+                translation_key = "deprecated_yaml_import_issue_cannot_connect"
     else:
         translation_key = "deprecated_yaml_no_import"
 
@@ -620,10 +641,10 @@ async def async_setup_entry(
     data: FitbitData = hass.data[DOMAIN][entry.entry_id]
     api = data.api
 
-    # Note: This will only be one rpc since it will cache the user profile
-    (user_profile, unit_system) = await asyncio.gather(
-        api.async_get_user_profile(), api.async_get_unit_system()
-    )
+    # These are run serially to reuse the cached user profile, not gathered
+    # to avoid two racing requests.
+    user_profile = await api.async_get_user_profile()
+    unit_system = await api.async_get_unit_system()
 
     fitbit_config = config_from_entry_data(entry.data)
 
@@ -654,7 +675,7 @@ async def async_setup_entry(
         for description in resource_list
         if is_allowed_resource(description)
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
     if data.device_coordinator and is_allowed_resource(FITBIT_RESOURCE_BATTERY):
         async_add_entities(
@@ -711,6 +732,14 @@ class FitbitSensor(SensorEntity):
         else:
             self._attr_available = True
             self._attr_native_value = self.entity_description.value_fn(result)
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # We do not ask for an update with async_add_entities()
+        # because it will update disabled entities.
+        self.async_schedule_update_ha_state(force_refresh=True)
 
 
 class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
