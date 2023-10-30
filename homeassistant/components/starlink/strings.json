@@ -75,6 +75,9 @@
     "switch": {
       "stowed": {
         "name": "Stowed"
+      },
+      "sleep_schedule": {
+        "name": "Sleep Schedule"
       }
     }
   }
