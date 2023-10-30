@@ -20,7 +20,6 @@ from aioairzone_cloud.const import (
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
-    AZD_NAME,
     AZD_NUM_DEVICES,
     AZD_NUM_GROUPS,
     AZD_POWER,
@@ -388,5 +387,5 @@ class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneDeviceClimate):
 
         if slave_raise:
             raise HomeAssistantError(
-                f"Mode can't be changed on slave zone {self.get_airzone_value(AZD_NAME)}"
+                f"Mode can't be changed on slave zone {self.entity_id}"
             )
