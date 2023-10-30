@@ -10,6 +10,7 @@ from homeassistant.components.fibaro.config_flow import _normalize_url
 from homeassistant.components.fibaro.const import CONF_IMPORT_PLUGINS
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_NAME, TEST_PASSWORD, TEST_URL, TEST_USERNAME
 
@@ -24,7 +25,7 @@ async def test_config_flow_user_initiated_success(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -37,7 +38,7 @@ async def test_config_flow_user_initiated_success(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_URL: TEST_URL,
@@ -55,7 +56,7 @@ async def test_config_flow_user_initiated_connect_failure(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -70,7 +71,7 @@ async def test_config_flow_user_initiated_connect_failure(
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -83,7 +84,7 @@ async def test_config_flow_user_initiated_auth_failure(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -98,7 +99,7 @@ async def test_config_flow_user_initiated_auth_failure(
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -111,7 +112,7 @@ async def test_config_flow_user_initiated_unknown_failure_1(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -126,7 +127,7 @@ async def test_config_flow_user_initiated_unknown_failure_1(
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -139,7 +140,7 @@ async def test_config_flow_user_initiated_unknown_failure_2(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -154,7 +155,7 @@ async def test_config_flow_user_initiated_unknown_failure_2(
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -172,7 +173,7 @@ async def test_reauth_success(
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
@@ -181,7 +182,7 @@ async def test_reauth_success(
         user_input={CONF_PASSWORD: "other_fake_password"},
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
@@ -200,7 +201,7 @@ async def test_reauth_connect_failure(
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
@@ -211,7 +212,7 @@ async def test_reauth_connect_failure(
         user_input={CONF_PASSWORD: "other_fake_password"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -231,7 +232,7 @@ async def test_reauth_auth_failure(
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
@@ -242,7 +243,7 @@ async def test_reauth_auth_failure(
         user_input={CONF_PASSWORD: "other_fake_password"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "invalid_auth"}
 
