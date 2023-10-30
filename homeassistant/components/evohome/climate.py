@@ -5,8 +5,6 @@ from datetime import datetime as dt
 import logging
 from typing import Any
 
-from evohomeasync2.zone import Zone
-
 from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_ECO,
@@ -100,8 +98,6 @@ async def async_setup_platform(
     entities: list[EvoClimateEntity] = [EvoController(broker, broker.tcs)]
 
     for zone in broker.tcs.zones.values():
-        assert isinstance(zone, Zone)  # mypy hint
-
         if zone.modelType == "HeatingZone" or zone.zoneType == "Thermostat":
             _LOGGER.debug(
                 "Adding: %s (%s), id=%s, name=%s",
@@ -145,7 +141,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
     _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
-    def __init__(self, evo_broker, evo_device: Zone) -> None:
+    def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Honeywell TCC Zone."""
         super().__init__(evo_broker, evo_device)
 
