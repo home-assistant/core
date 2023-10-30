@@ -3,7 +3,10 @@ import pytest
 from requests.exceptions import RequestException
 import requests_mock
 
-from homeassistant.components.qbittorrent.const import DOMAIN
+from homeassistant.components.qbittorrent.const import (
+    CONF_CREATE_TORRENT_SENSORS,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -104,3 +107,44 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_flow_qbittorrent_options(hass: HomeAssistant) -> None:
+    """Test config flow options."""
+    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Enable the torrent_sensors option.
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "qbittorrent_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_CREATE_TORRENT_SENSORS: True}
+    )
+
+    assert result["type"] == "create_entry"
+    await hass.async_block_till_done()
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert config_entry.options[CONF_CREATE_TORRENT_SENSORS]
+
+    # Disable the torrent_sensors option.
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "qbittorrent_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_CREATE_TORRENT_SENSORS: False}
+    )
+
+    assert result["type"] == "create_entry"
+    await hass.async_block_till_done()
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert not config_entry.options[CONF_CREATE_TORRENT_SENSORS]
