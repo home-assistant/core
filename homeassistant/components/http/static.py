@@ -23,6 +23,7 @@ PATH_CACHE = LRU(512)
 
 
 def _get_file_path(rel_url: str, directory: Path, follow_symlinks: bool) -> Path | None:
+    """Return the path to file on disk or None."""
     filename = Path(rel_url)
     if filename.anchor:
         # rel_url is an absolute name like
