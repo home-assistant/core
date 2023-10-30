@@ -91,7 +91,7 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    broker: EvoBroker = hass.data[DOMAIN]["broker"]
+    broker = hass.data[DOMAIN]["broker"]
 
     _LOGGER.debug(
         "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
@@ -149,7 +149,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
     _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
-    def __init__(self, evo_broker: EvoBroker, evo_device: Zone) -> None:
+    def __init__(self, evo_broker, evo_device: Zone) -> None:
         """Initialize a Honeywell TCC Zone."""
         super().__init__(evo_broker, evo_device)
 
@@ -314,7 +314,7 @@ class EvoController(EvoClimateEntity):
     _attr_icon = "mdi:thermostat"
     _attr_precision = PRECISION_TENTHS
 
-    def __init__(self, evo_broker: EvoBroker, evo_device: EvoDevice) -> None:
+    def __init__(self, evo_broker, evo_device: EvoDevice) -> None:
         """Initialize a Honeywell TCC Controller/Location."""
         super().__init__(evo_broker, evo_device)
 
