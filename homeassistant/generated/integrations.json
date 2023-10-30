@@ -6352,7 +6352,7 @@
     },
     "tvoverlay": {
       "name": "TvOverlay",
-      "integration_type": "device",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
     },
