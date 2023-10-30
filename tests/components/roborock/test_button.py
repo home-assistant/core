@@ -18,6 +18,7 @@ from tests.common import MockConfigEntry
         "button.roborock_s7_maxv_reset_main_brush_consumable",
     ],
 )
+@pytest.mark.freeze_time("2023-10-30 08:50:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_update_success(
     hass: HomeAssistant,
@@ -27,7 +28,7 @@ async def test_update_success(
 ) -> None:
     """Test pressing the button entities."""
     # Ensure that the entity exist, as these test can pass even if there is no entity.
-    assert hass.states.get(entity_id) is not None
+    assert hass.states.get(entity_id).state == "unknown"
     with patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message"
     ) as mock_send_message:
@@ -38,3 +39,4 @@ async def test_update_success(
             target={"entity_id": entity_id},
         )
     assert mock_send_message.assert_called_once
+    assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
