@@ -8,7 +8,7 @@ from transmission_rpc.torrent import Torrent
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, STATE_IDLE, UnitOfDataRate
+from homeassistant.const import STATE_IDLE, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -35,60 +35,51 @@ async def async_setup_entry(
     coordinator: TransmissionDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    name: str = config_entry.data[CONF_NAME]
 
-    dev = [
+    entities = [
         TransmissionSpeedSensor(
             coordinator,
-            name,
             "download_speed",
             "download",
         ),
         TransmissionSpeedSensor(
             coordinator,
-            name,
             "upload_speed",
             "upload",
         ),
         TransmissionStatusSensor(
             coordinator,
-            name,
             "transmission_status",
             "status",
         ),
         TransmissionTorrentsSensor(
             coordinator,
-            name,
             "active_torrents",
             "active_torrents",
         ),
         TransmissionTorrentsSensor(
             coordinator,
-            name,
             "paused_torrents",
             "paused_torrents",
         ),
         TransmissionTorrentsSensor(
             coordinator,
-            name,
             "total_torrents",
             "total_torrents",
         ),
         TransmissionTorrentsSensor(
             coordinator,
-            name,
             "completed_torrents",
             "completed_torrents",
         ),
         TransmissionTorrentsSensor(
             coordinator,
-            name,
             "started_torrents",
             "started_torrents",
         ),
     ]
 
-    async_add_entities(dev, True)
+    async_add_entities(entities)
 
 
 class TransmissionSensor(
@@ -102,7 +93,6 @@ class TransmissionSensor(
     def __init__(
         self,
         coordinator: TransmissionDataUpdateCoordinator,
-        client_name: str,
         sensor_translation_key: str,
         key: str,
     ) -> None:
@@ -115,7 +105,6 @@ class TransmissionSensor(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Transmission",
-            name=client_name,
         )
 
 

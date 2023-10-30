@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
+import time
 from typing import Any
 from unittest.mock import patch
 
@@ -16,9 +17,7 @@ from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
 
 from .conftest import (
     CLIENT_ID,
-    FAKE_ACCESS_TOKEN,
     FAKE_AUTH_IMPL,
-    FAKE_REFRESH_TOKEN,
     PROFILE_API_URL,
     PROFILE_USER_ID,
     SERVER_ACCESS_TOKEN,
@@ -204,13 +203,26 @@ async def test_config_entry_already_exists(
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.parametrize(
+    "token_expiration_time",
+    [time.time() + 86400, time.time() - 86400],
+    ids=("token_active", "token_expired"),
+)
 async def test_import_fitbit_config(
     hass: HomeAssistant,
     fitbit_config_setup: None,
     sensor_platform_setup: Callable[[], Awaitable[bool]],
     issue_registry: ir.IssueRegistry,
+    requests_mock: Mocker,
 ) -> None:
     """Test that platform configuration is imported successfully."""
+
+    requests_mock.register_uri(
+        "POST",
+        OAUTH2_TOKEN,
+        status_code=HTTPStatus.OK,
+        json=SERVER_ACCESS_TOKEN,
+    )
 
     with patch(
         "homeassistant.components.fitbit.async_setup_entry", return_value=True
@@ -227,16 +239,20 @@ async def test_import_fitbit_config(
     assert config_entry.unique_id == PROFILE_USER_ID
 
     data = dict(config_entry.data)
+    # Verify imported values from fitbit.conf and configuration.yaml and
+    # that the token is updated.
     assert "token" in data
+    expires_at = data["token"]["expires_at"]
+    assert expires_at > time.time()
     del data["token"]["expires_at"]
-    # Verify imported values from fitbit.conf and configuration.yaml
     assert dict(config_entry.data) == {
         "auth_implementation": DOMAIN,
         "clock_format": "24H",
         "monitored_resources": ["activities/steps"],
         "token": {
-            "access_token": FAKE_ACCESS_TOKEN,
-            "refresh_token": FAKE_REFRESH_TOKEN,
+            "access_token": "server-access-token",
+            "refresh_token": "server-refresh-token",
+            "scope": "activity heartrate nutrition profile settings sleep weight",
         },
         "unit_system": "default",
     }
@@ -257,7 +273,50 @@ async def test_import_fitbit_config_failure_cannot_connect(
     """Test platform configuration fails to import successfully."""
 
     requests_mock.register_uri(
+        "POST",
+        OAUTH2_TOKEN,
+        status_code=HTTPStatus.OK,
+        json=SERVER_ACCESS_TOKEN,
+    )
+    requests_mock.register_uri(
         "GET", PROFILE_API_URL, status_code=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+
+    with patch(
+        "homeassistant.components.fitbit.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await sensor_platform_setup()
+
+    assert len(mock_setup.mock_calls) == 0
+
+    # Verify an issue is raised that we were unable to import configuration
+    issue = issue_registry.issues.get((DOMAIN, "deprecated_yaml"))
+    assert issue
+    assert issue.translation_key == "deprecated_yaml_import_issue_cannot_connect"
+
+
+@pytest.mark.parametrize(
+    "status_code",
+    [
+        (HTTPStatus.UNAUTHORIZED),
+        (HTTPStatus.INTERNAL_SERVER_ERROR),
+    ],
+)
+async def test_import_fitbit_config_cannot_refresh(
+    hass: HomeAssistant,
+    fitbit_config_setup: None,
+    sensor_platform_setup: Callable[[], Awaitable[bool]],
+    issue_registry: ir.IssueRegistry,
+    requests_mock: Mocker,
+    status_code: HTTPStatus,
+) -> None:
+    """Test platform configuration import fails when refreshing the token."""
+
+    requests_mock.register_uri(
+        "POST",
+        OAUTH2_TOKEN,
+        status_code=status_code,
+        json="",
     )
 
     with patch(
@@ -281,8 +340,16 @@ async def test_import_fitbit_config_already_exists(
     fitbit_config_setup: None,
     sensor_platform_setup: Callable[[], Awaitable[bool]],
     issue_registry: ir.IssueRegistry,
+    requests_mock: Mocker,
 ) -> None:
     """Test that platform configuration is not imported if it already exists."""
+
+    requests_mock.register_uri(
+        "POST",
+        OAUTH2_TOKEN,
+        status_code=HTTPStatus.OK,
+        json=SERVER_ACCESS_TOKEN,
+    )
 
     # Verify existing config entry
     entries = hass.config_entries.async_entries(DOMAIN)

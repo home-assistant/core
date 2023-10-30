@@ -74,6 +74,9 @@
       "pm25": {
         "name": "[%key:component::sensor::entity_component::pm25::name%]"
       },
+      "neph": {
+        "name": "Visbility using nephelometry"
+      },
       "dominant_pollutant": {
         "name": "Dominant pollutant",
         "state": {
