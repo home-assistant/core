@@ -417,7 +417,7 @@ class EvoBroker:
         self.params = params
 
         loc_idx = params[CONF_LOCATION_IDX]
-        self.config = client._full_config[loc_idx][GWS][0][TCS][0]
+        self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
         self.tcs = client.locations[loc_idx]._gateways[0]._control_systems[0]
         self.tcs_utc_offset = timedelta(
             minutes=client.locations[loc_idx].timeZone[UTC_OFFSET]
@@ -553,13 +553,13 @@ class EvoBroker:
         operating mode of the Controller and the current temp of its children (e.g.
         Zones, DHW controller).
         """
+        await self._update_v2_api_state()
+
         if self.client_v1:
             try:
                 await self._update_v1_api_temps()
             except evohomeasync.EvohomeError:
                 self.temps = None  # these are now stale, will fall back to v2 temps
-
-        await self._update_v2_api_state()
 
 
 class EvoDevice(Entity):
