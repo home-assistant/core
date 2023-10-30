@@ -49,7 +49,7 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    broker: EvoBroker = hass.data[DOMAIN]["broker"]
+    broker = hass.data[DOMAIN]["broker"]
 
     _LOGGER.debug(
         "Adding: DhwController (%s), id=%s",
@@ -70,7 +70,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     _attr_operation_list = list(HA_STATE_TO_EVO)
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, evo_broker: EvoBroker, evo_device: HotWater) -> None:
+    def __init__(self, evo_broker, evo_device) -> None:
         """Initialize an evohome DHW controller."""
         super().__init__(evo_broker, evo_device)
 
