@@ -92,9 +92,6 @@ from tests.common import (
     mock_platform,
 )
 from tests.testing_config.custom_components.test import weather as WeatherPlatform
-from tests.testing_config.custom_components.test_weather import (
-    weather as NewWeatherPlatform,
-)
 from tests.typing import WebSocketGenerator
 
 
@@ -1152,36 +1149,93 @@ async def test_issue_forecast_attr_deprecated(
 
 async def test_issue_forecast_deprecated_no_logging(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    config_flow_fixture: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the no issue is raised on deprecated forecast attributes if new methods exist."""
+
+    class MockWeatherMockLegacyForecastOnly(WeatherPlatform.MockWeather):
+        """Mock weather class with mocked legacy forecast."""
+
+        def __init__(self, **values: Any) -> None:
+            """Initialize."""
+            super().__init__(**values)
+            self.forecast_list: list[Forecast] | None = [
+                {
+                    ATTR_FORECAST_NATIVE_TEMP: self.native_temperature,
+                    ATTR_FORECAST_NATIVE_APPARENT_TEMP: self.native_apparent_temperature,
+                    ATTR_FORECAST_NATIVE_TEMP_LOW: self.native_temperature,
+                    ATTR_FORECAST_NATIVE_DEW_POINT: self.native_dew_point,
+                    ATTR_FORECAST_CLOUD_COVERAGE: self.cloud_coverage,
+                    ATTR_FORECAST_NATIVE_PRESSURE: self.native_pressure,
+                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: self.native_wind_gust_speed,
+                    ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
+                    ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
+                    ATTR_FORECAST_UV_INDEX: self.uv_index,
+                    ATTR_FORECAST_NATIVE_PRECIPITATION: self._values.get(
+                        "native_precipitation"
+                    ),
+                    ATTR_FORECAST_HUMIDITY: self.humidity,
+                }
+            ]
+
+        @property
+        def forecast(self) -> list[Forecast] | None:
+            """Return the forecast."""
+            return self.forecast_list
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            """Return the forecast_daily."""
+            return self.forecast_list
 
     kwargs = {
         "native_temperature": 38,
         "native_temperature_unit": UnitOfTemperature.CELSIUS,
     }
-    platform: NewWeatherPlatform = getattr(hass.components, "test_weather.weather")
-    caplog.clear()
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockWeatherMockForecast(
-            name="Test",
-            entity_id="weather.test",
-            condition=ATTR_CONDITION_SUNNY,
-            **kwargs,
-        )
+    weather_entity = MockWeatherMockLegacyForecastOnly(
+        name="Testing",
+        entity_id="weather.testing",
+        condition=ATTR_CONDITION_SUNNY,
+        **kwargs,
     )
 
-    entity0 = platform.ENTITIES[0]
-    assert await async_setup_component(
-        hass, "weather", {"weather": {"platform": "test_weather", "name": "test"}}
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        return True
+
+    async def async_setup_entry_weather_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test weather platform via config entry."""
+        async_add_entities([weather_entity])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry_init,
+        ),
+        built_in=False,
     )
+    mock_platform(
+        hass,
+        "test.weather",
+        MockPlatform(async_setup_entry=async_setup_entry_weather_platform),
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity0.state == ATTR_CONDITION_SUNNY
+    assert weather_entity.state == ATTR_CONDITION_SUNNY
 
-    assert "Setting up weather.test_weather" in caplog.text
+    assert "Setting up weather.test" in caplog.text
     assert (
         "custom_components.test_weather.weather::weather.test is using a forecast attribute on an instance of WeatherEntity"
         not in caplog.text
