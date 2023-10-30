@@ -421,7 +421,7 @@ class EvoBroker:
         self.params = params
 
         loc_idx = params[CONF_LOCATION_IDX]
-        self.config = client._full_config[loc_idx][GWS][0][TCS][0]
+        self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
         self.tcs = client.locations[loc_idx]._gateways[0]._control_systems[0]
         self.tcs_utc_offset = timedelta(
             minutes=client.locations[loc_idx].timeZone[UTC_OFFSET]
