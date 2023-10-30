@@ -910,7 +910,7 @@ google-cloud-texttospeech==2.12.3
 google-generativeai==0.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==3.0.2
+google-nest-sdm==3.0.3
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1394,7 +1394,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.37
+opower==0.0.38
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2740,7 +2740,7 @@ xiaomi-ble==0.21.1
 xknx==2.11.2
 
 # homeassistant.components.knx
-xknxproject==3.3.0
+xknxproject==3.4.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
