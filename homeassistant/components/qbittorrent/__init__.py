@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import CONF_CREATE_TORRENT_SENSORS, DOMAIN
 from .coordinator import QBittorrentDataCoordinator
 from .helpers import setup_client
 
@@ -27,6 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up qBittorrent from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][CONF_CREATE_TORRENT_SENSORS] = entry.data.get(
+        CONF_CREATE_TORRENT_SENSORS, False
+    )
     try:
         client = await hass.async_add_executor_job(
             setup_client,

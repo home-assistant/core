@@ -1,7 +1,7 @@
 """Support for monitoring the qBittorrent API."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import CONF_CREATE_TORRENT_SENSORS, DOMAIN, QBITTORRENT_TORRENT_STATES
 from .coordinator import QBittorrentDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,12 +28,23 @@ SENSOR_TYPE_CURRENT_STATUS = "current_status"
 SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
 SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
 
+SENSOR_TYPE_TORRENTS = "torrents"
+SENSOR_TYPE_TORRENTS_DOWNLOADING = "torrents_downloading"
+SENSOR_TYPE_TORRENTS_UPLOADING = "torrents_uploading"
+SENSOR_TYPE_TORRENTS_STALLED = "torrents_stalled"
+SENSOR_TYPE_TORRENTS_STOPPED = "torrents_stopped"
+SENSOR_TYPE_TORRENTS_COMPLETED = "torrents_completed"
+SENSOR_TYPE_TORRENTS_QUEUED = "torrents_queued"
+SENSOR_TYPE_TORRENTS_CHECKING = "torrents_checking"
+SENSOR_TYPE_TORRENTS_ERROR = "torrents_error"
+
 
 @dataclass
 class QBittorrentMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[dict[str, Any]], StateType]
+    attrs_fn: Callable[[dict[str, Any]], Mapping[str, Any]] | None
 
 
 @dataclass
@@ -60,11 +71,45 @@ def format_speed(speed):
     return round(kb_spd, 2 if kb_spd < 0.1 else 1)
 
 
-SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
+def count_torrents(data: dict[str, Any], filter_state=None) -> int:
+    """Return the count of torrents which match the given set of state filters."""
+    torrents = data["torrents"]
+
+    count = 0
+    for torrent in torrents.values():
+        if not filter_state or torrent["state"] in filter_state:
+            count += 1
+
+    return count
+
+
+def _map_torrent_state(raw_state: str) -> str:
+    """Given a raw torrent state, return the normalized state which matches with it."""
+    for key, options in QBITTORRENT_TORRENT_STATES.items():
+        if raw_state in options:
+            return key
+    return "unknown"
+
+
+def list_torrents(data: dict[str, Any], filter_state=None) -> Mapping[str, str]:
+    """Return a map from torrent name to the torrent's status, for torrents matching the given state filter."""
+    torrents = data["torrents"]
+    attrs = {}
+
+    for torrent in torrents.values():
+        if not filter_state or torrent["state"] in filter_state:
+            torrent_name = torrent["name"]
+            attrs[torrent_name] = _map_torrent_state(torrent["state"])
+
+    return attrs
+
+
+BASE_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_CURRENT_STATUS,
         name="Status",
         value_fn=_get_qbittorrent_state,
+        attrs_fn=None,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
@@ -74,6 +119,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: format_speed(data["server_state"]["dl_info_speed"]),
+        attrs_fn=None,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
@@ -83,6 +129,109 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: format_speed(data["server_state"]["up_info_speed"]),
+        attrs_fn=None,
+    ),
+)
+
+
+TORRENT_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_TORRENTS,
+        name="Torrents",
+        icon="mdi:cog-transfer",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: count_torrents(data, None),
+        attrs_fn=lambda data: list_torrents(data, None),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_TORRENTS_DOWNLOADING,
+        name="Torrents Downloading",
+        icon="mdi:cloud-arrow-down",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: count_torrents(
+            data, QBITTORRENT_TORRENT_STATES["downloading"]
+        ),
+        attrs_fn=lambda data: list_torrents(
+            data, QBITTORRENT_TORRENT_STATES["downloading"]
+        ),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_TORRENTS_UPLOADING,
+        name="Torrents Uploading",
+        icon="mdi:cloud-arrow-up",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: count_torrents(
+            data, QBITTORRENT_TORRENT_STATES["uploading"]
+        ),
+        attrs_fn=lambda data: list_torrents(
+            data, QBITTORRENT_TORRENT_STATES["uploading"]
+        ),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_TORRENTS_STALLED,
+        name="Torrents Stalled",
+        icon="mdi:cloud-minus",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: count_torrents(
+            data, QBITTORRENT_TORRENT_STATES["stalled"]
+        ),
+        attrs_fn=lambda data: list_torrents(
+            data, QBITTORRENT_TORRENT_STATES["stalled"]
+        ),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_TORRENTS_STOPPED,
+        name="Torrents Stopped",
+        icon="mdi:cloud-cancel",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: count_torrents(
+            data, QBITTORRENT_TORRENT_STATES["stopped"]
+        ),
+        attrs_fn=lambda data: list_torrents(
+            data, QBITTORRENT_TORRENT_STATES["stopped"]
+        ),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_TORRENTS_COMPLETED,
+        name="Torrents Completed",
+        icon="mdi:cloud-check",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: count_torrents(
+            data, QBITTORRENT_TORRENT_STATES["completed"]
+        ),
+        attrs_fn=lambda data: list_torrents(
+            data, QBITTORRENT_TORRENT_STATES["completed"]
+        ),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_TORRENTS_QUEUED,
+        name="Torrents Queued",
+        icon="mdi:cloud-clock",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: count_torrents(
+            data, QBITTORRENT_TORRENT_STATES["queued"]
+        ),
+        attrs_fn=lambda data: list_torrents(data, QBITTORRENT_TORRENT_STATES["queued"]),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_TORRENTS_CHECKING,
+        name="Torrents Checking",
+        icon="mdi:cloud-sync",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: count_torrents(
+            data, QBITTORRENT_TORRENT_STATES["checking"]
+        ),
+        attrs_fn=lambda data: list_torrents(
+            data, QBITTORRENT_TORRENT_STATES["checking"]
+        ),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_TORRENTS_ERROR,
+        name="Torrents Erroring",
+        icon="mdi:cloud-remove",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: count_torrents(data, QBITTORRENT_TORRENT_STATES["error"]),
+        attrs_fn=lambda data: list_torrents(data, QBITTORRENT_TORRENT_STATES["error"]),
     ),
 )
 
@@ -96,8 +245,15 @@ async def async_setup_entry(
     coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = [
         QBittorrentSensor(description, coordinator, config_entry)
-        for description in SENSOR_TYPES
+        for description in BASE_SENSOR_TYPES
     ]
+
+    if config_entry.options.get(CONF_CREATE_TORRENT_SENSORS):
+        entities += [
+            QBittorrentSensor(description, coordinator, config_entry)
+            for description in TORRENT_SENSOR_TYPES
+        ]
+
     async_add_entites(entities)
 
 
@@ -123,3 +279,11 @@ class QBittorrentSensor(CoordinatorEntity[QBittorrentDataCoordinator], SensorEnt
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return extra state attributes for torrent statistics sensors."""
+        if self.entity_description.attrs_fn:
+            return self.entity_description.attrs_fn(self.coordinator.data)
+
+        return None

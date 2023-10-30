@@ -17,5 +17,15 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "options": {
+    "step": {
+      "qbittorrent_options": {
+        "description": "Options for qBittorrent",
+        "data": {
+          "create_torrent_sensors": "Create sensors for torrent statuses"
+        }
+      }
+    }
   }
 }
