@@ -40,6 +40,7 @@ from homeassistant.util import dt as dt_util
 from . import WithingsData
 from .const import (
     DOMAIN,
+    LOGGER,
     SCORE_POINTS,
     UOM_BEATS_PER_MINUTE,
     UOM_BREATHS_PER_MINUTE,
@@ -785,6 +786,11 @@ async def async_setup_entry(
 
         remove_workout_listener = workout_coordinator.async_add_listener(
             _async_add_workout_entities
+        )
+
+    if not entities:
+        LOGGER.warning(
+            "No data found for Withings entry %s, sensors will be added when new data is available"
         )
 
     async_add_entities(entities)

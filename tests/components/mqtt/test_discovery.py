@@ -1523,18 +1523,20 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
             return self.async_abort(reason="already_configured")
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0)
         assert ("comp/discovery/#", 0) in help_all_subscribe_calls(mqtt_client_mock)
         assert not mqtt_client_mock.unsubscribe.called
 
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
         mqtt_client_mock.unsubscribe.assert_called_once_with(["comp/discovery/#"])
         mqtt_client_mock.unsubscribe.reset_mock()
 
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
         assert not mqtt_client_mock.unsubscribe.called
 
