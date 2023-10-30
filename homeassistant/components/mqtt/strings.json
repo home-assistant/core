@@ -181,7 +181,7 @@
         },
         "qos": {
           "name": "QoS",
-          "description": "Quality of Service to use. O. At most once. 1: At least once. 2: Exactly once."
+          "description": "Quality of Service to use. 0: At most once. 1: At least once. 2: Exactly once."
         },
         "retain": {
           "name": "Retain",
