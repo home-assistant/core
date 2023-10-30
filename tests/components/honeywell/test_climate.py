@@ -1083,6 +1083,7 @@ async def test_async_update_errors(
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
+    # Due to server instability, only mark entity unavailable after RETRY update attmpts
     for _ in range(RETRY):
         async_fire_time_changed(
             hass,
@@ -1149,6 +1150,7 @@ async def test_async_update_errors(
 
     device.refresh.side_effect = ClientConnectionError
 
+    # Due to server instability, only mark entity unavailable after RETRY update attmpts
     for _ in range(RETRY):
         async_fire_time_changed(
             hass,
