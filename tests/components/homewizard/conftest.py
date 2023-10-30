@@ -43,7 +43,7 @@ def mock_homewizardenergy(
     data_fixture: str,
     state_fixture: str,
     system_fixture: str,
-):
+) -> MagicMock:
     """Return a mock bridge."""
     with patch(
         "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",

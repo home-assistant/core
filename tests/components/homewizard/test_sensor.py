@@ -14,8 +14,12 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
+pytestmark = [
+    pytest.mark.usefixtures("init_integration"),
+]
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("device_fixture", "data_fixture", "entity_ids"),
     [
@@ -88,7 +92,6 @@ async def test_sensors_p1_meter(
         assert snapshot(name=f"{entity_id}:device-registry") == device_entry
 
 
-@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     "entity_id",
     [
@@ -113,7 +116,6 @@ async def test_disabled_by_default_sensors(
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("data_fixture", ["data-HWE-P1-unused-exports.json"])
 @pytest.mark.parametrize(
     "entity_id",
@@ -138,7 +140,6 @@ async def test_disabled_by_default_sensors_when_unused(
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("exception", [RequestError, DisabledError])
 async def test_sensors_unreachable(
     hass: HomeAssistant,

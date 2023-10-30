@@ -21,8 +21,11 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
+pytestmark = [
+    pytest.mark.usefixtures("init_integration"),
+]
 
-@pytest.mark.usefixtures("init_integration")
+
 @pytest.mark.parametrize("device_fixture", ["device-HWE-SKT.json"])
 @pytest.mark.parametrize(
     ("entity_id", "method", "parameter"),
@@ -116,7 +119,6 @@ async def test_switch_entities(
         )
 
 
-@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("device_fixture", ["device-HWE-SKT.json"])
 @pytest.mark.parametrize("exception", [RequestError, DisabledError, UnsupportedError])
 @pytest.mark.parametrize(
