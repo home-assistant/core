@@ -7,7 +7,7 @@
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "client_id": "[%key:common::config_flow::data::client_id%]",
+          "client_id": "Client ID",
           "heating_type": "Heating type"
         }
       }
