@@ -526,7 +526,7 @@ async def test_call_service_error(
     assert msg["id"] == 6
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"] is False
-    assert msg["error"]["code"] == "home_assistant_error"
+    assert msg["error"]["code"] == "service_validation_error"
     assert msg["error"]["message"] == "Validation error: error_message"
     assert msg["error"]["translation_placeholders"] == {"option": "bla"}
     assert msg["error"]["translation_key"] == "custom_error"

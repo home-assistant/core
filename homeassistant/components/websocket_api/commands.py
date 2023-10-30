@@ -270,7 +270,7 @@ async def handle_call_service(
         connection.logger.debug("", exc_info=err)
         connection.send_error(
             msg["id"],
-            const.ERR_HOME_ASSISTANT_ERROR,
+            const.ERR_SERVICE_VALIDATION_ERROR,
             f"Validation error: {err}",
             translation_domain=err.translation_domain,
             translation_key=err.translation_key,

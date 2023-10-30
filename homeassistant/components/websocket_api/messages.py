@@ -78,8 +78,6 @@ def error_message(
         "code": code,
         "message": message,
     }
-    # In case a ServiceNotFound error is raised
-    # we use 'websocket_api' as default translation_domain.
     # In case `translation_key` is `None` we do not set it, nor the
     # `translation`_placeholders` and `translation_domain`.
     if translation_key is not None:
