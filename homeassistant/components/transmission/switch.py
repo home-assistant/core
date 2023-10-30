@@ -27,11 +27,11 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
 
-    dev = []
+    entities = []
     for switch_type, switch_name in SWITCH_TYPES.items():
-        dev.append(TransmissionSwitch(switch_type, switch_name, coordinator))
+        entities.append(TransmissionSwitch(switch_type, switch_name, coordinator))
 
-    async_add_entities(dev, True)
+    async_add_entities(entities)
 
 
 class TransmissionSwitch(
