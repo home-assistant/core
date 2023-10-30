@@ -4,7 +4,6 @@ Such systems include evohome, Round Thermostat, and others.
 """
 from __future__ import annotations
 
-from collections.abc import Awaitable
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import logging
@@ -451,9 +450,7 @@ class EvoBroker:
 
         await self._store.async_save(app_storage)
 
-    async def call_client_api(
-        self, api_function: Awaitable, update_state: bool = True
-    ) -> Any:
+    async def call_client_api(self, api_function, update_state: bool = True) -> Any:
         """Call a client API and update the broker state if required."""
         try:
             result = await api_function
@@ -566,7 +563,7 @@ class EvoDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, evo_broker: EvoBroker, evo_device: _ZoneBase) -> None:
+    def __init__(self, evo_broker, evo_device) -> None:
         """Initialize the evohome entity."""
         self._evo_device = evo_device
         self._evo_broker = evo_broker
@@ -618,7 +615,7 @@ class EvoChild(EvoDevice):
     This includes (up to 12) Heating Zones and (optionally) a DHW controller.
     """
 
-    def __init__(self, evo_broker: EvoBroker, evo_device: EvoDevice) -> None:
+    def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
         self._schedule: dict[str, Any] = {}
