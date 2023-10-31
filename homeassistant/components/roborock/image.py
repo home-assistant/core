@@ -80,7 +80,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         # we will evaluate on the new coordinator data if we should update the cache.
         if (
             dt_util.utcnow() - self.image_last_updated
-        ).total_seconds() > IMAGE_CACHE_INTERVAL:
+        ).total_seconds() > IMAGE_CACHE_INTERVAL and self.is_map_valid():
             self._attr_image_last_updated = dt_util.utcnow()
         super()._handle_coordinator_update()
 
