@@ -136,6 +136,11 @@ class MockWeather(MockEntity, WeatherEntity):
         """Return the current condition."""
         return self._handle("condition")
 
+    @property
+    def precision(self) -> float:
+        """Return the precision of the temperature."""
+        return self._handle("precision")
+
 
 class MockWeatherMockForecast(MockWeather):
     """Mock weather class with mocked forecast."""
