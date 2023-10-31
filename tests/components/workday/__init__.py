@@ -67,6 +67,16 @@ TEST_CONFIG_WITH_PROVINCE = {
     "remove_holidays": [],
     "language": "de",
 }
+TEST_CONFIG_NO_LANGUAGE_CONFIGURED = {
+    "name": DEFAULT_NAME,
+    "country": "DE",
+    "province": "BW",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": [],
+    "remove_holidays": [],
+}
 TEST_CONFIG_INCORRECT_COUNTRY = {
     "name": DEFAULT_NAME,
     "country": "ZZ",
