@@ -437,9 +437,10 @@ class HKDevice:
 
     @callback
     def async_migrate_unique_id(
-        self, old_unique_id: str, new_unique_id: str, platform: str
+        self, old_unique_id: str, new_unique_id: str | None, platform: str
     ) -> None:
         """Migrate legacy unique IDs to new format."""
+        assert new_unique_id is not None
         _LOGGER.debug(
             "Checking if unique ID %s on %s needs to be migrated",
             old_unique_id,
@@ -832,10 +833,8 @@ class HKDevice:
         # Process any stateless events (via device_triggers)
         async_fire_triggers(self, new_values_dict)
 
-        self.entity_map.process_changes(new_values_dict)
-
         to_callback: set[CALLBACK_TYPE] = set()
-        for aid_iid in new_values_dict:
+        for aid_iid in self.entity_map.process_changes(new_values_dict):
             if callbacks := self._subscriptions.get(aid_iid):
                 to_callback.update(callbacks)
 

@@ -14,22 +14,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from . import (
-    button as button_platform,
-    climate as climate_platform,
-    cover as cover_platform,
-    event as event_platform,
-    humidifier as humidifier_platform,
-    lawn_mower as lawn_mower_platform,
-    lock as lock_platform,
-    number as number_platform,
-    select as select_platform,
-    sensor as sensor_platform,
-    switch as switch_platform,
-    update as update_platform,
-    vacuum as vacuum_platform,
-    water_heater as water_heater_platform,
-)
 from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
@@ -48,70 +32,28 @@ CONFIG_SCHEMA_BASE = vol.Schema(
     {
         Platform.ALARM_CONTROL_PANEL.value: vol.All(cv.ensure_list, [dict]),
         Platform.BINARY_SENSOR.value: vol.All(cv.ensure_list, [dict]),
-        Platform.BUTTON.value: vol.All(
-            cv.ensure_list,
-            [button_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.BUTTON.value: vol.All(cv.ensure_list, [dict]),
         Platform.CAMERA.value: vol.All(cv.ensure_list, [dict]),
-        Platform.CLIMATE.value: vol.All(
-            cv.ensure_list,
-            [climate_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
-        Platform.COVER.value: vol.All(
-            cv.ensure_list,
-            [cover_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.CLIMATE.value: vol.All(cv.ensure_list, [dict]),
+        Platform.COVER.value: vol.All(cv.ensure_list, [dict]),
         Platform.DEVICE_TRACKER.value: vol.All(cv.ensure_list, [dict]),
-        Platform.EVENT.value: vol.All(
-            cv.ensure_list,
-            [event_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.EVENT.value: vol.All(cv.ensure_list, [dict]),
         Platform.FAN.value: vol.All(cv.ensure_list, [dict]),
-        Platform.HUMIDIFIER.value: vol.All(
-            cv.ensure_list,
-            [humidifier_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.HUMIDIFIER.value: vol.All(cv.ensure_list, [dict]),
         Platform.IMAGE.value: vol.All(cv.ensure_list, [dict]),
-        Platform.LAWN_MOWER.value: vol.All(
-            cv.ensure_list,
-            [lawn_mower_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.LAWN_MOWER.value: vol.All(cv.ensure_list, [dict]),
         Platform.LIGHT.value: vol.All(cv.ensure_list, [dict]),
-        Platform.LOCK.value: vol.All(
-            cv.ensure_list,
-            [lock_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
-        Platform.NUMBER.value: vol.All(
-            cv.ensure_list,
-            [number_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.LOCK.value: vol.All(cv.ensure_list, [dict]),
+        Platform.NUMBER.value: vol.All(cv.ensure_list, [dict]),
         Platform.SCENE.value: vol.All(cv.ensure_list, [dict]),
-        Platform.SELECT.value: vol.All(
-            cv.ensure_list,
-            [select_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
-        Platform.SENSOR.value: vol.All(
-            cv.ensure_list,
-            [sensor_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.SELECT.value: vol.All(cv.ensure_list, [dict]),
+        Platform.SENSOR.value: vol.All(cv.ensure_list, [dict]),
         Platform.SIREN.value: vol.All(cv.ensure_list, [dict]),
-        Platform.SWITCH.value: vol.All(
-            cv.ensure_list,
-            [switch_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.SWITCH.value: vol.All(cv.ensure_list, [dict]),
         Platform.TEXT.value: vol.All(cv.ensure_list, [dict]),
-        Platform.UPDATE.value: vol.All(
-            cv.ensure_list,
-            [update_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
-        Platform.VACUUM.value: vol.All(
-            cv.ensure_list,
-            [vacuum_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
-        Platform.WATER_HEATER.value: vol.All(
-            cv.ensure_list,
-            [water_heater_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
-        ),
+        Platform.UPDATE.value: vol.All(cv.ensure_list, [dict]),
+        Platform.VACUUM.value: vol.All(cv.ensure_list, [dict]),
+        Platform.WATER_HEATER.value: vol.All(cv.ensure_list, [dict]),
     }
 )
 
