@@ -1,7 +1,7 @@
 {
   "domain": "fronius",
   "name": "Fronius",
-  "codeowners": ["@nielstron", "@farmio"],
+  "codeowners": ["@farmio"],
   "config_flow": true,
   "dhcp": [
     {
