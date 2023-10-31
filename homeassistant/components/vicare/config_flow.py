@@ -90,8 +90,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self.entry is not None
 
         if user_input is not None:
-            password = user_input[CONF_PASSWORD]
-            client_id = user_input[CONF_CLIENT_ID]
             data = {
                 **self.entry.data,
                 **user_input,
@@ -99,19 +97,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(vicare_login, self.hass, data)
-            except (PyViCareInvalidConfigurationError, ViCareInvalidCredentialsError):
+            except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
             else:
                 self.hass.config_entries.async_update_entry(
                     self.entry,
-                    data={
-                        **self.entry.data,
-                        **user_input
-                    },
+                    data={**self.entry.data, **user_input},
                 )
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
-
 
         return self.async_show_form(
             step_id="reauth_confirm",
