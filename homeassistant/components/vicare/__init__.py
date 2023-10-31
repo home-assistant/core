@@ -10,7 +10,10 @@ from typing import Any
 
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device
-from PyViCare.PyViCareUtils import PyViCareInvalidCredentialsError
+from PyViCare.PyViCareUtils import (
+    PyViCareInvalidConfigurationError,
+    PyViCareInvalidCredentialsError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
@@ -57,8 +60,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await hass.async_add_executor_job(setup_vicare_api, hass, entry)
-    except PyViCareInvalidCredentialsError as ex:
-        raise ConfigEntryAuthFailed("Authentication failed") from ex
+    except PyViCareInvalidConfigurationError as err:
+        raise ConfigEntryAuthFailed("Authentication failed") from err
+    except PyViCareInvalidCredentialsError as err:
+        raise ConfigEntryAuthFailed("Authentication failed") from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
