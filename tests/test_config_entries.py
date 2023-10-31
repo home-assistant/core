@@ -3758,7 +3758,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     flow = hass.config_entries.flow
     with patch.object(flow, "async_init", wraps=flow.async_init) as mock_init:
-        entry.async_start_reauth(
+        await entry.async_init_reauth(
             hass,
             context={"extra_context": "some_extra_context"},
             data={"extra_data": 1234},
@@ -3777,19 +3777,33 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert entry.entry_id != entry2.entry_id
 
     # Check that we can't start duplicate reauth flows
-    entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    await entry.async_init_reauth(hass, {"extra_context": "some_extra_context"})
     await hass.async_block_till_done()
     assert len(hass.config_entries.flow.async_progress()) == 1
 
     # Check that we can't start duplicate reauth flows when the context is different
-    entry.async_start_reauth(hass, {"diff": "diff"})
+    await entry.async_init_reauth(hass, {"diff": "diff"})
     await hass.async_block_till_done()
     assert len(hass.config_entries.flow.async_progress()) == 1
 
     # Check that we can start a reauth flow for a different entry
-    entry2.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    await entry2.async_init_reauth(hass, {"extra_context": "some_extra_context"})
     await hass.async_block_till_done()
     assert len(hass.config_entries.flow.async_progress()) == 2
+
+    # Abort all existing flows
+    for flow in hass.config_entries.flow.async_progress():
+        hass.config_entries.flow.async_abort(flow["flow_id"])
+    await hass.async_block_till_done()
+
+    # Check that we can't start duplicate reauth flows
+    # without blocking between flows
+    await entry.async_init_reauth(hass, {"extra_context": "some_extra_context"})
+    await entry.async_init_reauth(hass, {"extra_context": "some_extra_context"})
+    await entry.async_init_reauth(hass, {"extra_context": "some_extra_context"})
+    await entry.async_init_reauth(hass, {"extra_context": "some_extra_context"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
 
 
 async def test_get_active_flows(hass: HomeAssistant) -> None:
@@ -3804,7 +3818,7 @@ async def test_get_active_flows(hass: HomeAssistant) -> None:
 
     flow = hass.config_entries.flow
     with patch.object(flow, "async_init", wraps=flow.async_init):
-        entry.async_start_reauth(
+        await entry.async_init_reauth(
             hass,
             context={"extra_context": "some_extra_context"},
             data={"extra_data": 1234},

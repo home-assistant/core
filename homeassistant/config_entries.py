@@ -427,7 +427,7 @@ class ConfigEntry:
                 auth_message,
             )
             await self._async_process_on_unload(hass)
-            self.async_start_reauth(hass)
+            await self.async_init_reauth(hass)
             result = False
         except ConfigEntryNotReady as ex:
             self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
@@ -726,25 +726,52 @@ class ConfigEntry:
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
     ) -> None:
+        """Start a reauth flow.
+
+        This method should no longer be used as it can race with other reauth flows.
+        """
+        report(
+            "ConfigEntry.async_start_reauth is deprecated and will be removed in Home Assistant 2024.3, await ConfigEntry.async_init_reauth instead",
+            error_if_core=False,
+        )
+        if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
+            # Reauth flow already in progress for this entry
+            return
+        hass.async_create_task(
+            self._async_create_reauth_flow(hass, context, data),
+            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
+        )
+
+    def _async_create_reauth_flow(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> Coroutine[Any, Any, FlowResult]:
+        """Create a reauth flow."""
+        return hass.config_entries.flow.async_init(
+            self.domain,
+            context={
+                "source": SOURCE_REAUTH,
+                "entry_id": self.entry_id,
+                "title_placeholders": {"name": self.title},
+                "unique_id": self.unique_id,
+            }
+            | (context or {}),
+            data=self.data | (data or {}),
+        )
+
+    async def async_init_reauth(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
         """Start a reauth flow."""
         if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
             # Reauth flow already in progress for this entry
             return
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                self.domain,
-                context={
-                    "source": SOURCE_REAUTH,
-                    "entry_id": self.entry_id,
-                    "title_placeholders": {"name": self.title},
-                    "unique_id": self.unique_id,
-                }
-                | (context or {}),
-                data=self.data | (data or {}),
-            ),
-            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
-        )
+        await self._async_create_reauth_flow(hass, context, data)
 
     @callback
     def async_get_active_flows(
@@ -754,7 +781,9 @@ class ConfigEntry:
         return (
             flow
             for flow in hass.config_entries.flow.async_progress_by_handler(
-                self.domain, match_context={"entry_id": self.entry_id}
+                self.domain,
+                match_context={"entry_id": self.entry_id},
+                include_uninitialized=True,
             )
             if flow["context"].get("source") in sources
         )
