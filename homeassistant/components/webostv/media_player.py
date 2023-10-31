@@ -318,7 +318,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             try:
                 await self._client.connect()
             except WebOsTvPairError:
-                self._entry.async_start_reauth(self.hass)
+                await self._entry.async_init_reauth(self.hass)
             else:
                 update_client_key(self.hass, self._entry, self._client)
 

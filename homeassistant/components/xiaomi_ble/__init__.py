@@ -98,7 +98,12 @@ def process_service_info(
         and data.encryption_scheme != EncryptionScheme.NONE
         and not data.bindkey_verified
     ):
-        entry.async_start_reauth(hass, data={"device": data})
+        # There is a small risk of race here if its called multiple times
+        # before the task it run since tasks are not eager.
+        hass.async_create_background_task(
+            entry.async_init_reauth(hass, data={"device": data}),
+            f"reauth flow {DOMAIN} {entry.entry_id}",
+        )
 
     return update
 

@@ -139,7 +139,7 @@ class ProtectData:
             else:
                 await self.async_stop()
                 _LOGGER.exception("Reauthentication required")
-                self._entry.async_start_reauth(self._hass)
+                await self._entry.async_init_reauth(self._hass)
             self.last_update_success = False
         except ClientError:
             if self.last_update_success:

@@ -233,7 +233,7 @@ class TractiveClient:
                         self._last_pos_time = event["position"]["time"]
                         self._send_position_update(event)
             except aiotractive.exceptions.UnauthorizedError:
-                self._config_entry.async_start_reauth(self._hass)
+                await self._config_entry.async_init_reauth(self._hass)
                 await self.unsubscribe()
                 _LOGGER.error(
                     "Authentication failed for %s, try reconfiguring device",

@@ -53,7 +53,7 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
             response = await self.api.async_edit_monitor(**kwargs)
         except UptimeRobotAuthenticationException:
             LOGGER.debug("API authentication error, calling reauth")
-            self.coordinator.config_entry.async_start_reauth(self.hass)
+            await self.coordinator.config_entry.async_init_reauth(self.hass)
             return
         except UptimeRobotException as exception:
             LOGGER.error("API exception: %s", exception)
