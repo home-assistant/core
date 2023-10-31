@@ -276,7 +276,7 @@ class BlockSleepingClimate(
                 f" {repr(err)}"
             ) from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.entry.async_init_reauth(self.hass)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -378,6 +378,9 @@ class BlockSleepingClimate(
                     ]["schedule_profile_names"],
                 ]
             except InvalidAuthError:
-                self.coordinator.entry.async_start_reauth(self.hass)
+                self.hass.async_create_background_task(
+                    self.coordinator.entry.async_init_reauth(self.hass),
+                    f"reauth flow {DOMAIN} {self.coordinator.entry.entry_id}",
+                )
             else:
                 self.async_write_ha_state()

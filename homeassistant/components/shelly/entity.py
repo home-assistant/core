@@ -353,7 +353,7 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
                 f" {repr(err)}"
             ) from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.entry.async_init_reauth(self.hass)
 
 
 class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
@@ -406,7 +406,7 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
                 f" {params}, error: {repr(err)}"
             ) from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.entry.async_init_reauth(self.hass)
 
 
 class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):

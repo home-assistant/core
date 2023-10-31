@@ -207,7 +207,7 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         except DeviceConnectionError as err:
             raise HomeAssistantError(f"Error starting OTA update: {repr(err)}") from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.entry.async_init_reauth(self.hass)
         else:
             LOGGER.debug("Result of OTA update call: %s", result)
 
@@ -293,7 +293,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         except RpcCallError as err:
             raise HomeAssistantError(f"OTA update request error: {repr(err)}") from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.entry.async_init_reauth(self.hass)
         else:
             self._ota_in_progress = True
             LOGGER.debug("OTA update call successful")

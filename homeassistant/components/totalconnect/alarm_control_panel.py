@@ -166,7 +166,7 @@ class TotalConnectAlarm(
         try:
             await self.hass.async_add_executor_job(self._disarm)
         except UsercodeInvalid as error:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
+            await self.coordinator.config_entry.async_init_reauth(self.hass)
             raise HomeAssistantError(
                 "TotalConnect usercode is invalid. Did not disarm"
             ) from error
@@ -185,7 +185,7 @@ class TotalConnectAlarm(
         try:
             await self.hass.async_add_executor_job(self._arm_home)
         except UsercodeInvalid as error:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
+            await self.coordinator.config_entry.async_init_reauth(self.hass)
             raise HomeAssistantError(
                 "TotalConnect usercode is invalid. Did not arm home"
             ) from error
@@ -204,7 +204,7 @@ class TotalConnectAlarm(
         try:
             await self.hass.async_add_executor_job(self._arm_away)
         except UsercodeInvalid as error:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
+            await self.coordinator.config_entry.async_init_reauth(self.hass)
             raise HomeAssistantError(
                 "TotalConnect usercode is invalid. Did not arm away"
             ) from error
@@ -223,7 +223,7 @@ class TotalConnectAlarm(
         try:
             await self.hass.async_add_executor_job(self._arm_night)
         except UsercodeInvalid as error:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
+            await self.coordinator.config_entry.async_init_reauth(self.hass)
             raise HomeAssistantError(
                 "TotalConnect usercode is invalid. Did not arm night"
             ) from error
@@ -242,7 +242,7 @@ class TotalConnectAlarm(
         try:
             await self.hass.async_add_executor_job(self._arm_home_instant)
         except UsercodeInvalid as error:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
+            await self.coordinator.config_entry.async_init_reauth(self.hass)
             raise HomeAssistantError(
                 "TotalConnect usercode is invalid. Did not arm home instant"
             ) from error
@@ -261,7 +261,7 @@ class TotalConnectAlarm(
         try:
             await self.hass.async_add_executor_job(self._arm_away_instant)
         except UsercodeInvalid as error:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
+            await self.coordinator.config_entry.async_init_reauth(self.hass)
             raise HomeAssistantError(
                 "TotalConnect usercode is invalid. Did not arm away instant"
             ) from error
