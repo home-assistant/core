@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -68,6 +69,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
+    await cleanup_old_device(hass)
+
     return True
 
 
@@ -86,6 +89,15 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 async def async_update_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Reload Met component when options changed."""
     await hass.config_entries.async_reload(config_entry.entry_id)
+
+
+async def cleanup_old_device(hass: HomeAssistant) -> None:
+    """Cleanup device without proper device identifier."""
+    device_reg = dr.async_get(hass)
+    device = device_reg.async_get_device(identifiers={(DOMAIN,)})  # type: ignore[arg-type]
+    if device:
+        _LOGGER.debug("Removing improper device %s", device.name)
+        device_reg.async_remove_device(device.id)
 
 
 class CannotConnect(HomeAssistantError):

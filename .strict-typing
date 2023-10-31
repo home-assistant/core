@@ -180,6 +180,7 @@ homeassistant.components.image_upload.*
 homeassistant.components.imap.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
+homeassistant.components.input_text.*
 homeassistant.components.integration.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*

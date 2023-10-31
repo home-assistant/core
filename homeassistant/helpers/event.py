@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     HassJob,
+    HassJobType,
     HomeAssistant,
     State,
     callback,
@@ -1376,6 +1377,7 @@ def async_track_point_in_time(
         utc_converter,
         name=f"{job.name} UTC converter",
         cancel_on_shutdown=job.cancel_on_shutdown,
+        job_type=HassJobType.Callback,
     )
     return async_track_point_in_utc_time(hass, track_job, point_in_time)
 
@@ -1531,7 +1533,10 @@ def async_track_time_interval(
         job_name = f"track time interval {interval} {action}"
 
     interval_listener_job = HassJob(
-        interval_listener, job_name, cancel_on_shutdown=cancel_on_shutdown
+        interval_listener,
+        job_name,
+        cancel_on_shutdown=cancel_on_shutdown,
+        job_type=HassJobType.Callback,
     )
     remove = async_call_later(hass, interval_seconds, interval_listener_job)
 
@@ -1703,6 +1708,7 @@ def async_track_utc_time_change(
     pattern_time_change_listener_job = HassJob(
         pattern_time_change_listener,
         f"time change listener {hour}:{minute}:{second} {action}",
+        job_type=HassJobType.Callback,
     )
     time_listener = async_track_point_in_utc_time(
         hass, pattern_time_change_listener_job, calculate_next(dt_util.utcnow())
