@@ -516,7 +516,7 @@ class ESPHomeManager:
                 InvalidAuthAPIError,
             ),
         ):
-            self.entry.async_start_reauth(self.hass)
+            await self.entry.async_init_reauth(self.hass)
 
     async def async_start(self) -> None:
         """Start the esphome connection manager."""
