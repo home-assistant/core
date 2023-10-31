@@ -6,49 +6,41 @@
     }
   },
   "services": {
-    "create_item": {
-      "name": "Create to-do list item",
+    "add_item": {
+      "name": "Add to-do list item",
       "description": "Add a new to-do list item.",
       "fields": {
-        "summary": {
-          "name": "Summary",
-          "description": "The short summary that represents the to-do item."
-        },
-        "status": {
-          "name": "Status",
-          "description": "A status or confirmation of the to-do item."
+        "item": {
+          "name": "Item name",
+          "description": "The name that represents the to-do item."
         }
       }
     },
     "update_item": {
       "name": "Update to-do list item",
-      "description": "Update an existing to-do list item based on either its unique ID or summary.",
+      "description": "Update an existing to-do list item based on its name.",
       "fields": {
-        "uid": {
-          "name": "To-do item unique ID",
-          "description": "Unique identifier for the to-do list item."
+        "item": {
+          "name": "Item name",
+          "description": "The name for the to-do list item."
         },
-        "summary": {
-          "name": "Summary",
-          "description": "The short summary that represents the to-do item."
+        "rename": {
+          "name": "Rename item",
+          "description": "The new name of the to-do item"
         },
         "status": {
-          "name": "Status",
+          "name": "Set status",
           "description": "A status or confirmation of the to-do item."
         }
       }
     },
-    "delete_item": {
-      "name": "Delete a to-do list item",
-      "description": "Delete an existing to-do list item either by its unique ID or summary.",
+    "remove_item": {
+      "name": "Remove a to-do list item",
+      "description": "Remove an existing to-do list item by its name.",
       "fields": {
-        "uid": {
-          "name": "To-do item unique IDs",
-          "description": "Unique identifiers for the to-do list items."
-        },
-        "summary": {
-          "name": "Summary",
-          "description": "The short summary that represents the to-do item."
+        "item": {
+          "name": "Item name",
+          "description": "The name for the to-do list items."
         }
       }
     }
