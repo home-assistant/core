@@ -732,7 +732,6 @@ class ConfigEntry:
         """
         report(
             "ConfigEntry.async_start_reauth is deprecated and will be removed in Home Assistant 2024.3, await ConfigEntry.async_init_reauth instead",
-            error_if_core=False,
         )
         if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
             # Reauth flow already in progress for this entry
