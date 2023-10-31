@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import async_discover_devices
-from .const import DOMAIN
+from .const import CONF_DEVICE_TYPE, DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -137,6 +137,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=f"{device.alias} {device.model}",
             data={
                 CONF_HOST: device.host,
+                CONF_DEVICE_TYPE: device.device_type.value,
             },
         )
 
