@@ -1154,8 +1154,8 @@ async def test_issue_forecast_deprecated_no_logging(
 ) -> None:
     """Test the no issue is raised on deprecated forecast attributes if new methods exist."""
 
-    class MockWeatherMockLegacyForecastOnly(WeatherPlatform.MockWeather):
-        """Mock weather class with mocked legacy forecast."""
+    class MockWeatherMockForecast(WeatherPlatform.MockWeather):
+        """Mock weather class with mocked new method and legacy forecast."""
 
         def __init__(self, **values: Any) -> None:
             """Initialize."""
@@ -1192,7 +1192,7 @@ async def test_issue_forecast_deprecated_no_logging(
         "native_temperature": 38,
         "native_temperature_unit": UnitOfTemperature.CELSIUS,
     }
-    weather_entity = MockWeatherMockLegacyForecastOnly(
+    weather_entity = MockWeatherMockForecast(
         name="Testing",
         entity_id="weather.testing",
         condition=ATTR_CONDITION_SUNNY,
