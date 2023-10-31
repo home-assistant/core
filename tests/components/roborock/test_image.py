@@ -18,7 +18,7 @@ async def test_floorplan_image(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test floor plan map image is correctly set up."""
-
+    # Setup calls the image parsing the first time and caches it.
     assert len(hass.states.async_all("image")) == 4
 
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
