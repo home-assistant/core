@@ -75,7 +75,7 @@ async def test_user_create_entry(
     mock_setup_entry.assert_called_once()
 
 
-async def test_reauth(hass: HomeAssistant) -> None:
+async def test_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test reauth flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
