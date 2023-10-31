@@ -1,6 +1,6 @@
 """Tests for the Vogel's MotionMount config flow."""
 import dataclasses
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
 import motionmount
 import pytest
@@ -63,7 +63,7 @@ async def test_user_timeout_error(
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
     """Test that the flow is aborted when there is a timeout error."""
-    mock_motionmount_config_flow.get_name.side_effect = TimeoutError()
+    mock_motionmount_config_flow.connect.side_effect = TimeoutError()
 
     user_input = MOCK_USER_INPUT.copy()
 
@@ -82,7 +82,7 @@ async def test_user_not_connected_error(
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
     """Test that the flow is aborted when there is a not connected error."""
-    mock_motionmount_config_flow.get_name.side_effect = motionmount.NotConnectedError()
+    mock_motionmount_config_flow.connect.side_effect = motionmount.NotConnectedError()
 
     user_input = MOCK_USER_INPUT.copy()
 
@@ -101,7 +101,7 @@ async def test_user_response_error_single_device_old_CE_old_new_Pro(
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
     """Test that the flow creates an entry when there is a response error."""
-    mock_motionmount_config_flow.get_mac.side_effect = (
+    mock_motionmount_config_flow.connect.side_effect = (
         motionmount.MotionMountResponseError(motionmount.MotionMountResponse.NotFound)
     )
 
@@ -128,8 +128,10 @@ async def test_user_response_error_single_device_new_CE_old_Pro(
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
     """Test that the flow creates an entry when there is a response error."""
-    mock_motionmount_config_flow.get_name.return_value = ZEROCONF_NAME
-    mock_motionmount_config_flow.get_mac.return_value = b"\x00\x00\x00\x00\x00\x00"
+    type(mock_motionmount_config_flow).name = PropertyMock(return_value=ZEROCONF_NAME)
+    type(mock_motionmount_config_flow).mac = PropertyMock(
+        return_value=b"\x00\x00\x00\x00\x00\x00"
+    )
 
     user_input = MOCK_USER_INPUT.copy()
 
@@ -154,8 +156,8 @@ async def test_user_response_error_single_device_new_CE_new_Pro(
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
     """Test that the flow creates an entry when there is a response error."""
-    mock_motionmount_config_flow.get_name.return_value = ZEROCONF_NAME
-    mock_motionmount_config_flow.get_mac.return_value = MAC
+    type(mock_motionmount_config_flow).name = PropertyMock(return_value=ZEROCONF_NAME)
+    type(mock_motionmount_config_flow).mac = PropertyMock(return_value=MAC)
 
     user_input = MOCK_USER_INPUT.copy()
 
@@ -184,7 +186,7 @@ async def test_user_response_error_multi_device_old_CE_old_new_Pro(
     """Test that the flow is aborted when there are multiple devices."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount_config_flow.get_mac.side_effect = (
+    mock_motionmount_config_flow.connect.side_effect = (
         motionmount.MotionMountResponseError(motionmount.MotionMountResponse.NotFound)
     )
 
@@ -208,8 +210,8 @@ async def test_user_response_error_multi_device_new_CE_new_Pro(
     """Test that the flow is aborted when there are multiple devices."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount_config_flow.get_name.return_value = ZEROCONF_NAME
-    mock_motionmount_config_flow.get_mac.return_value = MAC
+    type(mock_motionmount_config_flow).name = PropertyMock(return_value=ZEROCONF_NAME)
+    type(mock_motionmount_config_flow).mac = PropertyMock(return_value=MAC)
 
     user_input = MOCK_USER_INPUT.copy()
 
@@ -247,7 +249,7 @@ async def test_zeroconf_timout_error(
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
     """Test that the flow is aborted when there is a timeout error."""
-    mock_motionmount_config_flow.get_name.side_effect = TimeoutError()
+    mock_motionmount_config_flow.connect.side_effect = TimeoutError()
 
     discovery_info = dataclasses.replace(MOCK_ZEROCONF_TVM_SERVICE_INFO_V1)
 
@@ -266,7 +268,7 @@ async def test_zeroconf_not_connected_error(
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
     """Test that the flow is aborted when there is a not connected error."""
-    mock_motionmount_config_flow.get_name.side_effect = motionmount.NotConnectedError()
+    mock_motionmount_config_flow.connect.side_effect = motionmount.NotConnectedError()
 
     discovery_info = dataclasses.replace(MOCK_ZEROCONF_TVM_SERVICE_INFO_V1)
 
@@ -285,7 +287,7 @@ async def test_show_zeroconf_form_old_CE_old_Pro(
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
     """Test that the zeroconf confirmation form is served."""
-    mock_motionmount_config_flow.get_mac.side_effect = (
+    mock_motionmount_config_flow.connect.side_effect = (
         motionmount.MotionMountResponseError(motionmount.MotionMountResponse.NotFound)
     )
 
@@ -306,7 +308,7 @@ async def test_show_zeroconf_form_old_CE_new_Pro(
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
     """Test that the zeroconf confirmation form is served."""
-    mock_motionmount_config_flow.get_mac.side_effect = (
+    mock_motionmount_config_flow.connect.side_effect = (
         motionmount.MotionMountResponseError(motionmount.MotionMountResponse.NotFound)
     )
 
@@ -327,7 +329,9 @@ async def test_show_zeroconf_form_new_CE_old_Pro(
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
     """Test that the zeroconf confirmation form is served."""
-    mock_motionmount_config_flow.get_mac.return_value = b"\x00\x00\x00\x00\x00\x00"
+    type(mock_motionmount_config_flow).mac = PropertyMock(
+        return_value=b"\x00\x00\x00\x00\x00\x00"
+    )
 
     discovery_info = dataclasses.replace(MOCK_ZEROCONF_TVM_SERVICE_INFO_V1)
     result = await hass.config_entries.flow.async_init(
@@ -346,7 +350,7 @@ async def test_show_zeroconf_form_new_CE_new_Pro(
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
     """Test that the zeroconf confirmation form is served."""
-    mock_motionmount_config_flow.get_mac.return_value = MAC
+    type(mock_motionmount_config_flow).mac = PropertyMock(return_value=MAC)
 
     discovery_info = dataclasses.replace(MOCK_ZEROCONF_TVM_SERVICE_INFO_V2)
     result = await hass.config_entries.flow.async_init(
@@ -384,8 +388,8 @@ async def test_full_user_flow_implementation(
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
     """Test the full manual user flow from start to finish."""
-    mock_motionmount_config_flow.get_name.return_value = ZEROCONF_NAME
-    mock_motionmount_config_flow.get_mac.return_value = MAC
+    type(mock_motionmount_config_flow).name = PropertyMock(return_value=ZEROCONF_NAME)
+    type(mock_motionmount_config_flow).mac = PropertyMock(return_value=MAC)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -416,8 +420,8 @@ async def test_full_zeroconf_flow_implementation(
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
     """Test the full manual user flow from start to finish."""
-    mock_motionmount_config_flow.get_name.return_value = ZEROCONF_NAME
-    mock_motionmount_config_flow.get_mac.return_value = MAC
+    type(mock_motionmount_config_flow).name = PropertyMock(return_value=ZEROCONF_NAME)
+    type(mock_motionmount_config_flow).mac = PropertyMock(return_value=MAC)
 
     discovery_info = dataclasses.replace(MOCK_ZEROCONF_TVM_SERVICE_INFO_V2)
     result = await hass.config_entries.flow.async_init(

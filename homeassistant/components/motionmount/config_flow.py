@@ -154,12 +154,10 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         mm = motionmount.MotionMount(data[CONF_HOST], data[CONF_PORT])
         try:
             await mm.connect()
-            mac = await mm.get_mac()
-            name = await mm.get_name()
         finally:
             await mm.disconnect()
 
-        return {CONF_UUID: format_mac(mac.hex()), CONF_NAME: name}
+        return {CONF_UUID: format_mac(mm.mac.hex()), CONF_NAME: mm.name}
 
     def _show_setup_form(self, errors: dict | None = None) -> FlowResult:
         """Show the setup form to the user."""
