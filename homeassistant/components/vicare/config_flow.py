@@ -1,6 +1,7 @@
 """Config flow for ViCare integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -25,11 +26,30 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_CLIENT_ID): cv.string,
+        vol.Required(CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value): vol.In(
+            [e.value for e in HeatingType]
+        ),
+    }
+)
+
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_CLIENT_ID): cv.string,
+    }
+)
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ViCare."""
 
     VERSION = 1
+    entry: config_entries.ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -38,14 +58,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        data_schema = {
-            vol.Required(CONF_USERNAME): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Required(CONF_CLIENT_ID): cv.string,
-            vol.Required(CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value): vol.In(
-                [e.value for e in HeatingType]
-            ),
-        }
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -60,7 +72,62 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data_schema),
+            data_schema=USER_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle re-authentication with ViCare."""
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm re-authentication with ViCare."""
+        errors: dict[str, str] = {}
+        assert self.entry is not None
+
+        if user_input is not None:
+            password = user_input[CONF_PASSWORD]
+            client_id = user_input[CONF_CLIENT_ID]
+            data = {
+                CONF_USERNAME: self.entry.data[CONF_USERNAME],
+                CONF_PASSWORD: password,
+                CONF_CLIENT_ID: client_id,
+                CONF_HEATING_TYPE: self.entry.data[CONF_HEATING_TYPE],
+            }
+
+            try:
+                await self.hass.async_add_executor_job(vicare_login, self.hass, data)
+            except PyViCareInvalidCredentialsError:
+                errors["base"] = "invalid_auth"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.entry,
+                    data={
+                        **self.entry.data,
+                        CONF_PASSWORD: password,
+                        CONF_CLIENT_ID: client_id,
+                    },
+                )
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_PASSWORD, default=self.entry.data[CONF_PASSWORD]
+                ): cv.string,
+                vol.Required(
+                    CONF_CLIENT_ID, default=self.entry.data[CONF_CLIENT_ID]
+                ): cv.string,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=schema,
             errors=errors,
         )
 
