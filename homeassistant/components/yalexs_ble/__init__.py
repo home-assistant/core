@@ -111,7 +111,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> None:
         """Handle state changed."""
         if new_state.auth and not new_state.auth.successful:
-            entry.async_start_reauth(hass)
+            hass.async_create_background_task(
+                entry.async_init_reauth(hass), f"reauth flow {DOMAIN} {entry.entry_id}"
+            )
 
     entry.async_on_unload(push_lock.register_callback(_async_state_changed))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
