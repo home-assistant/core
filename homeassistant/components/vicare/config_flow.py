@@ -56,9 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     vicare_login, self.hass, user_input
                 )
-            except PyViCareInvalidConfigurationError:
-                errors["base"] = "invalid_auth"
-            except PyViCareInvalidCredentialsError:
+            except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_create_entry(title=VICARE_NAME, data=user_input)
