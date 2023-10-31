@@ -1514,7 +1514,7 @@ pysabnzbd==1.1.1
 pyschlage==2023.10.0
 
 # homeassistant.components.sensibo
-pysensibo==1.0.35
+pysensibo==1.0.36
 
 # homeassistant.components.zha
 pyserial-asyncio-fast==0.11
