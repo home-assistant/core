@@ -42,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 class PermobilRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Any], Any]
+    value_fn: Callable[[Any], float | int]
     available_fn: Callable[[Any], bool]
 
 
@@ -205,12 +205,11 @@ class PermobilSensor(CoordinatorEntity[MyPermobilCoordinator], SensorEntity):
     @property
     def available(self) -> bool:
         """Return True if the sensor has value."""
-        return self.entity_description.available_fn(self.coordinator.data)
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.data
+        )
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | int:
         """Return the value of the sensor."""
-        try:
-            return self.entity_description.value_fn(self.coordinator.data)
-        except KeyError:
-            return None
+        return self.entity_description.value_fn(self.coordinator.data)
