@@ -730,6 +730,11 @@ class ConfigEntry:
         data: dict[str, Any] | None = None,
     ) -> None:
         """Start a reauth flow."""
+        # We will check this again in the task when we hold the lock,
+        # but we also check it now to try to avoid creating the task.
+        if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
+            # Reauth flow already in progress for this entry
+            return
         hass.async_create_task(
             self._async_init_reauth(hass, context, data),
             f"config entry reauth {self.title} {self.domain} {self.entry_id}",
