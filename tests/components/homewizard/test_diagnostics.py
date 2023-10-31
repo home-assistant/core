@@ -1,5 +1,6 @@
 """Tests for diagnostics data."""
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -9,6 +10,9 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.parametrize(
+    "device_fixture", ["device-HWE-P1.json", "device-HWE-SKT.json"]
+)
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
