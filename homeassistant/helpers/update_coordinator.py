@@ -361,7 +361,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 raise
 
             if self.config_entry:
-                self.config_entry.async_start_reauth(self.hass)
+                await self.config_entry.async_init_reauth(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
             raise err
