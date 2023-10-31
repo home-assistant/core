@@ -1,0 +1,12 @@
+{
+  "domain": "sems_portal",
+  "name": "SEMS Portal",
+  "codeowners": ["@andrewgierens"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/sems_portal",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "loggers": ["sems_portal"],
+  "requirements": []
+}
