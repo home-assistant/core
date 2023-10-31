@@ -147,10 +147,12 @@ class LaMarzoccoWaterHeater(LaMarzoccoEntity, WaterHeaterEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
         await self.entity_description.control_fn(self._lm_client, True)
+        await self._update_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
         await self.entity_description.control_fn(self._lm_client, False)
+        await self._update_ha_state()
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set the operation mode."""

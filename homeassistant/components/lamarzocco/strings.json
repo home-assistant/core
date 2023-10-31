@@ -42,6 +42,20 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "title": "Update Configuration",
+          "host": "[%key:common::config_flow::data::ip%]",
+          "use_bluetooth": "Use Bluetooth"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
   "entity": {
     "water_heater": {
       "coffee_boiler": {
