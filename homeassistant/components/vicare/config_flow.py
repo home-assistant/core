@@ -26,21 +26,17 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = {
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_CLIENT_ID): cv.string,
+}
+
+USER_SCHEMA = REAUTH_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value): vol.In(
             [e.value for e in HeatingType]
         ),
-    }
-)
-
-REAUTH_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CLIENT_ID): cv.string,
     }
 )
 
@@ -72,7 +68,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=USER_SCHEMA,
+            data_schema=vol.Schema(USER_SCHEMA),
             errors=errors,
         )
 
@@ -92,10 +88,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
             client_id = user_input[CONF_CLIENT_ID]
             data = {
-                CONF_USERNAME: self.entry.data[CONF_USERNAME],
-                CONF_PASSWORD: password,
-                CONF_CLIENT_ID: client_id,
-                CONF_HEATING_TYPE: self.entry.data[CONF_HEATING_TYPE],
+                **self.entry.data,
+                **user_input,
             }
 
             try:
@@ -107,27 +101,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.entry,
                     data={
                         **self.entry.data,
-                        CONF_PASSWORD: password,
-                        CONF_CLIENT_ID: client_id,
+                        **user_input
                     },
                 )
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
-        schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_PASSWORD, default=self.entry.data[CONF_PASSWORD]
-                ): cv.string,
-                vol.Required(
-                    CONF_CLIENT_ID, default=self.entry.data[CONF_CLIENT_ID]
-                ): cv.string,
-            }
-        )
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=schema,
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(REAUTH_SCHEMA), self.entry.data
+            ),
             errors=errors,
         )
 
