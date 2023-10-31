@@ -258,7 +258,7 @@ class LmOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             if not errors:
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
-                    data=user_input,
+                    data=self.config_entry.data | user_input,
                     options=self.config_entry.options,
                 )
                 return self.async_create_entry(title="", data=user_input)
