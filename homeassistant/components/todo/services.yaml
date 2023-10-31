@@ -44,4 +44,4 @@ remove_item:
     item:
       required: true
       selector:
-        object:
+        text:
