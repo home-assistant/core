@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await hass.async_add_executor_job(setup_vicare_api, hass, entry)
-    except (PyViCareInvalidConfigurationError, ViCareInvalidCredentialsError) as err:
+    except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError) as err:
         raise ConfigEntryAuthFailed("Authentication failed") from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
