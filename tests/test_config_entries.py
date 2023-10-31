@@ -3806,6 +3806,33 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.flow.async_progress()) == 1
 
 
+async def test_reauth_old_method(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that async_start_reauth reports."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    flow = hass.config_entries.flow
+    with patch.object(flow, "async_init", wraps=flow.async_init):
+        # Verify we have a race in the old method
+        entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+        entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+        entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+        entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.flow.async_progress()) == 4
+
+    assert "await ConfigEntry.async_init_reauth instead" in caplog.text
+
+
 async def test_get_active_flows(hass: HomeAssistant) -> None:
     """Test the async_get_active_flows helper."""
     entry = MockConfigEntry(title="test_title", domain="test")
