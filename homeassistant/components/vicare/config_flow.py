@@ -5,7 +5,10 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from PyViCare.PyViCareUtils import PyViCareInvalidCredentialsError
+from PyViCare.PyViCareUtils import (
+    PyViCareInvalidConfigurationError,
+    PyViCareInvalidCredentialsError,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -96,7 +99,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(vicare_login, self.hass, data)
-            except PyViCareInvalidCredentialsError:
+            except (PyViCareInvalidConfigurationError, ViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
             else:
                 self.hass.config_entries.async_update_entry(
