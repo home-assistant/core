@@ -113,7 +113,7 @@
         "data": {
           "radio_type": "[%key:component::zha::config::step::manual_pick_radio_type::data::radio_type%]"
         },
-        "title": "[%key:component::zha::config::step::manual_pick_radio_type::title%]",
+        "title": "[%key:component::zha::config::step::manual_pick_radio_type::data::radio_type%]",
         "description": "[%key:component::zha::config::step::manual_pick_radio_type::description%]"
       },
       "manual_port_config": {
@@ -163,11 +163,11 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:component::zha::config::error::cannot_connect%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_backup_json": "[%key:component::zha::config::error::invalid_backup_json%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:component::zha::config::abort::single_instance_allowed%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "not_zha_device": "[%key:component::zha::config::abort::not_zha_device%]",
       "usb_probe_failed": "[%key:component::zha::config::abort::usb_probe_failed%]",
       "wrong_firmware_installed": "[%key:component::zha::config::abort::wrong_firmware_installed%]"
@@ -513,6 +513,419 @@
     "wrong_silabs_firmware_installed_other": {
       "title": "[%key:component::zha::issues::wrong_silabs_firmware_installed_nabucasa::title%]",
       "description": "Your Zigbee radio was previously used with multiprotocol (Zigbee and Thread) and still has multiprotocol firmware installed: ({firmware_type}). To run your radio exclusively with ZHA, you need to install Zigbee firmware. Follow your Zigbee radio manufacturer's instructions for how to do this."
+    },
+    "inconsistent_network_settings": {
+      "title": "Zigbee network settings have changed",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "[%key:component::zha::issues::inconsistent_network_settings::title%]",
+            "description": "Your Zigbee radio's network settings are inconsistent with the most recent network backup. This usually happens if another Zigbee integration (e.g. Zigbee2MQTT or deCONZ) has overwritten them.\n\n{diff}\n\nIf you did not intentionally change your network settings, restore from the most recent backup: your devices will not work otherwise.",
+            "menu_options": {
+              "use_new_settings": "Keep the new settings",
+              "restore_old_settings": "Restore backup (recommended)"
+            }
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "alarm_control_panel": {
+      "alarm_control_panel": {
+        "name": "[%key:component::alarm_control_panel::title%]"
+      }
+    },
+    "binary_sensor": {
+      "accelerometer": {
+        "name": "Accelerometer"
+      },
+      "binary_input": {
+        "name": "Binary input"
+      },
+      "frost_lock": {
+        "name": "Frost lock"
+      },
+      "replace_filter": {
+        "name": "Replace filter"
+      },
+      "consumer_connected": {
+        "name": "Consumer connected"
+      },
+      "valve_alarm": {
+        "name": "Valve alarm"
+      },
+      "calibrated": {
+        "name": "Calibrated"
+      },
+      "external_sensor": {
+        "name": "External sensor"
+      },
+      "linkage_alarm_state": {
+        "name": "Linkage alarm state"
+      },
+      "ias_zone": {
+        "name": "IAS zone"
+      }
+    },
+    "button": {
+      "reset_frost_lock": {
+        "name": "Frost lock reset"
+      },
+      "reset_no_presence_status": {
+        "name": "Presence status reset"
+      },
+      "feed": {
+        "name": "Feed"
+      },
+      "self_test": {
+        "name": "Self-test"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "name": "[%key:component::climate::entity_component::_::name%]"
+      }
+    },
+    "cover": {
+      "cover": {
+        "name": "[%key:component::cover::title%]"
+      },
+      "shade": {
+        "name": "[%key:component::cover::entity_component::shade::name%]"
+      },
+      "keen_vent": {
+        "name": "Keen vent"
+      }
+    },
+    "fan": {
+      "fan": {
+        "name": "[%key:component::fan::title%]"
+      },
+      "fan_group": {
+        "name": "Fan group"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      },
+      "light_group": {
+        "name": "Light group"
+      }
+    },
+    "lock": {
+      "door_lock": {
+        "name": "Door lock"
+      }
+    },
+    "number": {
+      "number": {
+        "name": "[%key:component::number::title%]"
+      },
+      "detection_interval": {
+        "name": "Detection interval"
+      },
+      "on_level": {
+        "name": "On level"
+      },
+      "on_off_transition_time": {
+        "name": "On/Off transition time"
+      },
+      "on_transition_time": {
+        "name": "On transition time"
+      },
+      "off_transition_time": {
+        "name": "Off transition time"
+      },
+      "default_move_rate": {
+        "name": "Default move rate"
+      },
+      "start_up_current_level": {
+        "name": "Start-up current level"
+      },
+      "start_up_color_temperature": {
+        "name": "Start-up color temperature"
+      },
+      "timer_duration": {
+        "name": "Timer duration"
+      },
+      "filter_life_time": {
+        "name": "Filter life time"
+      },
+      "transmit_power": {
+        "name": "Transmit power"
+      },
+      "dimming_speed_up_remote": {
+        "name": "Remote dimming up speed"
+      },
+      "button_delay": {
+        "name": "Button delay"
+      },
+      "dimming_speed_up_local": {
+        "name": "Local dimming up speed"
+      },
+      "ramp_rate_off_to_on_local": {
+        "name": "Local ramp rate off to on"
+      },
+      "ramp_rate_off_to_on_remote": {
+        "name": "Remote ramp rate off to on"
+      },
+      "dimming_speed_down_remote": {
+        "name": "Remote dimming down speed"
+      },
+      "dimming_speed_down_local": {
+        "name": "Local dimming down speed"
+      },
+      "ramp_rate_on_to_off_local": {
+        "name": "Local ramp rate on to off"
+      },
+      "ramp_rate_on_to_off_remote": {
+        "name": "Remote ramp rate on to off"
+      },
+      "minimum_level": {
+        "name": "Minimum load dimming level"
+      },
+      "maximum_level": {
+        "name": "Maximum load dimming level"
+      },
+      "auto_off_timer": {
+        "name": "Automatic switch shutoff timer"
+      },
+      "load_level_indicator_timeout": {
+        "name": "Load level indicator timeout"
+      },
+      "led_color_when_on": {
+        "name": "Default all LED on color"
+      },
+      "led_color_when_off": {
+        "name": "Default all LED off color"
+      },
+      "led_intensity_when_on": {
+        "name": "Default all LED on intensity"
+      },
+      "led_intensity_when_off": {
+        "name": "Default all LED off intensity"
+      },
+      "double_tap_up_level": {
+        "name": "Double tap up level"
+      },
+      "double_tap_down_level": {
+        "name": "Double tap down level"
+      },
+      "serving_size": {
+        "name": "Serving to dispense"
+      },
+      "portion_weight": {
+        "name": "Portion weight"
+      },
+      "away_preset_temperature": {
+        "name": "Away preset temperature"
+      }
+    },
+    "select": {
+      "default_siren_tone": {
+        "name": "Default siren tone"
+      },
+      "default_siren_level": {
+        "name": "Default siren level"
+      },
+      "default_strobe_level": {
+        "name": "Default strobe level"
+      },
+      "default_strobe": {
+        "name": "Default strobe"
+      },
+      "start_up_on_off": {
+        "name": "Start-up behavior"
+      },
+      "power_on_state": {
+        "name": "Power on state"
+      },
+      "backlight_mode": {
+        "name": "Backlight mode"
+      },
+      "motion_sensitivity": {
+        "name": "Motion sensitivity"
+      },
+      "monitoring_mode": {
+        "name": "Monitoring mode"
+      },
+      "approach_distance": {
+        "name": "Approach distance"
+      },
+      "window_covering_mode": {
+        "name": "Curtain mode"
+      },
+      "output_mode": {
+        "name": "Output mode"
+      },
+      "switch_type": {
+        "name": "Switch type"
+      },
+      "led_scaling_mode": {
+        "name": "Led scaling mode"
+      },
+      "increased_non_neutral_output": {
+        "name": "Non neutral output"
+      },
+      "feeding_mode": {
+        "name": "Mode"
+      },
+      "preset": {
+        "name": "Preset"
+      }
+    },
+    "sensor": {
+      "analog_input": {
+        "name": "Analog input"
+      },
+      "ac_frequency": {
+        "name": "AC frequency"
+      },
+      "soil_moisture": {
+        "name": "Soil moisture"
+      },
+      "leaf_wetness": {
+        "name": "Leaf wetness"
+      },
+      "instantaneous_demand": {
+        "name": "Instantaneous demand"
+      },
+      "summation_delivered": {
+        "name": "Summation delivered"
+      },
+      "tier1_summation_delivered": {
+        "name": "Tier 1 summation delivered"
+      },
+      "tier2_summation_delivered": {
+        "name": "Tier 2 summation delivered"
+      },
+      "tier3_summation_delivered": {
+        "name": "Tier 3 summation delivered"
+      },
+      "tier4_summation_delivered": {
+        "name": "Tier 4 summation delivered"
+      },
+      "tier5_summation_delivered": {
+        "name": "Tier 5 summation delivered"
+      },
+      "tier6_summation_delivered": {
+        "name": "Tier 6 summation delivered"
+      },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
+      "formaldehyde": {
+        "name": "Formaldehyde concentration"
+      },
+      "hvac_action": {
+        "name": "HVAC action"
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "lqi": {
+        "name": "LQI"
+      },
+      "timer_time_left": {
+        "name": "Time left"
+      },
+      "device_run_time": {
+        "name": "Device run time"
+      },
+      "filter_run_time": {
+        "name": "Filter run time"
+      },
+      "last_feeding_source": {
+        "name": "Last feeding source"
+      },
+      "last_feeding_size": {
+        "name": "Last feeding size"
+      },
+      "portions_dispensed_today": {
+        "name": "Portions dispensed today"
+      },
+      "weight_dispensed_today": {
+        "name": "Weight dispensed today"
+      },
+      "smoke_density": {
+        "name": "Smoke density"
+      }
+    },
+    "switch": {
+      "switch": {
+        "name": "[%key:component::switch::title%]"
+      },
+      "window_detection_function": {
+        "name": "Invert window detection"
+      },
+      "trigger_indicator": {
+        "name": "LED trigger indicator"
+      },
+      "power_outage_memory": {
+        "name": "Power outage memory"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "disable_led": {
+        "name": "Disable LED"
+      },
+      "invert_switch": {
+        "name": "Invert switch"
+      },
+      "smart_bulb_mode": {
+        "name": "Smart bulb mode"
+      },
+      "double_tap_up_enabled": {
+        "name": "Double tap up enabled"
+      },
+      "double_tap_down_enabled": {
+        "name": "Double tap down enabled"
+      },
+      "aux_switch_scenes": {
+        "name": "Aux switch scenes"
+      },
+      "binding_off_to_on_sync_level": {
+        "name": "Binding off to on sync level"
+      },
+      "local_protection": {
+        "name": "Local protection"
+      },
+      "one_led_mode": {
+        "name": "Only 1 LED mode"
+      },
+      "firmware_progress_led": {
+        "name": "Firmware progress LED"
+      },
+      "relay_click_in_on_off_mode": {
+        "name": "Disable relay click in on off mode"
+      },
+      "disable_clear_notifications_double_tap": {
+        "name": "Disable config 2x tap to clear notifications"
+      },
+      "led_indicator": {
+        "name": "LED indicator"
+      },
+      "window_detection": {
+        "name": "Window detection"
+      },
+      "valve_detection": {
+        "name": "Valve detection"
+      },
+      "heartbeat_indicator": {
+        "name": "Heartbeat indicator"
+      },
+      "linkage_alarm": {
+        "name": "Linkage alarm"
+      },
+      "buzzer_manual_mute": {
+        "name": "Buzzer manual mute"
+      },
+      "buzzer_manual_alarm": {
+        "name": "Buzzer manual alarm"
+      }
     }
   }
 }

@@ -43,6 +43,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     IMPERIAL_UNITS,
+    SEMAPHORE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +52,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 PARALLEL_UPDATES = 1
 
-MS_BETWEEN_API_CALLS = 0.5
+SECONDS_BETWEEN_API_CALLS = 0.5
 
 
 async def async_setup_entry(
@@ -148,8 +149,12 @@ class WazeTravelTime(SensorEntity):
         _LOGGER.debug("Fetching Route for %s", self._attr_name)
         self._waze_data.origin = find_coordinates(self.hass, self._origin)
         self._waze_data.destination = find_coordinates(self.hass, self._destination)
-        await self._waze_data.async_update()
-        await asyncio.sleep(MS_BETWEEN_API_CALLS)
+        await self.hass.data[DOMAIN][SEMAPHORE].acquire()
+        try:
+            await self._waze_data.async_update()
+            await asyncio.sleep(SECONDS_BETWEEN_API_CALLS)
+        finally:
+            self.hass.data[DOMAIN][SEMAPHORE].release()
 
 
 class WazeTravelTimeData:

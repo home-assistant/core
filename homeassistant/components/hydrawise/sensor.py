@@ -11,13 +11,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS, UnitOfTime
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import HydrawiseDataUpdateCoordinator
 from .entity import HydrawiseEntity
 
@@ -59,7 +59,7 @@ def setup_platform(
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
     # We don't need to trigger import flow from here as it's triggered from `__init__.py`
-    return
+    return  # pragma: no cover
 
 
 async def async_setup_entry(
@@ -82,10 +82,8 @@ async def async_setup_entry(
 class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Get the latest data and updates the states."""
-        LOGGER.debug("Updating Hydrawise sensor: %s", self.name)
+    def _update_attrs(self) -> None:
+        """Update state attributes."""
         relay_data = self.coordinator.api.relays_by_zone_number[self.data["relay"]]
         if self.entity_description.key == "watering_time":
             if relay_data["timestr"] == "Now":
@@ -94,8 +92,6 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
                 self._attr_native_value = 0
         else:  # _sensor_type == 'next_cycle'
             next_cycle = min(relay_data["time"], TWO_YEAR_SECONDS)
-            LOGGER.debug("New cycle time: %s", next_cycle)
             self._attr_native_value = dt_util.utc_from_timestamp(
                 dt_util.as_timestamp(dt_util.now()) + next_cycle
             )
-        super()._handle_coordinator_update()
