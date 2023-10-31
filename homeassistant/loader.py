@@ -188,7 +188,7 @@ async def _async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return list of custom integrations."""
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode or hass.config.safe_mode:
         return {}
 
     try:
@@ -1179,7 +1179,7 @@ def _async_mount_config_dir(hass: HomeAssistant) -> None:
 
 def _lookup_path(hass: HomeAssistant) -> list[str]:
     """Return the lookup paths for legacy lookups."""
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode or hass.config.safe_mode:
         return [PACKAGE_BUILTIN]
     return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
 

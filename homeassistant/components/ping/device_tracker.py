@@ -22,10 +22,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.async_ import gather_with_concurrency
+from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.process import kill_subprocess
 
-from .const import DOMAIN, ICMP_TIMEOUT, PING_ATTEMPTS_COUNT, PING_PRIVS, PING_TIMEOUT
+from . import PingDomainData
+from .const import DOMAIN, ICMP_TIMEOUT, PING_ATTEMPTS_COUNT, PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +98,9 @@ async def async_setup_scanner(
 ) -> bool:
     """Set up the Host objects and return the update function."""
 
-    privileged = hass.data[DOMAIN][PING_PRIVS]
+    data: PingDomainData = hass.data[DOMAIN]
+
+    privileged = data.privileged
     ip_to_dev_id = {ip: dev_id for (dev_id, ip) in config[CONF_HOSTS].items()}
     interval = config.get(
         CONF_SCAN_INTERVAL,
@@ -117,7 +120,7 @@ async def async_setup_scanner(
 
         async def async_update(now: datetime) -> None:
             """Update all the hosts on every interval time."""
-            results = await gather_with_concurrency(
+            results = await gather_with_limited_concurrency(
                 CONCURRENT_PING_LIMIT,
                 *(hass.async_add_executor_job(host.update) for host in hosts),
             )

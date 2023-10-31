@@ -24,8 +24,10 @@ from aiohue.v2.models.tamper import Tamper, TamperState
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -80,25 +82,17 @@ async def async_setup_entry(
     register_items(api.sensors.tamper, HueTamperSensor)
 
 
-class HueBinarySensorBase(HueBaseEntity, BinarySensorEntity):
-    """Representation of a Hue binary_sensor."""
-
-    def __init__(
-        self,
-        bridge: HueBridge,
-        controller: ControllerType,
-        resource: SensorType,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(bridge, controller, resource)
-        self.resource = resource
-        self.controller = controller
-
-
-class HueMotionSensor(HueBinarySensorBase):
+class HueMotionSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Motion sensor."""
 
-    _attr_device_class = BinarySensorDeviceClass.MOTION
+    controller: CameraMotionController | MotionController
+    resource: CameraMotion | Motion
+
+    entity_description = BinarySensorEntityDescription(
+        key="motion_sensor",
+        device_class=BinarySensorDeviceClass.MOTION,
+        has_entity_name=True,
+    )
 
     @property
     def is_on(self) -> bool | None:
@@ -109,10 +103,17 @@ class HueMotionSensor(HueBinarySensorBase):
         return self.resource.motion.value
 
 
-class HueEntertainmentActiveSensor(HueBinarySensorBase):
+class HueEntertainmentActiveSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Entertainment Configuration as binary sensor."""
 
-    _attr_device_class = BinarySensorDeviceClass.RUNNING
+    controller: EntertainmentConfigurationController
+    resource: EntertainmentConfiguration
+
+    entity_description = BinarySensorEntityDescription(
+        key="entertainment_active_sensor",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        has_entity_name=False,
+    )
 
     @property
     def is_on(self) -> bool | None:
@@ -122,14 +123,20 @@ class HueEntertainmentActiveSensor(HueBinarySensorBase):
     @property
     def name(self) -> str:
         """Return sensor name."""
-        type_title = self.resource.type.value.replace("_", " ").title()
-        return f"{self.resource.metadata.name}: {type_title}"
+        return self.resource.metadata.name
 
 
-class HueContactSensor(HueBinarySensorBase):
+class HueContactSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Contact sensor."""
 
-    _attr_device_class = BinarySensorDeviceClass.OPENING
+    controller: ContactController
+    resource: Contact
+
+    entity_description = BinarySensorEntityDescription(
+        key="contact_sensor",
+        device_class=BinarySensorDeviceClass.OPENING,
+        has_entity_name=True,
+    )
 
     @property
     def is_on(self) -> bool | None:
@@ -140,10 +147,18 @@ class HueContactSensor(HueBinarySensorBase):
         return self.resource.contact_report.state != ContactState.CONTACT
 
 
-class HueTamperSensor(HueBinarySensorBase):
+class HueTamperSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Tamper sensor."""
 
-    _attr_device_class = BinarySensorDeviceClass.TAMPER
+    controller: TamperController
+    resource: Tamper
+
+    entity_description = BinarySensorEntityDescription(
+        key="tamper_sensor",
+        device_class=BinarySensorDeviceClass.TAMPER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        has_entity_name=True,
+    )
 
     @property
     def is_on(self) -> bool | None:
