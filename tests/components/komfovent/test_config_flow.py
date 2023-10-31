@@ -12,8 +12,6 @@ from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
-
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test flow completes as expected."""
@@ -25,7 +23,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     final_result = await __test_normal_flow(hass, result["flow_id"])
     assert final_result["type"] == FlowResultType.CREATE_ENTRY
-    assert final_result["title"] == "test-name"
+    assert final_result["title"] == "1.1.1.1"
     assert final_result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test-username",
@@ -73,7 +71,7 @@ async def test_flow_error_authenticating(
 
     final_result = await __test_normal_flow(hass, result2["flow_id"])
     assert final_result["type"] == FlowResultType.CREATE_ENTRY
-    assert final_result["title"] == "test-name"
+    assert final_result["title"] == "1.1.1.1"
     assert final_result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test-username",
@@ -127,7 +125,7 @@ async def test_flow_error_device_info(
 
     final_result = await __test_normal_flow(hass, result2["flow_id"])
     assert final_result["type"] == FlowResultType.CREATE_ENTRY
-    assert final_result["title"] == "test-name"
+    assert final_result["title"] == "1.1.1.1"
     assert final_result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test-username",
