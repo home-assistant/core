@@ -46,10 +46,12 @@ async def test_user_create_entry(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    # test PyViCareInvalidCredentialsError
+    # test PyViCareInvalidConfigurationError
     with patch(
         f"{MODULE}.config_flow.vicare_login",
-        side_effect=PyViCareInvalidCredentialsError,
+        side_effect=PyViCareInvalidConfigurationError(
+            {"error": "foo", "error_description": "bar"}
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -60,10 +62,10 @@ async def test_user_create_entry(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
-    # test PyViCareInvalidConfigurationError
+    # test PyViCareInvalidCredentialsError
     with patch(
         f"{MODULE}.config_flow.vicare_login",
-        side_effect=PyViCareInvalidConfigurationError,
+        side_effect=PyViCareInvalidCredentialsError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
