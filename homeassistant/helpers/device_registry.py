@@ -324,9 +324,7 @@ def format_mac(mac: str) -> str:
     if len(to_test) == 12:
         # no : included
         return ":".join(to_test.lower()[i : i + 2] for i in range(0, 12, 2))
-
-    # Not sure how formatted, return original
-    return mac
+    raise ValueError("Invalid mac")
 
 
 class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
