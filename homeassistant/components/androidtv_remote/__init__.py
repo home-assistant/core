@@ -57,7 +57,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def reauth_needed() -> None:
         """Start a reauth flow if Android TV is hard reset while reconnecting."""
-        entry.async_start_reauth(hass)
+        hass.async_create_background_task(
+            entry.async_init_reauth(hass), f"reauth flow {DOMAIN} {entry.entry_id}"
+        )
 
     # Start a task (canceled in disconnect) to keep reconnecting if device becomes
     # network unreachable. If device gets a new IP address the zeroconf flow will

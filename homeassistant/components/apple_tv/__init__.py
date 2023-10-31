@@ -226,7 +226,7 @@ class AppleTVManager:
             if conf := await self._scan():
                 await self._connect(conf, raise_missing_credentials)
         except exceptions.AuthenticationError:
-            self.config_entry.async_start_reauth(self.hass)
+            await self.config_entry.async_init_reauth(self.hass)
             await self.disconnect()
             _LOGGER.exception(
                 "Authentication failed for %s, try reconfiguring device",
