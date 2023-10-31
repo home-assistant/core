@@ -309,8 +309,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         tasks = [
             entity.async_remove()
             for entity in component.entities
-            if entity.entity_id.startswith("group.")
-            and not cast(Group, entity).created_by_service
+            if entity.entity_id.startswith("group.") and not entity.created_by_service
         ]
 
         if tasks:
