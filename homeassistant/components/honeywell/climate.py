@@ -6,7 +6,7 @@ import datetime
 from typing import Any
 
 from aiohttp import ClientConnectionError
-from aiosomecomfort import SomeComfortError, UnauthorizedError, UnexpectedResponse
+from aiosomecomfort import AuthError, SomeComfortError, UnauthorizedError, UnexpectedResponse
 from aiosomecomfort.device import Device as SomeComfortDevice
 
 from homeassistant.components.climate import (
@@ -495,14 +495,14 @@ class HoneywellUSThermostat(ClimateEntity):
                     try:
                         await self._data.client.login()
                     except (
+                        AuthError,
                         ClientConnectionError,
                         asyncio.TimeoutError,
-                        SomeComfortError,
                     ):
                         self._retry += 1
                         self._attr_available = self._retry <= RETRY
-
-                    await _async_update(login=True)
+                    else:
+                        await _async_update(login=True)
 
             except (ClientConnectionError, asyncio.TimeoutError):
                 self._retry += 1
