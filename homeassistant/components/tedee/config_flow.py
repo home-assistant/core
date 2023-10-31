@@ -2,7 +2,12 @@
 from collections.abc import Mapping
 from typing import Any
 
-from pytedee_async import TedeeAuthException, TedeeClient, TedeeLocalAuthException
+from pytedee_async import (
+    TedeeAuthException,
+    TedeeClient,
+    TedeeClientException,
+    TedeeLocalAuthException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -32,7 +37,7 @@ async def validate_input(user_input: dict[str, Any]) -> bool:
         await tedee_client.get_locks()
     except (TedeeAuthException, TedeeLocalAuthException) as ex:
         raise InvalidAuth from ex
-    except Exception as ex:
+    except (TedeeClientException, Exception) as ex:
         raise CannotConnect from ex
     return True
 
