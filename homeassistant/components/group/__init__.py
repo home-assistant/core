@@ -301,11 +301,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
 
-        # There's only a group.group platform, no group.xxx platforms with
-        # entities.
-        # pylint: disable-next=protected-access
-        platform = component._platforms[DOMAIN]
-
         # Simplified + modified version of EntityPlatform.async_reset:
         # - group.group never retries setup
         # - group.group never polls
@@ -313,8 +308,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # - Only remove entities which were not created by service calls
         tasks = [
             entity.async_remove()
-            for entity in platform.entities.values()
-            if not cast(Group, entity).created_by_service
+            for entity in component.entities
+            if entity.entity_id.startswith("group.")
+            and not cast(Group, entity).created_by_service
         ]
 
         if tasks:
