@@ -127,5 +127,5 @@ async def test_api_not_enabled(
     assert result["reason"] == "access_not_configured"
     assert (
         result["description_placeholders"]["message"]
-        == "Google Tasks API has not been used in project 977052058199 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/tasks.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+        == "Google Tasks API has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/tasks.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
     )
