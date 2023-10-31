@@ -96,7 +96,7 @@ class OAuthFixture:
 
     async def async_reauth(self, config_entry: ConfigEntry) -> dict:
         """Initiate a reuath flow."""
-        config_entry.async_start_reauth(self.hass)
+        await config_entry.async_init_reauth(self.hass)
         await self.hass.async_block_till_done()
 
         # Advance through the reauth flow

@@ -769,7 +769,7 @@ async def test_reauth_flow_success(
     )
     mock_config_entry.add_to_hass(hass)
 
-    mock_config_entry.async_start_reauth(hass)
+    await mock_config_entry.async_init_reauth(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
@@ -838,7 +838,7 @@ async def test_reauth_flow_cannot_connect(
     )
     mock_config_entry.add_to_hass(hass)
 
-    mock_config_entry.async_start_reauth(hass)
+    await mock_config_entry.async_init_reauth(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()

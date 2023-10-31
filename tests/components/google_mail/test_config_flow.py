@@ -102,7 +102,7 @@ async def test_reauth(
     """
     config_entry.add_to_hass(hass)
 
-    config_entry.async_start_reauth(hass)
+    await config_entry.async_init_reauth(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()

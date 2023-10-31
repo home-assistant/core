@@ -79,7 +79,7 @@ async def test_load_removes_reauth_flow(
     mock_config_entry.add_to_hass(hass)
 
     # Add reauth flow from 'previously' failed init
-    mock_config_entry.async_start_reauth(hass)
+    await mock_config_entry.async_init_reauth(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)

@@ -107,7 +107,7 @@ async def test_authentication_error(
         "pyuptimerobot.UptimeRobot.async_edit_monitor",
         side_effect=UptimeRobotAuthenticationException,
     ), patch(
-        "homeassistant.config_entries.ConfigEntry.async_start_reauth"
+        "homeassistant.config_entries.ConfigEntry.async_init_reauth"
     ) as config_entry_reauth:
         await hass.services.async_call(
             SWITCH_DOMAIN,

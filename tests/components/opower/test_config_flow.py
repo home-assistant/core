@@ -278,7 +278,7 @@ async def test_form_valid_reauth(
 ) -> None:
     """Test that we can handle a valid reauth."""
     mock_config_entry.state = ConfigEntryState.LOADED
-    mock_config_entry.async_start_reauth(hass)
+    await mock_config_entry.async_init_reauth(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
@@ -327,7 +327,7 @@ async def test_form_valid_reauth_with_mfa(
         },
     )
     mock_config_entry.state = ConfigEntryState.LOADED
-    mock_config_entry.async_start_reauth(hass)
+    await mock_config_entry.async_init_reauth(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
