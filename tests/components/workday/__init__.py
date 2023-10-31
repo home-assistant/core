@@ -65,6 +65,7 @@ TEST_CONFIG_WITH_PROVINCE = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": [],
+    "language": "de",
 }
 TEST_CONFIG_INCORRECT_COUNTRY = {
     "name": DEFAULT_NAME,
@@ -74,6 +75,7 @@ TEST_CONFIG_INCORRECT_COUNTRY = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": [],
+    "language": "de",
 }
 TEST_CONFIG_INCORRECT_PROVINCE = {
     "name": DEFAULT_NAME,
@@ -84,6 +86,7 @@ TEST_CONFIG_INCORRECT_PROVINCE = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": [],
+    "language": "de",
 }
 TEST_CONFIG_NO_PROVINCE = {
     "name": DEFAULT_NAME,
@@ -93,6 +96,7 @@ TEST_CONFIG_NO_PROVINCE = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": [],
+    "language": "de",
 }
 TEST_CONFIG_WITH_STATE = {
     "name": DEFAULT_NAME,
@@ -103,6 +107,7 @@ TEST_CONFIG_WITH_STATE = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": [],
+    "language": "en_US",
 }
 TEST_CONFIG_NO_STATE = {
     "name": DEFAULT_NAME,
@@ -112,6 +117,7 @@ TEST_CONFIG_NO_STATE = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": [],
+    "language": "en_US",
 }
 TEST_CONFIG_INCLUDE_HOLIDAY = {
     "name": DEFAULT_NAME,
@@ -122,6 +128,7 @@ TEST_CONFIG_INCLUDE_HOLIDAY = {
     "workdays": ["holiday"],
     "add_holidays": [],
     "remove_holidays": [],
+    "language": "de",
 }
 TEST_CONFIG_EXAMPLE_1 = {
     "name": DEFAULT_NAME,
@@ -131,6 +138,7 @@ TEST_CONFIG_EXAMPLE_1 = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": [],
+    "language": "en_US",
 }
 TEST_CONFIG_EXAMPLE_2 = {
     "name": DEFAULT_NAME,
@@ -141,6 +149,7 @@ TEST_CONFIG_EXAMPLE_2 = {
     "workdays": ["mon", "wed", "fri"],
     "add_holidays": ["2020-02-24"],
     "remove_holidays": [],
+    "language": "de",
 }
 TEST_CONFIG_REMOVE_HOLIDAY = {
     "name": DEFAULT_NAME,
@@ -150,6 +159,7 @@ TEST_CONFIG_REMOVE_HOLIDAY = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": ["2020-12-25", "2020-11-26"],
+    "language": "en_US",
 }
 TEST_CONFIG_REMOVE_NAMED = {
     "name": DEFAULT_NAME,
@@ -159,6 +169,7 @@ TEST_CONFIG_REMOVE_NAMED = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": ["Not a Holiday", "Christmas", "Thanksgiving"],
+    "language": "en_US",
 }
 TEST_CONFIG_TOMORROW = {
     "name": DEFAULT_NAME,
@@ -168,6 +179,7 @@ TEST_CONFIG_TOMORROW = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": [],
+    "language": "de",
 }
 TEST_CONFIG_DAY_AFTER_TOMORROW = {
     "name": DEFAULT_NAME,
@@ -177,6 +189,7 @@ TEST_CONFIG_DAY_AFTER_TOMORROW = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": [],
+    "language": "de",
 }
 TEST_CONFIG_YESTERDAY = {
     "name": DEFAULT_NAME,
@@ -186,6 +199,7 @@ TEST_CONFIG_YESTERDAY = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": [],
+    "language": "de",
 }
 TEST_CONFIG_INCORRECT_ADD_REMOVE = {
     "name": DEFAULT_NAME,
@@ -196,6 +210,7 @@ TEST_CONFIG_INCORRECT_ADD_REMOVE = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": ["2023-12-32"],
     "remove_holidays": ["2023-12-32"],
+    "language": "de",
 }
 TEST_CONFIG_INCORRECT_ADD_DATE_RANGE = {
     "name": DEFAULT_NAME,
@@ -206,6 +221,7 @@ TEST_CONFIG_INCORRECT_ADD_DATE_RANGE = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": ["2023-12-01", "2023-12-30,2023-12-32"],
     "remove_holidays": [],
+    "language": "de",
 }
 TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE = {
     "name": DEFAULT_NAME,
@@ -216,6 +232,7 @@ TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": ["2023-12-25", "2023-12-30,2023-12-32"],
+    "language": "de",
 }
 TEST_CONFIG_INCORRECT_ADD_DATE_RANGE_LEN = {
     "name": DEFAULT_NAME,
@@ -226,6 +243,7 @@ TEST_CONFIG_INCORRECT_ADD_DATE_RANGE_LEN = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": ["2023-12-01", "2023-12-29,2023-12-30,2023-12-31"],
     "remove_holidays": [],
+    "language": "de",
 }
 TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE_LEN = {
     "name": DEFAULT_NAME,
@@ -236,6 +254,7 @@ TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE_LEN = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": ["2023-12-25", "2023-12-29,2023-12-30,2023-12-31"],
+    "language": "de",
 }
 TEST_CONFIG_ADD_REMOVE_DATE_RANGE = {
     "name": DEFAULT_NAME,
@@ -246,4 +265,5 @@ TEST_CONFIG_ADD_REMOVE_DATE_RANGE = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": ["2022-12-01", "2022-12-05,2022-12-15"],
     "remove_holidays": ["2022-12-04", "2022-12-24,2022-12-26"],
+    "language": "de",
 }

@@ -16,7 +16,7 @@ from homeassistant.components.workday.const import (
     DEFAULT_WORKDAYS,
     DOMAIN,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -63,6 +63,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": [],
         "remove_holidays": [],
+        "language": "de",
     }
 
 
@@ -143,6 +144,7 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": [],
         "remove_holidays": [],
+        "language": "sv",
     }
 
 
@@ -159,6 +161,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
+            "language": "de",
         },
     )
 
@@ -173,6 +176,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
             "add_holidays": [],
             "remove_holidays": [],
             "province": "BW",
+            "language": "de",
         },
     )
 
@@ -186,6 +190,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
         "add_holidays": [],
         "remove_holidays": [],
         "province": "BW",
+        "language": "de",
     }
 
 
@@ -213,6 +218,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-xx-12"],
             CONF_REMOVE_HOLIDAYS: [],
+            CONF_LANGUAGE: "de",
         },
     )
     await hass.async_block_till_done()
@@ -226,6 +232,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12"],
             CONF_REMOVE_HOLIDAYS: ["Does not exist"],
+            CONF_LANGUAGE: "de",
         },
     )
     await hass.async_block_till_done()
@@ -240,6 +247,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12"],
             CONF_REMOVE_HOLIDAYS: ["Weihnachtstag"],
+            CONF_LANGUAGE: "de",
         },
     )
     await hass.async_block_till_done()
@@ -254,6 +262,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": ["2022-12-12"],
         "remove_holidays": ["Weihnachtstag"],
+        "language": "de",
     }
 
 
@@ -270,6 +279,7 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
+            "language": "de",
         },
     )
 
@@ -284,6 +294,7 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
             "add_holidays": ["2022-xx-12"],
             "remove_holidays": [],
             "province": "BW",
+            "language": "de",
         },
     )
 
@@ -298,6 +309,7 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
             "add_holidays": ["2022-12-12"],
             "remove_holidays": ["Does not exist"],
             "province": "BW",
+            "language": "de",
         },
     )
 
@@ -312,6 +324,7 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
             "add_holidays": ["2022-12-12"],
             "remove_holidays": ["Weihnachtstag"],
             "province": "BW",
+            "language": "de",
         },
     )
 
@@ -325,6 +338,7 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
         "add_holidays": ["2022-12-12"],
         "remove_holidays": ["Weihnachtstag"],
         "province": "BW",
+        "language": "de",
     }
 
 
@@ -401,6 +415,7 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12", "2022-12-30,2022-12-32"],
             CONF_REMOVE_HOLIDAYS: [],
+            CONF_LANGUAGE: "de",
         },
     )
     await hass.async_block_till_done()
@@ -414,6 +429,7 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12"],
             CONF_REMOVE_HOLIDAYS: ["2022-12-25", "2022-12-30,2022-12-32"],
+            CONF_LANGUAGE: "de",
         },
     )
     await hass.async_block_till_done()
@@ -428,6 +444,7 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12", "2022-12-01,2022-12-10"],
             CONF_REMOVE_HOLIDAYS: ["2022-12-25", "2022-12-30,2022-12-31"],
+            CONF_LANGUAGE: "de",
         },
     )
     await hass.async_block_till_done()
@@ -442,6 +459,7 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": ["2022-12-12", "2022-12-01,2022-12-10"],
         "remove_holidays": ["2022-12-25", "2022-12-30,2022-12-31"],
+        "language": "de",
     }
 
 
@@ -458,6 +476,7 @@ async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
+            "language": "de",
         },
     )
 
@@ -472,6 +491,7 @@ async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
             "add_holidays": ["2022-12-30,2022-12-32"],
             "remove_holidays": [],
             "province": "BW",
+            "language": "de",
         },
     )
 
@@ -486,6 +506,7 @@ async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
             "add_holidays": ["2022-12-30,2022-12-31"],
             "remove_holidays": ["2022-13-25,2022-12-26"],
             "province": "BW",
+            "language": "de",
         },
     )
 
@@ -500,6 +521,7 @@ async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
             "add_holidays": ["2022-12-30,2022-12-31"],
             "remove_holidays": ["2022-12-25,2022-12-26"],
             "province": "BW",
+            "language": "de",
         },
     )
 
@@ -513,4 +535,5 @@ async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
         "add_holidays": ["2022-12-30,2022-12-31"],
         "remove_holidays": ["2022-12-25,2022-12-26"],
         "province": "BW",
+        "language": "de",
     }
