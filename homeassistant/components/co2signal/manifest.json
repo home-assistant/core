@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/co2signal",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["CO2Signal"],
-  "requirements": ["aioelectricitymaps==0.1.3"]
+  "loggers": ["aioelectricitymaps"],
+  "requirements": ["aioelectricitymaps==0.1.4"]
 }

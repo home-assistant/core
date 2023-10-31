@@ -11,7 +11,7 @@ from aioelectricitymaps.models import CarbonIntensityResponse
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_COUNTRY_CODE, DOMAIN
@@ -55,6 +55,6 @@ class CO2SignalCoordinator(DataUpdateCoordinator[CarbonIntensityResponse]):
                     ),
                 )
             except InvalidToken as err:
-                raise ConfigEntryAuthFailed from err
+                raise ConfigEntryError from err
             except ElectricityMapsError as err:
                 raise UpdateFailed(str(err)) from err
