@@ -61,9 +61,9 @@ class OAuth2FlowHandler(
             return await super().async_step_creation()
         except FitbitAuthException as err:
             _LOGGER.error(
-                "Failed to authenticate when creading Fitbit credentials: %s", err
+                "Failed to authenticate when creating Fitbit credentials: %s", err
             )
-            return self.async_abort(reason="invalid_access_token")
+            return self.async_abort(reason="invalid_auth")
         except FitbitApiException as err:
             _LOGGER.error("Failed to create Fitbit credentials: %s", err)
             return self.async_abort(reason="cannot_connect")
