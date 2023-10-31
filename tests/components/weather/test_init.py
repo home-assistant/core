@@ -1,5 +1,4 @@
 """The test for weather entity."""
-from collections.abc import Generator
 from datetime import datetime
 from typing import Any
 
@@ -56,7 +55,7 @@ from homeassistant.components.weather.const import (
     ATTR_WEATHER_DEW_POINT,
     ATTR_WEATHER_HUMIDITY,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
@@ -87,7 +86,6 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
-    mock_config_flow,
     mock_integration,
     mock_platform,
 )
@@ -955,19 +953,6 @@ async def test_get_forecast_unsupported(
                 blocking=True,
                 return_response=True,
             )
-
-
-class MockFlow(ConfigFlow):
-    """Test flow."""
-
-
-@pytest.fixture
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
-    """Mock config flow."""
-    mock_platform(hass, "test.config_flow")
-
-    with mock_config_flow("test", MockFlow):
-        yield
 
 
 ISSUE_TRACKER = "https://blablabla.com"
