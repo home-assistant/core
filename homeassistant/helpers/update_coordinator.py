@@ -16,7 +16,14 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -104,7 +111,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         job_name += f" {name}"
         if entry := self.config_entry:
             job_name += f" {entry.title} {entry.domain} {entry.entry_id}"
-        self._job = HassJob(self._handle_refresh_interval, job_name)
+        self._job = HassJob(
+            self._handle_refresh_interval,
+            job_name,
+            job_type=HassJobType.Coroutinefunction,
+        )
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._unsub_shutdown: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None

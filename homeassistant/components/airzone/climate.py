@@ -208,7 +208,9 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         await self._async_update_hvac_params(params)
 
         if slave_raise:
-            raise HomeAssistantError(f"Mode can't be changed on slave zone {self.name}")
+            raise HomeAssistantError(
+                f"Mode can't be changed on slave zone {self.entity_id}"
+            )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
