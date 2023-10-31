@@ -79,7 +79,7 @@ async def test_api_not_enabled(
     current_request_with_host,
     setup_credentials,
 ) -> None:
-    """Check full flow."""
+    """Check flow aborts if api is not enabled."""
     result = await hass.config_entries.flow.async_init(
         "google_tasks", context={"source": config_entries.SOURCE_USER}
     )
