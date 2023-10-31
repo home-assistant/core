@@ -71,12 +71,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             data = self.api.session_stats()
             self.torrents = self.api.get_torrents()
             self._session = self.api.get_session()
-
-            self.check_completed_torrent()
-            self.check_started_torrent()
-            self.check_removed_torrent()
         except transmission_rpc.TransmissionError as err:
             raise UpdateFailed("Unable to connect to Transmission client") from err
+
+        self.check_completed_torrent()
+        self.check_started_torrent()
+        self.check_removed_torrent()
 
         return data
 
