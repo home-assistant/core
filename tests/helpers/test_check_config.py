@@ -2,6 +2,8 @@
 import logging
 from unittest.mock import Mock, patch
 
+import pytest
+
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.check_config import (
@@ -136,6 +138,34 @@ async def test_component_not_found_safe_mode(hass: HomeAssistant) -> None:
         assert res.keys() == {"homeassistant"}
         assert not res.errors
         assert not res.warnings
+
+
+@pytest.mark.parametrize(
+    ("component", "errors", "warnings", "message"),
+    [
+        ("frontend", 1, 0, "[blah] is an invalid option for [frontend]"),
+        ("http", 1, 0, "[blah] is an invalid option for [http]"),
+        ("logger", 0, 1, "[blah] is an invalid option for [logger]"),
+    ],
+)
+async def test_component_schema_error(
+    hass: HomeAssistant, component: str, errors: int, warnings: int, message: str
+) -> None:
+    """Test schema error in component."""
+    # Make sure they don't exist
+    files = {YAML_CONFIG_FILE: BASE_CONFIG + f"frontend:\n{component}:\n    blah:"}
+    hass.config.safe_mode = True
+    with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        assert len(res.errors) == errors
+        assert len(res.warnings) == warnings
+
+        for err in res.errors:
+            assert message in err.message
+        for warn in res.warnings:
+            assert message in warn.message
 
 
 async def test_component_platform_not_found_2(hass: HomeAssistant) -> None:

@@ -102,7 +102,28 @@ async def async_check_ha_config_file(  # noqa: C901
 
     def _comp_error(ex: Exception, domain: str, config: ConfigType) -> None:
         """Handle errors from components: async_log_exception."""
-        result.add_warning(_format_config_error(ex, domain, config)[0], domain, config)
+        if domain in frontend_dependencies:
+            result.add_error(
+                _format_config_error(ex, domain, config)[0], domain, config
+            )
+        else:
+            result.add_warning(
+                _format_config_error(ex, domain, config)[0], domain, config
+            )
+
+    async def _get_integration(
+        hass: HomeAssistant, domain: str
+    ) -> loader.Integration | None:
+        """Get an integration."""
+        integration: loader.Integration | None = None
+        try:
+            integration = await async_get_integration_with_requirements(hass, domain)
+        except loader.IntegrationNotFound as ex:
+            if not hass.config.recovery_mode and not hass.config.safe_mode:
+                result.add_warning(f"Integration error: {domain} - {ex}")
+        except RequirementsNotFound as ex:
+            result.add_warning(f"Integration error: {domain} - {ex}")
+        return integration
 
     # Load configuration.yaml
     config_path = hass.config.path(YAML_CONFIG_FILE)
@@ -138,16 +159,16 @@ async def async_check_ha_config_file(  # noqa: C901
     # Filter out repeating config sections
     components = {key.partition(" ")[0] for key in config}
 
+    frontend_dependencies: set[str] = set()
+    if "frontend" in components or "default_config" in components:
+        frontend = await _get_integration(hass, "frontend")
+        if frontend:
+            await frontend.resolve_dependencies()
+            frontend_dependencies = frontend.all_dependencies | {"frontend"}
+
     # Process and validate config
     for domain in components:
-        try:
-            integration = await async_get_integration_with_requirements(hass, domain)
-        except loader.IntegrationNotFound as ex:
-            if not hass.config.recovery_mode and not hass.config.safe_mode:
-                result.add_warning(f"Integration error: {domain} - {ex}")
-            continue
-        except RequirementsNotFound as ex:
-            result.add_warning(f"Integration error: {domain} - {ex}")
+        if not (integration := await _get_integration(hass, domain)):
             continue
 
         try:
