@@ -15,7 +15,7 @@
         "description": "Please verify credentials.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
-          "client_id": "[%key:common::config_flow::data::api_key%]"
+          "client_id": "[%key:component::vicare::config::step::user::data::client_id%]"
         }
       }
     },
