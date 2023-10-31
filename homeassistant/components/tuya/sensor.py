@@ -519,12 +519,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     ),
     # Smart Water Timer
     "sfkzq": (
-        TuyaSensorEntityDescription(
-            key=DPCode.WORK_STATE,
-            name="Mode",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            translation_key="work_state",
-        ),
         # Total seconds of irrigation. Read-write value; the device appears to ignore the write action (maybe firmware bug)
         TuyaSensorEntityDescription(
             key=DPCode.TIME_USE,
