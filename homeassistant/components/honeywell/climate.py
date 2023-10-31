@@ -12,7 +12,6 @@ from aiosomecomfort import (
     UnauthorizedError, 
     UnexpectedResponse,
 )
-
 from aiosomecomfort.device import Device as SomeComfortDevice
 
 from homeassistant.components.climate import (
