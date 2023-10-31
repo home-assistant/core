@@ -56,12 +56,12 @@ async def test_todo_item_state(
 
 
 @pytest.mark.parametrize(("tasks"), [[]])
-async def test_create_todo_list_item(
+async def test_add_todo_list_item(
     hass: HomeAssistant,
     setup_integration: None,
     api: AsyncMock,
 ) -> None:
-    """Test for creating a To-do Item."""
+    """Test for adding a To-do Item."""
 
     state = hass.states.get("todo.name")
     assert state
@@ -75,8 +75,8 @@ async def test_create_todo_list_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "create_item",
-        {"summary": "Soda"},
+        "add_item",
+        {"item": "Soda"},
         target={"entity_id": "todo.name"},
         blocking=True,
     )
@@ -90,30 +90,6 @@ async def test_create_todo_list_item(
     state = hass.states.get("todo.name")
     assert state
     assert state.state == "1"
-
-
-@pytest.mark.parametrize(("tasks"), [[]])
-async def test_create_completed_item_unsupported(
-    hass: HomeAssistant,
-    setup_integration: None,
-    api: AsyncMock,
-) -> None:
-    """Test for creating a To-do Item that is already completed."""
-
-    state = hass.states.get("todo.name")
-    assert state
-    assert state.state == "0"
-
-    api.add_task = AsyncMock()
-
-    with pytest.raises(ValueError, match="Only active tasks"):
-        await hass.services.async_call(
-            TODO_DOMAIN,
-            "create_item",
-            {"summary": "Soda", "status": "completed"},
-            target={"entity_id": "todo.name"},
-            blocking=True,
-        )
 
 
 @pytest.mark.parametrize(
@@ -141,7 +117,7 @@ async def test_update_todo_item_status(
     await hass.services.async_call(
         TODO_DOMAIN,
         "update_item",
-        {"uid": "task-id-1", "status": "completed"},
+        {"item": "task-id-1", "status": "completed"},
         target={"entity_id": "todo.name"},
         blocking=True,
     )
@@ -164,7 +140,7 @@ async def test_update_todo_item_status(
     await hass.services.async_call(
         TODO_DOMAIN,
         "update_item",
-        {"uid": "task-id-1", "status": "needs_action"},
+        {"item": "task-id-1", "status": "needs_action"},
         target={"entity_id": "todo.name"},
         blocking=True,
     )
@@ -203,7 +179,7 @@ async def test_update_todo_item_summary(
     await hass.services.async_call(
         TODO_DOMAIN,
         "update_item",
-        {"uid": "task-id-1", "summary": "Milk"},
+        {"item": "task-id-1", "rename": "Milk"},
         target={"entity_id": "todo.name"},
         blocking=True,
     )
@@ -223,12 +199,12 @@ async def test_update_todo_item_summary(
         ]
     ],
 )
-async def test_delete_todo_item(
+async def test_remove_todo_item(
     hass: HomeAssistant,
     setup_integration: None,
     api: AsyncMock,
 ) -> None:
-    """Test for deleting a To-do Item."""
+    """Test for removing a To-do Item."""
 
     state = hass.states.get("todo.name")
     assert state
@@ -240,8 +216,8 @@ async def test_delete_todo_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "delete_item",
-        {"uid": ["task-id-1", "task-id-2"]},
+        "remove_item",
+        {"item": ["task-id-1", "task-id-2"]},
         target={"entity_id": "todo.name"},
         blocking=True,
     )
