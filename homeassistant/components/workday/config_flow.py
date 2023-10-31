@@ -109,12 +109,11 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
 
     year: int = dt_util.now().year
     if country := user_input.get(CONF_COUNTRY):
-        cls = country_holidays(country)
         obj_holidays = country_holidays(
             country=country,
             subdiv=user_input.get(CONF_PROVINCE),
             years=year,
-            language=cls.default_language,
+            language=user_input.get(CONF_LANGUAGE),
         )
     else:
         obj_holidays = HolidayBase(years=year)
