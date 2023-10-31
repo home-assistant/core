@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from PyViCare.PyViCareUtils import PyViCareInvalidCredentialsError
 from syrupy.assertion import SnapshotAssertion
-from homeassistant import data_entry_flow
 
+from homeassistant import data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_REAUTH, SOURCE_USER
@@ -78,7 +78,9 @@ async def test_user_create_entry(
 async def test_reauth(hass: HomeAssistant) -> None:
     """Test reauth flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=VALID_CONFIG,
+        DOMAIN,
+        context={"source": SOURCE_REAUTH},
+        data=VALID_CONFIG,
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -87,7 +89,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     with patch(
         f"{MODULE}.config_flow.vicare_login",
         return_value=None,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
@@ -96,7 +98,8 @@ async def test_reauth(hass: HomeAssistant) -> None:
     new_client_id = "EFGH"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_PASSWORD: new_password, CONF_CLIENT_ID: new_client_id}
+        result["flow_id"],
+        user_input={CONF_PASSWORD: new_password, CONF_CLIENT_ID: new_client_id},
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
