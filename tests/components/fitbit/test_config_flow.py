@@ -91,7 +91,7 @@ async def test_full_flow(
 @pytest.mark.parametrize(
     ("status_code", "error_reason"),
     [
-        (HTTPStatus.UNAUTHORIZED, "invalid_access_token"),
+        (HTTPStatus.UNAUTHORIZED, "invalid_auth"),
         (HTTPStatus.INTERNAL_SERVER_ERROR, "cannot_connect"),
     ],
 )
