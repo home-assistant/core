@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Generic, TypeVar, cast
 
-from pyprusalink.types import JobInfo, PrinterInfo, PrinterState, PrinterStatus
+from pyprusalink.types import JobInfo, PrinterState, PrinterStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,7 +29,7 @@ from homeassistant.util.variance import ignore_variance
 
 from . import DOMAIN, PrusaLinkEntity, PrusaLinkUpdateCoordinator
 
-T = TypeVar("T", PrinterStatus, PrinterInfo, JobInfo)
+T = TypeVar("T", PrinterStatus, JobInfo)
 
 
 @dataclass
