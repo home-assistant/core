@@ -66,23 +66,29 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         self.map_flag = map_flag
         self.cached_map = self._create_image(starting_map)
 
-    def is_cache_expired(self) -> bool:
-        """Update this map if it is the current active map, it's been long enough, and the vacuum is cleaning."""
+    def is_map_valid(self) -> bool:
+        """Update this map if it is the current active map, and the vacuum is cleaning."""
         return (
             self.map_flag == self.coordinator.current_map
             and self.image_last_updated is not None
-            and (dt_util.utcnow() - self.image_last_updated).total_seconds()
-            > IMAGE_CACHE_INTERVAL
             and self.coordinator.roborock_device_info.props.status is not None
             and self.coordinator.roborock_device_info.props.status.in_cleaning
         )
 
+    def _handle_coordinator_update(self):
+        # Bump last updated every third time the coordinator runs, so that async_image will be called and
+        # we will evaluate on the new coordinator data if we should update the cache.
+        if (
+            dt_util.utcnow() - self.image_last_updated
+        ).total_seconds() > IMAGE_CACHE_INTERVAL:
+            self._attr_image_last_updated = dt_util.utcnow()
+        super()._handle_coordinator_update()
+
     async def async_image(self) -> bytes | None:
         """Update the image if it is not cached."""
-        if self.is_cache_expired():
+        if self.is_map_valid():
             map_data: bytes = await self.cloud_api.get_map_v1()
             self.cached_map = self._create_image(map_data)
-            self._attr_image_last_updated = dt_util.utcnow()
         return self.cached_map
 
     def _create_image(self, map_bytes: bytes) -> bytes:
