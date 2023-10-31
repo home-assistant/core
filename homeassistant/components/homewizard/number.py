@@ -21,7 +21,7 @@ async def async_setup_entry(
     """Set up numbers for device."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     if coordinator.supports_state():
-        async_add_entities([HWEnergyNumberEntity(coordinator, entry)])
+        async_add_entities([HWEnergyNumberEntity(coordinator)])
 
 
 class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
@@ -35,11 +35,12 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
     def __init__(
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
-        entry: ConfigEntry,
     ) -> None:
         """Initialize the control number."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.unique_id}_status_light_brightness"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_status_light_brightness"
+        )
 
     @homewizard_exception_handler
     async def async_set_native_value(self, value: float) -> None:
@@ -48,12 +49,16 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
         await self.coordinator.async_refresh()
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.data.state is not None
+
+    @property
     def native_value(self) -> float | None:
         """Return the current value."""
         if (
-            self.coordinator.data.state is None
-            or self.coordinator.data.state.brightness is None
+            not self.coordinator.data.state
+            or (brightness := self.coordinator.data.state.brightness) is None
         ):
             return None
-        brightness: float = self.coordinator.data.state.brightness
         return round(brightness * (100 / 255))
