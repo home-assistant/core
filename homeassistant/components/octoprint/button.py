@@ -30,6 +30,9 @@ async def async_setup_entry(
             OctoprintResumeJobButton(coordinator, device_id, client),
             OctoprintPauseJobButton(coordinator, device_id, client),
             OctoprintStopJobButton(coordinator, device_id, client),
+            OctoprintShutdownSystemButton(coordinator, device_id, client),
+            OctoprintRebootSystemButton(coordinator, device_id, client),
+            OctoprintRestartOctoprintButton(coordinator, device_id, client),
         ]
     )
 
@@ -122,6 +125,76 @@ class OctoprintStopJobButton(OctoprintButton):
 
         if printer.state.flags.printing or printer.state.flags.paused:
             await self.client.cancel_job()
+
+
+class OctoprintShutdownSystemButton(OctoprintButton):
+    """Shutdown the system."""
+
+    def __init__(
+        self,
+        coordinator: OctoprintDataUpdateCoordinator,
+        device_id: str,
+        client: OctoprintClient,
+    ) -> None:
+        """Initialize a new OctoPrint button."""
+        super().__init__(coordinator, "Shutdown System", device_id, client)
+
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        await self.client.shutdown()
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
+
+
+class OctoprintRebootSystemButton(OctoprintButton):
+    """Reboot the system."""
+
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self,
+        coordinator: OctoprintDataUpdateCoordinator,
+        device_id: str,
+        client: OctoprintClient,
+    ) -> None:
+        """Initialize a new OctoPrint button."""
+        super().__init__(coordinator, "Reboot System", device_id, client)
+
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        await self.client.reboot_system()
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
+
+
+class OctoprintRestartOctoprintButton(OctoprintButton):
+    """Restart Octoprint."""
+
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self,
+        coordinator: OctoprintDataUpdateCoordinator,
+        device_id: str,
+        client: OctoprintClient,
+    ) -> None:
+        """Initialize a new OctoPrint button."""
+        super().__init__(coordinator, "Restart Octoprint", device_id, client)
+
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        await self.client.restart()
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
 
 
 class InvalidPrinterState(HomeAssistantError):
