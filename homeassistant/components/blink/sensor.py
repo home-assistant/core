@@ -74,14 +74,16 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
         self.entity_description = description
 
         self._camera = coordinator.api.cameras[camera]
-        self._attr_unique_id = f"{self._camera.serial}-{description.key}"
+        serial = self._camera.serial
+        self._attr_unique_id = f"{serial}-{description.key}"
         self._sensor_key = (
             "temperature_calibrated"
             if description.key == "temperature"
             else description.key
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._camera.serial)},
+            identifiers={(DOMAIN, serial)},
+            serial_number=serial,
             name=f"{DOMAIN} {camera}",
             manufacturer=DEFAULT_BRAND,
             model=self._camera.camera_type,
