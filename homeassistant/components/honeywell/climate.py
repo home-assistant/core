@@ -6,7 +6,13 @@ import datetime
 from typing import Any
 
 from aiohttp import ClientConnectionError
-from aiosomecomfort import AuthError, SomeComfortError, UnauthorizedError, UnexpectedResponse
+from aiosomecomfort import (
+    AuthError, 
+    SomeComfortError, 
+    UnauthorizedError, 
+    UnexpectedResponse,
+)
+
 from aiosomecomfort.device import Device as SomeComfortDevice
 
 from homeassistant.components.climate import (
